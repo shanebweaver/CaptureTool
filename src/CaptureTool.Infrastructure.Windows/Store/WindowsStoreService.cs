@@ -56,6 +56,7 @@ public sealed partial class WindowsStoreService : IStoreService
         }
         catch (Exception e)
         {
+            TrackStoreException(e, activityId, "license_check_failed");
             _telemetryService.ActivityError(activityId, e);
             return false;
         }
@@ -71,6 +72,13 @@ public sealed partial class WindowsStoreService : IStoreService
         try
         {
             _telemetryService.ActivityInitiated(activityId);
+            _telemetryService.TrackEvent(
+                TelemetryEvents.StorePurchaseStarted,
+                new Dictionary<string, object?>
+                {
+                    [TelemetryAttributes.ActivityId] = activityId,
+                    [TelemetryAttributes.Surface] = "store"
+                });
 
             nint hwnd = _windowHandleProvider.GetMainWindowHandle();
             WinRT.Interop.InitializeWithWindow.Initialize(_storeContext, hwnd);
@@ -92,10 +100,20 @@ public sealed partial class WindowsStoreService : IStoreService
             }
 
             _telemetryService.ActivityCompleted(activityId);
+            _telemetryService.TrackEvent(
+                TelemetryEvents.StorePurchaseCompleted,
+                new Dictionary<string, object?>
+                {
+                    [TelemetryAttributes.ActivityId] = activityId,
+                    [TelemetryAttributes.Outcome] = success ? "success" : "failed",
+                    [TelemetryAttributes.StoreStatus] = purchaseResult.Status.ToString(),
+                    [TelemetryAttributes.Surface] = "store"
+                });
             return success;
         }
         catch (Exception e)
         {
+            TrackStoreException(e, activityId, "purchase_failed");
             _telemetryService.ActivityError(activityId, e);
             return false;
         }
@@ -128,6 +146,7 @@ public sealed partial class WindowsStoreService : IStoreService
         }
         catch (Exception e)
         {
+            TrackStoreException(e, activityId, "product_info_failed");
             _telemetryService.ActivityError(activityId, e);
             throw;
         }
@@ -142,5 +161,19 @@ public sealed partial class WindowsStoreService : IStoreService
     public void ClearLicenseCache()
     {
         _licenseCache.Clear();
+    }
+
+    private void TrackStoreException(Exception exception, string activityId, string reasonCode)
+    {
+        _telemetryService.TrackException(
+            exception,
+            new TelemetryExceptionContext(
+                Component: "Store",
+                ActivityId: activityId,
+                ReasonCode: reasonCode,
+                Attributes: new Dictionary<string, object?>
+                {
+                    [TelemetryAttributes.Surface] = "store"
+                }));
     }
 }

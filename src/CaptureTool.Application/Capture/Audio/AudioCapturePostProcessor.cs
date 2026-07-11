@@ -59,6 +59,7 @@ internal sealed class AudioCapturePostProcessor
             }
             catch (Exception e)
             {
+                TrackPostProcessingException(e, "AutoCopyAudio", "auto_copy_failed");
                 _telemetryService.ActivityError("AutoCopyAudio", e);
             }
         });
@@ -83,10 +84,39 @@ internal sealed class AudioCapturePostProcessor
             string newFilePath = Path.Combine(audioFolder, _fileNameGenerator.GetNewCaptureFileName());
 
             _fileSystem.CopyFile(audioFile.FilePath, newFilePath, true);
+            TrackAutoSaveCompleted();
         }
         catch (Exception e)
         {
+            TrackPostProcessingException(e, "AutoSaveAudio", "auto_save_failed");
             _telemetryService.ActivityError("AutoSaveAudio", e);
         }
+    }
+
+    private void TrackAutoSaveCompleted()
+    {
+        _telemetryService.TrackEvent(
+            TelemetryEvents.FileSaved,
+            new Dictionary<string, object?>
+            {
+                [TelemetryAttributes.CommandId] = "capture.auto_save",
+                [TelemetryAttributes.MediaType] = "audio",
+                [TelemetryAttributes.Surface] = "capture_post_processor"
+            });
+    }
+
+    private void TrackPostProcessingException(Exception exception, string activityId, string reasonCode)
+    {
+        _telemetryService.TrackException(
+            exception,
+            new TelemetryExceptionContext(
+                Component: "CapturePostProcessor",
+                ActivityId: activityId,
+                ReasonCode: reasonCode,
+                Attributes: new Dictionary<string, object?>
+                {
+                    [TelemetryAttributes.MediaType] = "audio",
+                    [TelemetryAttributes.Surface] = "capture_post_processor"
+                }));
     }
 }

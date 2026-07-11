@@ -4,10 +4,12 @@ using CaptureTool.Application.Abstractions.Capture.Overlay.OpenCaptureOverlay;
 using CaptureTool.Application.Abstractions.Edit.Image.OpenImageEditPage;
 using CaptureTool.Application.Abstractions.Windowing.ShowMainWindow;
 using CaptureTool.Application.Abstractions.Shutdown;
+using CaptureTool.Application.Abstractions.Telemetry;
 using CaptureTool.Application.Abstractions.Themes;
 using CaptureTool.Domain.Capture;
 using CaptureTool.Domain.FileSystem;
 using CaptureTool.Presentation.Factories;
+using CaptureTool.Presentation.Shared.Commands;
 using CaptureTool.Presentation.ViewModels;
 using CommunityToolkit.Mvvm.Input;
 using System.Collections.ObjectModel;
@@ -23,6 +25,7 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
     private readonly ICaptureImageUseCase _captureImageCommand;
     private readonly IShutdownHandler _shutdownHandler;
     private readonly IFactoryServiceWithArgs<CaptureTypeViewModel, CaptureType> _captureTypeViewModelFactory;
+    private readonly ITelemetryService? _telemetryService;
 
     private static readonly CaptureType[] _imageCaptureTypes = [
         CaptureType.Rectangle,
@@ -162,7 +165,8 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
         IThemeService themeService,
         IShutdownHandler shutdownHandler,
         IFactoryServiceWithArgs<CaptureModeViewModel, CaptureMode> captureModeViewModelFactory,
-        IFactoryServiceWithArgs<CaptureTypeViewModel, CaptureType> captureTypeViewModelFactory)
+        IFactoryServiceWithArgs<CaptureTypeViewModel, CaptureType> captureTypeViewModelFactory,
+        ITelemetryService? telemetryService = null)
     {
         _openImageEditCommand = openImageEditPageCommand;
         _openVideoCaptureOverlayCommand = openVideoCaptureOverlayCommand;
@@ -170,6 +174,7 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
         _captureImageCommand = captureImageCommand;
         _shutdownHandler = shutdownHandler;
         _captureTypeViewModelFactory = captureTypeViewModelFactory;
+        _telemetryService = telemetryService;
 
         CaptureArea = Rectangle.Empty;
         MonitorWindows = [];
@@ -177,10 +182,10 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
         DefaultAppTheme = themeService.DefaultTheme;
         CurrentAppTheme = themeService.CurrentTheme;
 
-        RequestCaptureCommand = new AsyncRelayCommand(RequestCaptureAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
-        CloseOverlayCommand = new AsyncRelayCommand(CloseOverlayAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
-        UpdateSelectedCaptureModeCommand = new RelayCommand<(int Index, SelectionUpdateSource Source)>(UpdateSelectedCaptureMode);
-        UpdateSelectedCaptureTypeCommand = new RelayCommand<(int Index, SelectionUpdateSource Source)>(UpdateSelectedCaptureType);
+        RequestCaptureCommand = TelemetryCommandFactory.Async("selection_overlay.request_capture", RequestCaptureAsync, telemetryService, "selection_overlay");
+        CloseOverlayCommand = TelemetryCommandFactory.Async("selection_overlay.close", CloseOverlayAsync, telemetryService, "selection_overlay");
+        UpdateSelectedCaptureModeCommand = TelemetryCommandFactory.Relay<(int Index, SelectionUpdateSource Source)>("selection_overlay.update_capture_mode", UpdateSelectedCaptureMode, telemetryService, "selection_overlay");
+        UpdateSelectedCaptureTypeCommand = TelemetryCommandFactory.Relay<(int Index, SelectionUpdateSource Source)>("selection_overlay.update_capture_type", UpdateSelectedCaptureType, telemetryService, "selection_overlay");
         UpdateCaptureAreaCommand = new RelayCommand<Rectangle>(UpdateCaptureArea);
         UpdateCaptureOptionsCommand = new RelayCommand<CaptureOptions>(UpdateCaptureOptions);
 
@@ -217,8 +222,9 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
         {
             await _showMainWindowCommand.ExecuteAsync(new ShowMainWindowRequest(), CancellationToken.None);
         }
-        catch (Exception)
+        catch (Exception exception)
         {
+            TrackException(exception, "selection_overlay.close");
             _shutdownHandler.Shutdown();
         }
     }
@@ -312,18 +318,26 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
             return;
         }
 
-        if (SupportedCaptureModes[SelectedCaptureModeIndex].CaptureMode == CaptureMode.Image)
+        CaptureMode captureMode = SupportedCaptureModes[SelectedCaptureModeIndex].CaptureMode;
+        CaptureType captureType = GetSelectedCaptureType() ?? GetDefaultCaptureType(captureMode);
+        TrackCaptureEvent(TelemetryEvents.CaptureStarted, captureMode, captureType);
+
+        if (captureMode == CaptureMode.Image)
         {
             NewCaptureArgs args = new(Monitor.Value, CaptureArea);
             ImageFile? image = (await _captureImageCommand.ExecuteAsync(new CaptureImageRequest(args), CancellationToken.None)).Value?.Image;
             if (image != null)
             {
                 await _openImageEditCommand.ExecuteAsync(new OpenImageEditPageRequest(image), CancellationToken.None);
+                TrackCaptureEvent(TelemetryEvents.CaptureCompleted, captureMode, captureType);
+            }
+            else
+            {
+                TrackCaptureEvent(TelemetryEvents.CaptureFailed, captureMode, captureType, "missing_image");
             }
         }
-        else if (SupportedCaptureModes[SelectedCaptureModeIndex].CaptureMode == CaptureMode.Video)
+        else if (captureMode == CaptureMode.Video)
         {
-            CaptureType captureType = GetSelectedCaptureType() ?? CaptureType.FullScreen;
             NewCaptureArgs args = new(Monitor.Value, CaptureArea, captureType, GetSelectedWindowHandle(captureType, CaptureArea));
             await _openVideoCaptureOverlayCommand.ExecuteAsync(new OpenCaptureOverlayRequest(args), CancellationToken.None);
         }
@@ -359,5 +373,41 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
         _supportedCaptureModes.Clear();
 
         base.Dispose();
+    }
+
+    private void TrackCaptureEvent(
+        string eventName,
+        CaptureMode captureMode,
+        CaptureType captureType,
+        string? reasonCode = null)
+    {
+        Dictionary<string, object?> attributes = new()
+        {
+            [TelemetryAttributes.CaptureMode] = captureMode.ToString(),
+            [TelemetryAttributes.CaptureType] = captureType.ToString(),
+            [TelemetryAttributes.MediaType] = captureMode == CaptureMode.Video ? "video" : "image",
+            [TelemetryAttributes.Surface] = "selection_overlay"
+        };
+
+        if (!string.IsNullOrWhiteSpace(reasonCode))
+        {
+            attributes[TelemetryAttributes.ReasonCode] = reasonCode;
+        }
+
+        _telemetryService?.TrackEvent(eventName, attributes);
+    }
+
+    private void TrackException(Exception exception, string commandId)
+    {
+        _telemetryService?.TrackException(
+            exception,
+            new TelemetryExceptionContext(
+                Component: "SelectionOverlay",
+                ActivityId: commandId,
+                Attributes: new Dictionary<string, object?>
+                {
+                    [TelemetryAttributes.CommandId] = commandId,
+                    [TelemetryAttributes.Surface] = "selection_overlay"
+                }));
     }
 }

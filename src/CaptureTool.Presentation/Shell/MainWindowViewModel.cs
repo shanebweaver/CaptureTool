@@ -1,6 +1,8 @@
 using CaptureTool.Application.Abstractions.Navigation;
+using CaptureTool.Application.Abstractions.Telemetry;
 using CaptureTool.Application.Abstractions.Themes;
 using CaptureTool.Presentation.Notifications;
+using CaptureTool.Presentation.Shared.Commands;
 using CaptureTool.Presentation.ViewModels;
 using CommunityToolkit.Mvvm.Input;
 
@@ -42,7 +44,8 @@ public sealed partial class MainWindowViewModel : ViewModelBase
 
     public MainWindowViewModel(
         IThemeService themeService,
-        IAppNotificationService notificationService)
+        IAppNotificationService notificationService,
+        ITelemetryService? telemetryService = null)
     {
         _themeService = themeService;
         _notificationService = notificationService;
@@ -50,7 +53,7 @@ public sealed partial class MainWindowViewModel : ViewModelBase
         _notificationService.PropertyChanged += OnNotificationServicePropertyChanged;
         DefaultAppTheme = _themeService.DefaultTheme;
         CurrentAppTheme = _themeService.CurrentTheme;
-        DismissNotificationCommand = new RelayCommand(_notificationService.DismissCurrent);
+        DismissNotificationCommand = TelemetryCommandFactory.Relay("shell.dismiss_notification", _notificationService.DismissCurrent, telemetryService, "shell");
     }
 
     private void OnCurrentThemeChanged(object? sender, AppTheme newTheme)

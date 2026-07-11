@@ -4,6 +4,11 @@ namespace CaptureTool.Application.Abstractions.Telemetry;
 
 public interface ITelemetryService
 {
+    IDisposable? StartActivity(string name, IReadOnlyDictionary<string, object?>? attributes = null);
+    void TrackEvent(string eventName, IReadOnlyDictionary<string, object?>? attributes = null);
+    void TrackException(Exception exception, TelemetryExceptionContext context);
+    void TrackMetric(string metricName, double value, IReadOnlyDictionary<string, object?>? attributes = null);
+
     void ActivityInitiated(string activityId, string? message = null);
     void ActivityCompleted(string activityId, string? message = null);
     void ActivityCanceled(string activityId, string? message = null);

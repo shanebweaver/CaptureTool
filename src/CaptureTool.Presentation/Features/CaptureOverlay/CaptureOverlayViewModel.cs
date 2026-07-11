@@ -11,6 +11,7 @@ using CaptureTool.Application.Abstractions.Capture.Video.StopVideoCapture;
 using CaptureTool.Application.Abstractions.Capture.Video.ToggleVideoCaptureDesktopAudio;
 using CaptureTool.Application.Abstractions.Capture.Video.ToggleVideoCapturePauseResume;
 using CaptureTool.Application.Abstractions.TaskEnvironment;
+using CaptureTool.Application.Abstractions.Telemetry;
 using CaptureTool.Application.Abstractions.Themes;
 using CaptureTool.Domain.Capture;
 using CaptureTool.Presentation.Shared.Commands;
@@ -35,6 +36,7 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
     private readonly IAudioInputDetectionService _audioInputDetectionService;
     private readonly IVideoCaptureState _videoCaptureState;
     private readonly ITaskEnvironment _taskEnvironment;
+    private readonly ITelemetryService? _telemetryService;
 
     private MonitorCaptureResult? _monitorCaptureResult;
     private Rectangle? _captureArea;
@@ -131,7 +133,8 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
         IAudioInputDetectionService audioInputDetectionService,
         IThemeService themeService,
         IVideoCaptureState videoCaptureState,
-        ITaskEnvironment taskEnvironment)
+        ITaskEnvironment taskEnvironment,
+        ITelemetryService? telemetryService = null)
     {
         _startVideoCaptureCommand = startVideoCaptureCommand;
         _stopVideoCaptureCommand = stopVideoCaptureCommand;
@@ -143,20 +146,30 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
         _audioInputDetectionService = audioInputDetectionService;
         _videoCaptureState = videoCaptureState;
         _taskEnvironment = taskEnvironment;
+        _telemetryService = telemetryService;
 
         DefaultAppTheme = themeService.DefaultTheme;
         CurrentAppTheme = themeService.CurrentTheme;
         SelectedAudioInputSourceIndex = -1;
         AudioInputSources = [];
 
-        CloseOverlayCommand = closeOverlayCommand.ToRelayCommand(() => new CloseCaptureOverlayRequest());
-        GoBackCommand = goBackCommand.ToRelayCommand(() => new GoBackFromCaptureOverlayRequest());
-        StartVideoCaptureCommand = new AsyncRelayCommand(StartVideoCaptureAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
-        StopVideoCaptureCommand = new AsyncRelayCommand(StopVideoCaptureAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
-        ToggleDesktopAudioCommand = toggleVideoCaptureDesktopAudioCommand.ToRelayCommand(() => new ToggleVideoCaptureDesktopAudioRequest());
-        ToggleAudioInputMuteCommand = new RelayCommand(ToggleAudioInputMute);
-        TogglePauseResumeCommand = new AsyncRelayCommand(TogglePauseResumeAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
-        SelectAudioInputSourceCommand = new AsyncRelayCommand<AudioInputSource>(SelectAudioInputSourceAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
+        CloseOverlayCommand = closeOverlayCommand.ToRelayCommand(
+            () => new CloseCaptureOverlayRequest(),
+            telemetryService,
+            "capture_overlay.close");
+        GoBackCommand = goBackCommand.ToRelayCommand(
+            () => new GoBackFromCaptureOverlayRequest(),
+            telemetryService,
+            "capture_overlay.go_back");
+        StartVideoCaptureCommand = TelemetryCommandFactory.Async("capture_overlay.start_video_capture", StartVideoCaptureAsync, telemetryService, "capture_overlay");
+        StopVideoCaptureCommand = TelemetryCommandFactory.Async("capture_overlay.stop_video_capture", StopVideoCaptureAsync, telemetryService, "capture_overlay");
+        ToggleDesktopAudioCommand = toggleVideoCaptureDesktopAudioCommand.ToRelayCommand(
+            () => new ToggleVideoCaptureDesktopAudioRequest(),
+            telemetryService,
+            "capture_overlay.toggle_desktop_audio");
+        ToggleAudioInputMuteCommand = TelemetryCommandFactory.Relay("capture_overlay.toggle_audio_input_mute", ToggleAudioInputMute, telemetryService, "capture_overlay");
+        TogglePauseResumeCommand = TelemetryCommandFactory.Async("capture_overlay.toggle_pause_resume", TogglePauseResumeAsync, telemetryService, "capture_overlay");
+        SelectAudioInputSourceCommand = TelemetryCommandFactory.Async<AudioInputSource>("capture_overlay.select_audio_input_source", SelectAudioInputSourceAsync, telemetryService, "capture_overlay");
     }
 
     public override void Load(CaptureOverlayViewModelOptions options)
@@ -232,8 +245,9 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
             _audioInputDetectionService.StartWatching();
             _ = RefreshAudioInputSourcesAsync();
         }
-        catch (Exception)
+        catch (Exception exception)
         {
+            TrackException(exception, "capture_overlay.start_audio_input_detection");
             AudioInputSources.Clear();
             SelectedAudioInputSource = null;
             SelectedAudioInputSourceIndex = -1;
@@ -251,8 +265,9 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
         {
             _audioInputDetectionService.StopWatching();
         }
-        catch (Exception)
+        catch (Exception exception)
         {
+            TrackException(exception, "capture_overlay.stop_audio_input_detection");
             // The capture overlay can still close if the platform watcher is already gone.
         }
 
@@ -287,6 +302,7 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
         NewCaptureArgs args = new(_monitorCaptureResult.Value, _captureArea.Value);
 
         await _startVideoCaptureCommand.ExecuteAsync(new StartVideoCaptureRequest(args), CancellationToken.None);
+        TrackCaptureEvent(TelemetryEvents.CaptureStarted);
     }
 
     private async Task StopVideoCaptureAsync()
@@ -299,6 +315,7 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
         IsRecording = false;
         StopTimer();
         await _stopVideoCaptureCommand.ExecuteAsync(new StopVideoCaptureRequest(), CancellationToken.None);
+        TrackCaptureEvent(TelemetryEvents.CaptureCompleted);
     }
 
     private async Task TogglePauseResumeAsync()
@@ -437,5 +454,32 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
                 CaptureTime = DateTime.UtcNow - _captureStartTime - _pausedDuration;
             }
         });
+    }
+
+    private void TrackCaptureEvent(string eventName)
+    {
+        _telemetryService?.TrackEvent(
+            eventName,
+            new Dictionary<string, object?>
+            {
+                [TelemetryAttributes.CaptureMode] = CaptureMode.Video.ToString(),
+                [TelemetryAttributes.MediaType] = "video",
+                [TelemetryAttributes.Surface] = "capture_overlay"
+            });
+    }
+
+    private void TrackException(Exception exception, string commandId)
+    {
+        _telemetryService?.TrackException(
+            exception,
+            new TelemetryExceptionContext(
+                Component: "CaptureOverlay",
+                ActivityId: commandId,
+                Attributes: new Dictionary<string, object?>
+                {
+                    [TelemetryAttributes.CommandId] = commandId,
+                    [TelemetryAttributes.MediaType] = "video",
+                    [TelemetryAttributes.Surface] = "capture_overlay"
+                }));
     }
 }

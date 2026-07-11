@@ -10,11 +10,13 @@ using CaptureTool.Application.Abstractions.Settings;
 using CaptureTool.Application.Abstractions.Settings.OpenScreenshotsFolder;
 using CaptureTool.Application.Abstractions.Share;
 using CaptureTool.Application.Abstractions.Storage;
+using CaptureTool.Application.Abstractions.Telemetry;
 using CaptureTool.Domain.FileSystem;
 using CaptureTool.Domain.Edit;
 using CaptureTool.Domain.Edit.Drawable;
 using CaptureTool.Domain.Edit.Operations;
 using CaptureTool.Presentation.Notifications;
+using CaptureTool.Presentation.Shared.Commands;
 using CaptureTool.Presentation.ViewModels;
 using CommunityToolkit.Mvvm.Input;
 using System.Drawing;
@@ -40,6 +42,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     private readonly IOpenScreenshotsFolderUseCase _openScreenshotsFolderAction;
     private readonly ILogService _logService;
     private readonly IAppNotificationService _notificationService;
+    private readonly ITelemetryService? _telemetryService;
 
     private readonly ImageEditHistory _editHistory;
     private readonly ImageEditModeStateMachine _modeStateMachine;
@@ -271,7 +274,8 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         ColorPickerToolViewModel colorPickerTool,
         ChromaKeyToolViewModel chromaKeyTool,
         ShapeToolViewModel shapeTool,
-        TextToolViewModel textTool)
+        TextToolViewModel textTool,
+        ITelemetryService? telemetryService = null)
     {
         _localizationService = localizationService;
         _cancellationService = cancellationService;
@@ -289,6 +293,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         _openScreenshotsFolderAction = openScreenshotsFolderAction;
         _logService = logService;
         _notificationService = notificationService;
+        _telemetryService = telemetryService;
 
         ChromaKeyTool = chromaKeyTool;
         ColorPickerTool = colorPickerTool;
@@ -309,31 +314,34 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         ZoomPercentage = 100;
         IsSuperResolutionFeatureEnabled = _imageSuperResolutionFeatureAvailability.IsImageSuperResolutionEnabled;
 
-        CopyCommand = new AsyncRelayCommand(CopyAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
-        ToggleCropModeCommand = new RelayCommand(ToggleCropMode);
-        ToggleShapesModeCommand = new RelayCommand(ToggleShapesMode);
-        SaveCommand = new AsyncRelayCommand(SaveCommandAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
-        OpenScreenshotsFolderCommand = new AsyncRelayCommand(OpenScreenshotsFolderAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
-        UndoCommand = new RelayCommand(Undo);
-        RedoCommand = new RelayCommand(Redo);
-        RotateCommand = new RelayCommand(Rotate);
-        FlipHorizontalCommand = new RelayCommand(() => Flip(FlipDirection.Horizontal));
-        FlipVerticalCommand = new RelayCommand(() => Flip(FlipDirection.Vertical));
-        PrintCommand = new AsyncRelayCommand(PrintAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
-        ShareCommand = new AsyncRelayCommand(ShareAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
-        EditInPaintCommand = new AsyncRelayCommand(EditInPaintAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
-        ToggleSuperResolutionCommand = new AsyncRelayCommand(
+        CopyCommand = TelemetryCommandFactory.Async("image_edit.copy", CopyAsync, telemetryService, "image_edit");
+        ToggleCropModeCommand = TelemetryCommandFactory.Relay("image_edit.toggle_crop_mode", ToggleCropMode, telemetryService, "image_edit");
+        ToggleShapesModeCommand = TelemetryCommandFactory.Relay("image_edit.toggle_shapes_mode", ToggleShapesMode, telemetryService, "image_edit");
+        SaveCommand = TelemetryCommandFactory.Async("image_edit.save", SaveCommandAsync, telemetryService, "image_edit");
+        OpenScreenshotsFolderCommand = TelemetryCommandFactory.Async("image_edit.open_screenshots_folder", OpenScreenshotsFolderAsync, telemetryService, "image_edit");
+        UndoCommand = TelemetryCommandFactory.Relay("image_edit.undo", Undo, telemetryService, "image_edit");
+        RedoCommand = TelemetryCommandFactory.Relay("image_edit.redo", Redo, telemetryService, "image_edit");
+        RotateCommand = TelemetryCommandFactory.Relay("image_edit.rotate", Rotate, telemetryService, "image_edit");
+        FlipHorizontalCommand = TelemetryCommandFactory.Relay("image_edit.flip_horizontal", () => Flip(FlipDirection.Horizontal), telemetryService, "image_edit");
+        FlipVerticalCommand = TelemetryCommandFactory.Relay("image_edit.flip_vertical", () => Flip(FlipDirection.Vertical), telemetryService, "image_edit");
+        PrintCommand = TelemetryCommandFactory.Async("image_edit.print", PrintAsync, telemetryService, "image_edit");
+        ShareCommand = TelemetryCommandFactory.Async("image_edit.share", ShareAsync, telemetryService, "image_edit");
+        EditInPaintCommand = TelemetryCommandFactory.Async("image_edit.edit_in_paint", EditInPaintAsync, telemetryService, "image_edit");
+        ToggleSuperResolutionCommand = TelemetryCommandFactory.Async(
+            "image_edit.toggle_super_resolution",
             ToggleSuperResolutionAsync,
-            () => CanToggleSuperResolution,
-            AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
-        UpdateOrientationCommand = new RelayCommand<ImageOrientation>(UpdateOrientation);
+            telemetryService,
+            "image_edit",
+            () => CanToggleSuperResolution
+            );
+        UpdateOrientationCommand = TelemetryCommandFactory.Relay<ImageOrientation>("image_edit.update_orientation", UpdateOrientation, telemetryService, "image_edit");
         UpdateCropRectCommand = new RelayCommand<Rectangle>(UpdateCropRect);
-        SetChromaKeyModeActiveCommand = new RelayCommand<bool>(SetChromaKeyModeActive);
-        ToggleTextModeCommand = new RelayCommand(ToggleTextMode);
-        ToggleColorPickerModeCommand = new RelayCommand(ToggleColorPickerMode);
+        SetChromaKeyModeActiveCommand = TelemetryCommandFactory.Relay<bool>("image_edit.set_chroma_key_mode", SetChromaKeyModeActive, telemetryService, "image_edit");
+        ToggleTextModeCommand = TelemetryCommandFactory.Relay("image_edit.toggle_text_mode", ToggleTextMode, telemetryService, "image_edit");
+        ToggleColorPickerModeCommand = TelemetryCommandFactory.Relay("image_edit.toggle_color_picker_mode", ToggleColorPickerMode, telemetryService, "image_edit");
         UpdateZoomPercentageCommand = new RelayCommand<int>(UpdateZoomPercentage);
-        UpdateAutoZoomLockCommand = new RelayCommand<bool>(UpdateAutoZoomLock);
-        ZoomAndCenterCommand = new RelayCommand(RequestZoomAndCenter);
+        UpdateAutoZoomLockCommand = TelemetryCommandFactory.Relay<bool>("image_edit.update_auto_zoom_lock", UpdateAutoZoomLock, telemetryService, "image_edit");
+        ZoomAndCenterCommand = TelemetryCommandFactory.Relay("image_edit.zoom_and_center", RequestZoomAndCenter, telemetryService, "image_edit");
     }
 
     private void ChromaKeyTool_SettingsChanged(object? sender, EventArgs e)
@@ -590,10 +598,19 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
             HasUnsavedChanges = false;
             _hasUnsavedChangesBeforeSuperResolution = false;
             _hasUserEditsSinceSuperResolutionActivated = false;
+            TrackEvent(
+                TelemetryEvents.FileSaved,
+                new Dictionary<string, object?>
+                {
+                    [TelemetryAttributes.CommandId] = "image_edit.save",
+                    [TelemetryAttributes.MediaType] = "image",
+                    [TelemetryAttributes.Surface] = "image_edit"
+                });
             return true;
         }
         catch (Exception ex)
         {
+            TrackException(ex, "image_edit.save");
             _logService.LogException(ex, "Failed to save image edits.");
             return false;
         }
@@ -676,6 +693,14 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         ImageCanvasRenderOptions options = GetImageCanvasRenderOptions();
         using MemoryStream renderedStream = await _imageCanvasExporter.RenderToStreamAsync([.. Drawables], options);
         await _shareService.ShareStreamAsync(renderedStream);
+        TrackEvent(
+            TelemetryEvents.ShareInvoked,
+            new Dictionary<string, object?>
+            {
+                [TelemetryAttributes.CommandId] = "image_edit.share",
+                [TelemetryAttributes.MediaType] = "image",
+                [TelemetryAttributes.Surface] = "image_edit"
+            });
     }
 
     private async Task EditInPaintAsync()
@@ -725,6 +750,14 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     private void ExecuteEditCommand(IImageEditCommand command)
     {
         _editHistory.Execute(_editSession, command);
+        TrackEvent(
+            TelemetryEvents.EditCommandInvoked,
+            new Dictionary<string, object?>
+            {
+                [TelemetryAttributes.CommandId] = command.GetType().Name,
+                [TelemetryAttributes.MediaType] = "image",
+                [TelemetryAttributes.Surface] = "image_edit"
+            });
         SyncImageGeometryFromSession();
         SyncDrawablesFromSession();
         SyncChromaKeySettingsFromSession();
@@ -877,6 +910,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         }
         catch (Exception ex)
         {
+            TrackException(ex, "image_edit.super_resolution");
             _logService.LogException(ex, "Failed to generate super-resolution image.");
             ShowSuperResolutionFailure(GetLocalizedString("ImageSuperResolutionStatus_Failed"));
         }
@@ -1037,5 +1071,25 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         return string.IsNullOrWhiteSpace(value)
             ? resourceKey
             : value;
+    }
+
+    private void TrackEvent(string eventName, IReadOnlyDictionary<string, object?> attributes)
+    {
+        _telemetryService?.TrackEvent(eventName, attributes);
+    }
+
+    private void TrackException(Exception exception, string commandId)
+    {
+        _telemetryService?.TrackException(
+            exception,
+            new TelemetryExceptionContext(
+                Component: "ImageEdit",
+                ActivityId: commandId,
+                Attributes: new Dictionary<string, object?>
+                {
+                    [TelemetryAttributes.CommandId] = commandId,
+                    [TelemetryAttributes.MediaType] = "image",
+                    [TelemetryAttributes.Surface] = "image_edit"
+                }));
     }
 }

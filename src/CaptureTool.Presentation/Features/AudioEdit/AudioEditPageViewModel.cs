@@ -2,8 +2,10 @@ using CaptureTool.Application.Abstractions.Edit.External;
 using CaptureTool.Application.Abstractions.Edit.Audio.CopyAudioFile;
 using CaptureTool.Application.Abstractions.Edit.Audio.SaveAudioFile;
 using CaptureTool.Application.Abstractions.Settings.OpenAudioFolder;
+using CaptureTool.Application.Abstractions.Telemetry;
 using CaptureTool.Domain.FileSystem;
 using CaptureTool.Presentation.Features.Audio;
+using CaptureTool.Presentation.Shared.Commands;
 using CaptureTool.Presentation.ViewModels;
 using CommunityToolkit.Mvvm.Input;
 using System.Collections.ObjectModel;
@@ -37,6 +39,7 @@ public sealed partial class AudioEditPageViewModel : LoadableViewModelBase<Audio
     private readonly IOpenExternalEditorUseCase _openExternalEditorAction;
     private readonly IOpenAudioFolderUseCase _openAudioFolderAction;
     private readonly IAudioWaveformHistory _waveformHistory;
+    private readonly ITelemetryService? _telemetryService;
 
     public ObservableCollection<AudioWaveformBarViewModel> WaveformBars
     {
@@ -49,18 +52,20 @@ public sealed partial class AudioEditPageViewModel : LoadableViewModelBase<Audio
         ICopyAudioFileUseCase copyAction,
         IOpenExternalEditorUseCase openExternalEditorAction,
         IOpenAudioFolderUseCase openAudioFolderAction,
-        IAudioWaveformHistory waveformHistory)
+        IAudioWaveformHistory waveformHistory,
+        ITelemetryService? telemetryService = null)
     {
         _saveAction = saveAction;
         _copyAction = copyAction;
         _openExternalEditorAction = openExternalEditorAction;
         _openAudioFolderAction = openAudioFolderAction;
         _waveformHistory = waveformHistory;
+        _telemetryService = telemetryService;
 
-        SaveCommand = new AsyncRelayCommand(SaveAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
-        CopyCommand = new AsyncRelayCommand(CopyAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
-        OpenInClipchampCommand = new AsyncRelayCommand(OpenInClipchampAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
-        OpenAudioFolderCommand = new AsyncRelayCommand(OpenAudioFolderAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
+        SaveCommand = TelemetryCommandFactory.Async("audio_edit.save", SaveAsync, telemetryService, "audio_edit");
+        CopyCommand = TelemetryCommandFactory.Async("audio_edit.copy", CopyAsync, telemetryService, "audio_edit");
+        OpenInClipchampCommand = TelemetryCommandFactory.Async("audio_edit.open_in_clipchamp", OpenInClipchampAsync, telemetryService, "audio_edit");
+        OpenAudioFolderCommand = TelemetryCommandFactory.Async("audio_edit.open_audio_folder", OpenAudioFolderAsync, telemetryService, "audio_edit");
 
         IsAudioReady = false;
         WaveformBars = [];
@@ -114,7 +119,18 @@ public sealed partial class AudioEditPageViewModel : LoadableViewModelBase<Audio
             return;
         }
 
-        await _saveAction.ExecuteAsync(new SaveAudioFileRequest(AudioPath), CancellationToken.None);
+        var response = await _saveAction.ExecuteAsync(new SaveAudioFileRequest(AudioPath), CancellationToken.None);
+        if (response.Value?.Saved == true)
+        {
+            _telemetryService?.TrackEvent(
+                TelemetryEvents.FileSaved,
+                new Dictionary<string, object?>
+                {
+                    [TelemetryAttributes.CommandId] = "audio_edit.save",
+                    [TelemetryAttributes.MediaType] = "audio",
+                    [TelemetryAttributes.Surface] = "audio_edit"
+                });
+        }
     }
 
     private async Task CopyAsync()

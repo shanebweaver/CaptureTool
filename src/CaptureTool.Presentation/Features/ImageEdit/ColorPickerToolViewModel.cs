@@ -1,6 +1,8 @@
 using CaptureTool.Application.Abstractions.Clipboard;
 using CaptureTool.Application.Abstractions.Localization;
+using CaptureTool.Application.Abstractions.Telemetry;
 using CaptureTool.Presentation.Notifications;
+using CaptureTool.Presentation.Shared.Commands;
 using CaptureTool.Presentation.ViewModels;
 using CommunityToolkit.Mvvm.Input;
 using System.Drawing;
@@ -60,7 +62,8 @@ public sealed partial class ColorPickerToolViewModel : ViewModelBase
     public ColorPickerToolViewModel(
         IClipboardService clipboardService,
         ILocalizationService localizationService,
-        IAppNotificationService notificationService)
+        IAppNotificationService notificationService,
+        ITelemetryService? telemetryService = null)
     {
         _clipboardService = clipboardService;
         _localizationService = localizationService;
@@ -68,7 +71,7 @@ public sealed partial class ColorPickerToolViewModel : ViewModelBase
 
         UpdateSelectedColorTypeIndexCommand = new RelayCommand<int>(UpdateSelectedColorTypeIndex);
         UpdatePickedColorCommand = new RelayCommand<Color>(UpdatePickedColor);
-        CopyPickedColorCommand = new AsyncRelayCommand(CopyPickedColorAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
+        CopyPickedColorCommand = TelemetryCommandFactory.Async("image_edit.copy_picked_color", CopyPickedColorAsync, telemetryService, "image_edit");
 
         SelectedColorType = ColorPickerColorType.Hex;
         SelectedColorTypeIndex = (int)SelectedColorType;

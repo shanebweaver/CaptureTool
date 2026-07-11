@@ -201,7 +201,9 @@
     <value>使用条款</value>
   </data>
   <data name="About_PrivacyPolicy_DialogContent" xml:space="preserve">
-    <value>本应用不会收集、存储或传输任何个人数据或用户生成的内容。所有被捕获或编辑的图像仅保存在用户设备上，开发者无法访问。
+    <value>本应用不会收集、存储或传输屏幕截图、音频、视频、剪贴板内容、窗口标题、文件路径、文件名、文件夹路径、批注文本或其他用户生成的内容。捕获和编辑的媒体会保留在用户设备上，开发者无法访问。
+
+可以在“设置”中启用可选的诊断和使用情况遥测。启用后，应用可能会将保护隐私的事件、指标和异常详细信息发送到 Azure Monitor Application Insights，例如按钮名称、导航路由、功能结果、应用版本、匿名会话 ID 和经过哈希处理的匿名安装 ID。遥测默认关闭，可随时关闭，并且不包含捕获的媒体或本地文件信息。
 
 在正常使用过程中，系统可能会在指定的临时文件夹中创建并存储临时文件（例如用于编辑或图像预览）。这些文件由操作系统管理，并会定期自动清除。
 
@@ -841,6 +843,36 @@ SOFTWARE.
   </data>
   <data name="Settings_OtherHeaderLabel.Text" xml:space="preserve">
     <value>其他</value>
+  </data>
+  <data name="Settings_PrivacyTelemetryHeaderLabel.Text" xml:space="preserve">
+    <value>隐私和诊断</value>
+  </data>
+  <data name="Settings_Telemetry_HeaderLabel.Text" xml:space="preserve">
+    <value>可选遥测</value>
+  </data>
+  <data name="Settings_Telemetry_SubtitleLabel.Text" xml:space="preserve">
+    <value>共享保护隐私的诊断和使用情况数据，例如按钮名称、导航路由、功能结果、应用版本、匿名会话 ID 和经过哈希处理的匿名安装 ID。不会发送捕获的媒体、剪贴板内容、文件路径、文件名、文件夹路径、窗口标题或批注文本。</value>
+  </data>
+  <data name="Settings_Telemetry_Toggle.OnContent" xml:space="preserve">
+    <value>开</value>
+  </data>
+  <data name="Settings_Telemetry_Toggle.OffContent" xml:space="preserve">
+    <value>关</value>
+  </data>
+  <data name="Settings_Telemetry_Toggle.ToolTipService.ToolTip" xml:space="preserve">
+    <value>打开或关闭可选诊断和使用情况遥测</value>
+  </data>
+  <data name="Settings_TelemetryReset_HeaderLabel.Text" xml:space="preserve">
+    <value>重置匿名安装 ID</value>
+  </data>
+  <data name="Settings_TelemetryReset_SubtitleLabel.Text" xml:space="preserve">
+    <value>创建新的匿名标识符，仅用于对来自此安装且已启用的遥测进行分组。</value>
+  </data>
+  <data name="Settings_TelemetryReset_Button.Text" xml:space="preserve">
+    <value>重置 ID</value>
+  </data>
+  <data name="Settings_TelemetryReset_ToolTip.Text" xml:space="preserve">
+    <value>重置用于已启用遥测的匿名安装标识符</value>
   </data>
   <data name="Settings_RestoreDefaults_Button.Text" xml:space="preserve">
     <value>恢复默认设置</value>

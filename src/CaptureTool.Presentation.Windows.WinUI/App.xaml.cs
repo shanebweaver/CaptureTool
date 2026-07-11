@@ -1,5 +1,6 @@
 using CaptureTool.Application.Abstractions.Activation;
 using CaptureTool.Application.Abstractions.Logging;
+using CaptureTool.Application.Abstractions.Telemetry;
 using CaptureTool.Application.Abstractions.Themes;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
@@ -17,6 +18,9 @@ public partial class App : Microsoft.UI.Xaml.Application
     public App()
     {
         UnhandledException += App_UnhandledException;
+        AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
+        AppDomain.CurrentDomain.ProcessExit += CurrentDomain_ProcessExit;
+        TaskScheduler.UnobservedTaskException += TaskScheduler_UnobservedTaskException;
         DispatcherQueue = DispatcherQueue.GetForCurrentThread();
         ServiceProvider = new();
         InitializeComponent();
@@ -25,7 +29,27 @@ public partial class App : Microsoft.UI.Xaml.Application
 
     private void App_UnhandledException(object sender, Microsoft.UI.Xaml.UnhandledExceptionEventArgs e)
     {
+        TrackException(e.Exception, "App", fatal: true);
         ServiceProvider.GetService<ILogService>().LogException(e.Exception, "Unhandled exception occurred.");
+    }
+
+    private void CurrentDomain_UnhandledException(object sender, System.UnhandledExceptionEventArgs e)
+    {
+        if (e.ExceptionObject is Exception exception)
+        {
+            TrackException(exception, "AppDomain", fatal: e.IsTerminating);
+        }
+    }
+
+    private void TaskScheduler_UnobservedTaskException(object? sender, UnobservedTaskExceptionEventArgs e)
+    {
+        TrackException(e.Exception, "TaskScheduler", reasonCode: "unobserved_task_exception");
+    }
+
+    private void CurrentDomain_ProcessExit(object? sender, EventArgs e)
+    {
+        TrackEvent(TelemetryEvents.AppExited);
+        ServiceProvider.Dispose();
     }
 
     private void RestoreAppTheme()
@@ -49,6 +73,13 @@ public partial class App : Microsoft.UI.Xaml.Application
             IActivationHandler activationHandler = ServiceProvider.GetService<IActivationHandler>();
             try
             {
+                TrackEvent(
+                    TelemetryEvents.AppActivated,
+                    new Dictionary<string, object?>
+                    {
+                        [TelemetryAttributes.ActivationKind] = args.Kind.ToString()
+                    });
+
                 switch (args.Kind)
                 {
                     case ExtendedActivationKind.Launch:
@@ -73,8 +104,30 @@ public partial class App : Microsoft.UI.Xaml.Application
             }
             catch (Exception e)
             {
+                TrackException(e, "Activation", reasonCode: "activation_failed");
                 ServiceProvider.GetService<ILogService>().LogException(e, "Activation failed.");
             }
         });
+    }
+
+    private void TrackEvent(
+        string eventName,
+        IReadOnlyDictionary<string, object?>? attributes = null)
+    {
+        ServiceProvider.GetService<ITelemetryService>().TrackEvent(eventName, attributes);
+    }
+
+    private void TrackException(
+        Exception exception,
+        string component,
+        string? reasonCode = null,
+        bool fatal = false)
+    {
+        ServiceProvider.GetService<ITelemetryService>().TrackException(
+            exception,
+            new TelemetryExceptionContext(
+                Component: component,
+                Fatal: fatal,
+                ReasonCode: reasonCode));
     }
 }

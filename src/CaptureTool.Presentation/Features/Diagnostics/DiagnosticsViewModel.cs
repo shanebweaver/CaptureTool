@@ -4,6 +4,8 @@ using CaptureTool.Application.Abstractions.Diagnostics.GetCurrentLogs;
 using CaptureTool.Application.Abstractions.Diagnostics.GetIsLoggingEnabled;
 using CaptureTool.Application.Abstractions.Diagnostics.UpdateLoggingState;
 using CaptureTool.Application.Abstractions.Logging;
+using CaptureTool.Application.Abstractions.Telemetry;
+using CaptureTool.Presentation.Shared.Commands;
 using CaptureTool.Presentation.ViewModels;
 using CommunityToolkit.Mvvm.Input;
 
@@ -17,6 +19,7 @@ public sealed partial class DiagnosticsViewModel : ViewModelBase
     private readonly IGetIsLoggingEnabledUseCase _getIsLoggingEnabledQuery;
     private readonly IGetCurrentLogsUseCase _getCurrentLogsQuery;
     private readonly ILogService _logService;
+    private readonly ITelemetryService? _telemetryService;
 
     public IAsyncRelayCommand ClearLogsCommand { get; }
     public IAsyncRelayCommand ExportLogsCommand { get; }
@@ -40,7 +43,8 @@ public sealed partial class DiagnosticsViewModel : ViewModelBase
         IUpdateLoggingStateUseCase updateLoggingEnablementCommand,
         IGetIsLoggingEnabledUseCase getIsLoggingEnabledQuery,
         IGetCurrentLogsUseCase getCurrentLogsQuery,
-        ILogService logService)
+        ILogService logService,
+        ITelemetryService? telemetryService = null)
     {
         _clearLogsCommand = clearLogsCommand;
         _exportLogsCommand = exportLogsCommand;
@@ -49,11 +53,12 @@ public sealed partial class DiagnosticsViewModel : ViewModelBase
         _getCurrentLogsQuery = getCurrentLogsQuery;
 
         _logService = logService;
+        _telemetryService = telemetryService;
         _logService.LogAdded += OnLogAdded;
 
-        ClearLogsCommand = new AsyncRelayCommand(ClearLogsAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
-        ExportLogsCommand = new AsyncRelayCommand(ExportLogsAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
-        UpdateLoggingEnablementCommand = new AsyncRelayCommand<bool>(UpdateLoggingEnablementAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
+        ClearLogsCommand = TelemetryCommandFactory.Async("diagnostics.clear_logs", ClearLogsAsync, telemetryService, "diagnostics");
+        ExportLogsCommand = TelemetryCommandFactory.Async("diagnostics.export_logs", ExportLogsAsync, telemetryService, "diagnostics");
+        UpdateLoggingEnablementCommand = TelemetryCommandFactory.Async<bool>("diagnostics.update_logging_enablement", UpdateLoggingEnablementAsync, telemetryService, "diagnostics");
 
         IsLoggingEnabled = false;
         Logs = string.Empty;
@@ -80,16 +85,30 @@ public sealed partial class DiagnosticsViewModel : ViewModelBase
     {
         IsLoggingEnabled = newValue;
         await _updateLoggingStateCommand.ExecuteAsync(new UpdateLoggingStateRequest(newValue), CancellationToken.None);
+        TrackDiagnosticsAction("diagnostics.update_logging_enablement");
     }
 
     private async Task ClearLogsAsync()
     {
         Logs = string.Empty;
         await _clearLogsCommand.ExecuteAsync(new ClearLogsRequest(), CancellationToken.None);
+        TrackDiagnosticsAction("diagnostics.clear_logs");
     }
 
     private async Task ExportLogsAsync()
     {
         await _exportLogsCommand.ExecuteAsync(new ExportLogsRequest(), CancellationToken.None);
+        TrackDiagnosticsAction("diagnostics.export_logs");
+    }
+
+    private void TrackDiagnosticsAction(string commandId)
+    {
+        _telemetryService?.TrackEvent(
+            TelemetryEvents.DiagnosticsActionInvoked,
+            new Dictionary<string, object?>
+            {
+                [TelemetryAttributes.CommandId] = commandId,
+                [TelemetryAttributes.Surface] = "diagnostics"
+            });
     }
 }

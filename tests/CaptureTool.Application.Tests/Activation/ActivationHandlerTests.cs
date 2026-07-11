@@ -7,6 +7,7 @@ using CaptureTool.Application.Abstractions.Logging;
 using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Application.Abstractions.Settings;
 using CaptureTool.Application.Abstractions.Storage;
+using CaptureTool.Application.Abstractions.Telemetry;
 using CaptureTool.Application.Abstractions.UseCases;
 using CaptureTool.Application.Activation;
 using CaptureTool.Domain.Capture;
@@ -33,6 +34,10 @@ public sealed class ActivationHandlerTests
         fixture.Settings.Verify(service => service.Get(CaptureToolSettings.VerboseLogging), Times.Once);
         fixture.Settings.Verify(service => service.Get(CaptureToolSettings.Settings_LanguageOverride), Times.Once);
         fixture.LogService.Verify(service => service.Enable(), Times.Once);
+        fixture.TelemetryContext.Verify(service => service.InitializeAsync(It.IsAny<CancellationToken>()), Times.Once);
+        fixture.TelemetryService.Verify(
+            service => service.TrackEvent(TelemetryEvents.AppStarted, null),
+            Times.Once);
         fixture.Localization.Verify(service => service.Initialize("fr-FR"), Times.Once);
         fixture.NavigationService.Verify(service => service.SetNavigationHandler(fixture.NavigationHandler.Object), Times.Once);
     }
@@ -151,7 +156,8 @@ public sealed class ActivationHandlerTests
                 OpenSelectionOverlay.Object,
                 ShowHomePage.Object,
                 LogService.Object,
-                StartupInitializer);
+                StartupInitializer,
+                TelemetryService.Object);
         }
 
         public CaptureToolActivationHandler Handler { get; }
@@ -159,6 +165,7 @@ public sealed class ActivationHandlerTests
         public Mock<IShowHomePageUseCase> ShowHomePage { get; } = new();
         public Mock<ILogService> LogService { get; } = new();
         public FakeStartupInitializer StartupInitializer { get; } = new();
+        public Mock<ITelemetryService> TelemetryService { get; } = new();
     }
 
     private sealed class FakeStartupInitializer : IApplicationStartupInitializer
@@ -199,7 +206,9 @@ public sealed class ActivationHandlerTests
                 Localization.Object,
                 NavigationHandler.Object,
                 NavigationService.Object,
-                StorageService.Object);
+                StorageService.Object,
+                TelemetryContext.Object,
+                TelemetryService.Object);
         }
 
         public ApplicationStartupInitializer Initializer { get; }
@@ -211,5 +220,7 @@ public sealed class ActivationHandlerTests
         public Mock<INavigationHandler> NavigationHandler { get; } = new();
         public Mock<INavigationService> NavigationService { get; } = new();
         public Mock<IStorageService> StorageService { get; } = new();
+        public Mock<ITelemetryContext> TelemetryContext { get; } = new();
+        public Mock<ITelemetryService> TelemetryService { get; } = new();
     }
 }

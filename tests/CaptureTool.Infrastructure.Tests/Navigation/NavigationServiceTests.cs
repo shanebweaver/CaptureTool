@@ -1,4 +1,5 @@
 using CaptureTool.Application.Abstractions.Navigation;
+using CaptureTool.Application.Abstractions.Telemetry;
 using CaptureTool.Infrastructure.Navigation;
 
 namespace CaptureTool.Infrastructure.Tests.Navigation;
@@ -170,6 +171,28 @@ public class NavigationServiceTests
 
         Assert.IsNotNull(receivedRequest);
         Assert.AreEqual(TestRoute.Home, receivedRequest?.Route);
+    }
+
+    [TestMethod]
+    public void Navigate_TracksNavigationTelemetry()
+    {
+        var telemetry = new RecordingTelemetry();
+        var telemetryContext = new RecordingTelemetryContext();
+        var service = new NavigationService(telemetry, telemetryContext);
+        var handler = new MockNavigationHandler();
+        service.SetNavigationHandler(handler);
+
+        service.Navigate(TestRoute.Home);
+        service.Navigate(TestRoute.Settings, parameter: "from-home");
+
+        Assert.AreEqual("Settings", telemetryContext.CurrentRoute);
+        Assert.HasCount(2, telemetry.Events);
+        Assert.AreEqual(TelemetryEvents.NavigationCompleted, telemetry.Events[1].EventName);
+        Assert.AreEqual("Home", telemetry.Events[1].Attributes[TelemetryAttributes.FromRoute]);
+        Assert.AreEqual("Settings", telemetry.Events[1].Attributes[TelemetryAttributes.ToRoute]);
+        Assert.AreEqual("String", telemetry.Events[1].Attributes[TelemetryAttributes.ParameterType]);
+        Assert.HasCount(2, telemetry.Metrics);
+        Assert.AreEqual("navigation.completed", telemetry.Metrics[1].MetricName);
     }
 
     [TestMethod]

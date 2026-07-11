@@ -116,9 +116,8 @@ public partial class LocalSettingsService : ISettingsService, IDisposable
             Interlocked.Exchange(ref _settings, settings);
             Interlocked.Exchange(ref _settingsFile, settingsFile);
 
-            FireSettingsChangedEvent([.. _settings.Values]);
-
             _isInitialized = true;
+            FireSettingsChangedEvent([.. _settings.Values]);
         }
         finally
         {

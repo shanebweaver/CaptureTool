@@ -1,6 +1,7 @@
 using CaptureTool.Application.Abstractions.Cancellation;
 using CaptureTool.Application.Abstractions.Logging;
 using CaptureTool.Application.Abstractions.Shutdown;
+using CaptureTool.Application.Abstractions.Telemetry;
 using Microsoft.Windows.AppLifecycle;
 
 namespace CaptureTool.Infrastructure.Windows.Shutdown;
@@ -9,15 +10,18 @@ public sealed partial class WindowsShutdownHandler : IShutdownHandler
 {
     private readonly ICancellationService _cancellationService;
     private readonly ILogService _logService;
+    private readonly ITelemetryService _telemetryService;
 
     public bool IsShuttingDown { get; private set; }
 
     public WindowsShutdownHandler(
         ILogService logService,
-        ICancellationService cancellationService)
+        ICancellationService cancellationService,
+        ITelemetryService telemetryService)
     {
         _logService = logService;
         _cancellationService = cancellationService;
+        _telemetryService = telemetryService;
     }
 
     public bool TryRestart()
@@ -28,6 +32,7 @@ public sealed partial class WindowsShutdownHandler : IShutdownHandler
             return false;
         }
 
+        TrackShutdownRequested("restart");
         Teardown();
         global::Windows.ApplicationModel.Core.AppRestartFailureReason restartError = AppInstance.Restart(string.Empty);
 
@@ -59,10 +64,21 @@ public sealed partial class WindowsShutdownHandler : IShutdownHandler
 
         try
         {
+            TrackShutdownRequested("exit");
             Teardown();
         }
         catch (Exception e)
         {
+            _telemetryService.TrackException(
+                e,
+                new TelemetryExceptionContext(
+                    Component: "Shutdown",
+                    ActivityId: "app.shutdown",
+                    ReasonCode: "shutdown_failed",
+                    Attributes: new Dictionary<string, object?>
+                    {
+                        [TelemetryAttributes.CommandId] = "app.shutdown"
+                    }));
             _logService.LogException(e, "Error during shutdown. Forcing exit.");
         }
 
@@ -73,5 +89,15 @@ public sealed partial class WindowsShutdownHandler : IShutdownHandler
     {
         IsShuttingDown = true;
         _cancellationService.CancelAll();
+    }
+
+    private void TrackShutdownRequested(string reasonCode)
+    {
+        _telemetryService.TrackEvent(
+            TelemetryEvents.AppShutdownRequested,
+            new Dictionary<string, object?>
+            {
+                [TelemetryAttributes.ReasonCode] = reasonCode
+            });
     }
 }

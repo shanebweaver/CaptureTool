@@ -2,6 +2,7 @@ using CaptureTool.Application.Abstractions.Activation;
 using CaptureTool.Application.Abstractions.Capture.Overlay.OpenSelectionOverlay;
 using CaptureTool.Application.Abstractions.Shell.Home.ShowHomePage;
 using CaptureTool.Application.Abstractions.Logging;
+using CaptureTool.Application.Abstractions.Telemetry;
 using CaptureTool.Domain.Capture;
 using System.Collections.Specialized;
 using System.Web;
@@ -14,6 +15,7 @@ internal sealed class CaptureToolActivationHandler : IActivationHandler
     private readonly IShowHomePageUseCase _showHomePage;
     private readonly ILogService _logService;
     private readonly IApplicationStartupInitializer _startupInitializer;
+    private readonly ITelemetryService _telemetryService;
 
     private readonly SemaphoreSlim _semaphoreActivation = new(1, 1);
 
@@ -21,12 +23,14 @@ internal sealed class CaptureToolActivationHandler : IActivationHandler
         IOpenSelectionOverlayUseCase openSelectionOverlay,
         IShowHomePageUseCase showHomePage,
         ILogService logService,
-        IApplicationStartupInitializer startupInitializer)
+        IApplicationStartupInitializer startupInitializer,
+        ITelemetryService telemetryService)
     {
         _openSelectionOverlay = openSelectionOverlay;
         _showHomePage = showHomePage;
         _logService = logService;
         _startupInitializer = startupInitializer;
+        _telemetryService = telemetryService;
     }
 
     public async Task HandleLaunchActivationAsync()
@@ -80,6 +84,12 @@ internal sealed class CaptureToolActivationHandler : IActivationHandler
         }
         catch (Exception ex)
         {
+            _telemetryService.TrackException(
+                ex,
+                new TelemetryExceptionContext(
+                    Component: "Activation",
+                    ActivityId: "protocol_activation",
+                    ReasonCode: "protocol_activation_failed"));
             _logService.LogException(ex, "Failed to handle protocol activation.");
         }
         finally

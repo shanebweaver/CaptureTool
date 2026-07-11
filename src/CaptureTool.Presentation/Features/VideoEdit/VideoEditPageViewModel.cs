@@ -4,8 +4,10 @@ using CaptureTool.Application.Abstractions.Edit.Video.CopyVideoFile;
 using CaptureTool.Application.Abstractions.Edit.Video.SaveVideoFile;
 using CaptureTool.Application.Abstractions.Logging;
 using CaptureTool.Application.Abstractions.Settings.OpenVideosFolder;
+using CaptureTool.Application.Abstractions.Telemetry;
 using CaptureTool.Domain.Capture;
 using CaptureTool.Domain.FileSystem;
+using CaptureTool.Presentation.Shared.Commands;
 using CaptureTool.Presentation.ViewModels;
 using CommunityToolkit.Mvvm.Input;
 
@@ -86,6 +88,7 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
     private readonly IOpenExternalEditorUseCase _openExternalEditorAction;
     private readonly IOpenVideosFolderUseCase _openVideosFolderAction;
     private readonly ILogService _logService;
+    private readonly ITelemetryService? _telemetryService;
 
     public string EditSessionName => "video edit session";
 
@@ -100,19 +103,21 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
         ICopyVideoFileUseCase copyAction,
         IOpenExternalEditorUseCase openExternalEditorAction,
         IOpenVideosFolderUseCase openVideosFolderAction,
-        ILogService logService)
+        ILogService logService,
+        ITelemetryService? telemetryService = null)
     {
         _saveAction = saveAction;
         _copyAction = copyAction;
         _openExternalEditorAction = openExternalEditorAction;
         _openVideosFolderAction = openVideosFolderAction;
         _logService = logService;
+        _telemetryService = telemetryService;
 
-        SaveCommand = new AsyncRelayCommand(SaveCommandAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
-        CopyCommand = new AsyncRelayCommand(CopyAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
-        EditInClipchampCommand = new AsyncRelayCommand(EditInClipchampAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
-        OpenVideosFolderCommand = new AsyncRelayCommand(OpenVideosFolderAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
-        ToggleTrimModeCommand = new RelayCommand(ToggleTrimMode);
+        SaveCommand = TelemetryCommandFactory.Async("video_edit.save", SaveCommandAsync, telemetryService, "video_edit");
+        CopyCommand = TelemetryCommandFactory.Async("video_edit.copy", CopyAsync, telemetryService, "video_edit");
+        EditInClipchampCommand = TelemetryCommandFactory.Async("video_edit.edit_in_clipchamp", EditInClipchampAsync, telemetryService, "video_edit");
+        OpenVideosFolderCommand = TelemetryCommandFactory.Async("video_edit.open_videos_folder", OpenVideosFolderAsync, telemetryService, "video_edit");
+        ToggleTrimModeCommand = TelemetryCommandFactory.Relay("video_edit.toggle_trim_mode", ToggleTrimMode, telemetryService, "video_edit");
 
         IsVideoReady = false;
         IsFinalizingVideo = false;
@@ -156,8 +161,20 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
             IsVideoReady = true;
             IsFinalizingVideo = false;
         }
-        catch (Exception)
+        catch (Exception exception)
         {
+            _telemetryService?.TrackException(
+                exception,
+                new TelemetryExceptionContext(
+                    Component: "VideoEdit",
+                    ActivityId: "video_edit.finalize_pending_video",
+                    Attributes: new Dictionary<string, object?>
+                    {
+                        [TelemetryAttributes.CommandId] = "video_edit.finalize_pending_video",
+                        [TelemetryAttributes.MediaType] = "video",
+                        [TelemetryAttributes.Surface] = "video_edit"
+                    }));
+            _logService.LogException(exception, "Failed to finalize pending video.");
             IsFinalizingVideo = false;
         }
     }
@@ -227,6 +244,14 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
         if (response.Value?.Saved == true)
         {
             HasUnsavedChanges = false;
+            _telemetryService?.TrackEvent(
+                TelemetryEvents.FileSaved,
+                new Dictionary<string, object?>
+                {
+                    [TelemetryAttributes.CommandId] = "video_edit.save",
+                    [TelemetryAttributes.MediaType] = "video",
+                    [TelemetryAttributes.Surface] = "video_edit"
+                });
             return true;
         }
 

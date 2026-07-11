@@ -54,4 +54,7 @@
     <Project Path="tests/CaptureTool.Infrastructure.Tests/CaptureTool.Infrastructure.Tests.csproj" />
     <Project Path="tests/CaptureTool.Presentation.Tests/CaptureTool.Presentation.Tests.csproj" Id="b99a732e-0834-4598-a1c5-7030a36a486d" />
   </Folder>
+  <Folder Name="/tools/">
+    <Project Path="tools/CaptureTool.TelemetrySmoke/CaptureTool.TelemetrySmoke.csproj" />
+  </Folder>
 </Solution>

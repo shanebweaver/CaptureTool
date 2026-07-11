@@ -1,4 +1,5 @@
 using CaptureTool.Application.Abstractions.Navigation;
+using CaptureTool.Application.Abstractions.Telemetry;
 
 namespace CaptureTool.Infrastructure.Navigation;
 
@@ -6,12 +7,22 @@ public class NavigationService : INavigationService
 {
     private readonly Stack<NavigationRequest> _navigationStack = new();
     private readonly Lock _navigationLock = new();
+    private readonly ITelemetryService? _telemetryService;
+    private readonly ITelemetryContext? _telemetryContext;
     private INavigationHandler? _navigationHandler;
 
     public event EventHandler<INavigationEventArgs>? Navigated;
 
     public INavigationRequest? CurrentRequest => _navigationStack.Count == 0 ? null : _navigationStack.Peek();
     public bool CanGoBack => _navigationStack.Count > 1;
+
+    public NavigationService(
+        ITelemetryService? telemetryService = null,
+        ITelemetryContext? telemetryContext = null)
+    {
+        _telemetryService = telemetryService;
+        _telemetryContext = telemetryContext;
+    }
 
     public void SetNavigationHandler(INavigationHandler navigationHandler)
     {
@@ -33,7 +44,9 @@ public class NavigationService : INavigationService
             bool requestsMatch = CompareRequests(currentRequest, backRequest);
             if (!requestsMatch)
             {
-                RequestNavigation(new NavigationRequest(backRequest.Route, backRequest.Parameter, true, false));
+                RequestNavigation(
+                    new NavigationRequest(backRequest.Route, backRequest.Parameter, true, false),
+                    currentRequest.Route);
             }
 
             return true;
@@ -78,7 +91,9 @@ public class NavigationService : INavigationService
             }
 
             NavigationRequest actualTop = _navigationStack.Peek();
-            RequestNavigation(new NavigationRequest(actualTop.Route, actualTop.Parameter, isBackNavigation: true));
+            RequestNavigation(
+                new NavigationRequest(actualTop.Route, actualTop.Parameter, isBackNavigation: true),
+                currentRequest.Route);
             return true;
         }
     }
@@ -103,11 +118,11 @@ public class NavigationService : INavigationService
 
             _navigationStack.Push(newRequest);
 
-            RequestNavigation(newRequest);
+            RequestNavigation(newRequest, currentRequest?.Route);
         }
     }
 
-    private void RequestNavigation(NavigationRequest request)
+    private void RequestNavigation(NavigationRequest request, object? fromRoute)
     {
         if (_navigationHandler is null)
         {
@@ -115,7 +130,33 @@ public class NavigationService : INavigationService
         }
 
         _navigationHandler.HandleNavigationRequest(request);
+        TrackNavigation(request, fromRoute);
         Navigated?.Invoke(this, new NavigationEventArgs(request));
+    }
+
+    private void TrackNavigation(NavigationRequest request, object? fromRoute)
+    {
+        _telemetryContext?.SetCurrentRoute(request.Route);
+
+        Dictionary<string, object?> attributes = new(StringComparer.Ordinal)
+        {
+            [TelemetryAttributes.ToRoute] = request.Route.ToString(),
+            ["is_back"] = request.IsBackNavigation,
+            ["clear_history"] = request.ClearHistory
+        };
+
+        if (fromRoute is not null)
+        {
+            attributes[TelemetryAttributes.FromRoute] = fromRoute.ToString();
+        }
+
+        if (request.Parameter is not null)
+        {
+            attributes[TelemetryAttributes.ParameterType] = request.Parameter.GetType().Name;
+        }
+
+        _telemetryService?.TrackEvent(TelemetryEvents.NavigationCompleted, attributes);
+        _telemetryService?.TrackMetric("navigation.completed", 1, attributes);
     }
 
     private static bool CompareRequests(INavigationRequest? requestA, INavigationRequest? requestB)

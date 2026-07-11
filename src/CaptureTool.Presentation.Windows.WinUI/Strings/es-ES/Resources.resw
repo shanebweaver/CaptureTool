@@ -201,7 +201,9 @@ Sin garantía Esta aplicación se proporciona “tal cual”, sin garantía de n
     <value>Términos de uso</value>
   </data>
   <data name="About_PrivacyPolicy_DialogContent" xml:space="preserve">
-    <value>Esta aplicación no recopila, almacena ni transmite datos personales ni contenido generado por el usuario. Todas las imágenes capturadas o editadas permanecen exclusivamente en el dispositivo del usuario y no son accesibles para el desarrollador.
+    <value>Esta aplicación no recopila, almacena ni transmite capturas de pantalla, audio, vídeo, contenido del portapapeles, títulos de ventanas, rutas de archivos, nombres de archivos, rutas de carpetas, texto de anotaciones ni otro contenido generado por el usuario. Los medios capturados y editados permanecen en el dispositivo del usuario y no son accesibles para el desarrollador.
+
+La telemetría opcional de diagnóstico y uso puede activarse en Configuración. Cuando está activada, la aplicación puede enviar a Azure Monitor Application Insights eventos, métricas y detalles de excepciones que preservan la privacidad, como nombres de botones, rutas de navegación, resultados de funciones, versión de la aplicación, identificador de sesión anónimo y un identificador de instalación anónimo con hash. La telemetría está desactivada de forma predeterminada, puede desactivarse en cualquier momento y no incluye medios capturados ni información de archivos locales.
 
 Durante el uso normal, pueden crearse y almacenarse archivos temporales en carpetas temporales designadas por el sistema (por ejemplo, para la edición o previsualización de imágenes). Estos archivos son gestionados por el sistema operativo y se eliminan automáticamente de forma periódica.
 
@@ -841,6 +843,36 @@ SOFTWARE.
   </data>
   <data name="Settings_OtherHeaderLabel.Text" xml:space="preserve">
     <value>Otros</value>
+  </data>
+  <data name="Settings_PrivacyTelemetryHeaderLabel.Text" xml:space="preserve">
+    <value>Privacidad y diagnóstico</value>
+  </data>
+  <data name="Settings_Telemetry_HeaderLabel.Text" xml:space="preserve">
+    <value>Telemetría opcional</value>
+  </data>
+  <data name="Settings_Telemetry_SubtitleLabel.Text" xml:space="preserve">
+    <value>Comparte datos de diagnóstico y uso que preservan la privacidad, como nombres de botones, rutas de navegación, resultados de funciones, versión de la aplicación, identificador de sesión anónimo y un identificador de instalación anónimo con hash. No se envían medios capturados, contenido del portapapeles, rutas de archivos, nombres de archivos, rutas de carpetas, títulos de ventanas ni texto de anotaciones.</value>
+  </data>
+  <data name="Settings_Telemetry_Toggle.OnContent" xml:space="preserve">
+    <value>Activado</value>
+  </data>
+  <data name="Settings_Telemetry_Toggle.OffContent" xml:space="preserve">
+    <value>Desactivado</value>
+  </data>
+  <data name="Settings_Telemetry_Toggle.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Activar o desactivar la telemetría opcional de diagnóstico y uso</value>
+  </data>
+  <data name="Settings_TelemetryReset_HeaderLabel.Text" xml:space="preserve">
+    <value>Restablecer el identificador de instalación anónimo</value>
+  </data>
+  <data name="Settings_TelemetryReset_SubtitleLabel.Text" xml:space="preserve">
+    <value>Crea un nuevo identificador anónimo usado solo para agrupar la telemetría activada de esta instalación.</value>
+  </data>
+  <data name="Settings_TelemetryReset_Button.Text" xml:space="preserve">
+    <value>Restablecer ID</value>
+  </data>
+  <data name="Settings_TelemetryReset_ToolTip.Text" xml:space="preserve">
+    <value>Restablecer el identificador de instalación anónimo usado para la telemetría activada</value>
   </data>
   <data name="Settings_RestoreDefaults_Button.Text" xml:space="preserve">
     <value>Restablecer la configuración predeterminada</value>

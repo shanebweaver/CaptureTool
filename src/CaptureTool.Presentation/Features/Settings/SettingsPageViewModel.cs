@@ -24,8 +24,10 @@ using CaptureTool.Application.Abstractions.Settings.UpdateVideoCaptureDefaultLoc
 using CaptureTool.Application.Abstractions.Localization;
 using CaptureTool.Application.Abstractions.Settings;
 using CaptureTool.Application.Abstractions.Storage;
+using CaptureTool.Application.Abstractions.Telemetry;
 using CaptureTool.Application.Abstractions.Themes;
 using CaptureTool.Presentation.Factories;
+using CaptureTool.Presentation.Shared.Commands;
 using CaptureTool.Presentation.ViewModels;
 using CommunityToolkit.Mvvm.Input;
 using System.Collections.ObjectModel;
@@ -61,6 +63,7 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
     private readonly ISettingsService _settingsService;
     private readonly IThemeService _themeService;
     private readonly IStorageService _storageService;
+    private readonly ITelemetryService? _telemetryService;
     private readonly IFactoryServiceWithArgs<AppLanguageViewModel, IAppLanguage?> _appLanguageViewModelFactory;
     private readonly IFactoryServiceWithArgs<AppThemeViewModel, AppTheme> _appThemeViewModelFactory;
 
@@ -93,6 +96,8 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
     public IAsyncRelayCommand OpenTemporaryFilesFolderCommand { get; }
     public IAsyncRelayCommand ClearTemporaryFilesCommand { get; }
     public IAsyncRelayCommand RestoreDefaultSettingsCommand { get; }
+    public IAsyncRelayCommand<bool> UpdateTelemetryEnabledCommand { get; }
+    public IAsyncRelayCommand ResetTelemetryInstallIdCommand { get; }
 
     public ObservableCollection<AppLanguageViewModel> AppLanguages
     {
@@ -190,6 +195,12 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
         private set => Set(ref field, value);
     }
 
+    public bool TelemetryEnabled
+    {
+        get;
+        private set => Set(ref field, value);
+    }
+
     public string ScreenshotsFolderPath
     {
         get;
@@ -243,7 +254,8 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
         ISettingsService settingsService,
         IStorageService storageService,
         IFactoryServiceWithArgs<AppLanguageViewModel, IAppLanguage?> appLanguageViewModelFactory,
-        IFactoryServiceWithArgs<AppThemeViewModel, AppTheme> appThemeViewModelFactory)
+        IFactoryServiceWithArgs<AppThemeViewModel, AppTheme> appThemeViewModelFactory,
+        ITelemetryService? telemetryService = null)
     {
         _goBackAction = goBackAction;
         _restartAppAction = restartAppAction;
@@ -272,6 +284,7 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
         _themeService = themeService;
         _settingsService = settingsService;
         _storageService = storageService;
+        _telemetryService = telemetryService;
         _appLanguageViewModelFactory = appLanguageViewModelFactory;
         _appThemeViewModelFactory = appThemeViewModelFactory;
 
@@ -282,29 +295,31 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
         VideosFolderPath = string.Empty;
         TemporaryFilesFolderPath = string.Empty;
 
-        ChangeScreenshotsFolderCommand = new AsyncRelayCommand(ChangeScreenshotsFolderAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
-        OpenScreenshotsFolderCommand = new AsyncRelayCommand(OpenScreenshotsFolderAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
-        ChangeAudioFolderCommand = new AsyncRelayCommand(ChangeAudioFolderAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
-        OpenAudioFolderCommand = new AsyncRelayCommand(OpenAudioFolderAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
-        ChangeVideosFolderCommand = new AsyncRelayCommand(ChangeVideosFolderAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
-        OpenVideosFolderCommand = new AsyncRelayCommand(OpenVideosFolderAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
-        RestartAppCommand = new AsyncRelayCommand(RestartAppAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
-        GoBackCommand = new AsyncRelayCommand(GoBackAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
-        UpdateImageCaptureAutoCopyCommand = new AsyncRelayCommand<bool>(UpdateImageCaptureAutoCopyAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
-        UpdateImageCaptureAutoSaveCommand = new AsyncRelayCommand<bool>(UpdateImageCaptureAutoSaveAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
-        UpdateAudioCaptureAutoCopyCommand = new AsyncRelayCommand<bool>(UpdateAudioCaptureAutoCopyAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
-        UpdateAudioCaptureAutoSaveCommand = new AsyncRelayCommand<bool>(UpdateAudioCaptureAutoSaveAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
-        UpdateAudioCaptureDefaultLocalAudioCommand = new AsyncRelayCommand<bool>(UpdateAudioCaptureDefaultLocalAudioAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
-        UpdateVideoCaptureAutoCopyCommand = new AsyncRelayCommand<bool>(UpdateVideoCaptureAutoCopyAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
-        UpdateVideoCaptureAutoSaveCommand = new AsyncRelayCommand<bool>(UpdateVideoCaptureAutoSaveAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
-        UpdateVideoCaptureDefaultLocalAudioCommand = new AsyncRelayCommand<bool>(UpdateVideoCaptureDefaultLocalAudioAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
-        UpdateCaptureWarnBeforeDiscardCommand = new AsyncRelayCommand<bool>(UpdateCaptureWarnBeforeDiscardAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
-        UpdateEditWarnBeforeDiscardCommand = new AsyncRelayCommand<bool>(UpdateEditWarnBeforeDiscardAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
-        UpdateAppLanguageCommand = new AsyncRelayCommand<int>(UpdateAppLanguageAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
-        UpdateAppThemeCommand = new AsyncRelayCommand<int>(UpdateAppThemeAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
-        OpenTemporaryFilesFolderCommand = new AsyncRelayCommand(OpenTemporaryFilesFolderAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
-        ClearTemporaryFilesCommand = new AsyncRelayCommand(ClearTemporaryFilesAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
-        RestoreDefaultSettingsCommand = new AsyncRelayCommand(RestoreDefaultSettingsAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
+        ChangeScreenshotsFolderCommand = TelemetryCommandFactory.Async("settings.change_screenshots_folder", ChangeScreenshotsFolderAsync, telemetryService, "settings");
+        OpenScreenshotsFolderCommand = TelemetryCommandFactory.Async("settings.open_screenshots_folder", OpenScreenshotsFolderAsync, telemetryService, "settings");
+        ChangeAudioFolderCommand = TelemetryCommandFactory.Async("settings.change_audio_folder", ChangeAudioFolderAsync, telemetryService, "settings");
+        OpenAudioFolderCommand = TelemetryCommandFactory.Async("settings.open_audio_folder", OpenAudioFolderAsync, telemetryService, "settings");
+        ChangeVideosFolderCommand = TelemetryCommandFactory.Async("settings.change_videos_folder", ChangeVideosFolderAsync, telemetryService, "settings");
+        OpenVideosFolderCommand = TelemetryCommandFactory.Async("settings.open_videos_folder", OpenVideosFolderAsync, telemetryService, "settings");
+        RestartAppCommand = TelemetryCommandFactory.Async("settings.restart_app", RestartAppAsync, telemetryService, "settings");
+        GoBackCommand = TelemetryCommandFactory.Async("settings.go_back", GoBackAsync, telemetryService, "settings");
+        UpdateImageCaptureAutoCopyCommand = TelemetryCommandFactory.Async<bool>("settings.update_image_auto_copy", UpdateImageCaptureAutoCopyAsync, telemetryService, "settings");
+        UpdateImageCaptureAutoSaveCommand = TelemetryCommandFactory.Async<bool>("settings.update_image_auto_save", UpdateImageCaptureAutoSaveAsync, telemetryService, "settings");
+        UpdateAudioCaptureAutoCopyCommand = TelemetryCommandFactory.Async<bool>("settings.update_audio_auto_copy", UpdateAudioCaptureAutoCopyAsync, telemetryService, "settings");
+        UpdateAudioCaptureAutoSaveCommand = TelemetryCommandFactory.Async<bool>("settings.update_audio_auto_save", UpdateAudioCaptureAutoSaveAsync, telemetryService, "settings");
+        UpdateAudioCaptureDefaultLocalAudioCommand = TelemetryCommandFactory.Async<bool>("settings.update_audio_default_local_audio", UpdateAudioCaptureDefaultLocalAudioAsync, telemetryService, "settings");
+        UpdateVideoCaptureAutoCopyCommand = TelemetryCommandFactory.Async<bool>("settings.update_video_auto_copy", UpdateVideoCaptureAutoCopyAsync, telemetryService, "settings");
+        UpdateVideoCaptureAutoSaveCommand = TelemetryCommandFactory.Async<bool>("settings.update_video_auto_save", UpdateVideoCaptureAutoSaveAsync, telemetryService, "settings");
+        UpdateVideoCaptureDefaultLocalAudioCommand = TelemetryCommandFactory.Async<bool>("settings.update_video_default_local_audio", UpdateVideoCaptureDefaultLocalAudioAsync, telemetryService, "settings");
+        UpdateCaptureWarnBeforeDiscardCommand = TelemetryCommandFactory.Async<bool>("settings.update_capture_warn_before_discard", UpdateCaptureWarnBeforeDiscardAsync, telemetryService, "settings");
+        UpdateEditWarnBeforeDiscardCommand = TelemetryCommandFactory.Async<bool>("settings.update_edit_warn_before_discard", UpdateEditWarnBeforeDiscardAsync, telemetryService, "settings");
+        UpdateAppLanguageCommand = TelemetryCommandFactory.Async<int>("settings.update_app_language", UpdateAppLanguageAsync, telemetryService, "settings");
+        UpdateAppThemeCommand = TelemetryCommandFactory.Async<int>("settings.update_app_theme", UpdateAppThemeAsync, telemetryService, "settings");
+        OpenTemporaryFilesFolderCommand = TelemetryCommandFactory.Async("settings.open_temporary_files_folder", OpenTemporaryFilesFolderAsync, telemetryService, "settings");
+        ClearTemporaryFilesCommand = TelemetryCommandFactory.Async("settings.clear_temporary_files", ClearTemporaryFilesAsync, telemetryService, "settings");
+        RestoreDefaultSettingsCommand = TelemetryCommandFactory.Async("settings.restore_default_settings", RestoreDefaultSettingsAsync, telemetryService, "settings");
+        UpdateTelemetryEnabledCommand = TelemetryCommandFactory.Async<bool>("settings.update_telemetry_enabled", UpdateTelemetryEnabledAsync, telemetryService, "settings");
+        ResetTelemetryInstallIdCommand = TelemetryCommandFactory.Async("settings.reset_telemetry_install_id", ResetTelemetryInstallIdAsync, telemetryService, "settings");
     }
 
     public override async Task LoadAsync(CancellationToken cancellationToken)
@@ -373,6 +388,7 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
         AudioCaptureDefaultLocalAudio = _settingsService.Get(CaptureToolSettings.Settings_AudioCapture_DefaultLocalAudioEnabled);
         CaptureWarnBeforeDiscard = _settingsService.Get(CaptureToolSettings.Settings_Capture_WarnBeforeDiscard);
         EditWarnBeforeDiscard = _settingsService.Get(CaptureToolSettings.Settings_Edit_WarnBeforeDiscard);
+        TelemetryEnabled = _settingsService.Get(CaptureToolSettings.Settings_Telemetry_IsEnabled);
 
         var screenshotsFolder = _settingsService.Get(CaptureToolSettings.Settings_ImageCapture_AutoSaveFolder);
         if (string.IsNullOrWhiteSpace(screenshotsFolder))
@@ -417,6 +433,7 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
         }
 
         await _updateAppLanguageAction.ExecuteAsync(new UpdateAppLanguageRequest(index), CancellationToken.None);
+        TrackSettingChanged(CaptureToolSettings.Settings_LanguageOverride.Key);
         UpdateShowAppLanguageRestartMessage();
     }
 
@@ -436,6 +453,7 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
         }
 
         await _updateAppThemeAction.ExecuteAsync(new UpdateAppThemeRequest(index), CancellationToken.None);
+        TrackSettingChanged("AppTheme");
         UpdateShowAppThemeRestartMessage();
     }
 
@@ -464,60 +482,85 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
     {
         ImageCaptureAutoSave = value;
         await _updateImageAutoSaveAction.ExecuteAsync(new UpdateImageAutoSaveRequest(value), CancellationToken.None);
+        TrackSettingChanged(CaptureToolSettings.Settings_ImageCapture_AutoSave.Key);
     }
 
     private async Task UpdateImageCaptureAutoCopyAsync(bool value)
     {
         ImageCaptureAutoCopy = value;
         await _updateImageAutoCopyAction.ExecuteAsync(new UpdateImageAutoCopyRequest(value), CancellationToken.None);
+        TrackSettingChanged(CaptureToolSettings.Settings_ImageCapture_AutoCopy.Key);
     }
 
     private async Task UpdateVideoCaptureAutoSaveAsync(bool value)
     {
         VideoCaptureAutoSave = value;
         await _updateVideoCaptureAutoSaveAction.ExecuteAsync(new UpdateVideoCaptureAutoSaveRequest(value), CancellationToken.None);
+        TrackSettingChanged(CaptureToolSettings.Settings_VideoCapture_AutoSave.Key);
     }
 
     private async Task UpdateVideoCaptureAutoCopyAsync(bool value)
     {
         VideoCaptureAutoCopy = value;
         await _updateVideoCaptureAutoCopyAction.ExecuteAsync(new UpdateVideoCaptureAutoCopyRequest(value), CancellationToken.None);
+        TrackSettingChanged(CaptureToolSettings.Settings_VideoCapture_AutoCopy.Key);
     }
 
     private async Task UpdateAudioCaptureAutoSaveAsync(bool value)
     {
         AudioCaptureAutoSave = value;
         await _updateAudioCaptureAutoSaveAction.ExecuteAsync(new UpdateAudioCaptureAutoSaveRequest(value), CancellationToken.None);
+        TrackSettingChanged(CaptureToolSettings.Settings_AudioCapture_AutoSave.Key);
     }
 
     private async Task UpdateAudioCaptureAutoCopyAsync(bool value)
     {
         AudioCaptureAutoCopy = value;
         await _updateAudioCaptureAutoCopyAction.ExecuteAsync(new UpdateAudioCaptureAutoCopyRequest(value), CancellationToken.None);
+        TrackSettingChanged(CaptureToolSettings.Settings_AudioCapture_AutoCopy.Key);
     }
 
     private async Task UpdateVideoCaptureDefaultLocalAudioAsync(bool value)
     {
         VideoCaptureDefaultLocalAudio = value;
         await _updateVideoCaptureDefaultLocalAudioAction.ExecuteAsync(new UpdateVideoCaptureDefaultLocalAudioRequest(value), CancellationToken.None);
+        TrackSettingChanged(CaptureToolSettings.Settings_VideoCapture_DefaultLocalAudioEnabled.Key);
     }
 
     private async Task UpdateAudioCaptureDefaultLocalAudioAsync(bool value)
     {
         AudioCaptureDefaultLocalAudio = value;
         await _updateAudioCaptureDefaultLocalAudioAction.ExecuteAsync(new UpdateAudioCaptureDefaultLocalAudioRequest(value), CancellationToken.None);
+        TrackSettingChanged(CaptureToolSettings.Settings_AudioCapture_DefaultLocalAudioEnabled.Key);
     }
 
     private async Task UpdateEditWarnBeforeDiscardAsync(bool value)
     {
         EditWarnBeforeDiscard = value;
         await _updateEditWarnBeforeDiscardAction.ExecuteAsync(new UpdateEditWarnBeforeDiscardRequest(value), CancellationToken.None);
+        TrackSettingChanged(CaptureToolSettings.Settings_Edit_WarnBeforeDiscard.Key);
     }
 
     private async Task UpdateCaptureWarnBeforeDiscardAsync(bool value)
     {
         CaptureWarnBeforeDiscard = value;
         await _updateCaptureWarnBeforeDiscardAction.ExecuteAsync(new UpdateCaptureWarnBeforeDiscardRequest(value), CancellationToken.None);
+        TrackSettingChanged(CaptureToolSettings.Settings_Capture_WarnBeforeDiscard.Key);
+    }
+
+    private async Task UpdateTelemetryEnabledAsync(bool value)
+    {
+        TelemetryEnabled = value;
+        _settingsService.Set(CaptureToolSettings.Settings_Telemetry_IsEnabled, value);
+        await _settingsService.TrySaveAsync(CancellationToken.None);
+        TrackSettingChanged(CaptureToolSettings.Settings_Telemetry_IsEnabled.Key);
+    }
+
+    private async Task ResetTelemetryInstallIdAsync()
+    {
+        _settingsService.Set(CaptureToolSettings.Settings_Telemetry_InstallId, Guid.NewGuid().ToString("N"));
+        await _settingsService.TrySaveAsync(CancellationToken.None);
+        TrackSettingChanged(CaptureToolSettings.Settings_Telemetry_InstallId.Key);
     }
 
     private async Task ChangeScreenshotsFolderAsync()
@@ -534,6 +577,7 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
             screenshotsFolder = _storageService.GetSystemDefaultScreenshotsFolderPath();
         }
         ScreenshotsFolderPath = screenshotsFolder;
+        TrackSettingChanged(CaptureToolSettings.Settings_ImageCapture_AutoSaveFolder.Key);
     }
 
     private async Task ChangeVideosFolderAsync()
@@ -550,6 +594,7 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
             videosFolder = _storageService.GetSystemDefaultVideosFolderPath();
         }
         VideosFolderPath = videosFolder;
+        TrackSettingChanged(CaptureToolSettings.Settings_VideoCapture_AutoSaveFolder.Key);
     }
 
     private async Task ChangeAudioFolderAsync()
@@ -566,6 +611,7 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
             audioFolder = _storageService.GetSystemDefaultMusicFolderPath();
         }
         AudioFolderPath = audioFolder;
+        TrackSettingChanged(CaptureToolSettings.Settings_AudioCapture_AutoSaveFolder.Key);
     }
 
     private async Task OpenScreenshotsFolderAsync()
@@ -618,6 +664,7 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
         AudioCaptureDefaultLocalAudio = _settingsService.Get(CaptureToolSettings.Settings_AudioCapture_DefaultLocalAudioEnabled);
         CaptureWarnBeforeDiscard = _settingsService.Get(CaptureToolSettings.Settings_Capture_WarnBeforeDiscard);
         EditWarnBeforeDiscard = _settingsService.Get(CaptureToolSettings.Settings_Edit_WarnBeforeDiscard);
+        TelemetryEnabled = _settingsService.Get(CaptureToolSettings.Settings_Telemetry_IsEnabled);
 
         var screenshotsFolder = _settingsService.Get(CaptureToolSettings.Settings_ImageCapture_AutoSaveFolder);
         ScreenshotsFolderPath = !string.IsNullOrEmpty(screenshotsFolder) ? screenshotsFolder : _storageService.GetSystemDefaultScreenshotsFolderPath();
@@ -633,5 +680,17 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
 
         UpdateShowAppLanguageRestartMessage();
         UpdateShowAppThemeRestartMessage();
+        TrackSettingChanged("settings.restore_defaults");
+    }
+
+    private void TrackSettingChanged(string settingKey)
+    {
+        _telemetryService?.TrackEvent(
+            TelemetryEvents.SettingsChanged,
+            new Dictionary<string, object?>
+            {
+                [TelemetryAttributes.SettingKey] = settingKey,
+                [TelemetryAttributes.Surface] = "settings"
+            });
     }
 }

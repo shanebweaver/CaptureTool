@@ -4,6 +4,7 @@ using CaptureTool.Application.Abstractions.Logging;
 using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Application.Abstractions.Settings;
 using CaptureTool.Application.Abstractions.Storage;
+using CaptureTool.Application.Abstractions.Telemetry;
 
 namespace CaptureTool.Application.Activation;
 
@@ -16,6 +17,8 @@ internal sealed class ApplicationStartupInitializer : IApplicationStartupInitial
     private readonly INavigationHandler _navigationHandler;
     private readonly INavigationService _navigationService;
     private readonly IStorageService _storageService;
+    private readonly ITelemetryContext _telemetryContext;
+    private readonly ITelemetryService _telemetryService;
     private readonly SemaphoreSlim _semaphore = new(1, 1);
 
     private bool _isInitialized;
@@ -27,7 +30,9 @@ internal sealed class ApplicationStartupInitializer : IApplicationStartupInitial
         ILocalizationService localizationService,
         INavigationHandler navigationHandler,
         INavigationService navigationService,
-        IStorageService storageService)
+        IStorageService storageService,
+        ITelemetryContext telemetryContext,
+        ITelemetryService telemetryService)
     {
         _cancellationService = cancellationService;
         _settingsService = settingsService;
@@ -36,6 +41,8 @@ internal sealed class ApplicationStartupInitializer : IApplicationStartupInitial
         _navigationHandler = navigationHandler;
         _navigationService = navigationService;
         _storageService = storageService;
+        _telemetryContext = telemetryContext;
+        _telemetryService = telemetryService;
     }
 
     public async Task InitializeAsync(CancellationToken cancellationToken = default)
@@ -52,6 +59,7 @@ internal sealed class ApplicationStartupInitializer : IApplicationStartupInitial
             using CancellationTokenSource cancellationTokenSource =
                 _cancellationService.GetLinkedCancellationTokenSource(cancellationToken);
             await InitializeSettingsServiceAsync(cancellationTokenSource.Token);
+            await _telemetryContext.InitializeAsync(cancellationTokenSource.Token);
 
             bool isLoggingEnabled = _settingsService.Get(CaptureToolSettings.VerboseLogging);
             if (isLoggingEnabled)
@@ -63,6 +71,7 @@ internal sealed class ApplicationStartupInitializer : IApplicationStartupInitial
             _localizationService.Initialize(languageOverride);
 
             _navigationService.SetNavigationHandler(_navigationHandler);
+            _telemetryService.TrackEvent(TelemetryEvents.AppStarted);
 
             _isInitialized = true;
         }

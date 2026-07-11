@@ -201,7 +201,9 @@ Absence de garantie Cette application est fournie « en l’état », sans aucun
     <value>Conditions d'utilisation</value>
   </data>
   <data name="About_PrivacyPolicy_DialogContent" xml:space="preserve">
-    <value>Cette application ne collecte, ne stocke ni ne transmet aucune donnée personnelle ou contenu généré par l’utilisateur. Toutes les images capturées ou modifiées restent exclusivement sur l’appareil de l’utilisateur et ne sont pas accessibles par le développeur.
+    <value>Cette application ne collecte, ne stocke ni ne transmet de captures d'écran, d'audio, de vidéo, de contenu du presse-papiers, de titres de fenêtres, de chemins de fichiers, de noms de fichiers, de chemins de dossiers, de texte d'annotation ou tout autre contenu généré par l'utilisateur. Les médias capturés et modifiés restent sur l'appareil de l'utilisateur et ne sont pas accessibles par le développeur.
+
+La télémétrie facultative de diagnostic et d'utilisation peut être activée dans les paramètres. Lorsqu'elle est activée, l'application peut envoyer à Azure Monitor Application Insights des événements, métriques et détails d'exceptions préservant la confidentialité, tels que les noms de boutons, les itinéraires de navigation, les résultats de fonctionnalités, la version de l'application, un identifiant de session anonyme et un identifiant d'installation anonyme haché. La télémétrie est désactivée par défaut, peut être désactivée à tout moment et n'inclut pas les médias capturés ni les informations de fichiers locaux.
 
 Des fichiers temporaires peuvent être créés et stockés dans des dossiers temporaires désignés par le système lors d’une utilisation normale (par exemple, pour l’édition ou l’aperçu d’images). Ces fichiers sont gérés par le système d’exploitation et sont automatiquement supprimés périodiquement.
 
@@ -841,6 +843,36 @@ SOFTWARE.
   </data>
   <data name="Settings_OtherHeaderLabel.Text" xml:space="preserve">
     <value>Autres</value>
+  </data>
+  <data name="Settings_PrivacyTelemetryHeaderLabel.Text" xml:space="preserve">
+    <value>Confidentialité et diagnostic</value>
+  </data>
+  <data name="Settings_Telemetry_HeaderLabel.Text" xml:space="preserve">
+    <value>Télémétrie facultative</value>
+  </data>
+  <data name="Settings_Telemetry_SubtitleLabel.Text" xml:space="preserve">
+    <value>Partagez des données de diagnostic et d'utilisation préservant la confidentialité, comme les noms de boutons, les itinéraires de navigation, les résultats de fonctionnalités, la version de l'application, un identifiant de session anonyme et un identifiant d'installation anonyme haché. Les médias capturés, le contenu du presse-papiers, les chemins de fichiers, les noms de fichiers, les chemins de dossiers, les titres de fenêtres et le texte d'annotation ne sont pas envoyés.</value>
+  </data>
+  <data name="Settings_Telemetry_Toggle.OnContent" xml:space="preserve">
+    <value>Activé</value>
+  </data>
+  <data name="Settings_Telemetry_Toggle.OffContent" xml:space="preserve">
+    <value>Désactivé</value>
+  </data>
+  <data name="Settings_Telemetry_Toggle.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Activer ou désactiver la télémétrie facultative de diagnostic et d'utilisation</value>
+  </data>
+  <data name="Settings_TelemetryReset_HeaderLabel.Text" xml:space="preserve">
+    <value>Réinitialiser l'identifiant d'installation anonyme</value>
+  </data>
+  <data name="Settings_TelemetryReset_SubtitleLabel.Text" xml:space="preserve">
+    <value>Créez un nouvel identifiant anonyme utilisé uniquement pour regrouper la télémétrie activée de cette installation.</value>
+  </data>
+  <data name="Settings_TelemetryReset_Button.Text" xml:space="preserve">
+    <value>Réinitialiser l'ID</value>
+  </data>
+  <data name="Settings_TelemetryReset_ToolTip.Text" xml:space="preserve">
+    <value>Réinitialiser l'identifiant d'installation anonyme utilisé pour la télémétrie activée</value>
   </data>
   <data name="Settings_RestoreDefaults_Button.Text" xml:space="preserve">
     <value>Restaurer les paramètres par défaut</value>

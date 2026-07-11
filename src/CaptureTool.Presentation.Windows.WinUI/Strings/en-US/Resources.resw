@@ -230,7 +230,9 @@ This application is provided "as is", without any warranty of any kind. The deve
     <comment>The label for the button shows the terms of use dialog on the about page.</comment>
   </data>
   <data name="About_PrivacyPolicy_DialogContent" xml:space="preserve">
-    <value>This application does not collect, store, or transmit any personal data or user-generated content. All captured or edited images remain solely on the user’s device and are not accessible to the developer.
+    <value>This application does not collect, store, or transmit screenshot, audio, video, clipboard, window title, file path, file name, folder path, annotation text, or other user-generated content. Captured and edited media remains on the user's device and is not accessible to the developer.
+
+Optional diagnostic and usage telemetry can be enabled in Settings. When enabled, the app may send privacy-preserving events, metrics, and exception details such as button names, navigation routes, feature outcomes, app version, anonymous session ID, and a hashed anonymous install ID to Azure Monitor Application Insights. Telemetry is off by default, can be turned off at any time, and does not include captured media or local file information.
 
 Temporary files may be created and stored in system-designated temporary folders during normal use (such as for editing or image previews). These files are managed by the operating system and are automatically cleared periodically.
 
@@ -1089,6 +1091,36 @@ SOFTWARE.
   <data name="Settings_OtherHeaderLabel.Text" xml:space="preserve">
     <value>Other</value>
     <comment>The header for the section with uncategorized settings</comment>
+  </data>
+  <data name="Settings_PrivacyTelemetryHeaderLabel.Text" xml:space="preserve">
+    <value>Privacy and diagnostics</value>
+  </data>
+  <data name="Settings_Telemetry_HeaderLabel.Text" xml:space="preserve">
+    <value>Optional telemetry</value>
+  </data>
+  <data name="Settings_Telemetry_SubtitleLabel.Text" xml:space="preserve">
+    <value>Share privacy-preserving diagnostic and usage data such as button names, navigation routes, feature outcomes, app version, anonymous session ID, and a hashed anonymous install ID. Captured media, clipboard content, file paths, file names, folder paths, window titles, and annotation text are not sent.</value>
+  </data>
+  <data name="Settings_Telemetry_Toggle.OnContent" xml:space="preserve">
+    <value>On</value>
+  </data>
+  <data name="Settings_Telemetry_Toggle.OffContent" xml:space="preserve">
+    <value>Off</value>
+  </data>
+  <data name="Settings_Telemetry_Toggle.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Turn optional diagnostic and usage telemetry on or off</value>
+  </data>
+  <data name="Settings_TelemetryReset_HeaderLabel.Text" xml:space="preserve">
+    <value>Reset anonymous install ID</value>
+  </data>
+  <data name="Settings_TelemetryReset_SubtitleLabel.Text" xml:space="preserve">
+    <value>Create a new anonymous identifier used only to group opted-in telemetry from this installation.</value>
+  </data>
+  <data name="Settings_TelemetryReset_Button.Text" xml:space="preserve">
+    <value>Reset ID</value>
+  </data>
+  <data name="Settings_TelemetryReset_ToolTip.Text" xml:space="preserve">
+    <value>Reset the anonymous install identifier used for opted-in telemetry</value>
   </data>
   <data name="Settings_RestoreDefaults_Button.Text" xml:space="preserve">
     <value>Restore default settings</value>

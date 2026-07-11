@@ -59,6 +59,7 @@ internal sealed class VideoCapturePostProcessor
             }
             catch (Exception e)
             {
+                TrackPostProcessingException(e, "AutoCopyVideo", "auto_copy_failed");
                 _telemetryService.ActivityError("AutoCopyVideo", e);
             }
         });
@@ -83,10 +84,39 @@ internal sealed class VideoCapturePostProcessor
             string newFilePath = Path.Combine(videosFolder, _fileNameGenerator.GetNewCaptureFileName());
 
             _fileSystem.CopyFile(videoFile.FilePath, newFilePath, true);
+            TrackAutoSaveCompleted();
         }
         catch (Exception e)
         {
+            TrackPostProcessingException(e, "AutoSaveVideo", "auto_save_failed");
             _telemetryService.ActivityError("AutoSaveVideo", e);
         }
+    }
+
+    private void TrackAutoSaveCompleted()
+    {
+        _telemetryService.TrackEvent(
+            TelemetryEvents.FileSaved,
+            new Dictionary<string, object?>
+            {
+                [TelemetryAttributes.CommandId] = "capture.auto_save",
+                [TelemetryAttributes.MediaType] = "video",
+                [TelemetryAttributes.Surface] = "capture_post_processor"
+            });
+    }
+
+    private void TrackPostProcessingException(Exception exception, string activityId, string reasonCode)
+    {
+        _telemetryService.TrackException(
+            exception,
+            new TelemetryExceptionContext(
+                Component: "CapturePostProcessor",
+                ActivityId: activityId,
+                ReasonCode: reasonCode,
+                Attributes: new Dictionary<string, object?>
+                {
+                    [TelemetryAttributes.MediaType] = "video",
+                    [TelemetryAttributes.Surface] = "capture_post_processor"
+                }));
     }
 }

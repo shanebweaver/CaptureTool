@@ -113,6 +113,12 @@ internal static class UseCaseCommandExtensions
 
         try
         {
+            telemetryService?.TrackEvent(
+                TelemetryEvents.UiCommandInvoked,
+                new Dictionary<string, object?>
+                {
+                    [TelemetryAttributes.CommandId] = resolvedActivityId
+                });
             telemetryService?.ActivityInitiated(resolvedActivityId);
             await useCase.ExecuteAsync(requestFactory(), cancellationToken);
             telemetryService?.ActivityCompleted(resolvedActivityId);
@@ -123,6 +129,15 @@ internal static class UseCaseCommandExtensions
         }
         catch (Exception exception)
         {
+            telemetryService?.TrackException(
+                exception,
+                new TelemetryExceptionContext(
+                    Component: "Command",
+                    ActivityId: resolvedActivityId,
+                    Attributes: new Dictionary<string, object?>
+                    {
+                        [TelemetryAttributes.CommandId] = resolvedActivityId
+                    }));
             telemetryService?.ActivityError(resolvedActivityId, exception);
         }
     }
@@ -158,6 +173,16 @@ internal static class UseCaseCommandExtensions
         }
         catch (Exception exception)
         {
+            telemetryService?.TrackException(
+                exception,
+                new TelemetryExceptionContext(
+                    Component: "Command",
+                    ActivityId: resolvedActivityId,
+                    ReasonCode: "can_execute_failed",
+                    Attributes: new Dictionary<string, object?>
+                    {
+                        [TelemetryAttributes.CommandId] = resolvedActivityId
+                    }));
             telemetryService?.ActivityError(resolvedActivityId, exception, "CanExecute failed.");
             return false;
         }

@@ -59,6 +59,7 @@ internal sealed class ImageCapturePostProcessor
             }
             catch (Exception e)
             {
+                TrackPostProcessingException(e, "AutoCopyImage", "auto_copy_failed");
                 _telemetryService.ActivityError("AutoCopyImage", e);
             }
         });
@@ -85,11 +86,40 @@ internal sealed class ImageCapturePostProcessor
                 string newFilePath = Path.Combine(screenshotsFolder, _fileNameGenerator.GetNewCaptureFileName());
 
                 _fileSystem.CopyFile(imageFile.FilePath, newFilePath, true);
+                TrackAutoSaveCompleted();
             }
             catch (Exception e)
             {
+                TrackPostProcessingException(e, "AutoSaveImage", "auto_save_failed");
                 _telemetryService.ActivityError("AutoSaveImage", e);
             }
         });
+    }
+
+    private void TrackAutoSaveCompleted()
+    {
+        _telemetryService.TrackEvent(
+            TelemetryEvents.FileSaved,
+            new Dictionary<string, object?>
+            {
+                [TelemetryAttributes.CommandId] = "capture.auto_save",
+                [TelemetryAttributes.MediaType] = "image",
+                [TelemetryAttributes.Surface] = "capture_post_processor"
+            });
+    }
+
+    private void TrackPostProcessingException(Exception exception, string activityId, string reasonCode)
+    {
+        _telemetryService.TrackException(
+            exception,
+            new TelemetryExceptionContext(
+                Component: "CapturePostProcessor",
+                ActivityId: activityId,
+                ReasonCode: reasonCode,
+                Attributes: new Dictionary<string, object?>
+                {
+                    [TelemetryAttributes.MediaType] = "image",
+                    [TelemetryAttributes.Surface] = "capture_post_processor"
+                }));
     }
 }

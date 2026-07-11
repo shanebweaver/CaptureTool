@@ -37,6 +37,9 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddSingleton<INavigationService, NavigationService>();
         services.AddSingleton<ISettingsService, LocalSettingsService>();
         services.AddSingleton<IBackgroundTaskRunner, BackgroundTaskRunner>();
+        services.AddSingleton<ITelemetryContext, TelemetryContext>();
+        services.AddSingleton<ITelemetrySanitizer, TelemetrySanitizer>();
+        services.AddSingleton<TelemetryRuntime>();
         services.AddSingleton<ITelemetryService, TelemetryService>();
         services.AddSingleton<IClock, SystemClock>();
 #if DEBUG

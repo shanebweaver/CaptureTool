@@ -1,6 +1,7 @@
 using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Application.Abstractions.EditSessions;
 using CaptureTool.Application.Abstractions.Logging;
+using CaptureTool.Application.Abstractions.Telemetry;
 using CaptureTool.Presentation.Loading;
 using CaptureTool.Presentation.ViewModels;
 using Microsoft.UI.Xaml.Controls;
@@ -13,6 +14,7 @@ public abstract class PageBase<VM> : Page where VM : IViewModel
     private readonly IActiveEditSessionService _activeEditSessionService = App.Current.ServiceProvider.GetService<IActiveEditSessionService>();
     private readonly ILogService _logService = App.Current.ServiceProvider.GetService<ILogService>();
     private readonly INavigationService _navigationService = App.Current.ServiceProvider.GetService<INavigationService>();
+    private readonly ITelemetryService _telemetryService = App.Current.ServiceProvider.GetService<ITelemetryService>();
     private CancellationTokenSource? _loadCts;
 
     public VM ViewModel { get; } = App.Current.ServiceProvider.GetService<VM>();
@@ -61,6 +63,7 @@ public abstract class PageBase<VM> : Page where VM : IViewModel
         }
         catch (Exception ex)
         {
+            TrackLoadException(ex);
             _logService.LogException(ex, "Failed to load page.");
             _navigationService.Navigate(NavigationRoute.Error, ex);
         }
@@ -84,5 +87,20 @@ public abstract class PageBase<VM> : Page where VM : IViewModel
         }
 
         base.OnNavigatedFrom(e);
+    }
+
+    private void TrackLoadException(Exception exception)
+    {
+        _telemetryService.TrackException(
+            exception,
+            new TelemetryExceptionContext(
+                Component: "Page",
+                ActivityId: ViewModel.GetType().Name,
+                ReasonCode: "page_load_failed",
+                Attributes: new Dictionary<string, object?>
+                {
+                    [TelemetryAttributes.Surface] = "page",
+                    [TelemetryAttributes.Component] = ViewModel.GetType().Name
+                }));
     }
 }

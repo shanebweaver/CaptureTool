@@ -36,6 +36,20 @@ public sealed class LocalSettingsServiceTests
     }
 
     [TestMethod]
+    public async Task InitializeAsync_SettingsChangedHandlerCanReadLoadedSettings()
+    {
+        var storedSetting = new BoolSettingDefinition("enabled", false);
+        var jsonStorage = new TestJsonStorageService { ReadResult = [storedSetting] };
+        using var service = new LocalSettingsService(new TestLogService(), jsonStorage);
+        bool? valueReadFromHandler = null;
+        service.SettingsChanged += _ => valueReadFromHandler = service.Get(new BoolSettingDefinition("enabled", true));
+
+        await service.InitializeAsync("settings.json", TestContext.CancellationToken);
+
+        Assert.IsFalse(valueReadFromHandler);
+    }
+
+    [TestMethod]
     public async Task Set_WhenValueChanges_StoresSettingAndRaisesChangedEvent()
     {
         using var service = new LocalSettingsService(new TestLogService(), new TestJsonStorageService());
