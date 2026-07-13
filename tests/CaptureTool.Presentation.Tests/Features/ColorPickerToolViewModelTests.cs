@@ -52,6 +52,25 @@ public sealed class ColorPickerToolViewModelTests
     }
 
     [TestMethod]
+    public async Task CopyPickedColorAsync_WhenClipboardFails_ShouldShowError()
+    {
+        var clipboard = new Mock<IClipboardService>();
+        clipboard
+            .Setup(service => service.CopyTextAsync(It.IsAny<string>()))
+            .ThrowsAsync(new InvalidOperationException("Clipboard unavailable."));
+        var localization = CreateLocalizationService();
+        var notifications = new Mock<IAppNotificationService>();
+        var viewModel = CreateViewModel(clipboard.Object, localization, notifications.Object);
+        viewModel.UpdatePickedColor(Color.Blue);
+
+        await viewModel.CopyPickedColorAsync();
+
+        clipboard.Verify(service => service.CopyTextAsync("#0000FF"), Times.Once);
+        notifications.Verify(service => service.ShowError("Could not copy color to clipboard."), Times.Once);
+        notifications.Verify(service => service.ShowInfo(It.IsAny<string>()), Times.Never);
+    }
+
+    [TestMethod]
     public async Task CopyPickedColorAsync_WithoutPickedColor_ShouldDoNothing()
     {
         var clipboard = new Mock<IClipboardService>();
@@ -81,6 +100,9 @@ public sealed class ColorPickerToolViewModelTests
         localization
             .Setup(service => service.GetString("ImageEdit_ColorCopiedNotification"))
             .Returns("Color copied");
+        localization
+            .Setup(service => service.GetString("ImageEdit_ColorCopyFailedNotification"))
+            .Returns("Could not copy color to clipboard.");
 
         return localization.Object;
     }

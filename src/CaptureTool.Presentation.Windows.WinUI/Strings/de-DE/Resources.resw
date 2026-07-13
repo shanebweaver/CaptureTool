@@ -1292,6 +1292,9 @@ SOFTWARE.
   <data name="ImageEdit_ColorCopiedNotification" xml:space="preserve">
     <value>Farbe kopiert</value>
   </data>
+  <data name="ImageEdit_ColorCopyFailedNotification" xml:space="preserve">
+    <value>Farbe konnte nicht in die Zwischenablage kopiert werden.</value>
+  </data>
   <data name="VideoEdit_EditInClipchampButton.Label" xml:space="preserve">
     <value>In Clipchamp bearbeiten</value>
   </data>
