@@ -2,6 +2,7 @@ using CaptureTool.Application.Abstractions.Audio;
 using CaptureTool.Application.Abstractions.Clipboard;
 using CaptureTool.Application.Abstractions.Edit.External;
 using CaptureTool.Application.Abstractions.Edit.Image;
+using CaptureTool.Application.Abstractions.Feedback;
 using CaptureTool.Application.Abstractions.Localization;
 using CaptureTool.Application.Abstractions.Media;
 using CaptureTool.Application.Abstractions.Share;
@@ -12,6 +13,7 @@ using CaptureTool.Application.Abstractions.TaskEnvironment;
 using CaptureTool.Application.Abstractions.Themes;
 using CaptureTool.Infrastructure.Windows.Audio;
 using CaptureTool.Infrastructure.Windows.Clipboard;
+using CaptureTool.Infrastructure.Windows.Feedback;
 using CaptureTool.Infrastructure.Windows.Localization;
 using CaptureTool.Infrastructure.Windows.Media;
 using CaptureTool.Infrastructure.Windows.Share;
@@ -31,6 +33,7 @@ public static class WindowsInfrastructureServiceCollectionExtensions
     public static IServiceCollection AddWindowsServices(this IServiceCollection services, DispatcherQueue dispatcherQueue)
     {
         services.AddSingleton<IClipboardService, WindowsClipboardService>();
+        services.AddSingleton<IFeedbackHubService, WindowsFeedbackHubService>();
         services.AddSingleton<IStoreService, WindowsStoreService>();
         services.AddSingleton<IThemeService, WindowsThemeService>();
         services.AddSingleton<IStorageService, WindowsStorageService>();
