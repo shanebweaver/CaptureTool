@@ -11,6 +11,7 @@ namespace CaptureTool.Presentation.Features.ImageEdit;
 public sealed partial class ColorPickerToolViewModel : ViewModelBase
 {
     private const string ColorCopiedMessageResourceKey = "ImageEdit_ColorCopiedNotification";
+    private const string ColorCopyFailedMessageResourceKey = "ImageEdit_ColorCopyFailedNotification";
 
     private readonly IClipboardService _clipboardService;
     private readonly ILocalizationService _localizationService;
@@ -104,8 +105,15 @@ public sealed partial class ColorPickerToolViewModel : ViewModelBase
             return;
         }
 
-        await _clipboardService.CopyTextAsync(PickedColorValue);
-        _notificationService.ShowInfo(GetLocalizedString(ColorCopiedMessageResourceKey));
+        try
+        {
+            await _clipboardService.CopyTextAsync(PickedColorValue);
+            _notificationService.ShowInfo(GetLocalizedString(ColorCopiedMessageResourceKey));
+        }
+        catch (Exception)
+        {
+            _notificationService.ShowError(GetLocalizedString(ColorCopyFailedMessageResourceKey));
+        }
     }
 
     private void UpdatePickedColorValue()

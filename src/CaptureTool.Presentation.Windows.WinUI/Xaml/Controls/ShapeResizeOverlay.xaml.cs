@@ -2,6 +2,7 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
+using Microsoft.UI.Input;
 using System.Drawing;
 using Point = Windows.Foundation.Point;
 
@@ -229,7 +230,7 @@ public sealed partial class ShapeResizeOverlay : UserControlBase
 
     private void StartResize(ResizeHandle handle, PointerRoutedEventArgs e)
     {
-        if (!e.GetCurrentPoint(this).Properties.IsLeftButtonPressed)
+        if (!IsPrimaryPointerPressed(e))
         {
             return;
         }
@@ -242,6 +243,13 @@ public sealed partial class ShapeResizeOverlay : UserControlBase
         var element = e.OriginalSource as UIElement;
         element?.CapturePointer(e.Pointer);
         e.Handled = true;
+    }
+
+    private bool IsPrimaryPointerPressed(PointerRoutedEventArgs e)
+    {
+        var point = e.GetCurrentPoint(this);
+        return point.Properties.IsLeftButtonPressed ||
+            (e.Pointer.PointerDeviceType != PointerDeviceType.Mouse && e.Pointer.IsInContact);
     }
 
     private void ContinueResize(PointerRoutedEventArgs e)
