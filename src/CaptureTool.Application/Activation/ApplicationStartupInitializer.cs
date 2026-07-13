@@ -1,6 +1,7 @@
 using CaptureTool.Application.Abstractions.Cancellation;
 using CaptureTool.Application.Abstractions.Localization;
 using CaptureTool.Application.Abstractions.Logging;
+using CaptureTool.Application.Abstractions.Metrics;
 using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Application.Abstractions.Settings;
 using CaptureTool.Application.Abstractions.Storage;
@@ -12,6 +13,7 @@ internal sealed class ApplicationStartupInitializer : IApplicationStartupInitial
     private readonly ICancellationService _cancellationService;
     private readonly ISettingsService _settingsService;
     private readonly ILogService _logService;
+    private readonly IAppMetricsService _appMetricsService;
     private readonly ILocalizationService _localizationService;
     private readonly INavigationHandler _navigationHandler;
     private readonly INavigationService _navigationService;
@@ -24,6 +26,7 @@ internal sealed class ApplicationStartupInitializer : IApplicationStartupInitial
         ICancellationService cancellationService,
         ISettingsService settingsService,
         ILogService logService,
+        IAppMetricsService appMetricsService,
         ILocalizationService localizationService,
         INavigationHandler navigationHandler,
         INavigationService navigationService,
@@ -32,6 +35,7 @@ internal sealed class ApplicationStartupInitializer : IApplicationStartupInitial
         _cancellationService = cancellationService;
         _settingsService = settingsService;
         _logService = logService;
+        _appMetricsService = appMetricsService;
         _localizationService = localizationService;
         _navigationHandler = navigationHandler;
         _navigationService = navigationService;
@@ -52,6 +56,7 @@ internal sealed class ApplicationStartupInitializer : IApplicationStartupInitial
             using CancellationTokenSource cancellationTokenSource =
                 _cancellationService.GetLinkedCancellationTokenSource(cancellationToken);
             await InitializeSettingsServiceAsync(cancellationTokenSource.Token);
+            await InitializeMetricsServiceAsync(cancellationTokenSource.Token);
 
             bool isLoggingEnabled = _settingsService.Get(CaptureToolSettings.VerboseLogging);
             if (isLoggingEnabled)
@@ -77,6 +82,15 @@ internal sealed class ApplicationStartupInitializer : IApplicationStartupInitial
         string appDataPath = _storageService.GetApplicationDataFolderPath();
         string settingsFilePath = Path.Combine(appDataPath, "Settings.json");
         await _settingsService.InitializeAsync(settingsFilePath, cancellationToken);
+        cancellationToken.ThrowIfCancellationRequested();
+    }
+
+    private async Task InitializeMetricsServiceAsync(CancellationToken cancellationToken)
+    {
+        string appDataPath = _storageService.GetApplicationDataFolderPath();
+        string metricsFilePath = Path.Combine(appDataPath, "Metrics.json");
+        await _appMetricsService.InitializeAsync(metricsFilePath, cancellationToken);
+        await _appMetricsService.RecordAppLaunchAsync(cancellationToken);
         cancellationToken.ThrowIfCancellationRequested();
     }
 }
