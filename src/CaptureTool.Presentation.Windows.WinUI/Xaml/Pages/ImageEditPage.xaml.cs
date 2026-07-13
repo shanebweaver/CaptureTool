@@ -452,6 +452,7 @@ public sealed partial class ImageEditPage : ImageEditPageBase
     {
         if (Enum.IsDefined(typeof(CaptureTool.Domain.Edit.ShapeType), e))
         {
+            ImageCanvas.ClearShapeSelection();
             var shapeType = (CaptureTool.Domain.Edit.ShapeType)e;
             ViewModel.ShapeTool.UpdateSelectedShapeTypeCommand.Execute(shapeType);
         }

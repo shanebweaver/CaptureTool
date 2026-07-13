@@ -1298,6 +1298,9 @@ SOFTWARE.
   <data name="ImageEdit_ColorCopiedNotification" xml:space="preserve">
     <value>颜色已复制</value>
   </data>
+  <data name="ImageEdit_ColorCopyFailedNotification" xml:space="preserve">
+    <value>无法将颜色复制到剪贴板。</value>
+  </data>
   <data name="VideoEdit_EditInClipchampButton.Label" xml:space="preserve">
     <value>在 Clipchamp 中编辑</value>
   </data>

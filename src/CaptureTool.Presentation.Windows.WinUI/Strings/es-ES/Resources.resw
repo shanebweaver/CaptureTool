@@ -1298,6 +1298,9 @@ SOFTWARE.
   <data name="ImageEdit_ColorCopiedNotification" xml:space="preserve">
     <value>Color copiado</value>
   </data>
+  <data name="ImageEdit_ColorCopyFailedNotification" xml:space="preserve">
+    <value>No se pudo copiar el color al portapapeles.</value>
+  </data>
   <data name="VideoEdit_EditInClipchampButton.Label" xml:space="preserve">
     <value>Editar en Clipchamp</value>
   </data>

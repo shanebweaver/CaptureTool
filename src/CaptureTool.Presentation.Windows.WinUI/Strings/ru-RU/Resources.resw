@@ -1298,6 +1298,9 @@ SOFTWARE.
   <data name="ImageEdit_ColorCopiedNotification" xml:space="preserve">
     <value>Цвет скопирован</value>
   </data>
+  <data name="ImageEdit_ColorCopyFailedNotification" xml:space="preserve">
+    <value>Не удалось скопировать цвет в буфер обмена.</value>
+  </data>
   <data name="VideoEdit_EditInClipchampButton.Label" xml:space="preserve">
     <value>Редактировать в Clipchamp</value>
   </data>
