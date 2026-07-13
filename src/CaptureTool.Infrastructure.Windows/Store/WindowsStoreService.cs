@@ -2,11 +2,15 @@ using CaptureTool.Application.Abstractions.Store;
 using CaptureTool.Application.Abstractions.Telemetry;
 using CaptureTool.Application.Abstractions.Windowing;
 using Windows.Services.Store;
+using Windows.System;
 
 namespace CaptureTool.Infrastructure.Windows.Store;
 
 public sealed partial class WindowsStoreService : IStoreService
 {
+    private static readonly Uri AppStorePageUri = new($"ms-windows-store://pdp/?ProductId={CaptureToolStoreProducts.AppProductId}");
+    private static readonly Uri AppStoreReviewUri = new($"ms-windows-store://review/?ProductId={CaptureToolStoreProducts.AppProductId}");
+
     private readonly ITelemetryService _telemetryService;
     private readonly IWindowHandleProvider _windowHandleProvider;
     private readonly StoreContext _storeContext;
@@ -20,6 +24,16 @@ public sealed partial class WindowsStoreService : IStoreService
         _windowHandleProvider = windowHandleProvider;
         _storeContext = StoreContext.GetDefault();
         _licenseCache = [];
+    }
+
+    public Task<bool> LaunchAppStorePageAsync(CancellationToken cancellationToken)
+    {
+        return LaunchStoreUriAsync("LaunchAppStorePage", AppStorePageUri, cancellationToken);
+    }
+
+    public Task<bool> LaunchAppReviewAsync(CancellationToken cancellationToken)
+    {
+        return LaunchStoreUriAsync("LaunchAppReview", AppStoreReviewUri, cancellationToken);
     }
 
     /// <summary>
@@ -142,5 +156,26 @@ public sealed partial class WindowsStoreService : IStoreService
     public void ClearLicenseCache()
     {
         _licenseCache.Clear();
+    }
+
+    private async Task<bool> LaunchStoreUriAsync(string activityName, Uri uri, CancellationToken cancellationToken)
+    {
+        string activityId = $"{nameof(WindowsStoreService)}.{activityName}";
+        try
+        {
+            _telemetryService.ActivityInitiated(activityId);
+
+            cancellationToken.ThrowIfCancellationRequested();
+            bool launched = await Launcher.LaunchUriAsync(uri);
+            cancellationToken.ThrowIfCancellationRequested();
+
+            _telemetryService.ActivityCompleted(activityId);
+            return launched;
+        }
+        catch (Exception e)
+        {
+            _telemetryService.ActivityError(activityId, e);
+            return false;
+        }
     }
 }

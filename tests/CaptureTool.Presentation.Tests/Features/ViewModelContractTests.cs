@@ -3,6 +3,8 @@ using CaptureTool.Application.Abstractions.Capture.Audio.OpenAudioCapturePage;
 using CaptureTool.Application.Abstractions.Capture.Overlay.OpenSelectionOverlay;
 using CaptureTool.Application.Abstractions.Feedback;
 using CaptureTool.Application.Abstractions.Localization;
+using CaptureTool.Application.Abstractions.Metrics;
+using CaptureTool.Application.Abstractions.Store;
 using CaptureTool.Domain.Capture;
 using CaptureTool.Presentation.Features.About;
 using CaptureTool.Presentation.Features.Home;
@@ -59,7 +61,11 @@ public sealed class ViewModelContractTests
         var openSelectionOverlay = new Mock<IOpenSelectionOverlayUseCase>();
         var openAudioCapturePage = Mock.Of<IOpenAudioCapturePageUseCase>();
 
-        var viewModel = new HomePageViewModel(openSelectionOverlay.Object, openAudioCapturePage);
+        var viewModel = new HomePageViewModel(
+            openSelectionOverlay.Object,
+            openAudioCapturePage,
+            Mock.Of<IAppMetricsService>(),
+            Mock.Of<IStoreService>());
 
         viewModel.NewImageCaptureCommand.Execute(null);
 
@@ -71,4 +77,64 @@ public sealed class ViewModelContractTests
                 It.IsAny<CancellationToken>()),
             Times.Once);
     }
+
+    [TestMethod]
+    public async Task HomePageViewModel_LoadAsync_WhenStoreReviewEligible_ShouldRequestPrompt()
+    {
+        var appMetrics = new Mock<IAppMetricsService>();
+        appMetrics
+            .Setup(service => service.ShouldShowStoreReviewReminder())
+            .Returns(true);
+        var viewModel = new HomePageViewModel(
+            Mock.Of<IOpenSelectionOverlayUseCase>(),
+            Mock.Of<IOpenAudioCapturePageUseCase>(),
+            appMetrics.Object,
+            Mock.Of<IStoreService>());
+        int requestCount = 0;
+        viewModel.StoreReviewPromptRequested += (_, _) => requestCount++;
+
+        await viewModel.LoadAsync(TestContext.CancellationToken);
+
+        Assert.AreEqual(1, requestCount);
+    }
+
+    [TestMethod]
+    public async Task HomePageViewModel_LeaveStoreReviewCommand_WhenStoreLaunchSucceeds_ShouldDisableReminders()
+    {
+        var appMetrics = new Mock<IAppMetricsService>();
+        var storeService = new Mock<IStoreService>();
+        storeService
+            .Setup(service => service.LaunchAppReviewAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+        var viewModel = new HomePageViewModel(
+            Mock.Of<IOpenSelectionOverlayUseCase>(),
+            Mock.Of<IOpenAudioCapturePageUseCase>(),
+            appMetrics.Object,
+            storeService.Object);
+
+        await viewModel.LeaveStoreReviewCommand.ExecuteAsync(null);
+
+        appMetrics.Verify(
+            service => service.SetStoreReviewRemindersEnabledAsync(false, It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [TestMethod]
+    public async Task HomePageViewModel_RemindStoreReviewLaterCommand_ShouldResetReminderCriteria()
+    {
+        var appMetrics = new Mock<IAppMetricsService>();
+        var viewModel = new HomePageViewModel(
+            Mock.Of<IOpenSelectionOverlayUseCase>(),
+            Mock.Of<IOpenAudioCapturePageUseCase>(),
+            appMetrics.Object,
+            Mock.Of<IStoreService>());
+
+        await viewModel.RemindStoreReviewLaterCommand.ExecuteAsync(null);
+
+        appMetrics.Verify(
+            service => service.RemindAboutStoreReviewLaterAsync(It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    public TestContext TestContext { get; set; } = null!;
 }

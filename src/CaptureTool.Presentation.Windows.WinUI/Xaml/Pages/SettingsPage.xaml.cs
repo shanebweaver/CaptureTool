@@ -94,6 +94,14 @@ public sealed partial class SettingsPage : SettingsPageBase
         }
     }
 
+    private void StoreReviewRemindersToggleSwitch_Toggled(object sender, RoutedEventArgs e)
+    {
+        if (sender is ToggleSwitch toggleSwitch)
+        {
+            _ = ViewModel.UpdateStoreReviewRemindersEnabledCommand.ExecuteAsync(toggleSwitch.IsOn);
+        }
+    }
+
     private void AppThemeRadioButtons_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         if (sender is RadioButtons radioButtons)
