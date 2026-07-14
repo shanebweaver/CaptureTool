@@ -333,9 +333,7 @@
                                         <Viewbox Height="16">
                                             <SymbolIcon Symbol="Folder" />
                                         </Viewbox>
-                                        <TextBlock
-                                            x:Uid="Settings_AudioAutoSave_ChangeButton"
-                                            Text="Change" />
+                                        <TextBlock x:Uid="Settings_AudioAutoSave_ChangeButton" Text="Change" />
                                     </StackPanel>
                                 </Button>
                             </StackPanel>
@@ -616,15 +614,14 @@
                             <ColumnDefinition Width="Auto" />
                             <ColumnDefinition />
                             <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="28" />
                         </Grid.ColumnDefinitions>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="Auto" />
                         </Grid.RowDefinitions>
 
-                        <SymbolIcon
-                            Grid.RowSpan="2"
-                            Symbol="Favorite" />
+                        <SymbolIcon Grid.RowSpan="2" Symbol="Favorite" />
 
                         <StackPanel Grid.Column="1">
                             <TextBlock
@@ -654,9 +651,7 @@
                             Grid.Column="1"
                             Padding="0"
                             Command="{x:Bind ViewModel.OpenStoreReviewCommand, Mode=OneWay}">
-                            <TextBlock
-                                x:Uid="Settings_StoreReview_LinkLabel"
-                                TextWrapping="WrapWholeWords" />
+                            <TextBlock x:Uid="Settings_StoreReview_LinkLabel" TextWrapping="WrapWholeWords" />
                         </HyperlinkButton>
                     </Grid>
                 </StackPanel>
