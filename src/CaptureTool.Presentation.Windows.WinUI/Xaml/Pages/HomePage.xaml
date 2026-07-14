@@ -166,22 +166,32 @@
             VerticalScrollBarVisibility="Auto"
             ViewChanged="HomeScrollViewer_ViewChanged">
             <StackPanel
+                x:Name="PageContentStack"
                 MaxWidth="1160"
                 Padding="32,28,32,48"
                 HorizontalAlignment="Center"
                 Spacing="28">
 
-                <Grid ColumnSpacing="24">
+                <Grid
+                    x:Name="HeroGrid"
+                    ColumnSpacing="24"
+                    RowSpacing="16">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
 
                     <StackPanel
+                        x:Name="HeroTextPanel"
                         MaxWidth="460"
                         VerticalAlignment="Center"
                         Spacing="4">
                         <TextBlock
+                            x:Name="HeroTitleText"
                             x:Uid="HomePage_StartCaptureLabel"
                             FontSize="28"
                             FontWeight="SemiBold"
@@ -195,6 +205,7 @@
                     </StackPanel>
 
                     <StackPanel
+                        x:Name="CaptureActionsPanel"
                         Grid.Column="1"
                         HorizontalAlignment="Right"
                         Orientation="Horizontal"
@@ -205,6 +216,7 @@
                             Command="{x:Bind ViewModel.NewImageCaptureCommand}"
                             Style="{StaticResource NewCaptureButtonStyle}">
                             <StackPanel
+                                x:Name="NewImageCaptureButtonContent"
                                 HorizontalAlignment="Center"
                                 VerticalAlignment="Center"
                                 Spacing="8">
@@ -221,6 +233,7 @@
                             Command="{x:Bind ViewModel.NewVideoCaptureCommand}"
                             Style="{StaticResource NewCaptureButtonStyle}">
                             <StackPanel
+                                x:Name="NewVideoCaptureButtonContent"
                                 HorizontalAlignment="Center"
                                 VerticalAlignment="Center"
                                 Spacing="8">
@@ -237,6 +250,7 @@
                             Command="{x:Bind ViewModel.NewAudioCaptureCommand}"
                             Style="{StaticResource NewCaptureButtonStyle}">
                             <StackPanel
+                                x:Name="NewAudioCaptureButtonContent"
                                 HorizontalAlignment="Center"
                                 VerticalAlignment="Center"
                                 Spacing="8">
@@ -279,7 +293,8 @@
                         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                         ScrollViewer.HorizontalScrollMode="Disabled"
                         ScrollViewer.VerticalScrollBarVisibility="Disabled"
-                        ScrollViewer.VerticalScrollMode="Disabled">
+                        ScrollViewer.VerticalScrollMode="Disabled"
+                        SizeChanged="RecentCapturesGridView_SizeChanged">
                         <GridView.ItemsPanel>
                             <ItemsPanelTemplate>
                                 <ItemsWrapGrid
@@ -291,8 +306,8 @@
                         <GridView.ItemTemplate>
                             <DataTemplate x:DataType="recent:RecentCaptureViewModel">
                                 <Grid
-                                    Width="232"
-                                    Height="216"
+                                    HorizontalAlignment="Stretch"
+                                    VerticalAlignment="Stretch"
                                     ToolTipService.ToolTip="{x:Bind FilePath}">
                                     <Border
                                         Background="{ThemeResource HomeTileBackgroundBrush}"
@@ -401,6 +416,65 @@
                 </Grid>
             </StackPanel>
         </ScrollViewer>
+
+        <VisualStateManager.VisualStateGroups>
+            <VisualStateGroup x:Name="AdaptiveStates">
+                <VisualState x:Name="Compact">
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="0" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="PageContentStack.Padding" Value="16,20,16,32" />
+                        <Setter Target="PageContentStack.Spacing" Value="22" />
+                        <Setter Target="HeroGrid.ColumnSpacing" Value="0" />
+                        <Setter Target="HeroTextPanel.MaxWidth" Value="10000" />
+                        <Setter Target="HeroTextPanel.(Grid.ColumnSpan)" Value="2" />
+                        <Setter Target="HeroTitleText.FontSize" Value="24" />
+                        <Setter Target="CaptureActionsPanel.(Grid.Row)" Value="1" />
+                        <Setter Target="CaptureActionsPanel.(Grid.Column)" Value="0" />
+                        <Setter Target="CaptureActionsPanel.(Grid.ColumnSpan)" Value="2" />
+                        <Setter Target="CaptureActionsPanel.HorizontalAlignment" Value="Stretch" />
+                        <Setter Target="CaptureActionsPanel.Orientation" Value="Vertical" />
+                        <Setter Target="CaptureActionsPanel.Spacing" Value="8" />
+                        <Setter Target="NewImageCaptureButton.MinWidth" Value="0" />
+                        <Setter Target="NewVideoCaptureButton.MinWidth" Value="0" />
+                        <Setter Target="NewAudioCaptureButton.MinWidth" Value="0" />
+                        <Setter Target="NewImageCaptureButton.MinHeight" Value="76" />
+                        <Setter Target="NewVideoCaptureButton.MinHeight" Value="76" />
+                        <Setter Target="NewAudioCaptureButton.MinHeight" Value="76" />
+                        <Setter Target="NewImageCaptureButton.HorizontalAlignment" Value="Stretch" />
+                        <Setter Target="NewVideoCaptureButton.HorizontalAlignment" Value="Stretch" />
+                        <Setter Target="NewAudioCaptureButton.HorizontalAlignment" Value="Stretch" />
+                        <Setter Target="NewImageCaptureButton.Height" Value="76" />
+                        <Setter Target="NewVideoCaptureButton.Height" Value="76" />
+                        <Setter Target="NewAudioCaptureButton.Height" Value="76" />
+                        <Setter Target="NewImageCaptureButtonContent.Orientation" Value="Horizontal" />
+                        <Setter Target="NewVideoCaptureButtonContent.Orientation" Value="Horizontal" />
+                        <Setter Target="NewAudioCaptureButtonContent.Orientation" Value="Horizontal" />
+                    </VisualState.Setters>
+                </VisualState>
+                <VisualState x:Name="Medium">
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="700" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="PageContentStack.Padding" Value="24,24,24,40" />
+                        <Setter Target="HeroTextPanel.MaxWidth" Value="10000" />
+                        <Setter Target="HeroTextPanel.(Grid.ColumnSpan)" Value="2" />
+                        <Setter Target="CaptureActionsPanel.(Grid.Row)" Value="1" />
+                        <Setter Target="CaptureActionsPanel.(Grid.Column)" Value="0" />
+                        <Setter Target="CaptureActionsPanel.(Grid.ColumnSpan)" Value="2" />
+                        <Setter Target="CaptureActionsPanel.HorizontalAlignment" Value="Left" />
+                        <Setter Target="CaptureActionsPanel.Orientation" Value="Horizontal" />
+                    </VisualState.Setters>
+                </VisualState>
+                <VisualState x:Name="Wide">
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="1080" />
+                    </VisualState.StateTriggers>
+                </VisualState>
+            </VisualStateGroup>
+        </VisualStateManager.VisualStateGroups>
     </Grid>
 
 </local:HomePageBase>

@@ -13,6 +13,12 @@ namespace CaptureTool.Presentation.Windows.WinUI.Xaml.Pages;
 public sealed partial class HomePage : HomePageBase
 {
     private const uint RecentCaptureThumbnailSize = 360;
+    private const double RecentCaptureMinimumCompactSlotWidth = 136;
+    private const double RecentCaptureMinimumSlotWidth = 176;
+    private const double RecentCaptureMaximumSlotWidth = 248;
+    private const double RecentCaptureMinimumSlotHeight = 176;
+    private const double RecentCaptureMaximumSlotHeight = 232;
+    private const int RecentCaptureMaximumColumns = 4;
 
     private readonly ILogService _logService = App.Current.ServiceProvider.GetService<ILogService>();
     private readonly Dictionary<string, BitmapImage> _thumbnailCache = new(StringComparer.OrdinalIgnoreCase);
@@ -28,6 +34,7 @@ public sealed partial class HomePage : HomePageBase
     private void HomePage_Loaded(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
     {
         AmbientMotionStoryboard.Begin();
+        DispatcherQueue.TryEnqueue(() => UpdateRecentCaptureGridItemSize(RecentCapturesGridView.ActualWidth));
 
         if (!_storeReviewPromptPending)
         {
@@ -63,6 +70,42 @@ public sealed partial class HomePage : HomePageBase
         {
             _ = ViewModel.LoadMoreRecentCapturesCommand.ExecuteAsync(null);
         }
+    }
+
+    private void RecentCapturesGridView_SizeChanged(object sender, SizeChangedEventArgs e)
+    {
+        UpdateRecentCaptureGridItemSize(e.NewSize.Width);
+    }
+
+    private void UpdateRecentCaptureGridItemSize(double availableWidth)
+    {
+        if (availableWidth <= 0 || RecentCapturesGridView.ItemsPanelRoot is not ItemsWrapGrid itemsWrapGrid)
+        {
+            return;
+        }
+
+        double usableWidth = Math.Floor(availableWidth);
+        int columnCount = Math.Max(1, (int)Math.Floor(usableWidth / RecentCaptureMinimumSlotWidth));
+        columnCount = Math.Min(columnCount, RecentCaptureMaximumColumns);
+
+        double itemWidth = Math.Floor(usableWidth / columnCount);
+        itemWidth = Math.Min(itemWidth, RecentCaptureMaximumSlotWidth);
+        if (usableWidth < RecentCaptureMinimumCompactSlotWidth)
+        {
+            itemWidth = usableWidth;
+        }
+        else
+        {
+            itemWidth = Math.Max(itemWidth, RecentCaptureMinimumCompactSlotWidth);
+        }
+
+        double itemHeight = Math.Clamp(
+            itemWidth * .94,
+            RecentCaptureMinimumSlotHeight,
+            RecentCaptureMaximumSlotHeight);
+
+        itemsWrapGrid.ItemWidth = itemWidth;
+        itemsWrapGrid.ItemHeight = itemHeight;
     }
 
     private void RecentCapturesGridView_ItemClick(object sender, ItemClickEventArgs e)
