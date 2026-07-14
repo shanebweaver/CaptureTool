@@ -6,6 +6,7 @@ using CaptureTool.Infrastructure.Edit.Windows.DependencyInjection;
 using CaptureTool.Infrastructure.Windows.DependencyInjection;
 using CaptureTool.Presentation.DependencyInjection;
 using CaptureTool.Presentation.Windows.WinUI.DependencyInjection;
+using CaptureTool.Presentation.Windows.WinUI.UiTests;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace CaptureTool.Presentation.Windows.WinUI;
@@ -39,6 +40,11 @@ public partial class AppServiceProvider : IServiceProvider, IDisposable
 
         // App specific handlers
         collection.AddAppWindowsServices();
+
+        if (UiTestLaunchOptions.Current.IsEnabled)
+        {
+            collection.AddUiTestServices(UiTestLaunchOptions.Current);
+        }
 
         _serviceProvider = collection.BuildServiceProvider();
     }

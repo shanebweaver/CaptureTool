@@ -1,3 +1,4 @@
+using CaptureTool.Presentation.Features.Settings;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 
@@ -99,6 +100,14 @@ public sealed partial class SettingsPage : SettingsPageBase
         if (sender is ToggleSwitch toggleSwitch)
         {
             _ = ViewModel.UpdateStoreReviewRemindersEnabledCommand.ExecuteAsync(toggleSwitch.IsOn);
+        }
+    }
+
+    private void AiFeatureConsentCheckBox_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is CheckBox checkBox && checkBox.DataContext is AiFeatureConsentViewModel featureConsent)
+        {
+            _ = ViewModel.UpdateAiFeatureConsentAsync(featureConsent.FeatureId, checkBox.IsChecked == true);
         }
     }
 

@@ -1,3 +1,6 @@
+using CaptureTool.Application.Abstractions.Ai;
+using CaptureTool.Application.Abstractions.Edit.Image.SuperResolution;
+using CaptureTool.Application.Abstractions.Edit.Image.TextExtraction;
 using CaptureTool.Application.Abstractions.Settings.ChangeScreenshotsFolder;
 using CaptureTool.Application.Abstractions.Settings.ChangeAudioFolder;
 using CaptureTool.Application.Abstractions.Settings.ChangeVideosFolder;
@@ -27,6 +30,7 @@ using CaptureTool.Application.Abstractions.Settings;
 using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Application.Abstractions.Store;
 using CaptureTool.Application.Abstractions.Themes;
+using CaptureTool.Domain.Ai;
 using CaptureTool.Presentation.Factories;
 using CaptureTool.Presentation.ViewModels;
 using CommunityToolkit.Mvvm.Input;
@@ -59,6 +63,10 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
     private readonly IOpenTempFolderUseCase _openTempFolderAction;
     private readonly IClearTempFilesUseCase _clearTempFilesAction;
     private readonly IRestoreDefaultsUseCase _restoreDefaultsAction;
+    private readonly IAiFeatureConsentService _aiFeatureConsentService;
+    private readonly IAiConsentSettingsFeatureAvailability _aiConsentSettingsFeatureAvailability;
+    private readonly IImageSuperResolutionFeatureAvailability _imageSuperResolutionFeatureAvailability;
+    private readonly ITextExtractionFeatureAvailability _textExtractionFeatureAvailability;
     private readonly ILocalizationService _localizationService;
     private readonly ISettingsService _settingsService;
     private readonly IAppMetricsService _appMetricsService;
@@ -119,6 +127,18 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
     }
 
     public ObservableCollection<AppThemeViewModel> AppThemes
+    {
+        get;
+        private set => Set(ref field, value);
+    }
+
+    public ObservableCollection<AiFeatureConsentViewModel> AiFeatureConsents
+    {
+        get;
+        private set => Set(ref field, value);
+    }
+
+    public bool IsAiConsentSettingsVisible
     {
         get;
         private set => Set(ref field, value);
@@ -250,6 +270,10 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
         IOpenTempFolderUseCase openTempFolderAction,
         IClearTempFilesUseCase clearTempFilesAction,
         IRestoreDefaultsUseCase restoreDefaultsAction,
+        IAiFeatureConsentService aiFeatureConsentService,
+        IAiConsentSettingsFeatureAvailability aiConsentSettingsFeatureAvailability,
+        IImageSuperResolutionFeatureAvailability imageSuperResolutionFeatureAvailability,
+        ITextExtractionFeatureAvailability textExtractionFeatureAvailability,
         ILocalizationService localizationService,
         IThemeService themeService,
         ISettingsService settingsService,
@@ -282,6 +306,10 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
         _openTempFolderAction = openTempFolderAction;
         _clearTempFilesAction = clearTempFilesAction;
         _restoreDefaultsAction = restoreDefaultsAction;
+        _aiFeatureConsentService = aiFeatureConsentService;
+        _aiConsentSettingsFeatureAvailability = aiConsentSettingsFeatureAvailability;
+        _imageSuperResolutionFeatureAvailability = imageSuperResolutionFeatureAvailability;
+        _textExtractionFeatureAvailability = textExtractionFeatureAvailability;
         _localizationService = localizationService;
         _themeService = themeService;
         _settingsService = settingsService;
@@ -293,6 +321,7 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
 
         AppThemes = [];
         AppLanguages = [];
+        AiFeatureConsents = [];
         ScreenshotsFolderPath = string.Empty;
         AudioFolderPath = string.Empty;
         VideosFolderPath = string.Empty;
@@ -392,6 +421,7 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
         CaptureWarnBeforeDiscard = _settingsService.Get(CaptureToolSettings.Settings_Capture_WarnBeforeDiscard);
         EditWarnBeforeDiscard = _settingsService.Get(CaptureToolSettings.Settings_Edit_WarnBeforeDiscard);
         StoreReviewRemindersEnabled = _appMetricsService.StoreReviewRemindersEnabled;
+        RefreshAiFeatureConsents();
 
         var screenshotsFolder = _settingsService.Get(CaptureToolSettings.Settings_ImageCapture_AutoSaveFolder);
         if (string.IsNullOrWhiteSpace(screenshotsFolder))
@@ -419,6 +449,14 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
         TemporaryFilesFolderPath = _storageService.GetApplicationTemporaryFolderPath();
 
         await base.LoadAsync(cancellationToken);
+    }
+
+    public async Task UpdateAiFeatureConsentAsync(AiFeatureId featureId, bool isConsented)
+    {
+        await _aiFeatureConsentService.SetConsentAsync(featureId, isConsented, CancellationToken.None);
+
+        AiFeatureConsentViewModel? featureConsent = AiFeatureConsents.FirstOrDefault(consent => consent.FeatureId == featureId);
+        featureConsent?.ApplyConsent(isConsented);
     }
 
     private async Task UpdateAppLanguageAsync(int index)
@@ -648,6 +686,7 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
         AudioCaptureDefaultLocalAudio = _settingsService.Get(CaptureToolSettings.Settings_AudioCapture_DefaultLocalAudioEnabled);
         CaptureWarnBeforeDiscard = _settingsService.Get(CaptureToolSettings.Settings_Capture_WarnBeforeDiscard);
         EditWarnBeforeDiscard = _settingsService.Get(CaptureToolSettings.Settings_Edit_WarnBeforeDiscard);
+        RefreshAiFeatureConsents();
 
         var screenshotsFolder = _settingsService.Get(CaptureToolSettings.Settings_ImageCapture_AutoSaveFolder);
         ScreenshotsFolderPath = !string.IsNullOrEmpty(screenshotsFolder) ? screenshotsFolder : _storageService.GetSystemDefaultScreenshotsFolderPath();
@@ -663,5 +702,41 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
 
         UpdateShowAppLanguageRestartMessage();
         UpdateShowAppThemeRestartMessage();
+    }
+
+    private void RefreshAiFeatureConsents()
+    {
+        AiFeatureConsents.Clear();
+
+        if (!_aiConsentSettingsFeatureAvailability.IsAiConsentSettingsEnabled)
+        {
+            IsAiConsentSettingsVisible = false;
+            return;
+        }
+
+        foreach (AiFeatureConsent consent in _aiFeatureConsentService.GetFeatureConsents())
+        {
+            if (!IsAiFeatureConsentVisible(consent.FeatureId))
+            {
+                continue;
+            }
+
+            AiFeatureConsents.Add(new(
+                consent.FeatureId,
+                consent.DisplayName,
+                consent.State == AiFeatureConsentState.Granted));
+        }
+
+        IsAiConsentSettingsVisible = AiFeatureConsents.Count > 0;
+    }
+
+    private bool IsAiFeatureConsentVisible(AiFeatureId featureId)
+    {
+        return featureId switch
+        {
+            AiFeatureId.TextExtraction => _textExtractionFeatureAvailability.IsTextExtractionEnabled,
+            AiFeatureId.ImageSuperResolution => _imageSuperResolutionFeatureAvailability.IsImageSuperResolutionEnabled,
+            _ => false
+        };
     }
 }

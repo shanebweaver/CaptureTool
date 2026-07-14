@@ -21,10 +21,24 @@ public sealed class FeatureAvailabilityTests
     }
 
     [TestMethod]
+    public void AiConsentSettingsFeatureAvailability_ReturnsFeatureManagerValue()
+    {
+        Assert.IsTrue(new AiConsentSettingsFeatureAvailability(new ConstantFeatureManager(true)).IsAiConsentSettingsEnabled);
+        Assert.IsFalse(new AiConsentSettingsFeatureAvailability(new ConstantFeatureManager(false)).IsAiConsentSettingsEnabled);
+    }
+
+    [TestMethod]
     public void ImageSuperResolutionFeatureAvailability_ReturnsFeatureManagerValue()
     {
         Assert.IsTrue(new ImageSuperResolutionFeatureAvailability(new ConstantFeatureManager(true)).IsImageSuperResolutionEnabled);
         Assert.IsFalse(new ImageSuperResolutionFeatureAvailability(new ConstantFeatureManager(false)).IsImageSuperResolutionEnabled);
+    }
+
+    [TestMethod]
+    public void TextExtractionFeatureAvailability_ReturnsFeatureManagerValue()
+    {
+        Assert.IsTrue(new TextExtractionFeatureAvailability(new ConstantFeatureManager(true)).IsTextExtractionEnabled);
+        Assert.IsFalse(new TextExtractionFeatureAvailability(new ConstantFeatureManager(false)).IsTextExtractionEnabled);
     }
 
     private sealed class ConstantFeatureManager : IFeatureManager

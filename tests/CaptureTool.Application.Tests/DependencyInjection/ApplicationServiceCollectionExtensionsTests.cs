@@ -1,3 +1,5 @@
+using CaptureTool.Application.Abstractions.Ai;
+using CaptureTool.Application.Abstractions.Activation;
 using CaptureTool.Application.Abstractions.Capture;
 using CaptureTool.Application.Abstractions.Capture.Audio.CancelAudioCapture;
 using CaptureTool.Application.Abstractions.Capture.Image.CaptureAllScreensImage;
@@ -8,6 +10,7 @@ using CaptureTool.Application.Abstractions.Capture.Overlay.OpenSelectionOverlay;
 using CaptureTool.Application.Abstractions.Settings.OpenSettingsPage;
 using CaptureTool.Application.Abstractions.UseCases;
 using CaptureTool.Application.Activation;
+using CaptureTool.Application.Ai;
 using CaptureTool.Application.DependencyInjection;
 using CaptureTool.Application.EditSessions;
 using CaptureTool.Application.Capture.Audio;
@@ -36,7 +39,9 @@ public sealed class ApplicationServiceCollectionExtensionsTests
 
         Assert.AreSame(services, result);
         AssertHasRegistration<IUseCaseExecutor, UseCaseExecutor>(services, ServiceLifetime.Transient);
+        AssertHasRegistration<IAiFeatureConsentService, AiFeatureConsentService>(services, ServiceLifetime.Singleton);
         AssertHasRegistration<IApplicationStartupInitializer, ApplicationStartupInitializer>(services, ServiceLifetime.Singleton);
+        AssertHasRegistration<ILaunchNavigationTargetProvider, DefaultLaunchNavigationTargetProvider>(services, ServiceLifetime.Singleton);
         AssertHasRegistration<IActiveEditSessionService, ActiveEditSessionService>(services, ServiceLifetime.Singleton);
         AssertHasRegistration<IEditSessionGuard, EditSessionGuard>(services, ServiceLifetime.Singleton);
         AssertHasRegistration<AudioCaptureWorkflow, AudioCaptureWorkflow>(services, ServiceLifetime.Singleton);

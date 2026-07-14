@@ -2,6 +2,7 @@ using CaptureTool.Application.Abstractions.Activation;
 using CaptureTool.Application.Abstractions.Capture.Overlay.OpenSelectionOverlay;
 using CaptureTool.Application.Abstractions.Shell.Home.ShowHomePage;
 using CaptureTool.Application.Abstractions.Logging;
+using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Domain.Capture;
 using System.Collections.Specialized;
 using System.Web;
@@ -14,6 +15,8 @@ internal sealed class CaptureToolActivationHandler : IActivationHandler
     private readonly IShowHomePageUseCase _showHomePage;
     private readonly ILogService _logService;
     private readonly IApplicationStartupInitializer _startupInitializer;
+    private readonly ILaunchNavigationTargetProvider _launchNavigationTargetProvider;
+    private readonly INavigationService _navigationService;
 
     private readonly SemaphoreSlim _semaphoreActivation = new(1, 1);
 
@@ -21,12 +24,16 @@ internal sealed class CaptureToolActivationHandler : IActivationHandler
         IOpenSelectionOverlayUseCase openSelectionOverlay,
         IShowHomePageUseCase showHomePage,
         ILogService logService,
-        IApplicationStartupInitializer startupInitializer)
+        IApplicationStartupInitializer startupInitializer,
+        ILaunchNavigationTargetProvider launchNavigationTargetProvider,
+        INavigationService navigationService)
     {
         _openSelectionOverlay = openSelectionOverlay;
         _showHomePage = showHomePage;
         _logService = logService;
         _startupInitializer = startupInitializer;
+        _launchNavigationTargetProvider = launchNavigationTargetProvider;
+        _navigationService = navigationService;
     }
 
     public async Task HandleLaunchActivationAsync()
@@ -36,7 +43,18 @@ internal sealed class CaptureToolActivationHandler : IActivationHandler
         try
         {
             await _startupInitializer.InitializeAsync();
-            await _showHomePage.ExecuteAsync(new ShowHomePageRequest());
+            LaunchNavigationTarget? launchTarget = _launchNavigationTargetProvider.GetLaunchNavigationTarget();
+            if (launchTarget is null)
+            {
+                await _showHomePage.ExecuteAsync(new ShowHomePageRequest());
+            }
+            else
+            {
+                _navigationService.Navigate(
+                    launchTarget.Route,
+                    launchTarget.Parameter,
+                    launchTarget.ClearHistory);
+            }
         }
         finally
         {

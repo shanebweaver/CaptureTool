@@ -1,4 +1,5 @@
 using CaptureTool.Application.Abstractions.Capture.Audio;
+using CaptureTool.Presentation.Windows.WinUI.Utils;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Windows.ApplicationModel.Resources;
@@ -7,7 +8,7 @@ namespace CaptureTool.Presentation.Windows.WinUI.AudioCapture;
 
 internal sealed class WinUIAudioCaptureNavigationConfirmationService : IAudioCaptureNavigationConfirmationService
 {
-    private readonly ResourceLoader _resourceLoader = ResourceLoader.GetForViewIndependentUse();
+    private ResourceLoader? _resourceLoader;
 
     public XamlRoot? XamlRoot { get; set; }
 
@@ -21,10 +22,10 @@ internal sealed class WinUIAudioCaptureNavigationConfirmationService : IAudioCap
         ContentDialog dialog = new()
         {
             XamlRoot = XamlRoot,
-            Title = _resourceLoader.GetString("AudioCaptureNavigationConfirmation_Title"),
-            Content = _resourceLoader.GetString("AudioCaptureNavigationConfirmation_Content"),
-            PrimaryButtonText = _resourceLoader.GetString("AudioCaptureNavigationConfirmation_StopButton"),
-            CloseButtonText = _resourceLoader.GetString("AudioCaptureNavigationConfirmation_CancelButton"),
+            Title = GetString("AudioCaptureNavigationConfirmation_Title", "Stop recording?"),
+            Content = GetString("AudioCaptureNavigationConfirmation_Content", "Audio recording is currently active."),
+            PrimaryButtonText = GetString("AudioCaptureNavigationConfirmation_StopButton", "Stop"),
+            CloseButtonText = GetString("AudioCaptureNavigationConfirmation_CancelButton", "Cancel"),
             DefaultButton = ContentDialogButton.Primary
         };
 
@@ -35,5 +36,10 @@ internal sealed class WinUIAudioCaptureNavigationConfirmationService : IAudioCap
         }
 
         return result == ContentDialogResult.Primary;
+    }
+
+    private string GetString(string resourceKey, string fallback)
+    {
+        return WinUIResourceLoader.GetString(ref _resourceLoader, resourceKey, fallback);
     }
 }
