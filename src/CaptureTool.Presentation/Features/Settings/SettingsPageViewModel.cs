@@ -1,4 +1,6 @@
 using CaptureTool.Application.Abstractions.Ai;
+using CaptureTool.Application.Abstractions.Edit.Image.SuperResolution;
+using CaptureTool.Application.Abstractions.Edit.Image.TextExtraction;
 using CaptureTool.Application.Abstractions.Settings.ChangeScreenshotsFolder;
 using CaptureTool.Application.Abstractions.Settings.ChangeAudioFolder;
 using CaptureTool.Application.Abstractions.Settings.ChangeVideosFolder;
@@ -62,6 +64,9 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
     private readonly IClearTempFilesUseCase _clearTempFilesAction;
     private readonly IRestoreDefaultsUseCase _restoreDefaultsAction;
     private readonly IAiFeatureConsentService _aiFeatureConsentService;
+    private readonly IAiConsentSettingsFeatureAvailability _aiConsentSettingsFeatureAvailability;
+    private readonly IImageSuperResolutionFeatureAvailability _imageSuperResolutionFeatureAvailability;
+    private readonly ITextExtractionFeatureAvailability _textExtractionFeatureAvailability;
     private readonly ILocalizationService _localizationService;
     private readonly ISettingsService _settingsService;
     private readonly IAppMetricsService _appMetricsService;
@@ -128,6 +133,12 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
     }
 
     public ObservableCollection<AiFeatureConsentViewModel> AiFeatureConsents
+    {
+        get;
+        private set => Set(ref field, value);
+    }
+
+    public bool IsAiConsentSettingsVisible
     {
         get;
         private set => Set(ref field, value);
@@ -260,6 +271,9 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
         IClearTempFilesUseCase clearTempFilesAction,
         IRestoreDefaultsUseCase restoreDefaultsAction,
         IAiFeatureConsentService aiFeatureConsentService,
+        IAiConsentSettingsFeatureAvailability aiConsentSettingsFeatureAvailability,
+        IImageSuperResolutionFeatureAvailability imageSuperResolutionFeatureAvailability,
+        ITextExtractionFeatureAvailability textExtractionFeatureAvailability,
         ILocalizationService localizationService,
         IThemeService themeService,
         ISettingsService settingsService,
@@ -293,6 +307,9 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
         _clearTempFilesAction = clearTempFilesAction;
         _restoreDefaultsAction = restoreDefaultsAction;
         _aiFeatureConsentService = aiFeatureConsentService;
+        _aiConsentSettingsFeatureAvailability = aiConsentSettingsFeatureAvailability;
+        _imageSuperResolutionFeatureAvailability = imageSuperResolutionFeatureAvailability;
+        _textExtractionFeatureAvailability = textExtractionFeatureAvailability;
         _localizationService = localizationService;
         _themeService = themeService;
         _settingsService = settingsService;
@@ -690,12 +707,36 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
     private void RefreshAiFeatureConsents()
     {
         AiFeatureConsents.Clear();
+
+        if (!_aiConsentSettingsFeatureAvailability.IsAiConsentSettingsEnabled)
+        {
+            IsAiConsentSettingsVisible = false;
+            return;
+        }
+
         foreach (AiFeatureConsent consent in _aiFeatureConsentService.GetFeatureConsents())
         {
+            if (!IsAiFeatureConsentVisible(consent.FeatureId))
+            {
+                continue;
+            }
+
             AiFeatureConsents.Add(new(
                 consent.FeatureId,
                 consent.DisplayName,
                 consent.State == AiFeatureConsentState.Granted));
         }
+
+        IsAiConsentSettingsVisible = AiFeatureConsents.Count > 0;
+    }
+
+    private bool IsAiFeatureConsentVisible(AiFeatureId featureId)
+    {
+        return featureId switch
+        {
+            AiFeatureId.TextExtraction => _textExtractionFeatureAvailability.IsTextExtractionEnabled,
+            AiFeatureId.ImageSuperResolution => _imageSuperResolutionFeatureAvailability.IsImageSuperResolutionEnabled,
+            _ => false
+        };
     }
 }

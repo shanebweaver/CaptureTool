@@ -1,4 +1,5 @@
 using CaptureTool.Application.Abstractions.Cancellation;
+using CaptureTool.Application.Abstractions.Ai;
 using CaptureTool.Application.Abstractions.Edit.Image.ChromaKey;
 using CaptureTool.Application.Abstractions.Edit.Image.SuperResolution;
 using CaptureTool.Application.Abstractions.Edit.Image.TextExtraction;
@@ -40,6 +41,7 @@ public sealed class InfrastructureServiceCollectionExtensionsTests
 
         Assert.AreSame(services, result);
         AssertHasRegistration<ICancellationService, CancellationService>(services);
+        AssertHasRegistration<IAiConsentSettingsFeatureAvailability, AiConsentSettingsFeatureAvailability>(services);
         AssertHasRegistration<IStoreFeatureAvailability, StoreFeatureAvailability>(services);
         AssertHasRegistration<IChromaKeyFeatureAvailability, ChromaKeyFeatureAvailability>(services);
         AssertHasRegistration<IImageSuperResolutionFeatureAvailability, ImageSuperResolutionFeatureAvailability>(services);

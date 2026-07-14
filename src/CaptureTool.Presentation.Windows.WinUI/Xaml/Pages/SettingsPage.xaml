@@ -7,6 +7,7 @@
     xmlns:local="using:CaptureTool.Presentation.Windows.WinUI.Xaml.Pages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:settings="using:CaptureTool.Presentation.Features.Settings"
+    xmlns:utils="using:CaptureTool.Presentation.Windows.WinUI.Utils"
     xmlns:views="using:CaptureTool.Presentation.Windows.WinUI.Xaml.Views"
     d:DataContext="{d:DesignInstance Type=settings:SettingsPageViewModel}"
     mc:Ignorable="d">
@@ -657,7 +658,9 @@
                 </StackPanel>
 
                 <!--  AI consent section  -->
-                <StackPanel Spacing="4">
+                <StackPanel
+                    Spacing="4"
+                    Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.IsAiConsentSettingsVisible), Mode=OneWay}">
                     <TextBlock Margin="0,4" Text="AI consent" />
 
                     <ItemsControl ItemsSource="{x:Bind ViewModel.AiFeatureConsents, Mode=OneWay}">

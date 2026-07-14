@@ -21,6 +21,13 @@ public sealed class FeatureAvailabilityTests
     }
 
     [TestMethod]
+    public void AiConsentSettingsFeatureAvailability_ReturnsFeatureManagerValue()
+    {
+        Assert.IsTrue(new AiConsentSettingsFeatureAvailability(new ConstantFeatureManager(true)).IsAiConsentSettingsEnabled);
+        Assert.IsFalse(new AiConsentSettingsFeatureAvailability(new ConstantFeatureManager(false)).IsAiConsentSettingsEnabled);
+    }
+
+    [TestMethod]
     public void ImageSuperResolutionFeatureAvailability_ReturnsFeatureManagerValue()
     {
         Assert.IsTrue(new ImageSuperResolutionFeatureAvailability(new ConstantFeatureManager(true)).IsImageSuperResolutionEnabled);
