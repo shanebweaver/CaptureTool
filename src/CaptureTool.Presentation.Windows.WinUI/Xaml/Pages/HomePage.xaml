@@ -3,88 +3,483 @@
     x:Class="CaptureTool.Presentation.Windows.WinUI.Xaml.Pages.HomePage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:controls="using:CaptureTool.Presentation.Windows.WinUI.Xaml.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:home="using:CaptureTool.Presentation.Features.Home"
     xmlns:local="using:CaptureTool.Presentation.Windows.WinUI.Xaml.Pages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:views="using:CaptureTool.Presentation.Windows.WinUI.Xaml.Views"
+    xmlns:recent="using:CaptureTool.Presentation.Features.RecentCaptures"
+    xmlns:utils="using:CaptureTool.Presentation.Windows.WinUI.Utils"
     d:DataContext="{d:DesignInstance Type=home:HomePageViewModel}"
     mc:Ignorable="d">
 
     <Page.Resources>
-        <Style
-            x:Key="NewCaptureButtonStyle"
-            BasedOn="{StaticResource DefaultButtonStyle}"
-            TargetType="Button">
-            <Setter Property="Height" Value="96" />
-            <Setter Property="MinHeight" Value="96" />
-            <Setter Property="MinWidth" Value="96" />
-            <Setter Property="CornerRadius" Value="12" />
-        </Style>
+        <ResourceDictionary>
+            <ResourceDictionary.ThemeDictionaries>
+                <ResourceDictionary x:Key="Light">
+                    <LinearGradientBrush x:Key="HomeDreamBackgroundBrush" StartPoint="0,0" EndPoint="1,1">
+                        <GradientStop Offset="0" Color="#FFF8FBFF" />
+                        <GradientStop Offset=".36" Color="#FFEAF8F1" />
+                        <GradientStop Offset=".72" Color="#FFFFF2D8" />
+                        <GradientStop Offset="1" Color="#FFFFEAF1" />
+                    </LinearGradientBrush>
+                    <SolidColorBrush x:Key="HomeGlassBrush" Color="#CCFFFFFF" />
+                    <SolidColorBrush x:Key="HomeGlassHoverBrush" Color="#E8FFFFFF" />
+                    <SolidColorBrush x:Key="HomeGlassStrokeBrush" Color="#66FFFFFF" />
+                    <SolidColorBrush x:Key="HomeTileBackgroundBrush" Color="#B8FFFFFF" />
+                    <SolidColorBrush x:Key="HomePreviewBackgroundBrush" Color="#DCEEF3F2" />
+                </ResourceDictionary>
+                <ResourceDictionary x:Key="Dark">
+                    <LinearGradientBrush x:Key="HomeDreamBackgroundBrush" StartPoint="0,0" EndPoint="1,1">
+                        <GradientStop Offset="0" Color="#FF151821" />
+                        <GradientStop Offset=".32" Color="#FF153231" />
+                        <GradientStop Offset=".68" Color="#FF3A2731" />
+                        <GradientStop Offset="1" Color="#FF40361D" />
+                    </LinearGradientBrush>
+                    <SolidColorBrush x:Key="HomeGlassBrush" Color="#661C1F29" />
+                    <SolidColorBrush x:Key="HomeGlassHoverBrush" Color="#88292D39" />
+                    <SolidColorBrush x:Key="HomeGlassStrokeBrush" Color="#4DFFFFFF" />
+                    <SolidColorBrush x:Key="HomeTileBackgroundBrush" Color="#5C1B1F28" />
+                    <SolidColorBrush x:Key="HomePreviewBackgroundBrush" Color="#6622272E" />
+                </ResourceDictionary>
+                <ResourceDictionary x:Key="HighContrast">
+                    <StaticResource x:Key="HomeDreamBackgroundBrush" ResourceKey="ApplicationPageBackgroundThemeBrush" />
+                    <StaticResource x:Key="HomeGlassBrush" ResourceKey="SystemControlBackgroundChromeMediumLowBrush" />
+                    <StaticResource x:Key="HomeGlassHoverBrush" ResourceKey="SystemControlBackgroundChromeMediumBrush" />
+                    <StaticResource x:Key="HomeGlassStrokeBrush" ResourceKey="SystemControlForegroundBaseMediumBrush" />
+                    <StaticResource x:Key="HomeTileBackgroundBrush" ResourceKey="SystemControlBackgroundChromeMediumLowBrush" />
+                    <StaticResource x:Key="HomePreviewBackgroundBrush" ResourceKey="SystemControlBackgroundChromeMediumBrush" />
+                </ResourceDictionary>
+            </ResourceDictionary.ThemeDictionaries>
+
+            <LinearGradientBrush x:Key="HomeLightRibbonBrush" StartPoint="0,0.5" EndPoint="1,0.5">
+                <GradientStop Offset="0" Color="#00FFFFFF" />
+                <GradientStop Offset=".24" Color="#52FFFFFF" />
+                <GradientStop Offset=".5" Color="#55B8FFE8" />
+                <GradientStop Offset=".78" Color="#4DFFD18F" />
+                <GradientStop Offset="1" Color="#00FFFFFF" />
+            </LinearGradientBrush>
+
+            <LinearGradientBrush x:Key="HomeCaptureButtonBrush" StartPoint="0,0" EndPoint="1,1">
+                <GradientStop Offset="0" Color="#33FFFFFF" />
+                <GradientStop Offset="1" Color="#18FFFFFF" />
+            </LinearGradientBrush>
+
+            <Style
+                x:Key="NewCaptureButtonStyle"
+                BasedOn="{StaticResource DefaultButtonStyle}"
+                TargetType="Button">
+                <Setter Property="Height" Value="92" />
+                <Setter Property="MinHeight" Value="92" />
+                <Setter Property="MinWidth" Value="152" />
+                <Setter Property="Padding" Value="18,14" />
+                <Setter Property="CornerRadius" Value="8" />
+                <Setter Property="Background" Value="{StaticResource HomeCaptureButtonBrush}" />
+                <Setter Property="BorderBrush" Value="{ThemeResource HomeGlassStrokeBrush}" />
+                <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                <Setter Property="VerticalContentAlignment" Value="Stretch" />
+            </Style>
+
+            <Style x:Key="RecentCaptureGridViewItemStyle" TargetType="GridViewItem">
+                <Setter Property="Padding" Value="0" />
+                <Setter Property="Margin" Value="0,0,16,16" />
+                <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                <Setter Property="VerticalContentAlignment" Value="Stretch" />
+            </Style>
+        </ResourceDictionary>
     </Page.Resources>
 
-    <Grid Row="1">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="4*" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="6*" />
-        </Grid.RowDefinitions>
+    <Grid x:Name="RootLayout" Background="{ThemeResource HomeDreamBackgroundBrush}">
+        <Grid.Resources>
+            <Storyboard
+                x:Name="AmbientMotionStoryboard"
+                AutoReverse="True"
+                RepeatBehavior="Forever">
+                <DoubleAnimation
+                    Storyboard.TargetName="LightRibbonOneTransform"
+                    Storyboard.TargetProperty="TranslateX"
+                    From="-120"
+                    To="120"
+                    Duration="0:0:16" />
+                <DoubleAnimation
+                    Storyboard.TargetName="LightRibbonTwoTransform"
+                    Storyboard.TargetProperty="TranslateX"
+                    From="90"
+                    To="-90"
+                    Duration="0:0:19" />
+                <DoubleAnimation
+                    Storyboard.TargetName="LightRibbonThreeTransform"
+                    Storyboard.TargetProperty="TranslateY"
+                    From="-30"
+                    To="42"
+                    Duration="0:0:14" />
+            </Storyboard>
+        </Grid.Resources>
 
-        <StackPanel
-            Grid.Row="1"
-            HorizontalAlignment="Center"
-            Spacing="12">
+        <Grid IsHitTestVisible="False">
+            <Rectangle
+                Height="260"
+                Margin="-160,42,-160,0"
+                VerticalAlignment="Top"
+                Fill="{StaticResource HomeLightRibbonBrush}"
+                Opacity=".34"
+                RenderTransformOrigin=".5,.5">
+                <Rectangle.RenderTransform>
+                    <CompositeTransform x:Name="LightRibbonOneTransform" Rotation="-8" />
+                </Rectangle.RenderTransform>
+            </Rectangle>
+            <Rectangle
+                Height="220"
+                Margin="-180,280,-180,0"
+                VerticalAlignment="Top"
+                Fill="{StaticResource HomeLightRibbonBrush}"
+                Opacity=".22"
+                RenderTransformOrigin=".5,.5">
+                <Rectangle.RenderTransform>
+                    <CompositeTransform x:Name="LightRibbonTwoTransform" Rotation="11" />
+                </Rectangle.RenderTransform>
+            </Rectangle>
+            <Rectangle
+                Height="180"
+                Margin="-120,0,-120,86"
+                VerticalAlignment="Bottom"
+                Fill="{StaticResource HomeLightRibbonBrush}"
+                Opacity=".18"
+                RenderTransformOrigin=".5,.5">
+                <Rectangle.RenderTransform>
+                    <CompositeTransform x:Name="LightRibbonThreeTransform" Rotation="-4" />
+                </Rectangle.RenderTransform>
+            </Rectangle>
+        </Grid>
 
-            <TextBlock x:Uid="HomePage_StartCaptureLabel" HorizontalAlignment="Center" />
-
+        <ScrollViewer
+            x:Name="HomeScrollViewer"
+            HorizontalScrollBarVisibility="Disabled"
+            VerticalScrollBarVisibility="Auto"
+            ViewChanged="HomeScrollViewer_ViewChanged">
             <StackPanel
+                x:Name="PageContentStack"
+                MaxWidth="1160"
+                Padding="32,28,32,48"
                 HorizontalAlignment="Center"
-                Orientation="Horizontal"
-                Spacing="4">
-                <Button
-                    x:Name="NewImageCaptureButton"
-                    x:Uid="NewCaptureButton_Image"
-                    Command="{x:Bind ViewModel.NewImageCaptureCommand}"
-                    Style="{StaticResource NewCaptureButtonStyle}">
-                    <StackPanel Spacing="4">
-                        <SymbolIcon Symbol="{StaticResource NewImageCaptureSymbol}" />
+                Spacing="28">
+
+                <Grid
+                    x:Name="HeroGrid"
+                    ColumnSpacing="24"
+                    RowSpacing="16">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel
+                        x:Name="HeroTextPanel"
+                        MaxWidth="460"
+                        VerticalAlignment="Center"
+                        Spacing="4">
                         <TextBlock
-                            x:Uid="NewCaptureButton_Image_Label"
-                            TextAlignment="Center"
+                            x:Name="HeroTitleText"
+                            x:Uid="HomePage_StartCaptureLabel"
+                            FontSize="28"
+                            FontWeight="SemiBold"
+                            Text="Start a new capture"
+                            TextWrapping="WrapWholeWords" />
+                        <TextBlock
+                            x:Uid="HomePage_GallerySubtitleLabel"
+                            Opacity=".72"
+                            Text="Your latest screenshots, recordings, and clips are gathered below."
                             TextWrapping="WrapWholeWords" />
                     </StackPanel>
-                </Button>
-                <Button
-                    x:Name="NewVideoCaptureButton"
-                    x:Uid="NewCaptureButton_Video"
-                    Command="{x:Bind ViewModel.NewVideoCaptureCommand}"
-                    Style="{StaticResource NewCaptureButtonStyle}">
-                    <StackPanel Spacing="4">
-                        <SymbolIcon Symbol="{StaticResource NewVideoCaptureSymbol}" />
-                        <TextBlock
-                            x:Uid="NewCaptureButton_Video_Label"
-                            TextAlignment="Center"
-                            TextWrapping="WrapWholeWords" />
+
+                    <StackPanel
+                        x:Name="CaptureActionsPanel"
+                        Grid.Column="1"
+                        HorizontalAlignment="Right"
+                        Orientation="Horizontal"
+                        Spacing="10">
+                        <Button
+                            x:Name="NewImageCaptureButton"
+                            x:Uid="NewCaptureButton_Image"
+                            Command="{x:Bind ViewModel.NewImageCaptureCommand}"
+                            Style="{StaticResource NewCaptureButtonStyle}"
+                            Translation="0,0,18">
+                            <Button.Shadow>
+                                <ThemeShadow />
+                            </Button.Shadow>
+                            <StackPanel
+                                x:Name="NewImageCaptureButtonContent"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                Spacing="8">
+                                <SymbolIcon Symbol="{StaticResource NewImageCaptureSymbol}" />
+                                <TextBlock
+                                    x:Uid="NewCaptureButton_Image_Label"
+                                    TextAlignment="Center"
+                                    TextWrapping="WrapWholeWords" />
+                            </StackPanel>
+                        </Button>
+                        <Button
+                            x:Name="NewVideoCaptureButton"
+                            x:Uid="NewCaptureButton_Video"
+                            Command="{x:Bind ViewModel.NewVideoCaptureCommand}"
+                            Style="{StaticResource NewCaptureButtonStyle}"
+                            Translation="0,0,18">
+                            <Button.Shadow>
+                                <ThemeShadow />
+                            </Button.Shadow>
+                            <StackPanel
+                                x:Name="NewVideoCaptureButtonContent"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                Spacing="8">
+                                <SymbolIcon Symbol="{StaticResource NewVideoCaptureSymbol}" />
+                                <TextBlock
+                                    x:Uid="NewCaptureButton_Video_Label"
+                                    TextAlignment="Center"
+                                    TextWrapping="WrapWholeWords" />
+                            </StackPanel>
+                        </Button>
+                        <Button
+                            x:Name="NewAudioCaptureButton"
+                            x:Uid="NewCaptureButton_Audio"
+                            Command="{x:Bind ViewModel.NewAudioCaptureCommand}"
+                            Style="{StaticResource NewCaptureButtonStyle}"
+                            Translation="0,0,18">
+                            <Button.Shadow>
+                                <ThemeShadow />
+                            </Button.Shadow>
+                            <StackPanel
+                                x:Name="NewAudioCaptureButtonContent"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                Spacing="8">
+                                <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="{StaticResource Microphone}" />
+                                <TextBlock
+                                    x:Uid="NewCaptureButton_Audio_Label"
+                                    TextAlignment="Center"
+                                    TextWrapping="WrapWholeWords" />
+                            </StackPanel>
+                        </Button>
                     </StackPanel>
-                </Button>
-                <Button
-                    x:Name="NewAudioCaptureButton"
-                    x:Uid="NewCaptureButton_Audio"
-                    Command="{x:Bind ViewModel.NewAudioCaptureCommand}"
-                    Style="{StaticResource NewCaptureButtonStyle}">
-                    <StackPanel Spacing="4">
+                </Grid>
+
+                <Grid RowSpacing="16">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <TextBlock
+                        x:Uid="HomePage_RecentCapturesHeaderLabel"
+                        FontSize="20"
+                        FontWeight="SemiBold"
+                        Text="Recent captures" />
+
+                    <GridView
+                        x:Name="RecentCapturesGridView"
+                        Grid.Row="1"
+                        CanDragItems="False"
+                        ContainerContentChanging="RecentCapturesGridView_ContainerContentChanging"
+                        IsItemClickEnabled="True"
+                        IsSwipeEnabled="False"
+                        ItemClick="RecentCapturesGridView_ItemClick"
+                        ItemContainerStyle="{StaticResource RecentCaptureGridViewItemStyle}"
+                        ItemsSource="{x:Bind ViewModel.RecentCaptures, Mode=OneWay}"
+                        ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                        ScrollViewer.HorizontalScrollMode="Disabled"
+                        ScrollViewer.VerticalScrollBarVisibility="Disabled"
+                        ScrollViewer.VerticalScrollMode="Disabled"
+                        SelectionMode="None"
+                        SizeChanged="RecentCapturesGridView_SizeChanged">
+                        <GridView.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <ItemsWrapGrid
+                                    ItemHeight="232"
+                                    ItemWidth="248"
+                                    Orientation="Horizontal" />
+                            </ItemsPanelTemplate>
+                        </GridView.ItemsPanel>
+                        <GridView.ItemTemplate>
+                            <DataTemplate x:DataType="recent:RecentCaptureViewModel">
+                                <Grid
+                                    HorizontalAlignment="Stretch"
+                                    VerticalAlignment="Stretch"
+                                    ToolTipService.ToolTip="{x:Bind FilePath}">
+                                    <Border
+                                        Background="{ThemeResource HomeTileBackgroundBrush}"
+                                        BorderBrush="{ThemeResource HomeGlassStrokeBrush}"
+                                        BorderThickness="1"
+                                        CornerRadius="8"
+                                        Translation="0,0,18">
+                                        <Border.Shadow>
+                                            <ThemeShadow />
+                                        </Border.Shadow>
+                                        <Grid>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="*" />
+                                                <RowDefinition Height="Auto" />
+                                            </Grid.RowDefinitions>
+
+                                            <Grid Background="{ThemeResource HomePreviewBackgroundBrush}" CornerRadius="8,8,0,0">
+                                                <Image
+                                                    x:Name="RecentCapturePreviewImage"
+                                                    Opacity="0"
+                                                    Stretch="UniformToFill" />
+                                                <Grid
+                                                    x:Name="RecentCaptureFallback"
+                                                    HorizontalAlignment="Stretch"
+                                                    VerticalAlignment="Stretch">
+                                                    <FontIcon
+                                                        FontFamily="{StaticResource SymbolThemeFontFamily}"
+                                                        FontSize="38"
+                                                        Glyph="{x:Bind IconGlyph, Mode=OneWay}"
+                                                        Opacity=".72" />
+                                                </Grid>
+                                                <Border
+                                                    Width="30"
+                                                    Height="30"
+                                                    Margin="10"
+                                                    HorizontalAlignment="Right"
+                                                    VerticalAlignment="Top"
+                                                    Background="{ThemeResource HomeGlassBrush}"
+                                                    BorderBrush="{ThemeResource HomeGlassStrokeBrush}"
+                                                    BorderThickness="1"
+                                                    CornerRadius="8"
+                                                    ToolTipService.ToolTip="{x:Bind CaptureTypeLabel, Mode=OneWay}">
+                                                    <FontIcon
+                                                        HorizontalAlignment="Center"
+                                                        VerticalAlignment="Center"
+                                                        FontFamily="{StaticResource SymbolThemeFontFamily}"
+                                                        FontSize="13"
+                                                        Glyph="{x:Bind IconGlyph, Mode=OneWay}" />
+                                                </Border>
+                                            </Grid>
+
+                                            <StackPanel
+                                                Grid.Row="1"
+                                                Padding="12,10,12,12"
+                                                Spacing="3">
+                                                <TextBlock
+                                                    FontWeight="SemiBold"
+                                                    MaxLines="1"
+                                                    Text="{x:Bind FileName, Mode=OneWay}"
+                                                    TextTrimming="CharacterEllipsis" />
+                                                <TextBlock
+                                                    FontSize="11"
+                                                    MaxLines="1"
+                                                    Opacity=".64"
+                                                    Text="{x:Bind FilePath, Mode=OneWay}"
+                                                    TextTrimming="CharacterEllipsis" />
+                                            </StackPanel>
+                                        </Grid>
+                                    </Border>
+                                </Grid>
+                            </DataTemplate>
+                        </GridView.ItemTemplate>
+                    </GridView>
+
+                    <StackPanel
+                        Grid.Row="1"
+                        MinHeight="220"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Spacing="10"
+                        Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.IsRecentCapturesEmpty), Mode=OneWay}">
                         <FontIcon
                             FontFamily="{StaticResource SymbolThemeFontFamily}"
-                            Glyph="{StaticResource Microphone}" />
+                            FontSize="42"
+                            Glyph="{StaticResource PhotoCollection}"
+                            Opacity=".65" />
                         <TextBlock
-                            x:Uid="NewCaptureButton_Audio_Label"
-                            TextAlignment="Center"
-                            TextWrapping="WrapWholeWords" />
+                            x:Uid="HomePage_EmptyRecentCapturesLabel"
+                            Opacity=".72"
+                            Text="No captures yet"
+                            TextAlignment="Center" />
                     </StackPanel>
-                </Button>
+
+                    <StackPanel
+                        Grid.Row="2"
+                        HorizontalAlignment="Center"
+                        Orientation="Horizontal"
+                        Spacing="8"
+                        Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.ShowRecentCapturesLoading), Mode=OneWay}">
+                        <ProgressRing
+                            Width="20"
+                            Height="20"
+                            IsActive="{x:Bind ViewModel.ShowRecentCapturesLoading, Mode=OneWay}" />
+                        <TextBlock
+                            x:Uid="HomePage_LoadingRecentCapturesLabel"
+                            VerticalAlignment="Center"
+                            Opacity=".72"
+                            Text="Loading more captures" />
+                    </StackPanel>
+                </Grid>
             </StackPanel>
-        </StackPanel>
+        </ScrollViewer>
+
+        <VisualStateManager.VisualStateGroups>
+            <VisualStateGroup x:Name="AdaptiveStates">
+                <VisualState x:Name="Compact">
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="0" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="PageContentStack.Padding" Value="16,20,16,32" />
+                        <Setter Target="PageContentStack.Spacing" Value="22" />
+                        <Setter Target="HeroGrid.ColumnSpacing" Value="0" />
+                        <Setter Target="HeroTextPanel.MaxWidth" Value="10000" />
+                        <Setter Target="HeroTextPanel.(Grid.ColumnSpan)" Value="2" />
+                        <Setter Target="HeroTitleText.FontSize" Value="24" />
+                        <Setter Target="CaptureActionsPanel.(Grid.Row)" Value="1" />
+                        <Setter Target="CaptureActionsPanel.(Grid.Column)" Value="0" />
+                        <Setter Target="CaptureActionsPanel.(Grid.ColumnSpan)" Value="2" />
+                        <Setter Target="CaptureActionsPanel.HorizontalAlignment" Value="Stretch" />
+                        <Setter Target="CaptureActionsPanel.Orientation" Value="Vertical" />
+                        <Setter Target="CaptureActionsPanel.Spacing" Value="8" />
+                        <Setter Target="NewImageCaptureButton.MinWidth" Value="0" />
+                        <Setter Target="NewVideoCaptureButton.MinWidth" Value="0" />
+                        <Setter Target="NewAudioCaptureButton.MinWidth" Value="0" />
+                        <Setter Target="NewImageCaptureButton.MinHeight" Value="76" />
+                        <Setter Target="NewVideoCaptureButton.MinHeight" Value="76" />
+                        <Setter Target="NewAudioCaptureButton.MinHeight" Value="76" />
+                        <Setter Target="NewImageCaptureButton.HorizontalAlignment" Value="Stretch" />
+                        <Setter Target="NewVideoCaptureButton.HorizontalAlignment" Value="Stretch" />
+                        <Setter Target="NewAudioCaptureButton.HorizontalAlignment" Value="Stretch" />
+                        <Setter Target="NewImageCaptureButton.Height" Value="76" />
+                        <Setter Target="NewVideoCaptureButton.Height" Value="76" />
+                        <Setter Target="NewAudioCaptureButton.Height" Value="76" />
+                        <Setter Target="NewImageCaptureButtonContent.Orientation" Value="Horizontal" />
+                        <Setter Target="NewVideoCaptureButtonContent.Orientation" Value="Horizontal" />
+                        <Setter Target="NewAudioCaptureButtonContent.Orientation" Value="Horizontal" />
+                    </VisualState.Setters>
+                </VisualState>
+                <VisualState x:Name="Medium">
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="700" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="PageContentStack.Padding" Value="24,24,24,40" />
+                        <Setter Target="HeroTextPanel.MaxWidth" Value="10000" />
+                        <Setter Target="HeroTextPanel.(Grid.ColumnSpan)" Value="2" />
+                        <Setter Target="CaptureActionsPanel.(Grid.Row)" Value="1" />
+                        <Setter Target="CaptureActionsPanel.(Grid.Column)" Value="0" />
+                        <Setter Target="CaptureActionsPanel.(Grid.ColumnSpan)" Value="2" />
+                        <Setter Target="CaptureActionsPanel.HorizontalAlignment" Value="Left" />
+                        <Setter Target="CaptureActionsPanel.Orientation" Value="Horizontal" />
+                    </VisualState.Setters>
+                </VisualState>
+                <VisualState x:Name="Wide">
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="1080" />
+                    </VisualState.StateTriggers>
+                </VisualState>
+            </VisualStateGroup>
+        </VisualStateManager.VisualStateGroups>
     </Grid>
 
 </local:HomePageBase>
