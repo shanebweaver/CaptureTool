@@ -205,7 +205,11 @@
                             x:Name="NewImageCaptureButton"
                             x:Uid="NewCaptureButton_Image"
                             Command="{x:Bind ViewModel.NewImageCaptureCommand}"
-                            Style="{StaticResource NewCaptureButtonStyle}">
+                            Style="{StaticResource NewCaptureButtonStyle}"
+                            Translation="0,0,18">
+                            <Button.Shadow>
+                                <ThemeShadow />
+                            </Button.Shadow>
                             <StackPanel
                                 x:Name="NewImageCaptureButtonContent"
                                 HorizontalAlignment="Center"
@@ -222,7 +226,11 @@
                             x:Name="NewVideoCaptureButton"
                             x:Uid="NewCaptureButton_Video"
                             Command="{x:Bind ViewModel.NewVideoCaptureCommand}"
-                            Style="{StaticResource NewCaptureButtonStyle}">
+                            Style="{StaticResource NewCaptureButtonStyle}"
+                            Translation="0,0,18">
+                            <Button.Shadow>
+                                <ThemeShadow />
+                            </Button.Shadow>
                             <StackPanel
                                 x:Name="NewVideoCaptureButtonContent"
                                 HorizontalAlignment="Center"
@@ -239,7 +247,11 @@
                             x:Name="NewAudioCaptureButton"
                             x:Uid="NewCaptureButton_Audio"
                             Command="{x:Bind ViewModel.NewAudioCaptureCommand}"
-                            Style="{StaticResource NewCaptureButtonStyle}">
+                            Style="{StaticResource NewCaptureButtonStyle}"
+                            Translation="0,0,18">
+                            <Button.Shadow>
+                                <ThemeShadow />
+                            </Button.Shadow>
                             <StackPanel
                                 x:Name="NewAudioCaptureButtonContent"
                                 HorizontalAlignment="Center"
@@ -302,7 +314,11 @@
                                         Background="{ThemeResource HomeTileBackgroundBrush}"
                                         BorderBrush="{ThemeResource HomeGlassStrokeBrush}"
                                         BorderThickness="1"
-                                        CornerRadius="8">
+                                        CornerRadius="8"
+                                        Translation="0,0,18">
+                                        <Border.Shadow>
+                                            <ThemeShadow />
+                                        </Border.Shadow>
                                         <Grid>
                                             <Grid.RowDefinitions>
                                                 <RowDefinition Height="*" />
