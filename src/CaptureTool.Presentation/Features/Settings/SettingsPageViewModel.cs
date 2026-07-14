@@ -23,8 +23,10 @@ using CaptureTool.Application.Abstractions.Settings.UpdateVideoCaptureAutoCopy;
 using CaptureTool.Application.Abstractions.Settings.UpdateVideoCaptureAutoSave;
 using CaptureTool.Application.Abstractions.Settings.UpdateVideoCaptureDefaultLocalAudio;
 using CaptureTool.Application.Abstractions.Localization;
+using CaptureTool.Application.Abstractions.Metrics;
 using CaptureTool.Application.Abstractions.Settings;
 using CaptureTool.Application.Abstractions.Storage;
+using CaptureTool.Application.Abstractions.Store;
 using CaptureTool.Application.Abstractions.Themes;
 using CaptureTool.Domain.Ai;
 using CaptureTool.Presentation.Factories;
@@ -62,6 +64,8 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
     private readonly IAiFeatureConsentService _aiFeatureConsentService;
     private readonly ILocalizationService _localizationService;
     private readonly ISettingsService _settingsService;
+    private readonly IAppMetricsService _appMetricsService;
+    private readonly IStoreService _storeService;
     private readonly IThemeService _themeService;
     private readonly IStorageService _storageService;
     private readonly IFactoryServiceWithArgs<AppLanguageViewModel, IAppLanguage?> _appLanguageViewModelFactory;
@@ -96,6 +100,8 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
     public IAsyncRelayCommand OpenTemporaryFilesFolderCommand { get; }
     public IAsyncRelayCommand ClearTemporaryFilesCommand { get; }
     public IAsyncRelayCommand RestoreDefaultSettingsCommand { get; }
+    public IAsyncRelayCommand OpenStoreReviewCommand { get; }
+    public IAsyncRelayCommand<bool> UpdateStoreReviewRemindersEnabledCommand { get; }
 
     public ObservableCollection<AppLanguageViewModel> AppLanguages
     {
@@ -199,6 +205,12 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
         private set => Set(ref field, value);
     }
 
+    public bool StoreReviewRemindersEnabled
+    {
+        get;
+        private set => Set(ref field, value);
+    }
+
     public string ScreenshotsFolderPath
     {
         get;
@@ -251,6 +263,8 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
         ILocalizationService localizationService,
         IThemeService themeService,
         ISettingsService settingsService,
+        IAppMetricsService appMetricsService,
+        IStoreService storeService,
         IStorageService storageService,
         IFactoryServiceWithArgs<AppLanguageViewModel, IAppLanguage?> appLanguageViewModelFactory,
         IFactoryServiceWithArgs<AppThemeViewModel, AppTheme> appThemeViewModelFactory)
@@ -282,6 +296,8 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
         _localizationService = localizationService;
         _themeService = themeService;
         _settingsService = settingsService;
+        _appMetricsService = appMetricsService;
+        _storeService = storeService;
         _storageService = storageService;
         _appLanguageViewModelFactory = appLanguageViewModelFactory;
         _appThemeViewModelFactory = appThemeViewModelFactory;
@@ -317,6 +333,8 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
         OpenTemporaryFilesFolderCommand = new AsyncRelayCommand(OpenTemporaryFilesFolderAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
         ClearTemporaryFilesCommand = new AsyncRelayCommand(ClearTemporaryFilesAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
         RestoreDefaultSettingsCommand = new AsyncRelayCommand(RestoreDefaultSettingsAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
+        OpenStoreReviewCommand = new AsyncRelayCommand(OpenStoreReviewAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
+        UpdateStoreReviewRemindersEnabledCommand = new AsyncRelayCommand<bool>(UpdateStoreReviewRemindersEnabledAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
     }
 
     public override async Task LoadAsync(CancellationToken cancellationToken)
@@ -385,6 +403,7 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
         AudioCaptureDefaultLocalAudio = _settingsService.Get(CaptureToolSettings.Settings_AudioCapture_DefaultLocalAudioEnabled);
         CaptureWarnBeforeDiscard = _settingsService.Get(CaptureToolSettings.Settings_Capture_WarnBeforeDiscard);
         EditWarnBeforeDiscard = _settingsService.Get(CaptureToolSettings.Settings_Edit_WarnBeforeDiscard);
+        StoreReviewRemindersEnabled = _appMetricsService.StoreReviewRemindersEnabled;
         RefreshAiFeatureConsents();
 
         var screenshotsFolder = _settingsService.Get(CaptureToolSettings.Settings_ImageCapture_AutoSaveFolder);
@@ -539,6 +558,17 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
     {
         CaptureWarnBeforeDiscard = value;
         await _updateCaptureWarnBeforeDiscardAction.ExecuteAsync(new UpdateCaptureWarnBeforeDiscardRequest(value), CancellationToken.None);
+    }
+
+    private async Task UpdateStoreReviewRemindersEnabledAsync(bool value)
+    {
+        StoreReviewRemindersEnabled = value;
+        await _appMetricsService.SetStoreReviewRemindersEnabledAsync(value, CancellationToken.None);
+    }
+
+    private async Task OpenStoreReviewAsync()
+    {
+        await _storeService.LaunchAppReviewAsync(CancellationToken.None);
     }
 
     private async Task ChangeScreenshotsFolderAsync()

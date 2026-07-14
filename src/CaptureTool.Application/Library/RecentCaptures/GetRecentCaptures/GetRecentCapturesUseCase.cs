@@ -27,7 +27,7 @@ internal sealed class GetRecentCapturesUseCase : IGetRecentCapturesUseCase
 
     public bool CanExecute(GetRecentCapturesRequest request)
     {
-        return true;
+        return request.Skip >= 0 && request.Take > 0;
     }
 
     public Task<UseCaseResponse<GetRecentCapturesResponse>> ExecuteAsync(GetRecentCapturesRequest request, CancellationToken cancellationToken = default)
@@ -37,18 +37,25 @@ internal sealed class GetRecentCapturesUseCase : IGetRecentCapturesUseCase
             useCase: () =>
             {
                 string recentCapturesFolder = _storageService.GetApplicationTemporaryFolderPath();
+                int skip = Math.Max(0, request.Skip);
+                int take = request.Take <= 0 ? 5 : request.Take;
 
-                IReadOnlyList<RecentCapture> recentCaptures = _fileSystem.EnumerateFiles(recentCapturesFolder, "*.*")
+                IReadOnlyList<RecentCapture> requestedCaptures = _fileSystem.EnumerateFiles(recentCapturesFolder, "*.*")
                     .OrderByDescending(_fileSystem.GetLastWriteTimeUtc)
                     .Where(filePath => !string.IsNullOrEmpty(filePath) && _fileSystem.FileExists(filePath))
                     .Select(filePath => new RecentCapture(
                         filePath,
                         Path.GetFileName(filePath),
                         CaptureFileTypeDetector.DetectFileType(filePath)))
-                    .Take(5)
+                    .Skip(skip)
+                    .Take(take + 1)
                     .ToArray();
 
-                return new GetRecentCapturesResponse(recentCaptures);
+                IReadOnlyList<RecentCapture> recentCaptures = requestedCaptures
+                    .Take(take)
+                    .ToArray();
+
+                return new GetRecentCapturesResponse(recentCaptures, requestedCaptures.Count > take);
             },
             cancellationToken: cancellationToken);
     }

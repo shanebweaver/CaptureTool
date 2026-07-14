@@ -95,6 +95,14 @@ public sealed partial class SettingsPage : SettingsPageBase
         }
     }
 
+    private void StoreReviewRemindersToggleSwitch_Toggled(object sender, RoutedEventArgs e)
+    {
+        if (sender is ToggleSwitch toggleSwitch)
+        {
+            _ = ViewModel.UpdateStoreReviewRemindersEnabledCommand.ExecuteAsync(toggleSwitch.IsOn);
+        }
+    }
+
     private void AiFeatureConsentCheckBox_Click(object sender, RoutedEventArgs e)
     {
         if (sender is CheckBox checkBox && checkBox.DataContext is AiFeatureConsentViewModel featureConsent)

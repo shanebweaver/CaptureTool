@@ -5,6 +5,7 @@ using CaptureTool.Application.Abstractions.Capture.Overlay.OpenSelectionOverlay;
 using CaptureTool.Application.Abstractions.Shell.Home.ShowHomePage;
 using CaptureTool.Application.Abstractions.Localization;
 using CaptureTool.Application.Abstractions.Logging;
+using CaptureTool.Application.Abstractions.Metrics;
 using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Application.Abstractions.Settings;
 using CaptureTool.Application.Abstractions.Storage;
@@ -33,6 +34,12 @@ public sealed class ActivationHandlerTests
             Times.Once);
         fixture.Settings.Verify(service => service.Get(CaptureToolSettings.VerboseLogging), Times.Once);
         fixture.Settings.Verify(service => service.Get(CaptureToolSettings.Settings_LanguageOverride), Times.Once);
+        fixture.AppMetrics.Verify(
+            service => service.InitializeAsync(
+                Path.Combine(fixture.AppDataFolder, "Metrics.json"),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+        fixture.AppMetrics.Verify(service => service.RecordAppLaunchAsync(It.IsAny<CancellationToken>()), Times.Once);
         fixture.LogService.Verify(service => service.Enable(), Times.Once);
         fixture.Localization.Verify(service => service.Initialize("fr-FR"), Times.Once);
         fixture.NavigationService.Verify(service => service.SetNavigationHandler(fixture.NavigationHandler.Object), Times.Once);
@@ -206,6 +213,12 @@ public sealed class ActivationHandlerTests
             Settings
                 .Setup(service => service.InitializeAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .Returns(Task.CompletedTask);
+            AppMetrics
+                .Setup(service => service.InitializeAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .Returns(Task.CompletedTask);
+            AppMetrics
+                .Setup(service => service.RecordAppLaunchAsync(It.IsAny<CancellationToken>()))
+                .Returns(Task.CompletedTask);
             Settings
                 .Setup(service => service.Get(CaptureToolSettings.VerboseLogging))
                 .Returns(verboseLogging);
@@ -220,6 +233,7 @@ public sealed class ActivationHandlerTests
                 CancellationService.Object,
                 Settings.Object,
                 LogService.Object,
+                AppMetrics.Object,
                 Localization.Object,
                 NavigationHandler.Object,
                 NavigationService.Object,
@@ -230,6 +244,7 @@ public sealed class ActivationHandlerTests
         public string AppDataFolder { get; } = @"C:\CaptureTool\AppData";
         public Mock<ICancellationService> CancellationService { get; } = new();
         public Mock<ISettingsService> Settings { get; } = new();
+        public Mock<IAppMetricsService> AppMetrics { get; } = new();
         public Mock<ILogService> LogService { get; } = new();
         public Mock<ILocalizationService> Localization { get; } = new();
         public Mock<INavigationHandler> NavigationHandler { get; } = new();

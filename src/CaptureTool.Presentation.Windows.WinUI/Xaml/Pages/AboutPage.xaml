@@ -63,6 +63,16 @@
                     <HyperlinkButton Command="{x:Bind ViewModel.ShowThirdPartyCommand}">
                         <TextBlock x:Uid="About_ThirdParty_ButtonLabel" TextWrapping="WrapWholeWords" />
                     </HyperlinkButton>
+
+                    <Button
+                        x:Uid="About_SendFeedbackButton"
+                        Margin="0,8,0,0"
+                        Command="{x:Bind ViewModel.SendFeedbackCommand}">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <SymbolIcon Symbol="Comment" />
+                            <TextBlock x:Uid="About_SendFeedbackButtonLabel" />
+                        </StackPanel>
+                    </Button>
                 </StackPanel>
             </StackPanel>
         </StackPanel>

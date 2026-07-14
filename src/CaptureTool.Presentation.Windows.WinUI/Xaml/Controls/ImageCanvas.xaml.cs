@@ -69,10 +69,15 @@ public sealed partial class ImageCanvas : UserControlBase
 
     private static void OnIsShapesModeEnabledPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
-        if (d is ImageCanvas control && e.NewValue is bool isEnabled && !isEnabled)
+        if (d is ImageCanvas control && e.NewValue is bool isEnabled)
         {
-            // When leaving shapes mode, deselect any selected shape
-            control.DeselectShape();
+            if (!isEnabled)
+            {
+                // When leaving shapes mode, deselect any selected shape
+                control.DeselectShape();
+            }
+
+            control.UpdateTouchInputLock();
         }
     }
 
@@ -84,9 +89,14 @@ public sealed partial class ImageCanvas : UserControlBase
 
     private static void OnIsTextModeEnabledPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
-        if (d is ImageCanvas control && e.NewValue is bool isEnabled && !isEnabled)
+        if (d is ImageCanvas control && e.NewValue is bool isEnabled)
         {
-            control.DeselectShape();
+            if (!isEnabled)
+            {
+                control.DeselectShape();
+            }
+
+            control.UpdateTouchInputLock();
         }
     }
 
@@ -106,6 +116,8 @@ public sealed partial class ImageCanvas : UserControlBase
             {
                 control.HideColorPickerCursor();
             }
+
+            control.UpdateTouchInputLock();
         }
     }
 
@@ -275,6 +287,7 @@ public sealed partial class ImageCanvas : UserControlBase
                 }
             });
 
+            control.UpdateTouchInputLock();
             control.InvalidateCanvas();
         }
     }
@@ -444,6 +457,8 @@ public sealed partial class ImageCanvas : UserControlBase
     private int _styleInteractionShapeIndex = -1;
     private int _styleInteractionDepth;
     private INotifyCollectionChanged? _observableDrawables;
+    private ScrollingInputKinds _defaultIgnoredInputKinds = ScrollingInputKinds.None;
+    private bool _isIgnoringTouchInputForEditing;
 
     // Track if we're in a potential selection scenario
     private IDrawable? _shapeUnderPointer;
@@ -509,16 +524,28 @@ public sealed partial class ImageCanvas : UserControlBase
         }
     }
 
+    private static bool IsPrimaryPointerPressed(PointerRoutedEventArgs e, UIElement relativeTo)
+    {
+        var point = e.GetCurrentPoint(relativeTo);
+        return point.Properties.IsLeftButtonPressed ||
+            (e.Pointer.PointerDeviceType != PointerDeviceType.Mouse && e.Pointer.IsInContact);
+    }
+
     private void ImageCanvas_Loaded(object sender, RoutedEventArgs e)
     {
         // Wire up the ViewChanged event after the control is loaded
         if (CanvasScrollView != null)
         {
             CanvasScrollView.ViewChanged += CanvasScrollView_ViewChanged;
+            if (!_isIgnoringTouchInputForEditing)
+            {
+                _defaultIgnoredInputKinds = CanvasScrollView.IgnoredInputKinds;
+            }
         }
 
         AttachXamlRootChanged();
         SetObservableDrawables(Drawables as INotifyCollectionChanged);
+        UpdateTouchInputLock();
     }
 
     private void ImageCanvas_Unloaded(object sender, RoutedEventArgs e)
@@ -529,9 +556,52 @@ public sealed partial class ImageCanvas : UserControlBase
             CanvasScrollView.ViewChanged -= CanvasScrollView_ViewChanged;
         }
 
+        RestoreTouchInput();
         DetachXamlRootChanged();
         SetObservableDrawables(null);
         InvalidateColorPickerSnapshot();
+    }
+
+    private void UpdateTouchInputLock()
+    {
+        if (CanvasScrollView == null || RootContainer == null)
+        {
+            return;
+        }
+
+        bool shouldIgnoreTouchInput =
+            IsCropModeEnabled ||
+            IsShapesModeEnabled ||
+            IsTextModeEnabled ||
+            IsColorPickerModeEnabled;
+
+        if (shouldIgnoreTouchInput == _isIgnoringTouchInputForEditing)
+        {
+            return;
+        }
+
+        if (shouldIgnoreTouchInput)
+        {
+            _defaultIgnoredInputKinds = CanvasScrollView.IgnoredInputKinds;
+            CanvasScrollView.IgnoredInputKinds = _defaultIgnoredInputKinds | ScrollingInputKinds.Touch;
+            RootContainer.CancelDirectManipulations();
+            _isIgnoringTouchInputForEditing = true;
+        }
+        else
+        {
+            RestoreTouchInput();
+        }
+    }
+
+    private void RestoreTouchInput()
+    {
+        if (!_isIgnoringTouchInputForEditing || CanvasScrollView == null)
+        {
+            return;
+        }
+
+        CanvasScrollView.IgnoredInputKinds = _defaultIgnoredInputKinds;
+        _isIgnoringTouchInputForEditing = false;
     }
 
     private void AttachXamlRootChanged()
@@ -991,7 +1061,7 @@ public sealed partial class ImageCanvas : UserControlBase
             return true;
         }
 
-        if (!point.Properties.IsLeftButtonPressed)
+        if (!IsPrimaryPointerPressed(e, RenderCanvas))
         {
             return false;
         }
@@ -1163,7 +1233,7 @@ public sealed partial class ImageCanvas : UserControlBase
         {
             // Get position relative to the RenderCanvas
             var point = e.GetCurrentPoint(RenderCanvas);
-            if (point.Properties.IsLeftButtonPressed)
+            if (IsPrimaryPointerPressed(e, RenderCanvas))
             {
                 // Store the press position for later use
                 _pointerPressPosition = point.Position;
@@ -1196,7 +1266,7 @@ public sealed partial class ImageCanvas : UserControlBase
         else if (IsTextModeEnabled)
         {
             var point = e.GetCurrentPoint(RenderCanvas);
-            if (point.Properties.IsLeftButtonPressed)
+            if (IsPrimaryPointerPressed(e, RenderCanvas))
             {
                 _pointerPressPosition = point.Position;
 
@@ -1853,6 +1923,11 @@ public sealed partial class ImageCanvas : UserControlBase
         RenderCanvas.Invalidate(); // Redraw to show all shapes
     }
 
+    public void ClearShapeSelection()
+    {
+        DeselectShape();
+    }
+
     private IDrawable? FindShapeAtPoint(Point clickPoint)
     {
         if (Drawables == null)
@@ -2251,7 +2326,7 @@ public sealed partial class ImageCanvas : UserControlBase
 
     private void LineStartHandle_PointerPressed(object sender, PointerRoutedEventArgs e)
     {
-        if (!e.GetCurrentPoint(LineEndpointHandlesCanvas).Properties.IsLeftButtonPressed)
+        if (!IsPrimaryPointerPressed(e, LineEndpointHandlesCanvas))
         {
             return;
         }
@@ -2293,7 +2368,7 @@ public sealed partial class ImageCanvas : UserControlBase
 
     private void LineEndHandle_PointerPressed(object sender, PointerRoutedEventArgs e)
     {
-        if (!e.GetCurrentPoint(LineEndpointHandlesCanvas).Properties.IsLeftButtonPressed)
+        if (!IsPrimaryPointerPressed(e, LineEndpointHandlesCanvas))
         {
             return;
         }
@@ -2431,7 +2506,7 @@ public sealed partial class ImageCanvas : UserControlBase
 
     private void LineMoveHandle_PointerPressed(object sender, PointerRoutedEventArgs e)
     {
-        if (!e.GetCurrentPoint(LineEndpointHandlesCanvas).Properties.IsLeftButtonPressed)
+        if (!IsPrimaryPointerPressed(e, LineEndpointHandlesCanvas))
         {
             return;
         }

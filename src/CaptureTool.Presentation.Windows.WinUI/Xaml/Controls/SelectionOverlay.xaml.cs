@@ -103,7 +103,7 @@ public sealed partial class SelectionOverlay : UserControlBase
         if (CaptureType == CaptureType.Rectangle && IsValidSelection(SelectionRect))
         {
             double scale = XamlRoot.RasterizationScale;
-            SelectionToolTip.Content = $"{Math.Floor(SelectionRect.Width * scale)} × {Math.Floor(SelectionRect.Height * scale)}";
+            SelectionToolTip.Content = $"{Math.Floor(SelectionRect.Width * scale)} Ã— {Math.Floor(SelectionRect.Height * scale)}";
             SelectionToolTip.Visibility = Visibility.Visible;
             double left = Math.Clamp(SelectionRect.Left + (SelectionRect.Width / 2) - (SelectionToolTip.ActualWidth / 2), 0, SelectionCanvas.Width - SelectionToolTip.ActualWidth);
             double top = Math.Clamp(SelectionRect.Top - SelectionToolTip.ActualHeight, 0, SelectionCanvas.Height - SelectionToolTip.ActualHeight);
@@ -118,9 +118,10 @@ public sealed partial class SelectionOverlay : UserControlBase
 
     private void SelectionCanvas_PointerPressed(object sender, PointerRoutedEventArgs e)
     {
+        var pointerPos = e.GetCurrentPoint(SelectionCanvas).Position;
+
         if (CaptureType == CaptureType.Rectangle)
         {
-            var pointerPos = e.GetCurrentPoint(SelectionCanvas).Position;
             if (!IsPointerOverSelectionArea(pointerPos))
             {
                 _isCreatingNewSelection = true;
@@ -140,8 +141,7 @@ public sealed partial class SelectionOverlay : UserControlBase
         }
         else if (CaptureType == CaptureType.Window)
         {
-            var pointerPos = e.GetCurrentPoint(SelectionCanvas).Position;
-            if (IsPointerOverSelectionArea(pointerPos))
+            if (UpdateWindowSelection(pointerPos))
             {
                 _isCreatingNewSelection = true;
                 SelectionCanvas.CapturePointer(e.Pointer);
@@ -150,8 +150,8 @@ public sealed partial class SelectionOverlay : UserControlBase
         }
         else if (CaptureType == CaptureType.FullScreen)
         {
-            var pointerPos = e.GetCurrentPoint(SelectionCanvas).Position;
-            if (IsPointerOverSelectionArea(pointerPos))
+            UpdateFullScreenSelection();
+            if (IsValidSelection(SelectionRect))
             {
                 _isCreatingNewSelection = true;
                 SelectionCanvas.CapturePointer(e.Pointer);
@@ -204,38 +204,13 @@ public sealed partial class SelectionOverlay : UserControlBase
                 return;
             }
 
-            // Look for a window rectangle and if the pointer is inside it, use that rectangle as the selection area
             var pointerPos = e.GetCurrentPoint(SelectionCanvas).Position;
-            var pointerPoint = new System.Drawing.Point((int)pointerPos.X, (int)pointerPos.Y);
-
-            bool windowFound = false;
-            foreach (var windowRect in WindowRects)
-            {
-                if (windowRect.Contains(pointerPoint))
-                {
-                    var adjusted = new Rectangle(
-                        Math.Max(windowRect.X, 0),
-                        Math.Max(windowRect.Y, 0),
-                        windowRect.Width + Math.Min(windowRect.X, 0),
-                        windowRect.Height + Math.Min(windowRect.Y, 0));
-
-                    UpdateSelectionRect(adjusted);
-                    windowFound = true;
-                    break;
-                }
-            }
-
-            // If no window is found, clear the selection area.
-            if (!windowFound)
-            {
-                UpdateSelectionRect(Rectangle.Empty);
-            }
-
+            UpdateWindowSelection(pointerPos);
             e.Handled = true;
         }
         else if (CaptureType == CaptureType.FullScreen)
         {
-            UpdateSelectionRect(new(0, 0, (int)SelectionCanvas.Width, (int)SelectionCanvas.Height));
+            UpdateFullScreenSelection();
             e.Handled = true;
         }
 
@@ -244,6 +219,19 @@ public sealed partial class SelectionOverlay : UserControlBase
 
     private void SelectionCanvas_PointerReleased(object sender, PointerRoutedEventArgs e)
     {
+        if (_isCreatingNewSelection)
+        {
+            var pointerPos = e.GetCurrentPoint(SelectionCanvas).Position;
+            if (CaptureType == CaptureType.Window)
+            {
+                UpdateWindowSelection(pointerPos);
+            }
+            else if (CaptureType == CaptureType.FullScreen)
+            {
+                UpdateFullScreenSelection();
+            }
+        }
+
         SelectionCanvas.ReleasePointerCaptures();
 
         if (_isCreatingNewSelection)
@@ -276,7 +264,38 @@ public sealed partial class SelectionOverlay : UserControlBase
 
     private void SelectionCanvas_PointerExited(object sender, PointerRoutedEventArgs e)
     {
+        if (!_isCreatingNewSelection)
+        {
+            UpdateSelectionRect(Rectangle.Empty);
+        }
+    }
+
+    private bool UpdateWindowSelection(Point pointerPos)
+    {
+        var pointerPoint = new System.Drawing.Point((int)pointerPos.X, (int)pointerPos.Y);
+
+        foreach (var windowRect in WindowRects)
+        {
+            if (windowRect.Contains(pointerPoint))
+            {
+                var adjusted = new Rectangle(
+                    Math.Max(windowRect.X, 0),
+                    Math.Max(windowRect.Y, 0),
+                    windowRect.Width + Math.Min(windowRect.X, 0),
+                    windowRect.Height + Math.Min(windowRect.Y, 0));
+
+                UpdateSelectionRect(adjusted);
+                return IsValidSelection(adjusted);
+            }
+        }
+
         UpdateSelectionRect(Rectangle.Empty);
+        return false;
+    }
+
+    private void UpdateFullScreenSelection()
+    {
+        UpdateSelectionRect(new(0, 0, (int)SelectionCanvas.Width, (int)SelectionCanvas.Height));
     }
 
     private bool IsPointerOverSelectionArea(Point pos)

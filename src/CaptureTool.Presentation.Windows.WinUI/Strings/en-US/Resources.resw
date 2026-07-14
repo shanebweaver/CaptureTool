@@ -141,6 +141,22 @@
     <value>options</value>
     <comment>The label for the capture options button on the home page.</comment>
   </data>
+  <data name="HomePage_GallerySubtitleLabel.Text" xml:space="preserve">
+    <value>Your latest screenshots, recordings, and clips are gathered below.</value>
+    <comment>The subtitle shown near the capture actions on the home page.</comment>
+  </data>
+  <data name="HomePage_RecentCapturesHeaderLabel.Text" xml:space="preserve">
+    <value>Recent captures</value>
+    <comment>The header for the recent captures gallery on the home page.</comment>
+  </data>
+  <data name="HomePage_EmptyRecentCapturesLabel.Text" xml:space="preserve">
+    <value>No captures yet</value>
+    <comment>The empty state label for the recent captures gallery on the home page.</comment>
+  </data>
+  <data name="HomePage_LoadingRecentCapturesLabel.Text" xml:space="preserve">
+    <value>Loading more captures</value>
+    <comment>The loading label shown while the recent captures gallery is fetching more items.</comment>
+  </data>
   <data name="ErrorPage_HeaderLabel.Text" xml:space="preserve">
     <value>An error occurred while loading the page.</value>
     <comment>The title for the error page.</comment>
@@ -1511,10 +1527,55 @@ SOFTWARE.
   <data name="ImageEdit_ColorCopiedNotification" xml:space="preserve">
     <value>Color copied</value>
   </data>
+  <data name="ImageEdit_ColorCopyFailedNotification" xml:space="preserve">
+    <value>Could not copy color to clipboard.</value>
+  </data>
   <data name="VideoEdit_EditInClipchampButton.Label" xml:space="preserve">
     <value>Edit in Clipchamp</value>
   </data>
   <data name="AudioEdit_OpenInClipchampButton.Label" xml:space="preserve">
     <value>Open in Clipchamp</value>
+  </data>
+  <data name="About_SendFeedbackButton.AutomationProperties.Name" xml:space="preserve">
+    <value>Send feedback</value>
+  </data>
+  <data name="About_SendFeedbackButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Open Feedback Hub</value>
+  </data>
+  <data name="About_SendFeedbackButtonLabel.Text" xml:space="preserve">
+    <value>Send feedback</value>
+  </data>
+  <data name="StoreReviewPrompt_Title" xml:space="preserve">
+    <value>Enjoying Capture Tool?</value>
+  </data>
+  <data name="StoreReviewPrompt_Content" xml:space="preserve">
+    <value>A quick Microsoft Store review helps other people find the app.</value>
+  </data>
+  <data name="StoreReviewPrompt_ReviewButton" xml:space="preserve">
+    <value>Leave a review</value>
+  </data>
+  <data name="StoreReviewPrompt_RemindLaterButton" xml:space="preserve">
+    <value>Remind me later</value>
+  </data>
+  <data name="StoreReviewPrompt_DontShowAgainButton" xml:space="preserve">
+    <value>Don't show again</value>
+  </data>
+  <data name="Settings_StoreHeaderLabel.Text" xml:space="preserve">
+    <value>Store</value>
+  </data>
+  <data name="Settings_StoreReview_HeaderLabel.Text" xml:space="preserve">
+    <value>Store Review reminders</value>
+  </data>
+  <data name="Settings_StoreReview_SubtitleLabel.Text" xml:space="preserve">
+    <value>Ask for a Microsoft Store review after enough time and app launches.</value>
+  </data>
+  <data name="Settings_StoreReview_LinkLabel.Text" xml:space="preserve">
+    <value>Leave a Microsoft Store review</value>
+  </data>
+  <data name="Settings_StoreReviewReminders_Toggle.OnContent" xml:space="preserve">
+    <value>On</value>
+  </data>
+  <data name="Settings_StoreReviewReminders_Toggle.OffContent" xml:space="preserve">
+    <value>Off</value>
   </data>
 </root>
