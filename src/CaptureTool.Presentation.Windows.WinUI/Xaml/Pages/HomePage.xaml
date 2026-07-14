@@ -16,10 +16,7 @@
         <ResourceDictionary>
             <ResourceDictionary.ThemeDictionaries>
                 <ResourceDictionary x:Key="Light">
-                    <LinearGradientBrush
-                        x:Key="HomeDreamBackgroundBrush"
-                        StartPoint="0,0"
-                        EndPoint="1,1">
+                    <LinearGradientBrush x:Key="HomeDreamBackgroundBrush" StartPoint="0,0" EndPoint="1,1">
                         <GradientStop Offset="0" Color="#FFF8FBFF" />
                         <GradientStop Offset=".36" Color="#FFEAF8F1" />
                         <GradientStop Offset=".72" Color="#FFFFF2D8" />
@@ -30,38 +27,9 @@
                     <SolidColorBrush x:Key="HomeGlassStrokeBrush" Color="#66FFFFFF" />
                     <SolidColorBrush x:Key="HomeTileBackgroundBrush" Color="#B8FFFFFF" />
                     <SolidColorBrush x:Key="HomePreviewBackgroundBrush" Color="#DCEEF3F2" />
-                    <AcrylicBrush
-                        x:Key="HomeCaptureButtonBrush"
-                        FallbackColor="#DDF0FFF9"
-                        TintColor="#C8FFF1"
-                        TintLuminosityOpacity=".72"
-                        TintOpacity=".54" />
-                    <AcrylicBrush
-                        x:Key="HomeCaptureButtonPointerOverBrush"
-                        FallbackColor="#EEF7FFFC"
-                        TintColor="#D9FFF7"
-                        TintLuminosityOpacity=".8"
-                        TintOpacity=".66" />
-                    <AcrylicBrush
-                        x:Key="HomeCaptureButtonPressedBrush"
-                        FallbackColor="#CFE1FFF4"
-                        TintColor="#A8FBE6"
-                        TintLuminosityOpacity=".62"
-                        TintOpacity=".72" />
-                    <LinearGradientBrush
-                        x:Key="HomeCaptureButtonBorderBrush"
-                        StartPoint="0,0"
-                        EndPoint="1,1">
-                        <GradientStop Offset="0" Color="#F2FFFFFF" />
-                        <GradientStop Offset=".48" Color="#99B8FFE8" />
-                        <GradientStop Offset="1" Color="#88FFD18F" />
-                    </LinearGradientBrush>
                 </ResourceDictionary>
                 <ResourceDictionary x:Key="Dark">
-                    <LinearGradientBrush
-                        x:Key="HomeDreamBackgroundBrush"
-                        StartPoint="0,0"
-                        EndPoint="1,1">
+                    <LinearGradientBrush x:Key="HomeDreamBackgroundBrush" StartPoint="0,0" EndPoint="1,1">
                         <GradientStop Offset="0" Color="#FF151821" />
                         <GradientStop Offset=".32" Color="#FF153231" />
                         <GradientStop Offset=".68" Color="#FF3A2731" />
@@ -72,32 +40,6 @@
                     <SolidColorBrush x:Key="HomeGlassStrokeBrush" Color="#4DFFFFFF" />
                     <SolidColorBrush x:Key="HomeTileBackgroundBrush" Color="#5C1B1F28" />
                     <SolidColorBrush x:Key="HomePreviewBackgroundBrush" Color="#6622272E" />
-                    <AcrylicBrush
-                        x:Key="HomeCaptureButtonBrush"
-                        FallbackColor="#96304743"
-                        TintColor="#64F5D9"
-                        TintLuminosityOpacity=".34"
-                        TintOpacity=".3" />
-                    <AcrylicBrush
-                        x:Key="HomeCaptureButtonPointerOverBrush"
-                        FallbackColor="#B23A5A54"
-                        TintColor="#86FFE6"
-                        TintLuminosityOpacity=".42"
-                        TintOpacity=".38" />
-                    <AcrylicBrush
-                        x:Key="HomeCaptureButtonPressedBrush"
-                        FallbackColor="#8F263936"
-                        TintColor="#4BEACD"
-                        TintLuminosityOpacity=".28"
-                        TintOpacity=".44" />
-                    <LinearGradientBrush
-                        x:Key="HomeCaptureButtonBorderBrush"
-                        StartPoint="0,0"
-                        EndPoint="1,1">
-                        <GradientStop Offset="0" Color="#80FFFFFF" />
-                        <GradientStop Offset=".5" Color="#66B8FFE8" />
-                        <GradientStop Offset="1" Color="#5CFFD18F" />
-                    </LinearGradientBrush>
                 </ResourceDictionary>
                 <ResourceDictionary x:Key="HighContrast">
                     <StaticResource x:Key="HomeDreamBackgroundBrush" ResourceKey="ApplicationPageBackgroundThemeBrush" />
@@ -106,17 +48,10 @@
                     <StaticResource x:Key="HomeGlassStrokeBrush" ResourceKey="SystemControlForegroundBaseMediumBrush" />
                     <StaticResource x:Key="HomeTileBackgroundBrush" ResourceKey="SystemControlBackgroundChromeMediumLowBrush" />
                     <StaticResource x:Key="HomePreviewBackgroundBrush" ResourceKey="SystemControlBackgroundChromeMediumBrush" />
-                    <StaticResource x:Key="HomeCaptureButtonBrush" ResourceKey="SystemControlBackgroundChromeMediumLowBrush" />
-                    <StaticResource x:Key="HomeCaptureButtonPointerOverBrush" ResourceKey="SystemControlBackgroundChromeMediumBrush" />
-                    <StaticResource x:Key="HomeCaptureButtonPressedBrush" ResourceKey="SystemControlBackgroundChromeMediumBrush" />
-                    <StaticResource x:Key="HomeCaptureButtonBorderBrush" ResourceKey="SystemControlForegroundBaseMediumBrush" />
                 </ResourceDictionary>
             </ResourceDictionary.ThemeDictionaries>
 
-            <LinearGradientBrush
-                x:Key="HomeLightRibbonBrush"
-                StartPoint="0,0.5"
-                EndPoint="1,0.5">
+            <LinearGradientBrush x:Key="HomeLightRibbonBrush" StartPoint="0,0.5" EndPoint="1,0.5">
                 <GradientStop Offset="0" Color="#00FFFFFF" />
                 <GradientStop Offset=".24" Color="#52FFFFFF" />
                 <GradientStop Offset=".5" Color="#55B8FFE8" />
@@ -124,10 +59,10 @@
                 <GradientStop Offset="1" Color="#00FFFFFF" />
             </LinearGradientBrush>
 
-            <StaticResource x:Key="ButtonBackgroundPointerOver" ResourceKey="HomeCaptureButtonPointerOverBrush" />
-            <StaticResource x:Key="ButtonBackgroundPressed" ResourceKey="HomeCaptureButtonPressedBrush" />
-            <StaticResource x:Key="ButtonBorderBrushPointerOver" ResourceKey="HomeCaptureButtonBorderBrush" />
-            <StaticResource x:Key="ButtonBorderBrushPressed" ResourceKey="HomeCaptureButtonBorderBrush" />
+            <LinearGradientBrush x:Key="HomeCaptureButtonBrush" StartPoint="0,0" EndPoint="1,1">
+                <GradientStop Offset="0" Color="#33FFFFFF" />
+                <GradientStop Offset="1" Color="#18FFFFFF" />
+            </LinearGradientBrush>
 
             <Style
                 x:Key="NewCaptureButtonStyle"
@@ -138,8 +73,8 @@
                 <Setter Property="MinWidth" Value="152" />
                 <Setter Property="Padding" Value="18,14" />
                 <Setter Property="CornerRadius" Value="8" />
-                <Setter Property="Background" Value="{ThemeResource HomeCaptureButtonBrush}" />
-                <Setter Property="BorderBrush" Value="{ThemeResource HomeCaptureButtonBorderBrush}" />
+                <Setter Property="Background" Value="{StaticResource HomeCaptureButtonBrush}" />
+                <Setter Property="BorderBrush" Value="{ThemeResource HomeGlassStrokeBrush}" />
                 <Setter Property="HorizontalContentAlignment" Value="Stretch" />
                 <Setter Property="VerticalContentAlignment" Value="Stretch" />
             </Style>
@@ -155,7 +90,10 @@
 
     <Grid x:Name="RootLayout" Background="{ThemeResource HomeDreamBackgroundBrush}">
         <Grid.Resources>
-            <Storyboard x:Name="AmbientMotionStoryboard" RepeatBehavior="Forever" AutoReverse="True">
+            <Storyboard
+                x:Name="AmbientMotionStoryboard"
+                AutoReverse="True"
+                RepeatBehavior="Forever">
                 <DoubleAnimation
                     Storyboard.TargetName="LightRibbonOneTransform"
                     Storyboard.TargetProperty="TranslateX"
@@ -307,9 +245,7 @@
                                 HorizontalAlignment="Center"
                                 VerticalAlignment="Center"
                                 Spacing="8">
-                                <FontIcon
-                                    FontFamily="{StaticResource SymbolThemeFontFamily}"
-                                    Glyph="{StaticResource Microphone}" />
+                                <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="{StaticResource Microphone}" />
                                 <TextBlock
                                     x:Uid="NewCaptureButton_Audio_Label"
                                     TextAlignment="Center"
@@ -342,11 +278,11 @@
                         ItemClick="RecentCapturesGridView_ItemClick"
                         ItemContainerStyle="{StaticResource RecentCaptureGridViewItemStyle}"
                         ItemsSource="{x:Bind ViewModel.RecentCaptures, Mode=OneWay}"
-                        SelectionMode="None"
                         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                         ScrollViewer.HorizontalScrollMode="Disabled"
                         ScrollViewer.VerticalScrollBarVisibility="Disabled"
                         ScrollViewer.VerticalScrollMode="Disabled"
+                        SelectionMode="None"
                         SizeChanged="RecentCapturesGridView_SizeChanged">
                         <GridView.ItemsPanel>
                             <ItemsPanelTemplate>
