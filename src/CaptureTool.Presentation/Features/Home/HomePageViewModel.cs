@@ -41,7 +41,7 @@ public sealed partial class HomePageViewModel : AsyncLoadableViewModelBase
     public IAsyncRelayCommand RemindStoreReviewLaterCommand { get; }
     public IAsyncRelayCommand DisableStoreReviewRemindersCommand { get; }
 
-    public IReadOnlyList<RecentCaptureViewModel> RecentCaptures => _recentCaptures;
+    public ObservableCollection<RecentCaptureViewModel> RecentCaptures => _recentCaptures;
 
     public bool HasRecentCaptures => _recentCaptures.Count > 0;
 
