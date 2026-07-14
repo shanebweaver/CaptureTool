@@ -40,6 +40,7 @@ public sealed class GetRecentCapturesUseCaseTests
 
         Assert.IsNotNull(response);
         Assert.HasCount(5, response.Captures);
+        Assert.IsTrue(response.HasMore);
         Assert.AreEqual(recentFilePath, response.Captures[0].FilePath);
         Assert.IsFalse(response.Captures.Any(capture => capture.FilePath == oldFilePath));
     }
@@ -73,6 +74,45 @@ public sealed class GetRecentCapturesUseCaseTests
         Assert.HasCount(2, response.Captures);
         Assert.AreEqual(audioFilePath, response.Captures[0].FilePath);
         Assert.AreEqual(imageFilePath, response.Captures[1].FilePath);
+        Assert.IsFalse(response.HasMore);
+    }
+
+    [TestMethod]
+    public async Task ExecuteAsync_ShouldPageRecentCaptures()
+    {
+        Mock<IStorageService> storageService = new();
+        string tempFolder = CreateTestFolder();
+        string[] filePaths =
+        [
+            Path.Combine(tempFolder, "capture-1.png"),
+            Path.Combine(tempFolder, "capture-2.png"),
+            Path.Combine(tempFolder, "capture-3.png"),
+            Path.Combine(tempFolder, "capture-4.png"),
+            Path.Combine(tempFolder, "capture-5.png")
+        ];
+
+        for (int index = 0; index < filePaths.Length; index++)
+        {
+            await File.WriteAllTextAsync(filePaths[index], index.ToString(), TestContext.CancellationToken);
+            File.SetLastWriteTimeUtc(filePaths[index], DateTime.UtcNow.AddMinutes(-index));
+        }
+
+        storageService
+            .Setup(service => service.GetApplicationTemporaryFolderPath())
+            .Returns(tempFolder);
+
+        GetRecentCapturesUseCase useCase = new(
+            storageService.Object,
+            TestFileSystem.Instance,
+            TestUseCaseExecutor.Instance);
+
+        GetRecentCapturesResponse? response = (await useCase.ExecuteAsync(new GetRecentCapturesRequest(Skip: 2, Take: 2), TestContext.CancellationToken)).Value;
+
+        Assert.IsNotNull(response);
+        Assert.HasCount(2, response.Captures);
+        Assert.AreEqual(filePaths[2], response.Captures[0].FilePath);
+        Assert.AreEqual(filePaths[3], response.Captures[1].FilePath);
+        Assert.IsTrue(response.HasMore);
     }
 
     private static string CreateTestFolder()
