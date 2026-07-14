@@ -1,5 +1,6 @@
 using CaptureTool.Application.Abstractions.Capture.Audio;
 using CaptureTool.Application.Abstractions.EditSessions;
+using CaptureTool.Application.Abstractions.Logging;
 using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Application.Abstractions.Shutdown;
 using CaptureTool.Application.Abstractions.Themes;
@@ -22,7 +23,6 @@ using Windows.ApplicationModel;
 using Windows.Foundation;
 using Windows.Graphics;
 using Windows.UI;
-using Windows.UI.WindowManagement;
 
 namespace CaptureTool.Presentation.Windows.WinUI.Xaml.Windows;
 
@@ -34,6 +34,7 @@ public sealed partial class MainWindow : Window
 
     private readonly IAudioCaptureNavigationGuard _audioCaptureNavigationGuard;
     private readonly IEditSessionGuard _editSessionGuard;
+    private readonly ILogService _logService;
     private readonly IShutdownHandler _shutdownHandler;
     private readonly WinUIAudioCaptureNavigationConfirmationService _audioCaptureNavigationConfirmationService;
     private readonly WinUICaptureDiscardConfirmationService _captureDiscardConfirmationService;
@@ -44,12 +45,14 @@ public sealed partial class MainWindow : Window
 
     public MainWindowViewModel ViewModel { get; } = ViewModelLocator.GetViewModel<MainWindowViewModel>();
     private bool _closeConfirmed;
+    private bool _closeConfirmationInProgress;
     private bool _uiTestLaunchNavigationHandled;
 
     public MainWindow()
     {
         _audioCaptureNavigationGuard = App.Current.ServiceProvider.GetService<IAudioCaptureNavigationGuard>();
         _editSessionGuard = App.Current.ServiceProvider.GetService<IEditSessionGuard>();
+        _logService = App.Current.ServiceProvider.GetService<ILogService>();
         _shutdownHandler = App.Current.ServiceProvider.GetService<IShutdownHandler>();
         _audioCaptureNavigationConfirmationService = App.Current.ServiceProvider.GetService<WinUIAudioCaptureNavigationConfirmationService>();
         _captureDiscardConfirmationService = App.Current.ServiceProvider.GetService<WinUICaptureDiscardConfirmationService>();
@@ -75,6 +78,7 @@ public sealed partial class MainWindow : Window
         UpdateAppTitle();
 
         Activated += OnActivated;
+        AppWindow.Closing += OnAppWindowClosing;
         Closed += OnClosed;
         ViewModel.NavigationRequested += OnViewModelNavigationRequested;
         ViewModel.PropertyChanged += OnViewModelPropertyChanged;
@@ -232,11 +236,35 @@ public sealed partial class MainWindow : Window
         }
     }
 
-    private async void OnClosed(object sender, WindowEventArgs args)
+    private void BeginCloseConfirmation()
     {
-        if (!_closeConfirmed)
+        if (_closeConfirmationInProgress)
         {
-            args.Handled = true;
+            return;
+        }
+
+        _closeConfirmationInProgress = true;
+        if (!DispatcherQueue.TryEnqueue(() => _ = ConfirmCloseAsync()))
+        {
+            _closeConfirmationInProgress = false;
+        }
+    }
+
+    private void OnAppWindowClosing(Microsoft.UI.Windowing.AppWindow sender, AppWindowClosingEventArgs args)
+    {
+        if (_closeConfirmed)
+        {
+            return;
+        }
+
+        args.Cancel = true;
+        BeginCloseConfirmation();
+    }
+
+    private async Task ConfirmCloseAsync()
+    {
+        try
+        {
             bool canClose = await _editSessionGuard.CanLeaveCurrentSessionAsync();
             if (canClose)
             {
@@ -246,13 +274,23 @@ public sealed partial class MainWindow : Window
             if (canClose)
             {
                 _closeConfirmed = true;
-                DispatcherQueue.TryEnqueue(Close);
+                Close();
             }
-
-            return;
         }
+        catch (Exception ex)
+        {
+            _logService.LogException(ex, "Failed to confirm window close.");
+        }
+        finally
+        {
+            _closeConfirmationInProgress = false;
+        }
+    }
 
+    private void OnClosed(object sender, WindowEventArgs args)
+    {
         Activated -= OnActivated;
+        AppWindow.Closing -= OnAppWindowClosing;
         Closed -= OnClosed;
         RootGrid.Loaded -= RootGrid_Loaded;
         AppTitleBar.Loaded -= AppTitleBar_Loaded;
