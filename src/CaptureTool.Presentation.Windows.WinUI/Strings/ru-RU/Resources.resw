@@ -1307,6 +1307,15 @@ SOFTWARE.
   <data name="AudioEdit_OpenInClipchampButton.Label" xml:space="preserve">
     <value>Открыть в Clipchamp</value>
   </data>
+  <data name="About_SendFeedbackButton.AutomationProperties.Name" xml:space="preserve">
+    <value>Send feedback</value>
+  </data>
+  <data name="About_SendFeedbackButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Open Feedback Hub</value>
+  </data>
+  <data name="About_SendFeedbackButtonLabel.Text" xml:space="preserve">
+    <value>Send feedback</value>
+  </data>
   <data name="StoreReviewPrompt_Title" xml:space="preserve">
     <value>Enjoying Capture Tool?</value>
   </data>

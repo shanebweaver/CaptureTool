@@ -1,6 +1,7 @@
 using CaptureTool.Application.Abstractions.Shell.About.LeaveAboutPage;
 using CaptureTool.Application.Abstractions.Capture.Audio.OpenAudioCapturePage;
 using CaptureTool.Application.Abstractions.Capture.Overlay.OpenSelectionOverlay;
+using CaptureTool.Application.Abstractions.Feedback;
 using CaptureTool.Application.Abstractions.Localization;
 using CaptureTool.Application.Abstractions.Metrics;
 using CaptureTool.Application.Abstractions.Store;
@@ -22,7 +23,7 @@ public sealed class ViewModelContractTests
         localization.Setup(service => service.GetString("About_ThirdParty_DialogTitle")).Returns("Third-party");
         localization.Setup(service => service.GetString("About_ThirdParty_DialogContent")).Returns("Notices");
 
-        var viewModel = new AboutPageViewModel(goBack, localization.Object);
+        var viewModel = new AboutPageViewModel(goBack, Mock.Of<IFeedbackHubService>(), localization.Object);
 
         (string title, string content)? dialog = null;
         viewModel.ShowDialogRequested += (_, args) => dialog = args;
@@ -32,6 +33,26 @@ public sealed class ViewModelContractTests
         Assert.IsNotNull(dialog);
         Assert.AreEqual("Third-party", dialog.Value.title);
         Assert.AreEqual("Notices", dialog.Value.content);
+    }
+
+    [TestMethod]
+    public async Task AboutPageViewModel_SendFeedbackCommand_ShouldLaunchFeedbackHub()
+    {
+        var feedbackHub = new Mock<IFeedbackHubService>();
+        feedbackHub
+            .Setup(service => service.LaunchAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+
+        var viewModel = new AboutPageViewModel(
+            Mock.Of<ILeaveAboutPageUseCase>(),
+            feedbackHub.Object,
+            Mock.Of<ILocalizationService>());
+
+        await viewModel.SendFeedbackCommand.ExecuteAsync(null);
+
+        feedbackHub.Verify(
+            service => service.LaunchAsync(It.IsAny<CancellationToken>()),
+            Times.Once);
     }
 
     [TestMethod]
