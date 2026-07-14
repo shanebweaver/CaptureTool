@@ -1,5 +1,5 @@
 using System.Runtime.InteropServices;
-using Windows.ApplicationModel.Resources;
+using Microsoft.Windows.ApplicationModel.Resources;
 
 namespace CaptureTool.Presentation.Windows.WinUI.Utils;
 
@@ -14,7 +14,7 @@ internal static class WinUIResourceLoader
     {
         try
         {
-            resourceLoader ??= ResourceLoader.GetForViewIndependentUse();
+            resourceLoader ??= new ResourceLoader();
             string value = resourceLoader.GetString(resourceKey);
             return string.IsNullOrEmpty(value) ? fallback : value;
         }

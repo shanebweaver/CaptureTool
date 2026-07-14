@@ -2,7 +2,7 @@ using CaptureTool.Application.Abstractions.Capture.Audio;
 using CaptureTool.Presentation.Windows.WinUI.Utils;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using Windows.ApplicationModel.Resources;
+using Microsoft.Windows.ApplicationModel.Resources;
 
 namespace CaptureTool.Presentation.Windows.WinUI.AudioCapture;
 
