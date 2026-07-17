@@ -35,6 +35,27 @@ public sealed class ImageEditSessionTests
     }
 
     [TestMethod]
+    public void Constructor_ShouldClampCropRectToOrientedImageBounds()
+    {
+        var session = new ImageEditSession(
+            new Size(100, 200),
+            ImageOrientation.Rotate90FlipNone,
+            new Rectangle(180, 90, 50, 50));
+
+        Assert.AreEqual(new Rectangle(150, 50, 50, 50), session.CropRect);
+    }
+
+    [TestMethod]
+    public void SetCropRect_ShouldClampCropRectToImageBoundsWithMinimumSize()
+    {
+        var session = new ImageEditSession(new Size(100, 80));
+
+        session.SetCropRect(new Rectangle(-10, 90, 200, 0));
+
+        Assert.AreEqual(new Rectangle(0, 79, 100, 1), session.CropRect);
+    }
+
+    [TestMethod]
     public void CreateRenderSnapshot_ShouldReturnCurrentRenderState()
     {
         var session = new ImageEditSession(

@@ -442,6 +442,7 @@ public sealed partial class ImageCanvas : UserControlBase
     private const double MinimumHandleScale = 0.1;
     private const double MaximumHandleScale = 10;
     private const double CanvasContainerBaseMargin = 24;
+    private const int MaximumRenderDimension = 16_384;
     private const double LineSelectionStrokeThickness = 1;
     private const double LineMoveHandleStrokeThickness = 20;
 
@@ -560,6 +561,7 @@ public sealed partial class ImageCanvas : UserControlBase
         DetachXamlRootChanged();
         SetObservableDrawables(null);
         InvalidateColorPickerSnapshot();
+        RenderCanvas.RemoveFromVisualTree();
     }
 
     private void UpdateTouchInputLock()
@@ -652,12 +654,17 @@ public sealed partial class ImageCanvas : UserControlBase
 
     private void ApplyRasterizationScale(double rasterizationScale, bool forceResourceRefresh)
     {
-        if (RenderCanvas == null || rasterizationScale <= 0)
+        if (RenderCanvas == null || !double.IsFinite(rasterizationScale) || rasterizationScale <= 0)
         {
             return;
         }
 
         float dpiScale = (float)rasterizationScale;
+        if (!float.IsFinite(dpiScale) || dpiScale <= 0)
+        {
+            return;
+        }
+
         if (forceResourceRefresh && Math.Abs(RenderCanvas.DpiScale - dpiScale) < 0.0001f)
         {
             RenderCanvas.DpiScale = dpiScale + 0.0001f;
@@ -761,40 +768,53 @@ public sealed partial class ImageCanvas : UserControlBase
         return isTurned;
     }
 
-    private Size GetImageRenderSize()
+    private bool TryGetImageRenderSize(out Size renderSize)
     {
-        bool isTurned = IsTurned();
+        Rectangle renderCropRect = GetRenderCropRect();
+        return TryCreateRenderSize(renderCropRect.Width, renderCropRect.Height, out renderSize);
+    }
 
-        double canvasWidth, canvasHeight;
+    private static bool TryCreateRenderSize(double width, double height, out Size renderSize)
+    {
+        renderSize = Size.Empty;
 
-        if (IsCropModeEnabled)
+        if (!TryCreateRenderDimension(width, out int renderWidth) ||
+            !TryCreateRenderDimension(height, out int renderHeight))
         {
-            canvasHeight = isTurned ? CanvasSize.Width : CanvasSize.Height;
-            canvasWidth = isTurned ? CanvasSize.Height : CanvasSize.Width;
-        }
-        else
-        {
-            // Use CropRect dimensions when crop mode is not enabled
-            var crop = CropRect;
-            canvasHeight = crop.Height;
-            canvasWidth = crop.Width;
-
-            // Fallback to CanvasSize if CropRect is empty or invalid
-            if (canvasWidth <= 0 || canvasHeight <= 0)
-            {
-                canvasHeight = isTurned ? CanvasSize.Width : CanvasSize.Height;
-                canvasWidth = isTurned ? CanvasSize.Height : CanvasSize.Width;
-            }
+            return false;
         }
 
-        return new((int)canvasWidth, (int)canvasHeight);
+        renderSize = new Size(renderWidth, renderHeight);
+        return true;
+    }
+
+    private static bool TryCreateRenderDimension(double value, out int dimension)
+    {
+        dimension = 0;
+
+        if (!double.IsFinite(value) || value <= 0 || value > MaximumRenderDimension)
+        {
+            return false;
+        }
+
+        dimension = (int)Math.Ceiling(value);
+        return dimension > 0 && dimension <= MaximumRenderDimension;
+    }
+
+    private bool HasRenderableCanvasSize()
+    {
+        return TryCreateRenderSize(CanvasSize.Width, CanvasSize.Height, out _);
     }
 
     private void UpdateDrawingCanvasSize()
     {
         lock (this)
         {
-            Size renderSize = GetImageRenderSize();
+            if (!TryGetImageRenderSize(out Size renderSize))
+            {
+                return;
+            }
+
             int width = renderSize.Width;
             int height = renderSize.Height;
 
@@ -816,15 +836,23 @@ public sealed partial class ImageCanvas : UserControlBase
     {
         lock (this)
         {
-            if (CanvasScrollView == null || RootContainer == null || CanvasSize.Width == 0 || CanvasSize.Height == 0)
+            if (CanvasScrollView == null ||
+                RootContainer == null ||
+                CanvasSize.Width <= 0 ||
+                CanvasSize.Height <= 0 ||
+                !HasRenderableCanvasSize() ||
+                !TryGetImageRenderSize(out Size renderSize))
             {
                 return;
             }
 
             double containerWidth = RootContainer.ActualWidth;
             double containerHeight = RootContainer.ActualHeight;
+            if (!double.IsFinite(containerWidth) || !double.IsFinite(containerHeight) || containerWidth <= 0 || containerHeight <= 0)
+            {
+                return;
+            }
 
-            Size renderSize = GetImageRenderSize();
             int canvasWidth = renderSize.Width;
             int canvasHeight = renderSize.Height;
 
@@ -901,15 +929,28 @@ public sealed partial class ImageCanvas : UserControlBase
     {
         lock (this)
         {
+            if (!HasRenderableCanvasSize() || !TryGetImageRenderSize(out _))
+            {
+                args.DrawingSession.Clear(WinUIColor.FromArgb(0, 0, 0, 0));
+                return;
+            }
+
+            IEnumerable<IDrawable>? drawables = Drawables;
+            if (drawables == null)
+            {
+                args.DrawingSession.Clear(WinUIColor.FromArgb(0, 0, 0, 0));
+                return;
+            }
+
             var rect = GetRenderCropRect();
             ImageCanvasRenderOptions options = new(Orientation, CanvasSize, rect);
 
             // Filter out the selected shape ONLY when it's being actively manipulated
             // This prevents double rendering during drag operations
-            var drawablesToRender = Drawables;
+            IEnumerable<IDrawable> drawablesToRender = drawables;
             if (IsShapeSelected())
             {
-                drawablesToRender = Drawables.Where((d, i) => i != _selectedShapeIndex);
+                drawablesToRender = drawables.Where((d, i) => i != _selectedShapeIndex);
             }
 
             Win2DImageCanvasRenderer.Render([.. drawablesToRender], options, args.DrawingSession);
@@ -959,11 +1000,37 @@ public sealed partial class ImageCanvas : UserControlBase
 
     private Rectangle GetRenderCropRect()
     {
-        return !IsCropModeEnabled
-            ? CropRect
-            : IsTurned()
-                ? new Rectangle(0, 0, CanvasSize.Height, CanvasSize.Width)
-                : new Rectangle(0, 0, CanvasSize.Width, CanvasSize.Height);
+        Rectangle fullImageRect = GetFullRenderCropRect();
+        return IsCropModeEnabled
+            ? fullImageRect
+            : NormalizeRenderCropRect(CropRect, fullImageRect);
+    }
+
+    private Rectangle GetFullRenderCropRect()
+    {
+        return IsTurned()
+            ? new Rectangle(0, 0, CanvasSize.Height, CanvasSize.Width)
+            : new Rectangle(0, 0, CanvasSize.Width, CanvasSize.Height);
+    }
+
+    private static Rectangle NormalizeRenderCropRect(Rectangle cropRect, Rectangle bounds)
+    {
+        if (bounds.Width <= 0 || bounds.Height <= 0)
+        {
+            return Rectangle.Empty;
+        }
+
+        if (cropRect.Width <= 0 || cropRect.Height <= 0)
+        {
+            return bounds;
+        }
+
+        int width = Math.Clamp(cropRect.Width, 1, bounds.Width);
+        int height = Math.Clamp(cropRect.Height, 1, bounds.Height);
+        int x = Math.Clamp(cropRect.X, 0, bounds.Width - width);
+        int y = Math.Clamp(cropRect.Y, 0, bounds.Height - height);
+
+        return new Rectangle(x, y, width, height);
     }
 
     private bool IsShapeSelected()
@@ -1021,7 +1088,7 @@ public sealed partial class ImageCanvas : UserControlBase
         return new RectangleF(minX, minY, maxX - minX, maxY - minY);
     }
 
-    private bool CanCreateResources() => Drawables.Any();
+    private bool CanCreateResources() => Drawables?.Any() == true;
 
     private void CanvasControl_CreateResources(CanvasControl sender, CanvasCreateResourcesEventArgs args)
     {
@@ -1035,10 +1102,16 @@ public sealed partial class ImageCanvas : UserControlBase
 
     private async Task CreateResourcesAsync(CanvasControl sender)
     {
+        IEnumerable<IDrawable>? drawables = Drawables;
+        if (drawables == null)
+        {
+            return;
+        }
+
         // Load bitmaps, create brushes, etc.
         List<Task> preparationTasks = [];
 
-        foreach (IDrawable drawable in Drawables)
+        foreach (IDrawable drawable in drawables)
         {
             if (drawable is ImageDrawable imageDrawable)
             {
@@ -1130,13 +1203,15 @@ public sealed partial class ImageCanvas : UserControlBase
             return;
         }
 
-        Size renderSize = GetImageRenderSize();
-        if (renderSize.Width <= 0 || renderSize.Height <= 0 || Drawables is null)
+        IEnumerable<IDrawable>? drawableSource = Drawables;
+        if (!TryGetImageRenderSize(out Size renderSize) ||
+            !HasRenderableCanvasSize() ||
+            drawableSource is null)
         {
             return;
         }
 
-        IDrawable[] drawables = [.. Drawables];
+        IDrawable[] drawables = [.. drawableSource];
         if (drawables.Length == 0)
         {
             return;
