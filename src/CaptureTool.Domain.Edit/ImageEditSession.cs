@@ -21,7 +21,7 @@ public sealed class ImageEditSession
     {
         ImageSize = imageSize;
         Orientation = orientation;
-        CropRect = cropRect;
+        CropRect = NormalizeCropRect(cropRect);
         _drawables = [.. drawables];
     }
 
@@ -39,7 +39,7 @@ public sealed class ImageEditSession
 
     public void SetCropRect(Rectangle cropRect)
     {
-        CropRect = cropRect;
+        CropRect = NormalizeCropRect(cropRect);
     }
 
     public void ResizeImage(Size imageSize)
@@ -52,7 +52,7 @@ public sealed class ImageEditSession
         if (ImageSize.Width <= 0 || ImageSize.Height <= 0)
         {
             ImageSize = imageSize;
-            CropRect = new Rectangle(Point.Empty, imageSize);
+            CropRect = GetFullImageCropRect();
             return;
         }
 
@@ -66,6 +66,7 @@ public sealed class ImageEditSession
         }
 
         ImageSize = imageSize;
+        CropRect = NormalizeCropRect(CropRect);
     }
 
     public void SetOrientation(ImageOrientation orientation)
@@ -75,8 +76,9 @@ public sealed class ImageEditSession
             return;
         }
 
-        CropRect = ImageOrientationGeometry.GetOrientedCropRect(CropRect, ImageSize, Orientation, orientation);
+        Rectangle orientedCropRect = ImageOrientationGeometry.GetOrientedCropRect(CropRect, ImageSize, Orientation, orientation);
         Orientation = orientation;
+        CropRect = NormalizeCropRect(orientedCropRect);
     }
 
     public void Rotate(RotationDirection rotationDirection)
@@ -87,8 +89,9 @@ public sealed class ImageEditSession
     public void Flip(FlipDirection flipDirection)
     {
         Size orientedImageSize = ImageOrientationGeometry.GetOrientedImageSize(ImageSize, Orientation);
-        CropRect = ImageOrientationGeometry.GetFlippedCropRect(CropRect, orientedImageSize, flipDirection);
+        Rectangle flippedCropRect = ImageOrientationGeometry.GetFlippedCropRect(CropRect, orientedImageSize, flipDirection);
         Orientation = ImageOrientationGeometry.GetFlippedOrientation(Orientation, flipDirection);
+        CropRect = NormalizeCropRect(flippedCropRect);
     }
 
     public ImageEditRenderSnapshot CreateRenderSnapshot()
@@ -266,6 +269,33 @@ public sealed class ImageEditSession
             ScaleInt(rectangle.Y, scaleY),
             ScaleInt(rectangle.Width, scaleX),
             ScaleInt(rectangle.Height, scaleY));
+    }
+
+    private Rectangle GetFullImageCropRect()
+    {
+        Size orientedImageSize = ImageOrientationGeometry.GetOrientedImageSize(ImageSize, Orientation);
+        return ClampCropRect(new Rectangle(Point.Empty, orientedImageSize), orientedImageSize);
+    }
+
+    private Rectangle NormalizeCropRect(Rectangle cropRect)
+    {
+        Size orientedImageSize = ImageOrientationGeometry.GetOrientedImageSize(ImageSize, Orientation);
+        return ClampCropRect(cropRect, orientedImageSize);
+    }
+
+    private static Rectangle ClampCropRect(Rectangle cropRect, Size bounds)
+    {
+        if (bounds.Width <= 0 || bounds.Height <= 0)
+        {
+            return Rectangle.Empty;
+        }
+
+        int width = Math.Clamp(cropRect.Width, 1, bounds.Width);
+        int height = Math.Clamp(cropRect.Height, 1, bounds.Height);
+        int x = Math.Clamp(cropRect.X, 0, bounds.Width - width);
+        int y = Math.Clamp(cropRect.Y, 0, bounds.Height - height);
+
+        return new Rectangle(x, y, width, height);
     }
 
     private static Size ScaleSize(Size size, double scaleX, double scaleY)
