@@ -121,6 +121,7 @@
     <PropertyGroup>
       <_NativeAotAppPdbPath>$(OutDir)native\$(AssemblyName).pdb</_NativeAotAppPdbPath>
       <_CaptureKitNativePdbPath>$(OutDir)CaptureKit.Windows.Native.pdb</_CaptureKitNativePdbPath>
+      <_CaptureKitScreenshotNativePdbPath>$(OutDir)CaptureKit.Windows.Native.Screenshot.pdb</_CaptureKitScreenshotNativePdbPath>
     </PropertyGroup>
 
     <ItemGroup>
@@ -128,12 +129,18 @@
                   Condition="'%(Filename)%(Extension)' == '$(AssemblyName).pdb'" />
       <PDBPayload Remove="@(PDBPayload)"
                   Condition="'%(Filename)%(Extension)' == 'CaptureKit.Windows.Native.pdb'" />
+      <PDBPayload Remove="@(PDBPayload)"
+                  Condition="'%(Filename)%(Extension)' == 'CaptureKit.Windows.Native.Screenshot.pdb'" />
       <PDBPayload Include="$(_NativeAotAppPdbPath)">
         <TargetPath>$(AssemblyName).pdb</TargetPath>
       </PDBPayload>
       <PDBPayload Include="$(_CaptureKitNativePdbPath)"
                   Condition="Exists('$(_CaptureKitNativePdbPath)')">
         <TargetPath>CaptureKit.Windows.Native.pdb</TargetPath>
+      </PDBPayload>
+      <PDBPayload Include="$(_CaptureKitScreenshotNativePdbPath)"
+                  Condition="Exists('$(_CaptureKitScreenshotNativePdbPath)')">
+        <TargetPath>CaptureKit.Windows.Native.Screenshot.pdb</TargetPath>
       </PDBPayload>
     </ItemGroup>
   </Target>
@@ -145,6 +152,7 @@
     <PropertyGroup>
       <_NativeAotAppPdbPath>$(OutDir)native\$(AssemblyName).pdb</_NativeAotAppPdbPath>
       <_CaptureKitNativePdbPath>$(OutDir)CaptureKit.Windows.Native.pdb</_CaptureKitNativePdbPath>
+      <_CaptureKitScreenshotNativePdbPath>$(OutDir)CaptureKit.Windows.Native.Screenshot.pdb</_CaptureKitScreenshotNativePdbPath>
     </PropertyGroup>
 
     <ItemGroup>
@@ -152,12 +160,18 @@
                         Condition="'%(Filename)%(Extension)' == '$(AssemblyName).pdb'" />
       <PDBUploadPayload Remove="@(PDBUploadPayload)"
                         Condition="'%(Filename)%(Extension)' == 'CaptureKit.Windows.Native.pdb'" />
+      <PDBUploadPayload Remove="@(PDBUploadPayload)"
+                        Condition="'%(Filename)%(Extension)' == 'CaptureKit.Windows.Native.Screenshot.pdb'" />
       <PDBUploadPayload Include="$(_NativeAotAppPdbPath)">
         <TargetPath>$(AssemblyName).pdb</TargetPath>
       </PDBUploadPayload>
       <PDBUploadPayload Include="$(_CaptureKitNativePdbPath)"
                         Condition="Exists('$(_CaptureKitNativePdbPath)')">
         <TargetPath>CaptureKit.Windows.Native.pdb</TargetPath>
+      </PDBUploadPayload>
+      <PDBUploadPayload Include="$(_CaptureKitScreenshotNativePdbPath)"
+                        Condition="Exists('$(_CaptureKitScreenshotNativePdbPath)')">
+        <TargetPath>CaptureKit.Windows.Native.Screenshot.pdb</TargetPath>
       </PDBUploadPayload>
     </ItemGroup>
   </Target>
