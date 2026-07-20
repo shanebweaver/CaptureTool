@@ -47,36 +47,84 @@ public partial class App : Microsoft.UI.Xaml.Application
         }
 
         AppActivationArguments args = AppInstance.GetCurrent().GetActivatedEventArgs();
-        await ActivateAsync(args);
+        if (TryMaterializeActivation(args, out MaterializedActivation activation))
+        {
+            await ActivateAsync(activation);
+        }
     }
 
     internal void Activate(AppActivationArguments args)
     {
-        DispatcherQueue.TryEnqueue(async () =>
+        // Redirected activation data can be backed by a COM proxy to the process
+        // performing the redirect. Materialize it before this callback returns and
+        // that process is allowed to exit.
+        if (!TryMaterializeActivation(args, out MaterializedActivation activation))
         {
-            await ActivateAsync(args);
+            return;
+        }
+
+        bool enqueued = DispatcherQueue.TryEnqueue(async () =>
+        {
+            await ActivateAsync(activation);
         });
+
+        if (!enqueued)
+        {
+            ServiceProvider.GetService<ILogService>().LogWarning("Failed to enqueue activation on the UI thread.");
+        }
     }
 
-    private async Task ActivateAsync(AppActivationArguments args)
+    private bool TryMaterializeActivation(
+        AppActivationArguments args,
+        out MaterializedActivation activation)
+    {
+        try
+        {
+            ExtendedActivationKind kind = args.Kind;
+            Uri? protocolUri = null;
+
+            if (kind == ExtendedActivationKind.Protocol)
+            {
+                if (args.Data is not global::Windows.ApplicationModel.Activation.IProtocolActivatedEventArgs protocolArgs)
+                {
+                    ServiceProvider.GetService<ILogService>().LogWarning("Protocol activation data is not of expected type.");
+                    activation = default;
+                    return false;
+                }
+
+                protocolUri = new Uri(protocolArgs.Uri.AbsoluteUri);
+            }
+
+            activation = new MaterializedActivation(kind, protocolUri);
+            return true;
+        }
+        catch (Exception e)
+        {
+            ServiceProvider.GetService<ILogService>().LogException(e, "Failed to read activation data.");
+            activation = default;
+            return false;
+        }
+    }
+
+    private async Task ActivateAsync(MaterializedActivation activation)
     {
         IActivationHandler activationHandler = ServiceProvider.GetService<IActivationHandler>();
         try
         {
-            switch (args.Kind)
+            switch (activation.Kind)
             {
                 case ExtendedActivationKind.Launch:
                     await activationHandler.HandleLaunchActivationAsync();
                     break;
 
                 case ExtendedActivationKind.Protocol:
-                    if (args.Data is global::Windows.ApplicationModel.Activation.IProtocolActivatedEventArgs protocolArgs)
+                    if (activation.ProtocolUri is not null)
                     {
-                        await activationHandler.HandleProtocolActivationAsync(protocolArgs.Uri);
+                        await activationHandler.HandleProtocolActivationAsync(activation.ProtocolUri);
                     }
                     else
                     {
-                        ServiceProvider.GetService<ILogService>().LogWarning("Protocol activation data is not of expected type.");
+                        ServiceProvider.GetService<ILogService>().LogWarning("Protocol activation URI is unavailable.");
                     }
                     break;
 
@@ -90,4 +138,8 @@ public partial class App : Microsoft.UI.Xaml.Application
             ServiceProvider.GetService<ILogService>().LogException(e, "Activation failed.");
         }
     }
+
+    private readonly record struct MaterializedActivation(
+        ExtendedActivationKind Kind,
+        Uri? ProtocolUri);
 }
