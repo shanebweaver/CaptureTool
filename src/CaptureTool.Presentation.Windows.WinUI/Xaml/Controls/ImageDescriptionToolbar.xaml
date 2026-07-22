@@ -10,6 +10,8 @@
     mc:Ignorable="d">
 
     <Border
+        Height="48"
+        HorizontalAlignment="Center"
         Padding="8,6"
         Background="{ThemeResource AcrylicBackgroundFillColorBaseBrush}"
         BorderBrush="{ThemeResource SystemControlBackgroundBaseLowBrush}"
@@ -21,26 +23,62 @@
         </Border.Shadow>
 
         <StackPanel Orientation="Horizontal" Spacing="4">
-            <Button
+            <ToggleButton
                 x:Uid="ImageDescriptionToolbar_BriefButton"
                 MinHeight="34"
                 AutomationProperties.AutomationId="ImageEdit_ImageDescriptionBriefButton"
-                Command="{x:Bind BriefCommand, Mode=OneWay}" />
-            <Button
+                Click="ImageDescriptionButton_Click"
+                Command="{x:Bind BriefCommand, Mode=OneWay}"
+                IsChecked="{x:Bind IsBriefSelected, Mode=OneWay}">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                    <SymbolIcon Symbol="Caption" />
+                    <TextBlock
+                        x:Uid="ImageDescriptionToolbar_BriefButtonText"
+                        VerticalAlignment="Center" />
+                </StackPanel>
+            </ToggleButton>
+            <ToggleButton
                 x:Uid="ImageDescriptionToolbar_DetailedButton"
                 MinHeight="34"
                 AutomationProperties.AutomationId="ImageEdit_ImageDescriptionDetailedButton"
-                Command="{x:Bind DetailedCommand, Mode=OneWay}" />
-            <Button
+                Click="ImageDescriptionButton_Click"
+                Command="{x:Bind DetailedCommand, Mode=OneWay}"
+                IsChecked="{x:Bind IsDetailedSelected, Mode=OneWay}">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                    <SymbolIcon Symbol="Document" />
+                    <TextBlock
+                        x:Uid="ImageDescriptionToolbar_DetailedButtonText"
+                        VerticalAlignment="Center" />
+                </StackPanel>
+            </ToggleButton>
+            <ToggleButton
                 x:Uid="ImageDescriptionToolbar_DiagramButton"
                 MinHeight="34"
                 AutomationProperties.AutomationId="ImageEdit_ImageDescriptionDiagramButton"
-                Command="{x:Bind DiagramCommand, Mode=OneWay}" />
-            <Button
+                Click="ImageDescriptionButton_Click"
+                Command="{x:Bind DiagramCommand, Mode=OneWay}"
+                IsChecked="{x:Bind IsDiagramSelected, Mode=OneWay}">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                    <SymbolIcon Symbol="Pictures" />
+                    <TextBlock
+                        x:Uid="ImageDescriptionToolbar_DiagramButtonText"
+                        VerticalAlignment="Center" />
+                </StackPanel>
+            </ToggleButton>
+            <ToggleButton
                 x:Uid="ImageDescriptionToolbar_AccessibleButton"
                 MinHeight="34"
                 AutomationProperties.AutomationId="ImageEdit_ImageDescriptionAccessibleButton"
-                Command="{x:Bind AccessibleCommand, Mode=OneWay}" />
+                Click="ImageDescriptionButton_Click"
+                Command="{x:Bind AccessibleCommand, Mode=OneWay}"
+                IsChecked="{x:Bind IsAccessibleSelected, Mode=OneWay}">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                    <SymbolIcon Symbol="FontIncrease" />
+                    <TextBlock
+                        x:Uid="ImageDescriptionToolbar_AccessibleButtonText"
+                        VerticalAlignment="Center" />
+                </StackPanel>
+            </ToggleButton>
         </StackPanel>
     </Border>
 </local:UserControlBase>

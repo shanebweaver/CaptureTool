@@ -38,4 +38,14 @@ public sealed class WindowsImageSuperResolutionServiceTests
 
         result.Should().Be(new Size(960, 640));
     }
+
+    [TestMethod]
+    public void GetOutputFileName_ShouldUseStableSuperSuffix()
+    {
+        string firstName = WindowsImageSuperResolutionService.GetOutputFileName(@"C:\captures\example.png");
+        string secondName = WindowsImageSuperResolutionService.GetOutputFileName(@"C:\captures\example.png");
+
+        firstName.Should().Be("example.super.png");
+        secondName.Should().Be(firstName);
+    }
 }

@@ -1433,7 +1433,7 @@ SOFTWARE.
   <data name="ImageEdit_ImageDescriptionButton.ToolTipService.ToolTip" xml:space="preserve">
     <value>Описать изображение с помощью локального ИИ</value>
   </data>
-  <data name="ImageDescriptionToolbar_BriefButton.Content" xml:space="preserve">
+  <data name="ImageDescriptionToolbar_BriefButtonText.Text" xml:space="preserve">
     <value>Кратко</value>
   </data>
   <data name="ImageDescriptionToolbar_BriefButton.AutomationProperties.Name" xml:space="preserve">
@@ -1442,7 +1442,7 @@ SOFTWARE.
   <data name="ImageDescriptionToolbar_BriefButton.ToolTipService.ToolTip" xml:space="preserve">
     <value>Создать краткое описание</value>
   </data>
-  <data name="ImageDescriptionToolbar_DetailedButton.Content" xml:space="preserve">
+  <data name="ImageDescriptionToolbar_DetailedButtonText.Text" xml:space="preserve">
     <value>Подробно</value>
   </data>
   <data name="ImageDescriptionToolbar_DetailedButton.AutomationProperties.Name" xml:space="preserve">
@@ -1451,7 +1451,7 @@ SOFTWARE.
   <data name="ImageDescriptionToolbar_DetailedButton.ToolTipService.ToolTip" xml:space="preserve">
     <value>Создать подробное описание</value>
   </data>
-  <data name="ImageDescriptionToolbar_DiagramButton.Content" xml:space="preserve">
+  <data name="ImageDescriptionToolbar_DiagramButtonText.Text" xml:space="preserve">
     <value>Диаграмма</value>
   </data>
   <data name="ImageDescriptionToolbar_DiagramButton.AutomationProperties.Name" xml:space="preserve">
@@ -1460,7 +1460,7 @@ SOFTWARE.
   <data name="ImageDescriptionToolbar_DiagramButton.ToolTipService.ToolTip" xml:space="preserve">
     <value>Создать описание, оптимизированное для диаграмм</value>
   </data>
-  <data name="ImageDescriptionToolbar_AccessibleButton.Content" xml:space="preserve">
+  <data name="ImageDescriptionToolbar_AccessibleButtonText.Text" xml:space="preserve">
     <value>Специальные возможности</value>
   </data>
   <data name="ImageDescriptionToolbar_AccessibleButton.AutomationProperties.Name" xml:space="preserve">
@@ -1474,6 +1474,18 @@ SOFTWARE.
   </data>
   <data name="ImageDescriptionPanel_Title.Text" xml:space="preserve">
     <value>Описание изображения</value>
+  </data>
+  <data name="ImageDescriptionPanel_CopyButton.AutomationProperties.Name" xml:space="preserve">
+    <value>Копировать описание изображения</value>
+  </data>
+  <data name="ImageDescriptionPanel_CopyButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Копировать описание изображения</value>
+  </data>
+  <data name="ImageDescriptionCopiedNotification" xml:space="preserve">
+    <value>Описание изображения скопировано в буфер обмена.</value>
+  </data>
+  <data name="ImageDescriptionCopyFailedNotification" xml:space="preserve">
+    <value>Не удалось скопировать описание изображения.</value>
   </data>
   <data name="ImageEdit_ImageDescriptionProgressRing.AutomationProperties.Name" xml:space="preserve">
     <value>Создание описания изображения</value>

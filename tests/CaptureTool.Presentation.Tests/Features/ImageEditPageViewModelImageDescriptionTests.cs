@@ -14,12 +14,14 @@ using CaptureTool.Application.Abstractions.Settings.OpenScreenshotsFolder;
 using CaptureTool.Application.Abstractions.Share;
 using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Domain.Ai;
+using CaptureTool.Domain.Edit.Drawable;
 using CaptureTool.Domain.FileSystem;
 using CaptureTool.Presentation.Features.ImageEdit;
 using CaptureTool.Presentation.Notifications;
 using FluentAssertions;
 using Moq;
 using System.Drawing;
+using System.Numerics;
 
 namespace CaptureTool.Presentation.Tests.Features;
 
@@ -153,6 +155,307 @@ public sealed class ImageEditPageViewModelImageDescriptionTests
             It.IsAny<ImageCanvasRenderOptions>()), Times.Never);
     }
 
+    [TestMethod]
+    public async Task CopyImageDescriptionCommand_ShouldCopyOnlyWhenDescriptionIsVisible()
+    {
+        var exporter = new Mock<IImageCanvasExporter>();
+        var service = new Mock<IImageDescriptionService>();
+        var clipboard = new Mock<IClipboardService>();
+
+        exporter
+            .Setup(x => x.RenderToStreamAsync(
+                It.IsAny<IDrawable[]>(),
+                It.IsAny<ImageCanvasRenderOptions>()))
+            .ReturnsAsync(() => new MemoryStream([1, 2, 3]));
+        service
+            .Setup(x => x.GetReadyState())
+            .Returns(ImageDescriptionReadyState.Ready);
+        service
+            .Setup(x => x.DescribeAsync(
+                It.IsAny<ImageDescriptionRequest>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(ImageDescriptionResult.Success("A detailed description."));
+
+        ImageEditPageViewModel viewModel = CreateViewModel(
+            imageCanvasExporter: exporter.Object,
+            imageDescriptionService: service.Object,
+            clipboardService: clipboard.Object);
+
+        await viewModel.LoadAsync(new ImageFile("original.png"), CancellationToken.None);
+        viewModel.CopyImageDescriptionCommand.CanExecute(null).Should().BeFalse();
+        await viewModel.ToggleImageDescriptionModeCommand.ExecuteAsync(null);
+        await viewModel.GenerateDetailedImageDescriptionCommand.ExecuteAsync(null);
+
+        viewModel.CopyImageDescriptionCommand.CanExecute(null).Should().BeTrue();
+        await viewModel.CopyImageDescriptionCommand.ExecuteAsync(null);
+
+        clipboard.Verify(
+            service => service.CopyTextAsync("A detailed description."),
+            Times.Once);
+
+        await viewModel.ToggleImageDescriptionModeCommand.ExecuteAsync(null);
+        viewModel.CopyImageDescriptionCommand.CanExecute(null).Should().BeFalse();
+    }
+
+    [TestMethod]
+    public async Task ClosingMode_ShouldCancelRequestAndAllowSameModeToRunAfterReopening()
+    {
+        var exporter = new Mock<IImageCanvasExporter>();
+        var service = new Mock<IImageDescriptionService>();
+        var firstRequest = new TaskCompletionSource<ImageDescriptionResult>(
+            TaskCreationOptions.RunContinuationsAsynchronously);
+        CancellationToken firstRequestToken = default;
+        int requestCount = 0;
+
+        exporter
+            .Setup(x => x.RenderToStreamAsync(
+                It.IsAny<IDrawable[]>(),
+                It.IsAny<ImageCanvasRenderOptions>()))
+            .ReturnsAsync(() => new MemoryStream([1, 2, 3]));
+        service
+            .Setup(x => x.GetReadyState())
+            .Returns(ImageDescriptionReadyState.Ready);
+        service
+            .Setup(x => x.DescribeAsync(
+                It.IsAny<ImageDescriptionRequest>(),
+                It.IsAny<CancellationToken>()))
+            .Returns((ImageDescriptionRequest _, CancellationToken cancellationToken) =>
+            {
+                requestCount++;
+                if (requestCount == 1)
+                {
+                    firstRequestToken = cancellationToken;
+                    return firstRequest.Task;
+                }
+
+                return Task.FromResult(ImageDescriptionResult.Success("A new description."));
+            });
+
+        ImageEditPageViewModel viewModel = CreateViewModel(
+            imageCanvasExporter: exporter.Object,
+            imageDescriptionService: service.Object);
+
+        await viewModel.LoadAsync(new ImageFile("original.png"), CancellationToken.None);
+        await viewModel.ToggleImageDescriptionModeCommand.ExecuteAsync(null);
+        Task originalExecution = viewModel.GenerateDetailedImageDescriptionCommand.ExecuteAsync(null);
+        requestCount.Should().Be(1);
+
+        await viewModel.ToggleImageDescriptionModeCommand.ExecuteAsync(null);
+
+        firstRequestToken.IsCancellationRequested.Should().BeTrue();
+        viewModel.IsImageDescriptionRunning.Should().BeFalse();
+        viewModel.ImageDescription.Should().BeEmpty();
+        viewModel.SelectedImageDescriptionMode.Should().BeNull();
+
+        await viewModel.ToggleImageDescriptionModeCommand.ExecuteAsync(null);
+        viewModel.SelectedImageDescriptionMode.Should().BeNull();
+        viewModel.GenerateDetailedImageDescriptionCommand.CanExecute(null).Should().BeTrue();
+        await viewModel.GenerateDetailedImageDescriptionCommand.ExecuteAsync(null);
+
+        viewModel.ImageDescription.Should().Be("A new description.");
+        viewModel.IsDetailedImageDescriptionSelected.Should().BeTrue();
+        requestCount.Should().Be(2);
+
+        firstRequest.SetResult(ImageDescriptionResult.Cancelled);
+        await originalExecution;
+
+        viewModel.ImageDescription.Should().Be("A new description.");
+        viewModel.IsDetailedImageDescriptionSelected.Should().BeTrue();
+    }
+
+    [TestMethod]
+    public async Task RunningMode_ShouldDisableOnlyItsButtonAndAllowSwitchingModes()
+    {
+        var exporter = new Mock<IImageCanvasExporter>();
+        var service = new Mock<IImageDescriptionService>();
+        var detailedRequest = new TaskCompletionSource<ImageDescriptionResult>(
+            TaskCreationOptions.RunContinuationsAsynchronously);
+        CancellationToken detailedRequestToken = default;
+        int requestCount = 0;
+
+        exporter
+            .Setup(x => x.RenderToStreamAsync(
+                It.IsAny<IDrawable[]>(),
+                It.IsAny<ImageCanvasRenderOptions>()))
+            .ReturnsAsync(() => new MemoryStream([1, 2, 3]));
+        service
+            .Setup(x => x.GetReadyState())
+            .Returns(ImageDescriptionReadyState.Ready);
+        service
+            .Setup(x => x.DescribeAsync(
+                It.IsAny<ImageDescriptionRequest>(),
+                It.IsAny<CancellationToken>()))
+            .Returns((ImageDescriptionRequest request, CancellationToken cancellationToken) =>
+            {
+                requestCount++;
+                if (request.Mode == ImageDescriptionMode.Detailed)
+                {
+                    detailedRequestToken = cancellationToken;
+                    return detailedRequest.Task;
+                }
+
+                return Task.FromResult(ImageDescriptionResult.Success("A brief description."));
+            });
+
+        ImageEditPageViewModel viewModel = CreateViewModel(
+            imageCanvasExporter: exporter.Object,
+            imageDescriptionService: service.Object);
+
+        await viewModel.LoadAsync(new ImageFile("original.png"), CancellationToken.None);
+        await viewModel.ToggleImageDescriptionModeCommand.ExecuteAsync(null);
+        Task detailedExecution = viewModel.GenerateDetailedImageDescriptionCommand.ExecuteAsync(null);
+
+        viewModel.CanGenerateImageDescription.Should().BeTrue();
+        viewModel.GenerateDetailedImageDescriptionCommand.CanExecute(null).Should().BeFalse();
+        viewModel.GenerateBriefImageDescriptionCommand.CanExecute(null).Should().BeTrue();
+        viewModel.GenerateDiagramImageDescriptionCommand.CanExecute(null).Should().BeTrue();
+        viewModel.GenerateAccessibleImageDescriptionCommand.CanExecute(null).Should().BeTrue();
+
+        await viewModel.GenerateBriefImageDescriptionCommand.ExecuteAsync(null);
+
+        detailedRequestToken.IsCancellationRequested.Should().BeTrue();
+        viewModel.ImageDescription.Should().Be("A brief description.");
+        viewModel.IsBriefImageDescriptionSelected.Should().BeTrue();
+        viewModel.IsDetailedImageDescriptionSelected.Should().BeFalse();
+        requestCount.Should().Be(2);
+
+        detailedRequest.SetResult(ImageDescriptionResult.Cancelled);
+        await detailedExecution;
+
+        viewModel.ImageDescription.Should().Be("A brief description.");
+        viewModel.IsBriefImageDescriptionSelected.Should().BeTrue();
+    }
+
+    [TestMethod]
+    public async Task SelectingUncachedMode_ShouldImmediatelyClearDisplayedDescriptionAndSelection()
+    {
+        var exporter = new Mock<IImageCanvasExporter>();
+        var service = new Mock<IImageDescriptionService>();
+        var briefRequest = new TaskCompletionSource<ImageDescriptionResult>(
+            TaskCreationOptions.RunContinuationsAsynchronously);
+
+        exporter
+            .Setup(x => x.RenderToStreamAsync(
+                It.IsAny<IDrawable[]>(),
+                It.IsAny<ImageCanvasRenderOptions>()))
+            .ReturnsAsync(() => new MemoryStream([1, 2, 3]));
+        service
+            .Setup(x => x.GetReadyState())
+            .Returns(ImageDescriptionReadyState.Ready);
+        service
+            .Setup(x => x.DescribeAsync(
+                It.IsAny<ImageDescriptionRequest>(),
+                It.IsAny<CancellationToken>()))
+            .Returns((ImageDescriptionRequest request, CancellationToken _) =>
+                request.Mode == ImageDescriptionMode.Detailed
+                    ? Task.FromResult(ImageDescriptionResult.Success("A detailed description."))
+                    : briefRequest.Task);
+
+        ImageEditPageViewModel viewModel = CreateViewModel(
+            imageCanvasExporter: exporter.Object,
+            imageDescriptionService: service.Object);
+
+        await viewModel.LoadAsync(new ImageFile("original.png"), CancellationToken.None);
+        await viewModel.ToggleImageDescriptionModeCommand.ExecuteAsync(null);
+        await viewModel.GenerateDetailedImageDescriptionCommand.ExecuteAsync(null);
+        viewModel.ImageDescription.Should().Be("A detailed description.");
+        viewModel.IsDetailedImageDescriptionSelected.Should().BeTrue();
+
+        Task briefExecution = viewModel.GenerateBriefImageDescriptionCommand.ExecuteAsync(null);
+
+        viewModel.ImageDescription.Should().BeEmpty();
+        viewModel.HasImageDescription.Should().BeFalse();
+        viewModel.SelectedImageDescriptionMode.Should().BeNull();
+        viewModel.IsBriefImageDescriptionSelected.Should().BeFalse();
+        viewModel.IsDetailedImageDescriptionSelected.Should().BeFalse();
+
+        briefRequest.SetResult(ImageDescriptionResult.Success("A brief description."));
+        await briefExecution;
+
+        viewModel.ImageDescription.Should().Be("A brief description.");
+        viewModel.IsBriefImageDescriptionSelected.Should().BeTrue();
+    }
+
+    [TestMethod]
+    public async Task DescriptionModes_ShouldCacheResultsUntilImageChanges()
+    {
+        var exporter = new Mock<IImageCanvasExporter>();
+        var service = new Mock<IImageDescriptionService>();
+        int requestCount = 0;
+
+        exporter
+            .Setup(x => x.RenderToStreamAsync(
+                It.IsAny<IDrawable[]>(),
+                It.IsAny<ImageCanvasRenderOptions>()))
+            .ReturnsAsync(() => new MemoryStream([1, 2, 3]));
+        service
+            .Setup(x => x.GetReadyState())
+            .Returns(ImageDescriptionReadyState.Ready);
+        service
+            .Setup(x => x.DescribeAsync(
+                It.IsAny<ImageDescriptionRequest>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync((ImageDescriptionRequest request, CancellationToken _) =>
+            {
+                requestCount++;
+                return ImageDescriptionResult.Success(request.Mode switch
+                {
+                    ImageDescriptionMode.Brief => "A brief description.",
+                    ImageDescriptionMode.Detailed => "A detailed description.",
+                    _ => "Another description."
+                });
+            });
+
+        ImageEditPageViewModel viewModel = CreateViewModel(
+            imageCanvasExporter: exporter.Object,
+            imageDescriptionService: service.Object);
+
+        await viewModel.LoadAsync(new ImageFile("original.png"), CancellationToken.None);
+        await viewModel.ToggleImageDescriptionModeCommand.ExecuteAsync(null);
+        await viewModel.GenerateDetailedImageDescriptionCommand.ExecuteAsync(null);
+
+        viewModel.ImageDescription.Should().Be("A detailed description.");
+        viewModel.IsDetailedImageDescriptionSelected.Should().BeTrue();
+
+        await viewModel.ToggleImageDescriptionModeCommand.ExecuteAsync(null);
+        viewModel.ImageDescription.Should().BeEmpty();
+        viewModel.SelectedImageDescriptionMode.Should().BeNull();
+        await viewModel.ToggleImageDescriptionModeCommand.ExecuteAsync(null);
+        viewModel.ImageDescription.Should().BeEmpty();
+        viewModel.SelectedImageDescriptionMode.Should().BeNull();
+        await viewModel.GenerateDetailedImageDescriptionCommand.ExecuteAsync(null);
+        viewModel.ImageDescription.Should().Be("A detailed description.");
+        viewModel.IsDetailedImageDescriptionSelected.Should().BeTrue();
+        requestCount.Should().Be(1);
+
+        await viewModel.GenerateBriefImageDescriptionCommand.ExecuteAsync(null);
+        viewModel.ImageDescription.Should().Be("A brief description.");
+        viewModel.IsBriefImageDescriptionSelected.Should().BeTrue();
+        viewModel.IsDetailedImageDescriptionSelected.Should().BeFalse();
+        requestCount.Should().Be(2);
+
+        await viewModel.GenerateDetailedImageDescriptionCommand.ExecuteAsync(null);
+        viewModel.ImageDescription.Should().Be("A detailed description.");
+        viewModel.IsDetailedImageDescriptionSelected.Should().BeTrue();
+        viewModel.IsBriefImageDescriptionSelected.Should().BeFalse();
+        requestCount.Should().Be(2);
+
+        viewModel.AddDrawable(new RectangleDrawable(
+            new Vector2(1, 1),
+            new Size(10, 10),
+            Color.Red,
+            Color.Transparent,
+            1));
+
+        viewModel.IsImageDescriptionModeActive.Should().BeFalse();
+        viewModel.ImageDescription.Should().BeEmpty();
+        viewModel.SelectedImageDescriptionMode.Should().BeNull();
+
+        await viewModel.ToggleImageDescriptionModeCommand.ExecuteAsync(null);
+        await viewModel.GenerateDetailedImageDescriptionCommand.ExecuteAsync(null);
+        requestCount.Should().Be(3);
+    }
+
     private static bool IsExpectedRequest(ImageDescriptionRequest request, byte[] renderedBytes)
     {
         return request.Mode == ImageDescriptionMode.Detailed &&
@@ -166,7 +469,8 @@ public sealed class ImageEditPageViewModelImageDescriptionTests
         IImageDescriptionService? imageDescriptionService = null,
         IImageDescriptionFeatureAvailability? featureAvailability = null,
         IAiFeatureConsentService? consentService = null,
-        IAiFeatureConsentDialogService? consentDialogService = null)
+        IAiFeatureConsentDialogService? consentDialogService = null,
+        IClipboardService? clipboardService = null)
     {
         var imageMetadata = new Mock<IImageMetadataService>();
         imageMetadata
@@ -198,6 +502,7 @@ public sealed class ImageEditPageViewModelImageDescriptionTests
             Mock.Of<IOpenScreenshotsFolderUseCase>(),
             Mock.Of<ILogService>(),
             notifications,
+            clipboardService ?? Mock.Of<IClipboardService>(),
             new ColorPickerToolViewModel(Mock.Of<IClipboardService>(), localization, notifications),
             new ChromaKeyToolViewModel(
                 Mock.Of<IChromaKeyAccessService>(x => x.IsChromaKeyEnabled == false),

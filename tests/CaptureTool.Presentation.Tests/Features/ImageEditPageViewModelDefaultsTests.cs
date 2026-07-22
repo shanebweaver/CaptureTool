@@ -227,6 +227,7 @@ public sealed class ImageEditPageViewModelDefaultsTests
             openScreenshotsFolderAction ?? Mock.Of<IOpenScreenshotsFolderUseCase>(),
             Mock.Of<ILogService>(),
             notifications,
+            Mock.Of<IClipboardService>(),
             new ColorPickerToolViewModel(
                 Mock.Of<IClipboardService>(),
                 Mock.Of<ILocalizationService>(),

@@ -382,7 +382,12 @@
                         AccessibleCommand="{x:Bind ViewModel.GenerateAccessibleImageDescriptionCommand, Mode=OneWay}"
                         BriefCommand="{x:Bind ViewModel.GenerateBriefImageDescriptionCommand, Mode=OneWay}"
                         DetailedCommand="{x:Bind ViewModel.GenerateDetailedImageDescriptionCommand, Mode=OneWay}"
-                        DiagramCommand="{x:Bind ViewModel.GenerateDiagramImageDescriptionCommand, Mode=OneWay}" />
+                        DiagramCommand="{x:Bind ViewModel.GenerateDiagramImageDescriptionCommand, Mode=OneWay}"
+                        HorizontalAlignment="Center"
+                        IsAccessibleSelected="{x:Bind ViewModel.IsAccessibleImageDescriptionSelected, Mode=OneWay}"
+                        IsBriefSelected="{x:Bind ViewModel.IsBriefImageDescriptionSelected, Mode=OneWay}"
+                        IsDetailedSelected="{x:Bind ViewModel.IsDetailedImageDescriptionSelected, Mode=OneWay}"
+                        IsDiagramSelected="{x:Bind ViewModel.IsDiagramImageDescriptionSelected, Mode=OneWay}" />
                     <Border
                         x:Uid="ImageDescriptionPanel"
                         MaxWidth="640"
@@ -398,9 +403,25 @@
                             <ThemeShadow />
                         </Border.Shadow>
                         <StackPanel Spacing="6">
-                            <TextBlock
-                                x:Uid="ImageDescriptionPanel_Title"
-                                FontWeight="SemiBold" />
+                            <Grid ColumnSpacing="12">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock
+                                    x:Uid="ImageDescriptionPanel_Title"
+                                    VerticalAlignment="Center"
+                                    FontWeight="SemiBold" />
+                                <Button
+                                    x:Uid="ImageDescriptionPanel_CopyButton"
+                                    Grid.Column="1"
+                                    Padding="8,4"
+                                    AutomationProperties.AutomationId="ImageEdit_ImageDescriptionCopyButton"
+                                    Command="{x:Bind ViewModel.CopyImageDescriptionCommand, Mode=OneWay}"
+                                    Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.HasImageDescription), Mode=OneWay}">
+                                    <SymbolIcon Symbol="Copy" />
+                                </Button>
+                            </Grid>
                             <TextBlock
                                 AutomationProperties.AutomationId="ImageEdit_ImageDescriptionOutput"
                                 IsTextSelectionEnabled="True"

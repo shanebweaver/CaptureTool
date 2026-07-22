@@ -1,7 +1,10 @@
-﻿{
+{
   "profiles": {
     "CaptureTool (Packaged)": {
-      "commandName": "MsixPackage"
+      "commandName": "MsixPackage",
+      "remoteDebugEnabled": true,
+      "remoteDebugMachine": "VIOLET:4026",
+      "authenticationMode": "None"
     },
     "CaptureTool (Unpackaged)": {
       "commandName": "Project"

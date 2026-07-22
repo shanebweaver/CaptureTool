@@ -1,5 +1,6 @@
 using CaptureTool.Application.Abstractions.Settings.ClearTempFiles;
 using CaptureTool.Application.Abstractions.Files;
+using CaptureTool.Application.Abstractions.Library.RecentCaptures;
 using CaptureTool.Application.Abstractions.Logging;
 using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Application.Abstractions.UseCases;
@@ -15,15 +16,18 @@ internal sealed class ClearTempFilesUseCase : IClearTempFilesUseCase
     private readonly ILogService _logService;
     private readonly IStorageService _storageService;
     private readonly IFileSystem _fileSystem;
+    private readonly IRecentCapturesChangeNotifier _recentCapturesChangeNotifier;
 
     public ClearTempFilesUseCase(ILogService logService, IStorageService storageService,
         IFileSystem fileSystem,
-        IUseCaseExecutor useCaseExecutor)
+        IUseCaseExecutor useCaseExecutor,
+        IRecentCapturesChangeNotifier recentCapturesChangeNotifier)
     {
         _useCaseExecutor = useCaseExecutor;
         _logService = logService;
         _storageService = storageService;
         _fileSystem = fileSystem;
+        _recentCapturesChangeNotifier = recentCapturesChangeNotifier;
     }
 
     public bool CanExecute(ClearTempFilesRequest request) => true;
@@ -54,6 +58,7 @@ internal sealed class ClearTempFilesUseCase : IClearTempFilesUseCase
                     }
                 }
 
+                _recentCapturesChangeNotifier.NotifyRecentCapturesChanged();
                 return new ClearTempFilesResponse();
             },
             cancellationToken: cancellationToken);

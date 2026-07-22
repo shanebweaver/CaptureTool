@@ -7,6 +7,7 @@ using CaptureTool.Application.Abstractions.Shell.AppMenu.OpenFile;
 using CaptureTool.Application.Abstractions.Capture.Overlay.OpenSelectionOverlay;
 using CaptureTool.Application.Abstractions.Library.RecentCaptures.GetRecentCaptures;
 using CaptureTool.Application.Abstractions.Library.RecentCaptures.OpenRecentCapture;
+using CaptureTool.Application.Abstractions.Library.RecentCaptures;
 using CaptureTool.Application.Abstractions.Settings.OpenSettingsPage;
 using CaptureTool.Application.Abstractions.Store;
 using CaptureTool.Application.Abstractions.Store.OpenStorePage;
@@ -35,6 +36,8 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
     private readonly IExitApplicationUseCase _exitApplicationCommand;
     private readonly IEditSessionGuard _editSessionGuard;
     private readonly IFactoryServiceWithArgs<RecentCaptureViewModel, string> _recentCaptureViewModelFactory;
+    private readonly IRecentCapturesChangeNotifier _recentCapturesChangeNotifier;
+    private int _recentCapturesRefreshVersion;
 
     public event EventHandler? RecentCapturesUpdated;
 
@@ -78,6 +81,7 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
         IVideoCaptureState videoCaptureState,
         IAudioCaptureState audioCaptureState,
         IFactoryServiceWithArgs<RecentCaptureViewModel, string> recentCaptureViewModelFactory,
+        IRecentCapturesChangeNotifier recentCapturesChangeNotifier,
         IEditSessionGuard? editSessionGuard = null)
     {
         _imageCaptureState = imageCaptureState;
@@ -92,6 +96,7 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
         _exitApplicationCommand = exitApplicationCommand;
         _editSessionGuard = editSessionGuard ?? new AllowEditSessionGuard();
         _recentCaptureViewModelFactory = recentCaptureViewModelFactory;
+        _recentCapturesChangeNotifier = recentCapturesChangeNotifier;
 
         NewImageCaptureCommand = new AsyncRelayCommand(() => OpenSelectionOverlayAsync(CaptureOptions.ImageDefault), AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
         NewVideoCaptureCommand = new AsyncRelayCommand(() => OpenSelectionOverlayAsync(CaptureOptions.VideoDefault), AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
@@ -117,6 +122,7 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
         _imageCaptureState.NewImageCaptured += OnNewImageCaptured;
         _videoCaptureState.NewVideoCaptured += OnNewVideoCaptured;
         _audioCaptureState.NewAudioCaptured += OnNewAudioCaptured;
+        _recentCapturesChangeNotifier.RecentCapturesChanged += OnRecentCapturesChanged;
 
         base.Load();
     }
@@ -126,6 +132,7 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
         _imageCaptureState.NewImageCaptured -= OnNewImageCaptured;
         _videoCaptureState.NewVideoCaptured -= OnNewVideoCaptured;
         _audioCaptureState.NewAudioCaptured -= OnNewAudioCaptured;
+        _recentCapturesChangeNotifier.RecentCapturesChanged -= OnRecentCapturesChanged;
         base.Dispose();
     }
 
@@ -140,6 +147,11 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
     }
 
     private void OnNewAudioCaptured(object? sender, AudioFile e)
+    {
+        _ = RefreshRecentCapturesAsync();
+    }
+
+    private void OnRecentCapturesChanged(object? sender, EventArgs e)
     {
         _ = RefreshRecentCapturesAsync();
     }
@@ -185,7 +197,12 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
 
     public async Task RefreshRecentCapturesAsync()
     {
+        int refreshVersion = Interlocked.Increment(ref _recentCapturesRefreshVersion);
         var recentCaptures = (await _getRecentCapturesQuery.ExecuteAsync(new GetRecentCapturesRequest(), CancellationToken.None)).Value?.Captures ?? [];
+        if (refreshVersion != Volatile.Read(ref _recentCapturesRefreshVersion))
+        {
+            return;
+        }
 
         _recentCaptures.Clear();
         foreach (var recentCapture in recentCaptures)

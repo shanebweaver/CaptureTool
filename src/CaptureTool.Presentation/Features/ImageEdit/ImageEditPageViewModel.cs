@@ -1,5 +1,6 @@
 using CaptureTool.Application.Abstractions.Ai;
 using CaptureTool.Application.Abstractions.Cancellation;
+using CaptureTool.Application.Abstractions.Clipboard;
 using CaptureTool.Application.Abstractions.Edit.External;
 using CaptureTool.Application.Abstractions.EditSessions;
 using CaptureTool.Application.Abstractions.Edit.Image;
@@ -28,6 +29,9 @@ namespace CaptureTool.Presentation.Features.ImageEdit;
 
 public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<ImageFile>, IEditableSession
 {
+    private const string ImageDescriptionCopiedMessageResourceKey = "ImageDescriptionCopiedNotification";
+    private const string ImageDescriptionCopyFailedMessageResourceKey = "ImageDescriptionCopyFailedNotification";
+
     private readonly ILocalizationService _localizationService;
     private readonly ICancellationService _cancellationService;
     private readonly IImageCanvasPrinter _imageCanvasPrinter;
@@ -50,6 +54,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     private readonly IOpenScreenshotsFolderUseCase _openScreenshotsFolderAction;
     private readonly ILogService _logService;
     private readonly IAppNotificationService _notificationService;
+    private readonly IClipboardService _clipboardService;
 
     private readonly ImageEditHistory _editHistory;
     private readonly ImageEditModeStateMachine _modeStateMachine;
@@ -62,12 +67,15 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     private CancellationTokenSource? _superResolutionCancellationTokenSource;
     private CancellationTokenSource? _textExtractionCancellationTokenSource;
     private CancellationTokenSource? _imageDescriptionCancellationTokenSource;
+    private ImageDescriptionMode? _runningImageDescriptionMode;
+    private readonly Dictionary<ImageDescriptionMode, string> _imageDescriptionResults = [];
     private bool _hasUnsavedChangesBeforeSuperResolution;
     private bool _hasUserEditsSinceSuperResolutionActivated;
     private int _editRevision;
     private int? _textExtractionProcessedRevision;
 
     public event EventHandler? InvalidateCanvasRequested;
+    public event EventHandler? ReloadCanvasResourcesRequested;
     public event EventHandler? ForceZoomAndCenterRequested;
 
     public IAsyncRelayCommand CopyCommand { get; }
@@ -90,6 +98,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     public IAsyncRelayCommand GenerateDetailedImageDescriptionCommand { get; }
     public IAsyncRelayCommand GenerateDiagramImageDescriptionCommand { get; }
     public IAsyncRelayCommand GenerateAccessibleImageDescriptionCommand { get; }
+    public IAsyncRelayCommand CopyImageDescriptionCommand { get; }
     public IRelayCommand<ImageOrientation> UpdateOrientationCommand { get; }
     public IRelayCommand<Rectangle> UpdateCropRectCommand { get; }
     public IRelayCommand<bool> SetChromaKeyModeActiveCommand { get; }
@@ -416,8 +425,38 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     public bool HasImageDescription
     {
         get;
-        private set => Set(ref field, value);
+        private set
+        {
+            if (Set(ref field, value))
+            {
+                CopyImageDescriptionCommand.NotifyCanExecuteChanged();
+            }
+        }
     }
+
+    public ImageDescriptionMode? SelectedImageDescriptionMode
+    {
+        get;
+        private set
+        {
+            if (Set(ref field, value))
+            {
+                RaiseImageDescriptionSelectionProperties();
+            }
+        }
+    }
+
+    public bool IsBriefImageDescriptionSelected =>
+        SelectedImageDescriptionMode == ImageDescriptionMode.Brief;
+
+    public bool IsDetailedImageDescriptionSelected =>
+        SelectedImageDescriptionMode == ImageDescriptionMode.Detailed;
+
+    public bool IsDiagramImageDescriptionSelected =>
+        SelectedImageDescriptionMode == ImageDescriptionMode.Diagram;
+
+    public bool IsAccessibleImageDescriptionSelected =>
+        SelectedImageDescriptionMode == ImageDescriptionMode.Accessible;
 
     public string ImageDescriptionStatusMessage
     {
@@ -462,6 +501,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         IOpenScreenshotsFolderUseCase openScreenshotsFolderAction,
         ILogService logService,
         IAppNotificationService notificationService,
+        IClipboardService clipboardService,
         ColorPickerToolViewModel colorPickerTool,
         ChromaKeyToolViewModel chromaKeyTool,
         ShapeToolViewModel shapeTool,
@@ -496,6 +536,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         _openScreenshotsFolderAction = openScreenshotsFolderAction;
         _logService = logService;
         _notificationService = notificationService;
+        _clipboardService = clipboardService;
 
         ChromaKeyTool = chromaKeyTool;
         ColorPickerTool = colorPickerTool;
@@ -549,6 +590,10 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         GenerateDetailedImageDescriptionCommand = CreateImageDescriptionCommand(ImageDescriptionMode.Detailed);
         GenerateDiagramImageDescriptionCommand = CreateImageDescriptionCommand(ImageDescriptionMode.Diagram);
         GenerateAccessibleImageDescriptionCommand = CreateImageDescriptionCommand(ImageDescriptionMode.Accessible);
+        CopyImageDescriptionCommand = new AsyncRelayCommand(
+            CopyImageDescriptionAsync,
+            () => HasImageDescription,
+            AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
         UpdateOrientationCommand = new RelayCommand<ImageOrientation>(UpdateOrientation);
         UpdateCropRectCommand = new RelayCommand<Rectangle>(UpdateCropRect);
         SetChromaKeyModeActiveCommand = new RelayCommand<bool>(SetChromaKeyModeActive);
@@ -588,6 +633,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     {
         ThrowIfNotReadyToLoad();
         StartLoading();
+        ClearImageDescriptionResults();
 
         var cts = _cancellationService.GetLinkedCancellationTokenSource(cancellationToken);
         try
@@ -651,8 +697,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         IsImageDescriptionFeatureEnabled = _imageDescriptionFeatureAvailability.IsImageDescriptionEnabled;
         IsImageDescriptionAvailable = false;
         IsImageDescriptionRunning = false;
-        ImageDescriptionStatusMessage = string.Empty;
-        ImageDescription = string.Empty;
+        ClearImageDescriptionResults();
         _editRevision = 0;
         _textExtractionProcessedRevision = null;
         _editHistory.Clear();
@@ -673,12 +718,31 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         await _imageCanvasExporter.CopyImageToClipboardAsync([.. Drawables], options);
     }
 
+    private async Task CopyImageDescriptionAsync()
+    {
+        if (!HasImageDescription)
+        {
+            return;
+        }
+
+        try
+        {
+            await _clipboardService.CopyTextAsync(ImageDescription);
+            _notificationService.ShowInfo(GetLocalizedString(ImageDescriptionCopiedMessageResourceKey));
+        }
+        catch (Exception)
+        {
+            _notificationService.ShowError(GetLocalizedString(ImageDescriptionCopyFailedMessageResourceKey));
+        }
+    }
+
     private IAsyncRelayCommand CreateImageDescriptionCommand(ImageDescriptionMode mode)
     {
         return new AsyncRelayCommand(
             () => GenerateImageDescriptionAsync(mode),
-            () => CanGenerateImageDescription,
-            AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
+            () => CanGenerateImageDescription && _runningImageDescriptionMode != mode,
+            AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler |
+                AsyncRelayCommandOptions.AllowConcurrentExecutions);
     }
 
     private async Task ToggleSuperResolutionAsync()
@@ -802,8 +866,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         if (wasImageDescriptionModeActive && !IsImageDescriptionModeActive)
         {
             CancelImageDescriptionWork();
-            ImageDescription = string.Empty;
-            ImageDescriptionStatusMessage = string.Empty;
+            ClearDisplayedImageDescription();
         }
 
         UpdateCanToggleImageDescription();
@@ -1291,19 +1354,27 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
     private async Task GenerateImageDescriptionAsync(ImageDescriptionMode mode)
     {
-        if (!IsLoaded || !IsImageDescriptionModeActive || IsImageDescriptionRunning)
+        if (!CanGenerateImageDescription || _runningImageDescriptionMode == mode)
         {
             return;
         }
 
-        ImageDescriptionStatusMessage = string.Empty;
-        ImageDescription = string.Empty;
-
         CancelImageDescriptionWork();
+        ClearDisplayedImageDescription();
+
+        if (_imageDescriptionResults.TryGetValue(mode, out string? cachedDescription))
+        {
+            ShowImageDescription(mode, cachedDescription);
+            return;
+        }
+
         var cancellationTokenSource = new CancellationTokenSource();
         _imageDescriptionCancellationTokenSource = cancellationTokenSource;
+        _runningImageDescriptionMode = mode;
         CancellationToken cancellationToken = cancellationTokenSource.Token;
         IsImageDescriptionRunning = true;
+        NotifyImageDescriptionCommandsCanExecuteChanged();
+        RaiseImageDescriptionSelectionProperties();
 
         try
         {
@@ -1312,6 +1383,12 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
             {
                 ImageDescriptionPreparationResult preparationResult =
                     await _imageDescriptionService.EnsureReadyAsync(cancellationToken);
+                cancellationToken.ThrowIfCancellationRequested();
+                if (!ReferenceEquals(_imageDescriptionCancellationTokenSource, cancellationTokenSource))
+                {
+                    return;
+                }
+
                 if (preparationResult.Status != ImageDescriptionPreparationStatus.Success)
                 {
                     ShowImageDescriptionFailure(GetImageDescriptionPreparationFailureMessage(preparationResult));
@@ -1333,6 +1410,11 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
             ImageDescriptionResult result = await _imageDescriptionService.DescribeAsync(
                 new ImageDescriptionRequest(sourceImage, GetRenderedImageSize(options), mode),
                 cancellationToken);
+            cancellationToken.ThrowIfCancellationRequested();
+            if (!ReferenceEquals(_imageDescriptionCancellationTokenSource, cancellationTokenSource))
+            {
+                return;
+            }
 
             if (result.Status != ImageDescriptionStatus.Success)
             {
@@ -1340,26 +1422,35 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
                 return;
             }
 
-            if (!cancellationToken.IsCancellationRequested && IsImageDescriptionModeActive)
+            _imageDescriptionResults[mode] = result.Description;
+            if (IsImageDescriptionModeActive)
             {
-                ImageDescription = result.Description;
+                ShowImageDescription(mode, result.Description);
             }
         }
         catch (OperationCanceledException)
         {
-            ImageDescriptionStatusMessage = string.Empty;
+            if (ReferenceEquals(_imageDescriptionCancellationTokenSource, cancellationTokenSource))
+            {
+                ImageDescriptionStatusMessage = string.Empty;
+            }
         }
         catch (Exception ex)
         {
             _logService.LogException(ex, "Failed to describe image.");
-            ShowImageDescriptionFailure(GetLocalizedString("ImageDescriptionStatus_Failed"));
+            if (ReferenceEquals(_imageDescriptionCancellationTokenSource, cancellationTokenSource))
+            {
+                ShowImageDescriptionFailure(GetLocalizedString("ImageDescriptionStatus_Failed"));
+            }
         }
         finally
         {
             if (ReferenceEquals(_imageDescriptionCancellationTokenSource, cancellationTokenSource))
             {
                 _imageDescriptionCancellationTokenSource = null;
+                _runningImageDescriptionMode = null;
                 IsImageDescriptionRunning = false;
+                NotifyImageDescriptionCommandsCanExecuteChanged();
             }
 
             cancellationTokenSource.Dispose();
@@ -1515,7 +1606,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         IncrementEditRevision();
         SyncImageGeometryFromSession();
         SyncDrawablesFromSession();
-        InvalidateCanvasRequested?.Invoke(this, EventArgs.Empty);
+        ReloadCanvasResourcesRequested?.Invoke(this, EventArgs.Empty);
         ForceZoomAndCenterRequested?.Invoke(this, EventArgs.Empty);
     }
 
@@ -1602,8 +1693,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     {
         CanGenerateImageDescription = IsLoaded &&
             IsImageDescriptionModeActive &&
-            IsImageDescriptionAvailable &&
-            !IsImageDescriptionRunning;
+            IsImageDescriptionAvailable;
     }
 
     private bool IsAiFeatureRequestAllowed(AiFeatureId featureId)
@@ -1614,6 +1704,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     private void IncrementEditRevision()
     {
         _editRevision++;
+        ClearImageDescriptionResults();
 
         if (IsTextExtractionModeActive)
         {
@@ -1643,7 +1734,48 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     {
         _imageDescriptionCancellationTokenSource?.Cancel();
         _imageDescriptionCancellationTokenSource = null;
+        _runningImageDescriptionMode = null;
         IsImageDescriptionRunning = false;
+        NotifyImageDescriptionCommandsCanExecuteChanged();
+        RaiseImageDescriptionSelectionProperties();
+    }
+
+    private void ClearDisplayedImageDescription()
+    {
+        ImageDescription = string.Empty;
+        ImageDescriptionStatusMessage = string.Empty;
+        SelectedImageDescriptionMode = null;
+        RaiseImageDescriptionSelectionProperties();
+    }
+
+    private void ShowImageDescription(ImageDescriptionMode mode, string description)
+    {
+        ImageDescriptionStatusMessage = string.Empty;
+        ImageDescription = description;
+        SelectedImageDescriptionMode = mode;
+        RaiseImageDescriptionSelectionProperties();
+    }
+
+    private void ClearImageDescriptionResults()
+    {
+        _imageDescriptionResults.Clear();
+        ClearDisplayedImageDescription();
+    }
+
+    private void NotifyImageDescriptionCommandsCanExecuteChanged()
+    {
+        GenerateBriefImageDescriptionCommand.NotifyCanExecuteChanged();
+        GenerateDetailedImageDescriptionCommand.NotifyCanExecuteChanged();
+        GenerateDiagramImageDescriptionCommand.NotifyCanExecuteChanged();
+        GenerateAccessibleImageDescriptionCommand.NotifyCanExecuteChanged();
+    }
+
+    private void RaiseImageDescriptionSelectionProperties()
+    {
+        RaisePropertyChanged(nameof(IsBriefImageDescriptionSelected));
+        RaisePropertyChanged(nameof(IsDetailedImageDescriptionSelected));
+        RaisePropertyChanged(nameof(IsDiagramImageDescriptionSelected));
+        RaisePropertyChanged(nameof(IsAccessibleImageDescriptionSelected));
     }
 
     private string GetReadyStateFailureMessage(ImageSuperResolutionReadyState readyState)

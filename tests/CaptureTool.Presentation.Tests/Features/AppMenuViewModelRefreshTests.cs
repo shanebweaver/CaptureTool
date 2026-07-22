@@ -55,7 +55,8 @@ public sealed class AppMenuViewModelRefreshTests
             Mock.Of<IImageCaptureState>(),
             Mock.Of<IVideoCaptureState>(),
             Mock.Of<IAudioCaptureState>(),
-            recentCaptureFactory.Object);
+            recentCaptureFactory.Object,
+            Mock.Of<IRecentCapturesChangeNotifier>());
 
         viewModel.OpenFileCommand.Execute(null);
         await viewModel.OpenFileCommand.ExecutionTask!;
@@ -68,6 +69,44 @@ public sealed class AppMenuViewModelRefreshTests
             Times.Once);
         Assert.HasCount(1, viewModel.RecentCaptures);
         Assert.AreEqual(recentCapture.FilePath, viewModel.RecentCaptures[0].FilePath);
+    }
+
+    [TestMethod]
+    public void RecentCapturesChanged_WhenMenuIsLoaded_ShouldRefreshRemovedFiles()
+    {
+        var notifier = new Mock<IRecentCapturesChangeNotifier>();
+        var getRecentCapturesUseCase = new Mock<IGetRecentCapturesUseCase>();
+        var recentCaptureFactory = new Mock<IFactoryServiceWithArgs<RecentCaptureViewModel, string>>();
+        var recentCapture = new RecentCapture(@"C:\Temp\source.png", "source.png", CaptureFileType.Image);
+        int refreshCount = 0;
+
+        getRecentCapturesUseCase
+            .Setup(useCase => useCase.ExecuteAsync(
+                It.IsAny<GetRecentCapturesRequest>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(() => UseCaseResponse<GetRecentCapturesResponse>.Success(
+                new GetRecentCapturesResponse(refreshCount++ == 0 ? [recentCapture] : [])));
+        recentCaptureFactory
+            .Setup(factory => factory.Create(recentCapture.FilePath))
+            .Returns(new RecentCaptureViewModel(recentCapture.FilePath));
+
+        AppMenuViewModel viewModel = CreateViewModel(
+            getRecentCapturesUseCase: getRecentCapturesUseCase.Object,
+            recentCaptureViewModelFactory: recentCaptureFactory.Object,
+            recentCapturesChangeNotifier: notifier.Object);
+        viewModel.Load();
+        Assert.HasCount(1, viewModel.RecentCaptures);
+
+        notifier.Raise(source => source.RecentCapturesChanged += null, EventArgs.Empty);
+
+        Assert.IsEmpty(viewModel.RecentCaptures);
+        getRecentCapturesUseCase.Verify(
+            useCase => useCase.ExecuteAsync(
+                It.IsAny<GetRecentCapturesRequest>(),
+                It.IsAny<CancellationToken>()),
+            Times.Exactly(2));
+
+        viewModel.Dispose();
     }
 
     [TestMethod]
@@ -138,7 +177,10 @@ public sealed class AppMenuViewModelRefreshTests
         IOpenSelectionOverlayUseCase? openSelectionOverlayUseCase = null,
         IOpenFileUseCase? openFileUseCase = null,
         IOpenRecentCaptureUseCase? openRecentCaptureUseCase = null,
-        IEditSessionGuard? editSessionGuard = null)
+        IEditSessionGuard? editSessionGuard = null,
+        IGetRecentCapturesUseCase? getRecentCapturesUseCase = null,
+        IFactoryServiceWithArgs<RecentCaptureViewModel, string>? recentCaptureViewModelFactory = null,
+        IRecentCapturesChangeNotifier? recentCapturesChangeNotifier = null)
     {
         return new AppMenuViewModel(
             openSelectionOverlayUseCase ?? Mock.Of<IOpenSelectionOverlayUseCase>(),
@@ -149,12 +191,13 @@ public sealed class AppMenuViewModelRefreshTests
             openFileUseCase ?? Mock.Of<IOpenFileUseCase>(),
             Mock.Of<IExitApplicationUseCase>(),
             openRecentCaptureUseCase ?? Mock.Of<IOpenRecentCaptureUseCase>(),
-            Mock.Of<IGetRecentCapturesUseCase>(),
+            getRecentCapturesUseCase ?? Mock.Of<IGetRecentCapturesUseCase>(),
             Mock.Of<IStoreFeatureAvailability>(),
             Mock.Of<IImageCaptureState>(),
             Mock.Of<IVideoCaptureState>(),
             Mock.Of<IAudioCaptureState>(),
-            Mock.Of<IFactoryServiceWithArgs<RecentCaptureViewModel, string>>(),
+            recentCaptureViewModelFactory ?? Mock.Of<IFactoryServiceWithArgs<RecentCaptureViewModel, string>>(),
+            recentCapturesChangeNotifier ?? Mock.Of<IRecentCapturesChangeNotifier>(),
             editSessionGuard);
     }
 

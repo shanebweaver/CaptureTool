@@ -4,6 +4,7 @@ using CaptureTool.Application.Abstractions.Settings.ChangeAudioFolder;
 using CaptureTool.Application.Abstractions.Settings.ChangeScreenshotsFolder;
 using CaptureTool.Application.Abstractions.Settings.ChangeVideosFolder;
 using CaptureTool.Application.Abstractions.Settings.ClearTempFiles;
+using CaptureTool.Application.Abstractions.Library.RecentCaptures;
 using CaptureTool.Application.Abstractions.Settings.LeaveSettingsPage;
 using CaptureTool.Application.Abstractions.Settings.OpenAudioFolder;
 using CaptureTool.Application.Abstractions.Settings.OpenScreenshotsFolder;
@@ -116,12 +117,21 @@ public sealed class SettingsPageUseCaseTests
         await File.WriteAllTextAsync(Path.Combine(directoryPath, "child.tmp"), "child", TestContext.CancellationToken);
         var storage = new Mock<IStorageService>();
         storage.Setup(service => service.GetApplicationTemporaryFolderPath()).Returns(tempFolder);
-        var useCase = new ClearTempFilesUseCase(Mock.Of<ILogService>(), storage.Object, TestFileSystem.Instance, TestUseCaseExecutor.Instance);
+        var recentCapturesChangeNotifier = new Mock<IRecentCapturesChangeNotifier>();
+        var useCase = new ClearTempFilesUseCase(
+            Mock.Of<ILogService>(),
+            storage.Object,
+            TestFileSystem.Instance,
+            TestUseCaseExecutor.Instance,
+            recentCapturesChangeNotifier.Object);
 
         ClearTempFilesResponse response = (await useCase.ExecuteAsync(new ClearTempFilesRequest(), TestContext.CancellationToken)).Value!;
 
         Assert.IsTrue(response.Succeeded);
         Assert.IsEmpty(Directory.EnumerateFileSystemEntries(tempFolder).ToArray());
+        recentCapturesChangeNotifier.Verify(
+            notifier => notifier.NotifyRecentCapturesChanged(),
+            Times.Once);
     }
 
     [TestMethod]

@@ -40,7 +40,9 @@ public sealed class WindowsImageDescriptionService : IImageDescriptionService
 
         try
         {
-            AIFeatureReadyResult result = await ImageDescriptionGenerator.EnsureReadyAsync();
+            AIFeatureReadyResult result = await ImageDescriptionGenerator
+                .EnsureReadyAsync()
+                .AsTask(cancellationToken);
             if (cancellationToken.IsCancellationRequested)
             {
                 return ImageDescriptionPreparationResult.Cancelled;
@@ -75,14 +77,18 @@ public sealed class WindowsImageDescriptionService : IImageDescriptionService
         {
             using SoftwareBitmap sourceBitmap = await LoadSoftwareBitmapAsync(request.SourceImage);
             using ImageBuffer inputImage = ImageBuffer.CreateForSoftwareBitmap(sourceBitmap);
-            using ImageDescriptionGenerator generator = await ImageDescriptionGenerator.CreateAsync();
+            using ImageDescriptionGenerator generator = await ImageDescriptionGenerator
+                .CreateAsync()
+                .AsTask(cancellationToken);
 
             cancellationToken.ThrowIfCancellationRequested();
 
-            Microsoft.Windows.AI.Imaging.ImageDescriptionResult result = await generator.DescribeAsync(
-                inputImage,
-                MapMode(request.Mode),
-                new ContentFilterOptions());
+            Microsoft.Windows.AI.Imaging.ImageDescriptionResult result = await generator
+                .DescribeAsync(
+                    inputImage,
+                    MapMode(request.Mode),
+                    new ContentFilterOptions())
+                .AsTask(cancellationToken);
 
             if (cancellationToken.IsCancellationRequested)
             {

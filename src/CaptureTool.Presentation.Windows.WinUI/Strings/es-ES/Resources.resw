@@ -1433,7 +1433,7 @@ SOFTWARE.
   <data name="ImageEdit_ImageDescriptionButton.ToolTipService.ToolTip" xml:space="preserve">
     <value>Describir la imagen mediante IA en el dispositivo</value>
   </data>
-  <data name="ImageDescriptionToolbar_BriefButton.Content" xml:space="preserve">
+  <data name="ImageDescriptionToolbar_BriefButtonText.Text" xml:space="preserve">
     <value>Breve</value>
   </data>
   <data name="ImageDescriptionToolbar_BriefButton.AutomationProperties.Name" xml:space="preserve">
@@ -1442,7 +1442,7 @@ SOFTWARE.
   <data name="ImageDescriptionToolbar_BriefButton.ToolTipService.ToolTip" xml:space="preserve">
     <value>Generar una descripción breve</value>
   </data>
-  <data name="ImageDescriptionToolbar_DetailedButton.Content" xml:space="preserve">
+  <data name="ImageDescriptionToolbar_DetailedButtonText.Text" xml:space="preserve">
     <value>Detallada</value>
   </data>
   <data name="ImageDescriptionToolbar_DetailedButton.AutomationProperties.Name" xml:space="preserve">
@@ -1451,7 +1451,7 @@ SOFTWARE.
   <data name="ImageDescriptionToolbar_DetailedButton.ToolTipService.ToolTip" xml:space="preserve">
     <value>Generar una descripción detallada</value>
   </data>
-  <data name="ImageDescriptionToolbar_DiagramButton.Content" xml:space="preserve">
+  <data name="ImageDescriptionToolbar_DiagramButtonText.Text" xml:space="preserve">
     <value>Diagrama</value>
   </data>
   <data name="ImageDescriptionToolbar_DiagramButton.AutomationProperties.Name" xml:space="preserve">
@@ -1460,7 +1460,7 @@ SOFTWARE.
   <data name="ImageDescriptionToolbar_DiagramButton.ToolTipService.ToolTip" xml:space="preserve">
     <value>Generar una descripción optimizada para diagramas</value>
   </data>
-  <data name="ImageDescriptionToolbar_AccessibleButton.Content" xml:space="preserve">
+  <data name="ImageDescriptionToolbar_AccessibleButtonText.Text" xml:space="preserve">
     <value>Accesible</value>
   </data>
   <data name="ImageDescriptionToolbar_AccessibleButton.AutomationProperties.Name" xml:space="preserve">
@@ -1474,6 +1474,18 @@ SOFTWARE.
   </data>
   <data name="ImageDescriptionPanel_Title.Text" xml:space="preserve">
     <value>Descripción de imagen</value>
+  </data>
+  <data name="ImageDescriptionPanel_CopyButton.AutomationProperties.Name" xml:space="preserve">
+    <value>Copiar descripción de la imagen</value>
+  </data>
+  <data name="ImageDescriptionPanel_CopyButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Copiar descripción de la imagen</value>
+  </data>
+  <data name="ImageDescriptionCopiedNotification" xml:space="preserve">
+    <value>La descripción de la imagen se copió en el Portapapeles.</value>
+  </data>
+  <data name="ImageDescriptionCopyFailedNotification" xml:space="preserve">
+    <value>No se pudo copiar la descripción de la imagen.</value>
   </data>
   <data name="ImageEdit_ImageDescriptionProgressRing.AutomationProperties.Name" xml:space="preserve">
     <value>Generando descripción de imagen</value>

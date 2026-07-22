@@ -1433,7 +1433,7 @@ SOFTWARE.
   <data name="ImageEdit_ImageDescriptionButton.ToolTipService.ToolTip" xml:space="preserve">
     <value>使用设备上的 AI 描述图像</value>
   </data>
-  <data name="ImageDescriptionToolbar_BriefButton.Content" xml:space="preserve">
+  <data name="ImageDescriptionToolbar_BriefButtonText.Text" xml:space="preserve">
     <value>简短</value>
   </data>
   <data name="ImageDescriptionToolbar_BriefButton.AutomationProperties.Name" xml:space="preserve">
@@ -1442,7 +1442,7 @@ SOFTWARE.
   <data name="ImageDescriptionToolbar_BriefButton.ToolTipService.ToolTip" xml:space="preserve">
     <value>生成简短描述</value>
   </data>
-  <data name="ImageDescriptionToolbar_DetailedButton.Content" xml:space="preserve">
+  <data name="ImageDescriptionToolbar_DetailedButtonText.Text" xml:space="preserve">
     <value>详细</value>
   </data>
   <data name="ImageDescriptionToolbar_DetailedButton.AutomationProperties.Name" xml:space="preserve">
@@ -1451,7 +1451,7 @@ SOFTWARE.
   <data name="ImageDescriptionToolbar_DetailedButton.ToolTipService.ToolTip" xml:space="preserve">
     <value>生成详细描述</value>
   </data>
-  <data name="ImageDescriptionToolbar_DiagramButton.Content" xml:space="preserve">
+  <data name="ImageDescriptionToolbar_DiagramButtonText.Text" xml:space="preserve">
     <value>图表</value>
   </data>
   <data name="ImageDescriptionToolbar_DiagramButton.AutomationProperties.Name" xml:space="preserve">
@@ -1460,7 +1460,7 @@ SOFTWARE.
   <data name="ImageDescriptionToolbar_DiagramButton.ToolTipService.ToolTip" xml:space="preserve">
     <value>生成针对图表优化的描述</value>
   </data>
-  <data name="ImageDescriptionToolbar_AccessibleButton.Content" xml:space="preserve">
+  <data name="ImageDescriptionToolbar_AccessibleButtonText.Text" xml:space="preserve">
     <value>无障碍</value>
   </data>
   <data name="ImageDescriptionToolbar_AccessibleButton.AutomationProperties.Name" xml:space="preserve">
@@ -1474,6 +1474,18 @@ SOFTWARE.
   </data>
   <data name="ImageDescriptionPanel_Title.Text" xml:space="preserve">
     <value>图像描述</value>
+  </data>
+  <data name="ImageDescriptionPanel_CopyButton.AutomationProperties.Name" xml:space="preserve">
+    <value>复制图像描述</value>
+  </data>
+  <data name="ImageDescriptionPanel_CopyButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>复制图像描述</value>
+  </data>
+  <data name="ImageDescriptionCopiedNotification" xml:space="preserve">
+    <value>图像描述已复制到剪贴板。</value>
+  </data>
+  <data name="ImageDescriptionCopyFailedNotification" xml:space="preserve">
+    <value>无法复制图像描述。</value>
   </data>
   <data name="ImageEdit_ImageDescriptionProgressRing.AutomationProperties.Name" xml:space="preserve">
     <value>正在生成图像描述</value>
