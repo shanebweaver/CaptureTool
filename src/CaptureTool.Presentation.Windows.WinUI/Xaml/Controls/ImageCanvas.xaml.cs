@@ -1,5 +1,6 @@
 using CaptureTool.Application.Abstractions.Edit.Image.Rendering;
 using CaptureTool.Application.Abstractions.Edit.Image.TextExtraction;
+using CaptureTool.Application.Edit.Image.TextExtraction;
 using CaptureTool.Domain.Edit;
 using CaptureTool.Domain.Edit.Drawable;
 using CaptureTool.Domain.Edit.Operations;
@@ -9,12 +10,14 @@ using Microsoft.Graphics.Canvas.UI;
 using Microsoft.Graphics.Canvas.UI.Xaml;
 using Microsoft.UI.Input;
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using System.Collections.Specialized;
 using System.Drawing;
 using System.Numerics;
+using Windows.ApplicationModel.DataTransfer;
 using Windows.System;
 using Windows.UI.Core;
 using Point = global::Windows.Foundation.Point;
@@ -137,7 +140,9 @@ public sealed partial class ImageCanvas : UserControlBase
     {
         if (d is ImageCanvas control)
         {
+            control.RebuildTextExtractionLayout();
             control.UpdateTextExtractionOverlayPath();
+            control.UpdateTouchInputLock();
         }
     }
 
@@ -362,6 +367,8 @@ public sealed partial class ImageCanvas : UserControlBase
         set => Set(TextExtractionRegionsProperty, value);
     }
 
+    public string SelectedExtractedText => _textExtractionSelection.Text;
+
     public Rectangle CropRect
     {
         get => Get<Rectangle>(CropRectProperty);
@@ -433,6 +440,7 @@ public sealed partial class ImageCanvas : UserControlBase
     public event EventHandler<TextDrawable>? TextDrawableSelected;
     public event EventHandler<Color>? ColorPickerColorHovered;
     public event EventHandler<Color>? ColorPickerColorPicked;
+    public event EventHandler<string>? ExtractedTextSelectionChanged;
     public event EventHandler<Point>? ImageContextMenuRequested;
     public event EventHandler<Point>? ShapeContextMenuRequested;
 
@@ -483,6 +491,12 @@ public sealed partial class ImageCanvas : UserControlBase
     private CanvasRenderTarget? _colorPickerRenderTarget;
     private byte[]? _colorPickerPixelBytes;
     private Size _colorPickerSnapshotSize = Size.Empty;
+    private RecognizedTextLayout _textExtractionLayout = RecognizedTextLayout.Empty;
+    private RecognizedTextSelection _textExtractionSelection = RecognizedTextSelection.Empty;
+    private RecognizedTextPosition? _textSelectionAnchor;
+    private Point _textSelectionPressPosition;
+    private bool _isTextSelectionPointerDown;
+    private bool _hasTextSelectionDrag;
 
     // Line endpoint manipulation
     private bool _isDraggingLineStart = false;
@@ -504,6 +518,29 @@ public sealed partial class ImageCanvas : UserControlBase
 
     private void ImageCanvas_KeyDown(object sender, KeyRoutedEventArgs e)
     {
+        if (IsTextExtractionOverlayEnabled && _textExtractionSelection.Regions.Count > 0)
+        {
+            if (e.Key == VirtualKey.Escape)
+            {
+                ClearExtractedTextSelection();
+                e.Handled = true;
+                return;
+            }
+
+            bool isControlDown =
+                (InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Control) & CoreVirtualKeyStates.Down) ==
+                CoreVirtualKeyStates.Down;
+            if (e.Key == VirtualKey.C && isControlDown)
+            {
+                var package = new DataPackage();
+                package.SetText(_textExtractionSelection.Text);
+                global::Windows.ApplicationModel.DataTransfer.Clipboard.SetContent(package);
+                global::Windows.ApplicationModel.DataTransfer.Clipboard.Flush();
+                e.Handled = true;
+                return;
+            }
+        }
+
         if ((!IsShapesModeEnabled && !IsTextModeEnabled) || _selectedShape == null)
         {
             return;
@@ -575,7 +612,8 @@ public sealed partial class ImageCanvas : UserControlBase
             IsCropModeEnabled ||
             IsShapesModeEnabled ||
             IsTextModeEnabled ||
-            IsColorPickerModeEnabled;
+            IsColorPickerModeEnabled ||
+            IsTextExtractionOverlayEnabled;
 
         if (shouldIgnoreTouchInput == _isIgnoringTouchInputForEditing)
         {
@@ -964,38 +1002,137 @@ public sealed partial class ImageCanvas : UserControlBase
             TextExtractionOverlayPath.Visibility = Visibility.Collapsed;
             TextExtractionOverlayAutomationMarker.Visibility = Visibility.Collapsed;
             TextExtractionOverlayPath.Data = null;
+            TextExtractionSelectionPath.Visibility = Visibility.Collapsed;
             return;
         }
 
         double width = CanvasContainer.Width;
         double height = CanvasContainer.Height;
-        GeometryGroup geometry = new()
-        {
-            FillRule = FillRule.EvenOdd
-        };
-        geometry.Children.Add(new RectangleGeometry
-        {
-            Rect = new Rect(0, 0, width, height)
-        });
-
-        RectangleF imageBounds = new(0, 0, (float)width, (float)height);
-        foreach (RecognizedTextRegion region in TextExtractionRegions)
-        {
-            RectangleF bounds = RectangleF.Intersect(imageBounds, region.Bounds);
-            if (bounds.Width <= 0 || bounds.Height <= 0)
-            {
-                continue;
-            }
-
-            geometry.Children.Add(new RectangleGeometry
-            {
-                Rect = new Rect(bounds.X, bounds.Y, bounds.Width, bounds.Height)
-            });
-        }
+        PathGeometry geometry = CreateTextPathGeometry(
+            _textExtractionLayout.CutoutContours,
+            width,
+            height,
+            includeOuterBounds: true);
 
         TextExtractionOverlayPath.Data = geometry;
         TextExtractionOverlayPath.Visibility = Visibility.Visible;
         TextExtractionOverlayAutomationMarker.Visibility = Visibility.Visible;
+        UpdateTextExtractionSelectionPath();
+    }
+
+    private void RebuildTextExtractionLayout()
+    {
+        _textExtractionLayout = RecognizedTextLayout.Create(TextExtractionRegions);
+        ClearExtractedTextSelection();
+    }
+
+    private void UpdateTextExtractionSelectionPath()
+    {
+        if (!IsTextExtractionOverlayEnabled || _textExtractionSelection.HighlightBounds.Count == 0)
+        {
+            TextExtractionSelectionPath.Data = null;
+            TextExtractionSelectionPath.Visibility = Visibility.Collapsed;
+            return;
+        }
+
+        IReadOnlyList<IReadOnlyList<PointF>> contours = RecognizedTextLayout.CreateUnionContours(
+            _textExtractionSelection.HighlightBounds);
+        PathGeometry geometry = CreateTextPathGeometry(
+            contours,
+            CanvasContainer.Width,
+            CanvasContainer.Height,
+            includeOuterBounds: false);
+
+        TextExtractionSelectionPath.Data = geometry;
+        TextExtractionSelectionPath.Visibility = geometry.Figures.Count > 0
+            ? Visibility.Visible
+            : Visibility.Collapsed;
+    }
+
+    private static PathGeometry CreateTextPathGeometry(
+        IReadOnlyList<IReadOnlyList<PointF>> contours,
+        double width,
+        double height,
+        bool includeOuterBounds)
+    {
+        PathGeometry geometry = new()
+        {
+            FillRule = FillRule.EvenOdd
+        };
+        if (includeOuterBounds)
+        {
+            AddPathFigure(geometry, [
+                new PointF(0, 0),
+                new PointF((float)width, 0),
+                new PointF((float)width, (float)height),
+                new PointF(0, (float)height)
+            ], width, height);
+        }
+
+        foreach (IReadOnlyList<PointF> contour in contours)
+        {
+            AddPathFigure(geometry, contour, width, height);
+        }
+
+        return geometry;
+    }
+
+    private static void AddPathFigure(
+        PathGeometry geometry,
+        IReadOnlyList<PointF> contour,
+        double width,
+        double height)
+    {
+        if (contour.Count < 3)
+        {
+            return;
+        }
+
+        PointF start = ClampPoint(contour[0], width, height);
+        PathFigure figure = new()
+        {
+            StartPoint = new Point(start.X, start.Y),
+            IsClosed = true,
+            IsFilled = true
+        };
+        for (int index = 1; index < contour.Count; index++)
+        {
+            PointF point = ClampPoint(contour[index], width, height);
+            figure.Segments.Add(new LineSegment
+            {
+                Point = new Point(point.X, point.Y)
+            });
+        }
+
+        geometry.Figures.Add(figure);
+    }
+
+    private static PointF ClampPoint(PointF point, double width, double height)
+    {
+        return new PointF(
+            Math.Clamp(point.X, 0, (float)width),
+            Math.Clamp(point.Y, 0, (float)height));
+    }
+
+    private void SetExtractedTextSelection(RecognizedTextSelection selection)
+    {
+        if (_textExtractionSelection == selection)
+        {
+            return;
+        }
+
+        _textExtractionSelection = selection;
+        AutomationProperties.SetName(TextExtractionSelectionPath, selection.Text);
+        UpdateTextExtractionSelectionPath();
+        ExtractedTextSelectionChanged?.Invoke(this, selection.Text);
+    }
+
+    private void ClearExtractedTextSelection()
+    {
+        _textSelectionAnchor = null;
+        _isTextSelectionPointerDown = false;
+        _hasTextSelectionDrag = false;
+        SetExtractedTextSelection(RecognizedTextSelection.Empty);
     }
 
     private Rectangle GetRenderCropRect()
@@ -1299,6 +1436,11 @@ public sealed partial class ImageCanvas : UserControlBase
             return;
         }
 
+        if (IsTextExtractionOverlayEnabled && TryBeginExtractedTextSelection(e))
+        {
+            return;
+        }
+
         if (TryHandleContextMenuRequest(e))
         {
             return;
@@ -1423,6 +1565,17 @@ public sealed partial class ImageCanvas : UserControlBase
             return;
         }
 
+        if (_isTextSelectionPointerDown)
+        {
+            UpdateExtractedTextSelection(e);
+            return;
+        }
+
+        if (IsTextExtractionOverlayEnabled)
+        {
+            UpdateTextExtractionCursor(e.GetCurrentPoint(RenderCanvas).Position);
+        }
+
         if (_isPointerDown)
         {
             // In shapes mode, handle shape drawing
@@ -1496,6 +1649,24 @@ public sealed partial class ImageCanvas : UserControlBase
 
     private void RootContainer_PointerReleased(object sender, PointerRoutedEventArgs e)
     {
+        if (_isTextSelectionPointerDown)
+        {
+            if (!_hasTextSelectionDrag)
+            {
+                ClearExtractedTextSelection();
+            }
+            else
+            {
+                _textSelectionAnchor = null;
+                _isTextSelectionPointerDown = false;
+                _hasTextSelectionDrag = false;
+            }
+
+            RootContainer.ReleasePointerCaptures();
+            e.Handled = true;
+            return;
+        }
+
         if (IsShapesModeEnabled)
         {
             if (_shapeStartPoint.HasValue)
@@ -1563,6 +1734,9 @@ public sealed partial class ImageCanvas : UserControlBase
     private void RootContainer_PointerCanceled(object sender, PointerRoutedEventArgs e)
     {
         _isPointerDown = false;
+        _isTextSelectionPointerDown = false;
+        _hasTextSelectionDrag = false;
+        _textSelectionAnchor = null;
         _shapeStartPoint = null;
         _shapeUnderPointer = null;
         _pointerPressPosition = null;
@@ -1572,9 +1746,80 @@ public sealed partial class ImageCanvas : UserControlBase
     private void RootContainer_PointerCaptureLost(object sender, PointerRoutedEventArgs e)
     {
         _isPointerDown = false;
+        _isTextSelectionPointerDown = false;
+        _hasTextSelectionDrag = false;
+        _textSelectionAnchor = null;
         _shapeStartPoint = null;
         _shapeUnderPointer = null;
         _pointerPressPosition = null;
+    }
+
+    private bool TryBeginExtractedTextSelection(PointerRoutedEventArgs e)
+    {
+        if (!IsPrimaryPointerPressed(e, RenderCanvas))
+        {
+            return false;
+        }
+
+        Point position = e.GetCurrentPoint(RenderCanvas).Position;
+        RecognizedTextPosition? textPosition = _textExtractionLayout.HitTestPosition(ToPointF(position));
+        if (!textPosition.HasValue)
+        {
+            ClearExtractedTextSelection();
+            return false;
+        }
+
+        ClearExtractedTextSelection();
+        _textSelectionAnchor = textPosition.Value;
+        _textSelectionPressPosition = position;
+        _isTextSelectionPointerDown = true;
+        RootContainer.CapturePointer(e.Pointer);
+        Focus(FocusState.Pointer);
+        e.Handled = true;
+        return true;
+    }
+
+    private void UpdateExtractedTextSelection(PointerRoutedEventArgs e)
+    {
+        if (!_textSelectionAnchor.HasValue)
+        {
+            return;
+        }
+
+        Point position = e.GetCurrentPoint(RenderCanvas).Position;
+        double distance = Math.Sqrt(
+            Math.Pow(position.X - _textSelectionPressPosition.X, 2) +
+            Math.Pow(position.Y - _textSelectionPressPosition.Y, 2));
+        if (!_hasTextSelectionDrag && distance <= 3)
+        {
+            return;
+        }
+
+        _hasTextSelectionDrag = true;
+        RecognizedTextPosition? focus = _textExtractionLayout.HitTestPosition(
+            ToPointF(position),
+            allowNearest: true);
+        if (focus.HasValue)
+        {
+            SetExtractedTextSelection(_textExtractionLayout.Select(
+                _textSelectionAnchor.Value,
+                focus.Value));
+        }
+
+        UpdateTextExtractionCursor(position);
+        e.Handled = true;
+    }
+
+    private void UpdateTextExtractionCursor(Point position)
+    {
+        ProtectedCursor = _textExtractionLayout.HitTest(ToPointF(position)).HasValue
+            ? InputSystemCursor.Create(InputSystemCursorShape.IBeam)
+            : null;
+    }
+
+    private static PointF ToPointF(Point point)
+    {
+        return new PointF((float)point.X, (float)point.Y);
     }
     #endregion
 

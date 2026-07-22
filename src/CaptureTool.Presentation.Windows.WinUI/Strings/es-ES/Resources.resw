@@ -1349,4 +1349,79 @@ SOFTWARE.
   <data name="Settings_StoreReviewReminders_Toggle.OffContent" xml:space="preserve">
     <value>Off</value>
   </data>
+  <data name="ImageEdit_TextExtractionButton.Label" xml:space="preserve">
+    <value>Extracción de texto</value>
+  </data>
+  <data name="ImageEdit_TextExtractionButton.AutomationProperties.Name" xml:space="preserve">
+    <value>Extraer texto de la imagen</value>
+  </data>
+  <data name="ImageEdit_TextExtractionButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Extraer y seleccionar texto de la imagen</value>
+  </data>
+  <data name="ImageEdit_TextExtractionOverlayMarker.AutomationProperties.Name" xml:space="preserve">
+    <value>La superposición de extracción de texto está lista</value>
+  </data>
+  <data name="ImageEdit_TextExtractionProgressRing.AutomationProperties.Name" xml:space="preserve">
+    <value>Extrayendo texto</value>
+  </data>
+  <data name="TextExtractionToolbar_CopyAllTextButton.AutomationProperties.Name" xml:space="preserve">
+    <value>Copiar todo el texto reconocido</value>
+  </data>
+  <data name="TextExtractionToolbar_CopyAllTextButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Copiar todo el texto reconocido</value>
+  </data>
+  <data name="TextExtractionToolbar_CopyAllTextButtonLabel.Text" xml:space="preserve">
+    <value>Copiar todo el texto</value>
+  </data>
+  <data name="ImageEdit_TextCopiedNotification" xml:space="preserve">
+    <value>El texto reconocido se copió en el portapapeles.</value>
+  </data>
+  <data name="ImageEdit_TextCopyFailedNotification" xml:space="preserve">
+    <value>No se pudo copiar el texto reconocido.</value>
+  </data>
+  <data name="TextExtractionStatus_NotSupported" xml:space="preserve">
+    <value>La extracción de texto no es compatible con este equipo.</value>
+  </data>
+  <data name="TextExtractionStatus_Disabled" xml:space="preserve">
+    <value>La extracción de texto está deshabilitada en este equipo.</value>
+  </data>
+  <data name="TextExtractionStatus_NotAvailable" xml:space="preserve">
+    <value>La extracción de texto no está disponible.</value>
+  </data>
+  <data name="TextExtractionStatus_PreparationFailed" xml:space="preserve">
+    <value>No se pudo preparar la extracción de texto.</value>
+  </data>
+  <data name="TextExtractionStatus_NotReady" xml:space="preserve">
+    <value>La extracción de texto no está lista.</value>
+  </data>
+  <data name="TextExtractionStatus_TooLarge" xml:space="preserve">
+    <value>Esta imagen es demasiado grande para la extracción de texto.</value>
+  </data>
+  <data name="TextExtractionStatus_Failed" xml:space="preserve">
+    <value>No se pudo extraer el texto.</value>
+  </data>
+  <data name="AiFeatureConsentDialog_AllowButton" xml:space="preserve">
+    <value>Permitir</value>
+  </data>
+  <data name="AiFeatureConsentDialog_DontAllowButton" xml:space="preserve">
+    <value>No permitir</value>
+  </data>
+  <data name="AiFeatureConsentDialog_CancelButton" xml:space="preserve">
+    <value>Cancelar</value>
+  </data>
+  <data name="AiFeatureConsentDialog_TextExtractionTitle" xml:space="preserve">
+    <value>¿Permitir la extracción de texto?</value>
+  </data>
+  <data name="AiFeatureConsentDialog_TextExtractionContent" xml:space="preserve">
+    <value>La extracción de texto usa un modelo de IA en el dispositivo para detectar texto y su ubicación en la imagen actual.</value>
+  </data>
+  <data name="Settings_AiConsentHeaderLabel.Text" xml:space="preserve">
+    <value>Consentimiento para IA</value>
+  </data>
+  <data name="Settings_AiConsentDescription.Text" xml:space="preserve">
+    <value>Permitir que esta característica de IA procese imágenes en este dispositivo.</value>
+  </data>
+  <data name="Settings_AiConsent_TextExtractionDisplayName" xml:space="preserve">
+    <value>Extracción de texto</value>
+  </data>
 </root>

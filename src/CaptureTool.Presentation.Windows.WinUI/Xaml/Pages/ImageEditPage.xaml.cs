@@ -103,6 +103,7 @@ public sealed partial class ImageEditPage : ImageEditPageBase
         SetToolbarHostState(ShapeToolbarHost, ViewModel.IsShapesModeActive);
         SetToolbarHostState(TextToolbarHost, ViewModel.IsTextModeActive);
         SetToolbarHostState(ColorPickerToolbarHost, ViewModel.IsColorPickerModeActive);
+        SetToolbarHostState(TextExtractionToolbarHost, ViewModel.IsTextExtractionModeActive);
     }
 
     private void ViewModel_PropertyChanged(object? sender, PropertyChangedEventArgs e)
@@ -120,6 +121,9 @@ public sealed partial class ImageEditPage : ImageEditPageBase
                 break;
             case nameof(ViewModel.IsColorPickerModeActive):
                 AnimateToolbarHost(ColorPickerToolbarHost, ViewModel.IsColorPickerModeActive);
+                break;
+            case nameof(ViewModel.IsTextExtractionModeActive):
+                AnimateToolbarHost(TextExtractionToolbarHost, ViewModel.IsTextExtractionModeActive);
                 break;
         }
     }

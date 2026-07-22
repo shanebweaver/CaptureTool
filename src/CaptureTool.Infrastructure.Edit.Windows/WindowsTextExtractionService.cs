@@ -2,7 +2,7 @@ using CaptureTool.Application.Abstractions.Edit.Image.TextExtraction;
 using System.Drawing;
 using Windows.Graphics.Imaging;
 using Windows.Media.Ocr;
-using Windows.Storage;
+using Windows.Storage.Streams;
 using WinRect = global::Windows.Foundation.Rect;
 
 namespace CaptureTool.Infrastructure.Edit.Windows;
@@ -46,8 +46,7 @@ public sealed class WindowsTextExtractionService : ITextExtractionService
 
         try
         {
-            StorageFile sourceFile = await StorageFile.GetFileFromPathAsync(request.SourceImage.FilePath);
-            using SoftwareBitmap sourceBitmap = await LoadSoftwareBitmapAsync(sourceFile);
+            using SoftwareBitmap sourceBitmap = await LoadSoftwareBitmapAsync(request.SourceImage);
 
             cancellationToken.ThrowIfCancellationRequested();
 
@@ -55,14 +54,16 @@ public sealed class WindowsTextExtractionService : ITextExtractionService
             cancellationToken.ThrowIfCancellationRequested();
 
             List<RecognizedTextRegion> regions = [];
-            foreach (OcrLine line in ocrResult.Lines)
+            for (int lineIndex = 0; lineIndex < ocrResult.Lines.Count; lineIndex++)
             {
-                foreach (OcrWord word in line.Words)
+                OcrLine line = ocrResult.Lines[lineIndex];
+                for (int wordIndex = 0; wordIndex < line.Words.Count; wordIndex++)
                 {
+                    OcrWord word = line.Words[wordIndex];
                     RectangleF bounds = ToRectangleF(word.BoundingRect);
                     if (!string.IsNullOrWhiteSpace(word.Text) && bounds.Width > 0 && bounds.Height > 0)
                     {
-                        regions.Add(new RecognizedTextRegion(word.Text, bounds));
+                        regions.Add(new RecognizedTextRegion(word.Text, bounds, lineIndex, wordIndex));
                     }
                 }
             }
@@ -82,10 +83,15 @@ public sealed class WindowsTextExtractionService : ITextExtractionService
         }
     }
 
-    private static async Task<SoftwareBitmap> LoadSoftwareBitmapAsync(StorageFile sourceFile)
+    private static async Task<SoftwareBitmap> LoadSoftwareBitmapAsync(Stream sourceStream)
     {
-        using var stream = await sourceFile.OpenAsync(FileAccessMode.Read);
-        BitmapDecoder decoder = await BitmapDecoder.CreateAsync(stream);
+        if (sourceStream.CanSeek)
+        {
+            sourceStream.Position = 0;
+        }
+
+        using IRandomAccessStream randomAccessStream = sourceStream.AsRandomAccessStream();
+        BitmapDecoder decoder = await BitmapDecoder.CreateAsync(randomAccessStream);
         return await decoder.GetSoftwareBitmapAsync(BitmapPixelFormat.Bgra8, BitmapAlphaMode.Premultiplied);
     }
 

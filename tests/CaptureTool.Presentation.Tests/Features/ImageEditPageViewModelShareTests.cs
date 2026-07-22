@@ -91,7 +91,11 @@ public sealed class ImageEditPageViewModelShareTests
                 notifications),
             new ChromaKeyToolViewModel(chromaKeyAccess.Object, chromaKeyService),
             new ShapeToolViewModel(),
-            new TextToolViewModel());
+            new TextToolViewModel(),
+            new TextExtractionToolViewModel(
+                Mock.Of<IClipboardService>(),
+                localization,
+                notifications));
 
         await viewModel.LoadAsync(imageFile, CancellationToken.None);
         viewModel.AddDrawable(shape);
@@ -172,7 +176,11 @@ public sealed class ImageEditPageViewModelShareTests
                 notifications),
             new ChromaKeyToolViewModel(chromaKeyAccess.Object, chromaKeyService),
             new ShapeToolViewModel(),
-            new TextToolViewModel());
+            new TextToolViewModel(),
+            new TextExtractionToolViewModel(
+                Mock.Of<IClipboardService>(),
+                localization,
+                notifications));
 
         await viewModel.LoadAsync(imageFile, CancellationToken.None);
         await viewModel.EditInPaintCommand.ExecuteAsync(null);

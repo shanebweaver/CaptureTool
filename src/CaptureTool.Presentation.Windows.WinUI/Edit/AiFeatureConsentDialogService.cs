@@ -1,13 +1,17 @@
 using CaptureTool.Application.Abstractions.Ai;
 using CaptureTool.Domain.Ai;
+using CaptureTool.Presentation.Windows.WinUI.Utils;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.Windows.ApplicationModel.Resources;
 
 namespace CaptureTool.Presentation.Windows.WinUI.Edit;
 
 internal sealed class AiFeatureConsentDialogService : IAiFeatureConsentDialogService
 {
+    private ResourceLoader? _resourceLoader;
+
     public XamlRoot? XamlRoot { get; set; }
 
     public async Task<bool> RequestConsentAsync(
@@ -25,9 +29,9 @@ internal sealed class AiFeatureConsentDialogService : IAiFeatureConsentDialogSer
             XamlRoot = XamlRoot,
             Title = title,
             Content = content,
-            PrimaryButtonText = "Allow",
-            SecondaryButtonText = "Don't allow",
-            CloseButtonText = "Cancel",
+            PrimaryButtonText = GetString("AiFeatureConsentDialog_AllowButton", "Allow"),
+            SecondaryButtonText = GetString("AiFeatureConsentDialog_DontAllowButton", "Don't allow"),
+            CloseButtonText = GetString("AiFeatureConsentDialog_CancelButton", "Cancel"),
             DefaultButton = ContentDialogButton.Primary
         };
         AutomationProperties.SetAutomationId(dialog, "AiFeatureConsentDialog");
@@ -41,13 +45,15 @@ internal sealed class AiFeatureConsentDialogService : IAiFeatureConsentDialogSer
         return result == ContentDialogResult.Primary;
     }
 
-    private static (string Title, string Content) GetDialogText(AiFeatureId featureId)
+    private (string Title, string Content) GetDialogText(AiFeatureId featureId)
     {
         return featureId switch
         {
             AiFeatureId.TextExtraction => (
-                "Allow Text Extraction?",
-                "Text Extraction uses an on-device AI model to detect text and text locations in the current image."),
+                GetString("AiFeatureConsentDialog_TextExtractionTitle", "Allow Text Extraction?"),
+                GetString(
+                    "AiFeatureConsentDialog_TextExtractionContent",
+                    "Text Extraction uses an on-device AI model to detect text and text locations in the current image.")),
             AiFeatureId.ImageSuperResolution => (
                 "Allow Super Image Resolution?",
                 "Super Image Resolution uses an on-device AI model to create a higher-resolution copy of the current image."),
@@ -55,5 +61,10 @@ internal sealed class AiFeatureConsentDialogService : IAiFeatureConsentDialogSer
                 "Allow AI feature?",
                 "This feature uses an on-device AI model to process the current image.")
         };
+    }
+
+    private string GetString(string resourceKey, string fallback)
+    {
+        return WinUIResourceLoader.GetString(ref _resourceLoader, resourceKey, fallback);
     }
 }

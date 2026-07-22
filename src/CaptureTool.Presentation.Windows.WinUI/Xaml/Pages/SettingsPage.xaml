@@ -658,10 +658,8 @@
                 </StackPanel>
 
                 <!--  AI consent section  -->
-                <StackPanel
-                    Spacing="4"
-                    Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.IsAiConsentSettingsVisible), Mode=OneWay}">
-                    <TextBlock Margin="0,4" Text="AI consent" />
+                <StackPanel Spacing="4" Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.IsAiConsentSettingsVisible), Mode=OneWay}">
+                    <TextBlock x:Uid="Settings_AiConsentHeaderLabel" Margin="0,4" />
 
                     <ItemsControl ItemsSource="{x:Bind ViewModel.AiFeatureConsents, Mode=OneWay}">
                         <ItemsControl.ItemTemplate>
@@ -689,20 +687,21 @@
                                             TextTrimming="WordEllipsis"
                                             TextWrapping="WrapWholeWords" />
                                         <TextBlock
+                                            x:Uid="Settings_AiConsentDescription"
                                             FontSize="12"
                                             MaxLines="2"
                                             Opacity=".75"
-                                            Text="Allow this AI feature to process images on this device."
                                             TextTrimming="WordEllipsis"
                                             TextWrapping="WrapWholeWords" />
                                     </StackPanel>
 
                                     <CheckBox
                                         Grid.Column="2"
+                                        MinWidth="0"
                                         HorizontalAlignment="Right"
+                                        AutomationProperties.Name="{x:Bind DisplayName}"
                                         Click="AiFeatureConsentCheckBox_Click"
-                                        IsChecked="{x:Bind IsConsented, Mode=OneWay}"
-                                        />
+                                        IsChecked="{x:Bind IsConsented, Mode=OneWay}" />
                                 </Grid>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>

@@ -79,7 +79,7 @@ public sealed class SettingsPageViewModelAiConsentTests
         viewModel.IsAiConsentSettingsVisible.Should().BeTrue();
         viewModel.AiFeatureConsents.Should().ContainSingle(consent =>
             consent.FeatureId == AiFeatureId.TextExtraction &&
-            consent.DisplayName == "Text extraction");
+            consent.DisplayName == "Localized text extraction");
     }
 
     [TestMethod]
@@ -106,7 +106,9 @@ public sealed class SettingsPageViewModelAiConsentTests
             .Returns([]);
         localization
             .Setup(service => service.GetString(It.IsAny<string>()))
-            .Returns<string>(resourceKey => resourceKey);
+            .Returns<string>(resourceKey => resourceKey == "Settings_AiConsent_TextExtractionDisplayName"
+                ? "Localized text extraction"
+                : resourceKey);
 
         var settings = new Mock<ISettingsService>();
         settings

@@ -77,36 +77,50 @@ public sealed class ImageEditPageViewModelTextExtractionTests
         await viewModel.LoadAsync(new ImageFile("original.png"), CancellationToken.None);
 
         viewModel.CanToggleTextExtraction.Should().BeTrue();
+        List<string?> changedProperties = [];
+        viewModel.PropertyChanged += (_, e) => changedProperties.Add(e.PropertyName);
         await viewModel.ToggleTextExtractionModeCommand.ExecuteAsync(null);
 
         viewModel.IsTextExtractionModeActive.Should().BeFalse();
-        viewModel.CanToggleTextExtraction.Should().BeFalse();
+        viewModel.CanToggleTextExtraction.Should().BeTrue();
+        changedProperties.Should().Contain(nameof(ImageEditPageViewModel.IsTextExtractionModeActive));
         consent.Verify(service => service.SetConsentAsync(AiFeatureId.TextExtraction, false, It.IsAny<CancellationToken>()), Times.Once);
         textExtraction.Verify(service => service.ExtractAsync(It.IsAny<TextExtractionRequest>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [TestMethod]
-    public async Task ToggleTextExtractionMode_WhenConsented_ShouldRenderCurrentImageAndShowRegions()
+    public async Task ToggleTextExtractionMode_WhenConsentWasDenied_ShouldPromptAgainAndExtractWhenAccepted()
     {
+        AiFeatureConsentState consentState = AiFeatureConsentState.Denied;
+        var consent = new Mock<IAiFeatureConsentService>();
+        var dialog = new Mock<IAiFeatureConsentDialogService>();
         var exporter = new Mock<IImageCanvasExporter>();
         var textExtraction = new Mock<ITextExtractionService>();
-        var storage = new Mock<IStorageService>();
-        var sourceImage = new ImageFile("original.png");
-        string tempFolder = Path.Combine(Path.GetTempPath(), "CaptureToolTests", Guid.NewGuid().ToString());
 
-        storage.Setup(service => service.GetApplicationTemporaryFolderPath()).Returns(tempFolder);
-        storage.Setup(service => service.GetTemporaryFileName()).Returns("ocr.tmp");
-        exporter
-            .Setup(service => service.SaveImageAsync(It.IsAny<string>(), It.IsAny<IDrawable[]>(), It.IsAny<ImageCanvasRenderOptions>()))
+        consent
+            .Setup(service => service.GetConsentState(AiFeatureId.TextExtraction))
+            .Returns(() => consentState);
+        consent
+            .Setup(service => service.SetConsentAsync(AiFeatureId.TextExtraction, true, It.IsAny<CancellationToken>()))
+            .Callback(() => consentState = AiFeatureConsentState.Granted)
             .Returns(Task.CompletedTask);
+        consent
+            .Setup(service => service.GetConsentState(AiFeatureId.ImageSuperResolution))
+            .Returns(AiFeatureConsentState.Granted);
+        dialog
+            .Setup(service => service.RequestConsentAsync(AiFeatureId.TextExtraction, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+        exporter
+            .Setup(service => service.RenderToStreamAsync(
+                It.IsAny<IDrawable[]>(),
+                It.IsAny<ImageCanvasRenderOptions>()))
+            .ReturnsAsync(new MemoryStream([1, 2, 3]));
         textExtraction
             .Setup(service => service.GetReadyState())
             .Returns(TextExtractionReadyState.Ready);
         textExtraction
             .Setup(service => service.ExtractAsync(
-                It.Is<TextExtractionRequest>(request =>
-                    request.SourceImage.FilePath == Path.Combine(tempFolder, "ocr.text-extraction.png") &&
-                    request.SourceSize == new Size(100, 50)),
+                It.IsAny<TextExtractionRequest>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(TextExtractionResult.Success(new RecognizedTextDocument(
                 "hello",
@@ -115,7 +129,60 @@ public sealed class ImageEditPageViewModelTextExtractionTests
 
         ImageEditPageViewModel viewModel = CreateViewModel(
             imageCanvasExporter: exporter.Object,
-            storageService: storage.Object,
+            aiFeatureConsentService: consent.Object,
+            aiFeatureConsentDialogService: dialog.Object,
+            textExtractionService: textExtraction.Object);
+
+        await viewModel.LoadAsync(new ImageFile("original.png"), CancellationToken.None);
+
+        viewModel.CanToggleTextExtraction.Should().BeTrue();
+        await viewModel.ToggleTextExtractionModeCommand.ExecuteAsync(null);
+
+        viewModel.IsTextExtractionModeActive.Should().BeTrue();
+        viewModel.TextExtractionTool.Text.Should().Be("hello");
+        consentState.Should().Be(AiFeatureConsentState.Granted);
+        dialog.Verify(
+            service => service.RequestConsentAsync(AiFeatureId.TextExtraction, It.IsAny<CancellationToken>()),
+            Times.Once);
+        consent.Verify(
+            service => service.SetConsentAsync(AiFeatureId.TextExtraction, true, It.IsAny<CancellationToken>()),
+            Times.Once);
+        textExtraction.Verify(
+            service => service.ExtractAsync(It.IsAny<TextExtractionRequest>(), It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [TestMethod]
+    public async Task ToggleTextExtractionMode_WhenConsented_ShouldRenderCurrentImageInMemoryAndShowRegions()
+    {
+        var exporter = new Mock<IImageCanvasExporter>();
+        var textExtraction = new Mock<ITextExtractionService>();
+        var sourceImage = new ImageFile("original.png");
+        byte[] renderedImageBytes = [1, 2, 3, 4];
+        var renderedImage = new MemoryStream(renderedImageBytes);
+
+        exporter
+            .Setup(service => service.RenderToStreamAsync(
+                It.IsAny<IDrawable[]>(),
+                It.IsAny<ImageCanvasRenderOptions>()))
+            .ReturnsAsync(renderedImage);
+        textExtraction
+            .Setup(service => service.GetReadyState())
+            .Returns(TextExtractionReadyState.Ready);
+        textExtraction
+            .Setup(service => service.ExtractAsync(
+                It.Is<TextExtractionRequest>(request => IsExpectedInMemoryRequest(
+                    request,
+                    renderedImageBytes,
+                    new Size(100, 50))),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(TextExtractionResult.Success(new RecognizedTextDocument(
+                "hello",
+                new Size(100, 50),
+                [new RecognizedTextRegion("hello", new RectangleF(10, 10, 20, 5))])));
+
+        ImageEditPageViewModel viewModel = CreateViewModel(
+            imageCanvasExporter: exporter.Object,
             textExtractionService: textExtraction.Object);
 
         await viewModel.LoadAsync(sourceImage, CancellationToken.None);
@@ -124,13 +191,19 @@ public sealed class ImageEditPageViewModelTextExtractionTests
         viewModel.IsTextExtractionModeActive.Should().BeTrue();
         viewModel.TextExtractionRegions.Should().ContainSingle();
         viewModel.TextExtractionRegions[0].Bounds.Should().Be(new RectangleF(8, 8, 24, 9));
-        exporter.Verify(service => service.SaveImageAsync(
-            Path.Combine(tempFolder, "ocr.text-extraction.png"),
+        viewModel.TextExtractionTool.Text.Should().Be("hello");
+        renderedImage.CanRead.Should().BeFalse();
+        exporter.Verify(service => service.RenderToStreamAsync(
             It.IsAny<IDrawable[]>(),
             It.Is<ImageCanvasRenderOptions>(options =>
                 options.CanvasSize == new Size(100, 50) &&
                 options.CropRect == new Rectangle(0, 0, 100, 50))),
             Times.Once);
+        exporter.Verify(service => service.SaveImageAsync(
+            It.IsAny<string>(),
+            It.IsAny<IDrawable[]>(),
+            It.IsAny<ImageCanvasRenderOptions>()),
+            Times.Never);
     }
 
     [TestMethod]
@@ -138,14 +211,13 @@ public sealed class ImageEditPageViewModelTextExtractionTests
     {
         var exporter = new Mock<IImageCanvasExporter>();
         var textExtraction = new Mock<ITextExtractionService>();
-        var storage = new Mock<IStorageService>();
         int extractionCount = 0;
 
-        storage.Setup(service => service.GetApplicationTemporaryFolderPath()).Returns(Path.GetTempPath());
-        storage.Setup(service => service.GetTemporaryFileName()).Returns("ocr.tmp");
         exporter
-            .Setup(service => service.SaveImageAsync(It.IsAny<string>(), It.IsAny<IDrawable[]>(), It.IsAny<ImageCanvasRenderOptions>()))
-            .Returns(Task.CompletedTask);
+            .Setup(service => service.RenderToStreamAsync(
+                It.IsAny<IDrawable[]>(),
+                It.IsAny<ImageCanvasRenderOptions>()))
+            .ReturnsAsync(() => new MemoryStream([1, 2, 3]));
         textExtraction
             .Setup(service => service.GetReadyState())
             .Returns(TextExtractionReadyState.Ready);
@@ -162,7 +234,6 @@ public sealed class ImageEditPageViewModelTextExtractionTests
 
         ImageEditPageViewModel viewModel = CreateViewModel(
             imageCanvasExporter: exporter.Object,
-            storageService: storage.Object,
             textExtractionService: textExtraction.Object);
 
         await viewModel.LoadAsync(new ImageFile("original.png"), CancellationToken.None);
@@ -183,6 +254,102 @@ public sealed class ImageEditPageViewModelTextExtractionTests
 
         extractionCount.Should().Be(2);
         viewModel.IsTextExtractionModeActive.Should().BeTrue();
+        exporter.Verify(service => service.SaveImageAsync(
+            It.IsAny<string>(),
+            It.IsAny<IDrawable[]>(),
+            It.IsAny<ImageCanvasRenderOptions>()),
+            Times.Never);
+    }
+
+    [TestMethod]
+    public async Task ToggleTextExtractionMode_WhenRepeatedlyOpened_DoesNotSaveWorkingFiles()
+    {
+        var exporter = new Mock<IImageCanvasExporter>();
+        var textExtraction = new Mock<ITextExtractionService>();
+        exporter
+            .Setup(service => service.RenderToStreamAsync(
+                It.IsAny<IDrawable[]>(),
+                It.IsAny<ImageCanvasRenderOptions>()))
+            .ReturnsAsync(() => new MemoryStream([1, 2, 3]));
+        textExtraction
+            .Setup(service => service.GetReadyState())
+            .Returns(TextExtractionReadyState.Ready);
+        textExtraction
+            .Setup(service => service.ExtractAsync(
+                It.IsAny<TextExtractionRequest>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(TextExtractionResult.Success(new RecognizedTextDocument(
+                "hello",
+                new Size(100, 50),
+                [new RecognizedTextRegion("hello", new RectangleF(10, 10, 20, 5))])));
+        ImageEditPageViewModel viewModel = CreateViewModel(
+            imageCanvasExporter: exporter.Object,
+            textExtractionService: textExtraction.Object);
+
+        await viewModel.LoadAsync(new ImageFile("original.png"), CancellationToken.None);
+        for (int iteration = 0; iteration < 3; iteration++)
+        {
+            await viewModel.ToggleTextExtractionModeCommand.ExecuteAsync(null);
+            await viewModel.ToggleTextExtractionModeCommand.ExecuteAsync(null);
+        }
+
+        exporter.Verify(service => service.RenderToStreamAsync(
+            It.IsAny<IDrawable[]>(),
+            It.IsAny<ImageCanvasRenderOptions>()), Times.Exactly(3));
+        exporter.Verify(service => service.SaveImageAsync(
+            It.IsAny<string>(),
+            It.IsAny<IDrawable[]>(),
+            It.IsAny<ImageCanvasRenderOptions>()), Times.Never);
+    }
+
+    [TestMethod]
+    public async Task ToggleTextExtractionMode_WhenImageIsTooLarge_ShouldShowLocalizedMessage()
+    {
+        var exporter = new Mock<IImageCanvasExporter>();
+        var textExtraction = new Mock<ITextExtractionService>();
+        var localization = new Mock<ILocalizationService>();
+        var notifications = new Mock<IAppNotificationService>();
+
+        exporter
+            .Setup(service => service.RenderToStreamAsync(
+                It.IsAny<IDrawable[]>(),
+                It.IsAny<ImageCanvasRenderOptions>()))
+            .ReturnsAsync(new MemoryStream([1, 2, 3]));
+        textExtraction
+            .Setup(service => service.GetReadyState())
+            .Returns(TextExtractionReadyState.Ready);
+        textExtraction
+            .Setup(service => service.ExtractAsync(
+                It.IsAny<TextExtractionRequest>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(TextExtractionResult.TooLarge());
+        localization
+            .Setup(service => service.GetString("TextExtractionStatus_TooLarge"))
+            .Returns("Localized image-too-large message.");
+
+        ImageEditPageViewModel viewModel = CreateViewModel(
+            imageCanvasExporter: exporter.Object,
+            textExtractionService: textExtraction.Object,
+            localizationService: localization.Object,
+            notificationService: notifications.Object);
+
+        await viewModel.LoadAsync(new ImageFile("original.png"), CancellationToken.None);
+        await viewModel.ToggleTextExtractionModeCommand.ExecuteAsync(null);
+
+        viewModel.TextExtractionStatusMessage.Should().Be("Localized image-too-large message.");
+        notifications.Verify(
+            service => service.ShowError("Localized image-too-large message."),
+            Times.Once);
+    }
+
+    private static bool IsExpectedInMemoryRequest(
+        TextExtractionRequest request,
+        byte[] expectedBytes,
+        Size expectedSize)
+    {
+        return request.SourceImage is MemoryStream stream &&
+            stream.ToArray().SequenceEqual(expectedBytes) &&
+            request.SourceSize == expectedSize;
     }
 
     private static ImageEditPageViewModel CreateViewModel(
@@ -191,7 +358,10 @@ public sealed class ImageEditPageViewModelTextExtractionTests
         ITextExtractionService? textExtractionService = null,
         ITextExtractionFeatureAvailability? textExtractionFeatureAvailability = null,
         IAiFeatureConsentService? aiFeatureConsentService = null,
-        IAiFeatureConsentDialogService? aiFeatureConsentDialogService = null)
+        IAiFeatureConsentDialogService? aiFeatureConsentDialogService = null,
+        IClipboardService? clipboardService = null,
+        ILocalizationService? localizationService = null,
+        IAppNotificationService? notificationService = null)
     {
         var imageMetadata = new Mock<IImageMetadataService>();
         imageMetadata
@@ -203,8 +373,8 @@ public sealed class ImageEditPageViewModelTextExtractionTests
             .Setup(service => service.GetLinkedCancellationTokenSource(It.IsAny<CancellationToken>()))
             .Returns(() => new CancellationTokenSource());
 
-        IAppNotificationService notifications = Mock.Of<IAppNotificationService>();
-        ILocalizationService localization = Mock.Of<ILocalizationService>();
+        IAppNotificationService notifications = notificationService ?? Mock.Of<IAppNotificationService>();
+        ILocalizationService localization = localizationService ?? Mock.Of<ILocalizationService>();
 
         return new ImageEditPageViewModel(
             localization,
@@ -232,6 +402,10 @@ public sealed class ImageEditPageViewModelTextExtractionTests
                 Mock.Of<IChromaKeyService>()),
             new ShapeToolViewModel(),
             new TextToolViewModel(),
+            new TextExtractionToolViewModel(
+                clipboardService ?? Mock.Of<IClipboardService>(),
+                localization,
+                notifications),
             aiFeatureConsentService ?? Mock.Of<IAiFeatureConsentService>(
                 service => service.GetConsentState(AiFeatureId.TextExtraction) == AiFeatureConsentState.Granted &&
                     service.GetConsentState(AiFeatureId.ImageSuperResolution) == AiFeatureConsentState.Granted),

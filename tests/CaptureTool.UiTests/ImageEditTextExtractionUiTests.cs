@@ -94,6 +94,12 @@ public sealed class ImageEditTextExtractionUiTests
                 automation,
                 "ImageEdit_TextExtractionOverlayMarker",
                 InteractionTimeout);
+            AutomationElement copyAllTextButton = WaitForElement(
+                mainWindow,
+                automation,
+                "ImageEdit_TextExtractionCopyAllButton",
+                InteractionTimeout);
+            Assert.IsTrue(copyAllTextButton.IsEnabled, "Copy all text should be enabled after OCR completes.");
 
             Thread.Sleep(500);
             File.Delete(screenshotPath);
