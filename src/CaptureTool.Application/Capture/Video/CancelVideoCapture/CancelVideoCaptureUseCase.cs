@@ -2,7 +2,6 @@ using CaptureTool.Application.Abstractions.Capture;
 using CaptureTool.Application.Abstractions.Capture.Video.CancelVideoCapture;
 using CaptureTool.Application.Abstractions.Settings;
 using CaptureTool.Application.Abstractions.UseCases;
-using CaptureTool.Application.Capture.Video;
 using CaptureTool.Application.UseCases;
 
 namespace CaptureTool.Application.Capture.Video.CancelVideoCapture;

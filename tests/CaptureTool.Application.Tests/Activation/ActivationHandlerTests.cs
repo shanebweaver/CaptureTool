@@ -1,13 +1,12 @@
-using CaptureTool.Application.Tests;
-using CaptureTool.Application.Abstractions.Cancellation;
 using CaptureTool.Application.Abstractions.Activation;
+using CaptureTool.Application.Abstractions.Cancellation;
 using CaptureTool.Application.Abstractions.Capture.Overlay.OpenSelectionOverlay;
-using CaptureTool.Application.Abstractions.Shell.Home.ShowHomePage;
 using CaptureTool.Application.Abstractions.Localization;
 using CaptureTool.Application.Abstractions.Logging;
 using CaptureTool.Application.Abstractions.Metrics;
 using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Application.Abstractions.Settings;
+using CaptureTool.Application.Abstractions.Shell.Home.ShowHomePage;
 using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Application.Abstractions.UseCases;
 using CaptureTool.Application.Activation;

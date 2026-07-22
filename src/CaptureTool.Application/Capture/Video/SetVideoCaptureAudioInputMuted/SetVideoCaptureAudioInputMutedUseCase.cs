@@ -1,6 +1,5 @@
 using CaptureTool.Application.Abstractions.Capture.Video.SetVideoCaptureAudioInputMuted;
 using CaptureTool.Application.Abstractions.UseCases;
-using CaptureTool.Application.Capture.Video;
 using CaptureTool.Application.UseCases;
 
 namespace CaptureTool.Application.Capture.Video.SetVideoCaptureAudioInputMuted;

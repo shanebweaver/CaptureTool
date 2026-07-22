@@ -1,6 +1,6 @@
-using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Application.Abstractions.EditSessions;
 using CaptureTool.Application.Abstractions.Logging;
+using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Presentation.Loading;
 using CaptureTool.Presentation.ViewModels;
 using Microsoft.UI.Xaml.Controls;

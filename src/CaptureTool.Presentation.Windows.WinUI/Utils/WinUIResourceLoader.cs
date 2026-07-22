@@ -1,5 +1,5 @@
-using System.Runtime.InteropServices;
 using Microsoft.Windows.ApplicationModel.Resources;
+using System.Runtime.InteropServices;
 
 namespace CaptureTool.Presentation.Windows.WinUI.Utils;
 

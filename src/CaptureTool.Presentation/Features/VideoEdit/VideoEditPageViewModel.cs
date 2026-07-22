@@ -1,7 +1,7 @@
 using CaptureTool.Application.Abstractions.Edit.External;
-using CaptureTool.Application.Abstractions.EditSessions;
 using CaptureTool.Application.Abstractions.Edit.Video.CopyVideoFile;
 using CaptureTool.Application.Abstractions.Edit.Video.SaveVideoFile;
+using CaptureTool.Application.Abstractions.EditSessions;
 using CaptureTool.Application.Abstractions.Logging;
 using CaptureTool.Application.Abstractions.Settings.OpenVideosFolder;
 using CaptureTool.Domain.Capture;

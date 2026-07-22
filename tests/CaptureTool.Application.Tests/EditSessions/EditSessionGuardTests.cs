@@ -1,4 +1,3 @@
-using CaptureTool.Application.Tests;
 using CaptureTool.Application.Abstractions.EditSessions;
 using CaptureTool.Application.Abstractions.Settings;
 using CaptureTool.Application.EditSessions;

@@ -1,4 +1,3 @@
-using CaptureTool.Application.Tests;
 using CaptureTool.Application.Abstractions.Navigation;
 
 namespace CaptureTool.Application.Tests.Navigation;

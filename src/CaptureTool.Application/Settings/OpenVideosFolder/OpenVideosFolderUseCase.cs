@@ -1,5 +1,5 @@
-using CaptureTool.Application.Abstractions.Settings.OpenVideosFolder;
 using CaptureTool.Application.Abstractions.Settings;
+using CaptureTool.Application.Abstractions.Settings.OpenVideosFolder;
 using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Application.Abstractions.UseCases;
 using CaptureTool.Application.UseCases;

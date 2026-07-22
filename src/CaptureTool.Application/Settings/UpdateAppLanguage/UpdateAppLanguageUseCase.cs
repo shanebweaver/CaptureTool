@@ -1,6 +1,6 @@
-using CaptureTool.Application.Abstractions.Settings.UpdateAppLanguage;
 using CaptureTool.Application.Abstractions.Localization;
 using CaptureTool.Application.Abstractions.Settings;
+using CaptureTool.Application.Abstractions.Settings.UpdateAppLanguage;
 using CaptureTool.Application.Abstractions.UseCases;
 using CaptureTool.Application.UseCases;
 

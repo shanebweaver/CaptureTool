@@ -1,8 +1,8 @@
 using CaptureTool.Application.Abstractions.Capture.Overlay.CloseCaptureOverlay;
 using CaptureTool.Application.Abstractions.Capture.Video.CancelVideoCapture;
 using CaptureTool.Application.Abstractions.Navigation;
-using CaptureTool.Application.Abstractions.Windowing.ShowMainWindow;
 using CaptureTool.Application.Abstractions.UseCases;
+using CaptureTool.Application.Abstractions.Windowing.ShowMainWindow;
 using CaptureTool.Application.Capture.Video;
 using CaptureTool.Application.UseCases;
 

@@ -1,4 +1,3 @@
-using CaptureTool.Application.Tests;
 using CaptureTool.Application.Abstractions.Diagnostics.ExportLogs;
 using CaptureTool.Application.Abstractions.Logging;
 using CaptureTool.Application.Abstractions.Storage;

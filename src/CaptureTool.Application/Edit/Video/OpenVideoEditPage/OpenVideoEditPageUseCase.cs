@@ -1,6 +1,6 @@
 using CaptureTool.Application.Abstractions.Capture.Audio;
-using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Application.Abstractions.Edit.Video.OpenVideoEditPage;
+using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Application.Abstractions.UseCases;
 using CaptureTool.Application.UseCases;
 

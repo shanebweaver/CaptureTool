@@ -1,7 +1,7 @@
 using CaptureTool.Application.Abstractions.Capture.Audio;
 using CaptureTool.Application.Abstractions.Edit.Audio.OpenAudioEditPage;
-using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Application.Abstractions.Files;
+using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Application.Abstractions.UseCases;
 using CaptureTool.Application.UseCases;
 

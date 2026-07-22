@@ -1,6 +1,6 @@
-using CaptureTool.Application.Abstractions.Shell.About.LeaveAboutPage;
 using CaptureTool.Application.Abstractions.Feedback;
 using CaptureTool.Application.Abstractions.Localization;
+using CaptureTool.Application.Abstractions.Shell.About.LeaveAboutPage;
 using CaptureTool.Presentation.Shared.Commands;
 using CaptureTool.Presentation.ViewModels;
 using CommunityToolkit.Mvvm.Input;

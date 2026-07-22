@@ -1,6 +1,6 @@
 using CaptureTool.Application.Abstractions.Navigation;
-using CaptureTool.Application.Abstractions.Windowing.ShowMainWindow;
 using CaptureTool.Application.Abstractions.UseCases;
+using CaptureTool.Application.Abstractions.Windowing.ShowMainWindow;
 using CaptureTool.Application.UseCases;
 
 namespace CaptureTool.Application.Windowing.ShowMainWindow;

@@ -1,7 +1,7 @@
+using CaptureTool.Presentation.Windows.WinUI.UiTests;
 using Microsoft.UI.Dispatching;
 using Microsoft.Win32.SafeHandles;
 using Microsoft.Windows.AppLifecycle;
-using CaptureTool.Presentation.Windows.WinUI.UiTests;
 using System.Diagnostics;
 using Windows.Win32.Foundation;
 

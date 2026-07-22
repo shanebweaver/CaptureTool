@@ -1,11 +1,8 @@
-using CaptureTool.Application.Tests;
-using CaptureTool.Application.Abstractions.Shell.AppMenu.OpenFile;
-using CaptureTool.Application.Abstractions.Capture.Audio;
 using CaptureTool.Application.Abstractions.Navigation;
+using CaptureTool.Application.Abstractions.Shell.AppMenu.OpenFile;
 using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Application.Capture.Audio;
 using CaptureTool.Application.Shell.AppMenu.OpenFile;
-using CaptureTool.Domain.Capture;
 using CaptureTool.Domain.FileSystem;
 using Moq;
 

@@ -1,8 +1,8 @@
 using CaptureTool.Application.Abstractions.Activation;
 using CaptureTool.Application.Abstractions.Capture.Overlay.OpenSelectionOverlay;
-using CaptureTool.Application.Abstractions.Shell.Home.ShowHomePage;
 using CaptureTool.Application.Abstractions.Logging;
 using CaptureTool.Application.Abstractions.Navigation;
+using CaptureTool.Application.Abstractions.Shell.Home.ShowHomePage;
 using CaptureTool.Domain.Capture;
 using System.Collections.Specialized;
 using System.Web;

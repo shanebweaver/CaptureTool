@@ -1,10 +1,9 @@
-using CaptureTool.Application.Abstractions.Capture;
 using CaptureTool.Application.Abstractions.Capture.Image.CaptureImage;
 using CaptureTool.Application.Abstractions.Capture.Overlay.OpenCaptureOverlay;
 using CaptureTool.Application.Abstractions.Edit.Image.OpenImageEditPage;
-using CaptureTool.Application.Abstractions.Windowing.ShowMainWindow;
 using CaptureTool.Application.Abstractions.Shutdown;
 using CaptureTool.Application.Abstractions.Themes;
+using CaptureTool.Application.Abstractions.Windowing.ShowMainWindow;
 using CaptureTool.Domain.Capture;
 using CaptureTool.Domain.FileSystem;
 using CaptureTool.Presentation.Factories;

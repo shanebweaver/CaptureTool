@@ -1,4 +1,3 @@
-using CaptureTool.Application.Tests;
 using CaptureTool.Application.Abstractions.Diagnostics.ClearLogs;
 using CaptureTool.Application.Abstractions.Diagnostics.GetCurrentLogs;
 using CaptureTool.Application.Abstractions.Diagnostics.GetIsLoggingEnabled;

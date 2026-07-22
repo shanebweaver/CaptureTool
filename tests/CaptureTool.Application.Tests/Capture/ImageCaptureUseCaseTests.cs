@@ -1,8 +1,8 @@
+using CaptureTool.Application.Abstractions.Capture.Image.CaptureAllScreensImage;
+using CaptureTool.Application.Abstractions.Capture.Image.CaptureImage;
 using CaptureTool.Application.Capture.Image;
 using CaptureTool.Application.Capture.Image.CaptureAllScreensImage;
 using CaptureTool.Application.Capture.Image.CaptureImage;
-using CaptureTool.Application.Abstractions.Capture.Image.CaptureAllScreensImage;
-using CaptureTool.Application.Abstractions.Capture.Image.CaptureImage;
 using CaptureTool.Domain.Capture;
 using CaptureTool.Domain.FileSystem;
 using System.Drawing;

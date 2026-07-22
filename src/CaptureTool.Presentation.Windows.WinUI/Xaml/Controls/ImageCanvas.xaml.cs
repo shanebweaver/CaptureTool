@@ -21,7 +21,6 @@ using Windows.ApplicationModel.DataTransfer;
 using Windows.System;
 using Windows.UI.Core;
 using Point = global::Windows.Foundation.Point;
-using Rect = global::Windows.Foundation.Rect;
 using WinUIColor = global::Windows.UI.Color;
 
 namespace CaptureTool.Presentation.Windows.WinUI.Xaml.Controls;

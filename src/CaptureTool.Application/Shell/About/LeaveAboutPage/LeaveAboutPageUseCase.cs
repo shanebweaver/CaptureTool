@@ -1,5 +1,5 @@
-using CaptureTool.Application.Abstractions.Shell.About.LeaveAboutPage;
 using CaptureTool.Application.Abstractions.Navigation;
+using CaptureTool.Application.Abstractions.Shell.About.LeaveAboutPage;
 using CaptureTool.Application.Abstractions.UseCases;
 using CaptureTool.Application.UseCases;
 

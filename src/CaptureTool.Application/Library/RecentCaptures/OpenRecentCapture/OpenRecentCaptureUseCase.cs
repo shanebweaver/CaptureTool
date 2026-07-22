@@ -1,8 +1,8 @@
 using CaptureTool.Application.Abstractions.Edit.Audio.OpenAudioEditPage;
 using CaptureTool.Application.Abstractions.Edit.Image.OpenImageEditPage;
-using CaptureTool.Application.Abstractions.Library.RecentCaptures.OpenRecentCapture;
 using CaptureTool.Application.Abstractions.Edit.Video.OpenVideoEditPage;
 using CaptureTool.Application.Abstractions.Files;
+using CaptureTool.Application.Abstractions.Library.RecentCaptures.OpenRecentCapture;
 using CaptureTool.Application.Abstractions.UseCases;
 using CaptureTool.Application.UseCases;
 using CaptureTool.Domain.Capture;

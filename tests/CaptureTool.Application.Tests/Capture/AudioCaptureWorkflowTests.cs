@@ -6,7 +6,6 @@ using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Application.Abstractions.TaskEnvironment;
 using CaptureTool.Application.Abstractions.Telemetry;
 using CaptureTool.Application.Capture.Audio;
-using CaptureTool.Application.Tests;
 using CaptureTool.Domain.Capture;
 using CaptureTool.Domain.FileSystem;
 using FluentAssertions;
