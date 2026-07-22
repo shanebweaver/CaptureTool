@@ -1424,4 +1424,94 @@ SOFTWARE.
   <data name="Settings_AiConsent_TextExtractionDisplayName" xml:space="preserve">
     <value>Распознавание текста</value>
   </data>
+  <data name="ImageEdit_ImageDescriptionButton.Label" xml:space="preserve">
+    <value>Описание изображения</value>
+  </data>
+  <data name="ImageEdit_ImageDescriptionButton.AutomationProperties.Name" xml:space="preserve">
+    <value>Описать изображение</value>
+  </data>
+  <data name="ImageEdit_ImageDescriptionButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Описать изображение с помощью локального ИИ</value>
+  </data>
+  <data name="ImageDescriptionToolbar_BriefButton.Content" xml:space="preserve">
+    <value>Кратко</value>
+  </data>
+  <data name="ImageDescriptionToolbar_BriefButton.AutomationProperties.Name" xml:space="preserve">
+    <value>Создать краткое описание изображения</value>
+  </data>
+  <data name="ImageDescriptionToolbar_BriefButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Создать краткое описание</value>
+  </data>
+  <data name="ImageDescriptionToolbar_DetailedButton.Content" xml:space="preserve">
+    <value>Подробно</value>
+  </data>
+  <data name="ImageDescriptionToolbar_DetailedButton.AutomationProperties.Name" xml:space="preserve">
+    <value>Создать подробное описание изображения</value>
+  </data>
+  <data name="ImageDescriptionToolbar_DetailedButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Создать подробное описание</value>
+  </data>
+  <data name="ImageDescriptionToolbar_DiagramButton.Content" xml:space="preserve">
+    <value>Диаграмма</value>
+  </data>
+  <data name="ImageDescriptionToolbar_DiagramButton.AutomationProperties.Name" xml:space="preserve">
+    <value>Создать описание диаграммы</value>
+  </data>
+  <data name="ImageDescriptionToolbar_DiagramButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Создать описание, оптимизированное для диаграмм</value>
+  </data>
+  <data name="ImageDescriptionToolbar_AccessibleButton.Content" xml:space="preserve">
+    <value>Специальные возможности</value>
+  </data>
+  <data name="ImageDescriptionToolbar_AccessibleButton.AutomationProperties.Name" xml:space="preserve">
+    <value>Создать доступное описание изображения</value>
+  </data>
+  <data name="ImageDescriptionToolbar_AccessibleButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Создать описание для специальных возможностей</value>
+  </data>
+  <data name="ImageDescriptionPanel.AutomationProperties.Name" xml:space="preserve">
+    <value>Созданное описание изображения</value>
+  </data>
+  <data name="ImageDescriptionPanel_Title.Text" xml:space="preserve">
+    <value>Описание изображения</value>
+  </data>
+  <data name="ImageEdit_ImageDescriptionProgressRing.AutomationProperties.Name" xml:space="preserve">
+    <value>Создание описания изображения</value>
+  </data>
+  <data name="AiFeatureConsentDialog_ImageDescriptionTitle" xml:space="preserve">
+    <value>Разрешить описание изображений?</value>
+  </data>
+  <data name="AiFeatureConsentDialog_ImageDescriptionContent" xml:space="preserve">
+    <value>Функция описания изображений использует локальную модель ИИ для описания текущего изображения.</value>
+  </data>
+  <data name="Settings_AiConsent_ImageDescriptionDisplayName" xml:space="preserve">
+    <value>Описание изображения</value>
+  </data>
+  <data name="ImageDescriptionStatus_NotSupported" xml:space="preserve">
+    <value>Описание изображений не поддерживается на этом компьютере.</value>
+  </data>
+  <data name="ImageDescriptionStatus_Disabled" xml:space="preserve">
+    <value>Описание изображений отключено на этом компьютере.</value>
+  </data>
+  <data name="ImageDescriptionStatus_NotAvailable" xml:space="preserve">
+    <value>Описание изображений недоступно.</value>
+  </data>
+  <data name="ImageDescriptionStatus_PreparationFailed" xml:space="preserve">
+    <value>Не удалось подготовить описание изображений.</value>
+  </data>
+  <data name="ImageDescriptionStatus_NotReady" xml:space="preserve">
+    <value>Описание изображений не готово.</value>
+  </data>
+  <data name="ImageDescriptionStatus_BlockedByPolicy" xml:space="preserve">
+    <value>Описание изображений заблокировано политикой вашей организации.</value>
+  </data>
+  <data name="ImageDescriptionStatus_BlockedByContentSafety" xml:space="preserve">
+    <value>Не удалось описать это изображение из-за фильтров безопасности содержимого.</value>
+  </data>
+  <data name="ImageDescriptionStatus_TooMuchText" xml:space="preserve">
+    <value>На этом изображении слишком много текста для создания описания.</value>
+  </data>
+  <data name="ImageDescriptionStatus_Failed" xml:space="preserve">
+    <value>Не удалось создать описание изображения.</value>
+  </data>
 </root>

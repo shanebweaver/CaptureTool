@@ -1418,4 +1418,94 @@ SOFTWARE.
   <data name="Settings_AiConsent_TextExtractionDisplayName" xml:space="preserve">
     <value>Texterkennung</value>
   </data>
+  <data name="ImageEdit_ImageDescriptionButton.Label" xml:space="preserve">
+    <value>Bildbeschreibung</value>
+  </data>
+  <data name="ImageEdit_ImageDescriptionButton.AutomationProperties.Name" xml:space="preserve">
+    <value>Bild beschreiben</value>
+  </data>
+  <data name="ImageEdit_ImageDescriptionButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Bild mit lokaler KI beschreiben</value>
+  </data>
+  <data name="ImageDescriptionToolbar_BriefButton.Content" xml:space="preserve">
+    <value>Kurz</value>
+  </data>
+  <data name="ImageDescriptionToolbar_BriefButton.AutomationProperties.Name" xml:space="preserve">
+    <value>Kurze Bildbeschreibung erstellen</value>
+  </data>
+  <data name="ImageDescriptionToolbar_BriefButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Kurze Beschreibung erstellen</value>
+  </data>
+  <data name="ImageDescriptionToolbar_DetailedButton.Content" xml:space="preserve">
+    <value>Detailliert</value>
+  </data>
+  <data name="ImageDescriptionToolbar_DetailedButton.AutomationProperties.Name" xml:space="preserve">
+    <value>Detaillierte Bildbeschreibung erstellen</value>
+  </data>
+  <data name="ImageDescriptionToolbar_DetailedButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Detaillierte Beschreibung erstellen</value>
+  </data>
+  <data name="ImageDescriptionToolbar_DiagramButton.Content" xml:space="preserve">
+    <value>Diagramm</value>
+  </data>
+  <data name="ImageDescriptionToolbar_DiagramButton.AutomationProperties.Name" xml:space="preserve">
+    <value>Diagrammbeschreibung erstellen</value>
+  </data>
+  <data name="ImageDescriptionToolbar_DiagramButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Für Diagramme optimierte Beschreibung erstellen</value>
+  </data>
+  <data name="ImageDescriptionToolbar_AccessibleButton.Content" xml:space="preserve">
+    <value>Barrierefrei</value>
+  </data>
+  <data name="ImageDescriptionToolbar_AccessibleButton.AutomationProperties.Name" xml:space="preserve">
+    <value>Barrierefreie Bildbeschreibung erstellen</value>
+  </data>
+  <data name="ImageDescriptionToolbar_AccessibleButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Für Barrierefreiheit optimierte Beschreibung erstellen</value>
+  </data>
+  <data name="ImageDescriptionPanel.AutomationProperties.Name" xml:space="preserve">
+    <value>Erstellte Bildbeschreibung</value>
+  </data>
+  <data name="ImageDescriptionPanel_Title.Text" xml:space="preserve">
+    <value>Bildbeschreibung</value>
+  </data>
+  <data name="ImageEdit_ImageDescriptionProgressRing.AutomationProperties.Name" xml:space="preserve">
+    <value>Bildbeschreibung wird erstellt</value>
+  </data>
+  <data name="AiFeatureConsentDialog_ImageDescriptionTitle" xml:space="preserve">
+    <value>Bildbeschreibung zulassen?</value>
+  </data>
+  <data name="AiFeatureConsentDialog_ImageDescriptionContent" xml:space="preserve">
+    <value>Die Bildbeschreibung verwendet ein KI-Modell auf dem Gerät, um das aktuelle Bild zu beschreiben.</value>
+  </data>
+  <data name="Settings_AiConsent_ImageDescriptionDisplayName" xml:space="preserve">
+    <value>Bildbeschreibung</value>
+  </data>
+  <data name="ImageDescriptionStatus_NotSupported" xml:space="preserve">
+    <value>Die Bildbeschreibung wird auf diesem PC nicht unterstützt.</value>
+  </data>
+  <data name="ImageDescriptionStatus_Disabled" xml:space="preserve">
+    <value>Die Bildbeschreibung ist auf diesem PC deaktiviert.</value>
+  </data>
+  <data name="ImageDescriptionStatus_NotAvailable" xml:space="preserve">
+    <value>Die Bildbeschreibung ist nicht verfügbar.</value>
+  </data>
+  <data name="ImageDescriptionStatus_PreparationFailed" xml:space="preserve">
+    <value>Die Bildbeschreibung konnte nicht vorbereitet werden.</value>
+  </data>
+  <data name="ImageDescriptionStatus_NotReady" xml:space="preserve">
+    <value>Die Bildbeschreibung ist nicht bereit.</value>
+  </data>
+  <data name="ImageDescriptionStatus_BlockedByPolicy" xml:space="preserve">
+    <value>Die Bildbeschreibung wird durch die Richtlinie Ihrer Organisation blockiert.</value>
+  </data>
+  <data name="ImageDescriptionStatus_BlockedByContentSafety" xml:space="preserve">
+    <value>Dieses Bild konnte aufgrund der Inhaltssicherheitsfilter nicht beschrieben werden.</value>
+  </data>
+  <data name="ImageDescriptionStatus_TooMuchText" xml:space="preserve">
+    <value>Dieses Bild enthält zu viel Text, um eine Beschreibung zu erstellen.</value>
+  </data>
+  <data name="ImageDescriptionStatus_Failed" xml:space="preserve">
+    <value>Die Bildbeschreibung ist fehlgeschlagen.</value>
+  </data>
 </root>

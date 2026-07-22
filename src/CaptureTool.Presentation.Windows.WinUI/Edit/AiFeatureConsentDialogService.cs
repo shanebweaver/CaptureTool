@@ -57,6 +57,11 @@ internal sealed class AiFeatureConsentDialogService : IAiFeatureConsentDialogSer
             AiFeatureId.ImageSuperResolution => (
                 "Allow Super Image Resolution?",
                 "Super Image Resolution uses an on-device AI model to create a higher-resolution copy of the current image."),
+            AiFeatureId.ImageDescription => (
+                GetString("AiFeatureConsentDialog_ImageDescriptionTitle", "Allow Image Description?"),
+                GetString(
+                    "AiFeatureConsentDialog_ImageDescriptionContent",
+                    "Image Description uses an on-device AI model to describe the current image.")),
             _ => (
                 "Allow AI feature?",
                 "This feature uses an on-device AI model to process the current image.")

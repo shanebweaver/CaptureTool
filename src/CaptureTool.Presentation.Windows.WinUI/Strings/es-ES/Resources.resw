@@ -1424,4 +1424,94 @@ SOFTWARE.
   <data name="Settings_AiConsent_TextExtractionDisplayName" xml:space="preserve">
     <value>Extracción de texto</value>
   </data>
+  <data name="ImageEdit_ImageDescriptionButton.Label" xml:space="preserve">
+    <value>Descripción de imagen</value>
+  </data>
+  <data name="ImageEdit_ImageDescriptionButton.AutomationProperties.Name" xml:space="preserve">
+    <value>Describir imagen</value>
+  </data>
+  <data name="ImageEdit_ImageDescriptionButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Describir la imagen mediante IA en el dispositivo</value>
+  </data>
+  <data name="ImageDescriptionToolbar_BriefButton.Content" xml:space="preserve">
+    <value>Breve</value>
+  </data>
+  <data name="ImageDescriptionToolbar_BriefButton.AutomationProperties.Name" xml:space="preserve">
+    <value>Generar una descripción breve de la imagen</value>
+  </data>
+  <data name="ImageDescriptionToolbar_BriefButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Generar una descripción breve</value>
+  </data>
+  <data name="ImageDescriptionToolbar_DetailedButton.Content" xml:space="preserve">
+    <value>Detallada</value>
+  </data>
+  <data name="ImageDescriptionToolbar_DetailedButton.AutomationProperties.Name" xml:space="preserve">
+    <value>Generar una descripción detallada de la imagen</value>
+  </data>
+  <data name="ImageDescriptionToolbar_DetailedButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Generar una descripción detallada</value>
+  </data>
+  <data name="ImageDescriptionToolbar_DiagramButton.Content" xml:space="preserve">
+    <value>Diagrama</value>
+  </data>
+  <data name="ImageDescriptionToolbar_DiagramButton.AutomationProperties.Name" xml:space="preserve">
+    <value>Generar una descripción de diagrama</value>
+  </data>
+  <data name="ImageDescriptionToolbar_DiagramButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Generar una descripción optimizada para diagramas</value>
+  </data>
+  <data name="ImageDescriptionToolbar_AccessibleButton.Content" xml:space="preserve">
+    <value>Accesible</value>
+  </data>
+  <data name="ImageDescriptionToolbar_AccessibleButton.AutomationProperties.Name" xml:space="preserve">
+    <value>Generar una descripción accesible de la imagen</value>
+  </data>
+  <data name="ImageDescriptionToolbar_AccessibleButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Generar una descripción optimizada para accesibilidad</value>
+  </data>
+  <data name="ImageDescriptionPanel.AutomationProperties.Name" xml:space="preserve">
+    <value>Descripción de imagen generada</value>
+  </data>
+  <data name="ImageDescriptionPanel_Title.Text" xml:space="preserve">
+    <value>Descripción de imagen</value>
+  </data>
+  <data name="ImageEdit_ImageDescriptionProgressRing.AutomationProperties.Name" xml:space="preserve">
+    <value>Generando descripción de imagen</value>
+  </data>
+  <data name="AiFeatureConsentDialog_ImageDescriptionTitle" xml:space="preserve">
+    <value>¿Permitir la descripción de imágenes?</value>
+  </data>
+  <data name="AiFeatureConsentDialog_ImageDescriptionContent" xml:space="preserve">
+    <value>La descripción de imágenes usa un modelo de IA en el dispositivo para describir la imagen actual.</value>
+  </data>
+  <data name="Settings_AiConsent_ImageDescriptionDisplayName" xml:space="preserve">
+    <value>Descripción de imagen</value>
+  </data>
+  <data name="ImageDescriptionStatus_NotSupported" xml:space="preserve">
+    <value>La descripción de imágenes no es compatible con este equipo.</value>
+  </data>
+  <data name="ImageDescriptionStatus_Disabled" xml:space="preserve">
+    <value>La descripción de imágenes está deshabilitada en este equipo.</value>
+  </data>
+  <data name="ImageDescriptionStatus_NotAvailable" xml:space="preserve">
+    <value>La descripción de imágenes no está disponible.</value>
+  </data>
+  <data name="ImageDescriptionStatus_PreparationFailed" xml:space="preserve">
+    <value>No se pudo preparar la descripción de imágenes.</value>
+  </data>
+  <data name="ImageDescriptionStatus_NotReady" xml:space="preserve">
+    <value>La descripción de imágenes no está lista.</value>
+  </data>
+  <data name="ImageDescriptionStatus_BlockedByPolicy" xml:space="preserve">
+    <value>La directiva de tu organización bloquea la descripción de imágenes.</value>
+  </data>
+  <data name="ImageDescriptionStatus_BlockedByContentSafety" xml:space="preserve">
+    <value>No se pudo describir esta imagen debido a los filtros de seguridad de contenido.</value>
+  </data>
+  <data name="ImageDescriptionStatus_TooMuchText" xml:space="preserve">
+    <value>Esta imagen contiene demasiado texto para generar una descripción.</value>
+  </data>
+  <data name="ImageDescriptionStatus_Failed" xml:space="preserve">
+    <value>Error en la descripción de la imagen.</value>
+  </data>
 </root>
