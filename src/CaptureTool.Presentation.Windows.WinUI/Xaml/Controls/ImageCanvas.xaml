@@ -70,6 +70,15 @@
                     Opacity=".55"
                     Visibility="Collapsed" />
 
+                <Path
+                    x:Name="TextExtractionSelectionPath"
+                    AutomationProperties.AccessibilityView="Control"
+                    AutomationProperties.AutomationId="ImageCanvas_TextExtractionSelectionPath"
+                    Fill="{ThemeResource AccentFillColorDefaultBrush}"
+                    IsHitTestVisible="False"
+                    Opacity=".48"
+                    Visibility="Collapsed" />
+
                 <Border
                     x:Name="TextExtractionOverlayAutomationMarker"
                     Width="1"

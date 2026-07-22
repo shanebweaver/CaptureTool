@@ -1349,4 +1349,79 @@ SOFTWARE.
   <data name="Settings_StoreReviewReminders_Toggle.OffContent" xml:space="preserve">
     <value>Off</value>
   </data>
+  <data name="ImageEdit_TextExtractionButton.Label" xml:space="preserve">
+    <value>Распознавание текста</value>
+  </data>
+  <data name="ImageEdit_TextExtractionButton.AutomationProperties.Name" xml:space="preserve">
+    <value>Распознать текст на изображении</value>
+  </data>
+  <data name="ImageEdit_TextExtractionButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Распознать и выделить текст на изображении</value>
+  </data>
+  <data name="ImageEdit_TextExtractionOverlayMarker.AutomationProperties.Name" xml:space="preserve">
+    <value>Слой распознавания текста готов</value>
+  </data>
+  <data name="ImageEdit_TextExtractionProgressRing.AutomationProperties.Name" xml:space="preserve">
+    <value>Распознавание текста</value>
+  </data>
+  <data name="TextExtractionToolbar_CopyAllTextButton.AutomationProperties.Name" xml:space="preserve">
+    <value>Копировать весь распознанный текст</value>
+  </data>
+  <data name="TextExtractionToolbar_CopyAllTextButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Копировать весь распознанный текст</value>
+  </data>
+  <data name="TextExtractionToolbar_CopyAllTextButtonLabel.Text" xml:space="preserve">
+    <value>Копировать весь текст</value>
+  </data>
+  <data name="ImageEdit_TextCopiedNotification" xml:space="preserve">
+    <value>Распознанный текст скопирован в буфер обмена.</value>
+  </data>
+  <data name="ImageEdit_TextCopyFailedNotification" xml:space="preserve">
+    <value>Не удалось скопировать распознанный текст.</value>
+  </data>
+  <data name="TextExtractionStatus_NotSupported" xml:space="preserve">
+    <value>Распознавание текста не поддерживается на этом компьютере.</value>
+  </data>
+  <data name="TextExtractionStatus_Disabled" xml:space="preserve">
+    <value>Распознавание текста отключено на этом компьютере.</value>
+  </data>
+  <data name="TextExtractionStatus_NotAvailable" xml:space="preserve">
+    <value>Распознавание текста недоступно.</value>
+  </data>
+  <data name="TextExtractionStatus_PreparationFailed" xml:space="preserve">
+    <value>Не удалось подготовить распознавание текста.</value>
+  </data>
+  <data name="TextExtractionStatus_NotReady" xml:space="preserve">
+    <value>Распознавание текста не готово.</value>
+  </data>
+  <data name="TextExtractionStatus_TooLarge" xml:space="preserve">
+    <value>Это изображение слишком велико для распознавания текста.</value>
+  </data>
+  <data name="TextExtractionStatus_Failed" xml:space="preserve">
+    <value>Не удалось распознать текст.</value>
+  </data>
+  <data name="AiFeatureConsentDialog_AllowButton" xml:space="preserve">
+    <value>Разрешить</value>
+  </data>
+  <data name="AiFeatureConsentDialog_DontAllowButton" xml:space="preserve">
+    <value>Не разрешать</value>
+  </data>
+  <data name="AiFeatureConsentDialog_CancelButton" xml:space="preserve">
+    <value>Отмена</value>
+  </data>
+  <data name="AiFeatureConsentDialog_TextExtractionTitle" xml:space="preserve">
+    <value>Разрешить распознавание текста?</value>
+  </data>
+  <data name="AiFeatureConsentDialog_TextExtractionContent" xml:space="preserve">
+    <value>Функция распознавания текста использует локальную модель ИИ для обнаружения текста и его расположения на текущем изображении.</value>
+  </data>
+  <data name="Settings_AiConsentHeaderLabel.Text" xml:space="preserve">
+    <value>Согласие на использование ИИ</value>
+  </data>
+  <data name="Settings_AiConsentDescription.Text" xml:space="preserve">
+    <value>Разрешить этой функции ИИ обрабатывать изображения на этом устройстве.</value>
+  </data>
+  <data name="Settings_AiConsent_TextExtractionDisplayName" xml:space="preserve">
+    <value>Распознавание текста</value>
+  </data>
 </root>

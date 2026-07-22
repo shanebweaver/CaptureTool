@@ -58,11 +58,11 @@
                 </AppBarToggleButton.Icon>
             </AppBarToggleButton>
             <AppBarToggleButton
+                x:Uid="ImageEdit_TextExtractionButton"
                 AutomationProperties.AutomationId="ImageEdit_TextExtractionButton"
                 Command="{x:Bind ViewModel.ToggleTextExtractionModeCommand}"
                 IsChecked="{x:Bind ViewModel.IsTextExtractionModeActive, Mode=OneWay}"
                 IsEnabled="{x:Bind ViewModel.CanToggleTextExtraction, Mode=OneWay}"
-                Label="Text extraction"
                 Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.IsTextExtractionFeatureEnabled), Mode=OneWay}">
                 <AppBarToggleButton.Icon>
                     <FontIcon Glyph="&#xE8D2;" />
@@ -238,13 +238,13 @@
                 TextForegroundColor="{x:Bind ViewModel.TextTool.TextFontColor, Mode=OneWay}" />
 
             <Button
+                x:Uid="ImageEdit_TextExtractionOverlayMarker"
                 Width="16"
                 Height="16"
                 HorizontalAlignment="Left"
                 VerticalAlignment="Top"
                 AutomationProperties.AccessibilityView="Control"
                 AutomationProperties.AutomationId="ImageEdit_TextExtractionOverlayMarker"
-                AutomationProperties.Name="Text extraction overlay ready"
                 Background="Transparent"
                 IsEnabled="False"
                 IsTabStop="False"
@@ -344,10 +344,23 @@
                         <TranslateTransform Y="-8" />
                     </controls:ColorPickerToolbar.RenderTransform>
                 </controls:ColorPickerToolbar>
+
+                <!--  Text extraction options  -->
+                <controls:TextExtractionToolbar
+                    x:Name="TextExtractionToolbarHost"
+                    HorizontalAlignment="Center"
+                    CopyAllTextCommand="{x:Bind ViewModel.TextExtractionTool.CopyAllTextCommand, Mode=OneWay}"
+                    Opacity="0"
+                    Visibility="Collapsed">
+                    <controls:TextExtractionToolbar.RenderTransform>
+                        <TranslateTransform Y="-8" />
+                    </controls:TextExtractionToolbar.RenderTransform>
+                </controls:TextExtractionToolbar>
             </Grid>
         </Grid>
 
         <ProgressRing
+            x:Uid="ImageEdit_TextExtractionProgressRing"
             Grid.Row="2"
             Width="48"
             Height="48"

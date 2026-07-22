@@ -235,7 +235,11 @@ public sealed class ImageEditPageViewModelDefaultsTests
                 chromaKeyAccess ?? Mock.Of<IChromaKeyAccessService>(),
                 chromaKeyService ?? Mock.Of<IChromaKeyService>()),
             new ShapeToolViewModel(),
-            new TextToolViewModel());
+            new TextToolViewModel(),
+            new TextExtractionToolViewModel(
+                Mock.Of<IClipboardService>(),
+                Mock.Of<ILocalizationService>(),
+                notifications));
     }
 
     private static ImageChromaKeyEffect GetChromaKeyEffect(ImageEditPageViewModel viewModel)

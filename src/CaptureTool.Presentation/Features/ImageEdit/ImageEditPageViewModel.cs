@@ -98,6 +98,8 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
     public TextToolViewModel TextTool { get; }
 
+    public TextExtractionToolViewModel TextExtractionTool { get; }
+
     public bool HasUndoStack
     {
         get;
@@ -361,6 +363,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         ChromaKeyToolViewModel chromaKeyTool,
         ShapeToolViewModel shapeTool,
         TextToolViewModel textTool,
+        TextExtractionToolViewModel textExtractionTool,
         IAiFeatureConsentService? aiFeatureConsentService = null,
         IAiFeatureConsentDialogService? aiFeatureConsentDialogService = null,
         ITextExtractionService? textExtractionService = null,
@@ -391,6 +394,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         ColorPickerTool = colorPickerTool;
         ShapeTool = shapeTool;
         TextTool = textTool;
+        TextExtractionTool = textExtractionTool;
         ChromaKeyTool.SettingsChanged += ChromaKeyTool_SettingsChanged;
         ChromaKeyTool.InteractionCommitted += ChromaKeyTool_InteractionCommitted;
 
@@ -521,6 +525,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         IsTextExtractionRunning = false;
         TextExtractionStatusMessage = string.Empty;
         TextExtractionRegions = [];
+        TextExtractionTool.Reset();
         _editRevision = 0;
         _textExtractionProcessedRevision = null;
         _editHistory.Clear();
@@ -578,6 +583,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
         if (!await EnsureAiFeatureConsentAsync(AiFeatureId.TextExtraction, CancellationToken.None))
         {
+            RefreshTextExtractionToggleState();
             UpdateCanToggleTextExtraction();
             return;
         }
@@ -628,6 +634,8 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
             CancelTextExtractionWork();
             TextExtractionRegions = [];
             TextExtractionStatusMessage = string.Empty;
+            TextExtractionTool.Reset();
+            _textExtractionProcessedRevision = null;
             InvalidateCanvasRequested?.Invoke(this, EventArgs.Empty);
         }
     }
@@ -985,11 +993,6 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
             return true;
         }
 
-        if (consentState == AiFeatureConsentState.Denied)
-        {
-            return false;
-        }
-
         bool consented = await _aiFeatureConsentDialogService.RequestConsentAsync(featureId, cancellationToken);
         await _aiFeatureConsentService.SetConsentAsync(featureId, consented, cancellationToken);
         UpdateCanToggleSuperResolution();
@@ -1016,6 +1019,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
         TextExtractionStatusMessage = string.Empty;
         TextExtractionRegions = [];
+        TextExtractionTool.Reset();
 
         _textExtractionCancellationTokenSource = new CancellationTokenSource();
         CancellationToken cancellationToken = _textExtractionCancellationTokenSource.Token;
@@ -1043,14 +1047,13 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
                 return;
             }
 
-            string sourceImagePath = GetTemporaryTextExtractionImagePath();
             ImageCanvasRenderOptions options = GetImageCanvasRenderOptions();
-            await _imageCanvasExporter.SaveImageAsync(sourceImagePath, [.. Drawables], options);
+            using MemoryStream sourceImage = await _imageCanvasExporter.RenderToStreamAsync([.. Drawables], options);
             cancellationToken.ThrowIfCancellationRequested();
 
             Size renderedSize = GetTextExtractionRenderedSize(options);
             TextExtractionResult result = await _textExtractionService.ExtractAsync(
-                new TextExtractionRequest(new ImageFile(sourceImagePath), renderedSize),
+                new TextExtractionRequest(sourceImage, renderedSize),
                 cancellationToken);
 
             if (result.Status != TextExtractionStatus.Success || result.Document is null)
@@ -1060,6 +1063,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
             }
 
             TextExtractionRegions = NormalizeTextExtractionRegions(result.Document.Regions, result.Document.ImageSize);
+            TextExtractionTool.SetText(result.Document.Text);
             _textExtractionProcessedRevision = processedRevision;
             InvalidateCanvasRequested?.Invoke(this, EventArgs.Empty);
         }
@@ -1070,7 +1074,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         catch (Exception ex)
         {
             _logService.LogException(ex, "Failed to extract text from image.");
-            ShowTextExtractionFailure("Text extraction failed.");
+            ShowTextExtractionFailure(GetLocalizedString("TextExtractionStatus_Failed"));
         }
         finally
         {
@@ -1079,13 +1083,6 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
             IsTextExtractionRunning = false;
             UpdateCanToggleTextExtraction();
         }
-    }
-
-    private string GetTemporaryTextExtractionImagePath()
-    {
-        return Path.Combine(
-            _storageService.GetApplicationTemporaryFolderPath(),
-            $"{Path.GetFileNameWithoutExtension(_storageService.GetTemporaryFileName())}.text-extraction.png");
     }
 
     private static Size GetTextExtractionRenderedSize(ImageCanvasRenderOptions options)
@@ -1109,7 +1106,9 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         foreach (RecognizedTextRegion region in regions)
         {
             RectangleF bounds = region.Bounds;
-            bounds.Inflate(2, 2);
+            float horizontalPadding = Math.Clamp(bounds.Height * 0.15f, 2, 8);
+            float verticalPadding = Math.Clamp(bounds.Height * 0.1f, 2, 6);
+            bounds.Inflate(horizontalPadding, verticalPadding);
             RectangleF clampedBounds = RectangleF.Intersect(imageBounds, bounds);
             if (clampedBounds.Width > 0 && clampedBounds.Height > 0)
             {
@@ -1206,6 +1205,14 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         if (!IsSuperResolutionActive)
         {
             RaisePropertyChanged(nameof(IsSuperResolutionActive));
+        }
+    }
+
+    private void RefreshTextExtractionToggleState()
+    {
+        if (!IsTextExtractionModeActive)
+        {
+            RaisePropertyChanged(nameof(IsTextExtractionModeActive));
         }
     }
 
@@ -1308,8 +1315,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         CanToggleTextExtraction = IsLoaded &&
             IsTextExtractionFeatureEnabled &&
             IsTextExtractionAvailable &&
-            (IsTextExtractionModeActive ||
-                (!IsTextExtractionRunning && IsAiFeatureRequestAllowed(AiFeatureId.TextExtraction)));
+            (IsTextExtractionModeActive || !IsTextExtractionRunning);
     }
 
     private bool IsAiFeatureRequestAllowed(AiFeatureId featureId)
@@ -1394,39 +1400,39 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     {
         return readyState switch
         {
-            TextExtractionReadyState.NotSupported => "Text extraction is not supported on this PC.",
-            TextExtractionReadyState.Disabled => "Text extraction is disabled on this PC.",
-            _ => "Text extraction is not available."
+            TextExtractionReadyState.NotSupported => GetLocalizedString("TextExtractionStatus_NotSupported"),
+            TextExtractionReadyState.Disabled => GetLocalizedString("TextExtractionStatus_Disabled"),
+            _ => GetLocalizedString("TextExtractionStatus_NotAvailable")
         };
     }
 
-    private static string GetPreparationFailureMessage(TextExtractionPreparationResult result)
+    private string GetPreparationFailureMessage(TextExtractionPreparationResult result)
     {
         return result.Status switch
         {
             TextExtractionPreparationStatus.Cancelled => string.Empty,
-            TextExtractionPreparationStatus.NotSupported => "Text extraction is not supported on this PC.",
+            TextExtractionPreparationStatus.NotSupported => GetLocalizedString("TextExtractionStatus_NotSupported"),
             TextExtractionPreparationStatus.Failed => string.IsNullOrWhiteSpace(result.ErrorMessage)
-                ? "Text extraction could not be prepared."
+                ? GetLocalizedString("TextExtractionStatus_PreparationFailed")
                 : result.ErrorMessage,
-            _ => "Text extraction could not be prepared."
+            _ => GetLocalizedString("TextExtractionStatus_PreparationFailed")
         };
     }
 
-    private static string GetExtractionFailureMessage(TextExtractionResult result)
+    private string GetExtractionFailureMessage(TextExtractionResult result)
     {
         return result.Status switch
         {
             TextExtractionStatus.Cancelled => string.Empty,
-            TextExtractionStatus.NotReady => "Text extraction is not ready.",
-            TextExtractionStatus.NotSupported => "Text extraction is not supported on this PC.",
+            TextExtractionStatus.NotReady => GetLocalizedString("TextExtractionStatus_NotReady"),
+            TextExtractionStatus.NotSupported => GetLocalizedString("TextExtractionStatus_NotSupported"),
             TextExtractionStatus.TooLarge => string.IsNullOrWhiteSpace(result.ErrorMessage)
-                ? "This image is too large for Text Extraction."
+                ? GetLocalizedString("TextExtractionStatus_TooLarge")
                 : result.ErrorMessage,
             TextExtractionStatus.Failed => string.IsNullOrWhiteSpace(result.ErrorMessage)
-                ? "Text extraction failed."
+                ? GetLocalizedString("TextExtractionStatus_Failed")
                 : result.ErrorMessage,
-            _ => "Text extraction failed."
+            _ => GetLocalizedString("TextExtractionStatus_Failed")
         };
     }
 

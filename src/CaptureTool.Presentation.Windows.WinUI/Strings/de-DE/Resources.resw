@@ -1343,4 +1343,79 @@ SOFTWARE.
   <data name="Settings_StoreReviewReminders_Toggle.OffContent" xml:space="preserve">
     <value>Off</value>
   </data>
+  <data name="ImageEdit_TextExtractionButton.Label" xml:space="preserve">
+    <value>Texterkennung</value>
+  </data>
+  <data name="ImageEdit_TextExtractionButton.AutomationProperties.Name" xml:space="preserve">
+    <value>Text im Bild erkennen</value>
+  </data>
+  <data name="ImageEdit_TextExtractionButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Text im Bild erkennen und auswählen</value>
+  </data>
+  <data name="ImageEdit_TextExtractionOverlayMarker.AutomationProperties.Name" xml:space="preserve">
+    <value>Überlagerung für die Texterkennung ist bereit</value>
+  </data>
+  <data name="ImageEdit_TextExtractionProgressRing.AutomationProperties.Name" xml:space="preserve">
+    <value>Text wird erkannt</value>
+  </data>
+  <data name="TextExtractionToolbar_CopyAllTextButton.AutomationProperties.Name" xml:space="preserve">
+    <value>Gesamten erkannten Text kopieren</value>
+  </data>
+  <data name="TextExtractionToolbar_CopyAllTextButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Gesamten erkannten Text kopieren</value>
+  </data>
+  <data name="TextExtractionToolbar_CopyAllTextButtonLabel.Text" xml:space="preserve">
+    <value>Gesamten Text kopieren</value>
+  </data>
+  <data name="ImageEdit_TextCopiedNotification" xml:space="preserve">
+    <value>Erkannter Text wurde in die Zwischenablage kopiert.</value>
+  </data>
+  <data name="ImageEdit_TextCopyFailedNotification" xml:space="preserve">
+    <value>Der erkannte Text konnte nicht kopiert werden.</value>
+  </data>
+  <data name="TextExtractionStatus_NotSupported" xml:space="preserve">
+    <value>Die Texterkennung wird auf diesem PC nicht unterstützt.</value>
+  </data>
+  <data name="TextExtractionStatus_Disabled" xml:space="preserve">
+    <value>Die Texterkennung ist auf diesem PC deaktiviert.</value>
+  </data>
+  <data name="TextExtractionStatus_NotAvailable" xml:space="preserve">
+    <value>Die Texterkennung ist nicht verfügbar.</value>
+  </data>
+  <data name="TextExtractionStatus_PreparationFailed" xml:space="preserve">
+    <value>Die Texterkennung konnte nicht vorbereitet werden.</value>
+  </data>
+  <data name="TextExtractionStatus_NotReady" xml:space="preserve">
+    <value>Die Texterkennung ist nicht bereit.</value>
+  </data>
+  <data name="TextExtractionStatus_TooLarge" xml:space="preserve">
+    <value>Dieses Bild ist zu groß für die Texterkennung.</value>
+  </data>
+  <data name="TextExtractionStatus_Failed" xml:space="preserve">
+    <value>Die Texterkennung ist fehlgeschlagen.</value>
+  </data>
+  <data name="AiFeatureConsentDialog_AllowButton" xml:space="preserve">
+    <value>Zulassen</value>
+  </data>
+  <data name="AiFeatureConsentDialog_DontAllowButton" xml:space="preserve">
+    <value>Nicht zulassen</value>
+  </data>
+  <data name="AiFeatureConsentDialog_CancelButton" xml:space="preserve">
+    <value>Abbrechen</value>
+  </data>
+  <data name="AiFeatureConsentDialog_TextExtractionTitle" xml:space="preserve">
+    <value>Texterkennung zulassen?</value>
+  </data>
+  <data name="AiFeatureConsentDialog_TextExtractionContent" xml:space="preserve">
+    <value>Die Texterkennung verwendet ein KI-Modell auf dem Gerät, um Text und Textpositionen im aktuellen Bild zu erkennen.</value>
+  </data>
+  <data name="Settings_AiConsentHeaderLabel.Text" xml:space="preserve">
+    <value>KI-Zustimmung</value>
+  </data>
+  <data name="Settings_AiConsentDescription.Text" xml:space="preserve">
+    <value>Dieser KI-Funktion erlauben, Bilder auf diesem Gerät zu verarbeiten.</value>
+  </data>
+  <data name="Settings_AiConsent_TextExtractionDisplayName" xml:space="preserve">
+    <value>Texterkennung</value>
+  </data>
 </root>

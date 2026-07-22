@@ -44,6 +44,7 @@ public static class PresentationServiceCollectionExtensions
         services.AddTransient<ColorPickerToolViewModel>();
         services.AddTransient<ShapeToolViewModel>();
         services.AddTransient<TextToolViewModel>();
+        services.AddTransient<TextExtractionToolViewModel>();
         services.AddTransient<ImageEditPageViewModel>();
         services.AddTransient<VideoEditPageViewModel>();
         services.AddTransient<AudioCapturePageViewModel>();

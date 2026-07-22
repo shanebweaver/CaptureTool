@@ -1349,4 +1349,79 @@ SOFTWARE.
   <data name="Settings_StoreReviewReminders_Toggle.OffContent" xml:space="preserve">
     <value>Off</value>
   </data>
+  <data name="ImageEdit_TextExtractionButton.Label" xml:space="preserve">
+    <value>文本提取</value>
+  </data>
+  <data name="ImageEdit_TextExtractionButton.AutomationProperties.Name" xml:space="preserve">
+    <value>从图像中提取文本</value>
+  </data>
+  <data name="ImageEdit_TextExtractionButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>提取并选择图像中的文本</value>
+  </data>
+  <data name="ImageEdit_TextExtractionOverlayMarker.AutomationProperties.Name" xml:space="preserve">
+    <value>文本提取叠加层已就绪</value>
+  </data>
+  <data name="ImageEdit_TextExtractionProgressRing.AutomationProperties.Name" xml:space="preserve">
+    <value>正在提取文本</value>
+  </data>
+  <data name="TextExtractionToolbar_CopyAllTextButton.AutomationProperties.Name" xml:space="preserve">
+    <value>复制所有已识别文本</value>
+  </data>
+  <data name="TextExtractionToolbar_CopyAllTextButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>复制所有已识别文本</value>
+  </data>
+  <data name="TextExtractionToolbar_CopyAllTextButtonLabel.Text" xml:space="preserve">
+    <value>复制所有文本</value>
+  </data>
+  <data name="ImageEdit_TextCopiedNotification" xml:space="preserve">
+    <value>已将识别的文本复制到剪贴板。</value>
+  </data>
+  <data name="ImageEdit_TextCopyFailedNotification" xml:space="preserve">
+    <value>无法复制识别的文本。</value>
+  </data>
+  <data name="TextExtractionStatus_NotSupported" xml:space="preserve">
+    <value>此电脑不支持文本提取。</value>
+  </data>
+  <data name="TextExtractionStatus_Disabled" xml:space="preserve">
+    <value>此电脑已禁用文本提取。</value>
+  </data>
+  <data name="TextExtractionStatus_NotAvailable" xml:space="preserve">
+    <value>文本提取不可用。</value>
+  </data>
+  <data name="TextExtractionStatus_PreparationFailed" xml:space="preserve">
+    <value>无法准备文本提取。</value>
+  </data>
+  <data name="TextExtractionStatus_NotReady" xml:space="preserve">
+    <value>文本提取尚未就绪。</value>
+  </data>
+  <data name="TextExtractionStatus_TooLarge" xml:space="preserve">
+    <value>此图像过大，无法进行文本提取。</value>
+  </data>
+  <data name="TextExtractionStatus_Failed" xml:space="preserve">
+    <value>文本提取失败。</value>
+  </data>
+  <data name="AiFeatureConsentDialog_AllowButton" xml:space="preserve">
+    <value>允许</value>
+  </data>
+  <data name="AiFeatureConsentDialog_DontAllowButton" xml:space="preserve">
+    <value>不允许</value>
+  </data>
+  <data name="AiFeatureConsentDialog_CancelButton" xml:space="preserve">
+    <value>取消</value>
+  </data>
+  <data name="AiFeatureConsentDialog_TextExtractionTitle" xml:space="preserve">
+    <value>允许文本提取？</value>
+  </data>
+  <data name="AiFeatureConsentDialog_TextExtractionContent" xml:space="preserve">
+    <value>文本提取功能使用设备上的 AI 模型检测当前图像中的文本及文本位置。</value>
+  </data>
+  <data name="Settings_AiConsentHeaderLabel.Text" xml:space="preserve">
+    <value>AI 功能权限</value>
+  </data>
+  <data name="Settings_AiConsentDescription.Text" xml:space="preserve">
+    <value>允许此 AI 功能在此设备上处理图像。</value>
+  </data>
+  <data name="Settings_AiConsent_TextExtractionDisplayName" xml:space="preserve">
+    <value>文本提取</value>
+  </data>
 </root>

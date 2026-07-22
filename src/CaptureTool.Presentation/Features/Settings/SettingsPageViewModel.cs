@@ -723,11 +723,30 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
 
             AiFeatureConsents.Add(new(
                 consent.FeatureId,
-                consent.DisplayName,
+                GetAiFeatureDisplayName(consent),
                 consent.State == AiFeatureConsentState.Granted));
         }
 
         IsAiConsentSettingsVisible = AiFeatureConsents.Count > 0;
+    }
+
+    private string GetAiFeatureDisplayName(AiFeatureConsent consent)
+    {
+        string? resourceKey = consent.FeatureId switch
+        {
+            AiFeatureId.TextExtraction => "Settings_AiConsent_TextExtractionDisplayName",
+            _ => null
+        };
+
+        if (resourceKey is null)
+        {
+            return consent.DisplayName;
+        }
+
+        string localizedDisplayName = _localizationService.GetString(resourceKey);
+        return string.IsNullOrWhiteSpace(localizedDisplayName)
+            ? consent.DisplayName
+            : localizedDisplayName;
     }
 
     private bool IsAiFeatureConsentVisible(AiFeatureId featureId)

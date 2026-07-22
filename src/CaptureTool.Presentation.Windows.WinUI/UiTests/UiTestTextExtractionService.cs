@@ -29,8 +29,10 @@ internal sealed class UiTestTextExtractionService : ITextExtractionService
             : BaseImageSize;
 
         RecognizedTextRegion[] regions = [
-            new("OCR MODE", ScaleBounds(new RectangleF(48, 42, 236, 42), sourceSize)),
-            new("SAMPLE TEXT", ScaleBounds(new RectangleF(48, 112, 306, 38), sourceSize))
+            new("OCR", ScaleBounds(new RectangleF(48, 42, 106, 42), sourceSize), 0, 0),
+            new("MODE", ScaleBounds(new RectangleF(166, 42, 118, 42), sourceSize), 0, 1),
+            new("SAMPLE", ScaleBounds(new RectangleF(48, 112, 164, 38), sourceSize), 1, 0),
+            new("TEXT", ScaleBounds(new RectangleF(224, 112, 130, 38), sourceSize), 1, 1)
         ];
 
         return Task.FromResult(TextExtractionResult.Success(new RecognizedTextDocument(

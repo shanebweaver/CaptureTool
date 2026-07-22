@@ -266,7 +266,11 @@ public sealed class ImageEditPageViewModelSuperResolutionTests
                 notificationService),
             new ChromaKeyToolViewModel(chromaKeyAccess.Object, Mock.Of<IChromaKeyService>()),
             new ShapeToolViewModel(),
-            new TextToolViewModel());
+            new TextToolViewModel(),
+            new TextExtractionToolViewModel(
+                Mock.Of<IClipboardService>(),
+                localizationService ?? CreateLocalizationService(),
+                notificationService));
     }
 
     private static ILocalizationService CreateLocalizationService()
