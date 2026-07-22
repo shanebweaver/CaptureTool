@@ -35,6 +35,7 @@ public sealed partial class ImageEditPage : ImageEditPageBase
         InitializeToolbarHosts();
         ViewModel.LoadStateChanged += ViewModel_LoadStateChanged;
         ViewModel.InvalidateCanvasRequested += ViewModel_InvalidateCanvasRequested;
+        ViewModel.ReloadCanvasResourcesRequested += ViewModel_ReloadCanvasResourcesRequested;
         ViewModel.ForceZoomAndCenterRequested += ViewModel_ForceZoomAndCenterRequested;
         ViewModel.PropertyChanged += ViewModel_PropertyChanged;
         ImageCanvas.ZoomFactorChanged += ImageCanvas_ZoomFactorChanged;
@@ -46,6 +47,7 @@ public sealed partial class ImageEditPage : ImageEditPageBase
     {
         ViewModel.LoadStateChanged -= ViewModel_LoadStateChanged;
         ViewModel.InvalidateCanvasRequested -= ViewModel_InvalidateCanvasRequested;
+        ViewModel.ReloadCanvasResourcesRequested -= ViewModel_ReloadCanvasResourcesRequested;
         ViewModel.ForceZoomAndCenterRequested -= ViewModel_ForceZoomAndCenterRequested;
         ViewModel.PropertyChanged -= ViewModel_PropertyChanged;
         ImageCanvas.ZoomFactorChanged -= ImageCanvas_ZoomFactorChanged;
@@ -104,6 +106,7 @@ public sealed partial class ImageEditPage : ImageEditPageBase
         SetToolbarHostState(TextToolbarHost, ViewModel.IsTextModeActive);
         SetToolbarHostState(ColorPickerToolbarHost, ViewModel.IsColorPickerModeActive);
         SetToolbarHostState(TextExtractionToolbarHost, ViewModel.IsTextExtractionModeActive);
+        SetToolbarHostState(ImageDescriptionToolbarHost, ViewModel.IsImageDescriptionModeActive);
     }
 
     private void ViewModel_PropertyChanged(object? sender, PropertyChangedEventArgs e)
@@ -124,6 +127,9 @@ public sealed partial class ImageEditPage : ImageEditPageBase
                 break;
             case nameof(ViewModel.IsTextExtractionModeActive):
                 AnimateToolbarHost(TextExtractionToolbarHost, ViewModel.IsTextExtractionModeActive);
+                break;
+            case nameof(ViewModel.IsImageDescriptionModeActive):
+                AnimateToolbarHost(ImageDescriptionToolbarHost, ViewModel.IsImageDescriptionModeActive);
                 break;
         }
     }
@@ -332,6 +338,11 @@ public sealed partial class ImageEditPage : ImageEditPageBase
     private void ViewModel_InvalidateCanvasRequested(object? _, EventArgs __)
     {
         ImageCanvas.InvalidateCanvas();
+    }
+
+    private void ViewModel_ReloadCanvasResourcesRequested(object? _, EventArgs __)
+    {
+        ImageCanvas.ForceCanvasRedrawWithResources();
     }
 
     private void ViewModel_ForceZoomAndCenterRequested(object? _, EventArgs __)

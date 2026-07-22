@@ -49,5 +49,27 @@ public sealed class AiFeatureConsentServiceTests
         settings.Verify(service => service.TrySaveAsync(TestContext.CancellationToken), Times.Once);
     }
 
+    [TestMethod]
+    public void GetFeatureConsents_IncludesImageDescription()
+    {
+        var settings = new Mock<ISettingsService>();
+        var service = new AiFeatureConsentService(settings.Object);
+
+        service.GetFeatureConsents().Should().Contain(consent =>
+            consent.FeatureId == AiFeatureId.ImageDescription &&
+            consent.DisplayName == "Image description");
+    }
+
+    [TestMethod]
+    public async Task SetConsentAsync_PersistsImageDescriptionConsent()
+    {
+        var settings = new Mock<ISettingsService>();
+        var service = new AiFeatureConsentService(settings.Object);
+
+        await service.SetConsentAsync(AiFeatureId.ImageDescription, true, TestContext.CancellationToken);
+
+        settings.Verify(service => service.Set(CaptureToolSettings.Settings_AiConsent_ImageDescription, true), Times.Once);
+    }
+
     public TestContext TestContext { get; set; } = null!;
 }

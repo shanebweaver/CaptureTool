@@ -17,7 +17,8 @@ internal sealed class AiFeatureConsentService : IAiFeatureConsentService
     {
         return [
             CreateConsent(AiFeatureId.TextExtraction, "Text extraction"),
-            CreateConsent(AiFeatureId.ImageSuperResolution, "Super image resolution")
+            CreateConsent(AiFeatureId.ImageSuperResolution, "Super image resolution"),
+            CreateConsent(AiFeatureId.ImageDescription, "Image description")
         ];
     }
 
@@ -54,6 +55,7 @@ internal sealed class AiFeatureConsentService : IAiFeatureConsentService
         {
             AiFeatureId.TextExtraction => CaptureToolSettings.Settings_AiConsent_TextExtraction,
             AiFeatureId.ImageSuperResolution => CaptureToolSettings.Settings_AiConsent_ImageSuperResolution,
+            AiFeatureId.ImageDescription => CaptureToolSettings.Settings_AiConsent_ImageDescription,
             _ => throw new ArgumentOutOfRangeException(nameof(featureId), featureId, null)
         };
     }

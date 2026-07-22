@@ -393,6 +393,7 @@ public sealed class ImageEditPageViewModelTextExtractionTests
             Mock.Of<IOpenScreenshotsFolderUseCase>(),
             Mock.Of<ILogService>(),
             notifications,
+            clipboardService ?? Mock.Of<IClipboardService>(),
             new ColorPickerToolViewModel(
                 Mock.Of<IClipboardService>(),
                 localization,

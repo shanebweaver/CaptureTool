@@ -1653,4 +1653,106 @@ SOFTWARE.
   <data name="Settings_AiConsent_TextExtractionDisplayName" xml:space="preserve">
     <value>Text extraction</value>
   </data>
+  <data name="ImageEdit_ImageDescriptionButton.Label" xml:space="preserve">
+    <value>Image description</value>
+  </data>
+  <data name="ImageEdit_ImageDescriptionButton.AutomationProperties.Name" xml:space="preserve">
+    <value>Describe image</value>
+  </data>
+  <data name="ImageEdit_ImageDescriptionButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Describe the image using on-device AI</value>
+  </data>
+  <data name="ImageDescriptionToolbar_BriefButtonText.Text" xml:space="preserve">
+    <value>Brief</value>
+  </data>
+  <data name="ImageDescriptionToolbar_BriefButton.AutomationProperties.Name" xml:space="preserve">
+    <value>Generate a brief image description</value>
+  </data>
+  <data name="ImageDescriptionToolbar_BriefButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Generate a brief description</value>
+  </data>
+  <data name="ImageDescriptionToolbar_DetailedButtonText.Text" xml:space="preserve">
+    <value>Detailed</value>
+  </data>
+  <data name="ImageDescriptionToolbar_DetailedButton.AutomationProperties.Name" xml:space="preserve">
+    <value>Generate a detailed image description</value>
+  </data>
+  <data name="ImageDescriptionToolbar_DetailedButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Generate a detailed description</value>
+  </data>
+  <data name="ImageDescriptionToolbar_DiagramButtonText.Text" xml:space="preserve">
+    <value>Diagram</value>
+  </data>
+  <data name="ImageDescriptionToolbar_DiagramButton.AutomationProperties.Name" xml:space="preserve">
+    <value>Generate a diagram description</value>
+  </data>
+  <data name="ImageDescriptionToolbar_DiagramButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Generate a description optimized for diagrams</value>
+  </data>
+  <data name="ImageDescriptionToolbar_AccessibleButtonText.Text" xml:space="preserve">
+    <value>Accessible</value>
+  </data>
+  <data name="ImageDescriptionToolbar_AccessibleButton.AutomationProperties.Name" xml:space="preserve">
+    <value>Generate an accessible image description</value>
+  </data>
+  <data name="ImageDescriptionToolbar_AccessibleButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Generate a description optimized for accessibility</value>
+  </data>
+  <data name="ImageDescriptionPanel.AutomationProperties.Name" xml:space="preserve">
+    <value>Generated image description</value>
+  </data>
+  <data name="ImageDescriptionPanel_Title.Text" xml:space="preserve">
+    <value>Image description</value>
+  </data>
+  <data name="ImageDescriptionPanel_CopyButton.AutomationProperties.Name" xml:space="preserve">
+    <value>Copy image description</value>
+  </data>
+  <data name="ImageDescriptionPanel_CopyButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Copy image description</value>
+  </data>
+  <data name="ImageDescriptionCopiedNotification" xml:space="preserve">
+    <value>Image description copied to the clipboard.</value>
+  </data>
+  <data name="ImageDescriptionCopyFailedNotification" xml:space="preserve">
+    <value>Couldn't copy the image description.</value>
+  </data>
+  <data name="ImageEdit_ImageDescriptionProgressRing.AutomationProperties.Name" xml:space="preserve">
+    <value>Generating image description</value>
+  </data>
+  <data name="AiFeatureConsentDialog_ImageDescriptionTitle" xml:space="preserve">
+    <value>Allow Image Description?</value>
+  </data>
+  <data name="AiFeatureConsentDialog_ImageDescriptionContent" xml:space="preserve">
+    <value>Image Description uses an on-device AI model to describe the current image.</value>
+  </data>
+  <data name="Settings_AiConsent_ImageDescriptionDisplayName" xml:space="preserve">
+    <value>Image description</value>
+  </data>
+  <data name="ImageDescriptionStatus_NotSupported" xml:space="preserve">
+    <value>Image Description is not supported on this PC.</value>
+  </data>
+  <data name="ImageDescriptionStatus_Disabled" xml:space="preserve">
+    <value>Image Description is disabled on this PC.</value>
+  </data>
+  <data name="ImageDescriptionStatus_NotAvailable" xml:space="preserve">
+    <value>Image Description is not available.</value>
+  </data>
+  <data name="ImageDescriptionStatus_PreparationFailed" xml:space="preserve">
+    <value>Image Description could not be prepared.</value>
+  </data>
+  <data name="ImageDescriptionStatus_NotReady" xml:space="preserve">
+    <value>Image Description is not ready.</value>
+  </data>
+  <data name="ImageDescriptionStatus_BlockedByPolicy" xml:space="preserve">
+    <value>Image Description is blocked by your organization's policy.</value>
+  </data>
+  <data name="ImageDescriptionStatus_BlockedByContentSafety" xml:space="preserve">
+    <value>This image could not be described because of content safety filters.</value>
+  </data>
+  <data name="ImageDescriptionStatus_TooMuchText" xml:space="preserve">
+    <value>This image contains too much text to generate a description.</value>
+  </data>
+  <data name="ImageDescriptionStatus_Failed" xml:space="preserve">
+    <value>Image Description failed.</value>
+  </data>
 </root>

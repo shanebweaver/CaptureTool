@@ -1,3 +1,6 @@
+using CaptureTool.Application.Abstractions.Edit.Image.Description;
+using CaptureTool.Application.Abstractions.Edit.Image.SuperResolution;
+using CaptureTool.Application.Abstractions.Edit.Image.TextExtraction;
 using CaptureTool.FeatureManagement;
 using CaptureTool.Infrastructure.Features;
 
@@ -35,10 +38,68 @@ public sealed class FeatureAvailabilityTests
     }
 
     [TestMethod]
+    [DataRow(ImageSuperResolutionReadyState.Ready, true)]
+    [DataRow(ImageSuperResolutionReadyState.PreparationNeeded, true)]
+    [DataRow(ImageSuperResolutionReadyState.NotSupported, false)]
+    [DataRow(ImageSuperResolutionReadyState.Disabled, false)]
+    [DataRow(ImageSuperResolutionReadyState.Unknown, false)]
+    public void ImageSuperResolutionFeatureAvailability_RequiresRunnableDevice(
+        ImageSuperResolutionReadyState readyState,
+        bool expected)
+    {
+        var availability = new ImageSuperResolutionFeatureAvailability(
+            new ConstantFeatureManager(true),
+            new StubImageSuperResolutionService(readyState));
+
+        Assert.AreEqual(expected, availability.IsImageSuperResolutionEnabled);
+    }
+
+    [TestMethod]
     public void TextExtractionFeatureAvailability_ReturnsFeatureManagerValue()
     {
         Assert.IsTrue(new TextExtractionFeatureAvailability(new ConstantFeatureManager(true)).IsTextExtractionEnabled);
         Assert.IsFalse(new TextExtractionFeatureAvailability(new ConstantFeatureManager(false)).IsTextExtractionEnabled);
+    }
+
+    [TestMethod]
+    [DataRow(TextExtractionReadyState.Ready, true)]
+    [DataRow(TextExtractionReadyState.PreparationNeeded, true)]
+    [DataRow(TextExtractionReadyState.NotSupported, false)]
+    [DataRow(TextExtractionReadyState.Disabled, false)]
+    [DataRow(TextExtractionReadyState.Unknown, false)]
+    public void TextExtractionFeatureAvailability_RequiresRunnableDevice(
+        TextExtractionReadyState readyState,
+        bool expected)
+    {
+        var availability = new TextExtractionFeatureAvailability(
+            new ConstantFeatureManager(true),
+            new StubTextExtractionService(readyState));
+
+        Assert.AreEqual(expected, availability.IsTextExtractionEnabled);
+    }
+
+    [TestMethod]
+    public void ImageDescriptionFeatureAvailability_ReturnsFeatureManagerValue()
+    {
+        Assert.IsTrue(new ImageDescriptionFeatureAvailability(new ConstantFeatureManager(true)).IsImageDescriptionEnabled);
+        Assert.IsFalse(new ImageDescriptionFeatureAvailability(new ConstantFeatureManager(false)).IsImageDescriptionEnabled);
+    }
+
+    [TestMethod]
+    [DataRow(ImageDescriptionReadyState.Ready, true)]
+    [DataRow(ImageDescriptionReadyState.PreparationNeeded, true)]
+    [DataRow(ImageDescriptionReadyState.NotSupported, false)]
+    [DataRow(ImageDescriptionReadyState.Disabled, false)]
+    [DataRow(ImageDescriptionReadyState.Unknown, false)]
+    public void ImageDescriptionFeatureAvailability_RequiresRunnableDevice(
+        ImageDescriptionReadyState readyState,
+        bool expected)
+    {
+        var availability = new ImageDescriptionFeatureAvailability(
+            new ConstantFeatureManager(true),
+            new StubImageDescriptionService(readyState));
+
+        Assert.AreEqual(expected, availability.IsImageDescriptionEnabled);
     }
 
     private sealed class ConstantFeatureManager : IFeatureManager
@@ -51,5 +112,42 @@ public sealed class FeatureAvailabilityTests
         }
 
         public bool IsEnabled(FeatureFlag featureFlag) => _isEnabled;
+    }
+
+    private sealed class StubImageSuperResolutionService(ImageSuperResolutionReadyState readyState)
+        : IImageSuperResolutionService
+    {
+        public ImageSuperResolutionReadyState GetReadyState() => readyState;
+
+        public Task<ImageSuperResolutionPreparationResult> EnsureReadyAsync(
+            CancellationToken cancellationToken = default) => throw new NotSupportedException();
+
+        public Task<ImageSuperResolutionResult> GenerateAsync(
+            ImageSuperResolutionRequest request,
+            CancellationToken cancellationToken = default) => throw new NotSupportedException();
+    }
+
+    private sealed class StubTextExtractionService(TextExtractionReadyState readyState) : ITextExtractionService
+    {
+        public TextExtractionReadyState GetReadyState() => readyState;
+
+        public Task<TextExtractionPreparationResult> EnsureReadyAsync(
+            CancellationToken cancellationToken = default) => throw new NotSupportedException();
+
+        public Task<TextExtractionResult> ExtractAsync(
+            TextExtractionRequest request,
+            CancellationToken cancellationToken = default) => throw new NotSupportedException();
+    }
+
+    private sealed class StubImageDescriptionService(ImageDescriptionReadyState readyState) : IImageDescriptionService
+    {
+        public ImageDescriptionReadyState GetReadyState() => readyState;
+
+        public Task<ImageDescriptionPreparationResult> EnsureReadyAsync(
+            CancellationToken cancellationToken = default) => throw new NotSupportedException();
+
+        public Task<ImageDescriptionResult> DescribeAsync(
+            ImageDescriptionRequest request,
+            CancellationToken cancellationToken = default) => throw new NotSupportedException();
     }
 }

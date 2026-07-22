@@ -1,4 +1,5 @@
 using CaptureTool.Application.Abstractions.Edit.Image.ChromaKey;
+using CaptureTool.Application.Abstractions.Edit.Image.Description;
 using CaptureTool.Application.Abstractions.Edit.Image.Rendering;
 using CaptureTool.Application.Abstractions.Edit.Image.SuperResolution;
 using CaptureTool.Application.Abstractions.Edit.Image.TextExtraction;
@@ -22,6 +23,7 @@ public sealed class WindowsEditInfrastructureServiceCollectionExtensionsTests
         services.ShouldContainSingleton<IChromaKeyService, Win2DChromaKeyService>();
         services.ShouldContainSingleton<IImageSuperResolutionService, WindowsImageSuperResolutionService>();
         services.ShouldContainSingleton<ITextExtractionService, WindowsTextExtractionService>();
+        services.ShouldContainSingleton<IImageDescriptionService, WindowsImageDescriptionService>();
         services.ShouldContainSingleton<IImageCanvasExporter, Win2DImageCanvasExporter>();
         services.ShouldContainSingleton<IImageCanvasPrinter, Win2DImageCanvasPrinter>();
     }

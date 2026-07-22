@@ -85,6 +85,7 @@ public sealed class ImageEditPageViewModelShareTests
             Mock.Of<IOpenScreenshotsFolderUseCase>(),
             Mock.Of<ILogService>(),
             notifications,
+            Mock.Of<IClipboardService>(),
             new ColorPickerToolViewModel(
                 Mock.Of<IClipboardService>(),
                 localization,
@@ -170,6 +171,7 @@ public sealed class ImageEditPageViewModelShareTests
             Mock.Of<IOpenScreenshotsFolderUseCase>(),
             Mock.Of<ILogService>(),
             notifications,
+            Mock.Of<IClipboardService>(),
             new ColorPickerToolViewModel(
                 Mock.Of<IClipboardService>(),
                 localization,

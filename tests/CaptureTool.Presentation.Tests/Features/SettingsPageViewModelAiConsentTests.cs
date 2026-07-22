@@ -1,6 +1,7 @@
 using CaptureTool.Application.Abstractions.Ai;
 using CaptureTool.Application.Abstractions.Edit.Image.SuperResolution;
 using CaptureTool.Application.Abstractions.Edit.Image.TextExtraction;
+using CaptureTool.Application.Abstractions.Edit.Image.Description;
 using CaptureTool.Application.Abstractions.Localization;
 using CaptureTool.Application.Abstractions.Metrics;
 using CaptureTool.Application.Abstractions.Settings;
@@ -95,10 +96,27 @@ public sealed class SettingsPageViewModelAiConsentTests
         viewModel.AiFeatureConsents.Should().BeEmpty();
     }
 
+    [TestMethod]
+    public async Task LoadAsync_WhenOnlyImageDescriptionFeatureEnabled_ShouldShowImageDescriptionConsentOnly()
+    {
+        SettingsPageViewModel viewModel = CreateViewModel(
+            isImageSuperResolutionEnabled: false,
+            isTextExtractionEnabled: false,
+            isImageDescriptionEnabled: true);
+
+        await viewModel.LoadAsync(TestContext.CancellationToken);
+
+        viewModel.IsAiConsentSettingsVisible.Should().BeTrue();
+        viewModel.AiFeatureConsents.Should().ContainSingle(consent =>
+            consent.FeatureId == AiFeatureId.ImageDescription &&
+            consent.DisplayName == "Localized image description");
+    }
+
     private static SettingsPageViewModel CreateViewModel(
         bool isAiConsentSettingsEnabled = true,
         bool isImageSuperResolutionEnabled = true,
-        bool isTextExtractionEnabled = true)
+        bool isTextExtractionEnabled = true,
+        bool isImageDescriptionEnabled = false)
     {
         var localization = new Mock<ILocalizationService>();
         localization
@@ -106,9 +124,12 @@ public sealed class SettingsPageViewModelAiConsentTests
             .Returns([]);
         localization
             .Setup(service => service.GetString(It.IsAny<string>()))
-            .Returns<string>(resourceKey => resourceKey == "Settings_AiConsent_TextExtractionDisplayName"
-                ? "Localized text extraction"
-                : resourceKey);
+            .Returns<string>(resourceKey => resourceKey switch
+            {
+                "Settings_AiConsent_TextExtractionDisplayName" => "Localized text extraction",
+                "Settings_AiConsent_ImageDescriptionDisplayName" => "Localized image description",
+                _ => resourceKey
+            });
 
         var settings = new Mock<ISettingsService>();
         settings
@@ -123,7 +144,8 @@ public sealed class SettingsPageViewModelAiConsentTests
             .Setup(service => service.GetFeatureConsents())
             .Returns([
                 new(AiFeatureId.TextExtraction, "Text extraction", AiFeatureConsentState.Granted),
-                new(AiFeatureId.ImageSuperResolution, "Super image resolution", AiFeatureConsentState.Granted)
+                new(AiFeatureId.ImageSuperResolution, "Super image resolution", AiFeatureConsentState.Granted),
+                new(AiFeatureId.ImageDescription, "Image description", AiFeatureConsentState.Granted)
             ]);
 
         var appLanguageViewModelFactory = new Mock<IFactoryServiceWithArgs<AppLanguageViewModel, IAppLanguage?>>();
@@ -191,7 +213,9 @@ public sealed class SettingsPageViewModelAiConsentTests
             Mock.Of<IStoreService>(),
             storage.Object,
             appLanguageViewModelFactory.Object,
-            appThemeViewModelFactory.Object);
+            appThemeViewModelFactory.Object,
+            Mock.Of<IImageDescriptionFeatureAvailability>(service =>
+                service.IsImageDescriptionEnabled == isImageDescriptionEnabled));
     }
 
     public TestContext TestContext { get; set; } = null!;

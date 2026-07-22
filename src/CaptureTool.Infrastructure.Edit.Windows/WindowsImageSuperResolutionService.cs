@@ -106,7 +106,7 @@ public sealed class WindowsImageSuperResolutionService : IImageSuperResolutionSe
                 targetSize.Height);
 
             StorageFolder outputFolder = await StorageFolder.GetFolderFromPathAsync(_storageService.GetApplicationTemporaryFolderPath());
-            string outputFileName = $"{Path.GetFileNameWithoutExtension(request.SourceImage.FilePath)}.super-{Guid.NewGuid():N}.png";
+            string outputFileName = GetOutputFileName(request.SourceImage.FilePath);
             StorageFile outputFile = await outputFolder.CreateFileAsync(outputFileName, CreationCollisionOption.ReplaceExisting);
 
             await SaveSoftwareBitmapAsync(scaledBitmap, outputFile);
@@ -137,6 +137,11 @@ public sealed class WindowsImageSuperResolutionService : IImageSuperResolutionSe
         return new(
             Math.Max(1, (int)Math.Round(sourceSize.Width * scaleFactor)),
             Math.Max(1, (int)Math.Round(sourceSize.Height * scaleFactor)));
+    }
+
+    internal static string GetOutputFileName(string sourceFilePath)
+    {
+        return $"{Path.GetFileNameWithoutExtension(sourceFilePath)}.super.png";
     }
 
     private static async Task<SoftwareBitmap> LoadSoftwareBitmapAsync(StorageFile sourceFile)

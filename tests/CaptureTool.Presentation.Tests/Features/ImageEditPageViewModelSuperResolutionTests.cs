@@ -84,14 +84,20 @@ public sealed class ImageEditPageViewModelSuperResolutionTests
         ImageEditPageViewModel viewModel = CreateViewModel(service: service.Object);
 
         await viewModel.LoadAsync(original, CancellationToken.None);
+        int canvasResourceReloads = 0;
+        viewModel.ReloadCanvasResourcesRequested += (_, _) => canvasResourceReloads++;
 
         await viewModel.ToggleSuperResolutionCommand.ExecuteAsync(null);
 
+        ImageDrawable imageDrawable = viewModel.Drawables.OfType<ImageDrawable>().Single();
         viewModel.IsSuperResolutionActive.Should().BeTrue();
         viewModel.ImageFile.Should().Be(generated);
         viewModel.ImageSize.Should().Be(new Size(200, 100));
         viewModel.CropRect.Should().Be(new Rectangle(0, 0, 200, 100));
         viewModel.HasUnsavedChanges.Should().BeTrue();
+        imageDrawable.File.Should().Be(generated);
+        imageDrawable.ImageSize.Should().Be(new Size(200, 100));
+        canvasResourceReloads.Should().Be(1);
 
         await viewModel.ToggleSuperResolutionCommand.ExecuteAsync(null);
 
@@ -100,11 +106,16 @@ public sealed class ImageEditPageViewModelSuperResolutionTests
         viewModel.ImageSize.Should().Be(new Size(100, 50));
         viewModel.CropRect.Should().Be(new Rectangle(0, 0, 100, 50));
         viewModel.HasUnsavedChanges.Should().BeFalse();
+        imageDrawable.File.Should().Be(original);
+        imageDrawable.ImageSize.Should().Be(new Size(100, 50));
+        canvasResourceReloads.Should().Be(2);
 
         await viewModel.ToggleSuperResolutionCommand.ExecuteAsync(null);
 
         viewModel.IsSuperResolutionActive.Should().BeTrue();
         viewModel.ImageFile.Should().Be(generated);
+        imageDrawable.File.Should().Be(generated);
+        canvasResourceReloads.Should().Be(3);
         service.Verify(x => x.GenerateAsync(It.IsAny<ImageSuperResolutionRequest>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -260,6 +271,7 @@ public sealed class ImageEditPageViewModelSuperResolutionTests
             Mock.Of<IOpenScreenshotsFolderUseCase>(),
             Mock.Of<ILogService>(),
             notificationService,
+            Mock.Of<IClipboardService>(),
             new ColorPickerToolViewModel(
                 Mock.Of<IClipboardService>(),
                 localizationService ?? CreateLocalizationService(),
