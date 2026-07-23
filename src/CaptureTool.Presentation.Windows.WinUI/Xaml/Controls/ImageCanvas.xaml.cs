@@ -973,6 +973,13 @@ public sealed partial class ImageCanvas : UserControlBase
     #endregion
 
     #region Drawing
+    public void RedrawCanvas()
+    {
+        InvalidateColorPickerSnapshot();
+        ReconcileSelectedShape();
+        RenderCanvas.Invalidate();
+    }
+
     public void InvalidateCanvas()
     {
         InvalidateColorPickerSnapshot();

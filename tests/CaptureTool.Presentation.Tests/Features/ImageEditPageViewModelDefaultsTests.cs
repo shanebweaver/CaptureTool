@@ -19,6 +19,7 @@ using CaptureTool.Presentation.Notifications;
 using FluentAssertions;
 using Moq;
 using System.Drawing;
+using System.Numerics;
 
 namespace CaptureTool.Presentation.Tests.Features;
 
@@ -113,6 +114,24 @@ public sealed class ImageEditPageViewModelDefaultsTests
 
         viewModel.IsShapesModeActive.Should().BeTrue();
         viewModel.IsChromaKeyModeActive.Should().BeFalse();
+    }
+
+    [TestMethod]
+    public void OnShapeDrawn_ShouldRequestRedrawWithoutInvalidatingCanvasViewport()
+    {
+        var viewModel = CreateViewModel();
+        int redrawRequests = 0;
+        int invalidationRequests = 0;
+        viewModel.RedrawCanvasRequested += (_, _) => redrawRequests++;
+        viewModel.InvalidateCanvasRequested += (_, _) => invalidationRequests++;
+        viewModel.ToggleShapesModeCommand.Execute(null);
+
+        viewModel.OnShapeDrawn(new Vector2(10, 20), new Vector2(110, 120));
+
+        viewModel.Drawables.Should().ContainSingle()
+            .Which.Should().BeOfType<RectangleDrawable>();
+        redrawRequests.Should().Be(1);
+        invalidationRequests.Should().Be(0);
     }
 
     [TestMethod]

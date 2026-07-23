@@ -79,6 +79,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     private int? _textExtractionProcessedRevision;
 
     public event EventHandler? InvalidateCanvasRequested;
+    public event EventHandler? RedrawCanvasRequested;
     public event EventHandler? ReloadCanvasResourcesRequested;
     public event EventHandler? ForceZoomAndCenterRequested;
 
@@ -1006,7 +1007,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
         if (newShape != null)
         {
-            ExecuteEditCommand(new AddDrawableCommand(newShape));
+            ExecuteEditCommand(new AddDrawableCommand(newShape), preserveCanvasViewport: true);
         }
     }
 
@@ -1253,7 +1254,8 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     private void ExecuteEditCommand(
         IImageEditCommand command,
         bool reloadCanvasResources = false,
-        bool preserveForegroundExtractionMode = false)
+        bool preserveForegroundExtractionMode = false,
+        bool preserveCanvasViewport = false)
     {
         _editHistory.Execute(_editSession, command);
         SyncImageGeometryFromSession();
@@ -1266,6 +1268,10 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         if (reloadCanvasResources)
         {
             ReloadCanvasResourcesRequested?.Invoke(this, EventArgs.Empty);
+        }
+        else if (preserveCanvasViewport)
+        {
+            RedrawCanvasRequested?.Invoke(this, EventArgs.Empty);
         }
         else
         {
