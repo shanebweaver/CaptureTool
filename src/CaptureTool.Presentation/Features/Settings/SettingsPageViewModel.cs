@@ -1,8 +1,11 @@
 using CaptureTool.Application.Abstractions.Ai;
 using CaptureTool.Application.Abstractions.Edit.Image.Description;
 using CaptureTool.Application.Abstractions.Edit.Image.ForegroundExtraction;
+using CaptureTool.Application.Abstractions.Edit.Image.ObjectErase;
+using CaptureTool.Application.Abstractions.Edit.Image.ObjectExtraction;
 using CaptureTool.Application.Abstractions.Edit.Image.SuperResolution;
 using CaptureTool.Application.Abstractions.Edit.Image.TextExtraction;
+using CaptureTool.Application.Abstractions.Edit.Video.SuperResolution;
 using CaptureTool.Application.Abstractions.Localization;
 using CaptureTool.Application.Abstractions.Metrics;
 using CaptureTool.Application.Abstractions.Settings;
@@ -71,6 +74,9 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
     private readonly ITextExtractionFeatureAvailability _textExtractionFeatureAvailability;
     private readonly IImageDescriptionFeatureAvailability _imageDescriptionFeatureAvailability;
     private readonly IImageForegroundExtractionFeatureAvailability _imageForegroundExtractionFeatureAvailability;
+    private readonly IImageObjectEraseFeatureAvailability _imageObjectEraseFeatureAvailability;
+    private readonly IImageObjectExtractionFeatureAvailability _imageObjectExtractionFeatureAvailability;
+    private readonly IVideoSuperResolutionFeatureAvailability _videoSuperResolutionFeatureAvailability;
     private readonly ILocalizationService _localizationService;
     private readonly ISettingsService _settingsService;
     private readonly IAppMetricsService _appMetricsService;
@@ -287,7 +293,10 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
         IFactoryServiceWithArgs<AppLanguageViewModel, IAppLanguage?> appLanguageViewModelFactory,
         IFactoryServiceWithArgs<AppThemeViewModel, AppTheme> appThemeViewModelFactory,
         IImageDescriptionFeatureAvailability? imageDescriptionFeatureAvailability = null,
-        IImageForegroundExtractionFeatureAvailability? imageForegroundExtractionFeatureAvailability = null)
+        IImageForegroundExtractionFeatureAvailability? imageForegroundExtractionFeatureAvailability = null,
+        IImageObjectEraseFeatureAvailability? imageObjectEraseFeatureAvailability = null,
+        IImageObjectExtractionFeatureAvailability? imageObjectExtractionFeatureAvailability = null,
+        IVideoSuperResolutionFeatureAvailability? videoSuperResolutionFeatureAvailability = null)
     {
         _goBackAction = goBackAction;
         _restartAppAction = restartAppAction;
@@ -318,6 +327,10 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
         _textExtractionFeatureAvailability = textExtractionFeatureAvailability;
         _imageDescriptionFeatureAvailability = imageDescriptionFeatureAvailability ?? new DisabledImageDescriptionFeatureAvailability();
         _imageForegroundExtractionFeatureAvailability = imageForegroundExtractionFeatureAvailability ?? new DisabledImageForegroundExtractionFeatureAvailability();
+        _imageObjectEraseFeatureAvailability = imageObjectEraseFeatureAvailability ?? new DisabledImageObjectEraseFeatureAvailability();
+        _imageObjectExtractionFeatureAvailability = imageObjectExtractionFeatureAvailability ?? new DisabledImageObjectExtractionFeatureAvailability();
+        _videoSuperResolutionFeatureAvailability =
+            videoSuperResolutionFeatureAvailability ?? new DisabledVideoSuperResolutionFeatureAvailability();
         _localizationService = localizationService;
         _themeService = themeService;
         _settingsService = settingsService;
@@ -745,6 +758,9 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
             AiFeatureId.TextExtraction => "Settings_AiConsent_TextExtractionDisplayName",
             AiFeatureId.ImageDescription => "Settings_AiConsent_ImageDescriptionDisplayName",
             AiFeatureId.ImageForegroundExtraction => "Settings_AiConsent_ImageForegroundExtractionDisplayName",
+            AiFeatureId.ImageObjectErase => "Settings_AiConsent_ImageObjectEraseDisplayName",
+            AiFeatureId.ImageObjectExtraction => "Settings_AiConsent_ImageObjectExtractionDisplayName",
+            AiFeatureId.VideoSuperResolution => "Settings_AiConsent_VideoSuperResolutionDisplayName",
             _ => null
         };
 
@@ -767,6 +783,9 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
             AiFeatureId.ImageSuperResolution => _imageSuperResolutionFeatureAvailability.IsImageSuperResolutionEnabled,
             AiFeatureId.ImageDescription => _imageDescriptionFeatureAvailability.IsImageDescriptionEnabled,
             AiFeatureId.ImageForegroundExtraction => _imageForegroundExtractionFeatureAvailability.IsImageForegroundExtractionEnabled,
+            AiFeatureId.ImageObjectErase => _imageObjectEraseFeatureAvailability.IsImageObjectEraseEnabled,
+            AiFeatureId.ImageObjectExtraction => _imageObjectExtractionFeatureAvailability.IsImageObjectExtractionEnabled,
+            AiFeatureId.VideoSuperResolution => _videoSuperResolutionFeatureAvailability.IsVideoSuperResolutionEnabled,
             _ => false
         };
     }
@@ -779,5 +798,21 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
     private sealed class DisabledImageForegroundExtractionFeatureAvailability : IImageForegroundExtractionFeatureAvailability
     {
         public bool IsImageForegroundExtractionEnabled => false;
+    }
+
+    private sealed class DisabledImageObjectEraseFeatureAvailability : IImageObjectEraseFeatureAvailability
+    {
+        public bool IsImageObjectEraseEnabled => false;
+    }
+
+    private sealed class DisabledImageObjectExtractionFeatureAvailability : IImageObjectExtractionFeatureAvailability
+    {
+        public bool IsImageObjectExtractionEnabled => false;
+    }
+
+    private sealed class DisabledVideoSuperResolutionFeatureAvailability :
+        IVideoSuperResolutionFeatureAvailability
+    {
+        public bool IsVideoSuperResolutionEnabled => false;
     }
 }

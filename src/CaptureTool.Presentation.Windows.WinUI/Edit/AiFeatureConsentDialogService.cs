@@ -67,6 +67,21 @@ internal sealed class AiFeatureConsentDialogService : IAiFeatureConsentDialogSer
                 GetString(
                     "AiFeatureConsentDialog_ImageForegroundExtractionContent",
                     "Background Removal uses an on-device AI model to isolate the subject you select and remove its background.")),
+            AiFeatureId.ImageObjectErase => (
+                GetString("AiFeatureConsentDialog_ImageObjectEraseTitle", "Allow Object Erase?"),
+                GetString(
+                    "AiFeatureConsentDialog_ImageObjectEraseContent",
+                    "Object Erase uses on-device AI models to identify the object you select, remove it, and fill the area from its surroundings.")),
+            AiFeatureId.ImageObjectExtraction => (
+                GetString("AiFeatureConsentDialog_ImageObjectExtractionTitle", "Allow Object Extraction?"),
+                GetString(
+                    "AiFeatureConsentDialog_ImageObjectExtractionContent",
+                    "Object Extraction uses an on-device AI model to identify and extract the object you select from the current image.")),
+            AiFeatureId.VideoSuperResolution => (
+                GetString("AiFeatureConsentDialog_VideoSuperResolutionTitle", "Allow Video Super Resolution?"),
+                GetString(
+                    "AiFeatureConsentDialog_VideoSuperResolutionContent",
+                    "Video Super Resolution uses an on-device AI model to create a sharper, higher-resolution copy of the current video.")),
             _ => (
                 "Allow AI feature?",
                 "This feature uses an on-device AI model to process the current image.")

@@ -7,6 +7,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="using:CaptureTool.Presentation.Windows.WinUI.Xaml.Pages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:utils="using:CaptureTool.Presentation.Windows.WinUI.Utils"
     xmlns:videoedit="using:CaptureTool.Presentation.Features.VideoEdit"
     d:DataContext="{d:DesignInstance Type=videoedit:VideoEditPageViewModel}"
     mc:Ignorable="d">
@@ -27,6 +28,18 @@
                 Icon="Trim"
                 IsChecked="{x:Bind ViewModel.IsInTrimMode, Mode=OneWay}"
                 IsEnabled="{x:Bind ViewModel.IsVideoReady, Mode=OneWay}" />
+
+            <AppBarToggleButton
+                x:Uid="VideoEdit_SuperResolutionButton"
+                AutomationProperties.AutomationId="VideoEdit_SuperResolutionButton"
+                Command="{x:Bind ViewModel.ToggleVideoSuperResolutionCommand}"
+                IsChecked="{x:Bind ViewModel.IsVideoSuperResolutionActive, Mode=OneWay}"
+                IsEnabled="{x:Bind ViewModel.IsVideoSuperResolutionAvailable, Mode=OneWay}"
+                Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.IsVideoSuperResolutionFeatureEnabled), Mode=OneWay}">
+                <AppBarToggleButton.Icon>
+                    <FontIcon Glyph="&#xE945;" />
+                </AppBarToggleButton.Icon>
+            </AppBarToggleButton>
 
             <AppBarSeparator />
 
@@ -98,6 +111,27 @@
                         FontSize="16"
                         Opacity="0.7"
                         Text="Preparing preview..." />
+                </StackPanel>
+            </Grid>
+
+            <Grid
+                Background="{ThemeResource AcrylicBackgroundFillColorBaseBrush}"
+                Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.IsVideoSuperResolutionGenerating), Mode=OneWay}">
+                <StackPanel
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Spacing="16">
+                    <ProgressRing
+                        x:Uid="VideoEdit_SuperResolutionProgressRing"
+                        Width="48"
+                        Height="48"
+                        IsActive="{x:Bind ViewModel.IsVideoSuperResolutionGenerating, Mode=OneWay}" />
+                    <TextBlock
+                        x:Uid="VideoEdit_SuperResolutionProgressText"
+                        HorizontalAlignment="Center"
+                        FontSize="16"
+                        Opacity="0.7"
+                        Text="Enhancing video..." />
                 </StackPanel>
             </Grid>
 
