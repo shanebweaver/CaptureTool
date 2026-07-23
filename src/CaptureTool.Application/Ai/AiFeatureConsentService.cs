@@ -19,7 +19,10 @@ internal sealed class AiFeatureConsentService : IAiFeatureConsentService
             CreateConsent(AiFeatureId.TextExtraction, "Text extraction"),
             CreateConsent(AiFeatureId.ImageSuperResolution, "Super image resolution"),
             CreateConsent(AiFeatureId.ImageDescription, "Image description"),
-            CreateConsent(AiFeatureId.ImageForegroundExtraction, "Background removal")
+            CreateConsent(AiFeatureId.ImageForegroundExtraction, "Background removal"),
+            CreateConsent(AiFeatureId.ImageObjectErase, "Object erase"),
+            CreateConsent(AiFeatureId.ImageObjectExtraction, "Object extraction"),
+            CreateConsent(AiFeatureId.VideoSuperResolution, "Video super resolution")
         ];
     }
 
@@ -58,6 +61,9 @@ internal sealed class AiFeatureConsentService : IAiFeatureConsentService
             AiFeatureId.ImageSuperResolution => CaptureToolSettings.Settings_AiConsent_ImageSuperResolution,
             AiFeatureId.ImageDescription => CaptureToolSettings.Settings_AiConsent_ImageDescription,
             AiFeatureId.ImageForegroundExtraction => CaptureToolSettings.Settings_AiConsent_ImageForegroundExtraction,
+            AiFeatureId.ImageObjectErase => CaptureToolSettings.Settings_AiConsent_ImageObjectErase,
+            AiFeatureId.ImageObjectExtraction => CaptureToolSettings.Settings_AiConsent_ImageObjectExtraction,
+            AiFeatureId.VideoSuperResolution => CaptureToolSettings.Settings_AiConsent_VideoSuperResolution,
             _ => throw new ArgumentOutOfRangeException(nameof(featureId), featureId, null)
         };
     }

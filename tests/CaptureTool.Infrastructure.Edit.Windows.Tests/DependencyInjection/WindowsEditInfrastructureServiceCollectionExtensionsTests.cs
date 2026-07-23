@@ -1,9 +1,11 @@
 using CaptureTool.Application.Abstractions.Edit.Image.ChromaKey;
 using CaptureTool.Application.Abstractions.Edit.Image.Description;
 using CaptureTool.Application.Abstractions.Edit.Image.ForegroundExtraction;
+using CaptureTool.Application.Abstractions.Edit.Image.ObjectErase;
 using CaptureTool.Application.Abstractions.Edit.Image.Rendering;
 using CaptureTool.Application.Abstractions.Edit.Image.SuperResolution;
 using CaptureTool.Application.Abstractions.Edit.Image.TextExtraction;
+using CaptureTool.Application.Abstractions.Edit.Video.SuperResolution;
 using CaptureTool.Infrastructure.Edit.Windows.ChromaKey;
 using CaptureTool.Infrastructure.Edit.Windows.DependencyInjection;
 using FluentAssertions;
@@ -26,6 +28,8 @@ public sealed class WindowsEditInfrastructureServiceCollectionExtensionsTests
         services.ShouldContainSingleton<ITextExtractionService, WindowsTextExtractionService>();
         services.ShouldContainSingleton<IImageDescriptionService, WindowsImageDescriptionService>();
         services.ShouldContainSingleton<IImageForegroundExtractionService, WindowsImageForegroundExtractionService>();
+        services.ShouldContainSingleton<IImageObjectEraseService, WindowsImageObjectEraseService>();
+        services.ShouldContainSingleton<IVideoSuperResolutionService, WindowsVideoSuperResolutionService>();
         services.ShouldContainSingleton<IImageCanvasExporter, Win2DImageCanvasExporter>();
         services.ShouldContainSingleton<IImageCanvasPrinter, Win2DImageCanvasPrinter>();
     }

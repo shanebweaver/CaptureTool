@@ -174,6 +174,12 @@ public sealed partial class VideoEditPage : VideoEditPageBase
         {
             SyncMediaPositionToPlayhead();
         }
+
+        if (e.PropertyName == nameof(VideoEditPageViewModel.IsVideoSuperResolutionGenerating) &&
+            ViewModel.IsVideoSuperResolutionGenerating)
+        {
+            PauseMediaPlayers();
+        }
     }
 
     private bool TryInitializeVideo()
@@ -192,11 +198,18 @@ public sealed partial class VideoEditPage : VideoEditPageBase
         try
         {
             _originalVideoPath = filePath;
-            _hasLoadedOriginalDuration = false;
+            _hasLoadedOriginalDuration = ViewModel.VideoDurationSeconds > 0;
             _renderedTrimPreviewVersion++;
             DeleteRenderedTrimPreview();
             await LoadMediaSourceAsync(_originalMediaPlayer, filePath);
-            ShowOriginalPlayer();
+            if (!ViewModel.IsInTrimMode && ViewModel.IsTrimmed)
+            {
+                await UpdateRenderedTrimPreviewAsync();
+            }
+            else
+            {
+                ShowOriginalPlayer();
+            }
         }
         catch (Exception)
         {

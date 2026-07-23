@@ -1571,4 +1571,139 @@ SOFTWARE.
   <data name="ForegroundExtractionStatus_Failed" xml:space="preserve">
     <value>背景移除失败。</value>
   </data>
+  <data name="ImageEdit_ObjectEraseButton.Label" xml:space="preserve">
+    <value>擦除对象</value>
+  </data>
+  <data name="ImageEdit_ObjectEraseButton.AutomationProperties.Name" xml:space="preserve">
+    <value>从图像中擦除对象</value>
+  </data>
+  <data name="ImageEdit_ObjectEraseButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>使用设备上的 AI 擦除对象</value>
+  </data>
+  <data name="ObjectEraseToolbar_Instruction.Text" xml:space="preserve">
+    <value>单击要擦除的对象。</value>
+  </data>
+  <data name="ImageEdit_ObjectEraseProgressRing.AutomationProperties.Name" xml:space="preserve">
+    <value>正在擦除所选对象</value>
+  </data>
+  <data name="AiFeatureConsentDialog_ImageObjectEraseTitle" xml:space="preserve">
+    <value>允许对象擦除吗？</value>
+  </data>
+  <data name="AiFeatureConsentDialog_ImageObjectEraseContent" xml:space="preserve">
+    <value>对象擦除功能使用设备上的 AI 模型来识别你选择的对象、将其移除，并根据周围内容填充该区域。</value>
+  </data>
+  <data name="Settings_AiConsent_ImageObjectEraseDisplayName" xml:space="preserve">
+    <value>对象擦除</value>
+  </data>
+  <data name="ObjectEraseStatus_Success" xml:space="preserve">
+    <value>对象已擦除。</value>
+  </data>
+  <data name="ObjectEraseStatus_NotSupported" xml:space="preserve">
+    <value>此电脑不支持对象擦除。</value>
+  </data>
+  <data name="ObjectEraseStatus_Disabled" xml:space="preserve">
+    <value>此电脑已禁用对象擦除。</value>
+  </data>
+  <data name="ObjectEraseStatus_NotAvailable" xml:space="preserve">
+    <value>对象擦除不可用。</value>
+  </data>
+  <data name="ObjectEraseStatus_PreparationFailed" xml:space="preserve">
+    <value>无法准备对象擦除。</value>
+  </data>
+  <data name="ObjectEraseStatus_NotReady" xml:space="preserve">
+    <value>对象擦除尚未就绪。</value>
+  </data>
+  <data name="ObjectEraseStatus_Failed" xml:space="preserve">
+    <value>对象擦除失败。</value>
+  </data>
+  <data name="ImageEdit_ObjectExtractionButton.Label" xml:space="preserve">
+    <value>提取对象</value>
+  </data>
+  <data name="ImageEdit_ObjectExtractionButton.AutomationProperties.Name" xml:space="preserve">
+    <value>从图像中提取对象</value>
+  </data>
+  <data name="ImageEdit_ObjectExtractionButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>使用设备上的 AI 提取所选对象</value>
+  </data>
+  <data name="ObjectExtractionToolbar_Instruction.Text" xml:space="preserve">
+    <value>单击要提取的对象。</value>
+  </data>
+  <data name="ImageEdit_ObjectExtractionProgressRing.AutomationProperties.Name" xml:space="preserve">
+    <value>正在提取所选对象</value>
+  </data>
+  <data name="AiFeatureConsentDialog_ImageObjectExtractionTitle" xml:space="preserve">
+    <value>允许对象提取吗？</value>
+  </data>
+  <data name="AiFeatureConsentDialog_ImageObjectExtractionContent" xml:space="preserve">
+    <value>对象提取功能使用设备上的 AI 模型，从当前图像中识别并提取你选择的对象。</value>
+  </data>
+  <data name="Settings_AiConsent_ImageObjectExtractionDisplayName" xml:space="preserve">
+    <value>对象提取</value>
+  </data>
+  <data name="ObjectExtractionStatus_Success" xml:space="preserve">
+    <value>对象已提取。</value>
+  </data>
+  <data name="ObjectExtractionStatus_NotSupported" xml:space="preserve">
+    <value>此电脑不支持对象提取。</value>
+  </data>
+  <data name="ObjectExtractionStatus_Disabled" xml:space="preserve">
+    <value>此电脑已禁用对象提取。</value>
+  </data>
+  <data name="ObjectExtractionStatus_NotAvailable" xml:space="preserve">
+    <value>对象提取不可用。</value>
+  </data>
+  <data name="ObjectExtractionStatus_PreparationFailed" xml:space="preserve">
+    <value>无法准备对象提取。</value>
+  </data>
+  <data name="ObjectExtractionStatus_NotReady" xml:space="preserve">
+    <value>对象提取尚未就绪。</value>
+  </data>
+  <data name="ObjectExtractionStatus_Failed" xml:space="preserve">
+    <value>对象提取失败。</value>
+  </data>
+  <data name="VideoEdit_SuperResolutionButton.Label" xml:space="preserve">
+    <value>视频超分辨率</value>
+  </data>
+  <data name="VideoEdit_SuperResolutionButton.AutomationProperties.Name" xml:space="preserve">
+    <value>视频超分辨率</value>
+  </data>
+  <data name="VideoEdit_SuperResolutionButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>使用 AI 增强视频</value>
+  </data>
+  <data name="VideoEdit_SuperResolutionProgressRing.AutomationProperties.Name" xml:space="preserve">
+    <value>正在增强视频</value>
+  </data>
+  <data name="VideoEdit_SuperResolutionProgressText.Text" xml:space="preserve">
+    <value>正在增强视频...</value>
+  </data>
+  <data name="AiFeatureConsentDialog_VideoSuperResolutionTitle" xml:space="preserve">
+    <value>允许视频超分辨率？</value>
+  </data>
+  <data name="AiFeatureConsentDialog_VideoSuperResolutionContent" xml:space="preserve">
+    <value>视频超分辨率使用设备上的 AI 模型，为当前视频创建更清晰、分辨率更高的副本。</value>
+  </data>
+  <data name="Settings_AiConsent_VideoSuperResolutionDisplayName" xml:space="preserve">
+    <value>视频超分辨率</value>
+  </data>
+  <data name="VideoSuperResolutionStatus_NotSupported" xml:space="preserve">
+    <value>此设备不支持视频超分辨率。</value>
+  </data>
+  <data name="VideoSuperResolutionStatus_Disabled" xml:space="preserve">
+    <value>视频超分辨率已在 Windows 设置中禁用。</value>
+  </data>
+  <data name="VideoSuperResolutionStatus_NotAvailable" xml:space="preserve">
+    <value>视频超分辨率当前不可用。</value>
+  </data>
+  <data name="VideoSuperResolutionStatus_PreparationFailed" xml:space="preserve">
+    <value>无法准备视频超分辨率。</value>
+  </data>
+  <data name="VideoSuperResolutionStatus_NotReady" xml:space="preserve">
+    <value>视频超分辨率尚未就绪。</value>
+  </data>
+  <data name="VideoSuperResolutionStatus_UnsupportedVideo" xml:space="preserve">
+    <value>不支持此视频的分辨率或帧率。</value>
+  </data>
+  <data name="VideoSuperResolutionStatus_Failed" xml:space="preserve">
+    <value>视频增强失败。</value>
+  </data>
 </root>

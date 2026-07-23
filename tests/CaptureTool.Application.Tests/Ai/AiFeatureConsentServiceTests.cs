@@ -93,5 +93,78 @@ public sealed class AiFeatureConsentServiceTests
         settings.Verify(service => service.Set(CaptureToolSettings.Settings_AiConsent_ImageForegroundExtraction, true), Times.Once);
     }
 
+    [TestMethod]
+    public void GetFeatureConsents_IncludesObjectErase()
+    {
+        var settings = new Mock<ISettingsService>();
+        var service = new AiFeatureConsentService(settings.Object);
+
+        service.GetFeatureConsents().Should().Contain(consent =>
+            consent.FeatureId == AiFeatureId.ImageObjectErase &&
+            consent.DisplayName == "Object erase");
+    }
+
+    [TestMethod]
+    public async Task SetConsentAsync_PersistsObjectEraseConsent()
+    {
+        var settings = new Mock<ISettingsService>();
+        var service = new AiFeatureConsentService(settings.Object);
+
+        await service.SetConsentAsync(AiFeatureId.ImageObjectErase, true, TestContext.CancellationToken);
+
+        settings.Verify(service => service.Set(CaptureToolSettings.Settings_AiConsent_ImageObjectErase, true), Times.Once);
+    }
+
+    [TestMethod]
+    public void GetFeatureConsents_IncludesObjectExtraction()
+    {
+        var settings = new Mock<ISettingsService>();
+        var service = new AiFeatureConsentService(settings.Object);
+
+        service.GetFeatureConsents().Should().Contain(consent =>
+            consent.FeatureId == AiFeatureId.ImageObjectExtraction &&
+            consent.DisplayName == "Object extraction");
+    }
+
+    [TestMethod]
+    public async Task SetConsentAsync_PersistsObjectExtractionConsent()
+    {
+        var settings = new Mock<ISettingsService>();
+        var service = new AiFeatureConsentService(settings.Object);
+
+        await service.SetConsentAsync(AiFeatureId.ImageObjectExtraction, true, TestContext.CancellationToken);
+
+        settings.Verify(service => service.Set(CaptureToolSettings.Settings_AiConsent_ImageObjectExtraction, true), Times.Once);
+    }
+
+    [TestMethod]
+    public void GetFeatureConsents_IncludesVideoSuperResolution()
+    {
+        var settings = new Mock<ISettingsService>();
+        var service = new AiFeatureConsentService(settings.Object);
+
+        service.GetFeatureConsents().Should().Contain(consent =>
+            consent.FeatureId == AiFeatureId.VideoSuperResolution &&
+            consent.DisplayName == "Video super resolution");
+    }
+
+    [TestMethod]
+    public async Task SetConsentAsync_PersistsVideoSuperResolutionConsent()
+    {
+        var settings = new Mock<ISettingsService>();
+        var service = new AiFeatureConsentService(settings.Object);
+
+        await service.SetConsentAsync(
+            AiFeatureId.VideoSuperResolution,
+            true,
+            TestContext.CancellationToken);
+
+        settings.Verify(
+            service => service.Set(
+                CaptureToolSettings.Settings_AiConsent_VideoSuperResolution,
+                true),
+            Times.Once);
+    }
+
     public TestContext TestContext { get; set; } = null!;
 }

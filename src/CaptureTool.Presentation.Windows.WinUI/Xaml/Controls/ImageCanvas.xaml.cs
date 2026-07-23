@@ -141,10 +141,41 @@ public sealed partial class ImageCanvas : UserControlBase
     {
         if (d is ImageCanvas control)
         {
-            control.ProtectedCursor = e.NewValue is true
-                ? InputSystemCursor.Create(InputSystemCursorShape.Cross)
-                : null;
+            control.UpdatePointSelectionCursor();
+            control.UpdateTouchInputLock();
+        }
+    }
 
+    public static readonly DependencyProperty IsObjectEraseModeEnabledProperty = DependencyProperty.Register(
+        nameof(IsObjectEraseModeEnabled),
+        typeof(bool),
+        typeof(ImageCanvas),
+        new PropertyMetadata(false, OnIsObjectEraseModeEnabledPropertyChanged));
+
+    private static void OnIsObjectEraseModeEnabledPropertyChanged(
+        DependencyObject d,
+        DependencyPropertyChangedEventArgs e)
+    {
+        if (d is ImageCanvas control)
+        {
+            control.UpdatePointSelectionCursor();
+            control.UpdateTouchInputLock();
+        }
+    }
+
+    public static readonly DependencyProperty IsObjectExtractionModeEnabledProperty = DependencyProperty.Register(
+        nameof(IsObjectExtractionModeEnabled),
+        typeof(bool),
+        typeof(ImageCanvas),
+        new PropertyMetadata(false, OnIsObjectExtractionModeEnabledPropertyChanged));
+
+    private static void OnIsObjectExtractionModeEnabledPropertyChanged(
+        DependencyObject d,
+        DependencyPropertyChangedEventArgs e)
+    {
+        if (d is ImageCanvas control)
+        {
+            control.UpdatePointSelectionCursor();
             control.UpdateTouchInputLock();
         }
     }
@@ -386,6 +417,18 @@ public sealed partial class ImageCanvas : UserControlBase
         set => Set(IsForegroundExtractionModeEnabledProperty, value);
     }
 
+    public bool IsObjectEraseModeEnabled
+    {
+        get => Get<bool>(IsObjectEraseModeEnabledProperty);
+        set => Set(IsObjectEraseModeEnabledProperty, value);
+    }
+
+    public bool IsObjectExtractionModeEnabled
+    {
+        get => Get<bool>(IsObjectExtractionModeEnabledProperty);
+        set => Set(IsObjectExtractionModeEnabledProperty, value);
+    }
+
     public IReadOnlyList<RecognizedTextRegion> TextExtractionRegions
     {
         get => Get<IReadOnlyList<RecognizedTextRegion>>(TextExtractionRegionsProperty) ?? [];
@@ -467,6 +510,8 @@ public sealed partial class ImageCanvas : UserControlBase
     public event EventHandler<Color>? ColorPickerColorPicked;
     public event EventHandler<string>? ExtractedTextSelectionChanged;
     public event EventHandler<Vector2>? ForegroundExtractionRequested;
+    public event EventHandler<Vector2>? ObjectEraseRequested;
+    public event EventHandler<Vector2>? ObjectExtractionRequested;
     public event EventHandler<Point>? ImageContextMenuRequested;
     public event EventHandler<Point>? ShapeContextMenuRequested;
 
@@ -640,7 +685,9 @@ public sealed partial class ImageCanvas : UserControlBase
             IsTextModeEnabled ||
             IsColorPickerModeEnabled ||
             IsTextExtractionOverlayEnabled ||
-            IsForegroundExtractionModeEnabled;
+            IsForegroundExtractionModeEnabled ||
+            IsObjectEraseModeEnabled ||
+            IsObjectExtractionModeEnabled;
 
         if (shouldIgnoreTouchInput == _isIgnoringTouchInputForEditing)
         {
@@ -1428,7 +1475,7 @@ public sealed partial class ImageCanvas : UserControlBase
 
     private void RenderCanvas_PointerEntered(object sender, PointerRoutedEventArgs e)
     {
-        if (IsForegroundExtractionModeEnabled)
+        if (IsForegroundExtractionModeEnabled || IsObjectEraseModeEnabled || IsObjectExtractionModeEnabled)
         {
             ProtectedCursor = InputSystemCursor.Create(InputSystemCursorShape.Cross);
             return;
@@ -1444,7 +1491,7 @@ public sealed partial class ImageCanvas : UserControlBase
 
     private void RenderCanvas_PointerExited(object sender, PointerRoutedEventArgs e)
     {
-        if (IsForegroundExtractionModeEnabled)
+        if (IsForegroundExtractionModeEnabled || IsObjectEraseModeEnabled || IsObjectExtractionModeEnabled)
         {
             ProtectedCursor = null;
             return;
@@ -1477,6 +1524,16 @@ public sealed partial class ImageCanvas : UserControlBase
     #region Panning
     private void RootContainer_PointerPressed(object sender, PointerRoutedEventArgs e)
     {
+        if (IsObjectExtractionModeEnabled && TryHandleObjectExtractionPointerPressed(e))
+        {
+            return;
+        }
+
+        if (IsObjectEraseModeEnabled && TryHandleObjectErasePointerPressed(e))
+        {
+            return;
+        }
+
         if (IsForegroundExtractionModeEnabled && TryHandleForegroundExtractionPointerPressed(e))
         {
             return;
@@ -1585,6 +1642,51 @@ public sealed partial class ImageCanvas : UserControlBase
         ForegroundExtractionRequested?.Invoke(this, DisplayPointToCanvasPoint(position));
         e.Handled = true;
         return true;
+    }
+
+    private bool TryHandleObjectErasePointerPressed(PointerRoutedEventArgs e)
+    {
+        if (!IsPrimaryPointerPressed(e, RenderCanvas))
+        {
+            return false;
+        }
+
+        Point position = e.GetCurrentPoint(RenderCanvas).Position;
+        if (!IsPointInsideRenderCanvas(position))
+        {
+            return false;
+        }
+
+        ObjectEraseRequested?.Invoke(this, DisplayPointToCanvasPoint(position));
+        e.Handled = true;
+        return true;
+    }
+
+    private bool TryHandleObjectExtractionPointerPressed(PointerRoutedEventArgs e)
+    {
+        if (!IsPrimaryPointerPressed(e, RenderCanvas))
+        {
+            return false;
+        }
+
+        Point position = e.GetCurrentPoint(RenderCanvas).Position;
+        if (!IsPointInsideRenderCanvas(position))
+        {
+            return false;
+        }
+
+        ObjectExtractionRequested?.Invoke(this, DisplayPointToCanvasPoint(position));
+        e.Handled = true;
+        return true;
+    }
+
+    private void UpdatePointSelectionCursor()
+    {
+        ProtectedCursor = IsForegroundExtractionModeEnabled ||
+            IsObjectEraseModeEnabled ||
+            IsObjectExtractionModeEnabled
+            ? InputSystemCursor.Create(InputSystemCursorShape.Cross)
+            : null;
     }
 
     private bool TryHandleContextMenuRequest(PointerRoutedEventArgs e)

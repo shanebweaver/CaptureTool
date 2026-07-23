@@ -1571,4 +1571,139 @@ SOFTWARE.
   <data name="ForegroundExtractionStatus_Failed" xml:space="preserve">
     <value>Error al quitar el fondo.</value>
   </data>
+  <data name="ImageEdit_ObjectEraseButton.Label" xml:space="preserve">
+    <value>Borrar objeto</value>
+  </data>
+  <data name="ImageEdit_ObjectEraseButton.AutomationProperties.Name" xml:space="preserve">
+    <value>Borrar un objeto de la imagen</value>
+  </data>
+  <data name="ImageEdit_ObjectEraseButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Borrar un objeto con IA en el dispositivo</value>
+  </data>
+  <data name="ObjectEraseToolbar_Instruction.Text" xml:space="preserve">
+    <value>Haz clic en el objeto que quieras borrar.</value>
+  </data>
+  <data name="ImageEdit_ObjectEraseProgressRing.AutomationProperties.Name" xml:space="preserve">
+    <value>Borrando el objeto seleccionado</value>
+  </data>
+  <data name="AiFeatureConsentDialog_ImageObjectEraseTitle" xml:space="preserve">
+    <value>¿Permitir el borrado de objetos?</value>
+  </data>
+  <data name="AiFeatureConsentDialog_ImageObjectEraseContent" xml:space="preserve">
+    <value>El borrado de objetos usa modelos de IA en el dispositivo para identificar el objeto seleccionado, eliminarlo y rellenar el área a partir de su entorno.</value>
+  </data>
+  <data name="Settings_AiConsent_ImageObjectEraseDisplayName" xml:space="preserve">
+    <value>Borrado de objetos</value>
+  </data>
+  <data name="ObjectEraseStatus_Success" xml:space="preserve">
+    <value>Objeto borrado.</value>
+  </data>
+  <data name="ObjectEraseStatus_NotSupported" xml:space="preserve">
+    <value>Este PC no admite el borrado de objetos.</value>
+  </data>
+  <data name="ObjectEraseStatus_Disabled" xml:space="preserve">
+    <value>El borrado de objetos está deshabilitado en este PC.</value>
+  </data>
+  <data name="ObjectEraseStatus_NotAvailable" xml:space="preserve">
+    <value>El borrado de objetos no está disponible.</value>
+  </data>
+  <data name="ObjectEraseStatus_PreparationFailed" xml:space="preserve">
+    <value>No se pudo preparar el borrado de objetos.</value>
+  </data>
+  <data name="ObjectEraseStatus_NotReady" xml:space="preserve">
+    <value>El borrado de objetos no está listo.</value>
+  </data>
+  <data name="ObjectEraseStatus_Failed" xml:space="preserve">
+    <value>Error al borrar el objeto.</value>
+  </data>
+  <data name="ImageEdit_ObjectExtractionButton.Label" xml:space="preserve">
+    <value>Extraer objeto</value>
+  </data>
+  <data name="ImageEdit_ObjectExtractionButton.AutomationProperties.Name" xml:space="preserve">
+    <value>Extraer un objeto de la imagen</value>
+  </data>
+  <data name="ImageEdit_ObjectExtractionButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Extraer un objeto seleccionado con IA en el dispositivo</value>
+  </data>
+  <data name="ObjectExtractionToolbar_Instruction.Text" xml:space="preserve">
+    <value>Haz clic en el objeto que quieras extraer.</value>
+  </data>
+  <data name="ImageEdit_ObjectExtractionProgressRing.AutomationProperties.Name" xml:space="preserve">
+    <value>Extrayendo el objeto seleccionado</value>
+  </data>
+  <data name="AiFeatureConsentDialog_ImageObjectExtractionTitle" xml:space="preserve">
+    <value>¿Permitir la extracción de objetos?</value>
+  </data>
+  <data name="AiFeatureConsentDialog_ImageObjectExtractionContent" xml:space="preserve">
+    <value>La extracción de objetos usa un modelo de IA en el dispositivo para identificar y extraer de la imagen actual el objeto que selecciones.</value>
+  </data>
+  <data name="Settings_AiConsent_ImageObjectExtractionDisplayName" xml:space="preserve">
+    <value>Extracción de objetos</value>
+  </data>
+  <data name="ObjectExtractionStatus_Success" xml:space="preserve">
+    <value>Objeto extraído.</value>
+  </data>
+  <data name="ObjectExtractionStatus_NotSupported" xml:space="preserve">
+    <value>Este PC no admite la extracción de objetos.</value>
+  </data>
+  <data name="ObjectExtractionStatus_Disabled" xml:space="preserve">
+    <value>La extracción de objetos está deshabilitada en este PC.</value>
+  </data>
+  <data name="ObjectExtractionStatus_NotAvailable" xml:space="preserve">
+    <value>La extracción de objetos no está disponible.</value>
+  </data>
+  <data name="ObjectExtractionStatus_PreparationFailed" xml:space="preserve">
+    <value>No se pudo preparar la extracción de objetos.</value>
+  </data>
+  <data name="ObjectExtractionStatus_NotReady" xml:space="preserve">
+    <value>La extracción de objetos no está lista.</value>
+  </data>
+  <data name="ObjectExtractionStatus_Failed" xml:space="preserve">
+    <value>Error al extraer el objeto.</value>
+  </data>
+  <data name="VideoEdit_SuperResolutionButton.Label" xml:space="preserve">
+    <value>Superresolución de vídeo</value>
+  </data>
+  <data name="VideoEdit_SuperResolutionButton.AutomationProperties.Name" xml:space="preserve">
+    <value>Superresolución de vídeo</value>
+  </data>
+  <data name="VideoEdit_SuperResolutionButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Mejorar vídeo con IA</value>
+  </data>
+  <data name="VideoEdit_SuperResolutionProgressRing.AutomationProperties.Name" xml:space="preserve">
+    <value>Mejorando vídeo</value>
+  </data>
+  <data name="VideoEdit_SuperResolutionProgressText.Text" xml:space="preserve">
+    <value>Mejorando vídeo...</value>
+  </data>
+  <data name="AiFeatureConsentDialog_VideoSuperResolutionTitle" xml:space="preserve">
+    <value>¿Permitir la superresolución de vídeo?</value>
+  </data>
+  <data name="AiFeatureConsentDialog_VideoSuperResolutionContent" xml:space="preserve">
+    <value>La superresolución de vídeo usa un modelo de IA en el dispositivo para crear una copia más nítida y de mayor resolución del vídeo actual.</value>
+  </data>
+  <data name="Settings_AiConsent_VideoSuperResolutionDisplayName" xml:space="preserve">
+    <value>Superresolución de vídeo</value>
+  </data>
+  <data name="VideoSuperResolutionStatus_NotSupported" xml:space="preserve">
+    <value>La superresolución de vídeo no es compatible con este dispositivo.</value>
+  </data>
+  <data name="VideoSuperResolutionStatus_Disabled" xml:space="preserve">
+    <value>La superresolución de vídeo está deshabilitada en la configuración de Windows.</value>
+  </data>
+  <data name="VideoSuperResolutionStatus_NotAvailable" xml:space="preserve">
+    <value>La superresolución de vídeo no está disponible actualmente.</value>
+  </data>
+  <data name="VideoSuperResolutionStatus_PreparationFailed" xml:space="preserve">
+    <value>No se pudo preparar la superresolución de vídeo.</value>
+  </data>
+  <data name="VideoSuperResolutionStatus_NotReady" xml:space="preserve">
+    <value>La superresolución de vídeo no está lista.</value>
+  </data>
+  <data name="VideoSuperResolutionStatus_UnsupportedVideo" xml:space="preserve">
+    <value>La resolución o la velocidad de fotogramas de este vídeo no es compatible.</value>
+  </data>
+  <data name="VideoSuperResolutionStatus_Failed" xml:space="preserve">
+    <value>Error al mejorar el vídeo.</value>
+  </data>
 </root>

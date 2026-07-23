@@ -1571,4 +1571,139 @@ SOFTWARE.
   <data name="ForegroundExtractionStatus_Failed" xml:space="preserve">
     <value>Не удалось удалить фон.</value>
   </data>
+  <data name="ImageEdit_ObjectEraseButton.Label" xml:space="preserve">
+    <value>Удалить объект</value>
+  </data>
+  <data name="ImageEdit_ObjectEraseButton.AutomationProperties.Name" xml:space="preserve">
+    <value>Удалить объект с изображения</value>
+  </data>
+  <data name="ImageEdit_ObjectEraseButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Удалить объект с помощью ИИ на устройстве</value>
+  </data>
+  <data name="ObjectEraseToolbar_Instruction.Text" xml:space="preserve">
+    <value>Щелкните объект, который нужно удалить.</value>
+  </data>
+  <data name="ImageEdit_ObjectEraseProgressRing.AutomationProperties.Name" xml:space="preserve">
+    <value>Удаление выбранного объекта</value>
+  </data>
+  <data name="AiFeatureConsentDialog_ImageObjectEraseTitle" xml:space="preserve">
+    <value>Разрешить удаление объектов?</value>
+  </data>
+  <data name="AiFeatureConsentDialog_ImageObjectEraseContent" xml:space="preserve">
+    <value>Удаление объектов использует модели ИИ на устройстве, чтобы определить выбранный объект, удалить его и заполнить область на основе окружения.</value>
+  </data>
+  <data name="Settings_AiConsent_ImageObjectEraseDisplayName" xml:space="preserve">
+    <value>Удаление объектов</value>
+  </data>
+  <data name="ObjectEraseStatus_Success" xml:space="preserve">
+    <value>Объект удален.</value>
+  </data>
+  <data name="ObjectEraseStatus_NotSupported" xml:space="preserve">
+    <value>Удаление объектов не поддерживается на этом компьютере.</value>
+  </data>
+  <data name="ObjectEraseStatus_Disabled" xml:space="preserve">
+    <value>Удаление объектов отключено на этом компьютере.</value>
+  </data>
+  <data name="ObjectEraseStatus_NotAvailable" xml:space="preserve">
+    <value>Удаление объектов недоступно.</value>
+  </data>
+  <data name="ObjectEraseStatus_PreparationFailed" xml:space="preserve">
+    <value>Не удалось подготовить удаление объектов.</value>
+  </data>
+  <data name="ObjectEraseStatus_NotReady" xml:space="preserve">
+    <value>Удаление объектов не готово.</value>
+  </data>
+  <data name="ObjectEraseStatus_Failed" xml:space="preserve">
+    <value>Не удалось удалить объект.</value>
+  </data>
+  <data name="ImageEdit_ObjectExtractionButton.Label" xml:space="preserve">
+    <value>Извлечь объект</value>
+  </data>
+  <data name="ImageEdit_ObjectExtractionButton.AutomationProperties.Name" xml:space="preserve">
+    <value>Извлечь объект из изображения</value>
+  </data>
+  <data name="ImageEdit_ObjectExtractionButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Извлечь выбранный объект с помощью ИИ на устройстве</value>
+  </data>
+  <data name="ObjectExtractionToolbar_Instruction.Text" xml:space="preserve">
+    <value>Щелкните объект, который нужно извлечь.</value>
+  </data>
+  <data name="ImageEdit_ObjectExtractionProgressRing.AutomationProperties.Name" xml:space="preserve">
+    <value>Извлечение выбранного объекта</value>
+  </data>
+  <data name="AiFeatureConsentDialog_ImageObjectExtractionTitle" xml:space="preserve">
+    <value>Разрешить извлечение объектов?</value>
+  </data>
+  <data name="AiFeatureConsentDialog_ImageObjectExtractionContent" xml:space="preserve">
+    <value>Извлечение объектов использует модель ИИ на устройстве, чтобы определить и извлечь выбранный объект из текущего изображения.</value>
+  </data>
+  <data name="Settings_AiConsent_ImageObjectExtractionDisplayName" xml:space="preserve">
+    <value>Извлечение объектов</value>
+  </data>
+  <data name="ObjectExtractionStatus_Success" xml:space="preserve">
+    <value>Объект извлечен.</value>
+  </data>
+  <data name="ObjectExtractionStatus_NotSupported" xml:space="preserve">
+    <value>Извлечение объектов не поддерживается на этом компьютере.</value>
+  </data>
+  <data name="ObjectExtractionStatus_Disabled" xml:space="preserve">
+    <value>Извлечение объектов отключено на этом компьютере.</value>
+  </data>
+  <data name="ObjectExtractionStatus_NotAvailable" xml:space="preserve">
+    <value>Извлечение объектов недоступно.</value>
+  </data>
+  <data name="ObjectExtractionStatus_PreparationFailed" xml:space="preserve">
+    <value>Не удалось подготовить извлечение объектов.</value>
+  </data>
+  <data name="ObjectExtractionStatus_NotReady" xml:space="preserve">
+    <value>Извлечение объектов не готово.</value>
+  </data>
+  <data name="ObjectExtractionStatus_Failed" xml:space="preserve">
+    <value>Не удалось извлечь объект.</value>
+  </data>
+  <data name="VideoEdit_SuperResolutionButton.Label" xml:space="preserve">
+    <value>Сверхвысокое разрешение видео</value>
+  </data>
+  <data name="VideoEdit_SuperResolutionButton.AutomationProperties.Name" xml:space="preserve">
+    <value>Сверхвысокое разрешение видео</value>
+  </data>
+  <data name="VideoEdit_SuperResolutionButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Улучшить видео с помощью ИИ</value>
+  </data>
+  <data name="VideoEdit_SuperResolutionProgressRing.AutomationProperties.Name" xml:space="preserve">
+    <value>Улучшение видео</value>
+  </data>
+  <data name="VideoEdit_SuperResolutionProgressText.Text" xml:space="preserve">
+    <value>Улучшение видео...</value>
+  </data>
+  <data name="AiFeatureConsentDialog_VideoSuperResolutionTitle" xml:space="preserve">
+    <value>Разрешить сверхвысокое разрешение видео?</value>
+  </data>
+  <data name="AiFeatureConsentDialog_VideoSuperResolutionContent" xml:space="preserve">
+    <value>Сверхвысокое разрешение видео использует локальную модель ИИ, чтобы создать более чёткую копию текущего видео с более высоким разрешением.</value>
+  </data>
+  <data name="Settings_AiConsent_VideoSuperResolutionDisplayName" xml:space="preserve">
+    <value>Сверхвысокое разрешение видео</value>
+  </data>
+  <data name="VideoSuperResolutionStatus_NotSupported" xml:space="preserve">
+    <value>Сверхвысокое разрешение видео не поддерживается на этом устройстве.</value>
+  </data>
+  <data name="VideoSuperResolutionStatus_Disabled" xml:space="preserve">
+    <value>Сверхвысокое разрешение видео отключено в параметрах Windows.</value>
+  </data>
+  <data name="VideoSuperResolutionStatus_NotAvailable" xml:space="preserve">
+    <value>Сверхвысокое разрешение видео сейчас недоступно.</value>
+  </data>
+  <data name="VideoSuperResolutionStatus_PreparationFailed" xml:space="preserve">
+    <value>Не удалось подготовить сверхвысокое разрешение видео.</value>
+  </data>
+  <data name="VideoSuperResolutionStatus_NotReady" xml:space="preserve">
+    <value>Сверхвысокое разрешение видео ещё не готово.</value>
+  </data>
+  <data name="VideoSuperResolutionStatus_UnsupportedVideo" xml:space="preserve">
+    <value>Разрешение или частота кадров этого видео не поддерживается.</value>
+  </data>
+  <data name="VideoSuperResolutionStatus_Failed" xml:space="preserve">
+    <value>Не удалось улучшить видео.</value>
+  </data>
 </root>

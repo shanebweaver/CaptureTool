@@ -10,5 +10,7 @@ internal enum ImageEditMode
     ColorPicker,
     TextExtraction,
     ImageDescription,
-    ForegroundExtraction
+    ForegroundExtraction,
+    ObjectErase,
+    ObjectExtraction
 }

@@ -110,6 +110,8 @@ public sealed partial class ImageEditPage : ImageEditPageBase
         SetToolbarHostState(TextExtractionToolbarHost, ViewModel.IsTextExtractionModeActive);
         SetToolbarHostState(ImageDescriptionToolbarHost, ViewModel.IsImageDescriptionModeActive);
         SetToolbarHostState(ForegroundExtractionToolbarHost, ViewModel.IsForegroundExtractionModeActive);
+        SetToolbarHostState(ObjectEraseToolbarHost, ViewModel.IsObjectEraseModeActive);
+        SetToolbarHostState(ObjectExtractionToolbarHost, ViewModel.IsObjectExtractionModeActive);
     }
 
     private void ViewModel_PropertyChanged(object? sender, PropertyChangedEventArgs e)
@@ -136,6 +138,12 @@ public sealed partial class ImageEditPage : ImageEditPageBase
                 break;
             case nameof(ViewModel.IsForegroundExtractionModeActive):
                 AnimateToolbarHost(ForegroundExtractionToolbarHost, ViewModel.IsForegroundExtractionModeActive);
+                break;
+            case nameof(ViewModel.IsObjectEraseModeActive):
+                AnimateToolbarHost(ObjectEraseToolbarHost, ViewModel.IsObjectEraseModeActive);
+                break;
+            case nameof(ViewModel.IsObjectExtractionModeActive):
+                AnimateToolbarHost(ObjectExtractionToolbarHost, ViewModel.IsObjectExtractionModeActive);
                 break;
         }
     }
@@ -433,6 +441,16 @@ public sealed partial class ImageEditPage : ImageEditPageBase
     private async void ImageCanvas_ForegroundExtractionRequested(object? _, System.Numerics.Vector2 point)
     {
         await ViewModel.OnForegroundExtractionRequestedAsync(point);
+    }
+
+    private async void ImageCanvas_ObjectEraseRequested(object? _, System.Numerics.Vector2 point)
+    {
+        await ViewModel.OnObjectEraseRequestedAsync(point);
+    }
+
+    private async void ImageCanvas_ObjectExtractionRequested(object? _, System.Numerics.Vector2 point)
+    {
+        await ViewModel.OnObjectExtractionRequestedAsync(point);
     }
 
     private void ImageCanvas_ImageContextMenuRequested(object? _, Point position)
