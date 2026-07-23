@@ -20,15 +20,18 @@
         </Grid.RowDefinitions>
 
         <!--  Toolbar  -->
-        <CommandBar DefaultLabelPosition="Right" IsOpen="False">
+        <CommandBar
+            HorizontalAlignment="Stretch"
+            DefaultLabelPosition="Right"
+            IsOpen="False">
             <CommandBar.Content>
                 <Grid
                     x:Uid="AudioCapture_Timer"
-                    Margin="12,0"
                     Height="48"
+                    Margin="12,0"
                     VerticalAlignment="Stretch"
                     Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.IsRecording), Mode=OneWay}">
-                    <controls:ClockTimer Time="{x:Bind ViewModel.CaptureTime, Mode=OneWay}" VerticalAlignment="Center"/>
+                    <controls:ClockTimer VerticalAlignment="Center" Time="{x:Bind ViewModel.CaptureTime, Mode=OneWay}" />
                 </Grid>
             </CommandBar.Content>
 
@@ -115,13 +118,11 @@
             </AppBarButton>
         </CommandBar>
 
-        <Grid
-            Grid.Row="1"
-            MinHeight="220">
+        <Grid Grid.Row="1" MinHeight="220">
             <Border
+                Padding="20,32"
                 HorizontalAlignment="Stretch"
                 VerticalAlignment="Stretch"
-                Padding="20,32"
                 Background="{ThemeResource CardBackgroundFillColorDefault}"
                 BorderBrush="{ThemeResource CardStrokeColorDefault}"
                 BorderThickness="0,1">
