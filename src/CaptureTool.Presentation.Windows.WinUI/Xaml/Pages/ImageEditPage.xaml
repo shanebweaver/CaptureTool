@@ -80,6 +80,17 @@
                 </AppBarToggleButton.Icon>
             </AppBarToggleButton>
             <AppBarToggleButton
+                x:Uid="ImageEdit_ForegroundExtractionButton"
+                AutomationProperties.AutomationId="ImageEdit_ForegroundExtractionButton"
+                Command="{x:Bind ViewModel.ToggleForegroundExtractionModeCommand}"
+                IsChecked="{x:Bind ViewModel.IsForegroundExtractionModeActive, Mode=OneWay}"
+                IsEnabled="{x:Bind ViewModel.CanToggleForegroundExtraction, Mode=OneWay}"
+                Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.IsForegroundExtractionAvailable), Mode=OneWay}">
+                <AppBarToggleButton.Icon>
+                    <SymbolIcon Symbol="Cut" />
+                </AppBarToggleButton.Icon>
+            </AppBarToggleButton>
+            <AppBarToggleButton
                 x:Uid="ImageEdit_ColorPickerButton"
                 Command="{x:Bind ViewModel.ToggleColorPickerModeCommand}"
                 IsChecked="{x:Bind ViewModel.IsColorPickerModeActive, Mode=OneWay}"
@@ -224,10 +235,12 @@
                 CropRect="{x:Bind ViewModel.CropRect, Mode=OneWay}"
                 CropRectChanged="ImageCanvas_CropRectChanged"
                 Drawables="{x:Bind ViewModel.Drawables, Mode=OneWay}"
+                ForegroundExtractionRequested="ImageCanvas_ForegroundExtractionRequested"
                 InteractionComplete="ImageCanvas_InteractionComplete"
                 IsAutoZoomLocked="{x:Bind ViewModel.IsAutoZoomLocked, Mode=OneWay}"
                 IsColorPickerModeEnabled="{x:Bind ViewModel.IsColorPickerModeActive, Mode=OneWay}"
                 IsCropModeEnabled="{x:Bind ViewModel.IsCropModeActive, Mode=OneWay}"
+                IsForegroundExtractionModeEnabled="{x:Bind ViewModel.IsForegroundExtractionModeActive, Mode=OneWay}"
                 IsShapesModeEnabled="{x:Bind ViewModel.IsShapesModeActive, Mode=OneWay}"
                 IsTextModeEnabled="{x:Bind ViewModel.IsTextModeActive, Mode=OneWay}"
                 IsTextExtractionOverlayEnabled="{x:Bind ViewModel.IsTextExtractionModeActive, Mode=OneWay}"
@@ -368,6 +381,17 @@
                     </controls:TextExtractionToolbar.RenderTransform>
                 </controls:TextExtractionToolbar>
 
+                <!--  Foreground extraction instructions  -->
+                <controls:ForegroundExtractionToolbar
+                    x:Name="ForegroundExtractionToolbarHost"
+                    HorizontalAlignment="Center"
+                    Opacity="0"
+                    Visibility="Collapsed">
+                    <controls:ForegroundExtractionToolbar.RenderTransform>
+                        <TranslateTransform Y="-8" />
+                    </controls:ForegroundExtractionToolbar.RenderTransform>
+                </controls:ForegroundExtractionToolbar>
+
                 <!--  Image description options and output  -->
                 <StackPanel
                     x:Name="ImageDescriptionToolbarHost"
@@ -472,6 +496,17 @@
             VerticalAlignment="Center"
             IsActive="{x:Bind ViewModel.IsImageDescriptionRunning, Mode=OneWay}"
             Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.IsImageDescriptionRunning), Mode=OneWay}" />
+
+        <ProgressRing
+            x:Uid="ImageEdit_ForegroundExtractionProgressRing"
+            Grid.Row="2"
+            AutomationProperties.AutomationId="ImageEdit_ForegroundExtractionProgressRing"
+            Width="48"
+            Height="48"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center"
+            IsActive="{x:Bind ViewModel.IsForegroundExtractionRunning, Mode=OneWay}"
+            Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.IsForegroundExtractionRunning), Mode=OneWay}" />
 
         <Grid
             MinHeight="38"

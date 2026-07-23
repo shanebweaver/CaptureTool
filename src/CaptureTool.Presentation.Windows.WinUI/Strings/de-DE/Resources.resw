@@ -1520,4 +1520,49 @@ SOFTWARE.
   <data name="ImageDescriptionStatus_Failed" xml:space="preserve">
     <value>Die Bildbeschreibung ist fehlgeschlagen.</value>
   </data>
+  <data name="ImageEdit_ForegroundExtractionButton.Label" xml:space="preserve">
+    <value>Hintergrund entfernen</value>
+  </data>
+  <data name="ImageEdit_ForegroundExtractionButton.AutomationProperties.Name" xml:space="preserve">
+    <value>Bildhintergrund entfernen</value>
+  </data>
+  <data name="ImageEdit_ForegroundExtractionButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Ein Motiv mit KI auf dem Gerät freistellen</value>
+  </data>
+  <data name="ForegroundExtractionToolbar_Instruction.Text" xml:space="preserve">
+    <value>Klicken Sie auf das Motiv, das Sie behalten möchten.</value>
+  </data>
+  <data name="ImageEdit_ForegroundExtractionProgressRing.AutomationProperties.Name" xml:space="preserve">
+    <value>Bildhintergrund wird entfernt</value>
+  </data>
+  <data name="AiFeatureConsentDialog_ImageForegroundExtractionTitle" xml:space="preserve">
+    <value>Hintergrundentfernung zulassen?</value>
+  </data>
+  <data name="AiFeatureConsentDialog_ImageForegroundExtractionContent" xml:space="preserve">
+    <value>Die Hintergrundentfernung verwendet ein KI-Modell auf dem Gerät, um das ausgewählte Motiv freizustellen und seinen Hintergrund zu entfernen.</value>
+  </data>
+  <data name="Settings_AiConsent_ImageForegroundExtractionDisplayName" xml:space="preserve">
+    <value>Hintergrundentfernung</value>
+  </data>
+  <data name="ForegroundExtractionStatus_Success" xml:space="preserve">
+    <value>Hintergrund entfernt.</value>
+  </data>
+  <data name="ForegroundExtractionStatus_NotSupported" xml:space="preserve">
+    <value>Die Hintergrundentfernung wird auf diesem PC nicht unterstützt.</value>
+  </data>
+  <data name="ForegroundExtractionStatus_Disabled" xml:space="preserve">
+    <value>Die Hintergrundentfernung ist auf diesem PC deaktiviert.</value>
+  </data>
+  <data name="ForegroundExtractionStatus_NotAvailable" xml:space="preserve">
+    <value>Die Hintergrundentfernung ist nicht verfügbar.</value>
+  </data>
+  <data name="ForegroundExtractionStatus_PreparationFailed" xml:space="preserve">
+    <value>Die Hintergrundentfernung konnte nicht vorbereitet werden.</value>
+  </data>
+  <data name="ForegroundExtractionStatus_NotReady" xml:space="preserve">
+    <value>Die Hintergrundentfernung ist nicht bereit.</value>
+  </data>
+  <data name="ForegroundExtractionStatus_Failed" xml:space="preserve">
+    <value>Die Hintergrundentfernung ist fehlgeschlagen.</value>
+  </data>
 </root>

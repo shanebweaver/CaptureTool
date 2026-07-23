@@ -129,6 +129,26 @@ public sealed partial class ImageCanvas : UserControlBase
         typeof(ImageCanvas),
         new PropertyMetadata(false, OnTextExtractionOverlayPropertyChanged));
 
+    public static readonly DependencyProperty IsForegroundExtractionModeEnabledProperty = DependencyProperty.Register(
+        nameof(IsForegroundExtractionModeEnabled),
+        typeof(bool),
+        typeof(ImageCanvas),
+        new PropertyMetadata(false, OnIsForegroundExtractionModeEnabledPropertyChanged));
+
+    private static void OnIsForegroundExtractionModeEnabledPropertyChanged(
+        DependencyObject d,
+        DependencyPropertyChangedEventArgs e)
+    {
+        if (d is ImageCanvas control)
+        {
+            control.ProtectedCursor = e.NewValue is true
+                ? InputSystemCursor.Create(InputSystemCursorShape.Cross)
+                : null;
+
+            control.UpdateTouchInputLock();
+        }
+    }
+
     public static readonly DependencyProperty TextExtractionRegionsProperty = DependencyProperty.Register(
         nameof(TextExtractionRegions),
         typeof(IReadOnlyList<RecognizedTextRegion>),
@@ -360,6 +380,12 @@ public sealed partial class ImageCanvas : UserControlBase
         set => Set(IsTextExtractionOverlayEnabledProperty, value);
     }
 
+    public bool IsForegroundExtractionModeEnabled
+    {
+        get => Get<bool>(IsForegroundExtractionModeEnabledProperty);
+        set => Set(IsForegroundExtractionModeEnabledProperty, value);
+    }
+
     public IReadOnlyList<RecognizedTextRegion> TextExtractionRegions
     {
         get => Get<IReadOnlyList<RecognizedTextRegion>>(TextExtractionRegionsProperty) ?? [];
@@ -440,6 +466,7 @@ public sealed partial class ImageCanvas : UserControlBase
     public event EventHandler<Color>? ColorPickerColorHovered;
     public event EventHandler<Color>? ColorPickerColorPicked;
     public event EventHandler<string>? ExtractedTextSelectionChanged;
+    public event EventHandler<Vector2>? ForegroundExtractionRequested;
     public event EventHandler<Point>? ImageContextMenuRequested;
     public event EventHandler<Point>? ShapeContextMenuRequested;
 
@@ -612,7 +639,8 @@ public sealed partial class ImageCanvas : UserControlBase
             IsShapesModeEnabled ||
             IsTextModeEnabled ||
             IsColorPickerModeEnabled ||
-            IsTextExtractionOverlayEnabled;
+            IsTextExtractionOverlayEnabled ||
+            IsForegroundExtractionModeEnabled;
 
         if (shouldIgnoreTouchInput == _isIgnoringTouchInputForEditing)
         {
@@ -1393,6 +1421,12 @@ public sealed partial class ImageCanvas : UserControlBase
 
     private void RenderCanvas_PointerEntered(object sender, PointerRoutedEventArgs e)
     {
+        if (IsForegroundExtractionModeEnabled)
+        {
+            ProtectedCursor = InputSystemCursor.Create(InputSystemCursorShape.Cross);
+            return;
+        }
+
         if (!IsColorPickerModeEnabled)
         {
             return;
@@ -1403,6 +1437,12 @@ public sealed partial class ImageCanvas : UserControlBase
 
     private void RenderCanvas_PointerExited(object sender, PointerRoutedEventArgs e)
     {
+        if (IsForegroundExtractionModeEnabled)
+        {
+            ProtectedCursor = null;
+            return;
+        }
+
         HideColorPickerCursor();
     }
 
@@ -1430,6 +1470,11 @@ public sealed partial class ImageCanvas : UserControlBase
     #region Panning
     private void RootContainer_PointerPressed(object sender, PointerRoutedEventArgs e)
     {
+        if (IsForegroundExtractionModeEnabled && TryHandleForegroundExtractionPointerPressed(e))
+        {
+            return;
+        }
+
         if (IsColorPickerModeEnabled && TryHandleColorPickerPointerPressed(e))
         {
             return;
@@ -1515,6 +1560,24 @@ public sealed partial class ImageCanvas : UserControlBase
         _isPointerDown = true;
         _lastPointerPosition = e.GetCurrentPoint(RootContainer).Position;
         RootContainer.CapturePointer(e.Pointer);
+    }
+
+    private bool TryHandleForegroundExtractionPointerPressed(PointerRoutedEventArgs e)
+    {
+        if (!IsPrimaryPointerPressed(e, RenderCanvas))
+        {
+            return false;
+        }
+
+        Point position = e.GetCurrentPoint(RenderCanvas).Position;
+        if (!IsPointInsideRenderCanvas(position))
+        {
+            return false;
+        }
+
+        ForegroundExtractionRequested?.Invoke(this, DisplayPointToCanvasPoint(position));
+        e.Handled = true;
+        return true;
     }
 
     private bool TryHandleContextMenuRequest(PointerRoutedEventArgs e)

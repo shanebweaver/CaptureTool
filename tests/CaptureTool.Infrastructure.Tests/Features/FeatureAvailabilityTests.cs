@@ -1,4 +1,5 @@
 using CaptureTool.Application.Abstractions.Edit.Image.Description;
+using CaptureTool.Application.Abstractions.Edit.Image.ForegroundExtraction;
 using CaptureTool.Application.Abstractions.Edit.Image.SuperResolution;
 using CaptureTool.Application.Abstractions.Edit.Image.TextExtraction;
 using CaptureTool.FeatureManagement;
@@ -102,6 +103,30 @@ public sealed class FeatureAvailabilityTests
         Assert.AreEqual(expected, availability.IsImageDescriptionEnabled);
     }
 
+    [TestMethod]
+    public void ImageForegroundExtractionFeatureAvailability_ReturnsFeatureManagerValue()
+    {
+        Assert.IsTrue(new ImageForegroundExtractionFeatureAvailability(new ConstantFeatureManager(true)).IsImageForegroundExtractionEnabled);
+        Assert.IsFalse(new ImageForegroundExtractionFeatureAvailability(new ConstantFeatureManager(false)).IsImageForegroundExtractionEnabled);
+    }
+
+    [TestMethod]
+    [DataRow(ForegroundExtractionReadyState.Ready, true)]
+    [DataRow(ForegroundExtractionReadyState.PreparationNeeded, true)]
+    [DataRow(ForegroundExtractionReadyState.NotSupported, false)]
+    [DataRow(ForegroundExtractionReadyState.Disabled, false)]
+    [DataRow(ForegroundExtractionReadyState.Unknown, false)]
+    public void ImageForegroundExtractionFeatureAvailability_RequiresRunnableDevice(
+        ForegroundExtractionReadyState readyState,
+        bool expected)
+    {
+        var availability = new ImageForegroundExtractionFeatureAvailability(
+            new ConstantFeatureManager(true),
+            new StubImageForegroundExtractionService(readyState));
+
+        Assert.AreEqual(expected, availability.IsImageForegroundExtractionEnabled);
+    }
+
     private sealed class ConstantFeatureManager : IFeatureManager
     {
         private readonly bool _isEnabled;
@@ -148,6 +173,19 @@ public sealed class FeatureAvailabilityTests
 
         public Task<ImageDescriptionResult> DescribeAsync(
             ImageDescriptionRequest request,
+            CancellationToken cancellationToken = default) => throw new NotSupportedException();
+    }
+
+    private sealed class StubImageForegroundExtractionService(ForegroundExtractionReadyState readyState)
+        : IImageForegroundExtractionService
+    {
+        public ForegroundExtractionReadyState GetReadyState() => readyState;
+
+        public Task<ForegroundExtractionPreparationResult> EnsureReadyAsync(
+            CancellationToken cancellationToken = default) => throw new NotSupportedException();
+
+        public Task<ForegroundExtractionResult> ExtractAsync(
+            ForegroundExtractionRequest request,
             CancellationToken cancellationToken = default) => throw new NotSupportedException();
     }
 }

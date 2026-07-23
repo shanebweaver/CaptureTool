@@ -1,5 +1,6 @@
 using CaptureTool.Application.Abstractions.Ai;
 using CaptureTool.Application.Abstractions.Edit.Image.Description;
+using CaptureTool.Application.Abstractions.Edit.Image.ForegroundExtraction;
 using CaptureTool.Application.Abstractions.Edit.Image.SuperResolution;
 using CaptureTool.Application.Abstractions.Edit.Image.TextExtraction;
 using CaptureTool.Application.Abstractions.Localization;
@@ -69,6 +70,7 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
     private readonly IImageSuperResolutionFeatureAvailability _imageSuperResolutionFeatureAvailability;
     private readonly ITextExtractionFeatureAvailability _textExtractionFeatureAvailability;
     private readonly IImageDescriptionFeatureAvailability _imageDescriptionFeatureAvailability;
+    private readonly IImageForegroundExtractionFeatureAvailability _imageForegroundExtractionFeatureAvailability;
     private readonly ILocalizationService _localizationService;
     private readonly ISettingsService _settingsService;
     private readonly IAppMetricsService _appMetricsService;
@@ -284,7 +286,8 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
         IStorageService storageService,
         IFactoryServiceWithArgs<AppLanguageViewModel, IAppLanguage?> appLanguageViewModelFactory,
         IFactoryServiceWithArgs<AppThemeViewModel, AppTheme> appThemeViewModelFactory,
-        IImageDescriptionFeatureAvailability? imageDescriptionFeatureAvailability = null)
+        IImageDescriptionFeatureAvailability? imageDescriptionFeatureAvailability = null,
+        IImageForegroundExtractionFeatureAvailability? imageForegroundExtractionFeatureAvailability = null)
     {
         _goBackAction = goBackAction;
         _restartAppAction = restartAppAction;
@@ -314,6 +317,7 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
         _imageSuperResolutionFeatureAvailability = imageSuperResolutionFeatureAvailability;
         _textExtractionFeatureAvailability = textExtractionFeatureAvailability;
         _imageDescriptionFeatureAvailability = imageDescriptionFeatureAvailability ?? new DisabledImageDescriptionFeatureAvailability();
+        _imageForegroundExtractionFeatureAvailability = imageForegroundExtractionFeatureAvailability ?? new DisabledImageForegroundExtractionFeatureAvailability();
         _localizationService = localizationService;
         _themeService = themeService;
         _settingsService = settingsService;
@@ -740,6 +744,7 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
         {
             AiFeatureId.TextExtraction => "Settings_AiConsent_TextExtractionDisplayName",
             AiFeatureId.ImageDescription => "Settings_AiConsent_ImageDescriptionDisplayName",
+            AiFeatureId.ImageForegroundExtraction => "Settings_AiConsent_ImageForegroundExtractionDisplayName",
             _ => null
         };
 
@@ -761,6 +766,7 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
             AiFeatureId.TextExtraction => _textExtractionFeatureAvailability.IsTextExtractionEnabled,
             AiFeatureId.ImageSuperResolution => _imageSuperResolutionFeatureAvailability.IsImageSuperResolutionEnabled,
             AiFeatureId.ImageDescription => _imageDescriptionFeatureAvailability.IsImageDescriptionEnabled,
+            AiFeatureId.ImageForegroundExtraction => _imageForegroundExtractionFeatureAvailability.IsImageForegroundExtractionEnabled,
             _ => false
         };
     }
@@ -768,5 +774,10 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
     private sealed class DisabledImageDescriptionFeatureAvailability : IImageDescriptionFeatureAvailability
     {
         public bool IsImageDescriptionEnabled => false;
+    }
+
+    private sealed class DisabledImageForegroundExtractionFeatureAvailability : IImageForegroundExtractionFeatureAvailability
+    {
+        public bool IsImageForegroundExtractionEnabled => false;
     }
 }
