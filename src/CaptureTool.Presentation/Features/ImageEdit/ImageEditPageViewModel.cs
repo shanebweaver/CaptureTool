@@ -1022,7 +1022,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
         if (newText != null)
         {
-            ExecuteEditCommand(new AddDrawableCommand(newText));
+            ExecuteEditCommand(new AddDrawableCommand(newText), preserveCanvasViewport: true);
         }
     }
 

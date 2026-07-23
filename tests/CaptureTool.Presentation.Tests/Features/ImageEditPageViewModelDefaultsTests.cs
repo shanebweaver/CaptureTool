@@ -135,6 +135,24 @@ public sealed class ImageEditPageViewModelDefaultsTests
     }
 
     [TestMethod]
+    public void OnTextBoxDrawn_ShouldRequestRedrawWithoutInvalidatingCanvasViewport()
+    {
+        var viewModel = CreateViewModel();
+        int redrawRequests = 0;
+        int invalidationRequests = 0;
+        viewModel.RedrawCanvasRequested += (_, _) => redrawRequests++;
+        viewModel.InvalidateCanvasRequested += (_, _) => invalidationRequests++;
+        viewModel.ToggleTextModeCommand.Execute(null);
+
+        viewModel.OnTextBoxDrawn(new Vector2(10, 20), new Vector2(110, 120));
+
+        viewModel.Drawables.Should().ContainSingle()
+            .Which.Should().BeOfType<TextDrawable>();
+        redrawRequests.Should().Be(1);
+        invalidationRequests.Should().Be(0);
+    }
+
+    [TestMethod]
     public async Task OpenScreenshotsFolderCommand_ShouldOpenScreenshotsFolder()
     {
         var openScreenshotsFolder = new Mock<IOpenScreenshotsFolderUseCase>();
