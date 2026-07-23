@@ -30,7 +30,7 @@
         <!--  Toolbar  -->
         <CommandBar
             AutomationProperties.AutomationId="ImageEdit_CommandBar"
-            HorizontalAlignment="Center"
+            HorizontalAlignment="Stretch"
             DefaultLabelPosition="Right"
             IsOpen="False">
             <!--  Chroma Key  -->

@@ -35,6 +35,7 @@ public sealed partial class ImageEditPage : ImageEditPageBase
         InitializeToolbarHosts();
         ViewModel.LoadStateChanged += ViewModel_LoadStateChanged;
         ViewModel.InvalidateCanvasRequested += ViewModel_InvalidateCanvasRequested;
+        ViewModel.RedrawCanvasRequested += ViewModel_RedrawCanvasRequested;
         ViewModel.ReloadCanvasResourcesRequested += ViewModel_ReloadCanvasResourcesRequested;
         ViewModel.ForceZoomAndCenterRequested += ViewModel_ForceZoomAndCenterRequested;
         ViewModel.PropertyChanged += ViewModel_PropertyChanged;
@@ -47,6 +48,7 @@ public sealed partial class ImageEditPage : ImageEditPageBase
     {
         ViewModel.LoadStateChanged -= ViewModel_LoadStateChanged;
         ViewModel.InvalidateCanvasRequested -= ViewModel_InvalidateCanvasRequested;
+        ViewModel.RedrawCanvasRequested -= ViewModel_RedrawCanvasRequested;
         ViewModel.ReloadCanvasResourcesRequested -= ViewModel_ReloadCanvasResourcesRequested;
         ViewModel.ForceZoomAndCenterRequested -= ViewModel_ForceZoomAndCenterRequested;
         ViewModel.PropertyChanged -= ViewModel_PropertyChanged;
@@ -350,6 +352,11 @@ public sealed partial class ImageEditPage : ImageEditPageBase
     private void ViewModel_InvalidateCanvasRequested(object? _, EventArgs __)
     {
         ImageCanvas.InvalidateCanvas();
+    }
+
+    private void ViewModel_RedrawCanvasRequested(object? _, EventArgs __)
+    {
+        ImageCanvas.RedrawCanvas();
     }
 
     private void ViewModel_ReloadCanvasResourcesRequested(object? _, EventArgs __)

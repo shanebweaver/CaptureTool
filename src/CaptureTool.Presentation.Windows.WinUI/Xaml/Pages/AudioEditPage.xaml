@@ -18,7 +18,10 @@
         </Grid.RowDefinitions>
 
         <!--  Toolbar  -->
-        <CommandBar DefaultLabelPosition="Right" IsOpen="False">
+        <CommandBar
+            HorizontalAlignment="Stretch"
+            DefaultLabelPosition="Right"
+            IsOpen="False">
             <!--  Open in Clipchamp  -->
             <AppBarButton
                 x:Uid="AudioEdit_OpenInClipchampButton"
@@ -73,9 +76,9 @@
                 BorderThickness="0,1"
                 Visibility="{x:Bind ViewModel.IsAudioReady, Mode=OneWay}">
                 <Grid
-                    MaxHeight="300"
                     x:Name="WaveformSurface"
                     Grid.Row="1"
+                    MaxHeight="300"
                     SizeChanged="WaveformSurface_SizeChanged">
                     <ScrollViewer
                         x:Name="WaveformScrollViewer"
@@ -84,9 +87,7 @@
                         VerticalScrollBarVisibility="Disabled"
                         VerticalScrollMode="Disabled"
                         ZoomMode="Disabled">
-                        <Grid
-                            x:Name="WaveformScrollContent"
-                            VerticalAlignment="Stretch">
+                        <Grid x:Name="WaveformScrollContent" VerticalAlignment="Stretch">
                             <Grid
                                 x:Name="WaveformTrack"
                                 HorizontalAlignment="Center"

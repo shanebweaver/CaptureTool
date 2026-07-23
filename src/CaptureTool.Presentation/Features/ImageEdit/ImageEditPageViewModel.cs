@@ -32,6 +32,13 @@ namespace CaptureTool.Presentation.Features.ImageEdit;
 
 public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<ImageFile>, IEditableSession
 {
+    private enum CanvasUpdateMode
+    {
+        InvalidateLayout,
+        Redraw,
+        ReloadResources,
+    }
+
     private const string ImageDescriptionCopiedMessageResourceKey = "ImageDescriptionCopiedNotification";
     private const string ImageDescriptionCopyFailedMessageResourceKey = "ImageDescriptionCopyFailedNotification";
 
@@ -86,6 +93,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     private int? _textExtractionProcessedRevision;
 
     public event EventHandler? InvalidateCanvasRequested;
+    public event EventHandler? RedrawCanvasRequested;
     public event EventHandler? ReloadCanvasResourcesRequested;
     public event EventHandler? ForceZoomAndCenterRequested;
 
@@ -832,7 +840,9 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         object? sender,
         (ChromaKeySettings OldSettings, ChromaKeySettings NewSettings) settings)
     {
-        ExecuteEditCommand(new SetChromaKeyCommand(settings.OldSettings, settings.NewSettings));
+        ExecuteEditCommand(
+            new SetChromaKeyCommand(settings.OldSettings, settings.NewSettings),
+            CanvasUpdateMode.Redraw);
     }
 
     private void SettingsService_SettingsChanged(ISettingDefinition[] settings)
@@ -1235,7 +1245,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
         if (newShape != null)
         {
-            ExecuteEditCommand(new AddDrawableCommand(newShape));
+            ExecuteEditCommand(new AddDrawableCommand(newShape), CanvasUpdateMode.Redraw);
         }
     }
 
@@ -1250,7 +1260,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
         if (newText != null)
         {
-            ExecuteEditCommand(new AddDrawableCommand(newText));
+            ExecuteEditCommand(new AddDrawableCommand(newText), CanvasUpdateMode.Redraw);
         }
     }
 
@@ -1284,7 +1294,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
         if (shapeIndex >= 0 && shapeIndex < _editSession.Drawables.Count)
         {
-            ExecuteEditCommand(new DeleteDrawableCommand(shapeIndex));
+            ExecuteEditCommand(new DeleteDrawableCommand(shapeIndex), CanvasUpdateMode.Redraw);
         }
     }
 
@@ -1297,7 +1307,9 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
         if (shapeIndex >= 0 && shapeIndex < _editSession.Drawables.Count)
         {
-            ExecuteEditCommand(new ModifyDrawableCommand(shapeIndex, oldState, newState));
+            ExecuteEditCommand(
+                new ModifyDrawableCommand(shapeIndex, oldState, newState),
+                CanvasUpdateMode.Redraw);
         }
     }
 
@@ -1314,7 +1326,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         _editSession.AddDrawable(drawable);
         SyncDrawablesFromSession();
         IncrementEditRevision();
-        InvalidateCanvasRequested?.Invoke(this, EventArgs.Empty);
+        RequestCanvasUpdate(CanvasUpdateMode.Redraw);
     }
 
     private void UpdateChromaKeyEffectValues()
@@ -1322,7 +1334,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         _editSession.SetChromaKeySettings(ChromaKeyTool.CaptureSettings());
         SyncDrawablesFromSession();
 
-        InvalidateCanvasRequested?.Invoke(this, EventArgs.Empty);
+        RequestCanvasUpdate(CanvasUpdateMode.Redraw);
     }
 
     public async Task<bool> SaveAsync(CancellationToken cancellationToken = default)
@@ -1369,6 +1381,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     private void Undo()
     {
         string? previousImagePath = _imageDrawable?.File.FilePath;
+        ImageEditRenderSnapshot previousRenderSnapshot = _editSession.CreateRenderSnapshot();
         if (!_editHistory.Undo(_editSession))
         {
             return;
@@ -1381,12 +1394,13 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         UpdateUndoRedoStackProperties();
         IncrementEditRevision();
         HasUnsavedChanges = true;
-        RequestCanvasUpdateForImageChange(previousImagePath);
+        RequestCanvasUpdateAfterHistory(previousImagePath, previousRenderSnapshot);
     }
 
     private void Redo()
     {
         string? previousImagePath = _imageDrawable?.File.FilePath;
+        ImageEditRenderSnapshot previousRenderSnapshot = _editSession.CreateRenderSnapshot();
         if (!_editHistory.Redo(_editSession))
         {
             return;
@@ -1399,7 +1413,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         UpdateUndoRedoStackProperties();
         IncrementEditRevision();
         HasUnsavedChanges = true;
-        RequestCanvasUpdateForImageChange(previousImagePath);
+        RequestCanvasUpdateAfterHistory(previousImagePath, previousRenderSnapshot);
     }
 
     private void Rotate()
@@ -1481,7 +1495,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
     private void ExecuteEditCommand(
         IImageEditCommand command,
-        bool reloadCanvasResources = false,
+        CanvasUpdateMode canvasUpdateMode = CanvasUpdateMode.InvalidateLayout,
         bool preservePointSelectionAiMode = false)
     {
         _editHistory.Execute(_editSession, command);
@@ -1492,14 +1506,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         UpdateUndoRedoStackProperties();
         IncrementEditRevision(preservePointSelectionAiMode);
         MarkUnsavedChanges();
-        if (reloadCanvasResources)
-        {
-            ReloadCanvasResourcesRequested?.Invoke(this, EventArgs.Empty);
-        }
-        else
-        {
-            InvalidateCanvasRequested?.Invoke(this, EventArgs.Empty);
-        }
+        RequestCanvasUpdate(canvasUpdateMode);
     }
 
     private void SyncImageGeometryFromSession()
@@ -1525,15 +1532,39 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         }
     }
 
-    private void RequestCanvasUpdateForImageChange(string? previousImagePath)
+    private void RequestCanvasUpdateAfterHistory(
+        string? previousImagePath,
+        ImageEditRenderSnapshot previousRenderSnapshot)
     {
         if (!string.Equals(previousImagePath, _imageDrawable?.File.FilePath, StringComparison.OrdinalIgnoreCase))
         {
-            ReloadCanvasResourcesRequested?.Invoke(this, EventArgs.Empty);
+            RequestCanvasUpdate(CanvasUpdateMode.ReloadResources);
+        }
+        else if (previousRenderSnapshot != _editSession.CreateRenderSnapshot())
+        {
+            RequestCanvasUpdate(CanvasUpdateMode.InvalidateLayout);
         }
         else
         {
-            InvalidateCanvasRequested?.Invoke(this, EventArgs.Empty);
+            RequestCanvasUpdate(CanvasUpdateMode.Redraw);
+        }
+    }
+
+    private void RequestCanvasUpdate(CanvasUpdateMode mode)
+    {
+        switch (mode)
+        {
+            case CanvasUpdateMode.InvalidateLayout:
+                InvalidateCanvasRequested?.Invoke(this, EventArgs.Empty);
+                break;
+
+            case CanvasUpdateMode.Redraw:
+                RedrawCanvasRequested?.Invoke(this, EventArgs.Empty);
+                break;
+
+            case CanvasUpdateMode.ReloadResources:
+                ReloadCanvasResourcesRequested?.Invoke(this, EventArgs.Empty);
+                break;
         }
     }
 
@@ -1684,7 +1715,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
             ExecuteEditCommand(
                 new ReplaceImageDrawableFileCommand(drawableIndex, sourceImage, result.ImageFile),
-                reloadCanvasResources: true,
+                CanvasUpdateMode.ReloadResources,
                 preservePointSelectionAiMode: true);
             ForegroundExtractionStatusMessage = GetLocalizedString("ForegroundExtractionStatus_Success");
         }
@@ -1795,7 +1826,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
             ExecuteEditCommand(
                 new ReplaceImageDrawableFileCommand(drawableIndex, sourceImage, result.ImageFile),
-                reloadCanvasResources: true,
+                CanvasUpdateMode.ReloadResources,
                 preservePointSelectionAiMode: true);
             ObjectEraseStatusMessage = GetLocalizedString("ObjectEraseStatus_Success");
         }
@@ -1906,7 +1937,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
             ExecuteEditCommand(
                 new ReplaceImageDrawableFileCommand(drawableIndex, sourceImage, result.ImageFile),
-                reloadCanvasResources: true,
+                CanvasUpdateMode.ReloadResources,
                 preservePointSelectionAiMode: true);
             ObjectExtractionStatusMessage = GetLocalizedString("ObjectExtractionStatus_Success");
         }

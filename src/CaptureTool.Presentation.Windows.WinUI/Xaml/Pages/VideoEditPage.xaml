@@ -20,7 +20,10 @@
         </Grid.RowDefinitions>
 
         <!--  Toolbar  -->
-        <CommandBar DefaultLabelPosition="Right" IsOpen="False">
+        <CommandBar
+            HorizontalAlignment="Stretch"
+            DefaultLabelPosition="Right"
+            IsOpen="False">
             <!--  Trim  -->
             <AppBarToggleButton
                 x:Uid="VideoEdit_TrimButton"
@@ -114,9 +117,7 @@
                 </StackPanel>
             </Grid>
 
-            <Grid
-                Background="{ThemeResource AcrylicBackgroundFillColorBaseBrush}"
-                Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.IsVideoSuperResolutionGenerating), Mode=OneWay}">
+            <Grid Background="{ThemeResource AcrylicBackgroundFillColorBaseBrush}" Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.IsVideoSuperResolutionGenerating), Mode=OneWay}">
                 <StackPanel
                     HorizontalAlignment="Center"
                     VerticalAlignment="Center"

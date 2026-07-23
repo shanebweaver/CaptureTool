@@ -13,12 +13,14 @@ using CaptureTool.Application.Abstractions.Share;
 using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Application.Abstractions.UseCases;
 using CaptureTool.Domain.Edit.Drawable;
+using CaptureTool.Domain.Edit.Operations;
 using CaptureTool.Domain.FileSystem;
 using CaptureTool.Presentation.Features.ImageEdit;
 using CaptureTool.Presentation.Notifications;
 using FluentAssertions;
 using Moq;
 using System.Drawing;
+using System.Numerics;
 
 namespace CaptureTool.Presentation.Tests.Features;
 
@@ -113,6 +115,89 @@ public sealed class ImageEditPageViewModelDefaultsTests
 
         viewModel.IsShapesModeActive.Should().BeTrue();
         viewModel.IsChromaKeyModeActive.Should().BeFalse();
+    }
+
+    [TestMethod]
+    public void OnShapeDrawn_ShouldRequestRedrawWithoutInvalidatingCanvasViewport()
+    {
+        var viewModel = CreateViewModel();
+        int redrawRequests = 0;
+        int invalidationRequests = 0;
+        viewModel.RedrawCanvasRequested += (_, _) => redrawRequests++;
+        viewModel.InvalidateCanvasRequested += (_, _) => invalidationRequests++;
+        viewModel.ToggleShapesModeCommand.Execute(null);
+
+        viewModel.OnShapeDrawn(new Vector2(10, 20), new Vector2(110, 120));
+
+        viewModel.Drawables.Should().ContainSingle()
+            .Which.Should().BeOfType<RectangleDrawable>();
+        redrawRequests.Should().Be(1);
+        invalidationRequests.Should().Be(0);
+    }
+
+    [TestMethod]
+    public void OnTextBoxDrawn_ShouldRequestRedrawWithoutInvalidatingCanvasViewport()
+    {
+        var viewModel = CreateViewModel();
+        int redrawRequests = 0;
+        int invalidationRequests = 0;
+        viewModel.RedrawCanvasRequested += (_, _) => redrawRequests++;
+        viewModel.InvalidateCanvasRequested += (_, _) => invalidationRequests++;
+        viewModel.ToggleTextModeCommand.Execute(null);
+
+        viewModel.OnTextBoxDrawn(new Vector2(10, 20), new Vector2(110, 120));
+
+        viewModel.Drawables.Should().ContainSingle()
+            .Which.Should().BeOfType<TextDrawable>();
+        redrawRequests.Should().Be(1);
+        invalidationRequests.Should().Be(0);
+    }
+
+    [TestMethod]
+    public void ShapeModificationDeletionAndHistory_ShouldPreserveCanvasViewport()
+    {
+        var viewModel = CreateViewModel();
+        viewModel.ToggleShapesModeCommand.Execute(null);
+        viewModel.OnShapeDrawn(new Vector2(10, 20), new Vector2(110, 120));
+        var shape = viewModel.Drawables.Should().ContainSingle()
+            .Which.Should().BeOfType<RectangleDrawable>().Subject;
+        var originalState = new ModifyShapeOperation.ShapeState(shape);
+        shape.Offset = new Vector2(30, 40);
+        var modifiedState = new ModifyShapeOperation.ShapeState(shape);
+        int redrawRequests = 0;
+        int invalidationRequests = 0;
+        viewModel.RedrawCanvasRequested += (_, _) => redrawRequests++;
+        viewModel.InvalidateCanvasRequested += (_, _) => invalidationRequests++;
+
+        viewModel.OnShapeModified(0, originalState, modifiedState);
+        viewModel.OnShapeDeleted(0);
+        viewModel.UndoCommand.Execute(null);
+        viewModel.UndoCommand.Execute(null);
+        shape.Offset.Should().Be(originalState.Offset);
+        viewModel.RedoCommand.Execute(null);
+        shape.Offset.Should().Be(modifiedState.Offset);
+        viewModel.RedoCommand.Execute(null);
+
+        viewModel.Drawables.Should().BeEmpty();
+        redrawRequests.Should().Be(6);
+        invalidationRequests.Should().Be(0);
+    }
+
+    [TestMethod]
+    public void CanvasGeometryEditsAndHistory_ShouldInvalidateCanvasLayout()
+    {
+        var viewModel = CreateViewModel();
+        int redrawRequests = 0;
+        int invalidationRequests = 0;
+        viewModel.RedrawCanvasRequested += (_, _) => redrawRequests++;
+        viewModel.InvalidateCanvasRequested += (_, _) => invalidationRequests++;
+
+        viewModel.RotateCommand.Execute(null);
+        viewModel.UndoCommand.Execute(null);
+        viewModel.RedoCommand.Execute(null);
+
+        redrawRequests.Should().Be(0);
+        invalidationRequests.Should().Be(3);
     }
 
     [TestMethod]
