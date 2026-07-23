@@ -1496,7 +1496,6 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     private void ExecuteEditCommand(
         IImageEditCommand command,
         CanvasUpdateMode canvasUpdateMode = CanvasUpdateMode.InvalidateLayout,
-        bool preserveForegroundExtractionMode = false,
         bool preservePointSelectionAiMode = false)
     {
         _editHistory.Execute(_editSession, command);
@@ -1717,7 +1716,6 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
             ExecuteEditCommand(
                 new ReplaceImageDrawableFileCommand(drawableIndex, sourceImage, result.ImageFile),
                 CanvasUpdateMode.ReloadResources,
-                preserveForegroundExtractionMode: true,
                 preservePointSelectionAiMode: true);
             ForegroundExtractionStatusMessage = GetLocalizedString("ForegroundExtractionStatus_Success");
         }
@@ -1828,7 +1826,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
             ExecuteEditCommand(
                 new ReplaceImageDrawableFileCommand(drawableIndex, sourceImage, result.ImageFile),
-                reloadCanvasResources: true,
+                CanvasUpdateMode.ReloadResources,
                 preservePointSelectionAiMode: true);
             ObjectEraseStatusMessage = GetLocalizedString("ObjectEraseStatus_Success");
         }
@@ -1939,7 +1937,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
             ExecuteEditCommand(
                 new ReplaceImageDrawableFileCommand(drawableIndex, sourceImage, result.ImageFile),
-                reloadCanvasResources: true,
+                CanvasUpdateMode.ReloadResources,
                 preservePointSelectionAiMode: true);
             ObjectExtractionStatusMessage = GetLocalizedString("ObjectExtractionStatus_Success");
         }
