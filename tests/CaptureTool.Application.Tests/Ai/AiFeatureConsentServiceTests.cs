@@ -71,5 +71,27 @@ public sealed class AiFeatureConsentServiceTests
         settings.Verify(service => service.Set(CaptureToolSettings.Settings_AiConsent_ImageDescription, true), Times.Once);
     }
 
+    [TestMethod]
+    public void GetFeatureConsents_IncludesBackgroundRemoval()
+    {
+        var settings = new Mock<ISettingsService>();
+        var service = new AiFeatureConsentService(settings.Object);
+
+        service.GetFeatureConsents().Should().Contain(consent =>
+            consent.FeatureId == AiFeatureId.ImageForegroundExtraction &&
+            consent.DisplayName == "Background removal");
+    }
+
+    [TestMethod]
+    public async Task SetConsentAsync_PersistsBackgroundRemovalConsent()
+    {
+        var settings = new Mock<ISettingsService>();
+        var service = new AiFeatureConsentService(settings.Object);
+
+        await service.SetConsentAsync(AiFeatureId.ImageForegroundExtraction, true, TestContext.CancellationToken);
+
+        settings.Verify(service => service.Set(CaptureToolSettings.Settings_AiConsent_ImageForegroundExtraction, true), Times.Once);
+    }
+
     public TestContext TestContext { get; set; } = null!;
 }

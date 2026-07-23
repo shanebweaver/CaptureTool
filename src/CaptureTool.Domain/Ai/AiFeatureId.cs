@@ -4,6 +4,7 @@ public enum AiFeatureId
 {
     TextExtraction,
     ImageSuperResolution,
-    ImageDescription
+    ImageDescription,
+    ImageForegroundExtraction
 }
 

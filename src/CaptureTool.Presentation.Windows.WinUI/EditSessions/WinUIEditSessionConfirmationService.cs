@@ -1,8 +1,8 @@
-using CommunityToolkit.Mvvm.Input;
 using CaptureTool.Application.Abstractions.EditSessions;
-using Microsoft.UI.Xaml;
 using CaptureTool.Presentation.Windows.WinUI.Utils;
 using CaptureTool.Presentation.Windows.WinUI.Xaml.Controls;
+using CommunityToolkit.Mvvm.Input;
+using Microsoft.UI.Xaml;
 using Microsoft.Windows.ApplicationModel.Resources;
 
 namespace CaptureTool.Presentation.Windows.WinUI.EditSessions;

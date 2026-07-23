@@ -1,5 +1,5 @@
-using CaptureTool.Mcp.CaptureServer.Models;
 using CaptureTool.Mcp.CaptureServer.Abstractions;
+using CaptureTool.Mcp.CaptureServer.Models;
 namespace CaptureTool.Mcp.CaptureServer.Storage;
 
 public sealed class InMemoryMcpCaptureStore : IMcpCaptureStore

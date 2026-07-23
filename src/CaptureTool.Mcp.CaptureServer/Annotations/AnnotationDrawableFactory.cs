@@ -1,7 +1,5 @@
-using CaptureTool.Mcp.CaptureServer.Models;
-using CaptureTool.Mcp.CaptureServer.Capture;
-using CaptureTool.Mcp.CaptureServer.Abstractions;
 using CaptureTool.Domain.Edit.Drawable;
+using CaptureTool.Mcp.CaptureServer.Models;
 using System.Drawing;
 using System.Numerics;
 

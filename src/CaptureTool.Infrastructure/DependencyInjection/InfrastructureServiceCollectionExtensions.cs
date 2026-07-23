@@ -1,16 +1,17 @@
-using CaptureTool.Application.Abstractions.Cancellation;
 using CaptureTool.Application.Abstractions.Ai;
+using CaptureTool.Application.Abstractions.Cancellation;
 using CaptureTool.Application.Abstractions.Edit.Image.ChromaKey;
 using CaptureTool.Application.Abstractions.Edit.Image.Description;
+using CaptureTool.Application.Abstractions.Edit.Image.ForegroundExtraction;
 using CaptureTool.Application.Abstractions.Edit.Image.SuperResolution;
 using CaptureTool.Application.Abstractions.Edit.Image.TextExtraction;
-using CaptureTool.Application.Abstractions.Store;
 using CaptureTool.Application.Abstractions.Files;
 using CaptureTool.Application.Abstractions.Globalization;
 using CaptureTool.Application.Abstractions.Logging;
 using CaptureTool.Application.Abstractions.Metrics;
 using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Application.Abstractions.Settings;
+using CaptureTool.Application.Abstractions.Store;
 using CaptureTool.Application.Abstractions.TaskEnvironment;
 using CaptureTool.Application.Abstractions.Telemetry;
 using CaptureTool.Application.Abstractions.Time;
@@ -40,6 +41,7 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddSingleton<IImageSuperResolutionFeatureAvailability, ImageSuperResolutionFeatureAvailability>();
         services.AddSingleton<ITextExtractionFeatureAvailability, TextExtractionFeatureAvailability>();
         services.AddSingleton<IImageDescriptionFeatureAvailability, ImageDescriptionFeatureAvailability>();
+        services.AddSingleton<IImageForegroundExtractionFeatureAvailability, ImageForegroundExtractionFeatureAvailability>();
         services.AddSingleton<IFileSystem, LocalFileSystem>();
         services.AddSingleton<IGlobalizationService, GlobalizationService>();
         services.AddSingleton<INavigationService, NavigationService>();

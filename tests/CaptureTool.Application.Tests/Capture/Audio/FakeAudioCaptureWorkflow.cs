@@ -1,5 +1,5 @@
-using CaptureTool.Application.Capture.Audio;
 using CaptureTool.Application.Abstractions.Capture;
+using CaptureTool.Application.Capture.Audio;
 using CaptureTool.Domain.Capture;
 using CaptureTool.Domain.FileSystem;
 

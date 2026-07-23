@@ -1,5 +1,5 @@
-using CaptureTool.Application.Abstractions.Edit.Image.TextExtraction;
 using CaptureTool.Application.Abstractions.Edit.Image.Rendering;
+using CaptureTool.Application.Abstractions.Edit.Image.TextExtraction;
 using CaptureTool.Application.Abstractions.Localization;
 using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Application.Abstractions.Themes;

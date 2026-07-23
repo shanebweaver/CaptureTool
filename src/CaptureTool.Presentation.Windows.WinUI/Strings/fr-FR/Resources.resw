@@ -1526,4 +1526,49 @@ SOFTWARE.
   <data name="ImageDescriptionStatus_Failed" xml:space="preserve">
     <value>Échec de la description de l’image.</value>
   </data>
+  <data name="ImageEdit_ForegroundExtractionButton.Label" xml:space="preserve">
+    <value>Supprimer l’arrière-plan</value>
+  </data>
+  <data name="ImageEdit_ForegroundExtractionButton.AutomationProperties.Name" xml:space="preserve">
+    <value>Supprimer l’arrière-plan de l’image</value>
+  </data>
+  <data name="ImageEdit_ForegroundExtractionButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Extraire un sujet au premier plan avec l’IA sur l’appareil</value>
+  </data>
+  <data name="ForegroundExtractionToolbar_Instruction.Text" xml:space="preserve">
+    <value>Cliquez sur le sujet au premier plan que vous souhaitez conserver.</value>
+  </data>
+  <data name="ImageEdit_ForegroundExtractionProgressRing.AutomationProperties.Name" xml:space="preserve">
+    <value>Suppression de l’arrière-plan de l’image</value>
+  </data>
+  <data name="AiFeatureConsentDialog_ImageForegroundExtractionTitle" xml:space="preserve">
+    <value>Autoriser la suppression de l’arrière-plan ?</value>
+  </data>
+  <data name="AiFeatureConsentDialog_ImageForegroundExtractionContent" xml:space="preserve">
+    <value>La suppression de l’arrière-plan utilise un modèle d’IA sur l’appareil pour isoler le sujet sélectionné et supprimer son arrière-plan.</value>
+  </data>
+  <data name="Settings_AiConsent_ImageForegroundExtractionDisplayName" xml:space="preserve">
+    <value>Suppression de l’arrière-plan</value>
+  </data>
+  <data name="ForegroundExtractionStatus_Success" xml:space="preserve">
+    <value>Arrière-plan supprimé.</value>
+  </data>
+  <data name="ForegroundExtractionStatus_NotSupported" xml:space="preserve">
+    <value>La suppression de l’arrière-plan n’est pas prise en charge sur ce PC.</value>
+  </data>
+  <data name="ForegroundExtractionStatus_Disabled" xml:space="preserve">
+    <value>La suppression de l’arrière-plan est désactivée sur ce PC.</value>
+  </data>
+  <data name="ForegroundExtractionStatus_NotAvailable" xml:space="preserve">
+    <value>La suppression de l’arrière-plan n’est pas disponible.</value>
+  </data>
+  <data name="ForegroundExtractionStatus_PreparationFailed" xml:space="preserve">
+    <value>La suppression de l’arrière-plan n’a pas pu être préparée.</value>
+  </data>
+  <data name="ForegroundExtractionStatus_NotReady" xml:space="preserve">
+    <value>La suppression de l’arrière-plan n’est pas prête.</value>
+  </data>
+  <data name="ForegroundExtractionStatus_Failed" xml:space="preserve">
+    <value>Échec de la suppression de l’arrière-plan.</value>
+  </data>
 </root>

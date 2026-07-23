@@ -1,10 +1,10 @@
 using CaptureTool.Application.Abstractions.Capture.Overlay.GoBackFromCaptureOverlay;
 using CaptureTool.Application.Abstractions.Capture.Video.CancelVideoCapture;
 using CaptureTool.Application.Abstractions.Navigation;
-using CaptureTool.Domain.Capture;
 using CaptureTool.Application.Abstractions.UseCases;
 using CaptureTool.Application.Capture.Video;
 using CaptureTool.Application.UseCases;
+using CaptureTool.Domain.Capture;
 
 namespace CaptureTool.Application.Capture.Overlay.GoBackFromCaptureOverlay;
 

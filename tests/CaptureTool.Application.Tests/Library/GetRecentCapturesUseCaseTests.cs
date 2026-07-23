@@ -1,8 +1,6 @@
-using CaptureTool.Application.Tests;
 using CaptureTool.Application.Abstractions.Library.RecentCaptures.GetRecentCaptures;
 using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Application.Library.RecentCaptures.GetRecentCaptures;
-using CaptureTool.Domain.Capture;
 using Moq;
 
 namespace CaptureTool.Application.Tests.Library;

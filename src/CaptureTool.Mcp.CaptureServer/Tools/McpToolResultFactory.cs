@@ -1,5 +1,4 @@
 using CaptureTool.Mcp.CaptureServer.Models;
-using CaptureTool.Mcp.CaptureServer.Abstractions;
 using ModelContextProtocol.Protocol;
 using System.Text.Json;
 

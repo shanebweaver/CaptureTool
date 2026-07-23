@@ -1526,4 +1526,49 @@ SOFTWARE.
   <data name="ImageDescriptionStatus_Failed" xml:space="preserve">
     <value>Error en la descripción de la imagen.</value>
   </data>
+  <data name="ImageEdit_ForegroundExtractionButton.Label" xml:space="preserve">
+    <value>Quitar fondo</value>
+  </data>
+  <data name="ImageEdit_ForegroundExtractionButton.AutomationProperties.Name" xml:space="preserve">
+    <value>Quitar el fondo de la imagen</value>
+  </data>
+  <data name="ImageEdit_ForegroundExtractionButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Extraer un sujeto en primer plano con IA en el dispositivo</value>
+  </data>
+  <data name="ForegroundExtractionToolbar_Instruction.Text" xml:space="preserve">
+    <value>Haz clic en el sujeto en primer plano que quieras conservar.</value>
+  </data>
+  <data name="ImageEdit_ForegroundExtractionProgressRing.AutomationProperties.Name" xml:space="preserve">
+    <value>Quitando el fondo de la imagen</value>
+  </data>
+  <data name="AiFeatureConsentDialog_ImageForegroundExtractionTitle" xml:space="preserve">
+    <value>¿Permitir quitar el fondo?</value>
+  </data>
+  <data name="AiFeatureConsentDialog_ImageForegroundExtractionContent" xml:space="preserve">
+    <value>Quitar fondo usa un modelo de IA en el dispositivo para aislar el sujeto que selecciones y eliminar su fondo.</value>
+  </data>
+  <data name="Settings_AiConsent_ImageForegroundExtractionDisplayName" xml:space="preserve">
+    <value>Quitar fondo</value>
+  </data>
+  <data name="ForegroundExtractionStatus_Success" xml:space="preserve">
+    <value>Fondo eliminado.</value>
+  </data>
+  <data name="ForegroundExtractionStatus_NotSupported" xml:space="preserve">
+    <value>Este PC no admite la eliminación del fondo.</value>
+  </data>
+  <data name="ForegroundExtractionStatus_Disabled" xml:space="preserve">
+    <value>La eliminación del fondo está deshabilitada en este PC.</value>
+  </data>
+  <data name="ForegroundExtractionStatus_NotAvailable" xml:space="preserve">
+    <value>La eliminación del fondo no está disponible.</value>
+  </data>
+  <data name="ForegroundExtractionStatus_PreparationFailed" xml:space="preserve">
+    <value>No se pudo preparar la eliminación del fondo.</value>
+  </data>
+  <data name="ForegroundExtractionStatus_NotReady" xml:space="preserve">
+    <value>La eliminación del fondo no está lista.</value>
+  </data>
+  <data name="ForegroundExtractionStatus_Failed" xml:space="preserve">
+    <value>Error al quitar el fondo.</value>
+  </data>
 </root>

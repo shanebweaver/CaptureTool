@@ -1,4 +1,3 @@
-using CaptureTool.Application.Tests;
 using CaptureTool.Domain.Edit.Drawable;
 using CaptureTool.Domain.Edit.Operations;
 using System.Drawing;

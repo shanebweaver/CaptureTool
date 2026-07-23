@@ -1,6 +1,5 @@
-using CaptureTool.Application.Abstractions.Capture;
 using CaptureKit.Abstractions;
-using CaptureTool.Domain.Capture;
+using CaptureTool.Application.Abstractions.Capture;
 using CaptureTool.Domain.FileSystem;
 
 namespace CaptureTool.Infrastructure.Capture.Windows;

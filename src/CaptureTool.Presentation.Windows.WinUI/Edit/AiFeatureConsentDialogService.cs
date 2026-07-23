@@ -62,6 +62,11 @@ internal sealed class AiFeatureConsentDialogService : IAiFeatureConsentDialogSer
                 GetString(
                     "AiFeatureConsentDialog_ImageDescriptionContent",
                     "Image Description uses an on-device AI model to describe the current image.")),
+            AiFeatureId.ImageForegroundExtraction => (
+                GetString("AiFeatureConsentDialog_ImageForegroundExtractionTitle", "Allow Background Removal?"),
+                GetString(
+                    "AiFeatureConsentDialog_ImageForegroundExtractionContent",
+                    "Background Removal uses an on-device AI model to isolate the subject you select and remove its background.")),
             _ => (
                 "Allow AI feature?",
                 "This feature uses an on-device AI model to process the current image.")

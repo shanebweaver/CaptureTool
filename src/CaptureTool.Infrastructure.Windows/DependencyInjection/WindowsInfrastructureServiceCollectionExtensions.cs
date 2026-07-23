@@ -11,6 +11,7 @@ using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Application.Abstractions.Store;
 using CaptureTool.Application.Abstractions.TaskEnvironment;
 using CaptureTool.Application.Abstractions.Themes;
+using CaptureTool.Infrastructure.Storage;
 using CaptureTool.Infrastructure.Windows.Audio;
 using CaptureTool.Infrastructure.Windows.Clipboard;
 using CaptureTool.Infrastructure.Windows.Feedback;
@@ -22,7 +23,6 @@ using CaptureTool.Infrastructure.Windows.Storage;
 using CaptureTool.Infrastructure.Windows.Store;
 using CaptureTool.Infrastructure.Windows.TaskEnvironment;
 using CaptureTool.Infrastructure.Windows.Themes;
-using CaptureTool.Infrastructure.Storage;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.UI.Dispatching;
 

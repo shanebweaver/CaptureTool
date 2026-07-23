@@ -1,6 +1,6 @@
+using CaptureTool.Application.Abstractions.Ai;
 using CaptureTool.Application.Abstractions.Edit.External;
 using CaptureTool.Application.Abstractions.EditSessions;
-using CaptureTool.Application.Abstractions.Ai;
 using CaptureTool.Application.Ai;
 using CaptureTool.Application.Edit.External;
 using CaptureTool.Application.EditSessions;

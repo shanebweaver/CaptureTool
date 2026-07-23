@@ -1,7 +1,7 @@
-using CaptureTool.Application.Abstractions.Settings.ClearTempFiles;
 using CaptureTool.Application.Abstractions.Files;
 using CaptureTool.Application.Abstractions.Library.RecentCaptures;
 using CaptureTool.Application.Abstractions.Logging;
+using CaptureTool.Application.Abstractions.Settings.ClearTempFiles;
 using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Application.Abstractions.UseCases;
 using CaptureTool.Application.UseCases;

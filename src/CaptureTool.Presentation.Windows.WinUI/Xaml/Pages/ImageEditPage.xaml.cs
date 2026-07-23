@@ -107,6 +107,7 @@ public sealed partial class ImageEditPage : ImageEditPageBase
         SetToolbarHostState(ColorPickerToolbarHost, ViewModel.IsColorPickerModeActive);
         SetToolbarHostState(TextExtractionToolbarHost, ViewModel.IsTextExtractionModeActive);
         SetToolbarHostState(ImageDescriptionToolbarHost, ViewModel.IsImageDescriptionModeActive);
+        SetToolbarHostState(ForegroundExtractionToolbarHost, ViewModel.IsForegroundExtractionModeActive);
     }
 
     private void ViewModel_PropertyChanged(object? sender, PropertyChangedEventArgs e)
@@ -130,6 +131,9 @@ public sealed partial class ImageEditPage : ImageEditPageBase
                 break;
             case nameof(ViewModel.IsImageDescriptionModeActive):
                 AnimateToolbarHost(ImageDescriptionToolbarHost, ViewModel.IsImageDescriptionModeActive);
+                break;
+            case nameof(ViewModel.IsForegroundExtractionModeActive):
+                AnimateToolbarHost(ForegroundExtractionToolbarHost, ViewModel.IsForegroundExtractionModeActive);
                 break;
         }
     }
@@ -417,6 +421,11 @@ public sealed partial class ImageEditPage : ImageEditPageBase
     private async void ImageCanvas_ColorPickerColorPicked(object? _, Color color)
     {
         await ViewModel.OnColorPickerColorPickedAsync(color);
+    }
+
+    private async void ImageCanvas_ForegroundExtractionRequested(object? _, System.Numerics.Vector2 point)
+    {
+        await ViewModel.OnForegroundExtractionRequestedAsync(point);
     }
 
     private void ImageCanvas_ImageContextMenuRequested(object? _, Point position)

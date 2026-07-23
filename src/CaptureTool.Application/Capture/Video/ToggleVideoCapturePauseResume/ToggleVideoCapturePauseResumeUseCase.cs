@@ -1,6 +1,5 @@
 using CaptureTool.Application.Abstractions.Capture.Video.ToggleVideoCapturePauseResume;
 using CaptureTool.Application.Abstractions.UseCases;
-using CaptureTool.Application.Capture.Video;
 using CaptureTool.Application.UseCases;
 
 namespace CaptureTool.Application.Capture.Video.ToggleVideoCapturePauseResume;

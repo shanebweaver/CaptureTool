@@ -1,5 +1,5 @@
-using CaptureTool.Application.Abstractions.Settings.UpdateImageAutoCopy;
 using CaptureTool.Application.Abstractions.Settings;
+using CaptureTool.Application.Abstractions.Settings.UpdateImageAutoCopy;
 using CaptureTool.Application.Abstractions.UseCases;
 using CaptureTool.Application.UseCases;
 

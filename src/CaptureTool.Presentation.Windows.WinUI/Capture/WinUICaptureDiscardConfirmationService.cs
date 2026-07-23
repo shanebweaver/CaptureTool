@@ -1,10 +1,10 @@
-using CommunityToolkit.Mvvm.Input;
 using CaptureTool.Application.Abstractions.Capture;
 using CaptureTool.Presentation.Windows.WinUI.Utils;
 using CaptureTool.Presentation.Windows.WinUI.Xaml.Controls;
+using CommunityToolkit.Mvvm.Input;
 using Microsoft.UI.Xaml;
-using System.Drawing;
 using Microsoft.Windows.ApplicationModel.Resources;
+using System.Drawing;
 
 namespace CaptureTool.Presentation.Windows.WinUI.Capture;
 

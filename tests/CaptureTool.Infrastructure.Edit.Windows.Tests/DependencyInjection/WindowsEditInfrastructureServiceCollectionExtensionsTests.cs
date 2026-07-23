@@ -1,5 +1,6 @@
 using CaptureTool.Application.Abstractions.Edit.Image.ChromaKey;
 using CaptureTool.Application.Abstractions.Edit.Image.Description;
+using CaptureTool.Application.Abstractions.Edit.Image.ForegroundExtraction;
 using CaptureTool.Application.Abstractions.Edit.Image.Rendering;
 using CaptureTool.Application.Abstractions.Edit.Image.SuperResolution;
 using CaptureTool.Application.Abstractions.Edit.Image.TextExtraction;
@@ -24,6 +25,7 @@ public sealed class WindowsEditInfrastructureServiceCollectionExtensionsTests
         services.ShouldContainSingleton<IImageSuperResolutionService, WindowsImageSuperResolutionService>();
         services.ShouldContainSingleton<ITextExtractionService, WindowsTextExtractionService>();
         services.ShouldContainSingleton<IImageDescriptionService, WindowsImageDescriptionService>();
+        services.ShouldContainSingleton<IImageForegroundExtractionService, WindowsImageForegroundExtractionService>();
         services.ShouldContainSingleton<IImageCanvasExporter, Win2DImageCanvasExporter>();
         services.ShouldContainSingleton<IImageCanvasPrinter, Win2DImageCanvasPrinter>();
     }

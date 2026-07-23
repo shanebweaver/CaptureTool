@@ -1,4 +1,3 @@
-using CaptureTool.Application.Tests;
 using CaptureTool.Application.Abstractions.Edit.Image.ChromaKey;
 using System.Drawing;
 

@@ -1,6 +1,5 @@
-using CaptureTool.Application.Abstractions.Capture;
-using CaptureTool.Domain.Capture;
 using CaptureKit.Windows.DependencyInjection;
+using CaptureTool.Application.Abstractions.Capture;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace CaptureTool.Infrastructure.Capture.Windows.DependencyInjection;

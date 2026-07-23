@@ -1526,4 +1526,49 @@ SOFTWARE.
   <data name="ImageDescriptionStatus_Failed" xml:space="preserve">
     <value>图像描述失败。</value>
   </data>
+  <data name="ImageEdit_ForegroundExtractionButton.Label" xml:space="preserve">
+    <value>移除背景</value>
+  </data>
+  <data name="ImageEdit_ForegroundExtractionButton.AutomationProperties.Name" xml:space="preserve">
+    <value>移除图像背景</value>
+  </data>
+  <data name="ImageEdit_ForegroundExtractionButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>使用设备上的 AI 提取前景主体</value>
+  </data>
+  <data name="ForegroundExtractionToolbar_Instruction.Text" xml:space="preserve">
+    <value>单击要保留的前景主体。</value>
+  </data>
+  <data name="ImageEdit_ForegroundExtractionProgressRing.AutomationProperties.Name" xml:space="preserve">
+    <value>正在移除图像背景</value>
+  </data>
+  <data name="AiFeatureConsentDialog_ImageForegroundExtractionTitle" xml:space="preserve">
+    <value>允许移除背景吗？</value>
+  </data>
+  <data name="AiFeatureConsentDialog_ImageForegroundExtractionContent" xml:space="preserve">
+    <value>背景移除功能使用设备上的 AI 模型来分离你选择的主体并移除其背景。</value>
+  </data>
+  <data name="Settings_AiConsent_ImageForegroundExtractionDisplayName" xml:space="preserve">
+    <value>背景移除</value>
+  </data>
+  <data name="ForegroundExtractionStatus_Success" xml:space="preserve">
+    <value>背景已移除。</value>
+  </data>
+  <data name="ForegroundExtractionStatus_NotSupported" xml:space="preserve">
+    <value>此电脑不支持背景移除。</value>
+  </data>
+  <data name="ForegroundExtractionStatus_Disabled" xml:space="preserve">
+    <value>此电脑已禁用背景移除。</value>
+  </data>
+  <data name="ForegroundExtractionStatus_NotAvailable" xml:space="preserve">
+    <value>背景移除不可用。</value>
+  </data>
+  <data name="ForegroundExtractionStatus_PreparationFailed" xml:space="preserve">
+    <value>无法准备背景移除。</value>
+  </data>
+  <data name="ForegroundExtractionStatus_NotReady" xml:space="preserve">
+    <value>背景移除尚未就绪。</value>
+  </data>
+  <data name="ForegroundExtractionStatus_Failed" xml:space="preserve">
+    <value>背景移除失败。</value>
+  </data>
 </root>

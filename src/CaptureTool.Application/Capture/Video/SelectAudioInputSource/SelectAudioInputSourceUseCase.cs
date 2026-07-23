@@ -1,7 +1,6 @@
 using CaptureTool.Application.Abstractions.Audio;
 using CaptureTool.Application.Abstractions.Capture.Video.SelectAudioInputSource;
 using CaptureTool.Application.Abstractions.UseCases;
-using CaptureTool.Application.Capture.Video;
 using CaptureTool.Application.UseCases;
 
 namespace CaptureTool.Application.Capture.Video.SelectAudioInputSource;

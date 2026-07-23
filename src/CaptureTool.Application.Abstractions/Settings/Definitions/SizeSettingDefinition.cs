@@ -1,4 +1,3 @@
-using CaptureTool.Application.Abstractions.Settings;
 using System.Drawing;
 
 namespace CaptureTool.Application.Abstractions.Settings.Definitions;

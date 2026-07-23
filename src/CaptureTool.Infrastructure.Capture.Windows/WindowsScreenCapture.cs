@@ -1,5 +1,5 @@
-using CaptureTool.Application.Abstractions.Capture;
 using CaptureKit.Abstractions;
+using CaptureTool.Application.Abstractions.Capture;
 using CaptureTool.Domain.Capture;
 using System.Drawing;
 using System.Drawing.Imaging;

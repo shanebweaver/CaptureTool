@@ -5,8 +5,8 @@ using CaptureTool.Application.Abstractions.Library.RecentCaptures.GetRecentCaptu
 using CaptureTool.Application.Abstractions.Library.RecentCaptures.OpenRecentCapture;
 using CaptureTool.Application.Abstractions.Metrics;
 using CaptureTool.Application.Abstractions.Store;
-using CaptureTool.Domain.FileSystem;
 using CaptureTool.Domain.Capture;
+using CaptureTool.Domain.FileSystem;
 using CaptureTool.Presentation.Factories;
 using CaptureTool.Presentation.Features.RecentCaptures;
 using CaptureTool.Presentation.Shared.Commands;

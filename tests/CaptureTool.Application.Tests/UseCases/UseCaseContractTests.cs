@@ -1,4 +1,3 @@
-using CaptureTool.Application.Tests;
 using CaptureTool.Application.Abstractions.Capture.Audio.MuteAudioCapture;
 using CaptureTool.Application.Abstractions.Settings.UpdateAppTheme;
 using CaptureTool.Application.Abstractions.Themes;

@@ -1,5 +1,4 @@
 using CaptureTool.Application.Abstractions.Capture;
-using CaptureTool.Domain.Capture;
 using CaptureTool.Infrastructure.Capture.Windows.DependencyInjection;
 using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;

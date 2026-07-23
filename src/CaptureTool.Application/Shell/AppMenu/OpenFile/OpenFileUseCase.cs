@@ -1,13 +1,13 @@
-using CaptureTool.Application.Abstractions.Shell.AppMenu.OpenFile;
 using CaptureTool.Application.Abstractions.Capture.Audio;
-using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Application.Abstractions.Files;
+using CaptureTool.Application.Abstractions.Navigation;
+using CaptureTool.Application.Abstractions.Shell.AppMenu.OpenFile;
 using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Application.Abstractions.Time;
-using CaptureTool.Domain.Capture;
-using CaptureTool.Domain.FileSystem;
 using CaptureTool.Application.Abstractions.UseCases;
 using CaptureTool.Application.UseCases;
+using CaptureTool.Domain.Capture;
+using CaptureTool.Domain.FileSystem;
 
 namespace CaptureTool.Application.Shell.AppMenu.OpenFile;
 

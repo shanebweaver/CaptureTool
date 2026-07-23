@@ -1526,4 +1526,49 @@ SOFTWARE.
   <data name="ImageDescriptionStatus_Failed" xml:space="preserve">
     <value>Не удалось создать описание изображения.</value>
   </data>
+  <data name="ImageEdit_ForegroundExtractionButton.Label" xml:space="preserve">
+    <value>Удалить фон</value>
+  </data>
+  <data name="ImageEdit_ForegroundExtractionButton.AutomationProperties.Name" xml:space="preserve">
+    <value>Удалить фон изображения</value>
+  </data>
+  <data name="ImageEdit_ForegroundExtractionButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Выделить объект на переднем плане с помощью ИИ на устройстве</value>
+  </data>
+  <data name="ForegroundExtractionToolbar_Instruction.Text" xml:space="preserve">
+    <value>Щелкните объект на переднем плане, который нужно сохранить.</value>
+  </data>
+  <data name="ImageEdit_ForegroundExtractionProgressRing.AutomationProperties.Name" xml:space="preserve">
+    <value>Удаление фона изображения</value>
+  </data>
+  <data name="AiFeatureConsentDialog_ImageForegroundExtractionTitle" xml:space="preserve">
+    <value>Разрешить удаление фона?</value>
+  </data>
+  <data name="AiFeatureConsentDialog_ImageForegroundExtractionContent" xml:space="preserve">
+    <value>Удаление фона использует модель ИИ на устройстве, чтобы выделить выбранный объект и удалить его фон.</value>
+  </data>
+  <data name="Settings_AiConsent_ImageForegroundExtractionDisplayName" xml:space="preserve">
+    <value>Удаление фона</value>
+  </data>
+  <data name="ForegroundExtractionStatus_Success" xml:space="preserve">
+    <value>Фон удален.</value>
+  </data>
+  <data name="ForegroundExtractionStatus_NotSupported" xml:space="preserve">
+    <value>Удаление фона не поддерживается на этом компьютере.</value>
+  </data>
+  <data name="ForegroundExtractionStatus_Disabled" xml:space="preserve">
+    <value>Удаление фона отключено на этом компьютере.</value>
+  </data>
+  <data name="ForegroundExtractionStatus_NotAvailable" xml:space="preserve">
+    <value>Удаление фона недоступно.</value>
+  </data>
+  <data name="ForegroundExtractionStatus_PreparationFailed" xml:space="preserve">
+    <value>Не удалось подготовить удаление фона.</value>
+  </data>
+  <data name="ForegroundExtractionStatus_NotReady" xml:space="preserve">
+    <value>Удаление фона не готово.</value>
+  </data>
+  <data name="ForegroundExtractionStatus_Failed" xml:space="preserve">
+    <value>Не удалось удалить фон.</value>
+  </data>
 </root>

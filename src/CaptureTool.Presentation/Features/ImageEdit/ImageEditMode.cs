@@ -9,5 +9,6 @@ internal enum ImageEditMode
     ChromaKey,
     ColorPicker,
     TextExtraction,
-    ImageDescription
+    ImageDescription,
+    ForegroundExtraction
 }

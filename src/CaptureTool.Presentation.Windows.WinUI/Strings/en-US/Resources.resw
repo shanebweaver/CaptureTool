@@ -1755,4 +1755,49 @@ SOFTWARE.
   <data name="ImageDescriptionStatus_Failed" xml:space="preserve">
     <value>Image Description failed.</value>
   </data>
+  <data name="ImageEdit_ForegroundExtractionButton.Label" xml:space="preserve">
+    <value>Background removal</value>
+  </data>
+  <data name="ImageEdit_ForegroundExtractionButton.AutomationProperties.Name" xml:space="preserve">
+    <value>Remove image background</value>
+  </data>
+  <data name="ImageEdit_ForegroundExtractionButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Extract a foreground subject using on-device AI</value>
+  </data>
+  <data name="ForegroundExtractionToolbar_Instruction.Text" xml:space="preserve">
+    <value>Click the foreground subject you want to keep.</value>
+  </data>
+  <data name="ImageEdit_ForegroundExtractionProgressRing.AutomationProperties.Name" xml:space="preserve">
+    <value>Removing image background</value>
+  </data>
+  <data name="AiFeatureConsentDialog_ImageForegroundExtractionTitle" xml:space="preserve">
+    <value>Allow Background Removal?</value>
+  </data>
+  <data name="AiFeatureConsentDialog_ImageForegroundExtractionContent" xml:space="preserve">
+    <value>Background Removal uses an on-device AI model to isolate the subject you select and remove its background.</value>
+  </data>
+  <data name="Settings_AiConsent_ImageForegroundExtractionDisplayName" xml:space="preserve">
+    <value>Background removal</value>
+  </data>
+  <data name="ForegroundExtractionStatus_Success" xml:space="preserve">
+    <value>Background removed.</value>
+  </data>
+  <data name="ForegroundExtractionStatus_NotSupported" xml:space="preserve">
+    <value>Background removal is not supported on this PC.</value>
+  </data>
+  <data name="ForegroundExtractionStatus_Disabled" xml:space="preserve">
+    <value>Background removal is disabled on this PC.</value>
+  </data>
+  <data name="ForegroundExtractionStatus_NotAvailable" xml:space="preserve">
+    <value>Background removal is not available.</value>
+  </data>
+  <data name="ForegroundExtractionStatus_PreparationFailed" xml:space="preserve">
+    <value>Background removal could not be prepared.</value>
+  </data>
+  <data name="ForegroundExtractionStatus_NotReady" xml:space="preserve">
+    <value>Background removal is not ready.</value>
+  </data>
+  <data name="ForegroundExtractionStatus_Failed" xml:space="preserve">
+    <value>Background removal failed.</value>
+  </data>
 </root>

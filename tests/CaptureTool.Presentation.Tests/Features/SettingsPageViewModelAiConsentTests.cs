@@ -1,7 +1,8 @@
 using CaptureTool.Application.Abstractions.Ai;
+using CaptureTool.Application.Abstractions.Edit.Image.Description;
+using CaptureTool.Application.Abstractions.Edit.Image.ForegroundExtraction;
 using CaptureTool.Application.Abstractions.Edit.Image.SuperResolution;
 using CaptureTool.Application.Abstractions.Edit.Image.TextExtraction;
-using CaptureTool.Application.Abstractions.Edit.Image.Description;
 using CaptureTool.Application.Abstractions.Localization;
 using CaptureTool.Application.Abstractions.Metrics;
 using CaptureTool.Application.Abstractions.Settings;
@@ -112,11 +113,29 @@ public sealed class SettingsPageViewModelAiConsentTests
             consent.DisplayName == "Localized image description");
     }
 
+    [TestMethod]
+    public async Task LoadAsync_WhenOnlyForegroundExtractionFeatureEnabled_ShouldShowBackgroundRemovalConsentOnly()
+    {
+        SettingsPageViewModel viewModel = CreateViewModel(
+            isImageSuperResolutionEnabled: false,
+            isTextExtractionEnabled: false,
+            isImageDescriptionEnabled: false,
+            isImageForegroundExtractionEnabled: true);
+
+        await viewModel.LoadAsync(TestContext.CancellationToken);
+
+        viewModel.IsAiConsentSettingsVisible.Should().BeTrue();
+        viewModel.AiFeatureConsents.Should().ContainSingle(consent =>
+            consent.FeatureId == AiFeatureId.ImageForegroundExtraction &&
+            consent.DisplayName == "Localized background removal");
+    }
+
     private static SettingsPageViewModel CreateViewModel(
         bool isAiConsentSettingsEnabled = true,
         bool isImageSuperResolutionEnabled = true,
         bool isTextExtractionEnabled = true,
-        bool isImageDescriptionEnabled = false)
+        bool isImageDescriptionEnabled = false,
+        bool isImageForegroundExtractionEnabled = false)
     {
         var localization = new Mock<ILocalizationService>();
         localization
@@ -128,6 +147,7 @@ public sealed class SettingsPageViewModelAiConsentTests
             {
                 "Settings_AiConsent_TextExtractionDisplayName" => "Localized text extraction",
                 "Settings_AiConsent_ImageDescriptionDisplayName" => "Localized image description",
+                "Settings_AiConsent_ImageForegroundExtractionDisplayName" => "Localized background removal",
                 _ => resourceKey
             });
 
@@ -145,7 +165,8 @@ public sealed class SettingsPageViewModelAiConsentTests
             .Returns([
                 new(AiFeatureId.TextExtraction, "Text extraction", AiFeatureConsentState.Granted),
                 new(AiFeatureId.ImageSuperResolution, "Super image resolution", AiFeatureConsentState.Granted),
-                new(AiFeatureId.ImageDescription, "Image description", AiFeatureConsentState.Granted)
+                new(AiFeatureId.ImageDescription, "Image description", AiFeatureConsentState.Granted),
+                new(AiFeatureId.ImageForegroundExtraction, "Background removal", AiFeatureConsentState.Granted)
             ]);
 
         var appLanguageViewModelFactory = new Mock<IFactoryServiceWithArgs<AppLanguageViewModel, IAppLanguage?>>();
@@ -215,7 +236,9 @@ public sealed class SettingsPageViewModelAiConsentTests
             appLanguageViewModelFactory.Object,
             appThemeViewModelFactory.Object,
             Mock.Of<IImageDescriptionFeatureAvailability>(service =>
-                service.IsImageDescriptionEnabled == isImageDescriptionEnabled));
+                service.IsImageDescriptionEnabled == isImageDescriptionEnabled),
+            Mock.Of<IImageForegroundExtractionFeatureAvailability>(service =>
+                service.IsImageForegroundExtractionEnabled == isImageForegroundExtractionEnabled));
     }
 
     public TestContext TestContext { get; set; } = null!;
