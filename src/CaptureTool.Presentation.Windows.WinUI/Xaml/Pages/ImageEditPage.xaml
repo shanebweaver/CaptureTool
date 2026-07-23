@@ -91,6 +91,28 @@
                 </AppBarToggleButton.Icon>
             </AppBarToggleButton>
             <AppBarToggleButton
+                x:Uid="ImageEdit_ObjectEraseButton"
+                AutomationProperties.AutomationId="ImageEdit_ObjectEraseButton"
+                Command="{x:Bind ViewModel.ToggleObjectEraseModeCommand}"
+                IsChecked="{x:Bind ViewModel.IsObjectEraseModeActive, Mode=OneWay}"
+                IsEnabled="{x:Bind ViewModel.CanToggleObjectErase, Mode=OneWay}"
+                Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.IsObjectEraseAvailable), Mode=OneWay}">
+                <AppBarToggleButton.Icon>
+                    <FontIcon Glyph="&#xE74D;" />
+                </AppBarToggleButton.Icon>
+            </AppBarToggleButton>
+            <AppBarToggleButton
+                x:Uid="ImageEdit_ObjectExtractionButton"
+                AutomationProperties.AutomationId="ImageEdit_ObjectExtractionButton"
+                Command="{x:Bind ViewModel.ToggleObjectExtractionModeCommand}"
+                IsChecked="{x:Bind ViewModel.IsObjectExtractionModeActive, Mode=OneWay}"
+                IsEnabled="{x:Bind ViewModel.CanToggleObjectExtraction, Mode=OneWay}"
+                Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.IsObjectExtractionAvailable), Mode=OneWay}">
+                <AppBarToggleButton.Icon>
+                    <FontIcon Glyph="&#xE8B7;" />
+                </AppBarToggleButton.Icon>
+            </AppBarToggleButton>
+            <AppBarToggleButton
                 x:Uid="ImageEdit_ColorPickerButton"
                 Command="{x:Bind ViewModel.ToggleColorPickerModeCommand}"
                 IsChecked="{x:Bind ViewModel.IsColorPickerModeActive, Mode=OneWay}"
@@ -236,11 +258,15 @@
                 CropRectChanged="ImageCanvas_CropRectChanged"
                 Drawables="{x:Bind ViewModel.Drawables, Mode=OneWay}"
                 ForegroundExtractionRequested="ImageCanvas_ForegroundExtractionRequested"
+                ObjectEraseRequested="ImageCanvas_ObjectEraseRequested"
+                ObjectExtractionRequested="ImageCanvas_ObjectExtractionRequested"
                 InteractionComplete="ImageCanvas_InteractionComplete"
                 IsAutoZoomLocked="{x:Bind ViewModel.IsAutoZoomLocked, Mode=OneWay}"
                 IsColorPickerModeEnabled="{x:Bind ViewModel.IsColorPickerModeActive, Mode=OneWay}"
                 IsCropModeEnabled="{x:Bind ViewModel.IsCropModeActive, Mode=OneWay}"
                 IsForegroundExtractionModeEnabled="{x:Bind ViewModel.IsForegroundExtractionModeActive, Mode=OneWay}"
+                IsObjectEraseModeEnabled="{x:Bind ViewModel.IsObjectEraseModeActive, Mode=OneWay}"
+                IsObjectExtractionModeEnabled="{x:Bind ViewModel.IsObjectExtractionModeActive, Mode=OneWay}"
                 IsShapesModeEnabled="{x:Bind ViewModel.IsShapesModeActive, Mode=OneWay}"
                 IsTextModeEnabled="{x:Bind ViewModel.IsTextModeActive, Mode=OneWay}"
                 IsTextExtractionOverlayEnabled="{x:Bind ViewModel.IsTextExtractionModeActive, Mode=OneWay}"
@@ -392,6 +418,28 @@
                     </controls:ForegroundExtractionToolbar.RenderTransform>
                 </controls:ForegroundExtractionToolbar>
 
+                <!--  Object erase instructions  -->
+                <controls:ObjectEraseToolbar
+                    x:Name="ObjectEraseToolbarHost"
+                    HorizontalAlignment="Center"
+                    Opacity="0"
+                    Visibility="Collapsed">
+                    <controls:ObjectEraseToolbar.RenderTransform>
+                        <TranslateTransform Y="-8" />
+                    </controls:ObjectEraseToolbar.RenderTransform>
+                </controls:ObjectEraseToolbar>
+
+                <!--  Object extraction instructions  -->
+                <controls:ObjectExtractionToolbar
+                    x:Name="ObjectExtractionToolbarHost"
+                    HorizontalAlignment="Center"
+                    Opacity="0"
+                    Visibility="Collapsed">
+                    <controls:ObjectExtractionToolbar.RenderTransform>
+                        <TranslateTransform Y="-8" />
+                    </controls:ObjectExtractionToolbar.RenderTransform>
+                </controls:ObjectExtractionToolbar>
+
                 <!--  Image description options and output  -->
                 <StackPanel
                     x:Name="ImageDescriptionToolbarHost"
@@ -507,6 +555,28 @@
             VerticalAlignment="Center"
             IsActive="{x:Bind ViewModel.IsForegroundExtractionRunning, Mode=OneWay}"
             Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.IsForegroundExtractionRunning), Mode=OneWay}" />
+
+        <ProgressRing
+            x:Uid="ImageEdit_ObjectEraseProgressRing"
+            Grid.Row="2"
+            AutomationProperties.AutomationId="ImageEdit_ObjectEraseProgressRing"
+            Width="48"
+            Height="48"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center"
+            IsActive="{x:Bind ViewModel.IsObjectEraseRunning, Mode=OneWay}"
+            Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.IsObjectEraseRunning), Mode=OneWay}" />
+
+        <ProgressRing
+            x:Uid="ImageEdit_ObjectExtractionProgressRing"
+            Grid.Row="2"
+            AutomationProperties.AutomationId="ImageEdit_ObjectExtractionProgressRing"
+            Width="48"
+            Height="48"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center"
+            IsActive="{x:Bind ViewModel.IsObjectExtractionRunning, Mode=OneWay}"
+            Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.IsObjectExtractionRunning), Mode=OneWay}" />
 
         <Grid
             MinHeight="38"

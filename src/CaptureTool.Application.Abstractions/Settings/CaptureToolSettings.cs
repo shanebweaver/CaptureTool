@@ -23,4 +23,7 @@ public static partial class CaptureToolSettings
     public static readonly IBoolSettingDefinition Settings_AiConsent_ImageSuperResolution = new BoolSettingDefinition("Settings_AiConsent_ImageSuperResolution", false);
     public static readonly IBoolSettingDefinition Settings_AiConsent_ImageDescription = new BoolSettingDefinition("Settings_AiConsent_ImageDescription", false);
     public static readonly IBoolSettingDefinition Settings_AiConsent_ImageForegroundExtraction = new BoolSettingDefinition("Settings_AiConsent_ImageForegroundExtraction", false);
+    public static readonly IBoolSettingDefinition Settings_AiConsent_ImageObjectErase = new BoolSettingDefinition("Settings_AiConsent_ImageObjectErase", false);
+    public static readonly IBoolSettingDefinition Settings_AiConsent_ImageObjectExtraction = new BoolSettingDefinition("Settings_AiConsent_ImageObjectExtraction", false);
+    public static readonly IBoolSettingDefinition Settings_AiConsent_VideoSuperResolution = new BoolSettingDefinition("Settings_AiConsent_VideoSuperResolution", false);
 }

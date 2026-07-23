@@ -5,6 +5,9 @@ public enum AiFeatureId
     TextExtraction,
     ImageSuperResolution,
     ImageDescription,
-    ImageForegroundExtraction
+    ImageForegroundExtraction,
+    ImageObjectErase,
+    ImageObjectExtraction,
+    VideoSuperResolution
 }
 

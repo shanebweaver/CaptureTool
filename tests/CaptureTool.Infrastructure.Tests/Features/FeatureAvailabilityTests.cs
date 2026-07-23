@@ -1,7 +1,10 @@
 using CaptureTool.Application.Abstractions.Edit.Image.Description;
 using CaptureTool.Application.Abstractions.Edit.Image.ForegroundExtraction;
+using CaptureTool.Application.Abstractions.Edit.Image.ObjectErase;
+using CaptureTool.Application.Abstractions.Edit.Image.ObjectExtraction;
 using CaptureTool.Application.Abstractions.Edit.Image.SuperResolution;
 using CaptureTool.Application.Abstractions.Edit.Image.TextExtraction;
+using CaptureTool.Application.Abstractions.Edit.Video.SuperResolution;
 using CaptureTool.FeatureManagement;
 using CaptureTool.Infrastructure.Features;
 
@@ -127,6 +130,80 @@ public sealed class FeatureAvailabilityTests
         Assert.AreEqual(expected, availability.IsImageForegroundExtractionEnabled);
     }
 
+    [TestMethod]
+    public void ImageObjectEraseFeatureAvailability_ReturnsFeatureManagerValue()
+    {
+        Assert.IsTrue(new ImageObjectEraseFeatureAvailability(new ConstantFeatureManager(true)).IsImageObjectEraseEnabled);
+        Assert.IsFalse(new ImageObjectEraseFeatureAvailability(new ConstantFeatureManager(false)).IsImageObjectEraseEnabled);
+    }
+
+    [TestMethod]
+    [DataRow(ObjectEraseReadyState.Ready, true)]
+    [DataRow(ObjectEraseReadyState.PreparationNeeded, true)]
+    [DataRow(ObjectEraseReadyState.NotSupported, false)]
+    [DataRow(ObjectEraseReadyState.Disabled, false)]
+    [DataRow(ObjectEraseReadyState.Unknown, false)]
+    public void ImageObjectEraseFeatureAvailability_RequiresRunnableDevice(
+        ObjectEraseReadyState readyState,
+        bool expected)
+    {
+        var availability = new ImageObjectEraseFeatureAvailability(
+            new ConstantFeatureManager(true),
+            new StubImageObjectEraseService(readyState));
+
+        Assert.AreEqual(expected, availability.IsImageObjectEraseEnabled);
+    }
+
+    [TestMethod]
+    public void ImageObjectExtractionFeatureAvailability_ReturnsFeatureManagerValue()
+    {
+        Assert.IsTrue(new ImageObjectExtractionFeatureAvailability(new ConstantFeatureManager(true)).IsImageObjectExtractionEnabled);
+        Assert.IsFalse(new ImageObjectExtractionFeatureAvailability(new ConstantFeatureManager(false)).IsImageObjectExtractionEnabled);
+    }
+
+    [TestMethod]
+    [DataRow(ForegroundExtractionReadyState.Ready, true)]
+    [DataRow(ForegroundExtractionReadyState.PreparationNeeded, true)]
+    [DataRow(ForegroundExtractionReadyState.NotSupported, false)]
+    [DataRow(ForegroundExtractionReadyState.Disabled, false)]
+    [DataRow(ForegroundExtractionReadyState.Unknown, false)]
+    public void ImageObjectExtractionFeatureAvailability_RequiresRunnableDevice(
+        ForegroundExtractionReadyState readyState,
+        bool expected)
+    {
+        var availability = new ImageObjectExtractionFeatureAvailability(
+            new ConstantFeatureManager(true),
+            new StubImageForegroundExtractionService(readyState));
+
+        Assert.AreEqual(expected, availability.IsImageObjectExtractionEnabled);
+    }
+
+    [TestMethod]
+    public void VideoSuperResolutionFeatureAvailability_ReturnsFeatureManagerValue()
+    {
+        Assert.IsTrue(new VideoSuperResolutionFeatureAvailability(
+            new ConstantFeatureManager(true)).IsVideoSuperResolutionEnabled);
+        Assert.IsFalse(new VideoSuperResolutionFeatureAvailability(
+            new ConstantFeatureManager(false)).IsVideoSuperResolutionEnabled);
+    }
+
+    [TestMethod]
+    [DataRow(VideoSuperResolutionReadyState.Ready, true)]
+    [DataRow(VideoSuperResolutionReadyState.PreparationNeeded, true)]
+    [DataRow(VideoSuperResolutionReadyState.NotSupported, false)]
+    [DataRow(VideoSuperResolutionReadyState.Disabled, false)]
+    [DataRow(VideoSuperResolutionReadyState.Unknown, false)]
+    public void VideoSuperResolutionFeatureAvailability_RequiresRunnableDevice(
+        VideoSuperResolutionReadyState readyState,
+        bool expected)
+    {
+        var availability = new VideoSuperResolutionFeatureAvailability(
+            new ConstantFeatureManager(true),
+            new StubVideoSuperResolutionService(readyState));
+
+        Assert.AreEqual(expected, availability.IsVideoSuperResolutionEnabled);
+    }
+
     private sealed class ConstantFeatureManager : IFeatureManager
     {
         private readonly bool _isEnabled;
@@ -186,6 +263,32 @@ public sealed class FeatureAvailabilityTests
 
         public Task<ForegroundExtractionResult> ExtractAsync(
             ForegroundExtractionRequest request,
+            CancellationToken cancellationToken = default) => throw new NotSupportedException();
+    }
+
+    private sealed class StubImageObjectEraseService(ObjectEraseReadyState readyState)
+        : IImageObjectEraseService
+    {
+        public ObjectEraseReadyState GetReadyState() => readyState;
+
+        public Task<ObjectErasePreparationResult> EnsureReadyAsync(
+            CancellationToken cancellationToken = default) => throw new NotSupportedException();
+
+        public Task<ObjectEraseResult> EraseAsync(
+            ObjectEraseRequest request,
+            CancellationToken cancellationToken = default) => throw new NotSupportedException();
+    }
+
+    private sealed class StubVideoSuperResolutionService(VideoSuperResolutionReadyState readyState)
+        : IVideoSuperResolutionService
+    {
+        public VideoSuperResolutionReadyState GetReadyState() => readyState;
+
+        public Task<VideoSuperResolutionPreparationResult> EnsureReadyAsync(
+            CancellationToken cancellationToken = default) => throw new NotSupportedException();
+
+        public Task<VideoSuperResolutionResult> GenerateAsync(
+            VideoSuperResolutionRequest request,
             CancellationToken cancellationToken = default) => throw new NotSupportedException();
     }
 }

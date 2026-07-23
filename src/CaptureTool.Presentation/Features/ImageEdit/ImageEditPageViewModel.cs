@@ -5,6 +5,8 @@ using CaptureTool.Application.Abstractions.Edit.External;
 using CaptureTool.Application.Abstractions.Edit.Image;
 using CaptureTool.Application.Abstractions.Edit.Image.Description;
 using CaptureTool.Application.Abstractions.Edit.Image.ForegroundExtraction;
+using CaptureTool.Application.Abstractions.Edit.Image.ObjectErase;
+using CaptureTool.Application.Abstractions.Edit.Image.ObjectExtraction;
 using CaptureTool.Application.Abstractions.Edit.Image.Rendering;
 using CaptureTool.Application.Abstractions.Edit.Image.SuperResolution;
 using CaptureTool.Application.Abstractions.Edit.Image.TextExtraction;
@@ -48,6 +50,9 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     private readonly IImageDescriptionFeatureAvailability _imageDescriptionFeatureAvailability;
     private readonly IImageForegroundExtractionService _imageForegroundExtractionService;
     private readonly IImageForegroundExtractionFeatureAvailability _imageForegroundExtractionFeatureAvailability;
+    private readonly IImageObjectEraseService _imageObjectEraseService;
+    private readonly IImageObjectEraseFeatureAvailability _imageObjectEraseFeatureAvailability;
+    private readonly IImageObjectExtractionFeatureAvailability _imageObjectExtractionFeatureAvailability;
     private readonly IAiFeatureConsentService _aiFeatureConsentService;
     private readonly IAiFeatureConsentDialogService _aiFeatureConsentDialogService;
     private readonly IShareService _shareService;
@@ -71,6 +76,8 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     private CancellationTokenSource? _textExtractionCancellationTokenSource;
     private CancellationTokenSource? _imageDescriptionCancellationTokenSource;
     private CancellationTokenSource? _foregroundExtractionCancellationTokenSource;
+    private CancellationTokenSource? _objectEraseCancellationTokenSource;
+    private CancellationTokenSource? _objectExtractionCancellationTokenSource;
     private ImageDescriptionMode? _runningImageDescriptionMode;
     private readonly Dictionary<ImageDescriptionMode, string> _imageDescriptionResults = [];
     private bool _hasUnsavedChangesBeforeSuperResolution;
@@ -99,6 +106,8 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     public IAsyncRelayCommand ToggleTextExtractionModeCommand { get; }
     public IAsyncRelayCommand ToggleImageDescriptionModeCommand { get; }
     public IAsyncRelayCommand ToggleForegroundExtractionModeCommand { get; }
+    public IAsyncRelayCommand ToggleObjectEraseModeCommand { get; }
+    public IAsyncRelayCommand ToggleObjectExtractionModeCommand { get; }
     public IAsyncRelayCommand GenerateBriefImageDescriptionCommand { get; }
     public IAsyncRelayCommand GenerateDetailedImageDescriptionCommand { get; }
     public IAsyncRelayCommand GenerateDiagramImageDescriptionCommand { get; }
@@ -274,6 +283,126 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     }
 
     public string ForegroundExtractionStatusMessage
+    {
+        get;
+        private set => Set(ref field, value);
+    } = string.Empty;
+
+    public bool IsObjectEraseModeActive
+    {
+        get;
+        private set => Set(ref field, value);
+    }
+
+    public bool IsObjectEraseFeatureEnabled
+    {
+        get;
+        private set
+        {
+            if (Set(ref field, value))
+            {
+                UpdateCanToggleObjectErase();
+            }
+        }
+    }
+
+    public bool IsObjectEraseAvailable
+    {
+        get;
+        private set
+        {
+            if (Set(ref field, value))
+            {
+                UpdateCanToggleObjectErase();
+            }
+        }
+    }
+
+    public bool IsObjectEraseRunning
+    {
+        get;
+        private set
+        {
+            if (Set(ref field, value))
+            {
+                UpdateCanToggleObjectErase();
+            }
+        }
+    }
+
+    public bool CanToggleObjectErase
+    {
+        get;
+        private set
+        {
+            if (Set(ref field, value))
+            {
+                ToggleObjectEraseModeCommand.NotifyCanExecuteChanged();
+            }
+        }
+    }
+
+    public string ObjectEraseStatusMessage
+    {
+        get;
+        private set => Set(ref field, value);
+    } = string.Empty;
+
+    public bool IsObjectExtractionModeActive
+    {
+        get;
+        private set => Set(ref field, value);
+    }
+
+    public bool IsObjectExtractionFeatureEnabled
+    {
+        get;
+        private set
+        {
+            if (Set(ref field, value))
+            {
+                UpdateCanToggleObjectExtraction();
+            }
+        }
+    }
+
+    public bool IsObjectExtractionAvailable
+    {
+        get;
+        private set
+        {
+            if (Set(ref field, value))
+            {
+                UpdateCanToggleObjectExtraction();
+            }
+        }
+    }
+
+    public bool IsObjectExtractionRunning
+    {
+        get;
+        private set
+        {
+            if (Set(ref field, value))
+            {
+                UpdateCanToggleObjectExtraction();
+            }
+        }
+    }
+
+    public bool CanToggleObjectExtraction
+    {
+        get;
+        private set
+        {
+            if (Set(ref field, value))
+            {
+                ToggleObjectExtractionModeCommand.NotifyCanExecuteChanged();
+            }
+        }
+    }
+
+    public string ObjectExtractionStatusMessage
     {
         get;
         private set => Set(ref field, value);
@@ -579,7 +708,10 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         IImageDescriptionService? imageDescriptionService = null,
         IImageDescriptionFeatureAvailability? imageDescriptionFeatureAvailability = null,
         IImageForegroundExtractionService? imageForegroundExtractionService = null,
-        IImageForegroundExtractionFeatureAvailability? imageForegroundExtractionFeatureAvailability = null)
+        IImageForegroundExtractionFeatureAvailability? imageForegroundExtractionFeatureAvailability = null,
+        IImageObjectEraseService? imageObjectEraseService = null,
+        IImageObjectEraseFeatureAvailability? imageObjectEraseFeatureAvailability = null,
+        IImageObjectExtractionFeatureAvailability? imageObjectExtractionFeatureAvailability = null)
     {
         _localizationService = localizationService;
         _cancellationService = cancellationService;
@@ -595,6 +727,9 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         _imageDescriptionFeatureAvailability = imageDescriptionFeatureAvailability ?? new DisabledImageDescriptionFeatureAvailability();
         _imageForegroundExtractionService = imageForegroundExtractionService ?? new NullImageForegroundExtractionService();
         _imageForegroundExtractionFeatureAvailability = imageForegroundExtractionFeatureAvailability ?? new DisabledImageForegroundExtractionFeatureAvailability();
+        _imageObjectEraseService = imageObjectEraseService ?? new NullImageObjectEraseService();
+        _imageObjectEraseFeatureAvailability = imageObjectEraseFeatureAvailability ?? new DisabledImageObjectEraseFeatureAvailability();
+        _imageObjectExtractionFeatureAvailability = imageObjectExtractionFeatureAvailability ?? new DisabledImageObjectExtractionFeatureAvailability();
         _aiFeatureConsentService = aiFeatureConsentService ?? new PermissiveAiFeatureConsentService();
         _aiFeatureConsentDialogService = aiFeatureConsentDialogService ?? new PermissiveAiFeatureConsentDialogService();
         _shareService = shareService;
@@ -629,6 +764,8 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         IsTextExtractionFeatureEnabled = _textExtractionFeatureAvailability.IsTextExtractionEnabled;
         IsImageDescriptionFeatureEnabled = _imageDescriptionFeatureAvailability.IsImageDescriptionEnabled;
         IsForegroundExtractionFeatureEnabled = _imageForegroundExtractionFeatureAvailability.IsImageForegroundExtractionEnabled;
+        IsObjectEraseFeatureEnabled = _imageObjectEraseFeatureAvailability.IsImageObjectEraseEnabled;
+        IsObjectExtractionFeatureEnabled = _imageObjectExtractionFeatureAvailability.IsImageObjectExtractionEnabled;
         _settingsService.SettingsChanged += SettingsService_SettingsChanged;
 
         CopyCommand = new AsyncRelayCommand(CopyAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
@@ -659,6 +796,14 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         ToggleForegroundExtractionModeCommand = new AsyncRelayCommand(
             ToggleForegroundExtractionModeAsync,
             () => CanToggleForegroundExtraction,
+            AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
+        ToggleObjectEraseModeCommand = new AsyncRelayCommand(
+            ToggleObjectEraseModeAsync,
+            () => CanToggleObjectErase,
+            AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
+        ToggleObjectExtractionModeCommand = new AsyncRelayCommand(
+            ToggleObjectExtractionModeAsync,
+            () => CanToggleObjectExtraction,
             AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
         GenerateBriefImageDescriptionCommand = CreateImageDescriptionCommand(ImageDescriptionMode.Brief);
         GenerateDetailedImageDescriptionCommand = CreateImageDescriptionCommand(ImageDescriptionMode.Detailed);
@@ -696,12 +841,16 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
             setting.Key == CaptureToolSettings.Settings_AiConsent_TextExtraction.Key ||
             setting.Key == CaptureToolSettings.Settings_AiConsent_ImageSuperResolution.Key ||
             setting.Key == CaptureToolSettings.Settings_AiConsent_ImageDescription.Key ||
-            setting.Key == CaptureToolSettings.Settings_AiConsent_ImageForegroundExtraction.Key))
+            setting.Key == CaptureToolSettings.Settings_AiConsent_ImageForegroundExtraction.Key ||
+            setting.Key == CaptureToolSettings.Settings_AiConsent_ImageObjectErase.Key ||
+            setting.Key == CaptureToolSettings.Settings_AiConsent_ImageObjectExtraction.Key))
         {
             UpdateCanToggleSuperResolution();
             UpdateCanToggleTextExtraction();
             UpdateCanToggleImageDescription();
             UpdateCanToggleForegroundExtraction();
+            UpdateCanToggleObjectErase();
+            UpdateCanToggleObjectExtraction();
         }
     }
 
@@ -746,6 +895,10 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         UpdateCanGenerateImageDescription();
         UpdateForegroundExtractionAvailability();
         UpdateCanToggleForegroundExtraction();
+        UpdateObjectEraseAvailability();
+        UpdateCanToggleObjectErase();
+        UpdateObjectExtractionAvailability();
+        UpdateCanToggleObjectExtraction();
     }
 
     public override void Dispose()
@@ -754,6 +907,8 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         CancelTextExtractionWork();
         CancelImageDescriptionWork();
         CancelForegroundExtractionWork();
+        CancelObjectEraseWork();
+        CancelObjectExtractionWork();
         _settingsService.SettingsChanged -= SettingsService_SettingsChanged;
         ChromaKeyTool.SettingsChanged -= ChromaKeyTool_SettingsChanged;
         ChromaKeyTool.InteractionCommitted -= ChromaKeyTool_InteractionCommitted;
@@ -781,6 +936,14 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         IsForegroundExtractionAvailable = false;
         IsForegroundExtractionRunning = false;
         ForegroundExtractionStatusMessage = string.Empty;
+        IsObjectEraseFeatureEnabled = _imageObjectEraseFeatureAvailability.IsImageObjectEraseEnabled;
+        IsObjectEraseAvailable = false;
+        IsObjectEraseRunning = false;
+        ObjectEraseStatusMessage = string.Empty;
+        IsObjectExtractionFeatureEnabled = _imageObjectExtractionFeatureAvailability.IsImageObjectExtractionEnabled;
+        IsObjectExtractionAvailable = false;
+        IsObjectExtractionRunning = false;
+        ObjectExtractionStatusMessage = string.Empty;
         _editRevision = 0;
         _textExtractionProcessedRevision = null;
         _editHistory.Clear();
@@ -921,6 +1084,54 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         ApplyActiveMode(_modeStateMachine.Activate(ImageEditMode.ForegroundExtraction));
     }
 
+    private async Task ToggleObjectEraseModeAsync()
+    {
+        if (!IsObjectEraseFeatureEnabled || !IsObjectEraseAvailable)
+        {
+            return;
+        }
+
+        if (IsObjectEraseModeActive)
+        {
+            ApplyActiveMode(_modeStateMachine.Deactivate(ImageEditMode.ObjectErase));
+            return;
+        }
+
+        if (!await EnsureAiFeatureConsentAsync(AiFeatureId.ImageObjectErase, CancellationToken.None))
+        {
+            RefreshObjectEraseToggleState();
+            UpdateCanToggleObjectErase();
+            return;
+        }
+
+        ObjectEraseStatusMessage = string.Empty;
+        ApplyActiveMode(_modeStateMachine.Activate(ImageEditMode.ObjectErase));
+    }
+
+    private async Task ToggleObjectExtractionModeAsync()
+    {
+        if (!IsObjectExtractionFeatureEnabled || !IsObjectExtractionAvailable)
+        {
+            return;
+        }
+
+        if (IsObjectExtractionModeActive)
+        {
+            ApplyActiveMode(_modeStateMachine.Deactivate(ImageEditMode.ObjectExtraction));
+            return;
+        }
+
+        if (!await EnsureAiFeatureConsentAsync(AiFeatureId.ImageObjectExtraction, CancellationToken.None))
+        {
+            RefreshObjectExtractionToggleState();
+            UpdateCanToggleObjectExtraction();
+            return;
+        }
+
+        ObjectExtractionStatusMessage = string.Empty;
+        ApplyActiveMode(_modeStateMachine.Activate(ImageEditMode.ObjectExtraction));
+    }
+
     private void SetChromaKeyModeActive(bool value)
     {
         ApplyActiveMode(value
@@ -953,6 +1164,8 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         bool wasTextExtractionModeActive = IsTextExtractionModeActive;
         bool wasImageDescriptionModeActive = IsImageDescriptionModeActive;
         bool wasForegroundExtractionModeActive = IsForegroundExtractionModeActive;
+        bool wasObjectEraseModeActive = IsObjectEraseModeActive;
+        bool wasObjectExtractionModeActive = IsObjectExtractionModeActive;
         IsCropModeActive = mode == ImageEditMode.Crop;
         IsShapesModeActive = mode == ImageEditMode.Shapes;
         IsTextModeActive = mode == ImageEditMode.Text;
@@ -961,6 +1174,8 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         IsTextExtractionModeActive = mode == ImageEditMode.TextExtraction;
         IsImageDescriptionModeActive = mode == ImageEditMode.ImageDescription;
         IsForegroundExtractionModeActive = mode == ImageEditMode.ForegroundExtraction;
+        IsObjectEraseModeActive = mode == ImageEditMode.ObjectErase;
+        IsObjectExtractionModeActive = mode == ImageEditMode.ObjectExtraction;
 
         if (wasTextExtractionModeActive && !IsTextExtractionModeActive)
         {
@@ -984,9 +1199,23 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
             ForegroundExtractionStatusMessage = string.Empty;
         }
 
+        if (wasObjectEraseModeActive && !IsObjectEraseModeActive)
+        {
+            CancelObjectEraseWork();
+            ObjectEraseStatusMessage = string.Empty;
+        }
+
+        if (wasObjectExtractionModeActive && !IsObjectExtractionModeActive)
+        {
+            CancelObjectExtractionWork();
+            ObjectExtractionStatusMessage = string.Empty;
+        }
+
         UpdateCanToggleImageDescription();
         UpdateCanGenerateImageDescription();
         UpdateCanToggleForegroundExtraction();
+        UpdateCanToggleObjectErase();
+        UpdateCanToggleObjectExtraction();
     }
 
     private void ApplyImageSizeBasedDefaults(Size imageSize)
@@ -1253,7 +1482,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     private void ExecuteEditCommand(
         IImageEditCommand command,
         bool reloadCanvasResources = false,
-        bool preserveForegroundExtractionMode = false)
+        bool preservePointSelectionAiMode = false)
     {
         _editHistory.Execute(_editSession, command);
         SyncImageGeometryFromSession();
@@ -1261,7 +1490,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         SyncImageFileFromDrawable();
         SyncChromaKeySettingsFromSession();
         UpdateUndoRedoStackProperties();
-        IncrementEditRevision(preserveForegroundExtractionMode);
+        IncrementEditRevision(preservePointSelectionAiMode);
         MarkUnsavedChanges();
         if (reloadCanvasResources)
         {
@@ -1456,7 +1685,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
             ExecuteEditCommand(
                 new ReplaceImageDrawableFileCommand(drawableIndex, sourceImage, result.ImageFile),
                 reloadCanvasResources: true,
-                preserveForegroundExtractionMode: true);
+                preservePointSelectionAiMode: true);
             ForegroundExtractionStatusMessage = GetLocalizedString("ForegroundExtractionStatus_Success");
         }
         catch (OperationCanceledException)
@@ -1480,6 +1709,228 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         }
     }
 
+    public async Task OnObjectEraseRequestedAsync(Vector2 objectPoint)
+    {
+        if (!IsLoaded ||
+            !IsObjectEraseModeActive ||
+            IsObjectEraseRunning ||
+            _imageDrawable is null ||
+            objectPoint.X < 0 ||
+            objectPoint.Y < 0 ||
+            objectPoint.X >= _imageDrawable.ImageSize.Width ||
+            objectPoint.Y >= _imageDrawable.ImageSize.Height)
+        {
+            return;
+        }
+
+        CancelObjectEraseWork();
+        ObjectEraseStatusMessage = string.Empty;
+
+        var cancellationTokenSource = new CancellationTokenSource();
+        _objectEraseCancellationTokenSource = cancellationTokenSource;
+        CancellationToken cancellationToken = cancellationTokenSource.Token;
+        ImageFile sourceImage = _imageDrawable.File;
+        Size sourceSize = _imageDrawable.ImageSize;
+        IsObjectEraseRunning = true;
+
+        try
+        {
+            ObjectEraseReadyState readyState = _imageObjectEraseService.GetReadyState();
+            if (readyState == ObjectEraseReadyState.PreparationNeeded)
+            {
+                ObjectErasePreparationResult preparationResult =
+                    await _imageObjectEraseService.EnsureReadyAsync(cancellationToken);
+                if (preparationResult.Status != ObjectErasePreparationStatus.Success)
+                {
+                    ShowObjectEraseFailure(GetObjectErasePreparationFailureMessage(preparationResult));
+                    UpdateObjectEraseAvailability();
+                    return;
+                }
+            }
+            else if (readyState != ObjectEraseReadyState.Ready)
+            {
+                ShowObjectEraseFailure(GetObjectEraseReadyStateFailureMessage(readyState));
+                UpdateObjectEraseAvailability();
+                return;
+            }
+
+            ObjectEraseResult result = await _imageObjectEraseService.EraseAsync(
+                new ObjectEraseRequest(
+                    sourceImage,
+                    sourceSize,
+                    new Point(
+                        (int)Math.Round(objectPoint.X),
+                        (int)Math.Round(objectPoint.Y))),
+                cancellationToken);
+
+            if (result.Status != ObjectEraseStatus.Success || result.ImageFile is null)
+            {
+                ShowObjectEraseFailure(GetObjectEraseFailureMessage(result));
+                return;
+            }
+
+            if (cancellationToken.IsCancellationRequested ||
+                !ReferenceEquals(_objectEraseCancellationTokenSource, cancellationTokenSource) ||
+                !IsObjectEraseModeActive ||
+                _imageDrawable is null ||
+                !string.Equals(_imageDrawable.File.FilePath, sourceImage.FilePath, StringComparison.OrdinalIgnoreCase))
+            {
+                return;
+            }
+
+            int drawableIndex = -1;
+            for (var index = 0; index < _editSession.Drawables.Count; index++)
+            {
+                if (ReferenceEquals(_editSession.Drawables[index], _imageDrawable))
+                {
+                    drawableIndex = index;
+                    break;
+                }
+            }
+
+            if (drawableIndex < 0)
+            {
+                return;
+            }
+
+            ExecuteEditCommand(
+                new ReplaceImageDrawableFileCommand(drawableIndex, sourceImage, result.ImageFile),
+                reloadCanvasResources: true,
+                preservePointSelectionAiMode: true);
+            ObjectEraseStatusMessage = GetLocalizedString("ObjectEraseStatus_Success");
+        }
+        catch (OperationCanceledException)
+        {
+        }
+        catch (Exception ex)
+        {
+            _logService.LogException(ex, "Failed to erase the selected image object.");
+            ShowObjectEraseFailure(GetLocalizedString("ObjectEraseStatus_Failed"));
+        }
+        finally
+        {
+            if (ReferenceEquals(_objectEraseCancellationTokenSource, cancellationTokenSource))
+            {
+                _objectEraseCancellationTokenSource = null;
+                IsObjectEraseRunning = false;
+            }
+
+            cancellationTokenSource.Dispose();
+            UpdateCanToggleObjectErase();
+        }
+    }
+
+    public async Task OnObjectExtractionRequestedAsync(Vector2 objectPoint)
+    {
+        if (!IsLoaded ||
+            !IsObjectExtractionModeActive ||
+            IsObjectExtractionRunning ||
+            _imageDrawable is null ||
+            objectPoint.X < 0 ||
+            objectPoint.Y < 0 ||
+            objectPoint.X >= _imageDrawable.ImageSize.Width ||
+            objectPoint.Y >= _imageDrawable.ImageSize.Height)
+        {
+            return;
+        }
+
+        CancelObjectExtractionWork();
+        ObjectExtractionStatusMessage = string.Empty;
+
+        var cancellationTokenSource = new CancellationTokenSource();
+        _objectExtractionCancellationTokenSource = cancellationTokenSource;
+        CancellationToken cancellationToken = cancellationTokenSource.Token;
+        ImageFile sourceImage = _imageDrawable.File;
+        Size sourceSize = _imageDrawable.ImageSize;
+        IsObjectExtractionRunning = true;
+
+        try
+        {
+            ForegroundExtractionReadyState readyState = _imageForegroundExtractionService.GetReadyState();
+            if (readyState == ForegroundExtractionReadyState.PreparationNeeded)
+            {
+                ForegroundExtractionPreparationResult preparationResult =
+                    await _imageForegroundExtractionService.EnsureReadyAsync(cancellationToken);
+                if (preparationResult.Status != ForegroundExtractionPreparationStatus.Success)
+                {
+                    ShowObjectExtractionFailure(GetObjectExtractionPreparationFailureMessage(preparationResult));
+                    UpdateObjectExtractionAvailability();
+                    return;
+                }
+            }
+            else if (readyState != ForegroundExtractionReadyState.Ready)
+            {
+                ShowObjectExtractionFailure(GetObjectExtractionReadyStateFailureMessage(readyState));
+                UpdateObjectExtractionAvailability();
+                return;
+            }
+
+            ForegroundExtractionResult result = await _imageForegroundExtractionService.ExtractAsync(
+                new ForegroundExtractionRequest(
+                    sourceImage,
+                    sourceSize,
+                    new Point(
+                        (int)Math.Round(objectPoint.X),
+                        (int)Math.Round(objectPoint.Y))),
+                cancellationToken);
+
+            if (result.Status != ForegroundExtractionStatus.Success || result.ImageFile is null)
+            {
+                ShowObjectExtractionFailure(GetObjectExtractionFailureMessage(result));
+                return;
+            }
+
+            if (cancellationToken.IsCancellationRequested ||
+                !ReferenceEquals(_objectExtractionCancellationTokenSource, cancellationTokenSource) ||
+                !IsObjectExtractionModeActive ||
+                _imageDrawable is null ||
+                !string.Equals(_imageDrawable.File.FilePath, sourceImage.FilePath, StringComparison.OrdinalIgnoreCase))
+            {
+                return;
+            }
+
+            int drawableIndex = -1;
+            for (var index = 0; index < _editSession.Drawables.Count; index++)
+            {
+                if (ReferenceEquals(_editSession.Drawables[index], _imageDrawable))
+                {
+                    drawableIndex = index;
+                    break;
+                }
+            }
+
+            if (drawableIndex < 0)
+            {
+                return;
+            }
+
+            ExecuteEditCommand(
+                new ReplaceImageDrawableFileCommand(drawableIndex, sourceImage, result.ImageFile),
+                reloadCanvasResources: true,
+                preservePointSelectionAiMode: true);
+            ObjectExtractionStatusMessage = GetLocalizedString("ObjectExtractionStatus_Success");
+        }
+        catch (OperationCanceledException)
+        {
+        }
+        catch (Exception ex)
+        {
+            _logService.LogException(ex, "Failed to extract the selected image object.");
+            ShowObjectExtractionFailure(GetLocalizedString("ObjectExtractionStatus_Failed"));
+        }
+        finally
+        {
+            if (ReferenceEquals(_objectExtractionCancellationTokenSource, cancellationTokenSource))
+            {
+                _objectExtractionCancellationTokenSource = null;
+                IsObjectExtractionRunning = false;
+            }
+
+            cancellationTokenSource.Dispose();
+            UpdateCanToggleObjectExtraction();
+        }
+    }
+
     private async Task<bool> EnsureAiFeatureConsentAsync(AiFeatureId featureId, CancellationToken cancellationToken)
     {
         AiFeatureConsentState consentState = _aiFeatureConsentService.GetConsentState(featureId);
@@ -1494,6 +1945,8 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         UpdateCanToggleTextExtraction();
         UpdateCanToggleImageDescription();
         UpdateCanToggleForegroundExtraction();
+        UpdateCanToggleObjectErase();
+        UpdateCanToggleObjectExtraction();
         return consented;
     }
 
@@ -1836,6 +2289,22 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         }
     }
 
+    private void RefreshObjectEraseToggleState()
+    {
+        if (!IsObjectEraseModeActive)
+        {
+            RaisePropertyChanged(nameof(IsObjectEraseModeActive));
+        }
+    }
+
+    private void RefreshObjectExtractionToggleState()
+    {
+        if (!IsObjectExtractionModeActive)
+        {
+            RaisePropertyChanged(nameof(IsObjectExtractionModeActive));
+        }
+    }
+
     private void ApplySuperResolutionImageVariant()
     {
         if (_superResolutionImageFile is null || _superResolutionImageSize == Size.Empty)
@@ -1991,12 +2460,58 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
             (IsForegroundExtractionModeActive || !IsForegroundExtractionRunning);
     }
 
+    private void UpdateObjectEraseAvailability()
+    {
+        IsObjectEraseFeatureEnabled = _imageObjectEraseFeatureAvailability.IsImageObjectEraseEnabled;
+        if (!IsObjectEraseFeatureEnabled)
+        {
+            IsObjectEraseAvailable = false;
+            return;
+        }
+
+        ObjectEraseReadyState readyState = _imageObjectEraseService.GetReadyState();
+        IsObjectEraseAvailable = readyState is
+            ObjectEraseReadyState.Ready or
+            ObjectEraseReadyState.PreparationNeeded;
+    }
+
+    private void UpdateCanToggleObjectErase()
+    {
+        CanToggleObjectErase = IsLoaded &&
+            IsObjectEraseFeatureEnabled &&
+            IsObjectEraseAvailable &&
+            (IsObjectEraseModeActive || !IsObjectEraseRunning);
+    }
+
+    private void UpdateObjectExtractionAvailability()
+    {
+        IsObjectExtractionFeatureEnabled = _imageObjectExtractionFeatureAvailability.IsImageObjectExtractionEnabled;
+        if (!IsObjectExtractionFeatureEnabled)
+        {
+            IsObjectExtractionAvailable = false;
+            return;
+        }
+
+        ForegroundExtractionReadyState readyState = _imageForegroundExtractionService.GetReadyState();
+        IsObjectExtractionAvailable = readyState is
+            ForegroundExtractionReadyState.Ready or
+            ForegroundExtractionReadyState.PreparationNeeded;
+    }
+
+    private void UpdateCanToggleObjectExtraction()
+    {
+        CanToggleObjectExtraction = IsLoaded &&
+            IsObjectExtractionFeatureEnabled &&
+            IsObjectExtractionAvailable &&
+            (IsObjectExtractionModeActive || !IsObjectExtractionRunning);
+    }
+
     private bool IsAiFeatureRequestAllowed(AiFeatureId featureId)
     {
         return _aiFeatureConsentService.GetConsentState(featureId) != AiFeatureConsentState.Denied;
     }
 
-    private void IncrementEditRevision(bool preserveForegroundExtractionMode = false)
+    private void IncrementEditRevision(bool preservePointSelectionAiMode = false)
     {
         _editRevision++;
         ClearImageDescriptionResults();
@@ -2009,9 +2524,17 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         {
             ApplyActiveMode(_modeStateMachine.Deactivate(ImageEditMode.ImageDescription));
         }
-        else if (IsForegroundExtractionModeActive && !preserveForegroundExtractionMode)
+        else if (IsForegroundExtractionModeActive && !preservePointSelectionAiMode)
         {
             ApplyActiveMode(_modeStateMachine.Deactivate(ImageEditMode.ForegroundExtraction));
+        }
+        else if (IsObjectEraseModeActive && !preservePointSelectionAiMode)
+        {
+            ApplyActiveMode(_modeStateMachine.Deactivate(ImageEditMode.ObjectErase));
+        }
+        else if (IsObjectExtractionModeActive && !preservePointSelectionAiMode)
+        {
+            ApplyActiveMode(_modeStateMachine.Deactivate(ImageEditMode.ObjectExtraction));
         }
     }
 
@@ -2044,6 +2567,20 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         _foregroundExtractionCancellationTokenSource?.Cancel();
         _foregroundExtractionCancellationTokenSource = null;
         IsForegroundExtractionRunning = false;
+    }
+
+    private void CancelObjectEraseWork()
+    {
+        _objectEraseCancellationTokenSource?.Cancel();
+        _objectEraseCancellationTokenSource = null;
+        IsObjectEraseRunning = false;
+    }
+
+    private void CancelObjectExtractionWork()
+    {
+        _objectExtractionCancellationTokenSource?.Cancel();
+        _objectExtractionCancellationTokenSource = null;
+        IsObjectExtractionRunning = false;
     }
 
     private void ClearDisplayedImageDescription()
@@ -2267,6 +2804,90 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         }
     }
 
+    private string GetObjectEraseReadyStateFailureMessage(ObjectEraseReadyState readyState)
+    {
+        return readyState switch
+        {
+            ObjectEraseReadyState.NotSupported => GetLocalizedString("ObjectEraseStatus_NotSupported"),
+            ObjectEraseReadyState.Disabled => GetLocalizedString("ObjectEraseStatus_Disabled"),
+            _ => GetLocalizedString("ObjectEraseStatus_NotAvailable")
+        };
+    }
+
+    private string GetObjectErasePreparationFailureMessage(ObjectErasePreparationResult result)
+    {
+        return result.Status switch
+        {
+            ObjectErasePreparationStatus.Cancelled => string.Empty,
+            ObjectErasePreparationStatus.NotSupported => GetLocalizedString("ObjectEraseStatus_NotSupported"),
+            ObjectErasePreparationStatus.Failed when !string.IsNullOrWhiteSpace(result.ErrorMessage) => result.ErrorMessage,
+            _ => GetLocalizedString("ObjectEraseStatus_PreparationFailed")
+        };
+    }
+
+    private string GetObjectEraseFailureMessage(ObjectEraseResult result)
+    {
+        return result.Status switch
+        {
+            ObjectEraseStatus.Cancelled => string.Empty,
+            ObjectEraseStatus.NotReady => GetLocalizedString("ObjectEraseStatus_NotReady"),
+            ObjectEraseStatus.NotSupported => GetLocalizedString("ObjectEraseStatus_NotSupported"),
+            ObjectEraseStatus.Failed when !string.IsNullOrWhiteSpace(result.ErrorMessage) => result.ErrorMessage,
+            _ => GetLocalizedString("ObjectEraseStatus_Failed")
+        };
+    }
+
+    private void ShowObjectEraseFailure(string message)
+    {
+        ObjectEraseStatusMessage = message;
+        if (!string.IsNullOrWhiteSpace(message))
+        {
+            _notificationService.ShowError(message);
+        }
+    }
+
+    private string GetObjectExtractionReadyStateFailureMessage(ForegroundExtractionReadyState readyState)
+    {
+        return readyState switch
+        {
+            ForegroundExtractionReadyState.NotSupported => GetLocalizedString("ObjectExtractionStatus_NotSupported"),
+            ForegroundExtractionReadyState.Disabled => GetLocalizedString("ObjectExtractionStatus_Disabled"),
+            _ => GetLocalizedString("ObjectExtractionStatus_NotAvailable")
+        };
+    }
+
+    private string GetObjectExtractionPreparationFailureMessage(ForegroundExtractionPreparationResult result)
+    {
+        return result.Status switch
+        {
+            ForegroundExtractionPreparationStatus.Cancelled => string.Empty,
+            ForegroundExtractionPreparationStatus.NotSupported => GetLocalizedString("ObjectExtractionStatus_NotSupported"),
+            ForegroundExtractionPreparationStatus.Failed when !string.IsNullOrWhiteSpace(result.ErrorMessage) => result.ErrorMessage,
+            _ => GetLocalizedString("ObjectExtractionStatus_PreparationFailed")
+        };
+    }
+
+    private string GetObjectExtractionFailureMessage(ForegroundExtractionResult result)
+    {
+        return result.Status switch
+        {
+            ForegroundExtractionStatus.Cancelled => string.Empty,
+            ForegroundExtractionStatus.NotReady => GetLocalizedString("ObjectExtractionStatus_NotReady"),
+            ForegroundExtractionStatus.NotSupported => GetLocalizedString("ObjectExtractionStatus_NotSupported"),
+            ForegroundExtractionStatus.Failed when !string.IsNullOrWhiteSpace(result.ErrorMessage) => result.ErrorMessage,
+            _ => GetLocalizedString("ObjectExtractionStatus_Failed")
+        };
+    }
+
+    private void ShowObjectExtractionFailure(string message)
+    {
+        ObjectExtractionStatusMessage = message;
+        if (!string.IsNullOrWhiteSpace(message))
+        {
+            _notificationService.ShowError(message);
+        }
+    }
+
     private string GetLocalizedString(string resourceKey)
     {
         string value = _localizationService.GetString(resourceKey);
@@ -2314,6 +2935,16 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     private sealed class DisabledImageForegroundExtractionFeatureAvailability : IImageForegroundExtractionFeatureAvailability
     {
         public bool IsImageForegroundExtractionEnabled => false;
+    }
+
+    private sealed class DisabledImageObjectEraseFeatureAvailability : IImageObjectEraseFeatureAvailability
+    {
+        public bool IsImageObjectEraseEnabled => false;
+    }
+
+    private sealed class DisabledImageObjectExtractionFeatureAvailability : IImageObjectExtractionFeatureAvailability
+    {
+        public bool IsImageObjectExtractionEnabled => false;
     }
 
     private sealed class NullTextExtractionService : ITextExtractionService
@@ -2373,6 +3004,26 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
             CancellationToken cancellationToken = default)
         {
             return Task.FromResult(ForegroundExtractionResult.NotSupported);
+        }
+    }
+
+    private sealed class NullImageObjectEraseService : IImageObjectEraseService
+    {
+        public ObjectEraseReadyState GetReadyState()
+        {
+            return ObjectEraseReadyState.NotSupported;
+        }
+
+        public Task<ObjectErasePreparationResult> EnsureReadyAsync(CancellationToken cancellationToken = default)
+        {
+            return Task.FromResult(ObjectErasePreparationResult.NotSupported);
+        }
+
+        public Task<ObjectEraseResult> EraseAsync(
+            ObjectEraseRequest request,
+            CancellationToken cancellationToken = default)
+        {
+            return Task.FromResult(ObjectEraseResult.NotSupported);
         }
     }
 }
