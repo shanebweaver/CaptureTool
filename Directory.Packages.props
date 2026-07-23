@@ -1,11 +1,10 @@
 <Project>
   <PropertyGroup>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
-    <CentralPackageFloatingVersionsEnabled>true</CentralPackageFloatingVersionsEnabled>
   </PropertyGroup>
   <ItemGroup>
-    <PackageVersion Include="CaptureKit.Abstractions" Version="0.1.0-alpha.*" />
-    <PackageVersion Include="CaptureKit.Windows" Version="0.1.0-alpha.*" />
+    <PackageVersion Include="CaptureKit.Abstractions" Version="1.0.0" />
+    <PackageVersion Include="CaptureKit.Windows" Version="1.0.0" />
     <PackageVersion Include="CommunityToolkit.Mvvm" Version="8.4.2" />
     <PackageVersion Include="CommunityToolkit.WinUI.Controls.Segmented" Version="8.2.251219" />
     <PackageVersion Include="Microsoft.CodeAnalysis.Common" Version="5.3.0" />
