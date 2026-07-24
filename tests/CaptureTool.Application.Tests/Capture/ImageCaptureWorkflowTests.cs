@@ -1,5 +1,6 @@
 using CaptureTool.Application.Abstractions.Capture;
 using CaptureTool.Application.Abstractions.Clipboard;
+using CaptureTool.Application.Abstractions.Logging;
 using CaptureTool.Application.Abstractions.Settings;
 using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Application.Abstractions.TaskEnvironment;
@@ -57,6 +58,47 @@ public sealed class ImageCaptureWorkflowTests
     }
 
     [TestMethod]
+    public void CaptureImage_TracksCaptureFunnelWithoutCoordinates()
+    {
+        string tempFolder = CreateTestFolder();
+        var monitor = CreateMonitor();
+        var area = new Rectangle(1, 2, 3, 4);
+        using var bitmap = new Bitmap(5, 5);
+        using var cropped = new Bitmap(3, 4);
+        var screenCapture = new Mock<IScreenCapture>();
+        screenCapture.Setup(service => service.CreateBitmapFromMonitorCaptureResult(monitor)).Returns(bitmap);
+        screenCapture.Setup(service => service.CreateCroppedBitmap(bitmap, area, monitor.Scale)).Returns(cropped);
+        List<(string Name, IReadOnlyDictionary<string, object?> Properties)> events = [];
+        var telemetry = new Mock<ITelemetryService>();
+        telemetry
+            .Setup(service => service.TrackEvent(
+                It.IsAny<string>(),
+                It.IsAny<IReadOnlyDictionary<string, object?>?>()))
+            .Callback<string, IReadOnlyDictionary<string, object?>?>(
+                (name, properties) => events.Add(
+                    (name, properties ?? new Dictionary<string, object?>())));
+        var workflow = CreateWorkflow(
+            tempFolder,
+            screenCapture: screenCapture.Object,
+            telemetry: telemetry.Object);
+
+        workflow.CaptureImage(new NewCaptureArgs(monitor, area));
+
+        CollectionAssert.AreEqual(
+            new[]
+            {
+                TelemetryEvents.CaptureRequested,
+                TelemetryEvents.CaptureStarted,
+                TelemetryEvents.CaptureCompleted
+            },
+            events.Select(trackedEvent => trackedEvent.Name).ToArray());
+        Assert.IsTrue(events.All(trackedEvent =>
+            trackedEvent.Properties[TelemetryProperties.MediaType]?.Equals("image") == true));
+        Assert.IsFalse(events.SelectMany(trackedEvent => trackedEvent.Properties.Values)
+            .Any(value => value?.Equals(area) == true));
+    }
+
+    [TestMethod]
     public void CaptureMonitors_WhenAutoSaveAndCopyEnabled_CopiesToClipboardAndSavesToConfiguredFolder()
     {
         string tempFolder = CreateTestFolder();
@@ -87,7 +129,8 @@ public sealed class ImageCaptureWorkflowTests
         string tempFolder,
         IClipboardService? clipboard = null,
         ISettingsService? settings = null,
-        IScreenCapture? screenCapture = null)
+        IScreenCapture? screenCapture = null,
+        ITelemetryService? telemetry = null)
     {
         var storage = new Mock<IStorageService>();
         storage.Setup(service => service.GetApplicationTemporaryFolderPath()).Returns(tempFolder);
@@ -111,14 +154,16 @@ public sealed class ImageCaptureWorkflowTests
             settings ?? defaultSettings.Object,
             storage.Object,
             taskEnvironment.Object,
-            Mock.Of<ITelemetryService>(),
-            fileNameGenerator);
+            Mock.Of<ILogService>(),
+            fileNameGenerator,
+            telemetry);
 
         return new ImageCaptureWorkflow(
             storage.Object,
             screenCapture ?? Mock.Of<IScreenCapture>(),
             postProcessor,
-            fileNameGenerator);
+            fileNameGenerator,
+            telemetry);
     }
 
     private static MonitorCaptureResult CreateMonitor() =>

@@ -1,4 +1,5 @@
 using CaptureTool.Application.Abstractions.Themes;
+using CaptureTool.Application.Abstractions.Telemetry;
 using Microsoft.Windows.Storage;
 using System.Diagnostics;
 
@@ -6,14 +7,17 @@ namespace CaptureTool.Infrastructure.Windows.Themes;
 
 public sealed partial class WindowsThemeService : IThemeService
 {
+    private readonly ITelemetryService? _telemetryService;
+
     public AppTheme DefaultTheme { get; private set; }
     public AppTheme StartupTheme { get; private set; }
     public AppTheme CurrentTheme { get; private set; }
 
     public event EventHandler<AppTheme>? CurrentThemeChanged;
 
-    public WindowsThemeService()
+    public WindowsThemeService(ITelemetryService? telemetryService = null)
     {
+        _telemetryService = telemetryService;
     }
 
     public void Initialize(AppTheme defaultTheme)
@@ -41,6 +45,13 @@ public sealed partial class WindowsThemeService : IThemeService
             CurrentTheme = appTheme;
             ApplicationData.GetDefault().LocalSettings.Values["themeSetting"] = (int)appTheme;
             CurrentThemeChanged?.Invoke(this, appTheme);
+            _telemetryService?.TrackEvent(
+                TelemetryEvents.SettingsChanged,
+                new Dictionary<string, object?>
+                {
+                    [TelemetryProperties.Setting] = "app_theme",
+                    [TelemetryProperties.Value] = appTheme.ToString()
+                });
         }
     }
 }

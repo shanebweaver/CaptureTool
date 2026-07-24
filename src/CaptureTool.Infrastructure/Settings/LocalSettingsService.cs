@@ -1,6 +1,7 @@
 using CaptureTool.Application.Abstractions.Logging;
 using CaptureTool.Application.Abstractions.Settings;
 using CaptureTool.Application.Abstractions.Settings.Definitions;
+using CaptureTool.Application.Abstractions.Telemetry;
 using CaptureTool.Domain.FileSystem;
 using CaptureTool.Infrastructure.Settings.Serialization;
 using CaptureTool.Infrastructure.Storage;
@@ -11,10 +12,34 @@ public partial class LocalSettingsService : ISettingsService, IDisposable
 {
     private sealed class SettingsFile(string filePath) : FileReference(filePath);
 
+    private static readonly IReadOnlySet<string> TelemetrySettingKeys = new HashSet<string>(StringComparer.Ordinal)
+    {
+        CaptureToolSettings.Settings_AiConsent_ImageDescription.Key,
+        CaptureToolSettings.Settings_AiConsent_ImageForegroundExtraction.Key,
+        CaptureToolSettings.Settings_AiConsent_ImageObjectErase.Key,
+        CaptureToolSettings.Settings_AiConsent_ImageObjectExtraction.Key,
+        CaptureToolSettings.Settings_AiConsent_ImageSuperResolution.Key,
+        CaptureToolSettings.Settings_AiConsent_TextExtraction.Key,
+        CaptureToolSettings.Settings_AiConsent_VideoSuperResolution.Key,
+        CaptureToolSettings.Settings_AudioCapture_AutoCopy.Key,
+        CaptureToolSettings.Settings_AudioCapture_AutoSave.Key,
+        CaptureToolSettings.Settings_AudioCapture_DefaultLocalAudioEnabled.Key,
+        CaptureToolSettings.Settings_Capture_WarnBeforeDiscard.Key,
+        CaptureToolSettings.Settings_Edit_WarnBeforeDiscard.Key,
+        CaptureToolSettings.Settings_ImageCapture_AutoCopy.Key,
+        CaptureToolSettings.Settings_ImageCapture_AutoSave.Key,
+        CaptureToolSettings.Settings_LanguageOverride.Key,
+        CaptureToolSettings.Settings_VideoCapture_AutoCopy.Key,
+        CaptureToolSettings.Settings_VideoCapture_AutoSave.Key,
+        CaptureToolSettings.Settings_VideoCapture_DefaultLocalAudioEnabled.Key,
+        CaptureToolSettings.VerboseLogging.Key
+    };
+
     private readonly SemaphoreSlim _semaphore = new(1, 1);
     private readonly Lock _accessLock = new();
     private readonly ILogService _logService;
     private readonly IJsonStorageService _jsonStorageService;
+    private readonly ITelemetryService? _telemetryService;
 
     private Dictionary<string, SettingDefinition> _settings;
     private SettingsFile? _settingsFile;
@@ -25,10 +50,12 @@ public partial class LocalSettingsService : ISettingsService, IDisposable
 
     public LocalSettingsService(
         ILogService logService,
-        IJsonStorageService jsonStorageService)
+        IJsonStorageService jsonStorageService,
+        ITelemetryService? telemetryService = null)
     {
         _logService = logService;
         _jsonStorageService = jsonStorageService;
+        _telemetryService = telemetryService;
         _settings = [];
     }
 
@@ -134,8 +161,12 @@ public partial class LocalSettingsService : ISettingsService, IDisposable
 
             if (settingDefinition.Key != null)
             {
-                _settings.Remove(settingDefinition.Key);
+                bool removed = _settings.Remove(settingDefinition.Key);
                 FireSettingsChangedEvent(settingDefinition);
+                if (removed)
+                {
+                    TrackSettingChanged(settingDefinition.Key, "default");
+                }
             }
         }
     }
@@ -146,18 +177,23 @@ public partial class LocalSettingsService : ISettingsService, IDisposable
         {
             ThrowIfNotInitialized();
 
-            int preCount = _settings.Count;
+            List<ISettingDefinition> removedSettings = [];
             foreach (ISettingDefinition settingDefinition in settingDefinitions)
             {
-                if (settingDefinition.Key != null)
+                if (settingDefinition.Key != null &&
+                    _settings.Remove(settingDefinition.Key))
                 {
-                    _settings.Remove(settingDefinition.Key);
+                    removedSettings.Add(settingDefinition);
                 }
             }
 
-            if (preCount > _settings.Count)
+            if (removedSettings.Count > 0)
             {
                 FireSettingsChangedEvent([.. settingDefinitions]);
+                foreach (ISettingDefinition settingDefinition in removedSettings)
+                {
+                    TrackSettingChanged(settingDefinition.Key, "default");
+                }
             }
         }
     }
@@ -212,6 +248,7 @@ public partial class LocalSettingsService : ISettingsService, IDisposable
 
                 _settings[settingDefinition.Key] = settingDefinition;
                 FireSettingsChangedEvent(settingDefinition);
+                TrackSettingChanged(settingDefinition.Key, GetSafeTelemetryValue(settingDefinition));
             }
         }
     }
@@ -240,6 +277,40 @@ public partial class LocalSettingsService : ISettingsService, IDisposable
 
     private void FireSettingsChangedEvent(ISettingDefinition settingDefinition) => SettingsChanged?.Invoke([settingDefinition]);
     private void FireSettingsChangedEvent(ISettingDefinition[] settingDefinitions) => SettingsChanged?.Invoke(settingDefinitions);
+
+    private void TrackSettingChanged(string settingKey, object? value)
+    {
+        if (!TelemetrySettingKeys.Contains(settingKey))
+        {
+            return;
+        }
+
+        _telemetryService?.TrackEvent(
+            TelemetryEvents.SettingsChanged,
+            new Dictionary<string, object?>
+            {
+                [TelemetryProperties.Setting] = settingKey,
+                [TelemetryProperties.Value] = value
+            });
+    }
+
+    private static object? GetSafeTelemetryValue<T>(SettingDefinition<T> settingDefinition)
+    {
+        if (settingDefinition.Value is bool value)
+        {
+            return value;
+        }
+
+        if (settingDefinition.Key == CaptureToolSettings.Settings_LanguageOverride.Key)
+        {
+            return settingDefinition.Value is not string languageOverride ||
+                string.IsNullOrWhiteSpace(languageOverride)
+                ? "system_default"
+                : "override";
+        }
+
+        return "changed";
+    }
 
     protected virtual void Dispose(bool disposing)
     {

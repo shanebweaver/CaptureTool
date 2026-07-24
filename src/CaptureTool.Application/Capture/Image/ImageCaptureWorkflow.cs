@@ -1,5 +1,6 @@
 using CaptureTool.Application.Abstractions.Capture;
 using CaptureTool.Application.Abstractions.Storage;
+using CaptureTool.Application.Abstractions.Telemetry;
 using CaptureTool.Domain.Capture;
 using CaptureTool.Domain.FileSystem;
 using System.Drawing;
@@ -12,6 +13,7 @@ internal sealed class ImageCaptureWorkflow : IImageCaptureWorkflow, IImageCaptur
     private readonly IScreenCapture _screenCapture;
     private readonly ImageCapturePostProcessor _postProcessor;
     private readonly ImageCaptureFileNameGenerator _fileNameGenerator;
+    private readonly ITelemetryService? _telemetryService;
 
     public event EventHandler<ImageFile>? NewImageCaptured;
 
@@ -19,12 +21,14 @@ internal sealed class ImageCaptureWorkflow : IImageCaptureWorkflow, IImageCaptur
         IStorageService storageService,
         IScreenCapture screenCapture,
         ImageCapturePostProcessor postProcessor,
-        ImageCaptureFileNameGenerator fileNameGenerator)
+        ImageCaptureFileNameGenerator fileNameGenerator,
+        ITelemetryService? telemetryService = null)
     {
         _storageService = storageService;
         _screenCapture = screenCapture;
         _postProcessor = postProcessor;
         _fileNameGenerator = fileNameGenerator;
+        _telemetryService = telemetryService;
     }
 
     public ImageFile CaptureAllScreens()
@@ -35,31 +39,58 @@ internal sealed class ImageCaptureWorkflow : IImageCaptureWorkflow, IImageCaptur
 
     public ImageFile CaptureMonitors(IReadOnlyList<MonitorCaptureResult> monitors)
     {
-        string tempPath = Path.Combine(
-            _storageService.GetApplicationTemporaryFolderPath(),
-            _fileNameGenerator.GetNewCaptureFileName()
-        );
+        TrackCapture(TelemetryEvents.CaptureRequested, "all_screens");
 
-        using System.Drawing.Image combined = _screenCapture.CombineMonitors([.. monitors]);
-        _screenCapture.SaveImageToFile(combined, tempPath);
+        try
+        {
+            TrackCapture(TelemetryEvents.CaptureStarted, "all_screens");
+            string tempPath = Path.Combine(
+                _storageService.GetApplicationTemporaryFolderPath(),
+                _fileNameGenerator.GetNewCaptureFileName()
+            );
 
-        return CompleteCapture(new ImageFile(tempPath));
+            using System.Drawing.Image combined = _screenCapture.CombineMonitors([.. monitors]);
+            _screenCapture.SaveImageToFile(combined, tempPath);
+
+            ImageFile imageFile = CompleteCapture(new ImageFile(tempPath));
+            TrackCapture(TelemetryEvents.CaptureCompleted, "all_screens", TelemetryOutcomes.Succeeded);
+            return imageFile;
+        }
+        catch
+        {
+            TrackCapture(TelemetryEvents.CaptureFailed, "all_screens", TelemetryOutcomes.Failed);
+            throw;
+        }
     }
 
     public ImageFile CaptureImage(NewCaptureArgs args)
     {
-        string tempPath = Path.Combine(
-            _storageService.GetApplicationTemporaryFolderPath(),
-            _fileNameGenerator.GetNewCaptureFileName()
-        );
+        string captureType = args.CaptureType.ToString();
+        TrackCapture(TelemetryEvents.CaptureRequested, captureType);
 
-        MonitorCaptureResult monitor = args.Monitor;
-        Rectangle area = args.Area;
-        using Bitmap image = _screenCapture.CreateBitmapFromMonitorCaptureResult(monitor);
-        using Bitmap cropped = _screenCapture.CreateCroppedBitmap(image, area, monitor.Scale);
-        _screenCapture.SaveImageToFile(cropped, tempPath);
+        try
+        {
+            TrackCapture(TelemetryEvents.CaptureStarted, captureType);
+            string tempPath = Path.Combine(
+                _storageService.GetApplicationTemporaryFolderPath(),
+                _fileNameGenerator.GetNewCaptureFileName()
+            );
 
-        return CompleteCapture(new ImageFile(tempPath));
+            MonitorCaptureResult monitor = args.Monitor;
+            Rectangle area = args.Area;
+            using Bitmap image = _screenCapture.CreateBitmapFromMonitorCaptureResult(monitor);
+            using Bitmap cropped = _screenCapture.CreateCroppedBitmap(image, area, monitor.Scale);
+            _screenCapture.SaveImageToFile(cropped, tempPath);
+
+            ImageFile imageFile = CompleteCapture(new ImageFile(tempPath));
+            TrackCapture(TelemetryEvents.CaptureCompleted, captureType, TelemetryOutcomes.Succeeded);
+            return imageFile;
+        }
+        catch
+        {
+            TrackCapture(TelemetryEvents.CaptureFailed, captureType, TelemetryOutcomes.Failed);
+            throw;
+        }
     }
 
     private ImageFile CompleteCapture(ImageFile imageFile)
@@ -67,5 +98,24 @@ internal sealed class ImageCaptureWorkflow : IImageCaptureWorkflow, IImageCaptur
         _postProcessor.Process(imageFile);
         NewImageCaptured?.Invoke(this, imageFile);
         return imageFile;
+    }
+
+    private void TrackCapture(
+        string eventName,
+        string captureType,
+        string? outcome = null)
+    {
+        var properties = new Dictionary<string, object?>
+        {
+            [TelemetryProperties.MediaType] = "image",
+            [TelemetryProperties.CaptureType] = captureType
+        };
+
+        if (outcome is not null)
+        {
+            properties[TelemetryProperties.Outcome] = outcome;
+        }
+
+        _telemetryService?.TrackEvent(eventName, properties);
     }
 }

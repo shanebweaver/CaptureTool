@@ -1,5 +1,6 @@
 using CaptureTool.Application.Abstractions.Clipboard;
 using CaptureTool.Application.Abstractions.Files;
+using CaptureTool.Application.Abstractions.Logging;
 using CaptureTool.Application.Abstractions.Settings;
 using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Application.Abstractions.TaskEnvironment;
@@ -15,8 +16,9 @@ internal sealed class VideoCapturePostProcessor
     private readonly ISettingsService _settingsService;
     private readonly IStorageService _storageService;
     private readonly ITaskEnvironment _taskEnvironment;
-    private readonly ITelemetryService _telemetryService;
+    private readonly ILogService _logService;
     private readonly VideoCaptureFileNameGenerator _fileNameGenerator;
+    private readonly ITelemetryService? _telemetryService;
 
     public VideoCapturePostProcessor(
         IClipboardService clipboardService,
@@ -24,16 +26,18 @@ internal sealed class VideoCapturePostProcessor
         ISettingsService settingsService,
         IStorageService storageService,
         ITaskEnvironment taskEnvironment,
-        ITelemetryService telemetryService,
-        VideoCaptureFileNameGenerator fileNameGenerator)
+        ILogService logService,
+        VideoCaptureFileNameGenerator fileNameGenerator,
+        ITelemetryService? telemetryService = null)
     {
         _clipboardService = clipboardService;
         _fileSystem = fileSystem;
         _settingsService = settingsService;
         _storageService = storageService;
         _taskEnvironment = taskEnvironment;
-        _telemetryService = telemetryService;
+        _logService = logService;
         _fileNameGenerator = fileNameGenerator;
+        _telemetryService = telemetryService;
     }
 
     public void Process(VideoFile videoFile)
@@ -56,10 +60,12 @@ internal sealed class VideoCapturePostProcessor
 
                 ClipboardFile clipboardFile = new(videoFile.FilePath);
                 await _clipboardService.CopyFileAsync(clipboardFile);
+                TrackOutput("auto_copy", TelemetryOutcomes.Succeeded);
             }
             catch (Exception e)
             {
-                _telemetryService.ActivityError("AutoCopyVideo", e);
+                _logService.LogException(e, "Activity error: AutoCopyVideo");
+                TrackOutput("auto_copy", TelemetryOutcomes.Failed);
             }
         });
     }
@@ -83,10 +89,25 @@ internal sealed class VideoCapturePostProcessor
             string newFilePath = Path.Combine(videosFolder, _fileNameGenerator.GetNewCaptureFileName());
 
             _fileSystem.CopyFile(videoFile.FilePath, newFilePath, true);
+            TrackOutput("auto_save", TelemetryOutcomes.Succeeded);
         }
         catch (Exception e)
         {
-            _telemetryService.ActivityError("AutoSaveVideo", e);
+            _logService.LogException(e, "Activity error: AutoSaveVideo");
+            TrackOutput("auto_save", TelemetryOutcomes.Failed);
         }
+    }
+
+    private void TrackOutput(string operation, string outcome)
+    {
+        _telemetryService?.TrackEvent(
+            TelemetryEvents.OutputCompleted,
+            new Dictionary<string, object?>
+            {
+                [TelemetryProperties.Operation] = operation,
+                [TelemetryProperties.MediaType] = "video",
+                [TelemetryProperties.Outcome] = outcome,
+                [TelemetryProperties.Source] = "capture_post_processor"
+            });
     }
 }

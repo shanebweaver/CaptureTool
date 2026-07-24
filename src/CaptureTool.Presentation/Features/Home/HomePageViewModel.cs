@@ -5,6 +5,7 @@ using CaptureTool.Application.Abstractions.Library.RecentCaptures.GetRecentCaptu
 using CaptureTool.Application.Abstractions.Library.RecentCaptures.OpenRecentCapture;
 using CaptureTool.Application.Abstractions.Metrics;
 using CaptureTool.Application.Abstractions.Store;
+using CaptureTool.Application.Abstractions.Telemetry;
 using CaptureTool.Domain.Capture;
 using CaptureTool.Domain.FileSystem;
 using CaptureTool.Presentation.Factories;
@@ -97,7 +98,8 @@ public sealed partial class HomePageViewModel : AsyncLoadableViewModelBase
         IImageCaptureState imageCaptureState,
         IVideoCaptureState videoCaptureState,
         IAudioCaptureState audioCaptureState,
-        IFactoryServiceWithArgs<RecentCaptureViewModel, string> recentCaptureViewModelFactory)
+        IFactoryServiceWithArgs<RecentCaptureViewModel, string> recentCaptureViewModelFactory,
+        ITelemetryService? telemetryService = null)
     {
         _imageCaptureState = imageCaptureState;
         _videoCaptureState = videoCaptureState;
@@ -108,10 +110,32 @@ public sealed partial class HomePageViewModel : AsyncLoadableViewModelBase
         _openRecentCaptureCommand = openRecentCaptureCommand;
         _recentCaptureViewModelFactory = recentCaptureViewModelFactory;
 
-        NewImageCaptureCommand = openSelectionOverlayCommand.ToRelayCommand(() => new OpenSelectionOverlayRequest(CaptureOptions.ImageDefault));
-        NewVideoCaptureCommand = openSelectionOverlayCommand.ToRelayCommand(() => new OpenSelectionOverlayRequest(CaptureOptions.VideoDefault));
-        NewAudioCaptureCommand = openAudioCapturePageCommand.ToRelayCommand(() => new OpenAudioCapturePageRequest());
-        OpenRecentCaptureCommand = new AsyncRelayCommand<RecentCaptureViewModel>(OpenRecentCaptureAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
+        NewImageCaptureCommand = TelemetryCommandFactory.Async(
+            "new_image_capture",
+            async () => await openSelectionOverlayCommand.ExecuteAsync(
+                new OpenSelectionOverlayRequest(CaptureOptions.ImageDefault),
+                CancellationToken.None),
+            telemetryService,
+            "home");
+        NewVideoCaptureCommand = TelemetryCommandFactory.Async(
+            "new_video_capture",
+            async () => await openSelectionOverlayCommand.ExecuteAsync(
+                new OpenSelectionOverlayRequest(CaptureOptions.VideoDefault),
+                CancellationToken.None),
+            telemetryService,
+            "home");
+        NewAudioCaptureCommand = TelemetryCommandFactory.Async(
+            "new_audio_capture",
+            async () => await openAudioCapturePageCommand.ExecuteAsync(
+                new OpenAudioCapturePageRequest(),
+                CancellationToken.None),
+            telemetryService,
+            "home");
+        OpenRecentCaptureCommand = TelemetryCommandFactory.Async<RecentCaptureViewModel>(
+            "open_recent_capture",
+            OpenRecentCaptureAsync,
+            telemetryService,
+            "home");
         LoadMoreRecentCapturesCommand = new AsyncRelayCommand(LoadMoreRecentCapturesAsync, CanLoadMoreRecentCaptures, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
         LeaveStoreReviewCommand = new AsyncRelayCommand(LeaveStoreReviewAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
         RemindStoreReviewLaterCommand = new AsyncRelayCommand(RemindStoreReviewLaterAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);

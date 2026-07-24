@@ -5,6 +5,7 @@ using CaptureTool.Application.Abstractions.Metrics;
 using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Application.Abstractions.Settings;
 using CaptureTool.Application.Abstractions.Storage;
+using CaptureTool.Application.Abstractions.Telemetry;
 
 namespace CaptureTool.Application.Activation;
 
@@ -18,6 +19,7 @@ internal sealed class ApplicationStartupInitializer : IApplicationStartupInitial
     private readonly INavigationHandler _navigationHandler;
     private readonly INavigationService _navigationService;
     private readonly IStorageService _storageService;
+    private readonly ITelemetryService? _telemetryService;
     private readonly SemaphoreSlim _semaphore = new(1, 1);
 
     private bool _isInitialized;
@@ -30,7 +32,8 @@ internal sealed class ApplicationStartupInitializer : IApplicationStartupInitial
         ILocalizationService localizationService,
         INavigationHandler navigationHandler,
         INavigationService navigationService,
-        IStorageService storageService)
+        IStorageService storageService,
+        ITelemetryService? telemetryService = null)
     {
         _cancellationService = cancellationService;
         _settingsService = settingsService;
@@ -40,6 +43,7 @@ internal sealed class ApplicationStartupInitializer : IApplicationStartupInitial
         _navigationHandler = navigationHandler;
         _navigationService = navigationService;
         _storageService = storageService;
+        _telemetryService = telemetryService;
     }
 
     public async Task InitializeAsync(CancellationToken cancellationToken = default)
@@ -70,6 +74,7 @@ internal sealed class ApplicationStartupInitializer : IApplicationStartupInitial
             _navigationService.SetNavigationHandler(_navigationHandler);
 
             _isInitialized = true;
+            _telemetryService?.TrackEvent(TelemetryEvents.AppStarted);
         }
         finally
         {

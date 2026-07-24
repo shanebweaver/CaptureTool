@@ -2,6 +2,7 @@ using CaptureTool.Application.Abstractions.Capture;
 using CaptureTool.Application.Abstractions.Settings;
 using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Application.Abstractions.TaskEnvironment;
+using CaptureTool.Application.Abstractions.Telemetry;
 using CaptureTool.Domain.Capture;
 using CaptureTool.Domain.FileSystem;
 
@@ -16,6 +17,7 @@ internal sealed class VideoCaptureWorkflow : IVideoCaptureWorkflow
     private readonly VideoCaptureStateStore _stateStore;
     private readonly VideoCapturePostProcessor _postProcessor;
     private readonly VideoCaptureFileNameGenerator _fileNameGenerator;
+    private readonly ITelemetryService? _telemetryService;
 
     public event EventHandler<VideoFile>? NewVideoCaptured;
     public event EventHandler? RecordingStarted;
@@ -39,7 +41,8 @@ internal sealed class VideoCaptureWorkflow : IVideoCaptureWorkflow
         IBackgroundTaskRunner backgroundTaskRunner,
         VideoCaptureStateStore stateStore,
         VideoCapturePostProcessor postProcessor,
-        VideoCaptureFileNameGenerator fileNameGenerator)
+        VideoCaptureFileNameGenerator fileNameGenerator,
+        ITelemetryService? telemetryService = null)
     {
         _screenRecorder = screenRecorder;
         _settingsService = settingsService;
@@ -48,6 +51,7 @@ internal sealed class VideoCaptureWorkflow : IVideoCaptureWorkflow
         _stateStore = stateStore;
         _postProcessor = postProcessor;
         _fileNameGenerator = fileNameGenerator;
+        _telemetryService = telemetryService;
 
         _screenRecorder.RecordingStarted += OnRecordingStarted;
     }
@@ -60,6 +64,7 @@ internal sealed class VideoCaptureWorkflow : IVideoCaptureWorkflow
 
     public void StartVideoCapture(NewCaptureArgs args)
     {
+        TrackCapture(TelemetryEvents.CaptureRequested, args.CaptureType.ToString(), Snapshot.AudioSettings);
         string tempVideoPath = Path.Combine(
             _storageService.GetApplicationTemporaryFolderPath(),
             _fileNameGenerator.GetNewCaptureFileName());
@@ -74,6 +79,11 @@ internal sealed class VideoCaptureWorkflow : IVideoCaptureWorkflow
         catch
         {
             _stateStore.ClearSession(session.Id);
+            TrackCapture(
+                TelemetryEvents.CaptureFailed,
+                args.CaptureType.ToString(),
+                session.AudioSettings,
+                TelemetryOutcomes.Failed);
             throw;
         }
     }
@@ -109,6 +119,15 @@ internal sealed class VideoCaptureWorkflow : IVideoCaptureWorkflow
         {
             _screenRecorder.StopRecording();
         }
+        catch
+        {
+            TrackCapture(
+                TelemetryEvents.CaptureFailed,
+                session.Target.Kind.ToString(),
+                session.AudioSettings,
+                TelemetryOutcomes.Failed);
+            throw;
+        }
         finally
         {
             _stateStore.ClearSession(session.Id);
@@ -118,6 +137,12 @@ internal sealed class VideoCaptureWorkflow : IVideoCaptureWorkflow
                 PausedStateChanged?.Invoke(this, false);
             }
         }
+
+        TrackCapture(
+            TelemetryEvents.CaptureCanceled,
+            session.Target.Kind.ToString(),
+            session.AudioSettings,
+            TelemetryOutcomes.Canceled);
     }
 
     public void SetIsDesktopAudioEnabled(bool value)
@@ -197,10 +222,20 @@ internal sealed class VideoCaptureWorkflow : IVideoCaptureWorkflow
 
             finalization.PendingVideo.Complete();
             _postProcessor.Process(finalization.PendingVideo);
+            TrackCapture(
+                TelemetryEvents.CaptureCompleted,
+                finalization.Target.Kind.ToString(),
+                finalization.AudioSettings,
+                TelemetryOutcomes.Succeeded);
         }
         catch (Exception ex)
         {
             finalization.PendingVideo.Fail(ex);
+            TrackCapture(
+                TelemetryEvents.CaptureFailed,
+                finalization.Target.Kind.ToString(),
+                finalization.AudioSettings,
+                TelemetryOutcomes.Failed);
             throw;
         }
         finally
@@ -213,8 +248,36 @@ internal sealed class VideoCaptureWorkflow : IVideoCaptureWorkflow
     {
         if (_stateStore.TryMarkRecordingStarted())
         {
+            VideoCaptureSession session = _stateStore.GetRequiredActiveSession();
+            TrackCapture(
+                TelemetryEvents.CaptureStarted,
+                session.Target.Kind.ToString(),
+                session.AudioSettings);
             RecordingStarted?.Invoke(this, EventArgs.Empty);
         }
+    }
+
+    private void TrackCapture(
+        string eventName,
+        string captureType,
+        VideoCaptureAudioSettings audioSettings,
+        string? outcome = null)
+    {
+        var properties = new Dictionary<string, object?>
+        {
+            [TelemetryProperties.MediaType] = "video",
+            [TelemetryProperties.CaptureType] = captureType,
+            [TelemetryProperties.DesktopAudioEnabled] = audioSettings.ShouldCaptureDesktopAudio,
+            [TelemetryProperties.AudioInputEnabled] =
+                audioSettings.ActiveAudioInputSourceId is not null
+        };
+
+        if (outcome is not null)
+        {
+            properties[TelemetryProperties.Outcome] = outcome;
+        }
+
+        _telemetryService?.TrackEvent(eventName, properties);
     }
 
     private static CaptureRecordingTarget CreateRecordingTarget(NewCaptureArgs args)

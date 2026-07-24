@@ -1,5 +1,6 @@
 using CaptureTool.Application.Abstractions.Clipboard;
 using CaptureTool.Application.Abstractions.Files;
+using CaptureTool.Application.Abstractions.Logging;
 using CaptureTool.Application.Abstractions.Settings;
 using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Application.Abstractions.TaskEnvironment;
@@ -15,8 +16,9 @@ internal sealed class ImageCapturePostProcessor
     private readonly ISettingsService _settingsService;
     private readonly IStorageService _storageService;
     private readonly ITaskEnvironment _taskEnvironment;
-    private readonly ITelemetryService _telemetryService;
+    private readonly ILogService _logService;
     private readonly ImageCaptureFileNameGenerator _fileNameGenerator;
+    private readonly ITelemetryService? _telemetryService;
 
     public ImageCapturePostProcessor(
         IClipboardService clipboardService,
@@ -24,16 +26,18 @@ internal sealed class ImageCapturePostProcessor
         ISettingsService settingsService,
         IStorageService storageService,
         ITaskEnvironment taskEnvironment,
-        ITelemetryService telemetryService,
-        ImageCaptureFileNameGenerator fileNameGenerator)
+        ILogService logService,
+        ImageCaptureFileNameGenerator fileNameGenerator,
+        ITelemetryService? telemetryService = null)
     {
         _clipboardService = clipboardService;
         _fileSystem = fileSystem;
         _settingsService = settingsService;
         _storageService = storageService;
         _taskEnvironment = taskEnvironment;
-        _telemetryService = telemetryService;
+        _logService = logService;
         _fileNameGenerator = fileNameGenerator;
+        _telemetryService = telemetryService;
     }
 
     public void Process(ImageFile imageFile)
@@ -56,10 +60,12 @@ internal sealed class ImageCapturePostProcessor
 
                 ClipboardFile clipboardFile = new(imageFile.FilePath);
                 await _clipboardService.CopyBitmapAsync(clipboardFile);
+                TrackOutput("auto_copy", TelemetryOutcomes.Succeeded);
             }
             catch (Exception e)
             {
-                _telemetryService.ActivityError("AutoCopyImage", e);
+                _logService.LogException(e, "Activity error: AutoCopyImage");
+                TrackOutput("auto_copy", TelemetryOutcomes.Failed);
             }
         });
     }
@@ -85,11 +91,26 @@ internal sealed class ImageCapturePostProcessor
                 string newFilePath = Path.Combine(screenshotsFolder, _fileNameGenerator.GetNewCaptureFileName());
 
                 _fileSystem.CopyFile(imageFile.FilePath, newFilePath, true);
+                TrackOutput("auto_save", TelemetryOutcomes.Succeeded);
             }
             catch (Exception e)
             {
-                _telemetryService.ActivityError("AutoSaveImage", e);
+                _logService.LogException(e, "Activity error: AutoSaveImage");
+                TrackOutput("auto_save", TelemetryOutcomes.Failed);
             }
         });
+    }
+
+    private void TrackOutput(string operation, string outcome)
+    {
+        _telemetryService?.TrackEvent(
+            TelemetryEvents.OutputCompleted,
+            new Dictionary<string, object?>
+            {
+                [TelemetryProperties.Operation] = operation,
+                [TelemetryProperties.MediaType] = "image",
+                [TelemetryProperties.Outcome] = outcome,
+                [TelemetryProperties.Source] = "capture_post_processor"
+            });
     }
 }

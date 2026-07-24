@@ -3,6 +3,7 @@ using CaptureTool.Application.Abstractions.Capture.Overlay.OpenSelectionOverlay;
 using CaptureTool.Application.Abstractions.Logging;
 using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Application.Abstractions.Shell.Home.ShowHomePage;
+using CaptureTool.Application.Abstractions.Telemetry;
 using CaptureTool.Domain.Capture;
 using System.Collections.Specialized;
 using System.Web;
@@ -17,6 +18,7 @@ internal sealed class CaptureToolActivationHandler : IActivationHandler
     private readonly IApplicationStartupInitializer _startupInitializer;
     private readonly ILaunchNavigationTargetProvider _launchNavigationTargetProvider;
     private readonly INavigationService _navigationService;
+    private readonly ITelemetryService? _telemetryService;
 
     private readonly SemaphoreSlim _semaphoreActivation = new(1, 1);
 
@@ -26,7 +28,8 @@ internal sealed class CaptureToolActivationHandler : IActivationHandler
         ILogService logService,
         IApplicationStartupInitializer startupInitializer,
         ILaunchNavigationTargetProvider launchNavigationTargetProvider,
-        INavigationService navigationService)
+        INavigationService navigationService,
+        ITelemetryService? telemetryService = null)
     {
         _openSelectionOverlay = openSelectionOverlay;
         _showHomePage = showHomePage;
@@ -34,6 +37,7 @@ internal sealed class CaptureToolActivationHandler : IActivationHandler
         _startupInitializer = startupInitializer;
         _launchNavigationTargetProvider = launchNavigationTargetProvider;
         _navigationService = navigationService;
+        _telemetryService = telemetryService;
     }
 
     public async Task HandleLaunchActivationAsync()
@@ -43,6 +47,7 @@ internal sealed class CaptureToolActivationHandler : IActivationHandler
         try
         {
             await _startupInitializer.InitializeAsync();
+            TrackActivation("launch", "app");
             LaunchNavigationTarget? launchTarget = _launchNavigationTargetProvider.GetLaunchNavigationTarget();
             if (launchTarget is null)
             {
@@ -79,6 +84,7 @@ internal sealed class CaptureToolActivationHandler : IActivationHandler
             bool isRecordingType = queryParams.Get("type") is string type && type.Equals("recording", StringComparison.InvariantCultureIgnoreCase);
 
             string source = queryParams.Get("source") ?? string.Empty;
+            TrackActivation("protocol", NormalizeProtocolSource(source, isRecordingType));
             if (source.Equals("PrintScreen", StringComparison.InvariantCultureIgnoreCase))
             {
                 await OpenSelectionOverlayAsync(CaptureOptions.ImageDefault);
@@ -109,5 +115,36 @@ internal sealed class CaptureToolActivationHandler : IActivationHandler
     private async Task OpenSelectionOverlayAsync(CaptureOptions captureOptions)
     {
         await _openSelectionOverlay.ExecuteAsync(new OpenSelectionOverlayRequest(captureOptions));
+    }
+
+    private void TrackActivation(string activationKind, string source)
+    {
+        _telemetryService?.TrackEvent(
+            TelemetryEvents.AppActivated,
+            new Dictionary<string, object?>
+            {
+                [TelemetryProperties.ActivationKind] = activationKind,
+                [TelemetryProperties.Source] = source
+            });
+    }
+
+    private static string NormalizeProtocolSource(string source, bool isRecordingType)
+    {
+        if (source.Equals("PrintScreen", StringComparison.InvariantCultureIgnoreCase))
+        {
+            return "print_screen";
+        }
+
+        if (source.Equals("ScreenRecorderHotKey", StringComparison.InvariantCultureIgnoreCase))
+        {
+            return "screen_recorder_hotkey";
+        }
+
+        if (source.Equals("HotKey", StringComparison.InvariantCultureIgnoreCase))
+        {
+            return "hotkey";
+        }
+
+        return isRecordingType ? "recording" : "other";
     }
 }

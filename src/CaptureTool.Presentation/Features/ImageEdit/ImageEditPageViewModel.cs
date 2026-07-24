@@ -17,6 +17,8 @@ using CaptureTool.Application.Abstractions.Settings;
 using CaptureTool.Application.Abstractions.Settings.OpenScreenshotsFolder;
 using CaptureTool.Application.Abstractions.Share;
 using CaptureTool.Application.Abstractions.Storage;
+using CaptureTool.Application.Abstractions.Telemetry;
+using CaptureTool.Application.Abstractions.UseCases;
 using CaptureTool.Domain.Ai;
 using CaptureTool.Domain.Edit;
 using CaptureTool.Domain.Edit.Drawable;
@@ -70,6 +72,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     private readonly ILogService _logService;
     private readonly IAppNotificationService _notificationService;
     private readonly IClipboardService _clipboardService;
+    private readonly ITelemetryService? _telemetryService;
 
     private readonly ImageEditHistory _editHistory;
     private readonly ImageEditModeStateMachine _modeStateMachine;
@@ -719,7 +722,8 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         IImageForegroundExtractionFeatureAvailability? imageForegroundExtractionFeatureAvailability = null,
         IImageObjectEraseService? imageObjectEraseService = null,
         IImageObjectEraseFeatureAvailability? imageObjectEraseFeatureAvailability = null,
-        IImageObjectExtractionFeatureAvailability? imageObjectExtractionFeatureAvailability = null)
+        IImageObjectExtractionFeatureAvailability? imageObjectExtractionFeatureAvailability = null,
+        ITelemetryService? telemetryService = null)
     {
         _localizationService = localizationService;
         _cancellationService = cancellationService;
@@ -749,6 +753,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         _logService = logService;
         _notificationService = notificationService;
         _clipboardService = clipboardService;
+        _telemetryService = telemetryService;
 
         ChromaKeyTool = chromaKeyTool;
         ColorPickerTool = colorPickerTool;
@@ -909,6 +914,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         UpdateCanToggleObjectErase();
         UpdateObjectExtractionAvailability();
         UpdateCanToggleObjectExtraction();
+        TrackEditorOpened();
     }
 
     public override void Dispose()
@@ -970,8 +976,17 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
     private async Task CopyAsync()
     {
-        ImageCanvasRenderOptions options = GetImageCanvasRenderOptions();
-        await _imageCanvasExporter.CopyImageToClipboardAsync([.. Drawables], options);
+        try
+        {
+            ImageCanvasRenderOptions options = GetImageCanvasRenderOptions();
+            await _imageCanvasExporter.CopyImageToClipboardAsync([.. Drawables], options);
+            TrackOutput("copy", TelemetryOutcomes.Succeeded);
+        }
+        catch
+        {
+            TrackOutput("copy", TelemetryOutcomes.Failed);
+            throw;
+        }
     }
 
     private async Task CopyImageDescriptionAsync()
@@ -985,10 +1000,12 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         {
             await _clipboardService.CopyTextAsync(ImageDescription);
             _notificationService.ShowInfo(GetLocalizedString(ImageDescriptionCopiedMessageResourceKey));
+            TrackOutput("copy_image_description", TelemetryOutcomes.Succeeded);
         }
         catch (Exception)
         {
             _notificationService.ShowError(GetLocalizedString(ImageDescriptionCopyFailedMessageResourceKey));
+            TrackOutput("copy_image_description", TelemetryOutcomes.Failed);
         }
     }
 
@@ -1016,6 +1033,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
         if (!await EnsureAiFeatureConsentAsync(AiFeatureId.ImageSuperResolution, CancellationToken.None))
         {
+            TrackEditTool("super_resolution", TelemetryOutcomes.Canceled);
             UpdateCanToggleSuperResolution();
             return;
         }
@@ -1038,6 +1056,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
         if (!await EnsureAiFeatureConsentAsync(AiFeatureId.TextExtraction, CancellationToken.None))
         {
+            TrackEditTool("text_extraction", TelemetryOutcomes.Canceled);
             RefreshTextExtractionToggleState();
             UpdateCanToggleTextExtraction();
             return;
@@ -1062,6 +1081,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
         if (!await EnsureAiFeatureConsentAsync(AiFeatureId.ImageDescription, CancellationToken.None))
         {
+            TrackEditTool("image_description", TelemetryOutcomes.Canceled);
             RefreshImageDescriptionToggleState();
             UpdateCanToggleImageDescription();
             return;
@@ -1085,6 +1105,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
         if (!await EnsureAiFeatureConsentAsync(AiFeatureId.ImageForegroundExtraction, CancellationToken.None))
         {
+            TrackEditTool("foreground_extraction", TelemetryOutcomes.Canceled);
             RefreshForegroundExtractionToggleState();
             UpdateCanToggleForegroundExtraction();
             return;
@@ -1109,6 +1130,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
         if (!await EnsureAiFeatureConsentAsync(AiFeatureId.ImageObjectErase, CancellationToken.None))
         {
+            TrackEditTool("object_erase", TelemetryOutcomes.Canceled);
             RefreshObjectEraseToggleState();
             UpdateCanToggleObjectErase();
             return;
@@ -1133,6 +1155,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
         if (!await EnsureAiFeatureConsentAsync(AiFeatureId.ImageObjectExtraction, CancellationToken.None))
         {
+            TrackEditTool("object_extraction", TelemetryOutcomes.Canceled);
             RefreshObjectExtractionToggleState();
             UpdateCanToggleObjectExtraction();
             return;
@@ -1246,6 +1269,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         if (newShape != null)
         {
             ExecuteEditCommand(new AddDrawableCommand(newShape), CanvasUpdateMode.Redraw);
+            TrackEditTool("shape");
         }
     }
 
@@ -1261,6 +1285,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         if (newText != null)
         {
             ExecuteEditCommand(new AddDrawableCommand(newText), CanvasUpdateMode.Redraw);
+            TrackEditTool("text");
         }
     }
 
@@ -1283,6 +1308,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
         ColorPickerTool.UpdatePickedColorCommand.Execute(color);
         await ColorPickerTool.CopyPickedColorCommand.ExecuteAsync(null);
+        TrackEditTool("color_picker");
     }
 
     public void OnShapeDeleted(int shapeIndex)
@@ -1295,6 +1321,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         if (shapeIndex >= 0 && shapeIndex < _editSession.Drawables.Count)
         {
             ExecuteEditCommand(new DeleteDrawableCommand(shapeIndex), CanvasUpdateMode.Redraw);
+            TrackEditTool(IsTextModeActive ? "text_delete" : "shape_delete");
         }
     }
 
@@ -1310,6 +1337,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
             ExecuteEditCommand(
                 new ModifyDrawableCommand(shapeIndex, oldState, newState),
                 CanvasUpdateMode.Redraw);
+            TrackEditTool(IsTextModeActive ? "text_modify" : "shape_modify");
         }
     }
 
@@ -1345,6 +1373,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
             if (file is null)
             {
+                TrackOutput("save", TelemetryOutcomes.Canceled);
                 return false;
             }
 
@@ -1353,11 +1382,13 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
             HasUnsavedChanges = false;
             _hasUnsavedChangesBeforeSuperResolution = false;
             _hasUserEditsSinceSuperResolutionActivated = false;
+            TrackOutput("save", TelemetryOutcomes.Succeeded);
             return true;
         }
         catch (Exception ex)
         {
             _logService.LogException(ex, "Failed to save image edits.");
+            TrackOutput("save", TelemetryOutcomes.Failed);
             return false;
         }
     }
@@ -1395,6 +1426,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         IncrementEditRevision();
         HasUnsavedChanges = true;
         RequestCanvasUpdateAfterHistory(previousImagePath, previousRenderSnapshot);
+        TrackEditTool("undo");
     }
 
     private void Redo()
@@ -1414,6 +1446,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         IncrementEditRevision();
         HasUnsavedChanges = true;
         RequestCanvasUpdateAfterHistory(previousImagePath, previousRenderSnapshot);
+        TrackEditTool("redo");
     }
 
     private void Rotate()
@@ -1434,7 +1467,16 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
     private async Task PrintAsync()
     {
-        await _imageCanvasPrinter.ShowPrintUIAsync([.. Drawables], GetImageCanvasRenderOptions());
+        try
+        {
+            await _imageCanvasPrinter.ShowPrintUIAsync([.. Drawables], GetImageCanvasRenderOptions());
+            TrackOutput("print", TelemetryOutcomes.Succeeded);
+        }
+        catch
+        {
+            TrackOutput("print", TelemetryOutcomes.Failed);
+            throw;
+        }
     }
 
     private async Task ShareAsync()
@@ -1444,9 +1486,18 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
             return;
         }
 
-        ImageCanvasRenderOptions options = GetImageCanvasRenderOptions();
-        using MemoryStream renderedStream = await _imageCanvasExporter.RenderToStreamAsync([.. Drawables], options);
-        await _shareService.ShareStreamAsync(renderedStream);
+        try
+        {
+            ImageCanvasRenderOptions options = GetImageCanvasRenderOptions();
+            using MemoryStream renderedStream = await _imageCanvasExporter.RenderToStreamAsync([.. Drawables], options);
+            await _shareService.ShareStreamAsync(renderedStream);
+            TrackOutput("share", TelemetryOutcomes.Succeeded);
+        }
+        catch
+        {
+            TrackOutput("share", TelemetryOutcomes.Failed);
+            throw;
+        }
     }
 
     private async Task EditInPaintAsync()
@@ -1458,9 +1509,17 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
         string imagePath = GetTemporaryPaintImagePath();
         await _imageCanvasExporter.SaveImageAsync(imagePath, [.. Drawables], GetImageCanvasRenderOptions());
-        await _openExternalEditorAction.ExecuteAsync(
+        var response = await _openExternalEditorAction.ExecuteAsync(
             new OpenExternalEditorRequest(imagePath, ExternalMediaEditor.Paint),
             CancellationToken.None);
+        TrackOutput(
+            "open_external_editor",
+            response?.Result == UseCaseResult.Cancelled
+                ? TelemetryOutcomes.Canceled
+                : response?.Result == UseCaseResult.Succeeded &&
+                    response.Value?.Opened == true
+                    ? TelemetryOutcomes.Succeeded
+                    : TelemetryOutcomes.Failed);
     }
 
     private string GetTemporaryPaintImagePath()
@@ -1507,6 +1566,67 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         IncrementEditRevision(preservePointSelectionAiMode);
         MarkUnsavedChanges();
         RequestCanvasUpdate(canvasUpdateMode);
+        string? telemetryTool = GetTelemetryTool(command);
+        if (telemetryTool is not null)
+        {
+            TrackEditTool(telemetryTool);
+        }
+    }
+
+    private void TrackEditorOpened()
+    {
+        _telemetryService?.TrackEvent(
+            TelemetryEvents.EditorOpened,
+            new Dictionary<string, object?>
+            {
+                [TelemetryProperties.MediaType] = "image"
+            });
+    }
+
+    private void TrackEditTool(string tool, string outcome = TelemetryOutcomes.Succeeded)
+    {
+        _telemetryService?.TrackEvent(
+            TelemetryEvents.EditToolInvoked,
+            new Dictionary<string, object?>
+            {
+                [TelemetryProperties.Tool] = tool,
+                [TelemetryProperties.MediaType] = "image",
+                [TelemetryProperties.Outcome] = outcome
+            });
+    }
+
+    private void TrackOutput(string operation, string outcome)
+    {
+        _telemetryService?.TrackEvent(
+            TelemetryEvents.OutputCompleted,
+            new Dictionary<string, object?>
+            {
+                [TelemetryProperties.Operation] = operation,
+                [TelemetryProperties.MediaType] = "image",
+                [TelemetryProperties.Outcome] = outcome,
+                [TelemetryProperties.Source] = "image_editor"
+            });
+    }
+
+    private static string? GetTelemetryTool(IImageEditCommand command)
+    {
+        return command switch
+        {
+            SetCropCommand => "crop",
+            RotateImageCommand => "rotate",
+            FlipImageCommand => "flip",
+            SetChromaKeyCommand => "chroma_key",
+            AddDrawableCommand => null,
+            ModifyDrawableCommand => null,
+            DeleteDrawableCommand => null,
+            ReplaceImageDrawableFileCommand => null,
+            _ => "other"
+        };
+    }
+
+    private static string GetImageDescriptionTelemetryTool(ImageDescriptionMode mode)
+    {
+        return $"image_description_{mode.ToString().ToLowerInvariant()}";
     }
 
     private void SyncImageGeometryFromSession()
@@ -1718,9 +1838,11 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
                 CanvasUpdateMode.ReloadResources,
                 preservePointSelectionAiMode: true);
             ForegroundExtractionStatusMessage = GetLocalizedString("ForegroundExtractionStatus_Success");
+            TrackEditTool("foreground_extraction");
         }
         catch (OperationCanceledException)
         {
+            TrackEditTool("foreground_extraction", TelemetryOutcomes.Canceled);
         }
         catch (Exception ex)
         {
@@ -1829,9 +1951,11 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
                 CanvasUpdateMode.ReloadResources,
                 preservePointSelectionAiMode: true);
             ObjectEraseStatusMessage = GetLocalizedString("ObjectEraseStatus_Success");
+            TrackEditTool("object_erase");
         }
         catch (OperationCanceledException)
         {
+            TrackEditTool("object_erase", TelemetryOutcomes.Canceled);
         }
         catch (Exception ex)
         {
@@ -1940,9 +2064,11 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
                 CanvasUpdateMode.ReloadResources,
                 preservePointSelectionAiMode: true);
             ObjectExtractionStatusMessage = GetLocalizedString("ObjectExtractionStatus_Success");
+            TrackEditTool("object_extraction");
         }
         catch (OperationCanceledException)
         {
+            TrackEditTool("object_extraction", TelemetryOutcomes.Canceled);
         }
         catch (Exception ex)
         {
@@ -2047,10 +2173,12 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
             TextExtractionTool.SetText(result.Document.Text);
             _textExtractionProcessedRevision = processedRevision;
             InvalidateCanvasRequested?.Invoke(this, EventArgs.Empty);
+            TrackEditTool("text_extraction");
         }
         catch (OperationCanceledException)
         {
             TextExtractionStatusMessage = string.Empty;
+            TrackEditTool("text_extraction", TelemetryOutcomes.Canceled);
         }
         catch (Exception ex)
         {
@@ -2113,6 +2241,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         if (_imageDescriptionResults.TryGetValue(mode, out string? cachedDescription))
         {
             ShowImageDescription(mode, cachedDescription);
+            TrackEditTool(GetImageDescriptionTelemetryTool(mode));
             return;
         }
 
@@ -2175,9 +2304,11 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
             {
                 ShowImageDescription(mode, result.Description);
             }
+            TrackEditTool(GetImageDescriptionTelemetryTool(mode));
         }
         catch (OperationCanceledException)
         {
+            TrackEditTool(GetImageDescriptionTelemetryTool(mode), TelemetryOutcomes.Canceled);
             if (ReferenceEquals(_imageDescriptionCancellationTokenSource, cancellationTokenSource))
             {
                 ImageDescriptionStatusMessage = string.Empty;
@@ -2272,6 +2403,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         catch (OperationCanceledException)
         {
             SuperResolutionStatusMessage = string.Empty;
+            TrackEditTool("super_resolution", TelemetryOutcomes.Canceled);
         }
         catch (Exception ex)
         {
@@ -2347,6 +2479,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         _hasUserEditsSinceSuperResolutionActivated = false;
         ApplyImageVariant(_superResolutionImageFile, _superResolutionImageSize, true);
         HasUnsavedChanges = true;
+        TrackEditTool("super_resolution");
     }
 
     private void RestoreOriginalImageVariant()
@@ -2695,6 +2828,11 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     private void ShowSuperResolutionFailure(string message)
     {
         SuperResolutionStatusMessage = message;
+        TrackEditTool(
+            "super_resolution",
+            string.IsNullOrWhiteSpace(message)
+                ? TelemetryOutcomes.Canceled
+                : TelemetryOutcomes.Failed);
         if (!string.IsNullOrWhiteSpace(message))
         {
             _notificationService.ShowError(message);
@@ -2744,6 +2882,11 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     private void ShowTextExtractionFailure(string message)
     {
         TextExtractionStatusMessage = message;
+        TrackEditTool(
+            "text_extraction",
+            string.IsNullOrWhiteSpace(message)
+                ? TelemetryOutcomes.Canceled
+                : TelemetryOutcomes.Failed);
         if (!string.IsNullOrWhiteSpace(message))
         {
             _notificationService.ShowError(message);
@@ -2787,6 +2930,13 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     private void ShowImageDescriptionFailure(string message)
     {
         ImageDescriptionStatusMessage = message;
+        TrackEditTool(
+            _runningImageDescriptionMode is { } mode
+                ? GetImageDescriptionTelemetryTool(mode)
+                : "image_description",
+            string.IsNullOrWhiteSpace(message)
+                ? TelemetryOutcomes.Canceled
+                : TelemetryOutcomes.Failed);
         if (!string.IsNullOrWhiteSpace(message))
         {
             _notificationService.ShowError(message);
@@ -2829,6 +2979,11 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     private void ShowForegroundExtractionFailure(string message)
     {
         ForegroundExtractionStatusMessage = message;
+        TrackEditTool(
+            "foreground_extraction",
+            string.IsNullOrWhiteSpace(message)
+                ? TelemetryOutcomes.Canceled
+                : TelemetryOutcomes.Failed);
         if (!string.IsNullOrWhiteSpace(message))
         {
             _notificationService.ShowError(message);
@@ -2871,6 +3026,11 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     private void ShowObjectEraseFailure(string message)
     {
         ObjectEraseStatusMessage = message;
+        TrackEditTool(
+            "object_erase",
+            string.IsNullOrWhiteSpace(message)
+                ? TelemetryOutcomes.Canceled
+                : TelemetryOutcomes.Failed);
         if (!string.IsNullOrWhiteSpace(message))
         {
             _notificationService.ShowError(message);
@@ -2913,6 +3073,11 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     private void ShowObjectExtractionFailure(string message)
     {
         ObjectExtractionStatusMessage = message;
+        TrackEditTool(
+            "object_extraction",
+            string.IsNullOrWhiteSpace(message)
+                ? TelemetryOutcomes.Canceled
+                : TelemetryOutcomes.Failed);
         if (!string.IsNullOrWhiteSpace(message))
         {
             _notificationService.ShowError(message);

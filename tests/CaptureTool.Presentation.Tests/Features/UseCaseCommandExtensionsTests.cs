@@ -9,7 +9,7 @@ namespace CaptureTool.Presentation.Tests.Features;
 public sealed class UseCaseCommandExtensionsTests
 {
     [TestMethod]
-    public async Task ToAsyncRelayCommand_ShouldLogInitiatedAndCompleted_WhenUseCaseSucceeds()
+    public async Task ToAsyncRelayCommand_ShouldTrackSucceededAction_WhenUseCaseSucceeds()
     {
         var telemetry = new Mock<ITelemetryService>();
         var useCase = new SuccessfulUseCase();
@@ -18,12 +18,11 @@ public sealed class UseCaseCommandExtensionsTests
         command.Execute(null);
         await command.ExecutionTask!;
 
-        telemetry.Verify(service => service.ActivityInitiated("TestActivity", null), Times.Once);
-        telemetry.Verify(service => service.ActivityCompleted("TestActivity", null), Times.Once);
+        VerifyAction(telemetry, TelemetryOutcomes.Succeeded);
     }
 
     [TestMethod]
-    public async Task ToAsyncRelayCommand_ShouldLogError_AndComplete_WhenUseCaseThrows()
+    public async Task ToAsyncRelayCommand_ShouldTrackFailedAction_WhenUseCaseThrows()
     {
         var exception = new InvalidOperationException("Command failed.");
         var telemetry = new Mock<ITelemetryService>();
@@ -33,22 +32,24 @@ public sealed class UseCaseCommandExtensionsTests
         command.Execute(null);
         await command.ExecutionTask!;
 
-        telemetry.Verify(service => service.ActivityInitiated("TestActivity", null), Times.Once);
-        telemetry.Verify(service => service.ActivityCompleted(It.IsAny<string>(), It.IsAny<string?>()), Times.Never);
-        telemetry.Verify(
-            service => service.ActivityError(
-                "TestActivity",
-                exception,
-                It.IsAny<string?>(),
-                It.IsAny<string?>(),
-                It.IsAny<string?>(),
-                It.IsAny<int>(),
-                It.IsAny<string?>()),
-            Times.Once);
+        VerifyAction(telemetry, TelemetryOutcomes.Failed);
     }
 
     [TestMethod]
-    public async Task ToAsyncRelayCommand_ShouldLogCanceled_AndComplete_WhenUseCaseCancels()
+    public async Task ToAsyncRelayCommand_ShouldTrackFailedAction_WhenUseCaseReturnsFailure()
+    {
+        var telemetry = new Mock<ITelemetryService>();
+        var useCase = new FailedUseCase();
+        var command = useCase.ToAsyncRelayCommand(() => new TestRequest(), telemetry.Object, "TestActivity");
+
+        command.Execute(null);
+        await command.ExecutionTask!;
+
+        VerifyAction(telemetry, TelemetryOutcomes.Failed);
+    }
+
+    [TestMethod]
+    public async Task ToAsyncRelayCommand_ShouldTrackCanceledAction_WhenUseCaseCancels()
     {
         var exception = new OperationCanceledException("Command canceled.");
         var telemetry = new Mock<ITelemetryService>();
@@ -58,21 +59,36 @@ public sealed class UseCaseCommandExtensionsTests
         command.Execute(null);
         await command.ExecutionTask!;
 
-        telemetry.Verify(service => service.ActivityInitiated("TestActivity", null), Times.Once);
-        telemetry.Verify(service => service.ActivityCompleted(It.IsAny<string>(), It.IsAny<string?>()), Times.Never);
+        VerifyAction(telemetry, TelemetryOutcomes.Canceled);
+    }
+
+    private static void VerifyAction(
+        Mock<ITelemetryService> telemetry,
+        string outcome)
+    {
         telemetry.Verify(
-            service => service.ActivityCanceled("TestActivity", "Command canceled."),
+            service => service.TrackEvent(
+                TelemetryEvents.UserAction,
+                It.Is<IReadOnlyDictionary<string, object?>?>(
+                    properties => IsAction(properties, "TestActivity", outcome))),
             Times.Once);
         telemetry.Verify(
-            service => service.ActivityError(
+            service => service.TrackEvent(
                 It.IsAny<string>(),
-                It.IsAny<Exception>(),
-                It.IsAny<string?>(),
-                It.IsAny<string?>(),
-                It.IsAny<string?>(),
-                It.IsAny<int>(),
-                It.IsAny<string?>()),
-            Times.Never);
+                It.IsAny<IReadOnlyDictionary<string, object?>?>()),
+            Times.Once);
+    }
+
+    private static bool IsAction(
+        IReadOnlyDictionary<string, object?>? properties,
+        string action,
+        string outcome)
+    {
+        return properties is not null
+            && properties.TryGetValue(TelemetryProperties.Action, out object? actualAction)
+            && properties.TryGetValue(TelemetryProperties.Outcome, out object? actualOutcome)
+            && Equals(actualAction, action)
+            && Equals(actualOutcome, outcome);
     }
 
     private sealed record TestRequest;
@@ -81,7 +97,9 @@ public sealed class UseCaseCommandExtensionsTests
 
     private sealed class SuccessfulUseCase : IUseCase<TestRequest, TestResponse>
     {
-        public Task<UseCaseResponse<TestResponse>> ExecuteAsync(TestRequest request, CancellationToken cancellationToken = default)
+        public Task<UseCaseResponse<TestResponse>> ExecuteAsync(
+            TestRequest request,
+            CancellationToken cancellationToken = default)
         {
             return Task.FromResult(UseCaseResponse<TestResponse>.Success(new TestResponse()));
         }
@@ -96,9 +114,21 @@ public sealed class UseCaseCommandExtensionsTests
             _exception = exception;
         }
 
-        public Task<UseCaseResponse<TestResponse>> ExecuteAsync(TestRequest request, CancellationToken cancellationToken = default)
+        public Task<UseCaseResponse<TestResponse>> ExecuteAsync(
+            TestRequest request,
+            CancellationToken cancellationToken = default)
         {
             throw _exception;
+        }
+    }
+
+    private sealed class FailedUseCase : IUseCase<TestRequest, TestResponse>
+    {
+        public Task<UseCaseResponse<TestResponse>> ExecuteAsync(
+            TestRequest request,
+            CancellationToken cancellationToken = default)
+        {
+            return Task.FromResult(UseCaseResponse<TestResponse>.Failure());
         }
     }
 }

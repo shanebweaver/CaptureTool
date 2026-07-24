@@ -1,6 +1,7 @@
 using CaptureTool.Application.Abstractions.Logging;
 using CaptureTool.Application.Abstractions.Metrics;
 using CaptureTool.Application.Abstractions.Time;
+using CaptureTool.Application.Abstractions.Telemetry;
 using CaptureTool.Domain.FileSystem;
 using CaptureTool.Infrastructure.Metrics.Serialization;
 using CaptureTool.Infrastructure.Storage;
@@ -18,6 +19,7 @@ public sealed class LocalAppMetricsService : IAppMetricsService
     private readonly IClock _clock;
     private readonly IJsonStorageService _jsonStorageService;
     private readonly ILogService _logService;
+    private readonly ITelemetryService? _telemetryService;
 
     private AppMetrics _metrics = new();
     private MetricsFile? _metricsFile;
@@ -26,11 +28,13 @@ public sealed class LocalAppMetricsService : IAppMetricsService
     public LocalAppMetricsService(
         IClock clock,
         IJsonStorageService jsonStorageService,
-        ILogService logService)
+        ILogService logService,
+        ITelemetryService? telemetryService = null)
     {
         _clock = clock;
         _jsonStorageService = jsonStorageService;
         _logService = logService;
+        _telemetryService = telemetryService;
     }
 
     public AppMetrics Metrics
@@ -120,9 +124,9 @@ public sealed class LocalAppMetricsService : IAppMetricsService
             launchesSinceReminderStart >= StoreReviewReminderLaunchThreshold;
     }
 
-    public Task RemindAboutStoreReviewLaterAsync(CancellationToken cancellationToken)
+    public async Task RemindAboutStoreReviewLaterAsync(CancellationToken cancellationToken)
     {
-        return UpdateMetricsAsync(
+        await UpdateMetricsAsync(
             metrics => metrics with
             {
                 StoreReviewRemindersEnabled = true,
@@ -130,13 +134,15 @@ public sealed class LocalAppMetricsService : IAppMetricsService
                 StoreReviewReminderStartLaunchCount = metrics.AppLaunchCount
             },
             cancellationToken);
+        TrackReviewReminderSetting(true, "remind_later");
     }
 
-    public Task SetStoreReviewRemindersEnabledAsync(bool isEnabled, CancellationToken cancellationToken)
+    public async Task SetStoreReviewRemindersEnabledAsync(bool isEnabled, CancellationToken cancellationToken)
     {
-        return UpdateMetricsAsync(
+        await UpdateMetricsAsync(
             metrics => metrics with { StoreReviewRemindersEnabled = isEnabled },
             cancellationToken);
+        TrackReviewReminderSetting(isEnabled, "setting");
     }
 
     private async Task UpdateMetricsAsync(Func<AppMetrics, AppMetrics> updateMetrics, CancellationToken cancellationToken)
@@ -197,5 +203,17 @@ public sealed class LocalAppMetricsService : IAppMetricsService
             InstallDateUtc = utcNow,
             StoreReviewReminderStartDateUtc = utcNow
         };
+    }
+
+    private void TrackReviewReminderSetting(bool enabled, string source)
+    {
+        _telemetryService?.TrackEvent(
+            TelemetryEvents.SettingsChanged,
+            new Dictionary<string, object?>
+            {
+                [TelemetryProperties.Setting] = "store_review_reminders",
+                [TelemetryProperties.Value] = enabled,
+                [TelemetryProperties.Source] = source
+            });
     }
 }

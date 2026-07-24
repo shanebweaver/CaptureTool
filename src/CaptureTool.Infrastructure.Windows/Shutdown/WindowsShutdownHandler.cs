@@ -1,6 +1,7 @@
 using CaptureTool.Application.Abstractions.Cancellation;
 using CaptureTool.Application.Abstractions.Logging;
 using CaptureTool.Application.Abstractions.Shutdown;
+using CaptureTool.Application.Abstractions.Telemetry;
 using Microsoft.Windows.AppLifecycle;
 
 namespace CaptureTool.Infrastructure.Windows.Shutdown;
@@ -9,15 +10,18 @@ public sealed partial class WindowsShutdownHandler : IShutdownHandler
 {
     private readonly ICancellationService _cancellationService;
     private readonly ILogService _logService;
+    private readonly ITelemetryService? _telemetryService;
 
     public bool IsShuttingDown { get; private set; }
 
     public WindowsShutdownHandler(
         ILogService logService,
-        ICancellationService cancellationService)
+        ICancellationService cancellationService,
+        ITelemetryService? telemetryService = null)
     {
         _logService = logService;
         _cancellationService = cancellationService;
+        _telemetryService = telemetryService;
     }
 
     public bool TryRestart()
@@ -28,6 +32,7 @@ public sealed partial class WindowsShutdownHandler : IShutdownHandler
             return false;
         }
 
+        TrackShutdownRequested("restart");
         Teardown();
         global::Windows.ApplicationModel.Core.AppRestartFailureReason restartError = AppInstance.Restart(string.Empty);
 
@@ -59,6 +64,7 @@ public sealed partial class WindowsShutdownHandler : IShutdownHandler
 
         try
         {
+            TrackShutdownRequested("exit");
             Teardown();
         }
         catch (Exception e)
@@ -73,5 +79,15 @@ public sealed partial class WindowsShutdownHandler : IShutdownHandler
     {
         IsShuttingDown = true;
         _cancellationService.CancelAll();
+    }
+
+    private void TrackShutdownRequested(string source)
+    {
+        _telemetryService?.TrackEvent(
+            TelemetryEvents.AppShutdownRequested,
+            new Dictionary<string, object?>
+            {
+                [TelemetryProperties.Source] = source
+            });
     }
 }
