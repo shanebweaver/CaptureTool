@@ -1713,7 +1713,7 @@ SOFTWARE.
     <value>Données d’utilisation facultatives</value>
   </data>
   <data name="Settings_OptionalUsageData_SubtitleLabel.Text" xml:space="preserve">
-    <value>Partager des statistiques agrégées sur l’utilisation des fonctionnalités et des boutons. Capture Tool n’ajoute aucun identifiant d’utilisateur, d’appareil, d’installation ou de session aux événements.</value>
+    <value>Envoyez des données d’utilisation facultatives par l’intermédiaire des services du Microsoft Store afin d’améliorer Capture Tool. Elles permettent de produire des rapports agrégés sur l’utilisation des fonctionnalités et le résultat des opérations. Les captures, informations sur les fichiers, contenu du Presse-papiers, texte reconnu et identifiants générés par l’application ne sont pas inclus.</value>
   </data>
   <data name="Settings_OptionalUsageData_Toggle.OnContent" xml:space="preserve">
     <value>Activé</value>
@@ -1722,15 +1722,15 @@ SOFTWARE.
     <value>Désactivé</value>
   </data>
   <data name="TelemetryConsentDialog_Title" xml:space="preserve">
-    <value>Aidez-nous à améliorer Capture Tool</value>
+    <value>Contribuer à l’amélioration de Capture Tool</value>
   </data>
   <data name="TelemetryConsentDialog_Content" xml:space="preserve">
-    <value>Partagez des données d’utilisation facultatives et agrégées, telles que la fréquence d’utilisation des fonctionnalités et des boutons. Capture Tool transmet uniquement de courts noms d’événements aux services du Microsoft Store. Ils ne contiennent ni vos captures, noms de fichiers, chemins, contenu du Presse-papiers ou texte reconnu, ni aucun identifiant d’utilisateur, d’appareil, d’installation ou de session généré par l’application. Vous pouvez modifier ce choix à tout moment dans les Paramètres.</value>
+    <value>Autorisez Capture Tool à envoyer des données d’utilisation facultatives par l’intermédiaire des services du Microsoft Store. Ces données servent à produire des statistiques agrégées sur l’utilisation des fonctionnalités et des commandes, ainsi que sur le résultat des opérations importantes. Capture Tool n’inclut pas les captures, les noms ou chemins de fichiers, le contenu du Presse-papiers, le texte reconnu ni les identifiants générés par l’application. Vous pouvez modifier ce paramètre à tout moment dans les Paramètres.</value>
   </data>
   <data name="TelemetryConsentDialog_AllowButton" xml:space="preserve">
-    <value>Partager les données d’utilisation</value>
+    <value>Envoyer les données facultatives</value>
   </data>
   <data name="TelemetryConsentDialog_DontAllowButton" xml:space="preserve">
-    <value>Non merci</value>
+    <value>Ne pas envoyer</value>
   </data>
 </root>

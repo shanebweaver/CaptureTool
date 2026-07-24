@@ -1942,7 +1942,7 @@ SOFTWARE.
     <value>Optional usage data</value>
   </data>
   <data name="Settings_OptionalUsageData_SubtitleLabel.Text" xml:space="preserve">
-    <value>Share aggregate counts of feature and button usage. Capture Tool does not add user, device, installation, or session identifiers to events.</value>
+    <value>Send optional usage data through Microsoft Store Services to help improve Capture Tool. This produces aggregate reports of feature usage and operation outcomes. Captures, file information, clipboard contents, recognized text, and app-generated identifiers are not included.</value>
   </data>
   <data name="Settings_OptionalUsageData_Toggle.OnContent" xml:space="preserve">
     <value>On</value>
@@ -1954,12 +1954,12 @@ SOFTWARE.
     <value>Help improve Capture Tool</value>
   </data>
   <data name="TelemetryConsentDialog_Content" xml:space="preserve">
-    <value>Share optional, aggregate usage data, such as how often features and buttons are used. Capture Tool submits only short event names to Microsoft Store Services. It does not include your captures, file names, paths, clipboard contents, recognized text, or app-generated user, device, installation, or session identifiers. You can change this anytime in Settings.</value>
+    <value>Allow Capture Tool to send optional usage data through Microsoft Store Services. This data is used to produce aggregate counts of feature and command usage and outcomes for key operations. Capture Tool does not include captures, file names or paths, clipboard contents, recognized text, or app-generated identifiers. You can change this setting at any time in Settings.</value>
   </data>
   <data name="TelemetryConsentDialog_AllowButton" xml:space="preserve">
-    <value>Share usage data</value>
+    <value>Send optional data</value>
   </data>
   <data name="TelemetryConsentDialog_DontAllowButton" xml:space="preserve">
-    <value>No thanks</value>
+    <value>Don't send</value>
   </data>
 </root>

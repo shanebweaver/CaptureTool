@@ -1707,7 +1707,7 @@ SOFTWARE.
     <value>Optionale Nutzungsdaten</value>
   </data>
   <data name="Settings_OptionalUsageData_SubtitleLabel.Text" xml:space="preserve">
-    <value>Aggregierte Zählwerte zur Nutzung von Funktionen und Schaltflächen teilen. Capture Tool fügt den Ereignissen keine Benutzer-, Geräte-, Installations- oder Sitzungskennungen hinzu.</value>
+    <value>Optionale Nutzungsdaten über Microsoft Store Services senden, um Capture Tool zu verbessern. Daraus werden aggregierte Berichte zur Funktionsnutzung und zu Vorgangsergebnissen erstellt. Aufnahmen, Dateiinformationen, Zwischenablageinhalte, erkannte Texte und von der App generierte Kennungen werden nicht übermittelt.</value>
   </data>
   <data name="Settings_OptionalUsageData_Toggle.OnContent" xml:space="preserve">
     <value>Ein</value>
@@ -1716,15 +1716,15 @@ SOFTWARE.
     <value>Aus</value>
   </data>
   <data name="TelemetryConsentDialog_Title" xml:space="preserve">
-    <value>Capture Tool verbessern</value>
+    <value>Helfen Sie, Capture Tool zu verbessern</value>
   </data>
   <data name="TelemetryConsentDialog_Content" xml:space="preserve">
-    <value>Teilen Sie optionale, aggregierte Nutzungsdaten, z. B. wie häufig Funktionen und Schaltflächen verwendet werden. Capture Tool übermittelt ausschließlich kurze Ereignisnamen an Microsoft Store Services. Ihre Aufnahmen, Dateinamen, Pfade, Zwischenablageinhalte, erkannten Texte sowie von der App erzeugte Benutzer-, Geräte-, Installations- oder Sitzungskennungen sind darin nicht enthalten. Sie können dies jederzeit in den Einstellungen ändern.</value>
+    <value>Erlauben Sie Capture Tool, optionale Nutzungsdaten über Microsoft Store Services zu senden. Diese Daten werden verwendet, um aggregierte Statistiken zur Nutzung von Funktionen und Befehlen sowie zu den Ergebnissen wichtiger Vorgänge zu erstellen. Capture Tool übermittelt keine Aufnahmen, Dateinamen oder -pfade, Zwischenablageinhalte, erkannten Texte oder von der App generierten Kennungen. Sie können diese Einstellung jederzeit in den Einstellungen ändern.</value>
   </data>
   <data name="TelemetryConsentDialog_AllowButton" xml:space="preserve">
-    <value>Nutzungsdaten teilen</value>
+    <value>Optionale Daten senden</value>
   </data>
   <data name="TelemetryConsentDialog_DontAllowButton" xml:space="preserve">
-    <value>Nein, danke</value>
+    <value>Nicht senden</value>
   </data>
 </root>

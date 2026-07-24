@@ -1713,7 +1713,7 @@ SOFTWARE.
     <value>Datos de uso opcionales</value>
   </data>
   <data name="Settings_OptionalUsageData_SubtitleLabel.Text" xml:space="preserve">
-    <value>Comparte recuentos agregados del uso de funciones y botones. Capture Tool no añade identificadores de usuario, dispositivo, instalación o sesión a los eventos.</value>
+    <value>Envía datos de uso opcionales mediante los servicios de Microsoft Store para ayudar a mejorar Capture Tool. Estos datos generan informes agregados sobre el uso de las funciones y los resultados de las operaciones. No se incluyen capturas, información de archivos, contenido del Portapapeles, texto reconocido ni identificadores generados por la aplicación.</value>
   </data>
   <data name="Settings_OptionalUsageData_Toggle.OnContent" xml:space="preserve">
     <value>Activado</value>
@@ -1725,12 +1725,12 @@ SOFTWARE.
     <value>Ayuda a mejorar Capture Tool</value>
   </data>
   <data name="TelemetryConsentDialog_Content" xml:space="preserve">
-    <value>Comparte datos de uso opcionales y agregados, como la frecuencia con la que se utilizan las funciones y los botones. Capture Tool solo envía nombres de eventos breves a los servicios de Microsoft Store. No incluye tus capturas, nombres de archivo, rutas, contenido del portapapeles, texto reconocido ni identificadores de usuario, dispositivo, instalación o sesión generados por la aplicación. Puedes cambiar esta opción en cualquier momento en Configuración.</value>
+    <value>Permite que Capture Tool envíe datos de uso opcionales mediante los servicios de Microsoft Store. Estos datos se utilizan para generar recuentos agregados del uso de funciones y comandos y de los resultados de operaciones importantes. Capture Tool no incluye capturas, nombres o rutas de archivos, contenido del Portapapeles, texto reconocido ni identificadores generados por la aplicación. Puedes cambiar esta opción en cualquier momento en Configuración.</value>
   </data>
   <data name="TelemetryConsentDialog_AllowButton" xml:space="preserve">
-    <value>Compartir datos de uso</value>
+    <value>Enviar datos opcionales</value>
   </data>
   <data name="TelemetryConsentDialog_DontAllowButton" xml:space="preserve">
-    <value>No, gracias</value>
+    <value>No enviar</value>
   </data>
 </root>

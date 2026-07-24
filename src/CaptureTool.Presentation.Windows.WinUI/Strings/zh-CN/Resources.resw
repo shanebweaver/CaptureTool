@@ -1713,7 +1713,7 @@ SOFTWARE.
     <value>可选使用情况数据</value>
   </data>
   <data name="Settings_OptionalUsageData_SubtitleLabel.Text" xml:space="preserve">
-    <value>分享功能和按钮使用次数的汇总统计信息。Capture Tool 不会向事件添加用户、设备、安装或会话标识符。</value>
+    <value>通过 Microsoft Store 服务发送可选使用情况数据，以帮助改进 Capture Tool。这些数据用于生成有关功能使用情况和操作结果的汇总报告，不包含捕获内容、文件信息、剪贴板内容、识别出的文本或应用生成的标识符。</value>
   </data>
   <data name="Settings_OptionalUsageData_Toggle.OnContent" xml:space="preserve">
     <value>开</value>
@@ -1725,12 +1725,12 @@ SOFTWARE.
     <value>帮助改进 Capture Tool</value>
   </data>
   <data name="TelemetryConsentDialog_Content" xml:space="preserve">
-    <value>分享可选的汇总使用情况数据，例如功能和按钮的使用频率。Capture Tool 只向 Microsoft Store 服务提交简短的事件名称，其中不包含你的捕获内容、文件名、路径、剪贴板内容、识别出的文本，也不包含应用生成的用户、设备、安装或会话标识符。你可以随时在“设置”中更改此选项。</value>
+    <value>允许 Capture Tool 通过 Microsoft Store 服务发送可选使用情况数据。这些数据用于生成有关功能和命令使用情况以及关键操作结果的汇总统计信息。Capture Tool 不会包含你的捕获内容、文件名或路径、剪贴板内容、识别出的文本，也不会包含应用生成的标识符。你可以随时在“设置”中更改此选项。</value>
   </data>
   <data name="TelemetryConsentDialog_AllowButton" xml:space="preserve">
-    <value>分享使用情况数据</value>
+    <value>发送可选数据</value>
   </data>
   <data name="TelemetryConsentDialog_DontAllowButton" xml:space="preserve">
-    <value>不用，谢谢</value>
+    <value>不发送</value>
   </data>
 </root>

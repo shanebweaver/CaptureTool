@@ -44,14 +44,14 @@ internal sealed class TelemetryConsentDialogService
                 {
                     Text = GetString(
                         "TelemetryConsentDialog_Content",
-                        "Share optional, aggregate usage data, such as how often features and buttons are used. " +
-                        "Capture Tool submits only short event names to Microsoft Store Services. It does not include your " +
-                        "captures, file names, paths, clipboard contents, recognized text, or app-generated user, device, " +
-                        "installation, or session identifiers. You can change this anytime in Settings."),
+                        "Allow Capture Tool to send optional usage data through Microsoft Store Services. This data is used " +
+                        "to produce aggregate counts of feature and command usage and outcomes for key operations. Capture Tool " +
+                        "does not include captures, file names or paths, clipboard contents, recognized text, or app-generated " +
+                        "identifiers. You can change this setting at any time in Settings."),
                     TextWrapping = TextWrapping.WrapWholeWords
                 },
-                PrimaryButtonText = GetString("TelemetryConsentDialog_AllowButton", "Share usage data"),
-                SecondaryButtonText = GetString("TelemetryConsentDialog_DontAllowButton", "No thanks"),
+                PrimaryButtonText = GetString("TelemetryConsentDialog_AllowButton", "Send optional data"),
+                SecondaryButtonText = GetString("TelemetryConsentDialog_DontAllowButton", "Don't send"),
                 DefaultButton = ContentDialogButton.None
             };
             AutomationProperties.SetAutomationId(dialog, "TelemetryConsentDialog");
