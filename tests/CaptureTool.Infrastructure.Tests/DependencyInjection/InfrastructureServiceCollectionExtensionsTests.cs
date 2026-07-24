@@ -62,7 +62,9 @@ public sealed class InfrastructureServiceCollectionExtensionsTests
         AssertHasRegistration<ISettingsService, LocalSettingsService>(services);
         AssertHasRegistration<IAppMetricsService, LocalAppMetricsService>(services);
         AssertHasRegistration<IBackgroundTaskRunner, BackgroundTaskRunner>(services);
-        AssertHasRegistration<ITelemetryService, NullTelemetryService>(services);
+        AssertHasRegistration<ITelemetryConsentService, TelemetryConsentService>(services);
+        AssertHasRegistration<ITelemetryEventSink, NullTelemetryService>(services);
+        AssertHasRegistration<ITelemetryService, ConsentAwareTelemetryService>(services);
         AssertHasRegistration<IClock, SystemClock>(services);
 #if DEBUG
         AssertHasRegistration<ILogService, DebugLogService>(services);

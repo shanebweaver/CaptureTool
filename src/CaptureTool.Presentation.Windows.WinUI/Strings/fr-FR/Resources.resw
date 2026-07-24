@@ -1706,4 +1706,31 @@ SOFTWARE.
   <data name="VideoSuperResolutionStatus_Failed" xml:space="preserve">
     <value>Échec de l’amélioration de la vidéo.</value>
   </data>
+  <data name="Settings_PrivacyHeaderLabel.Text" xml:space="preserve">
+    <value>Confidentialité</value>
+  </data>
+  <data name="Settings_OptionalUsageData_HeaderLabel.Text" xml:space="preserve">
+    <value>Données d’utilisation facultatives</value>
+  </data>
+  <data name="Settings_OptionalUsageData_SubtitleLabel.Text" xml:space="preserve">
+    <value>Partager des statistiques agrégées sur l’utilisation des fonctionnalités et des boutons. Capture Tool n’ajoute aucun identifiant d’utilisateur, d’appareil, d’installation ou de session aux événements.</value>
+  </data>
+  <data name="Settings_OptionalUsageData_Toggle.OnContent" xml:space="preserve">
+    <value>Activé</value>
+  </data>
+  <data name="Settings_OptionalUsageData_Toggle.OffContent" xml:space="preserve">
+    <value>Désactivé</value>
+  </data>
+  <data name="TelemetryConsentDialog_Title" xml:space="preserve">
+    <value>Aidez-nous à améliorer Capture Tool</value>
+  </data>
+  <data name="TelemetryConsentDialog_Content" xml:space="preserve">
+    <value>Partagez des données d’utilisation facultatives et agrégées, telles que la fréquence d’utilisation des fonctionnalités et des boutons. Capture Tool transmet uniquement de courts noms d’événements aux services du Microsoft Store. Ils ne contiennent ni vos captures, noms de fichiers, chemins, contenu du Presse-papiers ou texte reconnu, ni aucun identifiant d’utilisateur, d’appareil, d’installation ou de session généré par l’application. Vous pouvez modifier ce choix à tout moment dans les Paramètres.</value>
+  </data>
+  <data name="TelemetryConsentDialog_AllowButton" xml:space="preserve">
+    <value>Partager les données d’utilisation</value>
+  </data>
+  <data name="TelemetryConsentDialog_DontAllowButton" xml:space="preserve">
+    <value>Non merci</value>
+  </data>
 </root>

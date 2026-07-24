@@ -8,6 +8,7 @@ using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Application.Abstractions.Settings;
 using CaptureTool.Application.Abstractions.Shell.Home.ShowHomePage;
 using CaptureTool.Application.Abstractions.Storage;
+using CaptureTool.Application.Abstractions.Telemetry;
 using CaptureTool.Application.Abstractions.UseCases;
 using CaptureTool.Application.Activation;
 using CaptureTool.Domain.Capture;
@@ -33,6 +34,10 @@ public sealed class ActivationHandlerTests
             Times.Once);
         fixture.Settings.Verify(service => service.Get(CaptureToolSettings.VerboseLogging), Times.Once);
         fixture.Settings.Verify(service => service.Get(CaptureToolSettings.Settings_LanguageOverride), Times.Once);
+        fixture.Settings.Verify(service => service.Get(CaptureToolSettings.Settings_TelemetryConsent), Times.Once);
+        fixture.TelemetryConsent.Verify(
+            service => service.SetState(TelemetryConsentState.Unknown),
+            Times.Once);
         fixture.AppMetrics.Verify(
             service => service.InitializeAsync(
                 Path.Combine(fixture.AppDataFolder, "Metrics.json"),
@@ -74,6 +79,19 @@ public sealed class ActivationHandlerTests
             Times.Never);
         fixture.NavigationService.Verify(
             service => service.Navigate(target.Route, target.Parameter, target.ClearHistory),
+            Times.Once);
+    }
+
+    [TestMethod]
+    public async Task ApplicationStartupInitializer_ShouldRestoreGrantedTelemetryConsent()
+    {
+        StartupInitializerFixture fixture = new(
+            telemetryConsentValue: TelemetryConsentSettingValues.Granted);
+
+        await fixture.Initializer.InitializeAsync(TestContext.CancellationToken);
+
+        fixture.TelemetryConsent.Verify(
+            service => service.SetState(TelemetryConsentState.Granted),
             Times.Once);
     }
 
@@ -204,7 +222,10 @@ public sealed class ActivationHandlerTests
 
     private sealed class StartupInitializerFixture
     {
-        public StartupInitializerFixture(bool verboseLogging = false, string languageOverride = "")
+        public StartupInitializerFixture(
+            bool verboseLogging = false,
+            string languageOverride = "",
+            string telemetryConsentValue = TelemetryConsentSettingValues.Unknown)
         {
             CancellationService
                 .Setup(service => service.GetLinkedCancellationTokenSource(It.IsAny<CancellationToken?>()))
@@ -224,6 +245,9 @@ public sealed class ActivationHandlerTests
             Settings
                 .Setup(service => service.Get(CaptureToolSettings.Settings_LanguageOverride))
                 .Returns(languageOverride);
+            Settings
+                .Setup(service => service.Get(CaptureToolSettings.Settings_TelemetryConsent))
+                .Returns(telemetryConsentValue);
             StorageService
                 .Setup(service => service.GetApplicationDataFolderPath())
                 .Returns(AppDataFolder);
@@ -236,7 +260,8 @@ public sealed class ActivationHandlerTests
                 Localization.Object,
                 NavigationHandler.Object,
                 NavigationService.Object,
-                StorageService.Object);
+                StorageService.Object,
+                telemetryConsentService: TelemetryConsent.Object);
         }
 
         public ApplicationStartupInitializer Initializer { get; }
@@ -249,5 +274,6 @@ public sealed class ActivationHandlerTests
         public Mock<INavigationHandler> NavigationHandler { get; } = new();
         public Mock<INavigationService> NavigationService { get; } = new();
         public Mock<IStorageService> StorageService { get; } = new();
+        public Mock<ITelemetryConsentService> TelemetryConsent { get; } = new();
     }
 }

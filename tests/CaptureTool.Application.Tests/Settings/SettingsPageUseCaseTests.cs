@@ -26,6 +26,7 @@ using CaptureTool.Application.Abstractions.Settings.UpdateVideoCaptureAutoSave;
 using CaptureTool.Application.Abstractions.Settings.UpdateVideoCaptureDefaultLocalAudio;
 using CaptureTool.Application.Abstractions.Shutdown;
 using CaptureTool.Application.Abstractions.Storage;
+using CaptureTool.Application.Abstractions.Telemetry;
 using CaptureTool.Application.Settings.ChangeAudioFolder;
 using CaptureTool.Application.Settings.ChangeScreenshotsFolder;
 using CaptureTool.Application.Settings.ChangeVideosFolder;
@@ -199,13 +200,21 @@ public sealed class SettingsPageUseCaseTests
     {
         var settings = new Mock<ISettingsService>();
         var localization = new Mock<ILocalizationService>();
-        var useCase = new RestoreDefaultsUseCase(settings.Object, localization.Object, TestUseCaseExecutor.Instance);
+        var telemetryConsent = new Mock<ITelemetryConsentService>();
+        var useCase = new RestoreDefaultsUseCase(
+            settings.Object,
+            localization.Object,
+            telemetryConsent.Object,
+            TestUseCaseExecutor.Instance);
 
         RestoreDefaultsResponse response = (await useCase.ExecuteAsync(new RestoreDefaultsRequest(), TestContext.CancellationToken)).Value!;
 
         Assert.IsTrue(response.Succeeded);
         settings.Verify(service => service.ClearAllSettings(), Times.Once);
         localization.Verify(service => service.OverrideLanguage(null), Times.Once);
+        telemetryConsent.Verify(
+            service => service.SetState(TelemetryConsentState.Unknown),
+            Times.Once);
         settings.Verify(service => service.TrySaveAsync(TestContext.CancellationToken), Times.Once);
     }
 

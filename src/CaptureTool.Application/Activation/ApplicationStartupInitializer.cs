@@ -20,6 +20,7 @@ internal sealed class ApplicationStartupInitializer : IApplicationStartupInitial
     private readonly INavigationService _navigationService;
     private readonly IStorageService _storageService;
     private readonly ITelemetryService? _telemetryService;
+    private readonly ITelemetryConsentService? _telemetryConsentService;
     private readonly SemaphoreSlim _semaphore = new(1, 1);
 
     private bool _isInitialized;
@@ -33,7 +34,8 @@ internal sealed class ApplicationStartupInitializer : IApplicationStartupInitial
         INavigationHandler navigationHandler,
         INavigationService navigationService,
         IStorageService storageService,
-        ITelemetryService? telemetryService = null)
+        ITelemetryService? telemetryService = null,
+        ITelemetryConsentService? telemetryConsentService = null)
     {
         _cancellationService = cancellationService;
         _settingsService = settingsService;
@@ -44,6 +46,7 @@ internal sealed class ApplicationStartupInitializer : IApplicationStartupInitial
         _navigationService = navigationService;
         _storageService = storageService;
         _telemetryService = telemetryService;
+        _telemetryConsentService = telemetryConsentService;
     }
 
     public async Task InitializeAsync(CancellationToken cancellationToken = default)
@@ -60,6 +63,7 @@ internal sealed class ApplicationStartupInitializer : IApplicationStartupInitial
             using CancellationTokenSource cancellationTokenSource =
                 _cancellationService.GetLinkedCancellationTokenSource(cancellationToken);
             await InitializeSettingsServiceAsync(cancellationTokenSource.Token);
+            InitializeTelemetryConsent();
             await InitializeMetricsServiceAsync(cancellationTokenSource.Token);
 
             bool isLoggingEnabled = _settingsService.Get(CaptureToolSettings.VerboseLogging);
@@ -80,6 +84,12 @@ internal sealed class ApplicationStartupInitializer : IApplicationStartupInitial
         {
             _semaphore.Release();
         }
+    }
+
+    private void InitializeTelemetryConsent()
+    {
+        string settingValue = _settingsService.Get(CaptureToolSettings.Settings_TelemetryConsent);
+        _telemetryConsentService?.SetState(TelemetryConsentSettingValues.Parse(settingValue));
     }
 
     private async Task InitializeSettingsServiceAsync(CancellationToken cancellationToken)

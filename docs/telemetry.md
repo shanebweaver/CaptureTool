@@ -4,14 +4,14 @@
 
 Product telemetry should answer which parts of Capture Tool are used, whether important workflows succeed, and where users abandon them. It is separate from `ILogService`: logging contains local diagnostic detail for troubleshooting, while telemetry contains structured, privacy-safe product signals suitable for aggregation.
 
-"Who" means a resettable pseudonymous installation identifier and a short-lived session identifier. It does not mean a person's name, email address, Microsoft account, machine name, or other direct identity. Identity and common app/device context should eventually be added by the telemetry provider, not repeated by every call site.
+The telemetry is designed for anonymous aggregate counts, not individual usage histories. Events must not contain a user, account, device, installation, or session identifier, including a pseudonymous one.
 
 ## Recommended signals
 
 1. **App and session lifecycle**
    - App started, activated, backgrounded, and exited.
    - Activation source, app version, release channel, OS version, architecture, locale, and session duration.
-   - Derive active days, retention, and sessions per installation in the analytics system instead of emitting them as events.
+   - Aggregate launches and activations without attempting to calculate per-user retention or sessions per installation.
 
 2. **Capture funnel**
    - Capture requested, started, completed, canceled, and failed.
@@ -48,16 +48,17 @@ Product telemetry should answer which parts of Capture Tool are used, whether im
    - Outcome and coarse duration for the critical workflows above.
    - Use stable error categories or reason codes. Detailed exceptions, stack traces, and free-form messages remain in local diagnostic logging unless a separate crash-reporting policy is approved.
 
-## Common context for a future provider
+## Provider context
 
-Every event should be enriched centrally with a random installation ID, a rotating session ID, app version, release channel, OS version, architecture, and telemetry schema version. Installation identity must be resettable and must not be derived from hardware, account, or network identifiers.
+Capture Tool does not attach user, account, device, installation, session, hardware, or network identifiers. The Microsoft Store Services SDK receives only a short custom-event name. Partner Center supplies aggregate breakdowns by market, device type, and package version; Capture Tool does not populate those dimensions itself.
 
-## Data that must not be collected
+## Data Capture Tool must not include in events
 
 - Screenshot, video, audio, or clipboard content.
 - OCR text, image descriptions, text annotations, prompts, or file contents.
 - File/folder names or paths, URLs, window titles, or screen coordinates.
-- Audio device names, machine names, IP addresses, account IDs, names, or email addresses.
+- Audio device names, machine names, network identifiers, account IDs, names, or email addresses.
+- User, device, installation, advertising, or session identifiers, including generated pseudonymous identifiers.
 - Raw exception messages, stack traces, or arbitrary free-form properties in product events.
 - High-cardinality values that have not been explicitly reviewed.
 
@@ -77,9 +78,23 @@ Every event should be enriched centrally with a random installation ID, a rotati
 
 Outcomes use `succeeded`, `canceled`, or `failed`. Capture events include only media/capture categories and audio-enabled flags. Editor and output events contain stable tool/operation names. Navigation records route and parameter type names, never parameter values. Settings events are protected by an explicit allow-list; folder settings are excluded and language values are reduced to `system_default` or `override`. Store product identifiers and activation sources are normalized to a small known vocabulary.
 
-The use-case executor publishes `use_case.completed` for operational reliability, while command adapters publish user/UI action signals. Both keep detailed lifecycle/error information in `ILogService` and publish only structured outcomes through telemetry. Semantic events are emitted at workflow boundaries so a future analytics system can build funnels without depending on UI controls.
+The use-case executor publishes `use_case.completed` for operational reliability, while command adapters publish user/UI action signals. Both keep detailed lifecycle/error information in `ILogService` and publish only structured outcomes through telemetry. Semantic events are emitted at workflow boundaries so aggregate reports can describe funnels without depending on UI controls.
 
-`NullTelemetryService` is registered today. It discards every event, creates no identity, persists nothing, and sends nothing off-device. Replacing it with a provider later should not require product code to depend on a vendor SDK.
+`ConsentAwareTelemetryService` is the application-facing service. It discards every event unless the user has explicitly opted in. The first-run consent dialog and the Privacy setting persist only `unknown`, `granted`, or `denied`; declining or restoring defaults closes the gate immediately.
+
+`NullTelemetryService` remains the default event sink for platform-neutral hosts. The Windows app replaces it with `StoreServicesTelemetryEventSink`, which uses `StoreServicesCustomEventLogger` from Microsoft Store Services. This replacement is still downstream of `ConsentAwareTelemetryService`, so the Store SDK is not called until the user opts in.
+
+The Store API accepts one string and no property bag. `PartnerCenterTelemetryEventNameFormatter` converts each event and a small, event-specific set of allow-listed dimensions into a brief `ct1_...` name. Examples include:
+
+- `ct1_app_started`
+- `ct1_capture_completed_video_succeeded`
+- `ct1_ui_command_invoked_image_editor_open_selection_overlay`
+
+Unexpected properties are ignored. Names are normalized to lowercase ASCII and capped at 96 characters with a deterministic suffix when necessary. No identifier or user content is encoded in the event name.
+
+## Verifying events in Partner Center
+
+Microsoft requires the app to be published in the Store before its custom events appear. Install and exercise the published package, opt into optional usage data in Capture Tool, then open the app's **Usage** report in Partner Center and inspect **Custom events**. The Windows Usage report includes only customers who have not opted out of Windows telemetry, and its custom-event breakdown is aggregate by market, device type, and package version.
 
 ## Current-state assessment
 
@@ -87,9 +102,9 @@ Before this cleanup, `TelemetryService` formatted timestamps, activity messages,
 
 - No events left the device.
 - Logging was disabled by default and retained only a short in-memory window.
-- There was no stable structured schema, provider, installation/session identity, consent, sampling, or retention policy.
+- There was no stable structured schema, provider, consent, sampling, or retention policy.
 - `ButtonInvoked` had no production call sites.
 - Command instrumentation was optional and was not wired by production view models.
 - Exception messages and call-site details were appropriate for local logs but unsafe as default product-analytics properties.
 
-The logging and telemetry paths are now separate. Before registering any transmitting provider, choose the destination, document consent and retention, add a reset/opt-out control, and verify the event allow-list against the privacy disclosure.
+The logging and telemetry paths are separate, and the opt-in dialog plus Settings control protect the Store sink. Before considering the trial production-ready, verify the events in Partner Center, review Microsoft's retention and transport behavior, and confirm the event-name allow-list against the privacy disclosure.

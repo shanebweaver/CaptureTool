@@ -5,7 +5,7 @@ namespace CaptureTool.Infrastructure.Telemetry;
 /// <summary>
 /// Discards all telemetry events.
 /// </summary>
-public sealed class NullTelemetryService : ITelemetryService
+public sealed class NullTelemetryService : ITelemetryEventSink
 {
     public void TrackEvent(
         string eventName,

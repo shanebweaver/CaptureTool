@@ -1706,4 +1706,31 @@ SOFTWARE.
   <data name="VideoSuperResolutionStatus_Failed" xml:space="preserve">
     <value>Не удалось улучшить видео.</value>
   </data>
+  <data name="Settings_PrivacyHeaderLabel.Text" xml:space="preserve">
+    <value>Конфиденциальность</value>
+  </data>
+  <data name="Settings_OptionalUsageData_HeaderLabel.Text" xml:space="preserve">
+    <value>Необязательные данные об использовании</value>
+  </data>
+  <data name="Settings_OptionalUsageData_SubtitleLabel.Text" xml:space="preserve">
+    <value>Отправлять агрегированную статистику использования функций и кнопок. Capture Tool не добавляет к событиям идентификаторы пользователя, устройства, установки или сеанса.</value>
+  </data>
+  <data name="Settings_OptionalUsageData_Toggle.OnContent" xml:space="preserve">
+    <value>Вкл.</value>
+  </data>
+  <data name="Settings_OptionalUsageData_Toggle.OffContent" xml:space="preserve">
+    <value>Выкл.</value>
+  </data>
+  <data name="TelemetryConsentDialog_Title" xml:space="preserve">
+    <value>Помогите улучшить Capture Tool</value>
+  </data>
+  <data name="TelemetryConsentDialog_Content" xml:space="preserve">
+    <value>Отправляйте необязательные агрегированные данные об использовании, например частоту использования функций и кнопок. Capture Tool передаёт в службы Microsoft Store только короткие имена событий. Они не содержат ваши снимки, имена файлов, пути, содержимое буфера обмена, распознанный текст или созданные приложением идентификаторы пользователя, устройства, установки либо сеанса. Этот параметр можно изменить в любое время в разделе «Параметры».</value>
+  </data>
+  <data name="TelemetryConsentDialog_AllowButton" xml:space="preserve">
+    <value>Отправлять данные об использовании</value>
+  </data>
+  <data name="TelemetryConsentDialog_DontAllowButton" xml:space="preserve">
+    <value>Нет, спасибо</value>
+  </data>
 </root>

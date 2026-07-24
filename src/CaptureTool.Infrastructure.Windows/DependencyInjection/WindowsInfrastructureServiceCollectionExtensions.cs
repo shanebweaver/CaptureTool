@@ -10,6 +10,7 @@ using CaptureTool.Application.Abstractions.Shutdown;
 using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Application.Abstractions.Store;
 using CaptureTool.Application.Abstractions.TaskEnvironment;
+using CaptureTool.Application.Abstractions.Telemetry;
 using CaptureTool.Application.Abstractions.Themes;
 using CaptureTool.Infrastructure.Storage;
 using CaptureTool.Infrastructure.Windows.Audio;
@@ -22,6 +23,7 @@ using CaptureTool.Infrastructure.Windows.Shutdown;
 using CaptureTool.Infrastructure.Windows.Storage;
 using CaptureTool.Infrastructure.Windows.Store;
 using CaptureTool.Infrastructure.Windows.TaskEnvironment;
+using CaptureTool.Infrastructure.Windows.Telemetry;
 using CaptureTool.Infrastructure.Windows.Themes;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.UI.Dispatching;
@@ -48,6 +50,7 @@ public static class WindowsInfrastructureServiceCollectionExtensions
         services.AddSingleton<IImageMetadataService, WindowsImageMetadataService>();
         services.AddSingleton<IVideoFileTrimmer, WindowsVideoFileTrimmer>();
         services.AddSingleton<IAudioInputDetectionService, WindowsAudioInputDetectionService>();
+        services.AddSingleton<ITelemetryEventSink, StoreServicesTelemetryEventSink>();
         return services;
     }
 }

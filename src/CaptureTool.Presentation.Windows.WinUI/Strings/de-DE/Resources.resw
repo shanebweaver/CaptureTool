@@ -1700,4 +1700,31 @@ SOFTWARE.
   <data name="VideoSuperResolutionStatus_Failed" xml:space="preserve">
     <value>Die Videoverbesserung ist fehlgeschlagen.</value>
   </data>
+  <data name="Settings_PrivacyHeaderLabel.Text" xml:space="preserve">
+    <value>Datenschutz</value>
+  </data>
+  <data name="Settings_OptionalUsageData_HeaderLabel.Text" xml:space="preserve">
+    <value>Optionale Nutzungsdaten</value>
+  </data>
+  <data name="Settings_OptionalUsageData_SubtitleLabel.Text" xml:space="preserve">
+    <value>Aggregierte Zählwerte zur Nutzung von Funktionen und Schaltflächen teilen. Capture Tool fügt den Ereignissen keine Benutzer-, Geräte-, Installations- oder Sitzungskennungen hinzu.</value>
+  </data>
+  <data name="Settings_OptionalUsageData_Toggle.OnContent" xml:space="preserve">
+    <value>Ein</value>
+  </data>
+  <data name="Settings_OptionalUsageData_Toggle.OffContent" xml:space="preserve">
+    <value>Aus</value>
+  </data>
+  <data name="TelemetryConsentDialog_Title" xml:space="preserve">
+    <value>Capture Tool verbessern</value>
+  </data>
+  <data name="TelemetryConsentDialog_Content" xml:space="preserve">
+    <value>Teilen Sie optionale, aggregierte Nutzungsdaten, z. B. wie häufig Funktionen und Schaltflächen verwendet werden. Capture Tool übermittelt ausschließlich kurze Ereignisnamen an Microsoft Store Services. Ihre Aufnahmen, Dateinamen, Pfade, Zwischenablageinhalte, erkannten Texte sowie von der App erzeugte Benutzer-, Geräte-, Installations- oder Sitzungskennungen sind darin nicht enthalten. Sie können dies jederzeit in den Einstellungen ändern.</value>
+  </data>
+  <data name="TelemetryConsentDialog_AllowButton" xml:space="preserve">
+    <value>Nutzungsdaten teilen</value>
+  </data>
+  <data name="TelemetryConsentDialog_DontAllowButton" xml:space="preserve">
+    <value>Nein, danke</value>
+  </data>
 </root>

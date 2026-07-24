@@ -1706,4 +1706,31 @@ SOFTWARE.
   <data name="VideoSuperResolutionStatus_Failed" xml:space="preserve">
     <value>视频增强失败。</value>
   </data>
+  <data name="Settings_PrivacyHeaderLabel.Text" xml:space="preserve">
+    <value>隐私</value>
+  </data>
+  <data name="Settings_OptionalUsageData_HeaderLabel.Text" xml:space="preserve">
+    <value>可选使用情况数据</value>
+  </data>
+  <data name="Settings_OptionalUsageData_SubtitleLabel.Text" xml:space="preserve">
+    <value>分享功能和按钮使用次数的汇总统计信息。Capture Tool 不会向事件添加用户、设备、安装或会话标识符。</value>
+  </data>
+  <data name="Settings_OptionalUsageData_Toggle.OnContent" xml:space="preserve">
+    <value>开</value>
+  </data>
+  <data name="Settings_OptionalUsageData_Toggle.OffContent" xml:space="preserve">
+    <value>关</value>
+  </data>
+  <data name="TelemetryConsentDialog_Title" xml:space="preserve">
+    <value>帮助改进 Capture Tool</value>
+  </data>
+  <data name="TelemetryConsentDialog_Content" xml:space="preserve">
+    <value>分享可选的汇总使用情况数据，例如功能和按钮的使用频率。Capture Tool 只向 Microsoft Store 服务提交简短的事件名称，其中不包含你的捕获内容、文件名、路径、剪贴板内容、识别出的文本，也不包含应用生成的用户、设备、安装或会话标识符。你可以随时在“设置”中更改此选项。</value>
+  </data>
+  <data name="TelemetryConsentDialog_AllowButton" xml:space="preserve">
+    <value>分享使用情况数据</value>
+  </data>
+  <data name="TelemetryConsentDialog_DontAllowButton" xml:space="preserve">
+    <value>不用，谢谢</value>
+  </data>
 </root>

@@ -5,15 +5,30 @@
     <TargetFramework>net10.0-windows10.0.26100.0</TargetFramework>
     <Platforms>x64;ARM64</Platforms>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <!-- The legacy extension SDK manifests declare their original Windows 10 target,
+         but support newer Windows 10/11 app targets and both of this app's architectures. -->
+    <MSBuildWarningsAsMessages>$(MSBuildWarningsAsMessages);MSB3842</MSBuildWarningsAsMessages>
   </PropertyGroup>
 
   <!-- Package references -->
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
+    <PackageReference Include="Microsoft.Services.Store.Engagement" GeneratePathProperty="true" />
     <PackageReference Include="Microsoft.Services.Store.SDK" />
+    <PackageReference Include="Microsoft.Windows.CsWinRT" />
     <PackageReference Include="Microsoft.WindowsAppSDK" />
     <PackageReference Include="System.Drawing.Common" />
   </ItemGroup>
+
+  <ItemGroup>
+    <SDKReference Include="Microsoft.Services.Store.Engagement, Version=10.0" />
+    <SDKReference Include="Microsoft.VCLibs, Version=14.0" />
+    <CsWinRTInputs Include="$(PkgMicrosoft_Services_Store_Engagement)\SDK\Windows Kits\10\ExtensionSDKs\Microsoft.Services.Store.Engagement\10.0\References\CommonConfiguration\neutral\Microsoft.Services.Store.Engagement.winmd" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <CsWinRTIncludes>Microsoft.Services.Store.Engagement</CsWinRTIncludes>
+  </PropertyGroup>
 
   <!-- Project references -->
   <ItemGroup>
