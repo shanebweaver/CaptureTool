@@ -9,6 +9,7 @@ using CaptureTool.Application.Abstractions.Settings.OpenSettingsPage;
 using CaptureTool.Application.Abstractions.Shell.About.OpenAboutPage;
 using CaptureTool.Application.Abstractions.Shell.AppMenu.ExitApplication;
 using CaptureTool.Application.Abstractions.Shell.AppMenu.OpenFile;
+using CaptureTool.Application.Abstractions.Shell.Home.ShowHomePage;
 using CaptureTool.Application.Abstractions.Store;
 using CaptureTool.Application.Abstractions.Store.OpenStorePage;
 using CaptureTool.Application.Abstractions.Telemetry;
@@ -34,6 +35,7 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
     private readonly IOpenSelectionOverlayUseCase _openSelectionOverlayCommand;
     private readonly IOpenAudioCapturePageUseCase _openAudioCapturePageCommand;
     private readonly IOpenStorePageUseCase _openStorePageCommand;
+    private readonly IShowHomePageUseCase _showHomePageCommand;
     private readonly IExitApplicationUseCase _exitApplicationCommand;
     private readonly IEditSessionGuard _editSessionGuard;
     private readonly IFactoryServiceWithArgs<RecentCaptureViewModel, string> _recentCaptureViewModelFactory;
@@ -46,6 +48,7 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
     public IAsyncRelayCommand NewVideoCaptureCommand { get; }
     public IAsyncRelayCommand NewAudioCaptureCommand { get; }
     public IAsyncRelayCommand OpenFileCommand { get; }
+    public IAsyncRelayCommand NavigateHomeCommand { get; }
     public IRelayCommand NavigateToSettingsCommand { get; }
     public IRelayCommand ShowAboutAppCommand { get; }
     public IAsyncRelayCommand ShowAddOnsCommand { get; }
@@ -73,6 +76,7 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
         IOpenSettingsPageUseCase openSettingsPageCommand,
         IOpenAboutPageUseCase openAboutPageCommand,
         IOpenStorePageUseCase openStorePageCommand,
+        IShowHomePageUseCase showHomePageCommand,
         IOpenFileUseCase openFileCommand,
         IExitApplicationUseCase exitApplicationCommand,
         IOpenRecentCaptureUseCase openRecentCaptureCommand,
@@ -95,6 +99,7 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
         _openSelectionOverlayCommand = openSelectionOverlayCommand;
         _openAudioCapturePageCommand = openAudioCapturePageCommand;
         _openStorePageCommand = openStorePageCommand;
+        _showHomePageCommand = showHomePageCommand;
         _exitApplicationCommand = exitApplicationCommand;
         _editSessionGuard = editSessionGuard ?? new AllowEditSessionGuard();
         _recentCaptureViewModelFactory = recentCaptureViewModelFactory;
@@ -118,6 +123,11 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
         OpenFileCommand = TelemetryCommandFactory.Async(
             "open_file",
             OpenFileAsync,
+            telemetryService,
+            "app_menu");
+        NavigateHomeCommand = TelemetryCommandFactory.Async(
+            "open_home",
+            NavigateHomeAsync,
             telemetryService,
             "app_menu");
         NavigateToSettingsCommand = TelemetryCommandFactory.Async(
@@ -210,6 +220,16 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
         {
             await RefreshRecentCapturesAsync();
         }
+    }
+
+    private async Task NavigateHomeAsync()
+    {
+        if (!await _editSessionGuard.CanLeaveCurrentSessionAsync(CancellationToken.None))
+        {
+            return;
+        }
+
+        await _showHomePageCommand.ExecuteAsync(new ShowHomePageRequest(), CancellationToken.None);
     }
 
     private async Task OpenRecentCaptureAsync(RecentCaptureViewModel? model)

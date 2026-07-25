@@ -506,7 +506,7 @@
         </Grid>
 
         <ProgressRing
-            x:Uid="ImageEdit_TextExtractionProgressRing"
+            x:Uid="ImageEdit_LoadingProgressRing"
             Grid.Row="2"
             Width="48"
             Height="48"
@@ -515,64 +515,55 @@
             IsActive="True"
             Visibility="{x:Bind ViewModel.IsLoading, Mode=OneWay}" />
 
-        <ProgressRing
+        <controls:AiLoadingIndicator
+            x:Uid="ImageEdit_SuperResolutionProgressRing"
             Grid.Row="2"
-            Width="48"
-            Height="48"
+            AutomationProperties.AutomationId="ImageEdit_SuperResolutionProgressRing"
             HorizontalAlignment="Center"
             VerticalAlignment="Center"
             IsActive="{x:Bind ViewModel.IsSuperResolutionGenerating, Mode=OneWay}"
             Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.IsSuperResolutionGenerating), Mode=OneWay}" />
 
-        <ProgressRing
+        <controls:AiLoadingIndicator
+            x:Uid="ImageEdit_TextExtractionProgressRing"
             Grid.Row="2"
             AutomationProperties.AutomationId="ImageEdit_TextExtractionProgressRing"
-            Width="48"
-            Height="48"
             HorizontalAlignment="Center"
             VerticalAlignment="Center"
             IsActive="{x:Bind ViewModel.IsTextExtractionRunning, Mode=OneWay}"
             Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.IsTextExtractionRunning), Mode=OneWay}" />
 
-        <ProgressRing
+        <controls:AiLoadingIndicator
             x:Uid="ImageEdit_ImageDescriptionProgressRing"
             Grid.Row="2"
             AutomationProperties.AutomationId="ImageEdit_ImageDescriptionProgressRing"
-            Width="48"
-            Height="48"
             HorizontalAlignment="Center"
             VerticalAlignment="Center"
             IsActive="{x:Bind ViewModel.IsImageDescriptionRunning, Mode=OneWay}"
             Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.IsImageDescriptionRunning), Mode=OneWay}" />
 
-        <ProgressRing
+        <controls:AiLoadingIndicator
             x:Uid="ImageEdit_ForegroundExtractionProgressRing"
             Grid.Row="2"
             AutomationProperties.AutomationId="ImageEdit_ForegroundExtractionProgressRing"
-            Width="48"
-            Height="48"
             HorizontalAlignment="Center"
             VerticalAlignment="Center"
             IsActive="{x:Bind ViewModel.IsForegroundExtractionRunning, Mode=OneWay}"
             Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.IsForegroundExtractionRunning), Mode=OneWay}" />
 
-        <ProgressRing
+        <controls:AiLoadingIndicator
             x:Uid="ImageEdit_ObjectEraseProgressRing"
             Grid.Row="2"
             AutomationProperties.AutomationId="ImageEdit_ObjectEraseProgressRing"
-            Width="48"
-            Height="48"
             HorizontalAlignment="Center"
             VerticalAlignment="Center"
             IsActive="{x:Bind ViewModel.IsObjectEraseRunning, Mode=OneWay}"
             Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.IsObjectEraseRunning), Mode=OneWay}" />
 
-        <ProgressRing
+        <controls:AiLoadingIndicator
             x:Uid="ImageEdit_ObjectExtractionProgressRing"
             Grid.Row="2"
             AutomationProperties.AutomationId="ImageEdit_ObjectExtractionProgressRing"
-            Width="48"
-            Height="48"
             HorizontalAlignment="Center"
             VerticalAlignment="Center"
             IsActive="{x:Bind ViewModel.IsObjectExtractionRunning, Mode=OneWay}"

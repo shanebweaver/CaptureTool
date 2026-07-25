@@ -318,6 +318,12 @@ En utilisant cette application, vous reconnaissez être seul responsable de la g
   <data name="AppMenu_SettingsItem.Text" xml:space="preserve">
     <value>Paramètres</value>
   </data>
+  <data name="AppMenu_HomeItem.AccessKey" xml:space="preserve">
+    <value>C</value>
+  </data>
+  <data name="AppMenu_HomeItem.Text" xml:space="preserve">
+    <value>Accueil</value>
+  </data>
   <data name="AppMenu_OpenFileItem.AccessKey" xml:space="preserve">
     <value>O</value>
   </data>
@@ -1259,6 +1265,9 @@ SOFTWARE.
   <data name="ImageEdit_SuperResolutionButton.ToolTipService.ToolTip" xml:space="preserve">
     <value>Show or hide the AI super-resolution image</value>
   </data>
+  <data name="ImageEdit_SuperResolutionProgressRing.AutomationProperties.Name" xml:space="preserve">
+    <value>Amélioration de l’image</value>
+  </data>
   <data name="ImageSuperResolutionPreparation_Title" xml:space="preserve">
     <value>Prepare Super Resolution</value>
   </data>
@@ -1363,6 +1372,9 @@ SOFTWARE.
   </data>
   <data name="ImageEdit_TextExtractionProgressRing.AutomationProperties.Name" xml:space="preserve">
     <value>Extraction du texte</value>
+  </data>
+  <data name="ImageEdit_LoadingProgressRing.AutomationProperties.Name" xml:space="preserve">
+    <value>Chargement de l’éditeur d’images</value>
   </data>
   <data name="TextExtractionToolbar_CopyAllTextButton.AutomationProperties.Name" xml:space="preserve">
     <value>Copier tout le texte reconnu</value>

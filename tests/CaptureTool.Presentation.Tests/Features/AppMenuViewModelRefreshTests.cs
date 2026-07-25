@@ -9,6 +9,7 @@ using CaptureTool.Application.Abstractions.Settings.OpenSettingsPage;
 using CaptureTool.Application.Abstractions.Shell.About.OpenAboutPage;
 using CaptureTool.Application.Abstractions.Shell.AppMenu.ExitApplication;
 using CaptureTool.Application.Abstractions.Shell.AppMenu.OpenFile;
+using CaptureTool.Application.Abstractions.Shell.Home.ShowHomePage;
 using CaptureTool.Application.Abstractions.Store;
 using CaptureTool.Application.Abstractions.Store.OpenStorePage;
 using CaptureTool.Application.Abstractions.UseCases;
@@ -47,6 +48,7 @@ public sealed class AppMenuViewModelRefreshTests
             Mock.Of<IOpenSettingsPageUseCase>(),
             Mock.Of<IOpenAboutPageUseCase>(),
             Mock.Of<IOpenStorePageUseCase>(),
+            Mock.Of<IShowHomePageUseCase>(),
             openFileUseCase.Object,
             Mock.Of<IExitApplicationUseCase>(),
             Mock.Of<IOpenRecentCaptureUseCase>(),
@@ -69,6 +71,49 @@ public sealed class AppMenuViewModelRefreshTests
             Times.Once);
         Assert.HasCount(1, viewModel.RecentCaptures);
         Assert.AreEqual(recentCapture.FilePath, viewModel.RecentCaptures[0].FilePath);
+    }
+
+    [TestMethod]
+    public async Task NavigateHomeCommand_ShouldShowHomePage()
+    {
+        var showHomePageUseCase = new Mock<IShowHomePageUseCase>();
+        showHomePageUseCase
+            .Setup(useCase => useCase.ExecuteAsync(
+                It.IsAny<ShowHomePageRequest>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(UseCaseResponse<ShowHomePageResponse>.Success(new ShowHomePageResponse()));
+        var viewModel = CreateViewModel(showHomePageUseCase: showHomePageUseCase.Object);
+
+        viewModel.NavigateHomeCommand.Execute(null);
+        await viewModel.NavigateHomeCommand.ExecutionTask!;
+
+        showHomePageUseCase.Verify(
+            useCase => useCase.ExecuteAsync(
+                It.IsAny<ShowHomePageRequest>(),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [TestMethod]
+    public async Task NavigateHomeCommand_WhenEditSessionGuardBlocks_DoesNotShowHomePage()
+    {
+        var showHomePageUseCase = new Mock<IShowHomePageUseCase>();
+        var editSessionGuard = new Mock<IEditSessionGuard>();
+        editSessionGuard
+            .Setup(guard => guard.CanLeaveCurrentSessionAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
+        var viewModel = CreateViewModel(
+            showHomePageUseCase: showHomePageUseCase.Object,
+            editSessionGuard: editSessionGuard.Object);
+
+        viewModel.NavigateHomeCommand.Execute(null);
+        await viewModel.NavigateHomeCommand.ExecutionTask!;
+
+        showHomePageUseCase.Verify(
+            useCase => useCase.ExecuteAsync(
+                It.IsAny<ShowHomePageRequest>(),
+                It.IsAny<CancellationToken>()),
+            Times.Never);
     }
 
     [TestMethod]
@@ -177,6 +222,7 @@ public sealed class AppMenuViewModelRefreshTests
         IOpenSelectionOverlayUseCase? openSelectionOverlayUseCase = null,
         IOpenFileUseCase? openFileUseCase = null,
         IOpenRecentCaptureUseCase? openRecentCaptureUseCase = null,
+        IShowHomePageUseCase? showHomePageUseCase = null,
         IEditSessionGuard? editSessionGuard = null,
         IGetRecentCapturesUseCase? getRecentCapturesUseCase = null,
         IFactoryServiceWithArgs<RecentCaptureViewModel, string>? recentCaptureViewModelFactory = null,
@@ -188,6 +234,7 @@ public sealed class AppMenuViewModelRefreshTests
             Mock.Of<IOpenSettingsPageUseCase>(),
             Mock.Of<IOpenAboutPageUseCase>(),
             Mock.Of<IOpenStorePageUseCase>(),
+            showHomePageUseCase ?? Mock.Of<IShowHomePageUseCase>(),
             openFileUseCase ?? Mock.Of<IOpenFileUseCase>(),
             Mock.Of<IExitApplicationUseCase>(),
             openRecentCaptureUseCase ?? Mock.Of<IOpenRecentCaptureUseCase>(),
