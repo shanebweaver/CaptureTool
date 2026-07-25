@@ -5,6 +5,11 @@ namespace CaptureTool.Application.Edit.Image.TextExtraction;
 
 public sealed class RecognizedTextLayout
 {
+    private const float CutoutPadding = 4;
+    private const float CornerRadiusScale = 0.22f;
+    private const float MinimumCornerRadius = 2;
+    private const float MaximumCornerRadius = 12;
+    private const float GeometryEpsilon = 0.001f;
     private const float MinimumHitTestTolerance = 6;
     private readonly IReadOnlyList<WordPlacement> _readingOrder;
 
@@ -168,6 +173,86 @@ public sealed class RecognizedTextLayout
 
         HashSet<GridEdge> boundaryEdges = CreateBoundaryEdges(occupiedCells);
         return TraceContours(boundaryEdges, horizontalCoordinates, verticalCoordinates);
+    }
+
+    public static IReadOnlyList<RecognizedTextRoundedCorner> CreateRoundedContour(
+        IReadOnlyList<PointF>? contour)
+    {
+        PointF[] points = NormalizeContour(contour);
+        if (points.Length < 3)
+        {
+            return [];
+        }
+
+        double signedArea = GetSignedArea(points);
+        List<RecognizedTextRoundedCorner> corners = new(points.Length);
+        for (int index = 0; index < points.Length; index++)
+        {
+            PointF previous = points[(index + points.Length - 1) % points.Length];
+            PointF corner = points[index];
+            PointF next = points[(index + 1) % points.Length];
+
+            float incomingLength = GetDistance(previous, corner);
+            float outgoingLength = GetDistance(corner, next);
+            if (incomingLength <= GeometryEpsilon || outgoingLength <= GeometryEpsilon)
+            {
+                corners.Add(CreateSharpCorner(corner));
+                continue;
+            }
+
+            float incomingX = (corner.X - previous.X) / incomingLength;
+            float incomingY = (corner.Y - previous.Y) / incomingLength;
+            float outgoingX = (next.X - corner.X) / outgoingLength;
+            float outgoingY = (next.Y - corner.Y) / outgoingLength;
+            float turnCrossProduct = (incomingX * outgoingY) - (incomingY * outgoingX);
+            if (Math.Abs(turnCrossProduct) <= GeometryEpsilon)
+            {
+                corners.Add(CreateSharpCorner(corner));
+                continue;
+            }
+
+            float towardPreviousX = -incomingX;
+            float towardPreviousY = -incomingY;
+            float rayDotProduct = Math.Clamp(
+                (towardPreviousX * outgoingX) + (towardPreviousY * outgoingY),
+                -1,
+                1);
+            double cornerAngle = Math.Acos(rayDotProduct);
+            double tangentFactor = Math.Tan(cornerAngle / 2);
+            if (!double.IsFinite(tangentFactor) || tangentFactor <= GeometryEpsilon)
+            {
+                corners.Add(CreateSharpCorner(corner));
+                continue;
+            }
+
+            float shortestEdge = Math.Min(incomingLength, outgoingLength);
+            float preferredRadius = Math.Clamp(
+                shortestEdge * CornerRadiusScale,
+                MinimumCornerRadius,
+                MaximumCornerRadius);
+            float tangentDistance = (float)(preferredRadius / tangentFactor);
+            tangentDistance = Math.Min(tangentDistance, shortestEdge / 2);
+            float effectiveRadius = (float)(tangentDistance * tangentFactor);
+
+            PointF entryPoint = new(
+                corner.X - (incomingX * tangentDistance),
+                corner.Y - (incomingY * tangentDistance));
+            PointF exitPoint = new(
+                corner.X + (outgoingX * tangentDistance),
+                corner.Y + (outgoingY * tangentDistance));
+            bool isConcave = Math.Abs(signedArea) > GeometryEpsilon &&
+                Math.Sign(turnCrossProduct) != Math.Sign(signedArea);
+
+            corners.Add(new RecognizedTextRoundedCorner(
+                entryPoint,
+                corner,
+                exitPoint,
+                effectiveRadius,
+                isConcave,
+                turnCrossProduct > 0));
+        }
+
+        return corners;
     }
 
     public int? HitTest(PointF point, bool allowNearest = false)
@@ -529,6 +614,11 @@ public sealed class RecognizedTextLayout
                 .Select(line => line.Bounds)
                 .ToArray();
             NormalizeNearlyAlignedEdges(lineBounds);
+            for (int index = 0; index < lineBounds.Length; index++)
+            {
+                lineBounds[index] = Inflate(lineBounds[index], CutoutPadding);
+            }
+
             rectangles.AddRange(lineBounds);
 
             for (int index = 1; index < lineBounds.Length; index++)
@@ -551,6 +641,15 @@ public sealed class RecognizedTextLayout
         }
 
         return rectangles;
+    }
+
+    private static RectangleF Inflate(RectangleF bounds, float padding)
+    {
+        return RectangleF.FromLTRB(
+            bounds.Left - padding,
+            bounds.Top - padding,
+            bounds.Right + padding,
+            bounds.Bottom + padding);
     }
 
     private static void NormalizeNearlyAlignedEdges(RectangleF[] lineBounds)
@@ -729,6 +828,66 @@ public sealed class RecognizedTextLayout
         return (deltaX * deltaX) + (deltaY * deltaY);
     }
 
+    private static PointF[] NormalizeContour(IReadOnlyList<PointF>? contour)
+    {
+        if (contour is null || contour.Count == 0)
+        {
+            return [];
+        }
+
+        List<PointF> points = new(contour.Count);
+        foreach (PointF point in contour)
+        {
+            if (!float.IsFinite(point.X) || !float.IsFinite(point.Y))
+            {
+                continue;
+            }
+
+            if (points.Count == 0 || GetDistance(points[^1], point) > GeometryEpsilon)
+            {
+                points.Add(point);
+            }
+        }
+
+        if (points.Count > 1 && GetDistance(points[0], points[^1]) <= GeometryEpsilon)
+        {
+            points.RemoveAt(points.Count - 1);
+        }
+
+        return [.. points];
+    }
+
+    private static double GetSignedArea(IReadOnlyList<PointF> contour)
+    {
+        double twiceArea = 0;
+        for (int index = 0; index < contour.Count; index++)
+        {
+            PointF current = contour[index];
+            PointF next = contour[(index + 1) % contour.Count];
+            twiceArea += (current.X * next.Y) - (next.X * current.Y);
+        }
+
+        return twiceArea / 2;
+    }
+
+    private static float GetDistance(PointF first, PointF second)
+    {
+        float deltaX = second.X - first.X;
+        float deltaY = second.Y - first.Y;
+        return MathF.Sqrt((deltaX * deltaX) + (deltaY * deltaY));
+    }
+
+    private static RecognizedTextRoundedCorner CreateSharpCorner(PointF corner)
+    {
+        return new RecognizedTextRoundedCorner(
+            corner,
+            corner,
+            corner,
+            0,
+            false,
+            false);
+    }
+
     private sealed record LineCandidate(
         IReadOnlyList<RecognizedTextRegion> Regions,
         RectangleF Bounds);
@@ -769,3 +928,11 @@ public sealed record RecognizedTextSelection(
 {
     public static RecognizedTextSelection Empty { get; } = new(string.Empty, [], []);
 }
+
+public readonly record struct RecognizedTextRoundedCorner(
+    PointF EntryPoint,
+    PointF CornerPoint,
+    PointF ExitPoint,
+    float Radius,
+    bool IsConcave,
+    bool SweepsClockwise);

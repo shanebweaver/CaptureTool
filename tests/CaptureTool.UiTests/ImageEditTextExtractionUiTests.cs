@@ -122,6 +122,31 @@ public sealed class ImageEditTextExtractionUiTests
             Assert.IsGreaterThan(0L, new FileInfo(screenshotPath).Length, "The OCR overlay screenshot should not be empty.");
             TestContext.AddResultFile(screenshotPath);
             TestContext.WriteLine($"Text Extraction overlay screenshot: {screenshotPath}");
+
+            textExtractionButton.Click();
+            WaitForElementRemoved(
+                mainWindow,
+                automation,
+                "ImageEdit_TextExtractionOverlayMarker",
+                InteractionTimeout);
+
+            textExtractionButton.Click();
+            Assert.IsNull(
+                mainWindow.FindFirstDescendant(
+                    automation.ConditionFactory.ByAutomationId("ImageEdit_TextExtractionProgressRing")),
+                "Reopening OCR for an unchanged image should reuse its cached result without showing the loader.");
+            WaitForElement(
+                mainWindow,
+                automation,
+                "ImageEdit_TextExtractionOverlayMarker",
+                InteractionTimeout);
+
+            textExtractionButton.Click();
+            WaitForElementRemoved(
+                mainWindow,
+                automation,
+                "ImageEdit_TextExtractionOverlayMarker",
+                InteractionTimeout);
         }
         finally
         {

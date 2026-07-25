@@ -230,7 +230,13 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     public bool IsTextExtractionModeActive
     {
         get;
-        private set => Set(ref field, value);
+        private set
+        {
+            if (Set(ref field, value))
+            {
+                RaisePropertyChanged(nameof(IsTextExtractionOverlayVisible));
+            }
+        }
     }
 
     public bool IsImageDescriptionModeActive
@@ -548,8 +554,17 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     public bool HasTextExtractionRegions
     {
         get;
-        private set => Set(ref field, value);
+        private set
+        {
+            if (Set(ref field, value))
+            {
+                RaisePropertyChanged(nameof(IsTextExtractionOverlayVisible));
+            }
+        }
     }
+
+    public bool IsTextExtractionOverlayVisible =>
+        IsTextExtractionModeActive && HasTextExtractionRegions;
 
     public bool IsImageDescriptionFeatureEnabled
     {
@@ -1213,10 +1228,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         if (wasTextExtractionModeActive && !IsTextExtractionModeActive)
         {
             CancelTextExtractionWork();
-            TextExtractionRegions = [];
             TextExtractionStatusMessage = string.Empty;
-            TextExtractionTool.Reset();
-            _textExtractionProcessedRevision = null;
             InvalidateCanvasRequested?.Invoke(this, EventArgs.Empty);
         }
 
@@ -2162,6 +2174,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
             TextExtractionResult result = await _textExtractionService.ExtractAsync(
                 new TextExtractionRequest(sourceImage, renderedSize),
                 cancellationToken);
+            cancellationToken.ThrowIfCancellationRequested();
 
             if (result.Status != TextExtractionStatus.Success || result.Document is null)
             {
@@ -2678,6 +2691,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     private void IncrementEditRevision(bool preservePointSelectionAiMode = false)
     {
         _editRevision++;
+        InvalidateTextExtractionResult();
         ClearImageDescriptionResults();
 
         if (IsTextExtractionModeActive)
@@ -2700,6 +2714,14 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         {
             ApplyActiveMode(_modeStateMachine.Deactivate(ImageEditMode.ObjectExtraction));
         }
+    }
+
+    private void InvalidateTextExtractionResult()
+    {
+        _textExtractionProcessedRevision = null;
+        TextExtractionRegions = [];
+        TextExtractionStatusMessage = string.Empty;
+        TextExtractionTool.Reset();
     }
 
     private void CancelSuperResolutionWork()

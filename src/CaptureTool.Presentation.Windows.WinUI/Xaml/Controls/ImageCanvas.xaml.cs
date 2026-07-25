@@ -14,12 +14,14 @@ using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
+using Microsoft.UI.Xaml.Media.Animation;
 using System.Collections.Specialized;
 using System.Drawing;
 using System.Numerics;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.System;
 using Windows.UI.Core;
+using Windows.UI.ViewManagement;
 using Point = global::Windows.Foundation.Point;
 using WinUIColor = global::Windows.UI.Color;
 
@@ -27,6 +29,9 @@ namespace CaptureTool.Presentation.Windows.WinUI.Xaml.Controls;
 
 public sealed partial class ImageCanvas : UserControlBase
 {
+    private const int TextExtractionFadeInDurationMilliseconds = 180;
+    private const int TextExtractionFadeOutDurationMilliseconds = 140;
+
     public static readonly DependencyProperty DrawablesProperty = DependencyProperty.Register(
         nameof(Drawables),
         typeof(IEnumerable<IDrawable>),
@@ -127,7 +132,18 @@ public sealed partial class ImageCanvas : UserControlBase
         nameof(IsTextExtractionOverlayEnabled),
         typeof(bool),
         typeof(ImageCanvas),
-        new PropertyMetadata(false, OnTextExtractionOverlayPropertyChanged));
+        new PropertyMetadata(false, OnIsTextExtractionOverlayEnabledPropertyChanged));
+
+    private static void OnIsTextExtractionOverlayEnabledPropertyChanged(
+        DependencyObject d,
+        DependencyPropertyChangedEventArgs e)
+    {
+        if (d is ImageCanvas control)
+        {
+            control.UpdateTextExtractionOverlayPath();
+            control.UpdateTouchInputLock();
+        }
+    }
 
     public static readonly DependencyProperty IsForegroundExtractionModeEnabledProperty = DependencyProperty.Register(
         nameof(IsForegroundExtractionModeEnabled),
@@ -184,9 +200,9 @@ public sealed partial class ImageCanvas : UserControlBase
         nameof(TextExtractionRegions),
         typeof(IReadOnlyList<RecognizedTextRegion>),
         typeof(ImageCanvas),
-        new PropertyMetadata(Array.Empty<RecognizedTextRegion>(), OnTextExtractionOverlayPropertyChanged));
+        new PropertyMetadata(Array.Empty<RecognizedTextRegion>(), OnTextExtractionRegionsPropertyChanged));
 
-    private static void OnTextExtractionOverlayPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    private static void OnTextExtractionRegionsPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
         if (d is ImageCanvas control)
         {
@@ -564,6 +580,14 @@ public sealed partial class ImageCanvas : UserControlBase
     private Size _colorPickerSnapshotSize = Size.Empty;
     private RecognizedTextLayout _textExtractionLayout = RecognizedTextLayout.Empty;
     private RecognizedTextSelection _textExtractionSelection = RecognizedTextSelection.Empty;
+    private PathGeometry? _textExtractionOverlayGeometry;
+    private double _textExtractionOverlayGeometryWidth;
+    private double _textExtractionOverlayGeometryHeight;
+    private readonly UISettings _uiSettings = new();
+    private Storyboard? _textExtractionOverlayAnimation;
+    private bool _isTextExtractionOverlayRequested;
+    private bool _isTextExtractionOverlayFadingOut;
+    private bool _clearTextExtractionOverlayGeometryAfterFadeOut;
     private RecognizedTextPosition? _textSelectionAnchor;
     private Point _textSelectionPressPosition;
     private bool _isTextSelectionPointerDown;
@@ -669,6 +693,7 @@ public sealed partial class ImageCanvas : UserControlBase
         DetachXamlRootChanged();
         SetObservableDrawables(null);
         InvalidateColorPickerSnapshot();
+        StopTextExtractionOverlayAnimation();
         RenderCanvas.RemoveFromVisualTree();
     }
 
@@ -1078,33 +1103,189 @@ public sealed partial class ImageCanvas : UserControlBase
 
     private void UpdateTextExtractionOverlayPath()
     {
-        if (!IsTextExtractionOverlayEnabled || CanvasContainer.Width <= 0 || CanvasContainer.Height <= 0)
+        if (!IsTextExtractionOverlayEnabled)
         {
-            TextExtractionOverlayPath.Visibility = Visibility.Collapsed;
-            TextExtractionOverlayAutomationMarker.Visibility = Visibility.Collapsed;
-            TextExtractionOverlayPath.Data = null;
-            TextExtractionSelectionPath.Visibility = Visibility.Collapsed;
+            HideTextExtractionOverlay(clearGeometry: false);
             return;
         }
 
-        double width = CanvasContainer.Width;
-        double height = CanvasContainer.Height;
-        PathGeometry geometry = CreateTextPathGeometry(
-            _textExtractionLayout.CutoutContours,
-            width,
-            height,
-            includeOuterBounds: true);
+        if (_textExtractionLayout.CutoutContours.Count == 0 ||
+            CanvasContainer.Width <= 0 ||
+            CanvasContainer.Height <= 0)
+        {
+            HideTextExtractionOverlay(clearGeometry: true);
+            return;
+        }
+
+        PathGeometry geometry = GetOrCreateTextExtractionOverlayGeometry();
 
         TextExtractionOverlayPath.Data = geometry;
         TextExtractionOverlayPath.Visibility = Visibility.Visible;
         TextExtractionOverlayAutomationMarker.Visibility = Visibility.Visible;
         UpdateTextExtractionSelectionPath();
+        ShowTextExtractionOverlay();
+    }
+
+    private void ShowTextExtractionOverlay()
+    {
+        _isTextExtractionOverlayRequested = true;
+        _clearTextExtractionOverlayGeometryAfterFadeOut = false;
+        if (_textExtractionOverlayAnimation is not null && !_isTextExtractionOverlayFadingOut)
+        {
+            return;
+        }
+
+        double currentOpacity = TextExtractionOverlayLayer.Opacity;
+        StopTextExtractionOverlayAnimation();
+        if (TextExtractionOverlayLayer.Visibility == Visibility.Visible &&
+            currentOpacity >= 1)
+        {
+            return;
+        }
+
+        TextExtractionOverlayLayer.Visibility = Visibility.Visible;
+        if (!IsLoaded || !_uiSettings.AnimationsEnabled)
+        {
+            TextExtractionOverlayLayer.Opacity = 1;
+            return;
+        }
+
+        AnimateTextExtractionOverlay(
+            currentOpacity,
+            1,
+            TextExtractionFadeInDurationMilliseconds,
+            EasingMode.EaseOut,
+            isFadingOut: false);
+    }
+
+    private void HideTextExtractionOverlay(bool clearGeometry)
+    {
+        _isTextExtractionOverlayRequested = false;
+        _clearTextExtractionOverlayGeometryAfterFadeOut |= clearGeometry;
+        if (TextExtractionOverlayLayer.Visibility != Visibility.Visible)
+        {
+            CompleteTextExtractionOverlayHide();
+            return;
+        }
+
+        if (_textExtractionOverlayAnimation is not null && _isTextExtractionOverlayFadingOut)
+        {
+            return;
+        }
+
+        double currentOpacity = TextExtractionOverlayLayer.Opacity;
+        StopTextExtractionOverlayAnimation();
+        if (!IsLoaded || !_uiSettings.AnimationsEnabled)
+        {
+            CompleteTextExtractionOverlayHide();
+            return;
+        }
+
+        AnimateTextExtractionOverlay(
+            currentOpacity,
+            0,
+            TextExtractionFadeOutDurationMilliseconds,
+            EasingMode.EaseIn,
+            isFadingOut: true);
+    }
+
+    private void AnimateTextExtractionOverlay(
+        double fromOpacity,
+        double toOpacity,
+        int durationMilliseconds,
+        EasingMode easingMode,
+        bool isFadingOut)
+    {
+        TextExtractionOverlayLayer.Opacity = fromOpacity;
+        var animation = new DoubleAnimation
+        {
+            From = fromOpacity,
+            To = toOpacity,
+            Duration = TimeSpan.FromMilliseconds(durationMilliseconds),
+            EasingFunction = new SineEase { EasingMode = easingMode }
+        };
+        Storyboard.SetTarget(animation, TextExtractionOverlayLayer);
+        Storyboard.SetTargetProperty(animation, nameof(UIElement.Opacity));
+
+        var storyboard = new Storyboard();
+        storyboard.Children.Add(animation);
+        _textExtractionOverlayAnimation = storyboard;
+        _isTextExtractionOverlayFadingOut = isFadingOut;
+        storyboard.Completed += (_, _) =>
+        {
+            if (_textExtractionOverlayAnimation != storyboard)
+            {
+                return;
+            }
+
+            TextExtractionOverlayLayer.Opacity = _isTextExtractionOverlayRequested ? 1 : 0;
+            storyboard.Stop();
+            _textExtractionOverlayAnimation = null;
+            _isTextExtractionOverlayFadingOut = false;
+            if (_isTextExtractionOverlayRequested)
+            {
+                return;
+            }
+
+            CompleteTextExtractionOverlayHide();
+        };
+        storyboard.Begin();
+    }
+
+    private void StopTextExtractionOverlayAnimation()
+    {
+        if (_textExtractionOverlayAnimation is null)
+        {
+            return;
+        }
+
+        _textExtractionOverlayAnimation.Stop();
+        _textExtractionOverlayAnimation = null;
+        _isTextExtractionOverlayFadingOut = false;
+    }
+
+    private void CompleteTextExtractionOverlayHide()
+    {
+        TextExtractionOverlayLayer.Opacity = 0;
+        TextExtractionOverlayLayer.Visibility = Visibility.Collapsed;
+        if (_clearTextExtractionOverlayGeometryAfterFadeOut)
+        {
+            TextExtractionOverlayPath.Visibility = Visibility.Collapsed;
+            TextExtractionOverlayAutomationMarker.Visibility = Visibility.Collapsed;
+            TextExtractionOverlayPath.Data = null;
+            TextExtractionSelectionPath.Data = null;
+            TextExtractionSelectionPath.Visibility = Visibility.Collapsed;
+            _clearTextExtractionOverlayGeometryAfterFadeOut = false;
+        }
     }
 
     private void RebuildTextExtractionLayout()
     {
         _textExtractionLayout = RecognizedTextLayout.Create(TextExtractionRegions);
+        _textExtractionOverlayGeometry = null;
+        _textExtractionOverlayGeometryWidth = 0;
+        _textExtractionOverlayGeometryHeight = 0;
         ClearExtractedTextSelection();
+    }
+
+    private PathGeometry GetOrCreateTextExtractionOverlayGeometry()
+    {
+        double width = CanvasContainer.Width;
+        double height = CanvasContainer.Height;
+        if (_textExtractionOverlayGeometry is null ||
+            _textExtractionOverlayGeometryWidth != width ||
+            _textExtractionOverlayGeometryHeight != height)
+        {
+            _textExtractionOverlayGeometry = CreateTextPathGeometry(
+                _textExtractionLayout.CutoutContours,
+                width,
+                height,
+                includeOuterBounds: true);
+            _textExtractionOverlayGeometryWidth = width;
+            _textExtractionOverlayGeometryHeight = height;
+        }
+
+        return _textExtractionOverlayGeometry;
     }
 
     private void UpdateTextExtractionSelectionPath()
@@ -1147,12 +1328,12 @@ public sealed partial class ImageCanvas : UserControlBase
                 new PointF((float)width, 0),
                 new PointF((float)width, (float)height),
                 new PointF(0, (float)height)
-            ], width, height);
+            ], width, height, roundCorners: false);
         }
 
         foreach (IReadOnlyList<PointF> contour in contours)
         {
-            AddPathFigure(geometry, contour, width, height);
+            AddPathFigure(geometry, contour, width, height, roundCorners: true);
         }
 
         return geometry;
@@ -1162,23 +1343,85 @@ public sealed partial class ImageCanvas : UserControlBase
         PathGeometry geometry,
         IReadOnlyList<PointF> contour,
         double width,
-        double height)
+        double height,
+        bool roundCorners)
     {
         if (contour.Count < 3)
         {
             return;
         }
 
-        PointF start = ClampPoint(contour[0], width, height);
+        PointF[] clampedContour = contour
+            .Select(point => ClampPoint(point, width, height))
+            .ToArray();
+        if (!roundCorners)
+        {
+            AddSharpPathFigure(geometry, clampedContour);
+            return;
+        }
+
+        IReadOnlyList<RecognizedTextRoundedCorner> corners =
+            RecognizedTextLayout.CreateRoundedContour(clampedContour);
+        if (corners.Count < 3)
+        {
+            return;
+        }
+
+        RecognizedTextRoundedCorner firstCorner = corners[0];
         PathFigure figure = new()
         {
-            StartPoint = new Point(start.X, start.Y),
+            StartPoint = new Point(firstCorner.EntryPoint.X, firstCorner.EntryPoint.Y),
+            IsClosed = true,
+            IsFilled = true
+        };
+        for (int index = 0; index < corners.Count; index++)
+        {
+            RecognizedTextRoundedCorner corner = corners[index];
+            if (index > 0)
+            {
+                figure.Segments.Add(new LineSegment
+                {
+                    Point = new Point(corner.EntryPoint.X, corner.EntryPoint.Y)
+                });
+            }
+
+            if (corner.Radius > 0)
+            {
+                figure.Segments.Add(new ArcSegment
+                {
+                    Point = new Point(corner.ExitPoint.X, corner.ExitPoint.Y),
+                    Size = new global::Windows.Foundation.Size(corner.Radius, corner.Radius),
+                    IsLargeArc = false,
+                    SweepDirection = corner.SweepsClockwise
+                        ? SweepDirection.Clockwise
+                        : SweepDirection.Counterclockwise
+                });
+            }
+            else
+            {
+                figure.Segments.Add(new LineSegment
+                {
+                    Point = new Point(corner.ExitPoint.X, corner.ExitPoint.Y)
+                });
+            }
+        }
+
+        geometry.Figures.Add(figure);
+    }
+
+    private static void AddSharpPathFigure(
+        PathGeometry geometry,
+        IReadOnlyList<PointF> contour)
+    {
+        PathFigure figure = new()
+        {
+            StartPoint = new Point(contour[0].X, contour[0].Y),
             IsClosed = true,
             IsFilled = true
         };
         for (int index = 1; index < contour.Count; index++)
         {
-            PointF point = ClampPoint(contour[index], width, height);
+            PointF point = contour[index];
             figure.Segments.Add(new LineSegment
             {
                 Point = new Point(point.X, point.Y)
