@@ -1147,12 +1147,12 @@ public sealed partial class ImageCanvas : UserControlBase
                 new PointF((float)width, 0),
                 new PointF((float)width, (float)height),
                 new PointF(0, (float)height)
-            ], width, height);
+            ], width, height, roundCorners: false);
         }
 
         foreach (IReadOnlyList<PointF> contour in contours)
         {
-            AddPathFigure(geometry, contour, width, height);
+            AddPathFigure(geometry, contour, width, height, roundCorners: true);
         }
 
         return geometry;
@@ -1162,23 +1162,85 @@ public sealed partial class ImageCanvas : UserControlBase
         PathGeometry geometry,
         IReadOnlyList<PointF> contour,
         double width,
-        double height)
+        double height,
+        bool roundCorners)
     {
         if (contour.Count < 3)
         {
             return;
         }
 
-        PointF start = ClampPoint(contour[0], width, height);
+        PointF[] clampedContour = contour
+            .Select(point => ClampPoint(point, width, height))
+            .ToArray();
+        if (!roundCorners)
+        {
+            AddSharpPathFigure(geometry, clampedContour);
+            return;
+        }
+
+        IReadOnlyList<RecognizedTextRoundedCorner> corners =
+            RecognizedTextLayout.CreateRoundedContour(clampedContour);
+        if (corners.Count < 3)
+        {
+            return;
+        }
+
+        RecognizedTextRoundedCorner firstCorner = corners[0];
         PathFigure figure = new()
         {
-            StartPoint = new Point(start.X, start.Y),
+            StartPoint = new Point(firstCorner.EntryPoint.X, firstCorner.EntryPoint.Y),
+            IsClosed = true,
+            IsFilled = true
+        };
+        for (int index = 0; index < corners.Count; index++)
+        {
+            RecognizedTextRoundedCorner corner = corners[index];
+            if (index > 0)
+            {
+                figure.Segments.Add(new LineSegment
+                {
+                    Point = new Point(corner.EntryPoint.X, corner.EntryPoint.Y)
+                });
+            }
+
+            if (corner.Radius > 0)
+            {
+                figure.Segments.Add(new ArcSegment
+                {
+                    Point = new Point(corner.ExitPoint.X, corner.ExitPoint.Y),
+                    Size = new global::Windows.Foundation.Size(corner.Radius, corner.Radius),
+                    IsLargeArc = false,
+                    SweepDirection = corner.SweepsClockwise
+                        ? SweepDirection.Clockwise
+                        : SweepDirection.Counterclockwise
+                });
+            }
+            else
+            {
+                figure.Segments.Add(new LineSegment
+                {
+                    Point = new Point(corner.ExitPoint.X, corner.ExitPoint.Y)
+                });
+            }
+        }
+
+        geometry.Figures.Add(figure);
+    }
+
+    private static void AddSharpPathFigure(
+        PathGeometry geometry,
+        IReadOnlyList<PointF> contour)
+    {
+        PathFigure figure = new()
+        {
+            StartPoint = new Point(contour[0].X, contour[0].Y),
             IsClosed = true,
             IsFilled = true
         };
         for (int index = 1; index < contour.Count; index++)
         {
-            PointF point = ClampPoint(contour[index], width, height);
+            PointF point = contour[index];
             figure.Segments.Add(new LineSegment
             {
                 Point = new Point(point.X, point.Y)
