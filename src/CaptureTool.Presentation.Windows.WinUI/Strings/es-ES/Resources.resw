@@ -318,6 +318,12 @@ Al utilizar esta aplicación, usted reconoce que es responsable de gestionar el 
   <data name="AppMenu_SettingsItem.Text" xml:space="preserve">
     <value>Configuración</value>
   </data>
+  <data name="AppMenu_HomeItem.AccessKey" xml:space="preserve">
+    <value>I</value>
+  </data>
+  <data name="AppMenu_HomeItem.Text" xml:space="preserve">
+    <value>Inicio</value>
+  </data>
   <data name="AppMenu_OpenFileItem.AccessKey" xml:space="preserve">
     <value>O</value>
   </data>

@@ -401,6 +401,14 @@ By using this application, you acknowledge that you are responsible for managing
     <value>Settings</value>
     <comment>The label for the settings item in the file menu.</comment>
   </data>
+  <data name="AppMenu_HomeItem.AccessKey" xml:space="preserve">
+    <value>H</value>
+    <comment>The access key for the home item in the file menu.</comment>
+  </data>
+  <data name="AppMenu_HomeItem.Text" xml:space="preserve">
+    <value>Home</value>
+    <comment>The label for the home item in the file menu.</comment>
+  </data>
   <data name="AppMenu_OpenFileItem.AccessKey" xml:space="preserve">
     <value>O</value>
     <comment>The access key for the open file item in the file menu.</comment>

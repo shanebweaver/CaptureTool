@@ -318,6 +318,12 @@
   <data name="AppMenu_SettingsItem.Text" xml:space="preserve">
     <value>设置</value>
   </data>
+  <data name="AppMenu_HomeItem.AccessKey" xml:space="preserve">
+    <value>H</value>
+  </data>
+  <data name="AppMenu_HomeItem.Text" xml:space="preserve">
+    <value>主页</value>
+  </data>
   <data name="AppMenu_OpenFileItem.AccessKey" xml:space="preserve">
     <value>O</value>
   </data>

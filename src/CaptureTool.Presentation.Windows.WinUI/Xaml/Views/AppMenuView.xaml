@@ -14,6 +14,15 @@
     <MenuBar>
         <!--  File  -->
         <MenuBarItem x:Uid="AppMenu_FileMenuItem">
+            <!--  Home  -->
+            <MenuFlyoutItem
+                x:Uid="AppMenu_HomeItem"
+                AutomationProperties.AutomationId="AppMenu_HomeItem"
+                Command="{x:Bind ViewModel.NavigateHomeCommand}"
+                Icon="Home" />
+
+            <MenuFlyoutSeparator />
+
             <!--  New capture  -->
             <MenuFlyoutItem
                 x:Uid="AppMenu_NewCaptureItem"

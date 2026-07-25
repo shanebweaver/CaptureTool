@@ -318,6 +318,12 @@ En utilisant cette application, vous reconnaissez être seul responsable de la g
   <data name="AppMenu_SettingsItem.Text" xml:space="preserve">
     <value>Paramètres</value>
   </data>
+  <data name="AppMenu_HomeItem.AccessKey" xml:space="preserve">
+    <value>C</value>
+  </data>
+  <data name="AppMenu_HomeItem.Text" xml:space="preserve">
+    <value>Accueil</value>
+  </data>
   <data name="AppMenu_OpenFileItem.AccessKey" xml:space="preserve">
     <value>O</value>
   </data>

@@ -318,6 +318,12 @@
   <data name="AppMenu_SettingsItem.Text" xml:space="preserve">
     <value>Настройки</value>
   </data>
+  <data name="AppMenu_HomeItem.AccessKey" xml:space="preserve">
+    <value>Г</value>
+  </data>
+  <data name="AppMenu_HomeItem.Text" xml:space="preserve">
+    <value>Главная</value>
+  </data>
   <data name="AppMenu_OpenFileItem.AccessKey" xml:space="preserve">
     <value>O</value>
   </data>
