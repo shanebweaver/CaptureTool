@@ -299,7 +299,7 @@
                 IsEnabled="False"
                 IsTabStop="False"
                 Opacity=".01"
-                Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.HasTextExtractionRegions), Mode=OneWay}" />
+                Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.IsTextExtractionOverlayVisible), Mode=OneWay}" />
 
             <Grid
                 x:Name="FloatingToolbarLayer"

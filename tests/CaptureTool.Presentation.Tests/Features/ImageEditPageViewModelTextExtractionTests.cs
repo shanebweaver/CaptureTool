@@ -262,7 +262,7 @@ public sealed class ImageEditPageViewModelTextExtractionTests
     }
 
     [TestMethod]
-    public async Task ToggleTextExtractionMode_WhenRepeatedlyOpened_DoesNotSaveWorkingFiles()
+    public async Task ToggleTextExtractionMode_WhenRepeatedlyOpenedWithoutEdits_ShouldReuseCachedResult()
     {
         var exporter = new Mock<IImageCanvasExporter>();
         var textExtraction = new Mock<ITextExtractionService>();
@@ -293,9 +293,14 @@ public sealed class ImageEditPageViewModelTextExtractionTests
             await viewModel.ToggleTextExtractionModeCommand.ExecuteAsync(null);
         }
 
+        viewModel.TextExtractionRegions.Should().ContainSingle();
+        viewModel.TextExtractionTool.Text.Should().Be("hello");
         exporter.Verify(service => service.RenderToStreamAsync(
             It.IsAny<IDrawable[]>(),
-            It.IsAny<ImageCanvasRenderOptions>()), Times.Exactly(3));
+            It.IsAny<ImageCanvasRenderOptions>()), Times.Once);
+        textExtraction.Verify(service => service.ExtractAsync(
+            It.IsAny<TextExtractionRequest>(),
+            It.IsAny<CancellationToken>()), Times.Once);
         exporter.Verify(service => service.SaveImageAsync(
             It.IsAny<string>(),
             It.IsAny<IDrawable[]>(),
