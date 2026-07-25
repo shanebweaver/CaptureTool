@@ -70,4 +70,28 @@ public sealed class PartnerCenterTelemetryEventNameFormatterTests
         Assert.HasCount(96, first);
         Assert.AreEqual(first, second);
     }
+
+    [TestMethod]
+    public void Format_ShouldHandleEmptyBooleanAndNumericSegments()
+    {
+        string empty = PartnerCenterTelemetryEventNameFormatter.Format("---");
+        string boolean = PartnerCenterTelemetryEventNameFormatter.Format(
+            TelemetryEvents.SettingsChanged,
+            new Dictionary<string, object?>
+            {
+                [TelemetryProperties.Setting] = "enabled",
+                [TelemetryProperties.Value] = true
+            });
+        string numeric = PartnerCenterTelemetryEventNameFormatter.Format(
+            TelemetryEvents.SettingsChanged,
+            new Dictionary<string, object?>
+            {
+                [TelemetryProperties.Setting] = "count",
+                [TelemetryProperties.Value] = 42
+            });
+
+        Assert.AreEqual("ct1", empty);
+        Assert.AreEqual("ct1_settings_changed_enabled_true", boolean);
+        Assert.AreEqual("ct1_settings_changed_count_42", numeric);
+    }
 }

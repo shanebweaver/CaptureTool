@@ -55,6 +55,92 @@ public sealed class ImageEditSessionTests
     }
 
     [TestMethod]
+    public void ResizeImage_ShouldScaleCropAndEveryDrawableType()
+    {
+        var image = new ImageDrawable(new Vector2(1, 2), new ImageFile("image.png"), new Size(10, 20));
+        var rectangle = new RectangleDrawable(new Vector2(1, 2), new Size(10, 20), Color.Red, Color.Blue, 2);
+        var ellipse = new EllipseDrawable(new Vector2(1, 2), new Size(10, 20), Color.Red, Color.Blue, 2);
+        var line = new LineDrawable(new Vector2(1, 2), new Vector2(3, 4), Color.Red, 2);
+        var arrow = new ArrowDrawable(new Vector2(1, 2), new Vector2(3, 4), Color.Red, 2);
+        var text = new TextDrawable(
+            new Vector2(1, 2),
+            new Size(10, 20),
+            "text",
+            Color.Black,
+            Color.White,
+            "Segoe UI",
+            10);
+        var session = new ImageEditSession(
+            new Size(100, 100),
+            ImageOrientation.RotateNoneFlipNone,
+            new Rectangle(10, 20, 30, 40),
+            [image, rectangle, ellipse, line, arrow, text]);
+
+        session.ResizeImage(new Size(200, 300));
+
+        Assert.AreEqual(new Rectangle(20, 60, 60, 120), session.CropRect);
+        Assert.AreEqual(new Vector2(2, 6), image.Offset);
+        Assert.AreEqual(new Size(20, 60), image.ImageSize);
+        Assert.AreEqual(new Vector2(2, 6), rectangle.Offset);
+        Assert.AreEqual(new Size(20, 60), rectangle.Size);
+        Assert.AreEqual(5, rectangle.StrokeWidth);
+        Assert.AreEqual(new Vector2(2, 6), ellipse.Offset);
+        Assert.AreEqual(new Size(20, 60), ellipse.Size);
+        Assert.AreEqual(5, ellipse.StrokeWidth);
+        Assert.AreEqual(new Vector2(2, 6), line.Offset);
+        Assert.AreEqual(new Vector2(6, 12), line.EndPoint);
+        Assert.AreEqual(5, line.StrokeWidth);
+        Assert.AreEqual(new Vector2(2, 6), arrow.Offset);
+        Assert.AreEqual(new Vector2(6, 12), arrow.EndPoint);
+        Assert.AreEqual(5, arrow.StrokeWidth);
+        Assert.AreEqual(new Vector2(2, 6), text.Offset);
+        Assert.AreEqual(new Size(20, 60), text.Size);
+        Assert.AreEqual(25, text.FontSize);
+    }
+
+    [TestMethod]
+    public void ResizeAndOrientation_WhenValuesDoNotRequireScaling_HandleNoOpAndEmptyImage()
+    {
+        var emptySession = new ImageEditSession(Size.Empty);
+
+        emptySession.ResizeImage(new Size(30, 40));
+        emptySession.ResizeImage(new Size(30, 40));
+        emptySession.SetOrientation(emptySession.Orientation);
+
+        Assert.AreEqual(new Size(30, 40), emptySession.ImageSize);
+        Assert.AreEqual(new Rectangle(0, 0, 30, 40), emptySession.CropRect);
+    }
+
+    [TestMethod]
+    public void SetAndFlipCommands_ShouldApplyAndRevertState()
+    {
+        var session = new ImageEditSession(new Size(100, 80));
+        var setCrop = new SetCropCommand(
+            new Rectangle(0, 0, 100, 80),
+            new Rectangle(10, 20, 30, 40));
+        var setOrientation = new SetOrientationCommand(
+            ImageOrientation.RotateNoneFlipNone,
+            ImageOrientation.Rotate90FlipNone);
+        var flip = new FlipImageCommand(FlipDirection.Horizontal);
+
+        setCrop.Apply(session);
+        Assert.AreEqual(new Rectangle(10, 20, 30, 40), session.CropRect);
+        setCrop.Revert(session);
+        Assert.AreEqual(new Rectangle(0, 0, 100, 80), session.CropRect);
+
+        setOrientation.Apply(session);
+        Assert.AreEqual(ImageOrientation.Rotate90FlipNone, session.Orientation);
+        setOrientation.Revert(session);
+        Assert.AreEqual(ImageOrientation.RotateNoneFlipNone, session.Orientation);
+
+        flip.Apply(session);
+        ImageOrientation flipped = session.Orientation;
+        Assert.AreNotEqual(ImageOrientation.RotateNoneFlipNone, flipped);
+        flip.Revert(session);
+        Assert.AreEqual(ImageOrientation.RotateNoneFlipNone, session.Orientation);
+    }
+
+    [TestMethod]
     public void CreateRenderSnapshot_ShouldReturnCurrentRenderState()
     {
         var session = new ImageEditSession(
