@@ -54,7 +54,9 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddSingleton<ISettingsService, LocalSettingsService>();
         services.AddSingleton<IAppMetricsService, LocalAppMetricsService>();
         services.AddSingleton<IBackgroundTaskRunner, BackgroundTaskRunner>();
-        services.AddSingleton<ITelemetryService, TelemetryService>();
+        services.AddSingleton<ITelemetryConsentService, TelemetryConsentService>();
+        services.AddSingleton<ITelemetryEventSink, NullTelemetryService>();
+        services.AddSingleton<ITelemetryService, ConsentAwareTelemetryService>();
         services.AddSingleton<IClock, SystemClock>();
 #if DEBUG
         services.AddSingleton<ILogService, DebugLogService>();

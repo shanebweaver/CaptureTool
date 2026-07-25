@@ -34,6 +34,7 @@ using CaptureTool.Application.Abstractions.Settings.UpdateVideoCaptureAutoSave;
 using CaptureTool.Application.Abstractions.Settings.UpdateVideoCaptureDefaultLocalAudio;
 using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Application.Abstractions.Store;
+using CaptureTool.Application.Abstractions.Telemetry;
 using CaptureTool.Application.Abstractions.Themes;
 using CaptureTool.Domain.Ai;
 using CaptureTool.Presentation.Factories;
@@ -85,6 +86,7 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
     private readonly IStorageService _storageService;
     private readonly IFactoryServiceWithArgs<AppLanguageViewModel, IAppLanguage?> _appLanguageViewModelFactory;
     private readonly IFactoryServiceWithArgs<AppThemeViewModel, AppTheme> _appThemeViewModelFactory;
+    private readonly ITelemetryConsentService? _telemetryConsentService;
 
     private readonly AppTheme[] SupportedAppThemes = [
         AppTheme.Light,
@@ -117,6 +119,7 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
     public IAsyncRelayCommand RestoreDefaultSettingsCommand { get; }
     public IAsyncRelayCommand OpenStoreReviewCommand { get; }
     public IAsyncRelayCommand<bool> UpdateStoreReviewRemindersEnabledCommand { get; }
+    public IAsyncRelayCommand<bool> UpdateOptionalUsageDataEnabledCommand { get; }
 
     public ObservableCollection<AppLanguageViewModel> AppLanguages
     {
@@ -232,6 +235,12 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
         private set => Set(ref field, value);
     }
 
+    public bool OptionalUsageDataEnabled
+    {
+        get;
+        private set => Set(ref field, value);
+    }
+
     public string ScreenshotsFolderPath
     {
         get;
@@ -296,7 +305,8 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
         IImageForegroundExtractionFeatureAvailability? imageForegroundExtractionFeatureAvailability = null,
         IImageObjectEraseFeatureAvailability? imageObjectEraseFeatureAvailability = null,
         IImageObjectExtractionFeatureAvailability? imageObjectExtractionFeatureAvailability = null,
-        IVideoSuperResolutionFeatureAvailability? videoSuperResolutionFeatureAvailability = null)
+        IVideoSuperResolutionFeatureAvailability? videoSuperResolutionFeatureAvailability = null,
+        ITelemetryConsentService? telemetryConsentService = null)
     {
         _goBackAction = goBackAction;
         _restartAppAction = restartAppAction;
@@ -331,6 +341,7 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
         _imageObjectExtractionFeatureAvailability = imageObjectExtractionFeatureAvailability ?? new DisabledImageObjectExtractionFeatureAvailability();
         _videoSuperResolutionFeatureAvailability =
             videoSuperResolutionFeatureAvailability ?? new DisabledVideoSuperResolutionFeatureAvailability();
+        _telemetryConsentService = telemetryConsentService;
         _localizationService = localizationService;
         _themeService = themeService;
         _settingsService = settingsService;
@@ -373,6 +384,7 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
         RestoreDefaultSettingsCommand = new AsyncRelayCommand(RestoreDefaultSettingsAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
         OpenStoreReviewCommand = new AsyncRelayCommand(OpenStoreReviewAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
         UpdateStoreReviewRemindersEnabledCommand = new AsyncRelayCommand<bool>(UpdateStoreReviewRemindersEnabledAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
+        UpdateOptionalUsageDataEnabledCommand = new AsyncRelayCommand<bool>(UpdateOptionalUsageDataEnabledAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
     }
 
     public override async Task LoadAsync(CancellationToken cancellationToken)
@@ -442,6 +454,10 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
         CaptureWarnBeforeDiscard = _settingsService.Get(CaptureToolSettings.Settings_Capture_WarnBeforeDiscard);
         EditWarnBeforeDiscard = _settingsService.Get(CaptureToolSettings.Settings_Edit_WarnBeforeDiscard);
         StoreReviewRemindersEnabled = _appMetricsService.StoreReviewRemindersEnabled;
+        OptionalUsageDataEnabled =
+            TelemetryConsentSettingValues.Parse(
+                _settingsService.Get(CaptureToolSettings.Settings_TelemetryConsent)) ==
+            TelemetryConsentState.Granted;
         RefreshAiFeatureConsents();
 
         var screenshotsFolder = _settingsService.Get(CaptureToolSettings.Settings_ImageCapture_AutoSaveFolder);
@@ -604,6 +620,27 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
         await _appMetricsService.SetStoreReviewRemindersEnabledAsync(value, CancellationToken.None);
     }
 
+    private async Task UpdateOptionalUsageDataEnabledAsync(bool value)
+    {
+        OptionalUsageDataEnabled = value;
+        TelemetryConsentState state = value
+            ? TelemetryConsentState.Granted
+            : TelemetryConsentState.Denied;
+        if (state == TelemetryConsentState.Denied)
+        {
+            _telemetryConsentService?.SetState(state);
+        }
+
+        _settingsService.Set(
+            CaptureToolSettings.Settings_TelemetryConsent,
+            TelemetryConsentSettingValues.Serialize(state));
+        await _settingsService.TrySaveAsync(CancellationToken.None);
+        if (state == TelemetryConsentState.Granted)
+        {
+            _telemetryConsentService?.SetState(state);
+        }
+    }
+
     private async Task OpenStoreReviewAsync()
     {
         await _storeService.LaunchAppReviewAsync(CancellationToken.None);
@@ -708,6 +745,8 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
         CaptureWarnBeforeDiscard = _settingsService.Get(CaptureToolSettings.Settings_Capture_WarnBeforeDiscard);
         EditWarnBeforeDiscard = _settingsService.Get(CaptureToolSettings.Settings_Edit_WarnBeforeDiscard);
         RefreshAiFeatureConsents();
+        OptionalUsageDataEnabled = false;
+        _telemetryConsentService?.SetState(TelemetryConsentState.Unknown);
 
         var screenshotsFolder = _settingsService.Get(CaptureToolSettings.Settings_ImageCapture_AutoSaveFolder);
         ScreenshotsFolderPath = !string.IsNullOrEmpty(screenshotsFolder) ? screenshotsFolder : _storageService.GetSystemDefaultScreenshotsFolderPath();

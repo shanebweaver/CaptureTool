@@ -34,6 +34,7 @@ using CaptureTool.Application.Abstractions.Settings.UpdateVideoCaptureAutoSave;
 using CaptureTool.Application.Abstractions.Settings.UpdateVideoCaptureDefaultLocalAudio;
 using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Application.Abstractions.Store;
+using CaptureTool.Application.Abstractions.Telemetry;
 using CaptureTool.Application.Abstractions.Themes;
 using CaptureTool.Domain.Ai;
 using CaptureTool.Presentation.Factories;
@@ -46,6 +47,33 @@ namespace CaptureTool.Presentation.Tests.Features;
 [TestClass]
 public sealed class SettingsPageViewModelAiConsentTests
 {
+    [TestMethod]
+    public async Task LoadAsync_WithTelemetryConsent_ShouldEnableOptionalUsageData()
+    {
+        SettingsPageViewModel viewModel = CreateViewModel(
+            telemetryConsentValue: TelemetryConsentSettingValues.Granted);
+
+        await viewModel.LoadAsync(TestContext.CancellationToken);
+
+        viewModel.OptionalUsageDataEnabled.Should().BeTrue();
+    }
+
+    [TestMethod]
+    public async Task UpdateOptionalUsageDataEnabledCommand_ShouldUpdateConsentGate()
+    {
+        var telemetryConsent = new Mock<ITelemetryConsentService>();
+        SettingsPageViewModel viewModel = CreateViewModel(
+            telemetryConsentService: telemetryConsent.Object);
+        await viewModel.LoadAsync(TestContext.CancellationToken);
+
+        await viewModel.UpdateOptionalUsageDataEnabledCommand.ExecuteAsync(true);
+
+        viewModel.OptionalUsageDataEnabled.Should().BeTrue();
+        telemetryConsent.Verify(
+            service => service.SetState(TelemetryConsentState.Granted),
+            Times.Once);
+    }
+
     [TestMethod]
     public async Task LoadAsync_WhenAiConsentSettingsFeatureDisabled_ShouldHideSectionAndRows()
     {
@@ -198,7 +226,9 @@ public sealed class SettingsPageViewModelAiConsentTests
         bool isImageForegroundExtractionEnabled = false,
         bool isImageObjectEraseEnabled = false,
         bool isImageObjectExtractionEnabled = false,
-        bool isVideoSuperResolutionEnabled = false)
+        bool isVideoSuperResolutionEnabled = false,
+        string telemetryConsentValue = TelemetryConsentSettingValues.Unknown,
+        ITelemetryConsentService? telemetryConsentService = null)
     {
         var localization = new Mock<ILocalizationService>();
         localization
@@ -224,6 +254,9 @@ public sealed class SettingsPageViewModelAiConsentTests
         settings
             .Setup(service => service.Get(It.IsAny<ISettingDefinitionWithValue<string>>()))
             .Returns<ISettingDefinitionWithValue<string>>(definition => definition.Value);
+        settings
+            .Setup(service => service.Get(CaptureToolSettings.Settings_TelemetryConsent))
+            .Returns(telemetryConsentValue);
 
         var aiFeatureConsentService = new Mock<IAiFeatureConsentService>();
         aiFeatureConsentService
@@ -313,7 +346,8 @@ public sealed class SettingsPageViewModelAiConsentTests
             Mock.Of<IImageObjectExtractionFeatureAvailability>(service =>
                 service.IsImageObjectExtractionEnabled == isImageObjectExtractionEnabled),
             Mock.Of<IVideoSuperResolutionFeatureAvailability>(service =>
-                service.IsVideoSuperResolutionEnabled == isVideoSuperResolutionEnabled));
+                service.IsVideoSuperResolutionEnabled == isVideoSuperResolutionEnabled),
+            telemetryConsentService);
     }
 
     public TestContext TestContext { get; set; } = null!;

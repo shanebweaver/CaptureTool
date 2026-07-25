@@ -9,6 +9,7 @@ using CaptureTool.Presentation.Windows.WinUI.AudioCapture;
 using CaptureTool.Presentation.Windows.WinUI.Capture;
 using CaptureTool.Presentation.Windows.WinUI.Edit;
 using CaptureTool.Presentation.Windows.WinUI.EditSessions;
+using CaptureTool.Presentation.Windows.WinUI.Telemetry;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace CaptureTool.Presentation.Windows.WinUI.DependencyInjection;
@@ -30,6 +31,7 @@ public static class WindowsPresentationServiceCollectionExtensions
         services.AddSingleton<IAiFeatureConsentDialogService>(sp => sp.GetRequiredService<AiFeatureConsentDialogService>());
         services.AddSingleton<ImageSuperResolutionPreparationConsentService>();
         services.AddSingleton<IImageSuperResolutionPreparationConsentService>(sp => sp.GetRequiredService<ImageSuperResolutionPreparationConsentService>());
+        services.AddSingleton<TelemetryConsentDialogService>();
         return services;
     }
 }

@@ -1700,4 +1700,31 @@ SOFTWARE.
   <data name="VideoSuperResolutionStatus_Failed" xml:space="preserve">
     <value>Die Videoverbesserung ist fehlgeschlagen.</value>
   </data>
+  <data name="Settings_PrivacyHeaderLabel.Text" xml:space="preserve">
+    <value>Datenschutz</value>
+  </data>
+  <data name="Settings_OptionalUsageData_HeaderLabel.Text" xml:space="preserve">
+    <value>Optionale Nutzungsdaten</value>
+  </data>
+  <data name="Settings_OptionalUsageData_SubtitleLabel.Text" xml:space="preserve">
+    <value>Optionale Nutzungsdaten über Microsoft Store Services senden, um Capture Tool zu verbessern. Daraus werden aggregierte Berichte zur Funktionsnutzung und zu Vorgangsergebnissen erstellt. Aufnahmen, Dateiinformationen, Zwischenablageinhalte, erkannte Texte und von der App generierte Kennungen werden nicht übermittelt.</value>
+  </data>
+  <data name="Settings_OptionalUsageData_Toggle.OnContent" xml:space="preserve">
+    <value>Ein</value>
+  </data>
+  <data name="Settings_OptionalUsageData_Toggle.OffContent" xml:space="preserve">
+    <value>Aus</value>
+  </data>
+  <data name="TelemetryConsentDialog_Title" xml:space="preserve">
+    <value>Helfen Sie, Capture Tool zu verbessern</value>
+  </data>
+  <data name="TelemetryConsentDialog_Content" xml:space="preserve">
+    <value>Erlauben Sie Capture Tool, optionale Nutzungsdaten über Microsoft Store Services zu senden. Diese Daten werden verwendet, um aggregierte Statistiken zur Nutzung von Funktionen und Befehlen sowie zu den Ergebnissen wichtiger Vorgänge zu erstellen. Capture Tool übermittelt keine Aufnahmen, Dateinamen oder -pfade, Zwischenablageinhalte, erkannten Texte oder von der App generierten Kennungen. Sie können diese Einstellung jederzeit in den Einstellungen ändern.</value>
+  </data>
+  <data name="TelemetryConsentDialog_AllowButton" xml:space="preserve">
+    <value>Optionale Daten senden</value>
+  </data>
+  <data name="TelemetryConsentDialog_DontAllowButton" xml:space="preserve">
+    <value>Nicht senden</value>
+  </data>
 </root>

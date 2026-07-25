@@ -1,3 +1,4 @@
+using CaptureTool.Application.Abstractions.Logging;
 using CaptureTool.Application.Abstractions.Telemetry;
 using CaptureTool.Application.Abstractions.UseCases;
 
@@ -5,10 +6,14 @@ namespace CaptureTool.Application.UseCases;
 
 internal sealed class UseCaseExecutor : IUseCaseExecutor
 {
+    private readonly ILogService _logService;
     private readonly ITelemetryService _telemetryService;
 
-    public UseCaseExecutor(ITelemetryService telemetryService)
+    public UseCaseExecutor(
+        ILogService logService,
+        ITelemetryService telemetryService)
     {
+        _logService = logService;
         _telemetryService = telemetryService;
     }
 
@@ -40,30 +45,45 @@ internal sealed class UseCaseExecutor : IUseCaseExecutor
         Func<CancellationToken, Task<TResponse>> useCase,
         CancellationToken cancellationToken)
     {
-        _telemetryService.ActivityInitiated(activityId);
+        _logService.LogInformation($"Activity initiated: {activityId}");
 
         try
         {
             if (cancellationToken.IsCancellationRequested)
             {
-                _telemetryService.ActivityCanceled(activityId);
+                _logService.LogInformation($"Activity canceled: {activityId}");
+                TrackAction(activityId, TelemetryOutcomes.Canceled);
                 return UseCaseResponse<TResponse>.Cancelled();
             }
 
             TResponse response = await useCase(cancellationToken);
 
-            _telemetryService.ActivityCompleted(activityId);
+            _logService.LogInformation($"Activity completed: {activityId}");
+            TrackAction(activityId, TelemetryOutcomes.Succeeded);
             return UseCaseResponse<TResponse>.Success(response);
         }
         catch (OperationCanceledException exception)
         {
-            _telemetryService.ActivityCanceled(activityId, exception.Message);
+            _logService.LogInformation($"Activity canceled: {activityId} - Message: {exception.Message}");
+            TrackAction(activityId, TelemetryOutcomes.Canceled);
             return UseCaseResponse<TResponse>.Cancelled();
         }
         catch (Exception exception)
         {
-            _telemetryService.ActivityError(activityId, exception);
+            _logService.LogException(exception, $"Activity error: {activityId}");
+            TrackAction(activityId, TelemetryOutcomes.Failed);
             return UseCaseResponse<TResponse>.Failure();
         }
+    }
+
+    private void TrackAction(string activityId, string outcome)
+    {
+        _telemetryService.TrackEvent(
+            TelemetryEvents.UseCaseCompleted,
+            new Dictionary<string, object?>
+            {
+                [TelemetryProperties.Action] = activityId,
+                [TelemetryProperties.Outcome] = outcome
+            });
     }
 }

@@ -2,6 +2,8 @@ using CaptureTool.Application.Abstractions.Edit.Audio.CopyAudioFile;
 using CaptureTool.Application.Abstractions.Edit.Audio.SaveAudioFile;
 using CaptureTool.Application.Abstractions.Edit.External;
 using CaptureTool.Application.Abstractions.Settings.OpenAudioFolder;
+using CaptureTool.Application.Abstractions.Telemetry;
+using CaptureTool.Application.Abstractions.UseCases;
 using CaptureTool.Domain.FileSystem;
 using CaptureTool.Presentation.Features.Audio;
 using CaptureTool.Presentation.ViewModels;
@@ -37,6 +39,7 @@ public sealed partial class AudioEditPageViewModel : LoadableViewModelBase<Audio
     private readonly IOpenExternalEditorUseCase _openExternalEditorAction;
     private readonly IOpenAudioFolderUseCase _openAudioFolderAction;
     private readonly IAudioWaveformHistory _waveformHistory;
+    private readonly ITelemetryService? _telemetryService;
 
     public ObservableCollection<AudioWaveformBarViewModel> WaveformBars
     {
@@ -49,13 +52,15 @@ public sealed partial class AudioEditPageViewModel : LoadableViewModelBase<Audio
         ICopyAudioFileUseCase copyAction,
         IOpenExternalEditorUseCase openExternalEditorAction,
         IOpenAudioFolderUseCase openAudioFolderAction,
-        IAudioWaveformHistory waveformHistory)
+        IAudioWaveformHistory waveformHistory,
+        ITelemetryService? telemetryService = null)
     {
         _saveAction = saveAction;
         _copyAction = copyAction;
         _openExternalEditorAction = openExternalEditorAction;
         _openAudioFolderAction = openAudioFolderAction;
         _waveformHistory = waveformHistory;
+        _telemetryService = telemetryService;
 
         SaveCommand = new AsyncRelayCommand(SaveAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
         CopyCommand = new AsyncRelayCommand(CopyAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
@@ -77,6 +82,7 @@ public sealed partial class AudioEditPageViewModel : LoadableViewModelBase<Audio
         ResetWaveform();
 
         base.Load(audio);
+        TrackEditorOpened();
     }
 
     public IReadOnlyList<double>? GetCapturedWaveformLevels(string audioPath)
@@ -114,7 +120,13 @@ public sealed partial class AudioEditPageViewModel : LoadableViewModelBase<Audio
             return;
         }
 
-        await _saveAction.ExecuteAsync(new SaveAudioFileRequest(AudioPath), CancellationToken.None);
+        var response = await _saveAction.ExecuteAsync(
+            new SaveAudioFileRequest(AudioPath),
+            CancellationToken.None);
+        TrackOutput(
+            "save",
+            response?.Result ?? UseCaseResult.Failed,
+            response?.Value?.Saved == true);
     }
 
     private async Task CopyAsync()
@@ -124,7 +136,13 @@ public sealed partial class AudioEditPageViewModel : LoadableViewModelBase<Audio
             return;
         }
 
-        await _copyAction.ExecuteAsync(new CopyAudioFileRequest(AudioPath), CancellationToken.None);
+        var response = await _copyAction.ExecuteAsync(
+            new CopyAudioFileRequest(AudioPath),
+            CancellationToken.None);
+        TrackOutput(
+            "copy",
+            response?.Result ?? UseCaseResult.Failed,
+            response?.Value?.Copied == true);
     }
 
     private async Task OpenAudioFolderAsync()
@@ -139,8 +157,39 @@ public sealed partial class AudioEditPageViewModel : LoadableViewModelBase<Audio
             return;
         }
 
-        await _openExternalEditorAction.ExecuteAsync(
+        var response = await _openExternalEditorAction.ExecuteAsync(
             new OpenExternalEditorRequest(AudioPath, ExternalMediaEditor.Clipchamp),
             CancellationToken.None);
+        TrackOutput(
+            "open_external_editor",
+            response?.Result ?? UseCaseResult.Failed,
+            response?.Value?.Opened == true);
+    }
+
+    private void TrackEditorOpened()
+    {
+        _telemetryService?.TrackEvent(
+            TelemetryEvents.EditorOpened,
+            new Dictionary<string, object?>
+            {
+                [TelemetryProperties.MediaType] = "audio"
+            });
+    }
+
+    private void TrackOutput(string operation, UseCaseResult result, bool completed)
+    {
+        _telemetryService?.TrackEvent(
+            TelemetryEvents.OutputCompleted,
+            new Dictionary<string, object?>
+            {
+                [TelemetryProperties.Operation] = operation,
+                [TelemetryProperties.MediaType] = "audio",
+                [TelemetryProperties.Outcome] = result == UseCaseResult.Cancelled
+                    ? TelemetryOutcomes.Canceled
+                    : result == UseCaseResult.Succeeded && completed
+                        ? TelemetryOutcomes.Succeeded
+                        : TelemetryOutcomes.Failed,
+                [TelemetryProperties.Source] = "audio_editor"
+            });
     }
 }

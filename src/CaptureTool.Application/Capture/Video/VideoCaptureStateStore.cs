@@ -76,7 +76,12 @@ internal sealed class VideoCaptureStateStore
             bool wasPaused = _activeSession.Status == VideoCaptureStatus.Paused;
             PendingVideoFile pendingVideo = _activeSession.BeginFinalizing();
             _idleAudioSettings = _activeSession.AudioSettings;
-            return new VideoCaptureFinalization(_activeSession.Id, pendingVideo, wasPaused);
+            return new VideoCaptureFinalization(
+                _activeSession.Id,
+                pendingVideo,
+                wasPaused,
+                _activeSession.Target,
+                _activeSession.AudioSettings);
         }
     }
 

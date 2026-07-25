@@ -2,6 +2,7 @@ using CaptureTool.Application.Abstractions.Capture;
 using CaptureTool.Application.Abstractions.Files;
 using CaptureTool.Application.Abstractions.Settings;
 using CaptureTool.Application.Abstractions.Storage;
+using CaptureTool.Application.Abstractions.Telemetry;
 using CaptureTool.Domain.Capture;
 using CaptureTool.Domain.FileSystem;
 
@@ -16,6 +17,7 @@ internal sealed class AudioCaptureWorkflow : IAudioCaptureWorkflow
     private readonly AudioCaptureStateStore _stateStore;
     private readonly AudioCapturePostProcessor _postProcessor;
     private readonly AudioCaptureFileNameGenerator _fileNameGenerator;
+    private readonly ITelemetryService? _telemetryService;
 
     public event EventHandler<AudioCaptureState>? CaptureStateChanged;
     public event EventHandler<bool>? MutedStateChanged;
@@ -39,7 +41,8 @@ internal sealed class AudioCaptureWorkflow : IAudioCaptureWorkflow
         IStorageService storageService,
         AudioCaptureStateStore stateStore,
         AudioCapturePostProcessor postProcessor,
-        AudioCaptureFileNameGenerator fileNameGenerator)
+        AudioCaptureFileNameGenerator fileNameGenerator,
+        ITelemetryService? telemetryService = null)
     {
         _audioRecorder = audioRecorder;
         _fileSystem = fileSystem;
@@ -48,6 +51,7 @@ internal sealed class AudioCaptureWorkflow : IAudioCaptureWorkflow
         _stateStore = stateStore;
         _postProcessor = postProcessor;
         _fileNameGenerator = fileNameGenerator;
+        _telemetryService = telemetryService;
 
         _audioRecorder.AudioLevelCaptured += OnAudioLevelCaptured;
     }
@@ -56,6 +60,7 @@ internal sealed class AudioCaptureWorkflow : IAudioCaptureWorkflow
     {
         bool defaultDesktopAudioEnabled = _settingsService.Get(CaptureToolSettings.Settings_AudioCapture_DefaultLocalAudioEnabled);
         _stateStore.PrepareForAudioCapture(defaultDesktopAudioEnabled);
+        TrackCapture(TelemetryEvents.CaptureRequested);
 
         string tempAudioPath = Path.Combine(
             _storageService.GetApplicationTemporaryFolderPath(),
@@ -70,10 +75,12 @@ internal sealed class AudioCaptureWorkflow : IAudioCaptureWorkflow
         catch
         {
             _stateStore.StopSession(session.Id);
+            TrackCapture(TelemetryEvents.CaptureFailed, TelemetryOutcomes.Failed);
             throw;
         }
 
         CaptureStateChanged?.Invoke(this, AudioCaptureState.Recording);
+        TrackCapture(TelemetryEvents.CaptureStarted);
     }
 
     public AudioFile StopCapture()
@@ -85,6 +92,11 @@ internal sealed class AudioCaptureWorkflow : IAudioCaptureWorkflow
         {
             audioFile = _audioRecorder.StopCapture();
         }
+        catch
+        {
+            TrackCapture(TelemetryEvents.CaptureFailed, TelemetryOutcomes.Failed);
+            throw;
+        }
         finally
         {
             _stateStore.StopSession(sessionId);
@@ -93,7 +105,7 @@ internal sealed class AudioCaptureWorkflow : IAudioCaptureWorkflow
         CaptureStateChanged?.Invoke(this, AudioCaptureState.Stopped);
         NewAudioCaptured?.Invoke(this, audioFile);
         _postProcessor.Process(audioFile);
-
+        TrackCapture(TelemetryEvents.CaptureCompleted, TelemetryOutcomes.Succeeded);
         return audioFile;
     }
 
@@ -105,11 +117,15 @@ internal sealed class AudioCaptureWorkflow : IAudioCaptureWorkflow
             return;
         }
 
-        AudioFile? audioFile = null;
-
+        AudioFile? audioFile;
         try
         {
             audioFile = _audioRecorder.StopCapture();
+        }
+        catch
+        {
+            TrackCapture(TelemetryEvents.CaptureFailed, TelemetryOutcomes.Failed);
+            throw;
         }
         finally
         {
@@ -117,11 +133,21 @@ internal sealed class AudioCaptureWorkflow : IAudioCaptureWorkflow
             CaptureStateChanged?.Invoke(this, AudioCaptureState.Stopped);
         }
 
-        DeleteCanceledAudioFile(session.TempAudioPath);
-        if (audioFile is not null &&
-            !string.Equals(audioFile.FilePath, session.TempAudioPath, StringComparison.OrdinalIgnoreCase))
+        try
         {
-            DeleteCanceledAudioFile(audioFile.FilePath);
+            DeleteCanceledAudioFile(session.TempAudioPath);
+            if (audioFile is not null &&
+                !string.Equals(audioFile.FilePath, session.TempAudioPath, StringComparison.OrdinalIgnoreCase))
+            {
+                DeleteCanceledAudioFile(audioFile.FilePath);
+            }
+
+            TrackCapture(TelemetryEvents.CaptureCanceled, TelemetryOutcomes.Canceled);
+        }
+        catch
+        {
+            TrackCapture(TelemetryEvents.CaptureFailed, TelemetryOutcomes.Failed);
+            throw;
         }
     }
 
@@ -181,5 +207,25 @@ internal sealed class AudioCaptureWorkflow : IAudioCaptureWorkflow
         {
             _fileSystem.DeleteFile(filePath);
         }
+    }
+
+    private void TrackCapture(string eventName, string? outcome = null)
+    {
+        AudioCaptureStateSnapshot snapshot = Snapshot;
+        var properties = new Dictionary<string, object?>
+        {
+            [TelemetryProperties.MediaType] = "audio",
+            [TelemetryProperties.CaptureType] = "audio_only",
+            [TelemetryProperties.DesktopAudioEnabled] = snapshot.IsDesktopAudioEnabled,
+            [TelemetryProperties.AudioInputEnabled] =
+                snapshot.SelectedAudioInputSourceId is not null && !snapshot.IsMuted
+        };
+
+        if (outcome is not null)
+        {
+            properties[TelemetryProperties.Outcome] = outcome;
+        }
+
+        _telemetryService?.TrackEvent(eventName, properties);
     }
 }

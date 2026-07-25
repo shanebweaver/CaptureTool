@@ -1,6 +1,7 @@
 using CaptureTool.Application.Abstractions.Logging;
 using CaptureTool.Application.Abstractions.Settings;
 using CaptureTool.Application.Abstractions.Settings.Definitions;
+using CaptureTool.Application.Abstractions.Telemetry;
 using CaptureTool.Domain.FileSystem;
 using CaptureTool.Infrastructure.Settings;
 using CaptureTool.Infrastructure.Storage;
@@ -50,6 +51,31 @@ public sealed class LocalSettingsServiceTests
         Assert.AreEqual(@"C:\Captures", service.Get(definition));
         Assert.IsTrue(service.IsSet(definition));
         Assert.AreEqual(1, changedCount);
+    }
+
+    [TestMethod]
+    public async Task Set_TracksOnlyAllowListedSettingsWithSafeValues()
+    {
+        var telemetry = new RecordingTelemetryService();
+        using var service = new LocalSettingsService(
+            new TestLogService(),
+            new TestJsonStorageService(),
+            telemetry);
+        await service.InitializeAsync("settings.json", TestContext.CancellationToken);
+
+        service.Set(CaptureToolSettings.Settings_ImageCapture_AutoCopy, false);
+        service.Set(
+            CaptureToolSettings.Settings_ImageCapture_AutoSaveFolder,
+            @"C:\Private\Screenshots");
+
+        Assert.HasCount(1, telemetry.Events);
+        var trackedEvent = telemetry.Events.Single();
+        Assert.AreEqual(TelemetryEvents.SettingsChanged, trackedEvent.Name);
+        Assert.AreEqual(
+            CaptureToolSettings.Settings_ImageCapture_AutoCopy.Key,
+            trackedEvent.Properties[TelemetryProperties.Setting]);
+        Assert.IsFalse((bool)trackedEvent.Properties[TelemetryProperties.Value]!);
+        Assert.IsFalse(trackedEvent.Properties.Values.Contains(@"C:\Private\Screenshots"));
     }
 
     [TestMethod]
@@ -178,5 +204,17 @@ public sealed class LocalSettingsServiceTests
         public void LogException(Exception e, string? message = null) => LastMessage = message;
         public void LogInformation(string info) { }
         public void LogWarning(string warning) { }
+    }
+
+    private sealed class RecordingTelemetryService : ITelemetryService
+    {
+        public List<(string Name, IReadOnlyDictionary<string, object?> Properties)> Events { get; } = [];
+
+        public void TrackEvent(
+            string eventName,
+            IReadOnlyDictionary<string, object?>? properties = null)
+        {
+            Events.Add((eventName, properties ?? new Dictionary<string, object?>()));
+        }
     }
 }

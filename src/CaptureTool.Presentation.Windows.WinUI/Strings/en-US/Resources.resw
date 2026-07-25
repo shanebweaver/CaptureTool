@@ -1935,4 +1935,31 @@ SOFTWARE.
   <data name="VideoSuperResolutionStatus_Failed" xml:space="preserve">
     <value>Video enhancement failed.</value>
   </data>
+  <data name="Settings_PrivacyHeaderLabel.Text" xml:space="preserve">
+    <value>Privacy</value>
+  </data>
+  <data name="Settings_OptionalUsageData_HeaderLabel.Text" xml:space="preserve">
+    <value>Optional usage data</value>
+  </data>
+  <data name="Settings_OptionalUsageData_SubtitleLabel.Text" xml:space="preserve">
+    <value>Send optional usage data through Microsoft Store Services to help improve Capture Tool. This produces aggregate reports of feature usage and operation outcomes. Captures, file information, clipboard contents, recognized text, and app-generated identifiers are not included.</value>
+  </data>
+  <data name="Settings_OptionalUsageData_Toggle.OnContent" xml:space="preserve">
+    <value>On</value>
+  </data>
+  <data name="Settings_OptionalUsageData_Toggle.OffContent" xml:space="preserve">
+    <value>Off</value>
+  </data>
+  <data name="TelemetryConsentDialog_Title" xml:space="preserve">
+    <value>Help improve Capture Tool</value>
+  </data>
+  <data name="TelemetryConsentDialog_Content" xml:space="preserve">
+    <value>Allow Capture Tool to send optional usage data through Microsoft Store Services. This data is used to produce aggregate counts of feature and command usage and outcomes for key operations. Capture Tool does not include captures, file names or paths, clipboard contents, recognized text, or app-generated identifiers. You can change this setting at any time in Settings.</value>
+  </data>
+  <data name="TelemetryConsentDialog_AllowButton" xml:space="preserve">
+    <value>Send optional data</value>
+  </data>
+  <data name="TelemetryConsentDialog_DontAllowButton" xml:space="preserve">
+    <value>Don't send</value>
+  </data>
 </root>

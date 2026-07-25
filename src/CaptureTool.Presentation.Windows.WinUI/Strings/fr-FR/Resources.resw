@@ -1706,4 +1706,31 @@ SOFTWARE.
   <data name="VideoSuperResolutionStatus_Failed" xml:space="preserve">
     <value>Échec de l’amélioration de la vidéo.</value>
   </data>
+  <data name="Settings_PrivacyHeaderLabel.Text" xml:space="preserve">
+    <value>Confidentialité</value>
+  </data>
+  <data name="Settings_OptionalUsageData_HeaderLabel.Text" xml:space="preserve">
+    <value>Données d’utilisation facultatives</value>
+  </data>
+  <data name="Settings_OptionalUsageData_SubtitleLabel.Text" xml:space="preserve">
+    <value>Envoyez des données d’utilisation facultatives par l’intermédiaire des services du Microsoft Store afin d’améliorer Capture Tool. Elles permettent de produire des rapports agrégés sur l’utilisation des fonctionnalités et le résultat des opérations. Les captures, informations sur les fichiers, contenu du Presse-papiers, texte reconnu et identifiants générés par l’application ne sont pas inclus.</value>
+  </data>
+  <data name="Settings_OptionalUsageData_Toggle.OnContent" xml:space="preserve">
+    <value>Activé</value>
+  </data>
+  <data name="Settings_OptionalUsageData_Toggle.OffContent" xml:space="preserve">
+    <value>Désactivé</value>
+  </data>
+  <data name="TelemetryConsentDialog_Title" xml:space="preserve">
+    <value>Contribuer à l’amélioration de Capture Tool</value>
+  </data>
+  <data name="TelemetryConsentDialog_Content" xml:space="preserve">
+    <value>Autorisez Capture Tool à envoyer des données d’utilisation facultatives par l’intermédiaire des services du Microsoft Store. Ces données servent à produire des statistiques agrégées sur l’utilisation des fonctionnalités et des commandes, ainsi que sur le résultat des opérations importantes. Capture Tool n’inclut pas les captures, les noms ou chemins de fichiers, le contenu du Presse-papiers, le texte reconnu ni les identifiants générés par l’application. Vous pouvez modifier ce paramètre à tout moment dans les Paramètres.</value>
+  </data>
+  <data name="TelemetryConsentDialog_AllowButton" xml:space="preserve">
+    <value>Envoyer les données facultatives</value>
+  </data>
+  <data name="TelemetryConsentDialog_DontAllowButton" xml:space="preserve">
+    <value>Ne pas envoyer</value>
+  </data>
 </root>

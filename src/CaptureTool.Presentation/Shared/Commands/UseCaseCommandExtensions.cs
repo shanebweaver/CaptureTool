@@ -113,17 +113,16 @@ internal static class UseCaseCommandExtensions
 
         try
         {
-            telemetryService?.ActivityInitiated(resolvedActivityId);
-            await useCase.ExecuteAsync(requestFactory(), cancellationToken);
-            telemetryService?.ActivityCompleted(resolvedActivityId);
+            UseCaseResponse<TResponse> response = await useCase.ExecuteAsync(requestFactory(), cancellationToken);
+            TrackAction(telemetryService, resolvedActivityId, ResolveOutcome(response.Result));
         }
-        catch (OperationCanceledException exception)
+        catch (OperationCanceledException)
         {
-            telemetryService?.ActivityCanceled(resolvedActivityId, exception.Message);
+            TrackAction(telemetryService, resolvedActivityId, TelemetryOutcomes.Canceled);
         }
-        catch (Exception exception)
+        catch (Exception)
         {
-            telemetryService?.ActivityError(resolvedActivityId, exception);
+            TrackAction(telemetryService, resolvedActivityId, TelemetryOutcomes.Failed);
         }
     }
 
@@ -156,11 +155,36 @@ internal static class UseCaseCommandExtensions
         {
             return conditional.CanExecute(requestFactory());
         }
-        catch (Exception exception)
+        catch (Exception)
         {
-            telemetryService?.ActivityError(resolvedActivityId, exception, "CanExecute failed.");
+            TrackAction(telemetryService, resolvedActivityId, TelemetryOutcomes.Failed);
             return false;
         }
+    }
+
+    private static void TrackAction(
+        ITelemetryService? telemetryService,
+        string activityId,
+        string outcome)
+    {
+        telemetryService?.TrackEvent(
+            TelemetryEvents.UserAction,
+            new Dictionary<string, object?>
+            {
+                [TelemetryProperties.Action] = activityId,
+                [TelemetryProperties.Outcome] = outcome
+            });
+    }
+
+    private static string ResolveOutcome(UseCaseResult result)
+    {
+        return result switch
+        {
+            UseCaseResult.Succeeded => TelemetryOutcomes.Succeeded,
+            UseCaseResult.Cancelled => TelemetryOutcomes.Canceled,
+            UseCaseResult.Failed => TelemetryOutcomes.Failed,
+            _ => throw new ArgumentOutOfRangeException(nameof(result), result, null)
+        };
     }
 
     private static string ResolveActivityId(object useCase, string? activityId)

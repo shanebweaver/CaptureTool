@@ -11,6 +11,7 @@ using CaptureTool.Application.Abstractions.Shell.AppMenu.ExitApplication;
 using CaptureTool.Application.Abstractions.Shell.AppMenu.OpenFile;
 using CaptureTool.Application.Abstractions.Store;
 using CaptureTool.Application.Abstractions.Store.OpenStorePage;
+using CaptureTool.Application.Abstractions.Telemetry;
 using CaptureTool.Domain.Capture;
 using CaptureTool.Domain.FileSystem;
 using CaptureTool.Presentation.Factories;
@@ -82,7 +83,8 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
         IAudioCaptureState audioCaptureState,
         IFactoryServiceWithArgs<RecentCaptureViewModel, string> recentCaptureViewModelFactory,
         IRecentCapturesChangeNotifier recentCapturesChangeNotifier,
-        IEditSessionGuard? editSessionGuard = null)
+        IEditSessionGuard? editSessionGuard = null,
+        ITelemetryService? telemetryService = null)
     {
         _imageCaptureState = imageCaptureState;
         _videoCaptureState = videoCaptureState;
@@ -98,16 +100,56 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
         _recentCaptureViewModelFactory = recentCaptureViewModelFactory;
         _recentCapturesChangeNotifier = recentCapturesChangeNotifier;
 
-        NewImageCaptureCommand = new AsyncRelayCommand(() => OpenSelectionOverlayAsync(CaptureOptions.ImageDefault), AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
-        NewVideoCaptureCommand = new AsyncRelayCommand(() => OpenSelectionOverlayAsync(CaptureOptions.VideoDefault), AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
-        NewAudioCaptureCommand = new AsyncRelayCommand(OpenAudioCapturePageAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
-        OpenFileCommand = new AsyncRelayCommand(OpenFileAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
-        NavigateToSettingsCommand = openSettingsPageCommand.ToRelayCommand(() => new OpenSettingsPageRequest());
-        ShowAboutAppCommand = openAboutPageCommand.ToRelayCommand(() => new OpenAboutPageRequest());
-        ShowAddOnsCommand = new AsyncRelayCommand(OpenStorePageAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
-        ExitApplicationCommand = new AsyncRelayCommand(ExitApplicationAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
+        NewImageCaptureCommand = TelemetryCommandFactory.Async(
+            "new_image_capture",
+            () => OpenSelectionOverlayAsync(CaptureOptions.ImageDefault),
+            telemetryService,
+            "app_menu");
+        NewVideoCaptureCommand = TelemetryCommandFactory.Async(
+            "new_video_capture",
+            () => OpenSelectionOverlayAsync(CaptureOptions.VideoDefault),
+            telemetryService,
+            "app_menu");
+        NewAudioCaptureCommand = TelemetryCommandFactory.Async(
+            "new_audio_capture",
+            OpenAudioCapturePageAsync,
+            telemetryService,
+            "app_menu");
+        OpenFileCommand = TelemetryCommandFactory.Async(
+            "open_file",
+            OpenFileAsync,
+            telemetryService,
+            "app_menu");
+        NavigateToSettingsCommand = TelemetryCommandFactory.Async(
+            "open_settings",
+            async () => await openSettingsPageCommand.ExecuteAsync(
+                new OpenSettingsPageRequest(),
+                CancellationToken.None),
+            telemetryService,
+            "app_menu");
+        ShowAboutAppCommand = TelemetryCommandFactory.Async(
+            "open_about",
+            async () => await openAboutPageCommand.ExecuteAsync(
+                new OpenAboutPageRequest(),
+                CancellationToken.None),
+            telemetryService,
+            "app_menu");
+        ShowAddOnsCommand = TelemetryCommandFactory.Async(
+            "open_add_ons",
+            OpenStorePageAsync,
+            telemetryService,
+            "app_menu");
+        ExitApplicationCommand = TelemetryCommandFactory.Async(
+            "exit_application",
+            ExitApplicationAsync,
+            telemetryService,
+            "app_menu");
         RefreshRecentCapturesCommand = new AsyncRelayCommand(RefreshRecentCapturesAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
-        OpenRecentCaptureCommand = new AsyncRelayCommand<RecentCaptureViewModel>(OpenRecentCaptureAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
+        OpenRecentCaptureCommand = TelemetryCommandFactory.Async<RecentCaptureViewModel>(
+            "open_recent_capture",
+            OpenRecentCaptureAsync,
+            telemetryService,
+            "app_menu");
 
         ShowAddOnsOption = storeFeatureAvailability.IsStoreEnabled;
         RecentCaptures = [];

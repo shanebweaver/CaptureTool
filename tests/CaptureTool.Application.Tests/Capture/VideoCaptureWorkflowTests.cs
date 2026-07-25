@@ -1,10 +1,10 @@
 using CaptureTool.Application.Abstractions.Capture;
 using CaptureTool.Application.Abstractions.Clipboard;
 using CaptureTool.Application.Abstractions.Files;
+using CaptureTool.Application.Abstractions.Logging;
 using CaptureTool.Application.Abstractions.Settings;
 using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Application.Abstractions.TaskEnvironment;
-using CaptureTool.Application.Abstractions.Telemetry;
 using CaptureTool.Application.Capture.Video;
 using CaptureTool.Domain.Capture;
 using CaptureTool.Domain.FileSystem;
@@ -232,7 +232,7 @@ public sealed class VideoCaptureWorkflowTests
             settings.Object,
             storage.Object,
             taskEnvironment.Object,
-            Mock.Of<ITelemetryService>(),
+            Mock.Of<ILogService>(),
             fileNameGenerator);
 
         var workflow = new VideoCaptureWorkflow(

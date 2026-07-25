@@ -4,6 +4,8 @@ using CaptureTool.Application.Abstractions.Diagnostics.GetCurrentLogs;
 using CaptureTool.Application.Abstractions.Diagnostics.GetIsLoggingEnabled;
 using CaptureTool.Application.Abstractions.Diagnostics.UpdateLoggingState;
 using CaptureTool.Application.Abstractions.Logging;
+using CaptureTool.Application.Abstractions.Telemetry;
+using CaptureTool.Application.Abstractions.UseCases;
 using CaptureTool.Presentation.ViewModels;
 using CommunityToolkit.Mvvm.Input;
 
@@ -17,6 +19,7 @@ public sealed partial class DiagnosticsViewModel : ViewModelBase
     private readonly IGetIsLoggingEnabledUseCase _getIsLoggingEnabledQuery;
     private readonly IGetCurrentLogsUseCase _getCurrentLogsQuery;
     private readonly ILogService _logService;
+    private readonly ITelemetryService? _telemetryService;
 
     public IAsyncRelayCommand ClearLogsCommand { get; }
     public IAsyncRelayCommand ExportLogsCommand { get; }
@@ -40,13 +43,15 @@ public sealed partial class DiagnosticsViewModel : ViewModelBase
         IUpdateLoggingStateUseCase updateLoggingEnablementCommand,
         IGetIsLoggingEnabledUseCase getIsLoggingEnabledQuery,
         IGetCurrentLogsUseCase getCurrentLogsQuery,
-        ILogService logService)
+        ILogService logService,
+        ITelemetryService? telemetryService = null)
     {
         _clearLogsCommand = clearLogsCommand;
         _exportLogsCommand = exportLogsCommand;
         _updateLoggingStateCommand = updateLoggingEnablementCommand;
         _getIsLoggingEnabledQuery = getIsLoggingEnabledQuery;
         _getCurrentLogsQuery = getCurrentLogsQuery;
+        _telemetryService = telemetryService;
 
         _logService = logService;
         _logService.LogAdded += OnLogAdded;
@@ -79,17 +84,46 @@ public sealed partial class DiagnosticsViewModel : ViewModelBase
     private async Task UpdateLoggingEnablementAsync(bool newValue)
     {
         IsLoggingEnabled = newValue;
-        await _updateLoggingStateCommand.ExecuteAsync(new UpdateLoggingStateRequest(newValue), CancellationToken.None);
+        var response = await _updateLoggingStateCommand.ExecuteAsync(
+            new UpdateLoggingStateRequest(newValue),
+            CancellationToken.None);
+        TrackDiagnosticsAction(
+            "update_logging",
+            response?.Result ?? UseCaseResult.Failed,
+            newValue);
     }
 
     private async Task ClearLogsAsync()
     {
         Logs = string.Empty;
-        await _clearLogsCommand.ExecuteAsync(new ClearLogsRequest(), CancellationToken.None);
+        var response = await _clearLogsCommand.ExecuteAsync(new ClearLogsRequest(), CancellationToken.None);
+        TrackDiagnosticsAction("clear_logs", response?.Result ?? UseCaseResult.Failed);
     }
 
     private async Task ExportLogsAsync()
     {
-        await _exportLogsCommand.ExecuteAsync(new ExportLogsRequest(), CancellationToken.None);
+        var response = await _exportLogsCommand.ExecuteAsync(new ExportLogsRequest(), CancellationToken.None);
+        TrackDiagnosticsAction("export_logs", response?.Result ?? UseCaseResult.Failed);
+    }
+
+    private void TrackDiagnosticsAction(string action, UseCaseResult result, bool? enabled = null)
+    {
+        Dictionary<string, object?> properties = new()
+        {
+            [TelemetryProperties.Action] = action,
+            [TelemetryProperties.Outcome] = result switch
+            {
+                UseCaseResult.Succeeded => TelemetryOutcomes.Succeeded,
+                UseCaseResult.Cancelled => TelemetryOutcomes.Canceled,
+                _ => TelemetryOutcomes.Failed
+            }
+        };
+
+        if (enabled.HasValue)
+        {
+            properties[TelemetryProperties.Enabled] = enabled.Value;
+        }
+
+        _telemetryService?.TrackEvent(TelemetryEvents.DiagnosticsAction, properties);
     }
 }

@@ -10,6 +10,7 @@ using CaptureTool.Presentation.Windows.WinUI.AudioCapture;
 using CaptureTool.Presentation.Windows.WinUI.Capture;
 using CaptureTool.Presentation.Windows.WinUI.Edit;
 using CaptureTool.Presentation.Windows.WinUI.EditSessions;
+using CaptureTool.Presentation.Windows.WinUI.Telemetry;
 using CaptureTool.Presentation.Windows.WinUI.UiTests;
 using CaptureTool.Presentation.Windows.WinUI.Utils;
 using CaptureTool.Presentation.Windows.WinUI.Xaml.Pages;
@@ -41,6 +42,7 @@ public sealed partial class MainWindow : Window
     private readonly WinUIEditSessionConfirmationService _editSessionConfirmationService;
     private readonly AiFeatureConsentDialogService _aiFeatureConsentDialogService;
     private readonly ImageSuperResolutionPreparationConsentService _imageSuperResolutionPreparationConsentService;
+    private readonly TelemetryConsentDialogService _telemetryConsentDialogService;
     private readonly DispatcherQueueTimer _notificationTimer;
 
     public MainWindowViewModel ViewModel { get; } = ViewModelLocator.GetViewModel<MainWindowViewModel>();
@@ -59,6 +61,7 @@ public sealed partial class MainWindow : Window
         _editSessionConfirmationService = App.Current.ServiceProvider.GetService<WinUIEditSessionConfirmationService>();
         _aiFeatureConsentDialogService = App.Current.ServiceProvider.GetService<AiFeatureConsentDialogService>();
         _imageSuperResolutionPreparationConsentService = App.Current.ServiceProvider.GetService<ImageSuperResolutionPreparationConsentService>();
+        _telemetryConsentDialogService = App.Current.ServiceProvider.GetService<TelemetryConsentDialogService>();
 
         if (AppWindow.Presenter is OverlappedPresenter presenter)
         {
@@ -88,14 +91,27 @@ public sealed partial class MainWindow : Window
         RestartNotificationTimer();
     }
 
-    private void RootGrid_Loaded(object sender, RoutedEventArgs e)
+    private async void RootGrid_Loaded(object sender, RoutedEventArgs e)
     {
         _editSessionConfirmationService.XamlRoot = RootGrid.XamlRoot;
         _audioCaptureNavigationConfirmationService.XamlRoot = RootGrid.XamlRoot;
         _captureDiscardConfirmationService.XamlRoot = RootGrid.XamlRoot;
         _aiFeatureConsentDialogService.XamlRoot = RootGrid.XamlRoot;
         _imageSuperResolutionPreparationConsentService.XamlRoot = RootGrid.XamlRoot;
+        _telemetryConsentDialogService.XamlRoot = RootGrid.XamlRoot;
         NavigateToUiTestImageWhenRequested();
+
+        if (!UiTestLaunchOptions.Current.IsEnabled)
+        {
+            try
+            {
+                await _telemetryConsentDialogService.RequestConsentIfNeededAsync();
+            }
+            catch (Exception ex)
+            {
+                _logService.LogException(ex, "Failed to request telemetry consent.");
+            }
+        }
     }
 
     private void NavigateToUiTestImageWhenRequested()

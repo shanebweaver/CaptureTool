@@ -708,6 +708,51 @@
                     </ItemsControl>
                 </StackPanel>
 
+                <!--  Privacy section  -->
+                <StackPanel Spacing="4">
+                    <TextBlock x:Uid="Settings_PrivacyHeaderLabel" Margin="0,4" />
+
+                    <Grid
+                        Padding="16,12"
+                        Background="{ThemeResource CardBackgroundFillColorDefault}"
+                        BorderBrush="{ThemeResource CardStrokeColorDefault}"
+                        BorderThickness="1"
+                        ColumnSpacing="16"
+                        CornerRadius="4">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="28" />
+                        </Grid.ColumnDefinitions>
+
+                        <SymbolIcon Symbol="Permissions" />
+
+                        <StackPanel Grid.Column="1">
+                            <TextBlock
+                                x:Uid="Settings_OptionalUsageData_HeaderLabel"
+                                MaxLines="2"
+                                TextTrimming="WordEllipsis"
+                                TextWrapping="WrapWholeWords" />
+                            <TextBlock
+                                x:Uid="Settings_OptionalUsageData_SubtitleLabel"
+                                FontSize="12"
+                                Opacity=".75"
+                                TextWrapping="WrapWholeWords" />
+                        </StackPanel>
+
+                        <ToggleSwitch
+                            x:Name="OptionalUsageDataToggleSwitch"
+                            x:Uid="Settings_OptionalUsageData_Toggle"
+                            Grid.Column="2"
+                            MinWidth="0"
+                            HorizontalAlignment="Right"
+                            AutomationProperties.AutomationId="OptionalUsageDataToggleSwitch"
+                            IsOn="{x:Bind ViewModel.OptionalUsageDataEnabled, Mode=OneWay}"
+                            Toggled="OptionalUsageDataToggleSwitch_Toggled" />
+                    </Grid>
+                </StackPanel>
+
                 <!--  Appearance section  -->
                 <StackPanel Spacing="4">
                     <TextBlock x:Uid="Settings_AppearanceHeaderLabel" Margin="0,4" />

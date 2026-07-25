@@ -1,4 +1,5 @@
 using CaptureTool.Application.Abstractions.Navigation;
+using CaptureTool.Application.Abstractions.Telemetry;
 using CaptureTool.Infrastructure.Navigation;
 
 namespace CaptureTool.Infrastructure.Tests.Navigation;
@@ -173,6 +174,24 @@ public class NavigationServiceTests
     }
 
     [TestMethod]
+    public void Navigate_TracksSafeRouteAndParameterType()
+    {
+        var telemetry = new RecordingTelemetryService();
+        var service = new NavigationService(telemetry);
+        service.SetNavigationHandler(new MockNavigationHandler());
+
+        service.Navigate(TestRoute.Home);
+        service.Navigate(TestRoute.Settings, new NavigationParameter("private-value"));
+
+        var trackedEvent = telemetry.Events.Last();
+        Assert.AreEqual(TelemetryEvents.NavigationCompleted, trackedEvent.Name);
+        Assert.AreEqual(nameof(TestRoute.Home), trackedEvent.Properties[TelemetryProperties.FromRoute]);
+        Assert.AreEqual(nameof(TestRoute.Settings), trackedEvent.Properties[TelemetryProperties.ToRoute]);
+        Assert.AreEqual(nameof(NavigationParameter), trackedEvent.Properties[TelemetryProperties.ParameterType]);
+        Assert.IsFalse(trackedEvent.Properties.Values.Contains("private-value"));
+    }
+
+    [TestMethod]
     public void Navigate_Throws_WhenNoHandlerSet()
     {
         var service = new NavigationService();
@@ -187,5 +206,19 @@ public class NavigationServiceTests
 
         Assert.IsNull(service.CurrentRequest);
         Assert.IsFalse(service.CanGoBack);
+    }
+
+    private sealed record NavigationParameter(string Secret);
+
+    private sealed class RecordingTelemetryService : ITelemetryService
+    {
+        public List<(string Name, IReadOnlyDictionary<string, object?> Properties)> Events { get; } = [];
+
+        public void TrackEvent(
+            string eventName,
+            IReadOnlyDictionary<string, object?>? properties = null)
+        {
+            Events.Add((eventName, properties ?? new Dictionary<string, object?>()));
+        }
     }
 }

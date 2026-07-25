@@ -1,3 +1,4 @@
+using CaptureTool.Application.Abstractions.Logging;
 using CaptureTool.Application.Abstractions.Store;
 using CaptureTool.Application.Abstractions.Telemetry;
 using CaptureTool.Application.Abstractions.Windowing;
@@ -11,17 +12,20 @@ public sealed partial class WindowsStoreService : IStoreService
     private static readonly Uri AppStorePageUri = new($"ms-windows-store://pdp/?ProductId={CaptureToolStoreProducts.AppProductId}");
     private static readonly Uri AppStoreReviewUri = new($"ms-windows-store://review/?ProductId={CaptureToolStoreProducts.AppProductId}");
 
-    private readonly ITelemetryService _telemetryService;
+    private readonly ILogService _logService;
     private readonly IWindowHandleProvider _windowHandleProvider;
     private readonly StoreContext _storeContext;
     private readonly Dictionary<string, StoreLicense> _licenseCache;
+    private readonly ITelemetryService? _telemetryService;
 
     public WindowsStoreService(
-        ITelemetryService telemetryService,
-        IWindowHandleProvider windowHandleProvider)
+        ILogService logService,
+        IWindowHandleProvider windowHandleProvider,
+        ITelemetryService? telemetryService = null)
     {
-        _telemetryService = telemetryService;
+        _logService = logService;
         _windowHandleProvider = windowHandleProvider;
+        _telemetryService = telemetryService;
         _storeContext = StoreContext.GetDefault();
         _licenseCache = [];
     }
@@ -44,7 +48,7 @@ public sealed partial class WindowsStoreService : IStoreService
         string activityId = $"{nameof(WindowsStoreService)}.{nameof(IsAddonPurchasedAsync)}";
         try
         {
-            _telemetryService.ActivityInitiated(activityId);
+            _logService.LogInformation($"Activity initiated: {activityId}");
 
             if (_licenseCache.TryGetValue(storeProductId, out var cachedLicense))
             {
@@ -65,12 +69,12 @@ public sealed partial class WindowsStoreService : IStoreService
                 }
             }
 
-            _telemetryService.ActivityCompleted(activityId);
+            _logService.LogInformation($"Activity completed: {activityId}");
             return false;
         }
         catch (Exception e)
         {
-            _telemetryService.ActivityError(activityId, e);
+            _logService.LogException(e, $"Activity error: {activityId}");
             return false;
         }
     }
@@ -82,9 +86,17 @@ public sealed partial class WindowsStoreService : IStoreService
     public async Task<bool> PurchaseAddonAsync(string storeProductId, CancellationToken cancellationToken)
     {
         string activityId = $"{nameof(WindowsStoreService)}.{nameof(PurchaseAddonAsync)}";
+        string product = GetTelemetryProduct(storeProductId);
+        _telemetryService?.TrackEvent(
+            TelemetryEvents.StorePurchaseStarted,
+            new Dictionary<string, object?>
+            {
+                [TelemetryProperties.Product] = product
+            });
+
         try
         {
-            _telemetryService.ActivityInitiated(activityId);
+            _logService.LogInformation($"Activity initiated: {activityId}");
 
             nint hwnd = _windowHandleProvider.GetMainWindowHandle();
             WinRT.Interop.InitializeWithWindow.Initialize(_storeContext, hwnd);
@@ -105,12 +117,23 @@ public sealed partial class WindowsStoreService : IStoreService
                 success = true;
             }
 
-            _telemetryService.ActivityCompleted(activityId);
+            _logService.LogInformation($"Activity completed: {activityId}");
+            TrackPurchaseCompleted(
+                product,
+                purchaseResult.Status.ToString(),
+                success ? TelemetryOutcomes.Succeeded : TelemetryOutcomes.Failed);
             return success;
+        }
+        catch (OperationCanceledException e)
+        {
+            _logService.LogException(e, $"Activity canceled: {activityId}");
+            TrackPurchaseCompleted(product, "canceled", TelemetryOutcomes.Canceled);
+            return false;
         }
         catch (Exception e)
         {
-            _telemetryService.ActivityError(activityId, e);
+            _logService.LogException(e, $"Activity error: {activityId}");
+            TrackPurchaseCompleted(product, "exception", TelemetryOutcomes.Failed);
             return false;
         }
     }
@@ -124,7 +147,7 @@ public sealed partial class WindowsStoreService : IStoreService
         WindowsStoreAddOn addOn;
         try
         {
-            _telemetryService.ActivityInitiated(activityId);
+            _logService.LogInformation($"Activity initiated: {activityId}");
 
             IList<string> productKinds = ["Durable"];
             IList<string> storeIds = [storeProductId];
@@ -142,11 +165,11 @@ public sealed partial class WindowsStoreService : IStoreService
         }
         catch (Exception e)
         {
-            _telemetryService.ActivityError(activityId, e);
+            _logService.LogException(e, $"Activity error: {activityId}");
             throw;
         }
 
-        _telemetryService.ActivityCompleted(activityId);
+        _logService.LogInformation($"Activity completed: {activityId}");
         return addOn;
     }
 
@@ -163,19 +186,55 @@ public sealed partial class WindowsStoreService : IStoreService
         string activityId = $"{nameof(WindowsStoreService)}.{activityName}";
         try
         {
-            _telemetryService.ActivityInitiated(activityId);
+            _logService.LogInformation($"Activity initiated: {activityId}");
 
             cancellationToken.ThrowIfCancellationRequested();
             bool launched = await Launcher.LaunchUriAsync(uri);
             cancellationToken.ThrowIfCancellationRequested();
 
-            _telemetryService.ActivityCompleted(activityId);
+            _logService.LogInformation($"Activity completed: {activityId}");
+            TrackStoreOpened(activityName, launched);
             return launched;
         }
         catch (Exception e)
         {
-            _telemetryService.ActivityError(activityId, e);
+            _logService.LogException(e, $"Activity error: {activityId}");
+            TrackStoreOpened(activityName, false);
             return false;
         }
+    }
+
+    private void TrackPurchaseCompleted(string product, string status, string outcome)
+    {
+        _telemetryService?.TrackEvent(
+            TelemetryEvents.StorePurchaseCompleted,
+            new Dictionary<string, object?>
+            {
+                [TelemetryProperties.Product] = product,
+                [TelemetryProperties.Status] = status,
+                [TelemetryProperties.Outcome] = outcome
+            });
+    }
+
+    private void TrackStoreOpened(string activityName, bool launched)
+    {
+        _telemetryService?.TrackEvent(
+            TelemetryEvents.StoreOpened,
+            new Dictionary<string, object?>
+            {
+                [TelemetryProperties.Operation] = activityName == "LaunchAppReview"
+                    ? "review"
+                    : "app_page",
+                [TelemetryProperties.Outcome] = launched
+                    ? TelemetryOutcomes.Succeeded
+                    : TelemetryOutcomes.Failed
+            });
+    }
+
+    private static string GetTelemetryProduct(string storeProductId)
+    {
+        return storeProductId == CaptureToolStoreProducts.AddOns.ChromaKeyBackgroundRemoval
+            ? "chroma_key_background_removal"
+            : "other";
     }
 }

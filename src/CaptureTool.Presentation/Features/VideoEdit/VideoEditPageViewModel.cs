@@ -7,6 +7,8 @@ using CaptureTool.Application.Abstractions.EditSessions;
 using CaptureTool.Application.Abstractions.Localization;
 using CaptureTool.Application.Abstractions.Logging;
 using CaptureTool.Application.Abstractions.Settings.OpenVideosFolder;
+using CaptureTool.Application.Abstractions.Telemetry;
+using CaptureTool.Application.Abstractions.UseCases;
 using CaptureTool.Domain.Ai;
 using CaptureTool.Domain.Capture;
 using CaptureTool.Domain.FileSystem;
@@ -128,6 +130,7 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
     private readonly IAiFeatureConsentDialogService _aiFeatureConsentDialogService;
     private readonly ILocalizationService _localizationService;
     private readonly IAppNotificationService _notificationService;
+    private readonly ITelemetryService? _telemetryService;
     private string? _originalVideoPath;
     private string? _superResolutionVideoPath;
 
@@ -150,7 +153,8 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
         IAiFeatureConsentService? aiFeatureConsentService = null,
         IAiFeatureConsentDialogService? aiFeatureConsentDialogService = null,
         ILocalizationService? localizationService = null,
-        IAppNotificationService? notificationService = null)
+        IAppNotificationService? notificationService = null,
+        ITelemetryService? telemetryService = null)
     {
         _saveAction = saveAction;
         _copyAction = copyAction;
@@ -164,6 +168,7 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
         _aiFeatureConsentDialogService = aiFeatureConsentDialogService ?? new PermissiveAiFeatureConsentDialogService();
         _localizationService = localizationService ?? new ResourceKeyLocalizationService();
         _notificationService = notificationService ?? new NullAppNotificationService();
+        _telemetryService = telemetryService;
 
         SaveCommand = new AsyncRelayCommand(SaveCommandAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
         CopyCommand = new AsyncRelayCommand(CopyAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
@@ -215,6 +220,7 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
 
         UpdateVideoSuperResolutionAvailability();
         base.Load(video);
+        TrackEditorOpened();
     }
 
     private async Task WaitForVideoFinalizationAsync(PendingVideoFile pendingVideo)
@@ -270,6 +276,7 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
     {
         IsInTrimMode = !IsInTrimMode;
         KeepPlayheadInTrimRange();
+        TrackEditTool("trim_mode", TelemetryOutcomes.Succeeded, IsInTrimMode);
     }
 
     private void ResetTrimRange(double durationSeconds)
@@ -301,8 +308,15 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
         var response = await _saveAction.ExecuteAsync(
             new SaveVideoFileRequest(VideoPath, GetTrimStartForRequest(), GetTrimEndForRequest()),
             cancellationToken);
-        if (response.Value?.Saved == true)
+        bool saved = response?.Value?.Saved == true;
+        TrackOutput("save", response?.Result ?? UseCaseResult.Failed, saved);
+        if (saved)
         {
+            if (IsTrimmed)
+            {
+                TrackEditTool("trim", TelemetryOutcomes.Succeeded);
+            }
+
             HasUnsavedChanges = false;
             return true;
         }
@@ -322,9 +336,13 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
             return;
         }
 
-        await _copyAction.ExecuteAsync(
+        var response = await _copyAction.ExecuteAsync(
             new CopyVideoFileRequest(VideoPath, GetTrimStartForRequest(), GetTrimEndForRequest()),
             CancellationToken.None);
+        TrackOutput(
+            "copy",
+            response?.Result ?? UseCaseResult.Failed,
+            response?.Value?.Copied == true);
     }
 
     private async Task OpenVideosFolderAsync()
@@ -349,6 +367,7 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
             AiFeatureId.VideoSuperResolution,
             CancellationToken.None))
         {
+            TrackEditTool("super_resolution", TelemetryOutcomes.Canceled);
             return;
         }
 
@@ -397,6 +416,7 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
         catch (OperationCanceledException)
         {
             VideoSuperResolutionStatusMessage = string.Empty;
+            TrackEditTool("super_resolution", TelemetryOutcomes.Canceled);
         }
         catch (Exception ex)
         {
@@ -451,6 +471,7 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
         VideoSuperResolutionStatusMessage = string.Empty;
         HasUnsavedChanges = true;
         UpdateVideoSuperResolutionAvailability();
+        TrackEditTool("super_resolution", TelemetryOutcomes.Succeeded);
     }
 
     private void UpdateVideoSuperResolutionAvailability()
@@ -521,6 +542,11 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
     private void ShowVideoSuperResolutionFailure(string message)
     {
         VideoSuperResolutionStatusMessage = message;
+        TrackEditTool(
+            "super_resolution",
+            string.IsNullOrWhiteSpace(message)
+                ? TelemetryOutcomes.Canceled
+                : TelemetryOutcomes.Failed);
         if (!string.IsNullOrWhiteSpace(message))
         {
             _notificationService.ShowError(message);
@@ -540,9 +566,13 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
             return;
         }
 
-        await _openExternalEditorAction.ExecuteAsync(
+        var response = await _openExternalEditorAction.ExecuteAsync(
             new OpenExternalEditorRequest(VideoPath, ExternalMediaEditor.Clipchamp),
             CancellationToken.None);
+        TrackOutput(
+            "open_external_editor",
+            response?.Result ?? UseCaseResult.Failed,
+            response?.Value?.Opened == true);
     }
 
     private TimeSpan? GetTrimStartForRequest()
@@ -558,6 +588,50 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
     private void OnTrimChanged()
     {
         HasUnsavedChanges = IsTrimmed || IsVideoSuperResolutionActive;
+    }
+
+    private void TrackEditorOpened()
+    {
+        _telemetryService?.TrackEvent(
+            TelemetryEvents.EditorOpened,
+            new Dictionary<string, object?>
+            {
+                [TelemetryProperties.MediaType] = "video"
+            });
+    }
+
+    private void TrackEditTool(string tool, string outcome, bool? enabled = null)
+    {
+        Dictionary<string, object?> properties = new()
+        {
+            [TelemetryProperties.Tool] = tool,
+            [TelemetryProperties.MediaType] = "video",
+            [TelemetryProperties.Outcome] = outcome
+        };
+
+        if (enabled.HasValue)
+        {
+            properties[TelemetryProperties.Enabled] = enabled.Value;
+        }
+
+        _telemetryService?.TrackEvent(TelemetryEvents.EditToolInvoked, properties);
+    }
+
+    private void TrackOutput(string operation, UseCaseResult result, bool completed)
+    {
+        _telemetryService?.TrackEvent(
+            TelemetryEvents.OutputCompleted,
+            new Dictionary<string, object?>
+            {
+                [TelemetryProperties.Operation] = operation,
+                [TelemetryProperties.MediaType] = "video",
+                [TelemetryProperties.Outcome] = result == UseCaseResult.Cancelled
+                    ? TelemetryOutcomes.Canceled
+                    : result == UseCaseResult.Succeeded && completed
+                        ? TelemetryOutcomes.Succeeded
+                        : TelemetryOutcomes.Failed,
+                [TelemetryProperties.Source] = "video_editor"
+            });
     }
 
     private sealed class DisabledVideoSuperResolutionFeatureAvailability :

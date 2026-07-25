@@ -19,5 +19,9 @@ Developed by Shane Weaver
 
 [![Get it from Microsoft](https://get.microsoft.com/images/en-us%20light.svg)](https://apps.microsoft.com/detail/9n7w6j13c4w0)
 
+```
+winget install 9N7W6J13C4W0 --source msstore
+```
+
 ![Home screen](StoreAssets/home_light.png)
 ![Crop mode](StoreAssets/crop-mode_light.png)

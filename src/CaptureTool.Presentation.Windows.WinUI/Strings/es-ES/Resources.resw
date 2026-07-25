@@ -1706,4 +1706,31 @@ SOFTWARE.
   <data name="VideoSuperResolutionStatus_Failed" xml:space="preserve">
     <value>Error al mejorar el vídeo.</value>
   </data>
+  <data name="Settings_PrivacyHeaderLabel.Text" xml:space="preserve">
+    <value>Privacidad</value>
+  </data>
+  <data name="Settings_OptionalUsageData_HeaderLabel.Text" xml:space="preserve">
+    <value>Datos de uso opcionales</value>
+  </data>
+  <data name="Settings_OptionalUsageData_SubtitleLabel.Text" xml:space="preserve">
+    <value>Envía datos de uso opcionales mediante los servicios de Microsoft Store para ayudar a mejorar Capture Tool. Estos datos generan informes agregados sobre el uso de las funciones y los resultados de las operaciones. No se incluyen capturas, información de archivos, contenido del Portapapeles, texto reconocido ni identificadores generados por la aplicación.</value>
+  </data>
+  <data name="Settings_OptionalUsageData_Toggle.OnContent" xml:space="preserve">
+    <value>Activado</value>
+  </data>
+  <data name="Settings_OptionalUsageData_Toggle.OffContent" xml:space="preserve">
+    <value>Desactivado</value>
+  </data>
+  <data name="TelemetryConsentDialog_Title" xml:space="preserve">
+    <value>Ayuda a mejorar Capture Tool</value>
+  </data>
+  <data name="TelemetryConsentDialog_Content" xml:space="preserve">
+    <value>Permite que Capture Tool envíe datos de uso opcionales mediante los servicios de Microsoft Store. Estos datos se utilizan para generar recuentos agregados del uso de funciones y comandos y de los resultados de operaciones importantes. Capture Tool no incluye capturas, nombres o rutas de archivos, contenido del Portapapeles, texto reconocido ni identificadores generados por la aplicación. Puedes cambiar esta opción en cualquier momento en Configuración.</value>
+  </data>
+  <data name="TelemetryConsentDialog_AllowButton" xml:space="preserve">
+    <value>Enviar datos opcionales</value>
+  </data>
+  <data name="TelemetryConsentDialog_DontAllowButton" xml:space="preserve">
+    <value>No enviar</value>
+  </data>
 </root>

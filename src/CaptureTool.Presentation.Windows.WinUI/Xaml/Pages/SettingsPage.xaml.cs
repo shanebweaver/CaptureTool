@@ -103,6 +103,14 @@ public sealed partial class SettingsPage : SettingsPageBase
         }
     }
 
+    private void OptionalUsageDataToggleSwitch_Toggled(object sender, RoutedEventArgs e)
+    {
+        if (sender is ToggleSwitch toggleSwitch)
+        {
+            _ = ViewModel.UpdateOptionalUsageDataEnabledCommand.ExecuteAsync(toggleSwitch.IsOn);
+        }
+    }
+
     private void AiFeatureConsentCheckBox_Click(object sender, RoutedEventArgs e)
     {
         if (sender is CheckBox checkBox && checkBox.DataContext is AiFeatureConsentViewModel featureConsent)
