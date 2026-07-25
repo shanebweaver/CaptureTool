@@ -42,6 +42,7 @@ public sealed class ImageEditTextExtractionUiTests
         string appDataDirectory = Path.Combine(artifactDirectory, "app-data");
         string appTempDirectory = Path.Combine(artifactDirectory, "app-temp");
         string screenshotDirectory = Path.Combine(repoRoot, "tests", "CaptureTool.UiTests", "TestResults", "artifacts");
+        string loadingScreenshotPath = Path.Combine(screenshotDirectory, "text-extraction-loading.png");
         string screenshotPath = Path.Combine(screenshotDirectory, "text-extraction-overlay.png");
 
         CreateOcrFixtureImage(fixtureImagePath);
@@ -82,6 +83,18 @@ public sealed class ImageEditTextExtractionUiTests
                 "Allow",
                 InteractionTimeout);
             allowButton.Click();
+
+            WaitForElement(
+                mainWindow,
+                automation,
+                "ImageEdit_TextExtractionProgressRing",
+                InteractionTimeout);
+
+            CaptureWindowScreenshot(app.ProcessId, mainWindow, loadingScreenshotPath);
+            Assert.IsTrue(File.Exists(loadingScreenshotPath), "The OCR loading screenshot should exist.");
+            Assert.IsGreaterThan(0L, new FileInfo(loadingScreenshotPath).Length, "The OCR loading screenshot should not be empty.");
+            TestContext.AddResultFile(loadingScreenshotPath);
+            TestContext.WriteLine($"Text Extraction loading screenshot: {loadingScreenshotPath}");
 
             WaitForElementRemoved(
                 mainWindow,

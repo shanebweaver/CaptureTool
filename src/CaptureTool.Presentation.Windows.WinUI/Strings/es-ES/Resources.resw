@@ -1259,6 +1259,9 @@ SOFTWARE.
   <data name="ImageEdit_SuperResolutionButton.ToolTipService.ToolTip" xml:space="preserve">
     <value>Show or hide the AI super-resolution image</value>
   </data>
+  <data name="ImageEdit_SuperResolutionProgressRing.AutomationProperties.Name" xml:space="preserve">
+    <value>Mejorando la imagen</value>
+  </data>
   <data name="ImageSuperResolutionPreparation_Title" xml:space="preserve">
     <value>Prepare Super Resolution</value>
   </data>
@@ -1363,6 +1366,9 @@ SOFTWARE.
   </data>
   <data name="ImageEdit_TextExtractionProgressRing.AutomationProperties.Name" xml:space="preserve">
     <value>Extrayendo texto</value>
+  </data>
+  <data name="ImageEdit_LoadingProgressRing.AutomationProperties.Name" xml:space="preserve">
+    <value>Cargando el editor de imágenes</value>
   </data>
   <data name="TextExtractionToolbar_CopyAllTextButton.AutomationProperties.Name" xml:space="preserve">
     <value>Copiar todo el texto reconocido</value>

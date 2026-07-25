@@ -122,10 +122,8 @@
                     HorizontalAlignment="Center"
                     VerticalAlignment="Center"
                     Spacing="16">
-                    <ProgressRing
+                    <controls:AiLoadingIndicator
                         x:Uid="VideoEdit_SuperResolutionProgressRing"
-                        Width="48"
-                        Height="48"
                         IsActive="{x:Bind ViewModel.IsVideoSuperResolutionGenerating, Mode=OneWay}" />
                     <TextBlock
                         x:Uid="VideoEdit_SuperResolutionProgressText"
