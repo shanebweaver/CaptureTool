@@ -13,6 +13,9 @@ internal sealed class TelemetryConsentDialogService
     private readonly ISettingsService _settingsService;
     private readonly ITelemetryConsentService _consentService;
     private readonly SemaphoreSlim _semaphore = new(1, 1);
+    private ContentDialog? _activeDialog;
+    private bool _isPromptAllowed;
+    private int _promptGeneration;
     private ResourceLoader? _resourceLoader;
 
     public TelemetryConsentDialogService(
@@ -25,17 +28,40 @@ internal sealed class TelemetryConsentDialogService
 
     public XamlRoot? XamlRoot { get; set; }
 
+    public void AllowPrompt()
+    {
+        _isPromptAllowed = true;
+    }
+
+    public void SuppressPrompt()
+    {
+        _isPromptAllowed = false;
+        _promptGeneration++;
+
+        try
+        {
+            _activeDialog?.Hide();
+        }
+        catch (InvalidOperationException)
+        {
+            // The dialog can finish closing between the null check and Hide.
+        }
+    }
+
     public async Task RequestConsentIfNeededAsync(CancellationToken cancellationToken = default)
     {
         await _semaphore.WaitAsync(cancellationToken);
 
         try
         {
-            if (XamlRoot is null || _consentService.State != TelemetryConsentState.Unknown)
+            if (!_isPromptAllowed ||
+                XamlRoot is null ||
+                _consentService.State != TelemetryConsentState.Unknown)
             {
                 return;
             }
 
+            int promptGeneration = _promptGeneration;
             ContentDialog dialog = new()
             {
                 XamlRoot = XamlRoot,
@@ -55,9 +81,12 @@ internal sealed class TelemetryConsentDialogService
                 DefaultButton = ContentDialogButton.None
             };
             AutomationProperties.SetAutomationId(dialog, "TelemetryConsentDialog");
+            _activeDialog = dialog;
 
             ContentDialogResult result = await dialog.ShowAsync();
-            if (cancellationToken.IsCancellationRequested)
+            if (cancellationToken.IsCancellationRequested ||
+                !_isPromptAllowed ||
+                promptGeneration != _promptGeneration)
             {
                 return;
             }
@@ -73,6 +102,7 @@ internal sealed class TelemetryConsentDialogService
         }
         finally
         {
+            _activeDialog = null;
             _semaphore.Release();
         }
     }

@@ -9,7 +9,7 @@ internal sealed partial class MainWindowHost : INavigationHandler, IDisposable
 
     public nint Handle => _mainWindow?.GetWindowHandle() ?? IntPtr.Zero;
 
-    public void Initialize()
+    private void Initialize()
     {
         if (_mainWindow != null)
         {
@@ -33,6 +33,8 @@ internal sealed partial class MainWindowHost : INavigationHandler, IDisposable
 
     public void Show()
     {
+        // Keep construction lazy so protocol-only capture activations cannot load a hidden
+        // main window and display optional dialogs over the selection or capture overlays.
         Initialize();
 
         if (_mainWindow == null)
@@ -48,6 +50,7 @@ internal sealed partial class MainWindowHost : INavigationHandler, IDisposable
         }
         _mainWindow.Activate();
         _mainWindow.SetForegroundWindow();
+        _mainWindow.NotifyShown();
     }
 
     public void Hide()
@@ -59,6 +62,7 @@ internal sealed partial class MainWindowHost : INavigationHandler, IDisposable
                 return;
             }
 
+            _mainWindow.NotifyHidden();
             _mainWindow.SuspendMediaPlayback();
             _mainWindow.AppWindow.Hide();
         });
