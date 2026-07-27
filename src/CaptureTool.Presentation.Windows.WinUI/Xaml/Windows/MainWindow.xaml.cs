@@ -48,6 +48,7 @@ public sealed partial class MainWindow : Window
     public MainWindowViewModel ViewModel { get; } = ViewModelLocator.GetViewModel<MainWindowViewModel>();
     private bool _closeConfirmed;
     private bool _closeConfirmationInProgress;
+    private bool _isShown;
     private bool _uiTestLaunchNavigationHandled;
 
     public MainWindow()
@@ -91,7 +92,7 @@ public sealed partial class MainWindow : Window
         RestartNotificationTimer();
     }
 
-    private async void RootGrid_Loaded(object sender, RoutedEventArgs e)
+    private void RootGrid_Loaded(object sender, RoutedEventArgs e)
     {
         _editSessionConfirmationService.XamlRoot = RootGrid.XamlRoot;
         _audioCaptureNavigationConfirmationService.XamlRoot = RootGrid.XamlRoot;
@@ -101,16 +102,48 @@ public sealed partial class MainWindow : Window
         _telemetryConsentDialogService.XamlRoot = RootGrid.XamlRoot;
         NavigateToUiTestImageWhenRequested();
 
-        if (!UiTestLaunchOptions.Current.IsEnabled)
+        if (_isShown)
         {
-            try
-            {
-                await _telemetryConsentDialogService.RequestConsentIfNeededAsync();
-            }
-            catch (Exception ex)
-            {
-                _logService.LogException(ex, "Failed to request telemetry consent.");
-            }
+            RequestTelemetryConsentIfNeeded();
+        }
+    }
+
+    internal void NotifyShown()
+    {
+        _isShown = true;
+        _telemetryConsentDialogService.AllowPrompt();
+
+        if (RootGrid.XamlRoot is not null)
+        {
+            RequestTelemetryConsentIfNeeded();
+        }
+    }
+
+    internal void NotifyHidden()
+    {
+        _isShown = false;
+        _telemetryConsentDialogService.SuppressPrompt();
+
+        if (NavigationFrame.Content is HomePage homePage)
+        {
+            homePage.SuppressStoreReviewPrompt();
+        }
+    }
+
+    private async void RequestTelemetryConsentIfNeeded()
+    {
+        if (UiTestLaunchOptions.Current.IsEnabled)
+        {
+            return;
+        }
+
+        try
+        {
+            await _telemetryConsentDialogService.RequestConsentIfNeededAsync();
+        }
+        catch (Exception ex)
+        {
+            _logService.LogException(ex, "Failed to request telemetry consent.");
         }
     }
 

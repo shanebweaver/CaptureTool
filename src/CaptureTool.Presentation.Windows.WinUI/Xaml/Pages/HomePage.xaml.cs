@@ -22,7 +22,9 @@ public sealed partial class HomePage : HomePageBase
 
     private readonly ILogService _logService = App.Current.ServiceProvider.GetService<ILogService>();
     private readonly Dictionary<string, BitmapImage> _thumbnailCache = new(StringComparer.OrdinalIgnoreCase);
+    private ContentDialog? _activeStoreReviewDialog;
     private bool _storeReviewPromptPending;
+    private int _storeReviewPromptGeneration;
 
     public HomePage()
     {
@@ -54,6 +56,21 @@ public sealed partial class HomePage : HomePageBase
         }
 
         _ = ShowStoreReviewPromptAsync();
+    }
+
+    internal void SuppressStoreReviewPrompt()
+    {
+        _storeReviewPromptPending = false;
+        _storeReviewPromptGeneration++;
+
+        try
+        {
+            _activeStoreReviewDialog?.Hide();
+        }
+        catch (InvalidOperationException)
+        {
+            // The dialog can finish closing between the null check and Hide.
+        }
     }
 
     private void HomeScrollViewer_ViewChanged(object? sender, ScrollViewerViewChangedEventArgs e)
@@ -211,6 +228,12 @@ public sealed partial class HomePage : HomePageBase
 
     private async Task ShowStoreReviewPromptAsync()
     {
+        if (_activeStoreReviewDialog is not null)
+        {
+            return;
+        }
+
+        int promptGeneration = _storeReviewPromptGeneration;
         Microsoft.Windows.ApplicationModel.Resources.ResourceLoader resourceLoader = new();
         Microsoft.UI.Xaml.Controls.ContentDialog dialog = new()
         {
@@ -227,21 +250,34 @@ public sealed partial class HomePage : HomePageBase
             Style = Microsoft.UI.Xaml.Application.Current.Resources["DefaultContentDialogStyle"] as Microsoft.UI.Xaml.Style,
             DefaultButton = Microsoft.UI.Xaml.Controls.ContentDialogButton.Primary
         };
+        _activeStoreReviewDialog = dialog;
 
-        Microsoft.UI.Xaml.Controls.ContentDialogResult result = await dialog.ShowAsync();
-        switch (result)
+        try
         {
-            case Microsoft.UI.Xaml.Controls.ContentDialogResult.Primary:
-                await ViewModel.LeaveStoreReviewCommand.ExecuteAsync(null);
-                break;
+            Microsoft.UI.Xaml.Controls.ContentDialogResult result = await dialog.ShowAsync();
+            if (promptGeneration != _storeReviewPromptGeneration)
+            {
+                return;
+            }
 
-            case Microsoft.UI.Xaml.Controls.ContentDialogResult.Secondary:
-                await ViewModel.DisableStoreReviewRemindersCommand.ExecuteAsync(null);
-                break;
+            switch (result)
+            {
+                case Microsoft.UI.Xaml.Controls.ContentDialogResult.Primary:
+                    await ViewModel.LeaveStoreReviewCommand.ExecuteAsync(null);
+                    break;
 
-            default:
-                await ViewModel.RemindStoreReviewLaterCommand.ExecuteAsync(null);
-                break;
+                case Microsoft.UI.Xaml.Controls.ContentDialogResult.Secondary:
+                    await ViewModel.DisableStoreReviewRemindersCommand.ExecuteAsync(null);
+                    break;
+
+                default:
+                    await ViewModel.RemindStoreReviewLaterCommand.ExecuteAsync(null);
+                    break;
+            }
+        }
+        finally
+        {
+            _activeStoreReviewDialog = null;
         }
     }
 }
