@@ -135,6 +135,15 @@
   <data name="HomePage_CaptureOptionsLabel.Text" xml:space="preserve">
     <value>Opciones</value>
   </data>
+  <data name="HomePage_ClearRecentCapturesButton.Text" xml:space="preserve">
+    <value>Borrar todo</value>
+  </data>
+  <data name="HomePage_RecentCaptureOpenMenuItem.Text" xml:space="preserve">
+    <value>Abrir</value>
+  </data>
+  <data name="HomePage_RecentCaptureDeleteMenuItem.Text" xml:space="preserve">
+    <value>Eliminar</value>
+  </data>
   <data name="ErrorPage_HeaderLabel.Text" xml:space="preserve">
     <value>Se produjo un error al cargar la página.</value>
   </data>
