@@ -135,6 +135,15 @@
   <data name="HomePage_CaptureOptionsLabel.Text" xml:space="preserve">
     <value>Параметры</value>
   </data>
+  <data name="HomePage_ClearRecentCapturesButton.Text" xml:space="preserve">
+    <value>Очистить все</value>
+  </data>
+  <data name="HomePage_RecentCaptureOpenMenuItem.Text" xml:space="preserve">
+    <value>Открыть</value>
+  </data>
+  <data name="HomePage_RecentCaptureDeleteMenuItem.Text" xml:space="preserve">
+    <value>Удалить</value>
+  </data>
   <data name="ErrorPage_HeaderLabel.Text" xml:space="preserve">
     <value>Произошла ошибка при загрузке страницы.</value>
   </data>

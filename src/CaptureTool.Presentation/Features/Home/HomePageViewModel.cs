@@ -1,9 +1,11 @@
 using CaptureTool.Application.Abstractions.Capture;
 using CaptureTool.Application.Abstractions.Capture.Audio.OpenAudioCapturePage;
 using CaptureTool.Application.Abstractions.Capture.Overlay.OpenSelectionOverlay;
+using CaptureTool.Application.Abstractions.Library.RecentCaptures.DeleteRecentCapture;
 using CaptureTool.Application.Abstractions.Library.RecentCaptures.GetRecentCaptures;
 using CaptureTool.Application.Abstractions.Library.RecentCaptures.OpenRecentCapture;
 using CaptureTool.Application.Abstractions.Metrics;
+using CaptureTool.Application.Abstractions.Settings.ClearTempFiles;
 using CaptureTool.Application.Abstractions.Store;
 using CaptureTool.Application.Abstractions.Telemetry;
 using CaptureTool.Domain.Capture;
@@ -26,6 +28,8 @@ public sealed partial class HomePageViewModel : AsyncLoadableViewModelBase
     private readonly IAudioCaptureState _audioCaptureState;
     private readonly IAppMetricsService _appMetricsService;
     private readonly IStoreService _storeService;
+    private readonly IClearTempFilesUseCase _clearTempFilesCommand;
+    private readonly IDeleteRecentCaptureUseCase _deleteRecentCaptureCommand;
     private readonly IGetRecentCapturesUseCase _getRecentCapturesQuery;
     private readonly IOpenRecentCaptureUseCase _openRecentCaptureCommand;
     private readonly IFactoryServiceWithArgs<RecentCaptureViewModel, string> _recentCaptureViewModelFactory;
@@ -36,6 +40,8 @@ public sealed partial class HomePageViewModel : AsyncLoadableViewModelBase
     public IRelayCommand NewImageCaptureCommand { get; }
     public IRelayCommand NewVideoCaptureCommand { get; }
     public IRelayCommand NewAudioCaptureCommand { get; }
+    public IAsyncRelayCommand ClearRecentCapturesCommand { get; }
+    public IAsyncRelayCommand<RecentCaptureViewModel> DeleteRecentCaptureCommand { get; }
     public IAsyncRelayCommand<RecentCaptureViewModel> OpenRecentCaptureCommand { get; }
     public IAsyncRelayCommand LoadMoreRecentCapturesCommand { get; }
     public IAsyncRelayCommand LeaveStoreReviewCommand { get; }
@@ -82,6 +88,7 @@ public sealed partial class HomePageViewModel : AsyncLoadableViewModelBase
             if (Set(ref field, value))
             {
                 LoadMoreRecentCapturesCommand.NotifyCanExecuteChanged();
+                ClearRecentCapturesCommand.NotifyCanExecuteChanged();
                 RaisePropertyChanged(nameof(IsRecentCapturesEmpty));
                 RaisePropertyChanged(nameof(ShowRecentCapturesLoading));
             }
@@ -93,6 +100,8 @@ public sealed partial class HomePageViewModel : AsyncLoadableViewModelBase
         IOpenAudioCapturePageUseCase openAudioCapturePageCommand,
         IAppMetricsService appMetricsService,
         IStoreService storeService,
+        IClearTempFilesUseCase clearTempFilesCommand,
+        IDeleteRecentCaptureUseCase deleteRecentCaptureCommand,
         IGetRecentCapturesUseCase getRecentCapturesQuery,
         IOpenRecentCaptureUseCase openRecentCaptureCommand,
         IImageCaptureState imageCaptureState,
@@ -106,6 +115,8 @@ public sealed partial class HomePageViewModel : AsyncLoadableViewModelBase
         _audioCaptureState = audioCaptureState;
         _appMetricsService = appMetricsService;
         _storeService = storeService;
+        _clearTempFilesCommand = clearTempFilesCommand;
+        _deleteRecentCaptureCommand = deleteRecentCaptureCommand;
         _getRecentCapturesQuery = getRecentCapturesQuery;
         _openRecentCaptureCommand = openRecentCaptureCommand;
         _recentCaptureViewModelFactory = recentCaptureViewModelFactory;
@@ -129,6 +140,17 @@ public sealed partial class HomePageViewModel : AsyncLoadableViewModelBase
             async () => await openAudioCapturePageCommand.ExecuteAsync(
                 new OpenAudioCapturePageRequest(),
                 CancellationToken.None),
+            telemetryService,
+            "home");
+        ClearRecentCapturesCommand = TelemetryCommandFactory.Async(
+            "clear_recent_captures",
+            ClearRecentCapturesAsync,
+            telemetryService,
+            "home",
+            () => !IsLoadingRecentCaptures);
+        DeleteRecentCaptureCommand = TelemetryCommandFactory.Async<RecentCaptureViewModel>(
+            "delete_recent_capture",
+            DeleteRecentCaptureAsync,
             telemetryService,
             "home");
         OpenRecentCaptureCommand = TelemetryCommandFactory.Async<RecentCaptureViewModel>(
@@ -207,6 +229,40 @@ public sealed partial class HomePageViewModel : AsyncLoadableViewModelBase
         }
     }
 
+    private async Task ClearRecentCapturesAsync()
+    {
+        var response = await _clearTempFilesCommand.ExecuteAsync(
+            new ClearTempFilesRequest(),
+            CancellationToken.None);
+
+        if (response.Value?.Succeeded == true)
+        {
+            await RefreshRecentCapturesAsync(CancellationToken.None);
+        }
+    }
+
+    private async Task DeleteRecentCaptureAsync(RecentCaptureViewModel? model)
+    {
+        if (model == null)
+        {
+            return;
+        }
+
+        var response = await _deleteRecentCaptureCommand.ExecuteAsync(
+            new DeleteRecentCaptureRequest(model.FilePath),
+            CancellationToken.None);
+
+        if (response.Value?.Deleted == true)
+        {
+            _recentCaptures.Remove(model);
+            RaiseRecentCaptureStateChanged();
+        }
+        else if (response.Value is not null)
+        {
+            await RefreshRecentCapturesAsync(CancellationToken.None);
+        }
+    }
+
     private Task RefreshRecentCapturesAsync(CancellationToken cancellationToken)
     {
         return LoadRecentCapturesPageAsync(reset: true, cancellationToken);
@@ -256,6 +312,7 @@ public sealed partial class HomePageViewModel : AsyncLoadableViewModelBase
         RaisePropertyChanged(nameof(HasRecentCaptures));
         RaisePropertyChanged(nameof(IsRecentCapturesEmpty));
         RaisePropertyChanged(nameof(ShowRecentCapturesLoading));
+        ClearRecentCapturesCommand.NotifyCanExecuteChanged();
     }
 
     private async Task LeaveStoreReviewAsync()

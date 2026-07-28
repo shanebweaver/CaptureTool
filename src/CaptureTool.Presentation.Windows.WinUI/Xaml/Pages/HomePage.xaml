@@ -274,11 +274,33 @@
                         <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
 
-                    <TextBlock
-                        x:Uid="HomePage_RecentCapturesHeaderLabel"
-                        FontSize="20"
-                        FontWeight="SemiBold"
-                        Text="Recent captures" />
+                    <Grid ColumnSpacing="12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock
+                            x:Uid="HomePage_RecentCapturesHeaderLabel"
+                            VerticalAlignment="Center"
+                            FontSize="20"
+                            FontWeight="SemiBold"
+                            Text="Recent captures" />
+
+                        <Button
+                            Grid.Column="1"
+                            HorizontalAlignment="Right"
+                            Background="Transparent"
+                            BorderBrush="Transparent"
+                            Command="{x:Bind ViewModel.ClearRecentCapturesCommand, Mode=OneWay}">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <SymbolIcon Symbol="Delete" />
+                                <TextBlock
+                                    x:Uid="HomePage_ClearRecentCapturesButton"
+                                    Text="Clear all" />
+                            </StackPanel>
+                        </Button>
+                    </Grid>
 
                     <GridView
                         x:Name="RecentCapturesGridView"
@@ -290,6 +312,7 @@
                         ItemClick="RecentCapturesGridView_ItemClick"
                         ItemContainerStyle="{StaticResource RecentCaptureGridViewItemStyle}"
                         ItemsSource="{x:Bind ViewModel.RecentCaptures, Mode=OneWay}"
+                        KeyDown="RecentCapturesGridView_KeyDown"
                         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                         ScrollViewer.HorizontalScrollMode="Disabled"
                         ScrollViewer.VerticalScrollBarVisibility="Disabled"
@@ -310,6 +333,23 @@
                                     HorizontalAlignment="Stretch"
                                     VerticalAlignment="Stretch"
                                     ToolTipService.ToolTip="{x:Bind FilePath}">
+                                    <Grid.ContextFlyout>
+                                        <MenuFlyout>
+                                            <MenuFlyoutItem
+                                                x:Uid="HomePage_RecentCaptureOpenMenuItem"
+                                                Click="OpenRecentCaptureMenuItem_Click"
+                                                CommandParameter="{x:Bind}"
+                                                Icon="Folder"
+                                                Text="Open" />
+                                            <MenuFlyoutItem
+                                                x:Uid="HomePage_RecentCaptureDeleteMenuItem"
+                                                Click="DeleteRecentCaptureMenuItem_Click"
+                                                CommandParameter="{x:Bind}"
+                                                Icon="Delete"
+                                                Text="Delete" />
+                                        </MenuFlyout>
+                                    </Grid.ContextFlyout>
+
                                     <Border
                                         Background="{ThemeResource HomeTileBackgroundBrush}"
                                         BorderBrush="{ThemeResource HomeGlassStrokeBrush}"

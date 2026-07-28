@@ -3,10 +3,12 @@ using CaptureTool.Presentation.Features.RecentCaptures;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
+using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Media.Imaging;
 using Windows.Storage;
 using Windows.Storage.FileProperties;
+using Windows.System;
 
 namespace CaptureTool.Presentation.Windows.WinUI.Xaml.Pages;
 
@@ -130,6 +132,44 @@ public sealed partial class HomePage : HomePageBase
         if (e.ClickedItem is RecentCaptureViewModel recentCapture)
         {
             _ = ViewModel.OpenRecentCaptureCommand.ExecuteAsync(recentCapture);
+        }
+    }
+
+    private void OpenRecentCaptureMenuItem_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is MenuFlyoutItem { CommandParameter: RecentCaptureViewModel recentCapture })
+        {
+            _ = ViewModel.OpenRecentCaptureCommand.ExecuteAsync(recentCapture);
+        }
+    }
+
+    private void DeleteRecentCaptureMenuItem_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is MenuFlyoutItem { CommandParameter: RecentCaptureViewModel recentCapture })
+        {
+            _ = ViewModel.DeleteRecentCaptureCommand.ExecuteAsync(recentCapture);
+        }
+    }
+
+    private void RecentCapturesGridView_KeyDown(object sender, KeyRoutedEventArgs e)
+    {
+        if (e.Key != VirtualKey.Delete)
+        {
+            return;
+        }
+
+        DependencyObject? focusedElement = FocusManager.GetFocusedElement(XamlRoot) as DependencyObject;
+        while (focusedElement != null && focusedElement != RecentCapturesGridView)
+        {
+            if (focusedElement is SelectorItem itemContainer
+                && RecentCapturesGridView.ItemFromContainer(itemContainer) is RecentCaptureViewModel recentCapture)
+            {
+                e.Handled = true;
+                _ = ViewModel.DeleteRecentCaptureCommand.ExecuteAsync(recentCapture);
+                return;
+            }
+
+            focusedElement = VisualTreeHelper.GetParent(focusedElement);
         }
     }
 

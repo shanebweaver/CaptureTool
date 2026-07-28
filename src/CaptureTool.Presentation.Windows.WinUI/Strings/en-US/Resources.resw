@@ -149,6 +149,18 @@
     <value>Recent captures</value>
     <comment>The header for the recent captures gallery on the home page.</comment>
   </data>
+  <data name="HomePage_ClearRecentCapturesButton.Text" xml:space="preserve">
+    <value>Clear all</value>
+    <comment>The label for the button that deletes all recent captures from the temporary files folder.</comment>
+  </data>
+  <data name="HomePage_RecentCaptureOpenMenuItem.Text" xml:space="preserve">
+    <value>Open</value>
+    <comment>The context menu option that opens a recent capture in the editor.</comment>
+  </data>
+  <data name="HomePage_RecentCaptureDeleteMenuItem.Text" xml:space="preserve">
+    <value>Delete</value>
+    <comment>The context menu option that deletes a recent capture.</comment>
+  </data>
   <data name="HomePage_EmptyRecentCapturesLabel.Text" xml:space="preserve">
     <value>No captures yet</value>
     <comment>The empty state label for the recent captures gallery on the home page.</comment>

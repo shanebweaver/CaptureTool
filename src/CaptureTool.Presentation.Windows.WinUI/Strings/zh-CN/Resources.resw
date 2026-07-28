@@ -135,6 +135,15 @@
   <data name="HomePage_CaptureOptionsLabel.Text" xml:space="preserve">
     <value>选项</value>
   </data>
+  <data name="HomePage_ClearRecentCapturesButton.Text" xml:space="preserve">
+    <value>全部清除</value>
+  </data>
+  <data name="HomePage_RecentCaptureOpenMenuItem.Text" xml:space="preserve">
+    <value>打开</value>
+  </data>
+  <data name="HomePage_RecentCaptureDeleteMenuItem.Text" xml:space="preserve">
+    <value>删除</value>
+  </data>
   <data name="ErrorPage_HeaderLabel.Text" xml:space="preserve">
     <value>加载页面时出错。</value>
   </data>
