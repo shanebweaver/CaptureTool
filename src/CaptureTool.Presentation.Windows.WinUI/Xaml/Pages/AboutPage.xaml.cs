@@ -2,6 +2,7 @@ using CaptureTool.Presentation.Windows.WinUI.Xaml.Views;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.Windows.ApplicationModel.Resources;
+using Windows.System;
 
 namespace CaptureTool.Presentation.Windows.WinUI.Xaml.Pages;
 
@@ -26,6 +27,15 @@ public sealed partial class AboutPage : AboutPageBase
     private void AboutPage_Loaded(object sender, RoutedEventArgs e)
     {
         AboutAmbientMotionStoryboard.Begin();
+    }
+
+    private async void ExternalLinkButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is FrameworkElement { Tag: string destination }
+            && Uri.TryCreate(destination, UriKind.Absolute, out Uri? uri))
+        {
+            _ = await Launcher.LaunchUriAsync(uri);
+        }
     }
 
     private void ViewModel_ShowDialogRequested(object? sender, (string title, string content) details)

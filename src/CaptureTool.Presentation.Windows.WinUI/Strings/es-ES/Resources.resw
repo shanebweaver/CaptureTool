@@ -225,6 +225,27 @@ Al utilizar esta aplicación, usted reconoce que es responsable de gestionar el 
   <data name="About_TitleLabel.Text" xml:space="preserve">
     <value>Acerca de esta aplicación</value>
   </data>
+  <data name="About_HireTitle.Text" xml:space="preserve">
+    <value>Trabaja conmigo</value>
+  </data>
+  <data name="About_HireDescription.Text" xml:space="preserve">
+    <value>Estoy disponible para nuevos proyectos de Windows.</value>
+  </data>
+  <data name="About_OpenSourceTitle.Text" xml:space="preserve">
+    <value>Código abierto</value>
+  </data>
+  <data name="About_OpenSourceDescription.Text" xml:space="preserve">
+    <value>Capture Tool es de código abierto y está disponible en GitHub.</value>
+  </data>
+  <data name="About_ViewResumeButtonLabel.Text" xml:space="preserve">
+    <value>Ver currículum</value>
+  </data>
+  <data name="About_BuyCoffeeButtonLabel.Text" xml:space="preserve">
+    <value>Invítame a un café</value>
+  </data>
+  <data name="About_ViewSourceButtonLabel.Text" xml:space="preserve">
+    <value>Ver proyecto en GitHub</value>
+  </data>
   <data name="ImageEdit_SaveButton.Label" xml:space="preserve">
     <value>Guardar como</value>
   </data>

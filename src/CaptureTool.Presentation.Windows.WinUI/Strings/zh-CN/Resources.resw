@@ -225,6 +225,27 @@
   <data name="About_TitleLabel.Text" xml:space="preserve">
     <value>关于此应用</value>
   </data>
+  <data name="About_HireTitle.Text" xml:space="preserve">
+    <value>与我合作</value>
+  </data>
+  <data name="About_HireDescription.Text" xml:space="preserve">
+    <value>我目前可承接新的 Windows 项目。</value>
+  </data>
+  <data name="About_OpenSourceTitle.Text" xml:space="preserve">
+    <value>开源</value>
+  </data>
+  <data name="About_OpenSourceDescription.Text" xml:space="preserve">
+    <value>Capture Tool 是开源项目，源代码可在 GitHub 上查看。</value>
+  </data>
+  <data name="About_ViewResumeButtonLabel.Text" xml:space="preserve">
+    <value>查看简历</value>
+  </data>
+  <data name="About_BuyCoffeeButtonLabel.Text" xml:space="preserve">
+    <value>请我喝杯咖啡</value>
+  </data>
+  <data name="About_ViewSourceButtonLabel.Text" xml:space="preserve">
+    <value>在 GitHub 上查看项目</value>
+  </data>
   <data name="ImageEdit_SaveButton.Label" xml:space="preserve">
     <value>另存为</value>
   </data>

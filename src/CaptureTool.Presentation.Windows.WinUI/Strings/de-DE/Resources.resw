@@ -225,6 +225,27 @@ Mit der Nutzung dieser Anwendung erkennen Sie an, dass Sie selbst für die Verwa
   <data name="About_TitleLabel.Text" xml:space="preserve">
     <value>Über diese App</value>
   </data>
+  <data name="About_HireTitle.Text" xml:space="preserve">
+    <value>Mit mir zusammenarbeiten</value>
+  </data>
+  <data name="About_HireDescription.Text" xml:space="preserve">
+    <value>Ich stehe für neue Windows-Projekte zur Verfügung.</value>
+  </data>
+  <data name="About_OpenSourceTitle.Text" xml:space="preserve">
+    <value>Open Source</value>
+  </data>
+  <data name="About_OpenSourceDescription.Text" xml:space="preserve">
+    <value>Capture Tool ist Open Source und auf GitHub verfügbar.</value>
+  </data>
+  <data name="About_ViewResumeButtonLabel.Text" xml:space="preserve">
+    <value>Lebenslauf ansehen</value>
+  </data>
+  <data name="About_BuyCoffeeButtonLabel.Text" xml:space="preserve">
+    <value>Kaffee spendieren</value>
+  </data>
+  <data name="About_ViewSourceButtonLabel.Text" xml:space="preserve">
+    <value>Projekt auf GitHub ansehen</value>
+  </data>
   <data name="ImageEdit_SaveButton.Label" xml:space="preserve">
     <value>Speichern unter</value>
   </data>
