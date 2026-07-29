@@ -1,6 +1,7 @@
 using CaptureTool.Application.Abstractions.Capture.Overlay.CloseCaptureOverlay;
 using CaptureTool.Application.Abstractions.Capture.Video.CancelVideoCapture;
 using CaptureTool.Application.Abstractions.Navigation;
+using CaptureTool.Application.Abstractions.Shutdown;
 using CaptureTool.Application.Abstractions.UseCases;
 using CaptureTool.Application.Abstractions.Windowing.ShowMainWindow;
 using CaptureTool.Application.Capture.Video;
@@ -16,12 +17,14 @@ internal sealed class CloseCaptureOverlayUseCase : ICloseCaptureOverlayUseCase
     private readonly IVideoCaptureWorkflow _videoCaptureWorkflow;
     private readonly ICancelVideoCaptureUseCase _cancelVideoCaptureUseCase;
     private readonly IShowMainWindowUseCase _showMainWindow;
+    private readonly IShutdownHandler _shutdownHandler;
     private readonly INavigationService _navigationService;
 
     public CloseCaptureOverlayUseCase(
         IVideoCaptureWorkflow videoCaptureWorkflow,
         ICancelVideoCaptureUseCase cancelVideoCaptureUseCase,
         IShowMainWindowUseCase showMainWindow,
+        IShutdownHandler shutdownHandler,
         INavigationService navigationService,
         IUseCaseExecutor useCaseExecutor)
     {
@@ -29,6 +32,7 @@ internal sealed class CloseCaptureOverlayUseCase : ICloseCaptureOverlayUseCase
         _videoCaptureWorkflow = videoCaptureWorkflow;
         _cancelVideoCaptureUseCase = cancelVideoCaptureUseCase;
         _showMainWindow = showMainWindow;
+        _shutdownHandler = shutdownHandler;
         _navigationService = navigationService;
     }
 
@@ -52,7 +56,14 @@ internal sealed class CloseCaptureOverlayUseCase : ICloseCaptureOverlayUseCase
                     return new CloseCaptureOverlayResponse(false);
                 }
 
-                await _showMainWindow.ExecuteAsync(new ShowMainWindowRequest(), cancellationToken);
+                var showMainWindowResponse = await _showMainWindow.ExecuteAsync(
+                    new ShowMainWindowRequest(CreateIfUnavailable: false),
+                    cancellationToken);
+
+                if (showMainWindowResponse.Value?.Succeeded != true)
+                {
+                    _shutdownHandler.Shutdown();
+                }
 
                 return new CloseCaptureOverlayResponse(discardResult.VideoCaptureCanceled);
             },
