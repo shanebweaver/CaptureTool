@@ -9,10 +9,16 @@ public sealed partial class SettingsPage : SettingsPageBase
     public SettingsPage()
     {
         InitializeComponent();
+        Loaded += SettingsPage_Loaded;
 
 #if DEBUG
         LocalizationSection.Visibility = Visibility.Visible;
 #endif
+    }
+
+    private void SettingsPage_Loaded(object sender, RoutedEventArgs e)
+    {
+        SettingsAmbientMotionStoryboard.Begin();
     }
 
     private void ImageAutoCopyToggleSwitch_Toggled(object sender, RoutedEventArgs e)

@@ -13,6 +13,7 @@ public sealed partial class AboutPage : AboutPageBase
     public AboutPage()
     {
         InitializeComponent();
+        Loaded += AboutPage_Loaded;
         ViewModel.ShowDialogRequested += ViewModel_ShowDialogRequested;
 
         var package = global::Windows.ApplicationModel.Package.Current;
@@ -20,6 +21,11 @@ public sealed partial class AboutPage : AboutPageBase
 
         AppName = package.DisplayName;
         AppVersion = $"{version.Major}.{version.Minor}.{version.Build}.{version.Revision}";
+    }
+
+    private void AboutPage_Loaded(object sender, RoutedEventArgs e)
+    {
+        AboutAmbientMotionStoryboard.Begin();
     }
 
     private void ViewModel_ShowDialogRequested(object? sender, (string title, string content) details)

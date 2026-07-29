@@ -10,89 +10,183 @@
     d:DataContext="{d:DesignInstance Type=viewmodels:AboutPageViewModel}"
     mc:Ignorable="d">
 
-    <ScrollView>
-        <StackPanel Padding="0,24" Spacing="24">
-            <StackPanel
-                Margin="12,0"
-                Orientation="Horizontal"
-                Spacing="12">
-                <Button
-                    Width="32"
-                    Height="32"
-                    Padding="0"
-                    VerticalAlignment="Center"
-                    AutomationProperties.Name="Back"
-                    Background="Transparent"
-                    BorderBrush="Transparent"
-                    Command="{x:Bind ViewModel.GoBackCommand}">
-                    <SymbolIcon Symbol="Back" />
-                </Button>
-                <TextBlock
-                    x:Uid="About_TitleLabel"
-                    Style="{StaticResource SubtitleTextBlockStyle}"
-                    TextWrapping="WrapWholeWords" />
-            </StackPanel>
+    <Page.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.ThemeDictionaries>
+                <ResourceDictionary x:Key="Light">
+                    <LinearGradientBrush x:Key="AboutDreamBackgroundBrush" StartPoint="0,0" EndPoint="1,1">
+                        <GradientStop Offset="0" Color="#FFF8FBFF" />
+                        <GradientStop Offset=".34" Color="#FFEEF0FF" />
+                        <GradientStop Offset=".7" Color="#FFFFF0F6" />
+                        <GradientStop Offset="1" Color="#FFFFF5E6" />
+                    </LinearGradientBrush>
+                    <LinearGradientBrush x:Key="AboutAmbientRibbonBrush" StartPoint="0,0.5" EndPoint="1,0.5">
+                        <GradientStop Offset="0" Color="#00FFFFFF" />
+                        <GradientStop Offset=".25" Color="#59B8D7FF" />
+                        <GradientStop Offset=".55" Color="#55FFD1E2" />
+                        <GradientStop Offset=".78" Color="#44FFE0A8" />
+                        <GradientStop Offset="1" Color="#00FFFFFF" />
+                    </LinearGradientBrush>
+                </ResourceDictionary>
+                <ResourceDictionary x:Key="Dark">
+                    <LinearGradientBrush x:Key="AboutDreamBackgroundBrush" StartPoint="0,0" EndPoint="1,1">
+                        <GradientStop Offset="0" Color="#FF121722" />
+                        <GradientStop Offset=".34" Color="#FF20223E" />
+                        <GradientStop Offset=".7" Color="#FF382530" />
+                        <GradientStop Offset="1" Color="#FF3B301F" />
+                    </LinearGradientBrush>
+                    <LinearGradientBrush x:Key="AboutAmbientRibbonBrush" StartPoint="0,0.5" EndPoint="1,0.5">
+                        <GradientStop Offset="0" Color="#00FFFFFF" />
+                        <GradientStop Offset=".25" Color="#4D78B7FF" />
+                        <GradientStop Offset=".55" Color="#42FF8FB8" />
+                        <GradientStop Offset=".78" Color="#3DFFD27A" />
+                        <GradientStop Offset="1" Color="#00FFFFFF" />
+                    </LinearGradientBrush>
+                </ResourceDictionary>
+                <ResourceDictionary x:Key="HighContrast">
+                    <StaticResource x:Key="AboutDreamBackgroundBrush" ResourceKey="ApplicationPageBackgroundThemeBrush" />
+                    <SolidColorBrush x:Key="AboutAmbientRibbonBrush" Color="Transparent" />
+                </ResourceDictionary>
+            </ResourceDictionary.ThemeDictionaries>
+        </ResourceDictionary>
+    </Page.Resources>
 
-            <StackPanel
-                x:Name="ContentPanel"
-                Margin="54,0"
-                HorizontalAlignment="Stretch"
-                Spacing="12">
+    <Grid Background="{ThemeResource AboutDreamBackgroundBrush}">
+        <Grid.Resources>
+            <Storyboard
+                x:Name="AboutAmbientMotionStoryboard"
+                AutoReverse="True"
+                RepeatBehavior="Forever">
+                <DoubleAnimation
+                    Storyboard.TargetName="AboutRibbonOneTransform"
+                    Storyboard.TargetProperty="TranslateX"
+                    From="-80"
+                    To="80"
+                    Duration="0:0:20" />
+                <DoubleAnimation
+                    Storyboard.TargetName="AboutRibbonTwoTransform"
+                    Storyboard.TargetProperty="TranslateY"
+                    From="34"
+                    To="-34"
+                    Duration="0:0:24" />
+            </Storyboard>
+        </Grid.Resources>
 
-                <StackPanel Spacing="4">
-                    <TextBlock DoubleTapped="AppNameAndVersionTextBlock_DoubleTapped" TextWrapping="WrapWholeWords">
-                        <Run Text="{x:Bind AppName}" />
-                        <Run Text="{x:Bind AppVersion}" />
-                    </TextBlock>
-                    <TextBlock x:Uid="About_Copyright" TextWrapping="WrapWholeWords" />
-                </StackPanel>
+        <Grid IsHitTestVisible="False">
+            <Border
+                Width="920"
+                Height="270"
+                Margin="-250,64,0,0"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Top"
+                Background="{ThemeResource AboutAmbientRibbonBrush}"
+                CornerRadius="135"
+                Opacity=".42"
+                RenderTransformOrigin=".5,.5">
+                <Border.RenderTransform>
+                    <CompositeTransform x:Name="AboutRibbonOneTransform" Rotation="-11" />
+                </Border.RenderTransform>
+            </Border>
+            <Border
+                Width="760"
+                Height="230"
+                Margin="0,0,-220,72"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Bottom"
+                Background="{ThemeResource AboutAmbientRibbonBrush}"
+                CornerRadius="115"
+                Opacity=".3"
+                RenderTransformOrigin=".5,.5">
+                <Border.RenderTransform>
+                    <CompositeTransform x:Name="AboutRibbonTwoTransform" Rotation="15" />
+                </Border.RenderTransform>
+            </Border>
+        </Grid>
 
-                <StackPanel Spacing="4">
-                    <HyperlinkButton Command="{x:Bind ViewModel.ShowDisclaimerOfLiabilityCommand}">
-                        <TextBlock x:Uid="About_DisclaimerOfLiability_ButtonLabel" TextWrapping="WrapWholeWords" />
-                    </HyperlinkButton>
-
-                    <HyperlinkButton Command="{x:Bind ViewModel.ShowTermsOfUseCommand}">
-                        <TextBlock x:Uid="About_TermsOfUse_ButtonLabel" TextWrapping="WrapWholeWords" />
-                    </HyperlinkButton>
-
-                    <HyperlinkButton Command="{x:Bind ViewModel.ShowPrivacyPolicyCommand}">
-                        <TextBlock x:Uid="About_PrivacyPolicy_ButtonLabel" TextWrapping="WrapWholeWords" />
-                    </HyperlinkButton>
-
-                    <HyperlinkButton Command="{x:Bind ViewModel.ShowThirdPartyCommand}">
-                        <TextBlock x:Uid="About_ThirdParty_ButtonLabel" TextWrapping="WrapWholeWords" />
-                    </HyperlinkButton>
-
+        <ScrollView>
+            <StackPanel Padding="0,24" Spacing="24">
+                <StackPanel
+                    Margin="12,0"
+                    Orientation="Horizontal"
+                    Spacing="12">
                     <Button
-                        x:Uid="About_SendFeedbackButton"
-                        Margin="0,8,0,0"
-                        Command="{x:Bind ViewModel.SendFeedbackCommand}">
-                        <StackPanel Orientation="Horizontal" Spacing="8">
-                            <SymbolIcon Symbol="Comment" />
-                            <TextBlock x:Uid="About_SendFeedbackButtonLabel" />
-                        </StackPanel>
+                        Width="32"
+                        Height="32"
+                        Padding="0"
+                        VerticalAlignment="Center"
+                        AutomationProperties.Name="Back"
+                        Background="Transparent"
+                        BorderBrush="Transparent"
+                        Command="{x:Bind ViewModel.GoBackCommand}">
+                        <SymbolIcon Symbol="Back" />
                     </Button>
+                    <TextBlock
+                        x:Uid="About_TitleLabel"
+                        Style="{StaticResource SubtitleTextBlockStyle}"
+                        TextWrapping="WrapWholeWords" />
+                </StackPanel>
+
+                <StackPanel
+                    x:Name="ContentPanel"
+                    Margin="54,0"
+                    HorizontalAlignment="Stretch"
+                    Spacing="12">
+
+                    <StackPanel Spacing="4">
+                        <TextBlock DoubleTapped="AppNameAndVersionTextBlock_DoubleTapped" TextWrapping="WrapWholeWords">
+                            <Run Text="{x:Bind AppName}" />
+                            <Run Text="{x:Bind AppVersion}" />
+                        </TextBlock>
+                        <TextBlock x:Uid="About_Copyright" TextWrapping="WrapWholeWords" />
+                    </StackPanel>
+
+                    <StackPanel Spacing="4">
+                        <HyperlinkButton Command="{x:Bind ViewModel.ShowDisclaimerOfLiabilityCommand}">
+                            <TextBlock x:Uid="About_DisclaimerOfLiability_ButtonLabel" TextWrapping="WrapWholeWords" />
+                        </HyperlinkButton>
+
+                        <HyperlinkButton Command="{x:Bind ViewModel.ShowTermsOfUseCommand}">
+                            <TextBlock x:Uid="About_TermsOfUse_ButtonLabel" TextWrapping="WrapWholeWords" />
+                        </HyperlinkButton>
+
+                        <HyperlinkButton Command="{x:Bind ViewModel.ShowPrivacyPolicyCommand}">
+                            <TextBlock x:Uid="About_PrivacyPolicy_ButtonLabel" TextWrapping="WrapWholeWords" />
+                        </HyperlinkButton>
+
+                        <HyperlinkButton Command="{x:Bind ViewModel.ShowThirdPartyCommand}">
+                            <TextBlock x:Uid="About_ThirdParty_ButtonLabel" TextWrapping="WrapWholeWords" />
+                        </HyperlinkButton>
+
+                        <Button
+                            x:Uid="About_SendFeedbackButton"
+                            Margin="0,8,0,0"
+                            Command="{x:Bind ViewModel.SendFeedbackCommand}">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <SymbolIcon Symbol="Comment" />
+                                <TextBlock x:Uid="About_SendFeedbackButtonLabel" />
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
                 </StackPanel>
             </StackPanel>
-        </StackPanel>
-        <VisualStateManager.VisualStateGroups>
-            <VisualStateGroup x:Name="CommonStates">
-                <VisualState x:Name="Default">
-                    <VisualState.StateTriggers>
-                        <AdaptiveTrigger MinWindowWidth="0" />
-                    </VisualState.StateTriggers>
-                </VisualState>
-                <VisualState x:Name="Wide">
-                    <VisualState.StateTriggers>
-                        <AdaptiveTrigger MinWindowWidth="908" />
-                    </VisualState.StateTriggers>
-                    <VisualState.Setters>
-                        <Setter Target="ContentPanel.HorizontalAlignment" Value="Left" />
-                        <Setter Target="ContentPanel.MinWidth" Value="800" />
-                    </VisualState.Setters>
-                </VisualState>
-            </VisualStateGroup>
-        </VisualStateManager.VisualStateGroups>
-    </ScrollView>
+            <VisualStateManager.VisualStateGroups>
+                <VisualStateGroup x:Name="CommonStates">
+                    <VisualState x:Name="Default">
+                        <VisualState.StateTriggers>
+                            <AdaptiveTrigger MinWindowWidth="0" />
+                        </VisualState.StateTriggers>
+                    </VisualState>
+                    <VisualState x:Name="Wide">
+                        <VisualState.StateTriggers>
+                            <AdaptiveTrigger MinWindowWidth="908" />
+                        </VisualState.StateTriggers>
+                        <VisualState.Setters>
+                            <Setter Target="ContentPanel.HorizontalAlignment" Value="Left" />
+                            <Setter Target="ContentPanel.MinWidth" Value="800" />
+                        </VisualState.Setters>
+                    </VisualState>
+                </VisualStateGroup>
+            </VisualStateManager.VisualStateGroups>
+        </ScrollView>
+    </Grid>
 </local:AboutPageBase>
