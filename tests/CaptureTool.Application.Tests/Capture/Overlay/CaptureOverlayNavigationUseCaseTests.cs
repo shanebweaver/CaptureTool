@@ -9,6 +9,7 @@ using CaptureTool.Application.Abstractions.Capture.Video.ToggleVideoCaptureDeskt
 using CaptureTool.Application.Abstractions.Capture.Video.ToggleVideoCapturePauseResume;
 using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Application.Abstractions.Settings;
+using CaptureTool.Application.Abstractions.Shutdown;
 using CaptureTool.Application.Abstractions.UseCases;
 using CaptureTool.Application.Abstractions.Windowing.ShowMainWindow;
 using CaptureTool.Application.Capture.Audio;
@@ -227,6 +228,7 @@ public sealed class CaptureOverlayNavigationUseCaseTests
         var videoCapture = new FakeVideoCaptureWorkflow { IsRecording = true };
         ICancelVideoCaptureUseCase cancelUseCase = CreateCancelVideoCaptureUseCase(videoCapture, shouldWarnBeforeDiscard: false);
         var showMainWindow = new Mock<IShowMainWindowUseCase>();
+        var shutdownHandler = new Mock<IShutdownHandler>();
         var navigation = new Mock<INavigationService>();
         navigation.Setup(service => service.CanGoBack).Returns(true);
         navigation.Setup(service => service.CurrentRequest).Returns(CreateNavigationRequest(NavigationRoute.CaptureOverlay));
@@ -237,6 +239,7 @@ public sealed class CaptureOverlayNavigationUseCaseTests
             videoCapture,
             cancelUseCase,
             showMainWindow.Object,
+            shutdownHandler.Object,
             navigation.Object,
             TestUseCaseExecutor.Instance);
 
@@ -245,7 +248,12 @@ public sealed class CaptureOverlayNavigationUseCaseTests
 
         Assert.IsTrue(response.VideoCaptureCanceled);
         Assert.AreEqual(1, videoCapture.CancelCallCount);
-        showMainWindow.Verify(useCase => useCase.ExecuteAsync(It.IsAny<ShowMainWindowRequest>(), TestContext.CancellationToken), Times.Once);
+        showMainWindow.Verify(
+            useCase => useCase.ExecuteAsync(
+                It.Is<ShowMainWindowRequest>(request => !request.CreateIfUnavailable),
+                TestContext.CancellationToken),
+            Times.Once);
+        shutdownHandler.Verify(handler => handler.Shutdown(), Times.Never);
     }
 
     [TestMethod]
@@ -261,6 +269,7 @@ public sealed class CaptureOverlayNavigationUseCaseTests
             shouldWarnBeforeDiscard: true,
             confirmationService: confirmationService.Object);
         var showMainWindow = new Mock<IShowMainWindowUseCase>();
+        var shutdownHandler = new Mock<IShutdownHandler>();
         var navigation = new Mock<INavigationService>();
         navigation.Setup(service => service.CanGoBack).Returns(true);
         navigation.Setup(service => service.CurrentRequest).Returns(CreateNavigationRequest(NavigationRoute.CaptureOverlay));
@@ -268,6 +277,7 @@ public sealed class CaptureOverlayNavigationUseCaseTests
             videoCapture,
             cancelUseCase,
             showMainWindow.Object,
+            shutdownHandler.Object,
             navigation.Object,
             TestUseCaseExecutor.Instance);
 
@@ -282,6 +292,38 @@ public sealed class CaptureOverlayNavigationUseCaseTests
         showMainWindow.Verify(
             useCase => useCase.ExecuteAsync(It.IsAny<ShowMainWindowRequest>(), It.IsAny<CancellationToken>()),
             Times.Never);
+        shutdownHandler.Verify(handler => handler.Shutdown(), Times.Never);
+    }
+
+    [TestMethod]
+    public async Task CloseCaptureOverlayUseCase_WhenNoMainWindowExists_ShutsDown()
+    {
+        var videoCapture = new FakeVideoCaptureWorkflow();
+        var showMainWindow = new Mock<IShowMainWindowUseCase>();
+        showMainWindow
+            .Setup(useCase => useCase.ExecuteAsync(
+                It.Is<ShowMainWindowRequest>(request => !request.CreateIfUnavailable),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(UseCaseResponse<ShowMainWindowResponse>.Success(new ShowMainWindowResponse(false)));
+        var shutdownHandler = new Mock<IShutdownHandler>();
+        var navigation = new Mock<INavigationService>();
+        navigation.Setup(service => service.CanGoBack).Returns(true);
+        navigation.Setup(service => service.CurrentRequest).Returns(CreateNavigationRequest(NavigationRoute.CaptureOverlay));
+        var useCase = new CloseCaptureOverlayUseCase(
+            videoCapture,
+            Mock.Of<ICancelVideoCaptureUseCase>(),
+            showMainWindow.Object,
+            shutdownHandler.Object,
+            navigation.Object,
+            TestUseCaseExecutor.Instance);
+
+        CloseCaptureOverlayResponse response = (await useCase.ExecuteAsync(
+            new CloseCaptureOverlayRequest(),
+            TestContext.CancellationToken)).Value!;
+
+        Assert.IsFalse(response.VideoCaptureCanceled);
+        showMainWindow.VerifyAll();
+        shutdownHandler.Verify(handler => handler.Shutdown(), Times.Once);
     }
 
     [TestMethod]
@@ -323,6 +365,24 @@ public sealed class CaptureOverlayNavigationUseCaseTests
 
         Assert.IsTrue(response.Succeeded);
         navigation.Verify(service => service.Navigate(NavigationRoute.Home, null, true), Times.Once);
+    }
+
+    [TestMethod]
+    public async Task ShowMainWindowUseCase_WhenCreationIsDisabledAndNoMainWindowExists_DoesNotNavigate()
+    {
+        var navigation = new Mock<INavigationService>();
+        navigation.Setup(service => service.CanGoBack).Returns(true);
+        navigation.Setup(service => service.TryGoBackTo(It.IsAny<Func<INavigationRequest, bool>>())).Returns(false);
+        var useCase = new ShowMainWindowUseCase(navigation.Object, TestUseCaseExecutor.Instance);
+
+        ShowMainWindowResponse response = (await useCase.ExecuteAsync(
+            new ShowMainWindowRequest(CreateIfUnavailable: false),
+            TestContext.CancellationToken)).Value!;
+
+        Assert.IsFalse(response.Succeeded);
+        navigation.Verify(
+            service => service.Navigate(It.IsAny<object>(), It.IsAny<object?>(), It.IsAny<bool>()),
+            Times.Never);
     }
 
     private static INavigationRequest CreateNavigationRequest(NavigationRoute route) =>

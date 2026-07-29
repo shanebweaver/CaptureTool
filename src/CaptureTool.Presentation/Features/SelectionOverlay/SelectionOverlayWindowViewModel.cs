@@ -214,7 +214,14 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
     {
         try
         {
-            await _showMainWindowCommand.ExecuteAsync(new ShowMainWindowRequest(), CancellationToken.None);
+            var response = await _showMainWindowCommand.ExecuteAsync(
+                new ShowMainWindowRequest(CreateIfUnavailable: false),
+                CancellationToken.None);
+
+            if (response.Value?.Succeeded != true)
+            {
+                _shutdownHandler.Shutdown();
+            }
         }
         catch (Exception)
         {

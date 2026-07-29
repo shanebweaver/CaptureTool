@@ -32,12 +32,13 @@ internal sealed class ShowMainWindowUseCase : IShowMainWindowUseCase
             useCase: () =>
             {
                 bool success = _navigationService.TryGoBackTo(r => CaptureToolNavigationRouteHelper.IsMainWindowRoute(r.Route));
-                if (!success)
+                if (!success && request.CreateIfUnavailable)
                 {
                     _navigationService.Navigate(NavigationRoute.Home, clearHistory: true);
+                    success = true;
                 }
 
-                return new ShowMainWindowResponse();
+                return new ShowMainWindowResponse(success);
             },
             cancellationToken: cancellationToken);
     }

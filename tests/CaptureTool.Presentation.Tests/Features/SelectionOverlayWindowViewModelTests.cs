@@ -4,6 +4,7 @@ using CaptureTool.Application.Abstractions.Edit.Image.OpenImageEditPage;
 using CaptureTool.Application.Abstractions.Localization;
 using CaptureTool.Application.Abstractions.Shutdown;
 using CaptureTool.Application.Abstractions.Themes;
+using CaptureTool.Application.Abstractions.UseCases;
 using CaptureTool.Application.Abstractions.Windowing.ShowMainWindow;
 using CaptureTool.Domain.Capture;
 using CaptureTool.Presentation.Features.SelectionOverlay;
@@ -59,7 +60,45 @@ public sealed class SelectionOverlayWindowViewModelTests
         Assert.IsTrue(viewModel.UsesCrosshairCursor);
     }
 
-    private static SelectionOverlayWindowViewModel CreateViewModel()
+    [TestMethod]
+    public async Task CloseOverlayCommand_WhenMainWindowExists_ShouldReturnToIt()
+    {
+        var showMainWindow = new Mock<IShowMainWindowUseCase>();
+        showMainWindow
+            .Setup(useCase => useCase.ExecuteAsync(
+                It.Is<ShowMainWindowRequest>(request => !request.CreateIfUnavailable),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(UseCaseResponse<ShowMainWindowResponse>.Success(new ShowMainWindowResponse()));
+        var shutdownHandler = new Mock<IShutdownHandler>();
+        SelectionOverlayWindowViewModel viewModel = CreateViewModel(showMainWindow, shutdownHandler);
+
+        await viewModel.CloseOverlayCommand.ExecuteAsync(null);
+
+        showMainWindow.VerifyAll();
+        shutdownHandler.Verify(handler => handler.Shutdown(), Times.Never);
+    }
+
+    [TestMethod]
+    public async Task CloseOverlayCommand_WhenNoMainWindowExists_ShouldShutDown()
+    {
+        var showMainWindow = new Mock<IShowMainWindowUseCase>();
+        showMainWindow
+            .Setup(useCase => useCase.ExecuteAsync(
+                It.Is<ShowMainWindowRequest>(request => !request.CreateIfUnavailable),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(UseCaseResponse<ShowMainWindowResponse>.Success(new ShowMainWindowResponse(false)));
+        var shutdownHandler = new Mock<IShutdownHandler>();
+        SelectionOverlayWindowViewModel viewModel = CreateViewModel(showMainWindow, shutdownHandler);
+
+        await viewModel.CloseOverlayCommand.ExecuteAsync(null);
+
+        showMainWindow.VerifyAll();
+        shutdownHandler.Verify(handler => handler.Shutdown(), Times.Once);
+    }
+
+    private static SelectionOverlayWindowViewModel CreateViewModel(
+        Mock<IShowMainWindowUseCase>? showMainWindow = null,
+        Mock<IShutdownHandler>? shutdownHandler = null)
     {
         Mock<ILocalizationService> localizationService = new();
         localizationService
@@ -73,10 +112,10 @@ public sealed class SelectionOverlayWindowViewModelTests
         return new SelectionOverlayWindowViewModel(
             Mock.Of<IOpenImageEditPageUseCase>(),
             Mock.Of<IOpenCaptureOverlayUseCase>(),
-            Mock.Of<IShowMainWindowUseCase>(),
+            showMainWindow?.Object ?? Mock.Of<IShowMainWindowUseCase>(),
             Mock.Of<ICaptureImageUseCase>(),
             themeService.Object,
-            Mock.Of<IShutdownHandler>(),
+            shutdownHandler?.Object ?? Mock.Of<IShutdownHandler>(),
             new CaptureModeViewModelFactory(localizationService.Object),
             new CaptureTypeViewModelFactory(localizationService.Object));
     }
