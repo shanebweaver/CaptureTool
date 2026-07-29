@@ -295,9 +295,7 @@
                             Command="{x:Bind ViewModel.ClearRecentCapturesCommand, Mode=OneWay}">
                             <StackPanel Orientation="Horizontal" Spacing="8">
                                 <SymbolIcon Symbol="Delete" />
-                                <TextBlock
-                                    x:Uid="HomePage_ClearRecentCapturesButton"
-                                    Text="Clear all" />
+                                <TextBlock x:Uid="HomePage_ClearRecentCapturesButton" Text="Clear all" />
                             </StackPanel>
                         </Button>
                     </Grid>
