@@ -225,6 +225,27 @@
   <data name="About_TitleLabel.Text" xml:space="preserve">
     <value>О приложении</value>
   </data>
+  <data name="About_HireTitle.Text" xml:space="preserve">
+    <value>Сотрудничество</value>
+  </data>
+  <data name="About_HireDescription.Text" xml:space="preserve">
+    <value>Я готов к новым проектам для Windows.</value>
+  </data>
+  <data name="About_OpenSourceTitle.Text" xml:space="preserve">
+    <value>Открытый исходный код</value>
+  </data>
+  <data name="About_OpenSourceDescription.Text" xml:space="preserve">
+    <value>Исходный код Capture Tool открыт и доступен на GitHub.</value>
+  </data>
+  <data name="About_ViewResumeButtonLabel.Text" xml:space="preserve">
+    <value>Посмотреть резюме</value>
+  </data>
+  <data name="About_BuyCoffeeButtonLabel.Text" xml:space="preserve">
+    <value>Угостить меня кофе</value>
+  </data>
+  <data name="About_ViewSourceButtonLabel.Text" xml:space="preserve">
+    <value>Открыть проект на GitHub</value>
+  </data>
   <data name="ImageEdit_SaveButton.Label" xml:space="preserve">
     <value>Сохранить как</value>
   </data>

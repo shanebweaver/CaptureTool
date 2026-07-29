@@ -130,63 +130,94 @@
                     x:Name="ContentPanel"
                     Margin="54,0"
                     HorizontalAlignment="Stretch"
-                    Spacing="12">
+                    Spacing="24">
+                    <StackPanel Spacing="12">
+                        <StackPanel Spacing="4">
+                            <TextBlock DoubleTapped="AppNameAndVersionTextBlock_DoubleTapped" TextWrapping="WrapWholeWords">
+                                <Run Text="{x:Bind AppName}" />
+                                <Run Text="{x:Bind AppVersion}" />
+                            </TextBlock>
+                            <TextBlock x:Uid="About_Copyright" TextWrapping="WrapWholeWords" />
+                        </StackPanel>
 
-                    <StackPanel Spacing="4">
-                        <TextBlock DoubleTapped="AppNameAndVersionTextBlock_DoubleTapped" TextWrapping="WrapWholeWords">
-                            <Run Text="{x:Bind AppName}" />
-                            <Run Text="{x:Bind AppVersion}" />
-                        </TextBlock>
-                        <TextBlock x:Uid="About_Copyright" TextWrapping="WrapWholeWords" />
+                        <StackPanel Spacing="4">
+                            <HyperlinkButton Command="{x:Bind ViewModel.ShowDisclaimerOfLiabilityCommand}">
+                                <TextBlock x:Uid="About_DisclaimerOfLiability_ButtonLabel" TextWrapping="WrapWholeWords" />
+                            </HyperlinkButton>
+
+                            <HyperlinkButton Command="{x:Bind ViewModel.ShowTermsOfUseCommand}">
+                                <TextBlock x:Uid="About_TermsOfUse_ButtonLabel" TextWrapping="WrapWholeWords" />
+                            </HyperlinkButton>
+
+                            <HyperlinkButton Command="{x:Bind ViewModel.ShowPrivacyPolicyCommand}">
+                                <TextBlock x:Uid="About_PrivacyPolicy_ButtonLabel" TextWrapping="WrapWholeWords" />
+                            </HyperlinkButton>
+
+                            <HyperlinkButton Command="{x:Bind ViewModel.ShowThirdPartyCommand}">
+                                <TextBlock x:Uid="About_ThirdParty_ButtonLabel" TextWrapping="WrapWholeWords" />
+                            </HyperlinkButton>
+
+                            <Button
+                                x:Uid="About_SendFeedbackButton"
+                                Margin="0,8,0,0"
+                                Command="{x:Bind ViewModel.SendFeedbackCommand}">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <SymbolIcon Symbol="Comment" />
+                                    <TextBlock x:Uid="About_SendFeedbackButtonLabel" />
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
                     </StackPanel>
 
                     <StackPanel Spacing="4">
-                        <HyperlinkButton Command="{x:Bind ViewModel.ShowDisclaimerOfLiabilityCommand}">
-                            <TextBlock x:Uid="About_DisclaimerOfLiability_ButtonLabel" TextWrapping="WrapWholeWords" />
-                        </HyperlinkButton>
-
-                        <HyperlinkButton Command="{x:Bind ViewModel.ShowTermsOfUseCommand}">
-                            <TextBlock x:Uid="About_TermsOfUse_ButtonLabel" TextWrapping="WrapWholeWords" />
-                        </HyperlinkButton>
-
-                        <HyperlinkButton Command="{x:Bind ViewModel.ShowPrivacyPolicyCommand}">
-                            <TextBlock x:Uid="About_PrivacyPolicy_ButtonLabel" TextWrapping="WrapWholeWords" />
-                        </HyperlinkButton>
-
-                        <HyperlinkButton Command="{x:Bind ViewModel.ShowThirdPartyCommand}">
-                            <TextBlock x:Uid="About_ThirdParty_ButtonLabel" TextWrapping="WrapWholeWords" />
-                        </HyperlinkButton>
-
+                        <TextBlock
+                            x:Uid="About_OpenSourceTitle"
+                            FontWeight="SemiBold"
+                            TextWrapping="WrapWholeWords" />
+                        <TextBlock
+                            x:Uid="About_OpenSourceDescription"
+                            Opacity=".75"
+                            TextWrapping="WrapWholeWords" />
                         <Button
-                            x:Uid="About_SendFeedbackButton"
-                            Margin="0,8,0,0"
-                            Command="{x:Bind ViewModel.SendFeedbackCommand}">
+                            Tag="https://github.com/shanebweaver/CaptureTool"
+                            Click="ExternalLinkButton_Click">
                             <StackPanel Orientation="Horizontal" Spacing="8">
-                                <SymbolIcon Symbol="Comment" />
-                                <TextBlock x:Uid="About_SendFeedbackButtonLabel" />
+                                <PathIcon Data="M8,0C3.58,0 0,3.58 0,8c0,3.54 2.29,6.53 5.47,7.59c.4,.07 .55,-.17 .55,-.38c0,-.19 -.01,-.82 -.01,-1.49c-2.01,.37 -2.53,-.49 -2.69,-.94c-.09,-.23 -.48,-.94 -.82,-1.13c-.28,-.15 -.68,-.52 -.01,-.53c.63,-.01 1.08,.58 1.23,.82c.72,1.21 1.87,.87 2.33,.66c.07,-.52 .28,-.87 .51,-1.07c-1.6,-.18 -3.29,-.8 -3.29,-3.56c0,-.88 .31,-1.6 .82,-2.17c-.08,-.2 -.36,-1.03 .08,-2.14c0,0 .67,-.21 2.2,.82A7.65,7.65 0 0 1 8,3.69c.68,0 1.36,.09 2,.27c1.53,-1.04 2.2,-.82 2.2,-.82c.44,1.11 .16,1.94 .08,2.14c.51,.57 .82,1.29 .82,2.17c0,2.77 -1.69,3.38 -3.3,3.56c.29,.25 .54,.73 .54,1.48c0,1.07 -.01,1.93 -.01,2.2c0,.21 .15,.46 .55,.38A8.013,8.013 0 0 0 16,8c0,-4.42 -3.58,-8 -8,-8Z" />
+                                <TextBlock x:Uid="About_ViewSourceButtonLabel" />
                             </StackPanel>
                         </Button>
                     </StackPanel>
+
+                    <StackPanel
+                        HorizontalAlignment="Left"
+                        VerticalAlignment="Top"
+                        Spacing="4">
+                        <TextBlock
+                            x:Uid="About_HireTitle"
+                            FontWeight="SemiBold"
+                            TextWrapping="WrapWholeWords" />
+                        <TextBlock
+                            x:Uid="About_HireDescription"
+                            Opacity=".75"
+                            TextWrapping="WrapWholeWords" />
+
+                        <StackPanel Orientation="Horizontal" Spacing="4">
+                            <Button Click="ExternalLinkButton_Click" Tag="https://www.shanebweaver.com/resume">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <SymbolIcon Symbol="Document" />
+                                    <TextBlock x:Uid="About_ViewResumeButtonLabel" />
+                                </StackPanel>
+                            </Button>
+                            <Button Click="ExternalLinkButton_Click" Tag="https://buymeacoffee.com/shanebweaver">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <TextBlock FontSize="16" Text="☕" />
+                                    <TextBlock x:Uid="About_BuyCoffeeButtonLabel" />
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+                    </StackPanel>
                 </StackPanel>
             </StackPanel>
-            <VisualStateManager.VisualStateGroups>
-                <VisualStateGroup x:Name="CommonStates">
-                    <VisualState x:Name="Default">
-                        <VisualState.StateTriggers>
-                            <AdaptiveTrigger MinWindowWidth="0" />
-                        </VisualState.StateTriggers>
-                    </VisualState>
-                    <VisualState x:Name="Wide">
-                        <VisualState.StateTriggers>
-                            <AdaptiveTrigger MinWindowWidth="908" />
-                        </VisualState.StateTriggers>
-                        <VisualState.Setters>
-                            <Setter Target="ContentPanel.HorizontalAlignment" Value="Left" />
-                            <Setter Target="ContentPanel.MinWidth" Value="800" />
-                        </VisualState.Setters>
-                    </VisualState>
-                </VisualStateGroup>
-            </VisualStateManager.VisualStateGroups>
         </ScrollView>
     </Grid>
 </local:AboutPageBase>

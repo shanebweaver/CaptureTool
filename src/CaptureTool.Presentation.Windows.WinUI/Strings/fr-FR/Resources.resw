@@ -225,6 +225,27 @@ En utilisant cette application, vous reconnaissez être seul responsable de la g
   <data name="About_TitleLabel.Text" xml:space="preserve">
     <value>À propos de cette application</value>
   </data>
+  <data name="About_HireTitle.Text" xml:space="preserve">
+    <value>Travaillons ensemble</value>
+  </data>
+  <data name="About_HireDescription.Text" xml:space="preserve">
+    <value>Je suis disponible pour de nouveaux projets Windows.</value>
+  </data>
+  <data name="About_OpenSourceTitle.Text" xml:space="preserve">
+    <value>Open source</value>
+  </data>
+  <data name="About_OpenSourceDescription.Text" xml:space="preserve">
+    <value>Capture Tool est open source et disponible sur GitHub.</value>
+  </data>
+  <data name="About_ViewResumeButtonLabel.Text" xml:space="preserve">
+    <value>Voir mon CV</value>
+  </data>
+  <data name="About_BuyCoffeeButtonLabel.Text" xml:space="preserve">
+    <value>M’offrir un café</value>
+  </data>
+  <data name="About_ViewSourceButtonLabel.Text" xml:space="preserve">
+    <value>Voir le projet sur GitHub</value>
+  </data>
   <data name="ImageEdit_SaveButton.Label" xml:space="preserve">
     <value>Enregistrer sous</value>
   </data>

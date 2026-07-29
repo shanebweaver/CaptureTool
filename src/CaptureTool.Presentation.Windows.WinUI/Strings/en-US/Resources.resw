@@ -277,6 +277,34 @@ By using this application, you acknowledge that you are responsible for managing
     <value>About this app</value>
     <comment>The label for the title of the about page.</comment>
   </data>
+  <data name="About_HireTitle.Text" xml:space="preserve">
+    <value>Work with me</value>
+    <comment>The heading for the hiring invitation on the about page.</comment>
+  </data>
+  <data name="About_HireDescription.Text" xml:space="preserve">
+    <value>I’m available for new Windows projects.</value>
+    <comment>The description for the hiring invitation on the about page.</comment>
+  </data>
+  <data name="About_OpenSourceTitle.Text" xml:space="preserve">
+    <value>Open source</value>
+    <comment>The heading for the open source project information on the about page.</comment>
+  </data>
+  <data name="About_OpenSourceDescription.Text" xml:space="preserve">
+    <value>Capture Tool is open source and available on GitHub.</value>
+    <comment>The description for the open source project information on the about page.</comment>
+  </data>
+  <data name="About_ViewResumeButtonLabel.Text" xml:space="preserve">
+    <value>View résumé</value>
+    <comment>The label for the button that opens Shane Weaver's résumé.</comment>
+  </data>
+  <data name="About_BuyCoffeeButtonLabel.Text" xml:space="preserve">
+    <value>Buy me a coffee</value>
+    <comment>The label for the button that opens Shane Weaver's supporter page.</comment>
+  </data>
+  <data name="About_ViewSourceButtonLabel.Text" xml:space="preserve">
+    <value>View project on GitHub</value>
+    <comment>The label for the button that opens the Capture Tool source code on GitHub.</comment>
+  </data>
   <data name="ImageEdit_SaveButton.Label" xml:space="preserve">
     <value>Save as</value>
     <comment>The label for the save button on the image edit page.</comment>
