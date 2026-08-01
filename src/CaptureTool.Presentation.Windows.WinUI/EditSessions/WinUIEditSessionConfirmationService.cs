@@ -20,6 +20,7 @@ internal sealed class WinUIEditSessionConfirmationService : IEditSessionConfirma
             return EditSessionLeaveDecision.Cancel;
         }
 
+        bool canSaveToSource = session is ISourceSaveableSession;
         EditSessionLeaveDecision decision = await ConfirmationCardPopupPresenter.ShowAsync(
             XamlRoot,
             EditSessionLeaveDecision.Cancel,
@@ -27,10 +28,21 @@ internal sealed class WinUIEditSessionConfirmationService : IEditSessionConfirma
             {
                 Title = GetString("EditSessionConfirmation_Title", "Leave editor?"),
                 Message = GetString("EditSessionConfirmation_Content", "The current edit session has unsaved changes."),
-                PrimaryButtonText = GetString("EditSessionConfirmation_SaveAsButton", "Save as"),
+                SecondaryButtonText = canSaveToSource
+                    ? GetString("EditSessionConfirmation_SaveAsButton", "Save as")
+                    : string.Empty,
+                PrimaryButtonText = canSaveToSource
+                    ? GetString("EditSessionConfirmation_SaveButton", "Save")
+                    : GetString("EditSessionConfirmation_SaveAsButton", "Save as"),
                 ConfirmButtonText = GetString("EditSessionConfirmation_DiscardButton", "Discard"),
                 CancelButtonText = GetString("EditSessionConfirmation_CancelButton", "Cancel"),
-                PrimaryCommand = new RelayCommand(() => complete(EditSessionLeaveDecision.Save)),
+                SecondaryCommand = canSaveToSource
+                    ? new RelayCommand(() => complete(EditSessionLeaveDecision.SaveAs))
+                    : null,
+                PrimaryCommand = new RelayCommand(() => complete(
+                    canSaveToSource
+                        ? EditSessionLeaveDecision.SaveToSource
+                        : EditSessionLeaveDecision.SaveAs)),
                 ConfirmCommand = new RelayCommand(() => complete(EditSessionLeaveDecision.Discard)),
                 CancelCommand = new RelayCommand(() => complete(EditSessionLeaveDecision.Cancel))
             });

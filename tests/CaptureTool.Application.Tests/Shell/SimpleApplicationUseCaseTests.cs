@@ -9,6 +9,7 @@ using CaptureTool.Application.Abstractions.Edit.Audio.OpenAudioEditPage;
 using CaptureTool.Application.Abstractions.Edit.Image.OpenImageEditPage;
 using CaptureTool.Application.Abstractions.Edit.Video.OpenVideoEditPage;
 using CaptureTool.Application.Abstractions.EditSessions;
+using CaptureTool.Application.Abstractions.Library.RecentCaptures;
 using CaptureTool.Application.Abstractions.Library.RecentCaptures.OpenRecentCapture;
 using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Application.Abstractions.Settings;
@@ -19,6 +20,7 @@ using CaptureTool.Application.Abstractions.Shell.AppMenu.ExitApplication;
 using CaptureTool.Application.Abstractions.Shell.Error.RestartApplication;
 using CaptureTool.Application.Abstractions.Shell.Home.ShowHomePage;
 using CaptureTool.Application.Abstractions.Shutdown;
+using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Application.Abstractions.Store;
 using CaptureTool.Application.Abstractions.Store.GetChromaKeyAddOn;
 using CaptureTool.Application.Abstractions.Store.LeaveStorePage;
@@ -266,8 +268,11 @@ public sealed class SimpleApplicationUseCaseTests
         videoEdit
             .Setup(useCase => useCase.ExecuteAsync(It.IsAny<OpenVideoEditPageRequest>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(UseCaseResponse<OpenVideoEditPageResponse>.Success(new OpenVideoEditPageResponse()));
+        var catalog = new Mock<IRecentCaptureCatalog>();
         var useCase = new OpenRecentCaptureUseCase(
             TestFileSystem.Instance,
+            CreateRecentCaptureStorage(),
+            catalog.Object,
             audioEdit.Object,
             imageEdit.Object,
             videoEdit.Object,
@@ -281,9 +286,22 @@ public sealed class SimpleApplicationUseCaseTests
         Assert.IsTrue(audioResponse.Opened);
         Assert.IsTrue(imageResponse.Opened);
         Assert.IsTrue(videoResponse.Opened);
-        audioEdit.Verify(useCase => useCase.ExecuteAsync(It.Is<OpenAudioEditPageRequest>(request => request.AudioFile.FilePath == audioPath), TestContext.CancellationToken), Times.Once);
-        imageEdit.Verify(useCase => useCase.ExecuteAsync(It.Is<OpenImageEditPageRequest>(request => request.ImageFile.FilePath == imagePath), TestContext.CancellationToken), Times.Once);
-        videoEdit.Verify(useCase => useCase.ExecuteAsync(It.Is<OpenVideoEditPageRequest>(request => request.VideoFile.FilePath == videoPath), TestContext.CancellationToken), Times.Once);
+        audioEdit.Verify(useCase => useCase.ExecuteAsync(
+            It.Is<OpenAudioEditPageRequest>(request =>
+                request.AudioFile.FilePath != audioPath &&
+                Path.GetExtension(request.AudioFile.FilePath) == ".wav"),
+            TestContext.CancellationToken), Times.Once);
+        imageEdit.Verify(useCase => useCase.ExecuteAsync(
+            It.Is<OpenImageEditPageRequest>(request =>
+                request.ImageFile.FilePath != imagePath &&
+                request.ImageFile.PersistentFilePath == imagePath),
+            TestContext.CancellationToken), Times.Once);
+        videoEdit.Verify(useCase => useCase.ExecuteAsync(
+            It.Is<OpenVideoEditPageRequest>(request =>
+                request.VideoFile.FilePath != videoPath &&
+                Path.GetExtension(request.VideoFile.FilePath) == ".mp4"),
+            TestContext.CancellationToken), Times.Once);
+        catalog.Verify(value => value.Touch(It.IsAny<string>()), Times.Exactly(3));
     }
 
     [TestMethod]
@@ -292,6 +310,8 @@ public sealed class SimpleApplicationUseCaseTests
         string unknownPath = await CreateTempFileAsync("capture.bin");
         var useCase = new OpenRecentCaptureUseCase(
             TestFileSystem.Instance,
+            CreateRecentCaptureStorage(),
+            Mock.Of<IRecentCaptureCatalog>(),
             Mock.Of<IOpenAudioEditPageUseCase>(),
             Mock.Of<IOpenImageEditPageUseCase>(),
             Mock.Of<IOpenVideoEditPageUseCase>(),
@@ -311,6 +331,15 @@ public sealed class SimpleApplicationUseCaseTests
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
         await File.WriteAllTextAsync(path, "capture");
         return path;
+    }
+
+    private static IStorageService CreateRecentCaptureStorage()
+    {
+        var storage = new Mock<IStorageService>();
+        storage.Setup(service => service.GetApplicationTemporaryFolderPath())
+            .Returns(Path.Combine(Path.GetTempPath(), "CaptureToolTests", "RecentWorkingFiles"));
+        storage.Setup(service => service.GetTemporaryFileName()).Returns(Guid.NewGuid().ToString());
+        return storage.Object;
     }
 
     public TestContext TestContext { get; set; } = null!;

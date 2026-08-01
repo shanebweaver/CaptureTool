@@ -201,12 +201,25 @@
             <!--  Save  -->
             <AppBarButton
                 x:Uid="ImageEdit_SaveButton"
+                AutomationProperties.AutomationId="ImageEdit_SaveButton"
                 Command="{x:Bind ViewModel.SaveCommand}"
                 Icon="Save"
                 IsEnabled="{x:Bind ViewModel.IsLoaded, Mode=OneWay}">
-                <AppBarButton.Label>Save as</AppBarButton.Label>
+                <AppBarButton.Label>Save</AppBarButton.Label>
                 <AppBarButton.KeyboardAccelerators>
                     <KeyboardAccelerator Key="S" Modifiers="Control" />
+                </AppBarButton.KeyboardAccelerators>
+            </AppBarButton>
+            <!--  Save as  -->
+            <AppBarButton
+                x:Uid="ImageEdit_SaveAsButton"
+                AutomationProperties.AutomationId="ImageEdit_SaveAsButton"
+                Command="{x:Bind ViewModel.SaveAsCommand}"
+                Icon="SaveLocal"
+                IsEnabled="{x:Bind ViewModel.IsLoaded, Mode=OneWay}">
+                <AppBarButton.Label>Save as</AppBarButton.Label>
+                <AppBarButton.KeyboardAccelerators>
+                    <KeyboardAccelerator Key="S" Modifiers="Control,Shift" />
                 </AppBarButton.KeyboardAccelerators>
             </AppBarButton>
             <!--  Open screenshots folder  -->

@@ -1,6 +1,7 @@
+using CaptureTool.Application.Abstractions.Library.RecentCaptures;
 using CaptureTool.Application.Abstractions.Library.RecentCaptures.GetRecentCaptures;
-using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Application.Library.RecentCaptures.GetRecentCaptures;
+using CaptureTool.Domain.Capture;
 using Moq;
 
 namespace CaptureTool.Application.Tests.Library;
@@ -9,115 +10,105 @@ namespace CaptureTool.Application.Tests.Library;
 public sealed class GetRecentCapturesUseCaseTests
 {
     [TestMethod]
-    public async Task ExecuteAsync_ShouldReturnFiveMostRecentlyWrittenFiles()
+    public async Task ExecuteAsync_ShouldCombineCapturedAndOpenedFilesAndSortByCatalogActivity()
     {
-        Mock<IStorageService> storageService = new();
-        string tempFolder = CreateTestFolder();
-        string oldFilePath = Path.Combine(tempFolder, "old.png");
-        string recentFilePath = Path.Combine(tempFolder, "recent.png");
+        string imagePath = await CreateFileAsync("Pictures", "capture.png");
+        string videoPath = await CreateFileAsync("Videos", "capture.mp4");
+        string audioPath = await CreateFileAsync("Music", "capture.wav");
+        string openedPath = await CreateFileAsync("Documents", "opened.jpg");
+        File.SetLastWriteTimeUtc(openedPath, new DateTime(2000, 1, 1, 0, 0, 0, DateTimeKind.Utc));
 
-        await File.WriteAllTextAsync(oldFilePath, "old", TestContext.CancellationToken);
-        await File.WriteAllTextAsync(Path.Combine(tempFolder, "capture-1.png"), "1", TestContext.CancellationToken);
-        await File.WriteAllTextAsync(Path.Combine(tempFolder, "capture-2.png"), "2", TestContext.CancellationToken);
-        await File.WriteAllTextAsync(Path.Combine(tempFolder, "capture-3.png"), "3", TestContext.CancellationToken);
-        await File.WriteAllTextAsync(Path.Combine(tempFolder, "capture-4.png"), "4", TestContext.CancellationToken);
-        await File.WriteAllTextAsync(recentFilePath, "recent", TestContext.CancellationToken);
-
-        File.SetLastWriteTimeUtc(oldFilePath, new DateTime(2020, 1, 1, 0, 0, 0, DateTimeKind.Utc));
-        File.SetLastWriteTimeUtc(recentFilePath, DateTime.UtcNow);
-
-        storageService
-            .Setup(service => service.GetApplicationTemporaryFolderPath())
-            .Returns(tempFolder);
-        GetRecentCapturesUseCase useCase = new(
-            storageService.Object,
+        var entries = new[]
+        {
+            Entry(imagePath, CaptureFileType.Image, RecentCaptureOrigin.Captured, 1),
+            Entry(videoPath, CaptureFileType.Video, RecentCaptureOrigin.Captured, 2),
+            Entry(audioPath, CaptureFileType.Audio, RecentCaptureOrigin.Captured, 3),
+            Entry(openedPath, CaptureFileType.Image, RecentCaptureOrigin.Opened, 4),
+        };
+        var catalog = new Mock<IRecentCaptureCatalog>();
+        catalog.Setup(value => value.GetEntries()).Returns(entries);
+        var useCase = new GetRecentCapturesUseCase(
+            catalog.Object,
             TestFileSystem.Instance,
             TestUseCaseExecutor.Instance);
 
-        GetRecentCapturesResponse? response = (await useCase.ExecuteAsync(new GetRecentCapturesRequest(), TestContext.CancellationToken)).Value;
+        GetRecentCapturesResponse response = (await useCase.ExecuteAsync(
+            new GetRecentCapturesRequest(Take: 10),
+            TestContext.CancellationToken)).Value!;
 
-        Assert.IsNotNull(response);
-        Assert.HasCount(5, response.Captures);
-        Assert.IsTrue(response.HasMore);
-        Assert.AreEqual(recentFilePath, response.Captures[0].FilePath);
-        Assert.IsFalse(response.Captures.Any(capture => capture.FilePath == oldFilePath));
-    }
-
-    [TestMethod]
-    public async Task ExecuteAsync_ShouldIncludeAudioFilesInRecentCaptures()
-    {
-        Mock<IStorageService> storageService = new();
-        string tempFolder = CreateTestFolder();
-        string audioFilePath = Path.Combine(tempFolder, "recent.wav");
-        string imageFilePath = Path.Combine(tempFolder, "older.png");
-
-        await File.WriteAllTextAsync(audioFilePath, "audio", TestContext.CancellationToken);
-        await File.WriteAllTextAsync(imageFilePath, "image", TestContext.CancellationToken);
-
-        File.SetLastWriteTimeUtc(audioFilePath, DateTime.UtcNow);
-        File.SetLastWriteTimeUtc(imageFilePath, DateTime.UtcNow.AddMinutes(-1));
-
-        storageService
-            .Setup(service => service.GetApplicationTemporaryFolderPath())
-            .Returns(tempFolder);
-
-        GetRecentCapturesUseCase useCase = new(
-            storageService.Object,
-            TestFileSystem.Instance,
-            TestUseCaseExecutor.Instance);
-
-        GetRecentCapturesResponse? response = (await useCase.ExecuteAsync(new GetRecentCapturesRequest(), TestContext.CancellationToken)).Value;
-
-        Assert.IsNotNull(response);
-        Assert.HasCount(2, response.Captures);
-        Assert.AreEqual(audioFilePath, response.Captures[0].FilePath);
-        Assert.AreEqual(imageFilePath, response.Captures[1].FilePath);
+        CollectionAssert.AreEqual(
+            new[] { openedPath, audioPath, videoPath, imagePath },
+            response.Captures.Select(capture => capture.FilePath).ToArray());
         Assert.IsFalse(response.HasMore);
     }
 
     [TestMethod]
-    public async Task ExecuteAsync_ShouldPageRecentCaptures()
+    public async Task ExecuteAsync_ShouldPageCatalogEntries()
     {
-        Mock<IStorageService> storageService = new();
-        string tempFolder = CreateTestFolder();
         string[] filePaths =
         [
-            Path.Combine(tempFolder, "capture-1.png"),
-            Path.Combine(tempFolder, "capture-2.png"),
-            Path.Combine(tempFolder, "capture-3.png"),
-            Path.Combine(tempFolder, "capture-4.png"),
-            Path.Combine(tempFolder, "capture-5.png")
+            await CreateFileAsync("Pictures", "capture-1.png"),
+            await CreateFileAsync("Pictures", "capture-2.png"),
+            await CreateFileAsync("Pictures", "capture-3.png"),
+            await CreateFileAsync("Pictures", "capture-4.png"),
+            await CreateFileAsync("Pictures", "capture-5.png"),
         ];
+        var entries = filePaths
+            .Select((path, index) => Entry(path, CaptureFileType.Image, RecentCaptureOrigin.Captured, 5 - index))
+            .ToArray();
+        var catalog = new Mock<IRecentCaptureCatalog>();
+        catalog.Setup(value => value.GetEntries()).Returns(entries);
+        var useCase = new GetRecentCapturesUseCase(catalog.Object, TestFileSystem.Instance, TestUseCaseExecutor.Instance);
 
-        for (int index = 0; index < filePaths.Length; index++)
-        {
-            await File.WriteAllTextAsync(filePaths[index], index.ToString(), TestContext.CancellationToken);
-            File.SetLastWriteTimeUtc(filePaths[index], DateTime.UtcNow.AddMinutes(-index));
-        }
+        GetRecentCapturesResponse response = (await useCase.ExecuteAsync(
+            new GetRecentCapturesRequest(Skip: 2, Take: 2),
+            TestContext.CancellationToken)).Value!;
 
-        storageService
-            .Setup(service => service.GetApplicationTemporaryFolderPath())
-            .Returns(tempFolder);
-
-        GetRecentCapturesUseCase useCase = new(
-            storageService.Object,
-            TestFileSystem.Instance,
-            TestUseCaseExecutor.Instance);
-
-        GetRecentCapturesResponse? response = (await useCase.ExecuteAsync(new GetRecentCapturesRequest(Skip: 2, Take: 2), TestContext.CancellationToken)).Value;
-
-        Assert.IsNotNull(response);
-        Assert.HasCount(2, response.Captures);
-        Assert.AreEqual(filePaths[2], response.Captures[0].FilePath);
-        Assert.AreEqual(filePaths[3], response.Captures[1].FilePath);
+        CollectionAssert.AreEqual(
+            filePaths.Skip(2).Take(2).ToArray(),
+            response.Captures.Select(capture => capture.FilePath).ToArray());
         Assert.IsTrue(response.HasMore);
     }
 
-    private static string CreateTestFolder()
+    [TestMethod]
+    public async Task ExecuteAsync_ShouldPruneMissingCatalogEntries()
     {
-        string path = Path.Combine(Path.GetTempPath(), "CaptureToolTests", Guid.NewGuid().ToString());
-        Directory.CreateDirectory(path);
-        return path;
+        string existingPath = await CreateFileAsync("Pictures", "existing.png");
+        string missingPath = Path.Combine(Path.GetDirectoryName(existingPath)!, "missing.png");
+        var catalog = new Mock<IRecentCaptureCatalog>();
+        catalog.Setup(value => value.GetEntries()).Returns(
+        [
+            Entry(missingPath, CaptureFileType.Image, RecentCaptureOrigin.Opened, 2),
+            Entry(existingPath, CaptureFileType.Image, RecentCaptureOrigin.Captured, 1),
+        ]);
+        var useCase = new GetRecentCapturesUseCase(catalog.Object, TestFileSystem.Instance, TestUseCaseExecutor.Instance);
+
+        GetRecentCapturesResponse response = (await useCase.ExecuteAsync(
+            new GetRecentCapturesRequest(Take: 10),
+            TestContext.CancellationToken)).Value!;
+
+        Assert.HasCount(1, response.Captures);
+        Assert.AreEqual(existingPath, response.Captures[0].FilePath);
+        catalog.Verify(value => value.RemoveRange(
+            It.Is<IEnumerable<string>>(paths => paths.SequenceEqual(new[] { missingPath }))), Times.Once);
+    }
+
+    private static RecentCaptureCatalogEntry Entry(
+        string filePath,
+        CaptureFileType fileType,
+        RecentCaptureOrigin origin,
+        int minute)
+    {
+        return new(filePath, fileType, origin, new DateTime(2026, 1, 1, 0, minute, 0, DateTimeKind.Utc));
+    }
+
+    private static async Task<string> CreateFileAsync(string folderName, string fileName)
+    {
+        string folderPath = Path.Combine(Path.GetTempPath(), "CaptureToolTests", Guid.NewGuid().ToString(), folderName);
+        Directory.CreateDirectory(folderPath);
+        string filePath = Path.Combine(folderPath, fileName);
+        await File.WriteAllTextAsync(filePath, "capture");
+        return filePath;
     }
 
     public TestContext TestContext { get; set; } = null!;

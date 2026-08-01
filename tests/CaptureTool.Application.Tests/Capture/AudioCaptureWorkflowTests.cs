@@ -2,6 +2,7 @@ using CaptureTool.Application.Abstractions.Capture;
 using CaptureTool.Application.Abstractions.Clipboard;
 using CaptureTool.Application.Abstractions.Files;
 using CaptureTool.Application.Abstractions.Logging;
+using CaptureTool.Application.Abstractions.Library.RecentCaptures;
 using CaptureTool.Application.Abstractions.Settings;
 using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Application.Abstractions.TaskEnvironment;
@@ -147,6 +148,7 @@ public sealed class AudioCaptureWorkflowTests
         Mock<ISettingsService> settings = CreateSettings(autoSave: true, autoCopy: true, audioFolder: @"C:\Audio");
         var fileSystem = new Mock<IFileSystem>();
         var clipboard = new Mock<IClipboardService>();
+        var recentCaptureCatalog = new Mock<IRecentCaptureCatalog>();
         TaskCompletionSource<object?> copied = new(TaskCreationOptions.RunContinuationsAsynchronously);
         clipboard
             .Setup(service => service.CopyFileAsync(It.Is<ClipboardFile>(file => file.FilePath == audioFile.FilePath)))
@@ -156,7 +158,8 @@ public sealed class AudioCaptureWorkflowTests
             recorder,
             settings: settings,
             fileSystem: fileSystem,
-            clipboard: clipboard);
+            clipboard: clipboard,
+            recentCaptureCatalog: recentCaptureCatalog);
 
         workflow.StartCapture();
         workflow.StopCapture();
@@ -168,6 +171,14 @@ public sealed class AudioCaptureWorkflowTests
                 true),
             Times.Once);
         await copied.Task.WaitAsync(TimeSpan.FromSeconds(1), CancellationToken.None);
+        recentCaptureCatalog.Verify(
+            catalog => catalog.RecordCaptured(audioFile.FilePath, CaptureFileType.Audio),
+            Times.Once);
+        recentCaptureCatalog.Verify(
+            catalog => catalog.ReplacePath(
+                audioFile.FilePath,
+                It.Is<string>(path => path.StartsWith(@"C:\Audio", StringComparison.OrdinalIgnoreCase) && path.EndsWith(".wav"))),
+            Times.Once);
     }
 
     [TestMethod]
@@ -244,7 +255,8 @@ public sealed class AudioCaptureWorkflowTests
         Mock<ISettingsService>? settings = null,
         Mock<IStorageService>? storage = null,
         Mock<IFileSystem>? fileSystem = null,
-        Mock<IClipboardService>? clipboard = null)
+        Mock<IClipboardService>? clipboard = null,
+        Mock<IRecentCaptureCatalog>? recentCaptureCatalog = null)
     {
         settings ??= CreateSettings();
 
@@ -266,7 +278,8 @@ public sealed class AudioCaptureWorkflowTests
             storage.Object,
             taskEnvironment.Object,
             Mock.Of<ILogService>(),
-            fileNameGenerator);
+            fileNameGenerator,
+            recentCaptureCatalog?.Object ?? Mock.Of<IRecentCaptureCatalog>());
 
         return new AudioCaptureWorkflow(
             recorder.Object,

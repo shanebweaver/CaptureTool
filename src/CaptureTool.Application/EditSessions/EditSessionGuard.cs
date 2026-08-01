@@ -36,7 +36,9 @@ internal sealed class EditSessionGuard : IEditSessionGuard
         EditSessionLeaveDecision decision = await _confirmationService.ConfirmLeaveAsync(session, cancellationToken);
         return decision switch
         {
-            EditSessionLeaveDecision.Save => await session.SaveAsync(cancellationToken),
+            EditSessionLeaveDecision.SaveToSource when session is ISourceSaveableSession sourceSaveableSession
+                => await sourceSaveableSession.SaveToSourceAsync(cancellationToken),
+            EditSessionLeaveDecision.SaveAs => await session.SaveAsync(cancellationToken),
             EditSessionLeaveDecision.Discard => true,
             _ => false,
         };

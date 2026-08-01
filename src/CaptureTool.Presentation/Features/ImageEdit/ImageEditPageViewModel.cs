@@ -32,7 +32,7 @@ using System.Numerics;
 
 namespace CaptureTool.Presentation.Features.ImageEdit;
 
-public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<ImageFile>, IEditableSession
+public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<ImageFile>, ISourceSaveableSession
 {
     private enum CanvasUpdateMode
     {
@@ -104,6 +104,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     public IRelayCommand ToggleCropModeCommand { get; }
     public IRelayCommand ToggleShapesModeCommand { get; }
     public IAsyncRelayCommand SaveCommand { get; }
+    public IAsyncRelayCommand SaveAsCommand { get; }
     public IAsyncRelayCommand OpenScreenshotsFolderCommand { get; }
     public IRelayCommand UndoCommand { get; }
     public IRelayCommand RedoCommand { get; }
@@ -799,7 +800,8 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         CopyCommand = new AsyncRelayCommand(CopyAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
         ToggleCropModeCommand = new RelayCommand(ToggleCropMode);
         ToggleShapesModeCommand = new RelayCommand(ToggleShapesMode);
-        SaveCommand = new AsyncRelayCommand(SaveCommandAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
+        SaveCommand = new AsyncRelayCommand(SaveToSourceCommandAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
+        SaveAsCommand = new AsyncRelayCommand(SaveAsCommandAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
         OpenScreenshotsFolderCommand = new AsyncRelayCommand(OpenScreenshotsFolderAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
         UndoCommand = new RelayCommand(Undo);
         RedoCommand = new RelayCommand(Redo);
@@ -1391,9 +1393,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
             ImageCanvasRenderOptions options = GetImageCanvasRenderOptions();
             await _imageCanvasExporter.SaveImageAsync(file.FilePath, [.. Drawables], options);
-            HasUnsavedChanges = false;
-            _hasUnsavedChangesBeforeSuperResolution = false;
-            _hasUserEditsSinceSuperResolutionActivated = false;
+            MarkChangesSaved();
             TrackOutput("save", TelemetryOutcomes.Succeeded);
             return true;
         }
@@ -1405,9 +1405,56 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         }
     }
 
-    private async Task SaveCommandAsync()
+    private async Task SaveToSourceCommandAsync()
+    {
+        await SaveToSourceAsync();
+    }
+
+    public async Task<bool> SaveToSourceAsync(CancellationToken cancellationToken = default)
+    {
+        if (_originalImageFile is null)
+        {
+            return false;
+        }
+
+        try
+        {
+            ImageCanvasRenderOptions options = GetImageCanvasRenderOptions();
+            IDrawable[] drawables = [.. Drawables];
+            await _imageCanvasExporter.SaveImageAsync(_originalImageFile.FilePath, drawables, options);
+
+            string? persistentFilePath = _originalImageFile.PersistentFilePath;
+            if (!string.IsNullOrWhiteSpace(persistentFilePath) &&
+                !string.Equals(
+                    Path.GetFullPath(persistentFilePath),
+                    Path.GetFullPath(_originalImageFile.FilePath),
+                    StringComparison.OrdinalIgnoreCase))
+            {
+                await _imageCanvasExporter.SaveImageAsync(persistentFilePath, drawables, options);
+            }
+
+            MarkChangesSaved();
+            TrackOutput("save", TelemetryOutcomes.Succeeded);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logService.LogException(ex, "Failed to save image edits to the source files.");
+            TrackOutput("save", TelemetryOutcomes.Failed);
+            return false;
+        }
+    }
+
+    private async Task SaveAsCommandAsync()
     {
         await SaveAsync(CancellationToken.None);
+    }
+
+    private void MarkChangesSaved()
+    {
+        HasUnsavedChanges = false;
+        _hasUnsavedChangesBeforeSuperResolution = false;
+        _hasUserEditsSinceSuperResolutionActivated = false;
     }
 
     private async Task OpenScreenshotsFolderAsync()

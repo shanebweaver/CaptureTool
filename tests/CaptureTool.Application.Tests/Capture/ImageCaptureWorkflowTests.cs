@@ -1,6 +1,7 @@
 using CaptureTool.Application.Abstractions.Capture;
 using CaptureTool.Application.Abstractions.Clipboard;
 using CaptureTool.Application.Abstractions.Logging;
+using CaptureTool.Application.Abstractions.Library.RecentCaptures;
 using CaptureTool.Application.Abstractions.Settings;
 using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Application.Abstractions.TaskEnvironment;
@@ -24,9 +25,13 @@ public sealed class ImageCaptureWorkflowTests
         string tempFolder = CreateTestFolder();
         var monitor = CreateMonitor();
         var screenCapture = new Mock<IScreenCapture>();
+        var recentCaptureCatalog = new Mock<IRecentCaptureCatalog>();
         screenCapture.Setup(service => service.CaptureAllMonitors()).Returns([monitor]);
         screenCapture.Setup(service => service.CombineMonitors(It.IsAny<IList<MonitorCaptureResult>>())).Returns(new Bitmap(2, 2));
-        var workflow = CreateWorkflow(tempFolder, screenCapture: screenCapture.Object);
+        var workflow = CreateWorkflow(
+            tempFolder,
+            screenCapture: screenCapture.Object,
+            recentCaptureCatalog: recentCaptureCatalog.Object);
         ImageFile? captured = null;
         workflow.NewImageCaptured += (_, file) => captured = file;
 
@@ -36,6 +41,9 @@ public sealed class ImageCaptureWorkflowTests
         Assert.AreEqual(result.FilePath, captured.FilePath);
         StringAssert.StartsWith(Path.GetFileName(result.FilePath), "Capture_");
         screenCapture.Verify(service => service.SaveImageToFile(It.IsAny<Image>(), result.FilePath), Times.Once);
+        recentCaptureCatalog.Verify(
+            catalog => catalog.RecordCaptured(result.FilePath, CaptureFileType.Image),
+            Times.Once);
     }
 
     [TestMethod]
@@ -109,6 +117,7 @@ public sealed class ImageCaptureWorkflowTests
         settings.Setup(service => service.Get(CaptureToolSettings.Settings_ImageCapture_AutoCopy)).Returns(true);
         settings.Setup(service => service.Get(CaptureToolSettings.Settings_ImageCapture_AutoSaveFolder)).Returns(screenshotsFolder);
         var screenCapture = new Mock<IScreenCapture>();
+        var recentCaptureCatalog = new Mock<IRecentCaptureCatalog>();
         screenCapture.Setup(service => service.CombineMonitors(It.IsAny<IList<MonitorCaptureResult>>())).Returns(new Bitmap(2, 2));
         screenCapture
             .Setup(service => service.SaveImageToFile(It.IsAny<Image>(), It.IsAny<string>()))
@@ -117,12 +126,18 @@ public sealed class ImageCaptureWorkflowTests
             tempFolder,
             clipboard.Object,
             settings.Object,
-            screenCapture.Object);
+            screenCapture.Object,
+            recentCaptureCatalog: recentCaptureCatalog.Object);
 
         ImageFile result = workflow.CaptureMonitors([CreateMonitor()]);
 
         clipboard.Verify(service => service.CopyBitmapAsync(It.Is<ClipboardFile>(file => file.FilePath == result.FilePath)), Times.Once);
-        Assert.HasCount(1, Directory.GetFiles(screenshotsFolder, "Capture_*.png"));
+        string[] savedFiles = Directory.GetFiles(screenshotsFolder, "Capture_*.png");
+        Assert.HasCount(1, savedFiles);
+        Assert.AreEqual(savedFiles[0], result.PersistentFilePath);
+        recentCaptureCatalog.Verify(
+            catalog => catalog.ReplacePath(result.FilePath, savedFiles[0]),
+            Times.Once);
     }
 
     private static ImageCaptureWorkflow CreateWorkflow(
@@ -130,7 +145,8 @@ public sealed class ImageCaptureWorkflowTests
         IClipboardService? clipboard = null,
         ISettingsService? settings = null,
         IScreenCapture? screenCapture = null,
-        ITelemetryService? telemetry = null)
+        ITelemetryService? telemetry = null,
+        IRecentCaptureCatalog? recentCaptureCatalog = null)
     {
         var storage = new Mock<IStorageService>();
         storage.Setup(service => service.GetApplicationTemporaryFolderPath()).Returns(tempFolder);
@@ -156,6 +172,7 @@ public sealed class ImageCaptureWorkflowTests
             taskEnvironment.Object,
             Mock.Of<ILogService>(),
             fileNameGenerator,
+            recentCaptureCatalog ?? Mock.Of<IRecentCaptureCatalog>(),
             telemetry);
 
         return new ImageCaptureWorkflow(

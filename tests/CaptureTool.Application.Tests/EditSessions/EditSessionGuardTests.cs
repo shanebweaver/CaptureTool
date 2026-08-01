@@ -36,7 +36,7 @@ public sealed class EditSessionGuardTests
     }
 
     [TestMethod]
-    public async Task CanLeaveCurrentSessionAsync_SavesBeforeLeaving_WhenUserChoosesSave()
+    public async Task CanLeaveCurrentSessionAsync_SavesAsBeforeLeaving_WhenUserChoosesSaveAs()
     {
         var session = new Mock<IEditableSession>();
         session.SetupGet(s => s.HasUnsavedChanges).Returns(true);
@@ -47,7 +47,7 @@ public sealed class EditSessionGuardTests
         var confirmation = new Mock<IEditSessionConfirmationService>();
         confirmation
             .Setup(service => service.ConfirmLeaveAsync(session.Object, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(EditSessionLeaveDecision.Save);
+            .ReturnsAsync(EditSessionLeaveDecision.SaveAs);
 
         var active = new ActiveEditSessionService();
         active.SetCurrentSession(session.Object);
@@ -55,6 +55,33 @@ public sealed class EditSessionGuardTests
 
         Assert.IsTrue(await guard.CanLeaveCurrentSessionAsync(TestContext.CancellationToken));
         session.Verify(s => s.SaveAsync(TestContext.CancellationToken), Times.Once);
+    }
+
+    [TestMethod]
+    public async Task CanLeaveCurrentSessionAsync_SavesToSource_WhenSupportedAndUserChoosesSave()
+    {
+        var session = new Mock<ISourceSaveableSession>();
+        session.SetupGet(s => s.HasUnsavedChanges).Returns(true);
+        session
+            .Setup(s => s.SaveToSourceAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+
+        var confirmation = new Mock<IEditSessionConfirmationService>();
+        confirmation
+            .Setup(service => service.ConfirmLeaveAsync(session.Object, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(EditSessionLeaveDecision.SaveToSource);
+
+        var active = new ActiveEditSessionService();
+        active.SetCurrentSession(session.Object);
+        var guard = CreateGuard(active, confirmation.Object);
+
+        Assert.IsTrue(await guard.CanLeaveCurrentSessionAsync(TestContext.CancellationToken));
+        session.Verify(
+            value => value.SaveToSourceAsync(TestContext.CancellationToken),
+            Times.Once);
+        session.Verify(
+            value => value.SaveAsync(It.IsAny<CancellationToken>()),
+            Times.Never);
     }
 
     [TestMethod]
