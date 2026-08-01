@@ -3,12 +3,12 @@ using CaptureTool.Application.Abstractions.Capture.Audio.OpenAudioCapturePage;
 using CaptureTool.Application.Abstractions.Capture.Overlay.OpenSelectionOverlay;
 using CaptureTool.Application.Abstractions.Feedback;
 using CaptureTool.Application.Abstractions.Library.RecentCaptures;
-using CaptureTool.Application.Abstractions.Library.RecentCaptures.DeleteRecentCapture;
+using CaptureTool.Application.Abstractions.Library.RecentCaptures.ClearRecentCaptures;
 using CaptureTool.Application.Abstractions.Library.RecentCaptures.GetRecentCaptures;
 using CaptureTool.Application.Abstractions.Library.RecentCaptures.OpenRecentCapture;
+using CaptureTool.Application.Abstractions.Library.RecentCaptures.RemoveRecentCapture;
 using CaptureTool.Application.Abstractions.Localization;
 using CaptureTool.Application.Abstractions.Metrics;
-using CaptureTool.Application.Abstractions.Settings.ClearTempFiles;
 using CaptureTool.Application.Abstractions.Shell.About.LeaveAboutPage;
 using CaptureTool.Application.Abstractions.Store;
 using CaptureTool.Application.Abstractions.UseCases;
@@ -164,17 +164,17 @@ public sealed class ViewModelContractTests
     }
 
     [TestMethod]
-    public async Task HomePageViewModel_ClearRecentCapturesCommand_ShouldClearTemporaryFilesAndRefresh()
+    public async Task HomePageViewModel_ClearRecentCapturesCommand_ShouldClearCatalogAndRefresh()
     {
-        var clearTempFilesUseCase = new Mock<IClearTempFilesUseCase>();
+        var clearRecentCapturesUseCase = new Mock<IClearRecentCapturesUseCase>();
         var getRecentCapturesUseCase = new Mock<IGetRecentCapturesUseCase>();
         var recentCapture = new RecentCapture(@"C:\Temp\capture.png", "capture.png", CaptureFileType.Image);
 
-        clearTempFilesUseCase
+        clearRecentCapturesUseCase
             .Setup(useCase => useCase.ExecuteAsync(
-                It.IsAny<ClearTempFilesRequest>(),
+                It.IsAny<ClearRecentCapturesRequest>(),
                 It.IsAny<CancellationToken>()))
-            .ReturnsAsync(UseCaseResponse<ClearTempFilesResponse>.Success(new ClearTempFilesResponse()));
+            .ReturnsAsync(UseCaseResponse<ClearRecentCapturesResponse>.Success(new ClearRecentCapturesResponse()));
         getRecentCapturesUseCase
             .SetupSequence(useCase => useCase.ExecuteAsync(
                 It.IsAny<GetRecentCapturesRequest>(),
@@ -183,33 +183,33 @@ public sealed class ViewModelContractTests
             .ReturnsAsync(UseCaseResponse<GetRecentCapturesResponse>.Success(new GetRecentCapturesResponse([])));
 
         var viewModel = CreateHomePageViewModel(
-            clearTempFilesUseCase: clearTempFilesUseCase.Object,
+            clearRecentCapturesUseCase: clearRecentCapturesUseCase.Object,
             getRecentCapturesUseCase: getRecentCapturesUseCase.Object);
 
         await viewModel.LoadAsync(TestContext.CancellationToken);
         await viewModel.ClearRecentCapturesCommand.ExecuteAsync(null);
 
-        clearTempFilesUseCase.Verify(
+        clearRecentCapturesUseCase.Verify(
             useCase => useCase.ExecuteAsync(
-                It.IsAny<ClearTempFilesRequest>(),
+                It.IsAny<ClearRecentCapturesRequest>(),
                 It.IsAny<CancellationToken>()),
             Times.Once);
         Assert.IsEmpty(viewModel.RecentCaptures);
     }
 
     [TestMethod]
-    public async Task HomePageViewModel_DeleteRecentCaptureCommand_ShouldDeleteAndRemoveItem()
+    public async Task HomePageViewModel_RemoveRecentCaptureCommand_ShouldRemoveItemFromCatalog()
     {
-        var deleteRecentCaptureUseCase = new Mock<IDeleteRecentCaptureUseCase>();
+        var removeRecentCaptureUseCase = new Mock<IRemoveRecentCaptureUseCase>();
         var getRecentCapturesUseCase = new Mock<IGetRecentCapturesUseCase>();
         var firstCapture = new RecentCapture(@"C:\Temp\capture-1.png", "capture-1.png", CaptureFileType.Image);
         var secondCapture = new RecentCapture(@"C:\Temp\capture-2.png", "capture-2.png", CaptureFileType.Image);
 
-        deleteRecentCaptureUseCase
+        removeRecentCaptureUseCase
             .Setup(useCase => useCase.ExecuteAsync(
-                It.IsAny<DeleteRecentCaptureRequest>(),
+                It.IsAny<RemoveRecentCaptureRequest>(),
                 It.IsAny<CancellationToken>()))
-            .ReturnsAsync(UseCaseResponse<DeleteRecentCaptureResponse>.Success(new DeleteRecentCaptureResponse()));
+            .ReturnsAsync(UseCaseResponse<RemoveRecentCaptureResponse>.Success(new RemoveRecentCaptureResponse()));
         getRecentCapturesUseCase
             .Setup(useCase => useCase.ExecuteAsync(
                 It.IsAny<GetRecentCapturesRequest>(),
@@ -218,16 +218,16 @@ public sealed class ViewModelContractTests
                 new GetRecentCapturesResponse([firstCapture, secondCapture])));
 
         var viewModel = CreateHomePageViewModel(
-            deleteRecentCaptureUseCase: deleteRecentCaptureUseCase.Object,
+            removeRecentCaptureUseCase: removeRecentCaptureUseCase.Object,
             getRecentCapturesUseCase: getRecentCapturesUseCase.Object);
 
         await viewModel.LoadAsync(TestContext.CancellationToken);
-        RecentCaptureViewModel deletedCapture = viewModel.RecentCaptures[0];
-        await viewModel.DeleteRecentCaptureCommand.ExecuteAsync(deletedCapture);
+        RecentCaptureViewModel removedCapture = viewModel.RecentCaptures[0];
+        await viewModel.RemoveRecentCaptureCommand.ExecuteAsync(removedCapture);
 
-        deleteRecentCaptureUseCase.Verify(
+        removeRecentCaptureUseCase.Verify(
             useCase => useCase.ExecuteAsync(
-                It.Is<DeleteRecentCaptureRequest>(request => request.FilePath == firstCapture.FilePath),
+                It.Is<RemoveRecentCaptureRequest>(request => request.FilePath == firstCapture.FilePath),
                 It.IsAny<CancellationToken>()),
             Times.Once);
         Assert.HasCount(1, viewModel.RecentCaptures);
@@ -239,10 +239,11 @@ public sealed class ViewModelContractTests
         IOpenAudioCapturePageUseCase? openAudioCapturePageUseCase = null,
         IAppMetricsService? appMetricsService = null,
         IStoreService? storeService = null,
-        IClearTempFilesUseCase? clearTempFilesUseCase = null,
-        IDeleteRecentCaptureUseCase? deleteRecentCaptureUseCase = null,
+        IClearRecentCapturesUseCase? clearRecentCapturesUseCase = null,
+        IRemoveRecentCaptureUseCase? removeRecentCaptureUseCase = null,
         IGetRecentCapturesUseCase? getRecentCapturesUseCase = null,
         IOpenRecentCaptureUseCase? openRecentCaptureUseCase = null,
+        IRecentCapturesChangeNotifier? recentCapturesChangeNotifier = null,
         IImageCaptureState? imageCaptureState = null,
         IVideoCaptureState? videoCaptureState = null,
         IAudioCaptureState? audioCaptureState = null,
@@ -263,10 +264,11 @@ public sealed class ViewModelContractTests
             openAudioCapturePageUseCase ?? Mock.Of<IOpenAudioCapturePageUseCase>(),
             appMetricsService ?? Mock.Of<IAppMetricsService>(),
             storeService ?? Mock.Of<IStoreService>(),
-            clearTempFilesUseCase ?? Mock.Of<IClearTempFilesUseCase>(),
-            deleteRecentCaptureUseCase ?? Mock.Of<IDeleteRecentCaptureUseCase>(),
+            clearRecentCapturesUseCase ?? Mock.Of<IClearRecentCapturesUseCase>(),
+            removeRecentCaptureUseCase ?? Mock.Of<IRemoveRecentCaptureUseCase>(),
             getRecentCapturesUseCase ?? fallbackGetRecentCapturesUseCase.Object,
             openRecentCaptureUseCase ?? Mock.Of<IOpenRecentCaptureUseCase>(),
+            recentCapturesChangeNotifier ?? Mock.Of<IRecentCapturesChangeNotifier>(),
             imageCaptureState ?? Mock.Of<IImageCaptureState>(),
             videoCaptureState ?? Mock.Of<IVideoCaptureState>(),
             audioCaptureState ?? Mock.Of<IAudioCaptureState>(),

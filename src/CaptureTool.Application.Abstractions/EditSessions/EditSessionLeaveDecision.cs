@@ -2,7 +2,8 @@ namespace CaptureTool.Application.Abstractions.EditSessions;
 
 public enum EditSessionLeaveDecision
 {
-    Save,
+    SaveToSource,
+    SaveAs,
     Discard,
     Cancel
 }

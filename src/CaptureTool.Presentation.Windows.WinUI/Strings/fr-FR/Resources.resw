@@ -135,14 +135,26 @@
   <data name="HomePage_CaptureOptionsLabel.Text" xml:space="preserve">
     <value>Options</value>
   </data>
+  <data name="HomePage_GallerySubtitleLabel.Text" xml:space="preserve">
+    <value>Vos fichiers récemment capturés ou ouverts apparaissent ci-dessous.</value>
+  </data>
+  <data name="HomePage_RecentCapturesHeaderLabel.Text" xml:space="preserve">
+    <value>Fichiers récents</value>
+  </data>
   <data name="HomePage_ClearRecentCapturesButton.Text" xml:space="preserve">
     <value>Tout effacer</value>
   </data>
   <data name="HomePage_RecentCaptureOpenMenuItem.Text" xml:space="preserve">
     <value>Ouvrir</value>
   </data>
-  <data name="HomePage_RecentCaptureDeleteMenuItem.Text" xml:space="preserve">
-    <value>Supprimer</value>
+  <data name="HomePage_RecentCaptureRemoveMenuItem.Text" xml:space="preserve">
+    <value>Retirer des éléments récents</value>
+  </data>
+  <data name="HomePage_EmptyRecentCapturesLabel.Text" xml:space="preserve">
+    <value>Aucun fichier récent</value>
+  </data>
+  <data name="HomePage_LoadingRecentCapturesLabel.Text" xml:space="preserve">
+    <value>Chargement de fichiers supplémentaires</value>
   </data>
   <data name="ErrorPage_HeaderLabel.Text" xml:space="preserve">
     <value>Une erreur est survenue lors du chargement de la page.</value>
@@ -247,6 +259,9 @@ En utilisant cette application, vous reconnaissez être seul responsable de la g
     <value>Voir le projet sur GitHub</value>
   </data>
   <data name="ImageEdit_SaveButton.Label" xml:space="preserve">
+    <value>Enregistrer</value>
+  </data>
+  <data name="ImageEdit_SaveAsButton.Label" xml:space="preserve">
     <value>Enregistrer sous</value>
   </data>
   <data name="ImageEdit_OpenScreenshotsFolderButton.Label" xml:space="preserve">
@@ -673,7 +688,11 @@ En utilisant cette application, vous reconnaissez être seul responsable de la g
   </data>
   <data name="EditSessionConfirmation_SaveAsButton" xml:space="preserve">
     <value>Enregistrer sous</value>
-    <comment>The primary button text for saving before leaving an edit session with unsaved changes.</comment>
+    <comment>The button text for saving to a new file before leaving an edit session with unsaved changes.</comment>
+  </data>
+  <data name="EditSessionConfirmation_SaveButton" xml:space="preserve">
+    <value>Enregistrer</value>
+    <comment>The button text for saving to the source files before leaving an edit session with unsaved changes.</comment>
   </data>
   <data name="EditSessionConfirmation_DiscardButton" xml:space="preserve">
     <value>Abandonner</value>

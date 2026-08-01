@@ -13,7 +13,7 @@
 
     <Border
         MinWidth="340"
-        MaxWidth="520"
+        MaxWidth="720"
         Margin="16"
         Padding="22"
         HorizontalAlignment="Center"
@@ -60,6 +60,12 @@
                     Command="{x:Bind CancelCommand, Mode=OneWay}"
                     Content="{x:Bind CancelButtonText, Mode=OneWay}"
                     CornerRadius="4" />
+                <Button
+                    MinWidth="118"
+                    Command="{x:Bind SecondaryCommand, Mode=OneWay}"
+                    Content="{x:Bind SecondaryButtonText, Mode=OneWay}"
+                    CornerRadius="4"
+                    Visibility="{x:Bind SecondaryButtonVisibility, Mode=OneWay}" />
                 <Button
                     MinWidth="118"
                     Command="{x:Bind PrimaryCommand, Mode=OneWay}"

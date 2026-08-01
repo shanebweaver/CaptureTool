@@ -142,32 +142,32 @@
     <comment>The label for the capture options button on the home page.</comment>
   </data>
   <data name="HomePage_GallerySubtitleLabel.Text" xml:space="preserve">
-    <value>Your latest screenshots, recordings, and clips are gathered below.</value>
-    <comment>The subtitle shown near the capture actions on the home page.</comment>
+    <value>Files you capture or open in Capture Tool are gathered below.</value>
+    <comment>The subtitle explaining which files appear in the recent files gallery.</comment>
   </data>
   <data name="HomePage_RecentCapturesHeaderLabel.Text" xml:space="preserve">
-    <value>Recent captures</value>
-    <comment>The header for the recent captures gallery on the home page.</comment>
+    <value>Recent files</value>
+    <comment>The header for files captured by or opened in Capture Tool.</comment>
   </data>
   <data name="HomePage_ClearRecentCapturesButton.Text" xml:space="preserve">
     <value>Clear all</value>
-    <comment>The label for the button that deletes all recent captures from the temporary files folder.</comment>
+    <comment>The label for the button that removes every item from recents without deleting any files.</comment>
   </data>
   <data name="HomePage_RecentCaptureOpenMenuItem.Text" xml:space="preserve">
     <value>Open</value>
     <comment>The context menu option that opens a recent capture in the editor.</comment>
   </data>
-  <data name="HomePage_RecentCaptureDeleteMenuItem.Text" xml:space="preserve">
-    <value>Delete</value>
-    <comment>The context menu option that deletes a recent capture.</comment>
+  <data name="HomePage_RecentCaptureRemoveMenuItem.Text" xml:space="preserve">
+    <value>Remove from recents</value>
+    <comment>The context menu option that removes an item from recents without deleting the file.</comment>
   </data>
   <data name="HomePage_EmptyRecentCapturesLabel.Text" xml:space="preserve">
-    <value>No captures yet</value>
-    <comment>The empty state label for the recent captures gallery on the home page.</comment>
+    <value>No recent files</value>
+    <comment>The empty state label for the recent files gallery on the home page.</comment>
   </data>
   <data name="HomePage_LoadingRecentCapturesLabel.Text" xml:space="preserve">
-    <value>Loading more captures</value>
-    <comment>The loading label shown while the recent captures gallery is fetching more items.</comment>
+    <value>Loading more files</value>
+    <comment>The loading label shown while the recent files gallery is fetching more items.</comment>
   </data>
   <data name="ErrorPage_HeaderLabel.Text" xml:space="preserve">
     <value>An error occurred while loading the page.</value>
@@ -306,8 +306,12 @@ By using this application, you acknowledge that you are responsible for managing
     <comment>The label for the button that opens the Capture Tool source code on GitHub.</comment>
   </data>
   <data name="ImageEdit_SaveButton.Label" xml:space="preserve">
-    <value>Save as</value>
+    <value>Save</value>
     <comment>The label for the save button on the image edit page.</comment>
+  </data>
+  <data name="ImageEdit_SaveAsButton.Label" xml:space="preserve">
+    <value>Save as</value>
+    <comment>The label for the save-as button on the image edit page.</comment>
   </data>
   <data name="ImageEdit_OpenScreenshotsFolderButton.Label" xml:space="preserve">
     <value>Open screenshots folder</value>
@@ -883,7 +887,11 @@ By using this application, you acknowledge that you are responsible for managing
   </data>
   <data name="EditSessionConfirmation_SaveAsButton" xml:space="preserve">
     <value>Save as</value>
-    <comment>The primary button text for saving before leaving an edit session with unsaved changes.</comment>
+    <comment>The button text for saving to a new file before leaving an edit session with unsaved changes.</comment>
+  </data>
+  <data name="EditSessionConfirmation_SaveButton" xml:space="preserve">
+    <value>Save</value>
+    <comment>The button text for saving to the source files before leaving an edit session with unsaved changes.</comment>
   </data>
   <data name="EditSessionConfirmation_DiscardButton" xml:space="preserve">
     <value>Discard</value>

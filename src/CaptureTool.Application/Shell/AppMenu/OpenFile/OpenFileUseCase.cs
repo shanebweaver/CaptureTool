@@ -1,9 +1,9 @@
 using CaptureTool.Application.Abstractions.Capture.Audio;
 using CaptureTool.Application.Abstractions.Files;
+using CaptureTool.Application.Abstractions.Library.RecentCaptures;
 using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Application.Abstractions.Shell.AppMenu.OpenFile;
 using CaptureTool.Application.Abstractions.Storage;
-using CaptureTool.Application.Abstractions.Time;
 using CaptureTool.Application.Abstractions.UseCases;
 using CaptureTool.Application.UseCases;
 using CaptureTool.Domain.Capture;
@@ -20,7 +20,7 @@ internal sealed class OpenFileUseCase : IOpenFileUseCase
     private readonly INavigationService _navigationService;
     private readonly IStorageService _storageService;
     private readonly IFileSystem _fileSystem;
-    private readonly IClock _clock;
+    private readonly IRecentCaptureCatalog _recentCaptureCatalog;
     private readonly IAudioCaptureNavigationGuard _audioCaptureNavigationGuard;
 
     public OpenFileUseCase(
@@ -28,7 +28,7 @@ internal sealed class OpenFileUseCase : IOpenFileUseCase
         INavigationService navigationService,
         IStorageService storageService,
         IFileSystem fileSystem,
-        IClock clock,
+        IRecentCaptureCatalog recentCaptureCatalog,
         IUseCaseExecutor useCaseExecutor,
         IAudioCaptureNavigationGuard audioCaptureNavigationGuard)
     {
@@ -37,7 +37,7 @@ internal sealed class OpenFileUseCase : IOpenFileUseCase
         _navigationService = navigationService;
         _storageService = storageService;
         _fileSystem = fileSystem;
-        _clock = clock;
+        _recentCaptureCatalog = recentCaptureCatalog;
         _audioCaptureNavigationGuard = audioCaptureNavigationGuard;
     }
 
@@ -63,13 +63,17 @@ internal sealed class OpenFileUseCase : IOpenFileUseCase
                     return new OpenFileResponse(false);
                 }
 
-                string temporaryFolderPath = _storageService.GetApplicationTemporaryFolderPath();
-                string filePath = IsFileInFolder(file.FilePath, temporaryFolderPath)
-                ? file.FilePath
-                : CopyFileToFolder(file.FilePath, temporaryFolderPath);
-                MarkFileAsRecentlyOpened(filePath);
+                CaptureFileType fileType = CaptureFileTypeDetector.DetectFileType(file.FilePath);
+                if (fileType == CaptureFileType.Unknown)
+                {
+                    return new OpenFileResponse(false);
+                }
 
-                CaptureFileType fileType = CaptureFileTypeDetector.DetectFileType(filePath);
+                string temporaryFolderPath = _storageService.GetApplicationTemporaryFolderPath();
+                bool isTemporaryFile = IsFileInFolder(file.FilePath, temporaryFolderPath);
+                string filePath = isTemporaryFile
+                    ? file.FilePath
+                    : CopyFileToFolder(file.FilePath, temporaryFolderPath);
                 switch (fileType)
                 {
                     case CaptureFileType.Audio:
@@ -77,7 +81,9 @@ internal sealed class OpenFileUseCase : IOpenFileUseCase
                         break;
 
                     case CaptureFileType.Image:
-                        _navigationService.Navigate(NavigationRoute.ImageEdit, new ImageFile(filePath));
+                        _navigationService.Navigate(
+                            NavigationRoute.ImageEdit,
+                            new ImageFile(filePath, isTemporaryFile ? null : file.FilePath));
                         break;
 
                     case CaptureFileType.Video:
@@ -88,6 +94,7 @@ internal sealed class OpenFileUseCase : IOpenFileUseCase
                         return new OpenFileResponse(false);
                 }
 
+                _recentCaptureCatalog.RecordOpened(file.FilePath, fileType);
                 return new OpenFileResponse();
             },
             cancellationToken: cancellationToken);
@@ -112,10 +119,5 @@ internal sealed class OpenFileUseCase : IOpenFileUseCase
 
         _fileSystem.CopyFile(sourcePath, destinationPath, true);
         return destinationPath;
-    }
-
-    private void MarkFileAsRecentlyOpened(string filePath)
-    {
-        _fileSystem.SetLastWriteTimeUtc(filePath, _clock.UtcNow);
     }
 }

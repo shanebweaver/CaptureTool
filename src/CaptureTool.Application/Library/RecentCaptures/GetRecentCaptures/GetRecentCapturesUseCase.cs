@@ -1,10 +1,8 @@
 using CaptureTool.Application.Abstractions.Files;
 using CaptureTool.Application.Abstractions.Library.RecentCaptures;
 using CaptureTool.Application.Abstractions.Library.RecentCaptures.GetRecentCaptures;
-using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Application.Abstractions.UseCases;
 using CaptureTool.Application.UseCases;
-using CaptureTool.Domain.Capture;
 
 namespace CaptureTool.Application.Library.RecentCaptures.GetRecentCaptures;
 
@@ -13,15 +11,16 @@ internal sealed class GetRecentCapturesUseCase : IGetRecentCapturesUseCase
     private const string ActivityId = "GetRecentCaptures";
 
     private readonly IUseCaseExecutor _useCaseExecutor;
-    private readonly IStorageService _storageService;
+    private readonly IRecentCaptureCatalog _recentCaptureCatalog;
     private readonly IFileSystem _fileSystem;
 
-    public GetRecentCapturesUseCase(IStorageService storageService,
+    public GetRecentCapturesUseCase(
+        IRecentCaptureCatalog recentCaptureCatalog,
         IFileSystem fileSystem,
         IUseCaseExecutor useCaseExecutor)
     {
         _useCaseExecutor = useCaseExecutor;
-        _storageService = storageService;
+        _recentCaptureCatalog = recentCaptureCatalog;
         _fileSystem = fileSystem;
     }
 
@@ -36,17 +35,26 @@ internal sealed class GetRecentCapturesUseCase : IGetRecentCapturesUseCase
             activityId: ActivityId,
             useCase: () =>
             {
-                string recentCapturesFolder = _storageService.GetApplicationTemporaryFolderPath();
                 int skip = Math.Max(0, request.Skip);
                 int take = request.Take <= 0 ? 5 : request.Take;
 
-                IReadOnlyList<RecentCapture> requestedCaptures = _fileSystem.EnumerateFiles(recentCapturesFolder, "*.*")
-                    .OrderByDescending(_fileSystem.GetLastWriteTimeUtc)
-                    .Where(filePath => !string.IsNullOrEmpty(filePath) && _fileSystem.FileExists(filePath))
-                    .Select(filePath => new RecentCapture(
-                        filePath,
-                        Path.GetFileName(filePath),
-                        CaptureFileTypeDetector.DetectFileType(filePath)))
+                IReadOnlyList<RecentCaptureCatalogEntry> catalogEntries = _recentCaptureCatalog.GetEntries();
+                string[] missingFilePaths = catalogEntries
+                    .Where(entry => !_fileSystem.FileExists(entry.FilePath))
+                    .Select(entry => entry.FilePath)
+                    .ToArray();
+                if (missingFilePaths.Length > 0)
+                {
+                    _recentCaptureCatalog.RemoveRange(missingFilePaths);
+                }
+
+                IReadOnlyList<RecentCapture> requestedCaptures = catalogEntries
+                    .Where(entry => _fileSystem.FileExists(entry.FilePath))
+                    .OrderByDescending(entry => entry.LastActivityUtc)
+                    .Select(entry => new RecentCapture(
+                        entry.FilePath,
+                        Path.GetFileName(entry.FilePath),
+                        entry.CaptureFileType))
                     .Skip(skip)
                     .Take(take + 1)
                     .ToArray();

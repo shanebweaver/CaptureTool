@@ -26,7 +26,10 @@ public sealed partial class Win2DImageCanvasExporter : IImageCanvasExporter
 
     public async Task<MemoryStream> RenderToStreamAsync(IDrawable[] drawables, ImageCanvasRenderOptions options)
     {
-        using InMemoryRandomAccessStream stream = await RenderToRandomAccessStreamAsync(drawables, options);
+        using InMemoryRandomAccessStream stream = await RenderToRandomAccessStreamAsync(
+            drawables,
+            options,
+            CanvasBitmapFileFormat.Png);
 
         var memoryStream = new MemoryStream();
         stream.Seek(0);
@@ -38,7 +41,10 @@ public sealed partial class Win2DImageCanvasExporter : IImageCanvasExporter
 
     public async Task SaveImageAsync(string filePath, IDrawable[] drawables, ImageCanvasRenderOptions options)
     {
-        using InMemoryRandomAccessStream stream = await RenderToRandomAccessStreamAsync(drawables, options);
+        using InMemoryRandomAccessStream stream = await RenderToRandomAccessStreamAsync(
+            drawables,
+            options,
+            GetFileFormat(filePath));
 
         string? directoryPath = Path.GetDirectoryName(filePath);
         if (!string.IsNullOrWhiteSpace(directoryPath))
@@ -68,7 +74,10 @@ public sealed partial class Win2DImageCanvasExporter : IImageCanvasExporter
         }
     }
 
-    private static async Task<InMemoryRandomAccessStream> RenderToRandomAccessStreamAsync(IDrawable[] drawables, ImageCanvasRenderOptions options)
+    private static async Task<InMemoryRandomAccessStream> RenderToRandomAccessStreamAsync(
+        IDrawable[] drawables,
+        ImageCanvasRenderOptions options,
+        CanvasBitmapFileFormat fileFormat)
     {
         float renderWidth = options.CropRect.Width;
         float renderHeight = options.CropRect.Height;
@@ -81,9 +90,19 @@ public sealed partial class Win2DImageCanvasExporter : IImageCanvasExporter
         drawingSession.Flush();
 
         var stream = new InMemoryRandomAccessStream();
-        await renderTarget.SaveAsync(stream, CanvasBitmapFileFormat.Png);
+        await renderTarget.SaveAsync(stream, fileFormat);
 
         return stream;
+    }
+
+    private static CanvasBitmapFileFormat GetFileFormat(string filePath)
+    {
+        return Path.GetExtension(filePath).ToLowerInvariant() switch
+        {
+            ".jpg" or ".jpeg" => CanvasBitmapFileFormat.Jpeg,
+            ".bmp" => CanvasBitmapFileFormat.Bmp,
+            _ => CanvasBitmapFileFormat.Png,
+        };
     }
 
     private sealed class ClipboardStreamSource : IClipboardStreamSource

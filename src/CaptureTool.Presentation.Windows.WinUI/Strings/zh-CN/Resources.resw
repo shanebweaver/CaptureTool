@@ -135,14 +135,26 @@
   <data name="HomePage_CaptureOptionsLabel.Text" xml:space="preserve">
     <value>选项</value>
   </data>
+  <data name="HomePage_GallerySubtitleLabel.Text" xml:space="preserve">
+    <value>最近捕获或打开的文件会显示在下方。</value>
+  </data>
+  <data name="HomePage_RecentCapturesHeaderLabel.Text" xml:space="preserve">
+    <value>最近使用的文件</value>
+  </data>
   <data name="HomePage_ClearRecentCapturesButton.Text" xml:space="preserve">
     <value>全部清除</value>
   </data>
   <data name="HomePage_RecentCaptureOpenMenuItem.Text" xml:space="preserve">
     <value>打开</value>
   </data>
-  <data name="HomePage_RecentCaptureDeleteMenuItem.Text" xml:space="preserve">
-    <value>删除</value>
+  <data name="HomePage_RecentCaptureRemoveMenuItem.Text" xml:space="preserve">
+    <value>从最近项目中移除</value>
+  </data>
+  <data name="HomePage_EmptyRecentCapturesLabel.Text" xml:space="preserve">
+    <value>没有最近使用的文件</value>
+  </data>
+  <data name="HomePage_LoadingRecentCapturesLabel.Text" xml:space="preserve">
+    <value>正在加载更多文件</value>
   </data>
   <data name="ErrorPage_HeaderLabel.Text" xml:space="preserve">
     <value>加载页面时出错。</value>
@@ -247,6 +259,9 @@
     <value>在 GitHub 上查看项目</value>
   </data>
   <data name="ImageEdit_SaveButton.Label" xml:space="preserve">
+    <value>保存</value>
+  </data>
+  <data name="ImageEdit_SaveAsButton.Label" xml:space="preserve">
     <value>另存为</value>
   </data>
   <data name="ImageEdit_OpenScreenshotsFolderButton.Label" xml:space="preserve">
@@ -673,7 +688,11 @@
   </data>
   <data name="EditSessionConfirmation_SaveAsButton" xml:space="preserve">
     <value>另存为</value>
-    <comment>The primary button text for saving before leaving an edit session with unsaved changes.</comment>
+    <comment>The button text for saving to a new file before leaving an edit session with unsaved changes.</comment>
+  </data>
+  <data name="EditSessionConfirmation_SaveButton" xml:space="preserve">
+    <value>保存</value>
+    <comment>The button text for saving to the source files before leaving an edit session with unsaved changes.</comment>
   </data>
   <data name="EditSessionConfirmation_DiscardButton" xml:space="preserve">
     <value>放弃</value>

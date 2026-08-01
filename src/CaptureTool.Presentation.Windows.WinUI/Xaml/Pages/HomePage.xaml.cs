@@ -143,11 +143,11 @@ public sealed partial class HomePage : HomePageBase
         }
     }
 
-    private void DeleteRecentCaptureMenuItem_Click(object sender, RoutedEventArgs e)
+    private void RemoveRecentCaptureMenuItem_Click(object sender, RoutedEventArgs e)
     {
         if (sender is MenuFlyoutItem { CommandParameter: RecentCaptureViewModel recentCapture })
         {
-            _ = ViewModel.DeleteRecentCaptureCommand.ExecuteAsync(recentCapture);
+            _ = ViewModel.RemoveRecentCaptureCommand.ExecuteAsync(recentCapture);
         }
     }
 
@@ -165,7 +165,7 @@ public sealed partial class HomePage : HomePageBase
                 && RecentCapturesGridView.ItemFromContainer(itemContainer) is RecentCaptureViewModel recentCapture)
             {
                 e.Handled = true;
-                _ = ViewModel.DeleteRecentCaptureCommand.ExecuteAsync(recentCapture);
+                _ = ViewModel.RemoveRecentCaptureCommand.ExecuteAsync(recentCapture);
                 return;
             }
 

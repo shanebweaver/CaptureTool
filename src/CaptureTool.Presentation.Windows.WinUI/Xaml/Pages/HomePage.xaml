@@ -285,7 +285,7 @@
                             VerticalAlignment="Center"
                             FontSize="20"
                             FontWeight="SemiBold"
-                            Text="Recent captures" />
+                            Text="Recent files" />
 
                         <Button
                             Grid.Column="1"
@@ -294,7 +294,7 @@
                             BorderBrush="Transparent"
                             Command="{x:Bind ViewModel.ClearRecentCapturesCommand, Mode=OneWay}">
                             <StackPanel Orientation="Horizontal" Spacing="8">
-                                <SymbolIcon Symbol="Delete" />
+                                <SymbolIcon Symbol="Clear" />
                                 <TextBlock x:Uid="HomePage_ClearRecentCapturesButton" Text="Clear all" />
                             </StackPanel>
                         </Button>
@@ -340,11 +340,11 @@
                                                 Icon="Folder"
                                                 Text="Open" />
                                             <MenuFlyoutItem
-                                                x:Uid="HomePage_RecentCaptureDeleteMenuItem"
-                                                Click="DeleteRecentCaptureMenuItem_Click"
+                                                x:Uid="HomePage_RecentCaptureRemoveMenuItem"
+                                                Click="RemoveRecentCaptureMenuItem_Click"
                                                 CommandParameter="{x:Bind}"
-                                                Icon="Delete"
-                                                Text="Delete" />
+                                                Icon="Remove"
+                                                Text="Remove from recents" />
                                         </MenuFlyout>
                                     </Grid.ContextFlyout>
 

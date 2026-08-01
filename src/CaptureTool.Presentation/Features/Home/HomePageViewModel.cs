@@ -1,11 +1,12 @@
 using CaptureTool.Application.Abstractions.Capture;
 using CaptureTool.Application.Abstractions.Capture.Audio.OpenAudioCapturePage;
 using CaptureTool.Application.Abstractions.Capture.Overlay.OpenSelectionOverlay;
-using CaptureTool.Application.Abstractions.Library.RecentCaptures.DeleteRecentCapture;
+using CaptureTool.Application.Abstractions.Library.RecentCaptures;
+using CaptureTool.Application.Abstractions.Library.RecentCaptures.ClearRecentCaptures;
 using CaptureTool.Application.Abstractions.Library.RecentCaptures.GetRecentCaptures;
 using CaptureTool.Application.Abstractions.Library.RecentCaptures.OpenRecentCapture;
+using CaptureTool.Application.Abstractions.Library.RecentCaptures.RemoveRecentCapture;
 using CaptureTool.Application.Abstractions.Metrics;
-using CaptureTool.Application.Abstractions.Settings.ClearTempFiles;
 using CaptureTool.Application.Abstractions.Store;
 using CaptureTool.Application.Abstractions.Telemetry;
 using CaptureTool.Domain.Capture;
@@ -28,10 +29,11 @@ public sealed partial class HomePageViewModel : AsyncLoadableViewModelBase
     private readonly IAudioCaptureState _audioCaptureState;
     private readonly IAppMetricsService _appMetricsService;
     private readonly IStoreService _storeService;
-    private readonly IClearTempFilesUseCase _clearTempFilesCommand;
-    private readonly IDeleteRecentCaptureUseCase _deleteRecentCaptureCommand;
+    private readonly IClearRecentCapturesUseCase _clearRecentCapturesCommand;
+    private readonly IRemoveRecentCaptureUseCase _removeRecentCaptureCommand;
     private readonly IGetRecentCapturesUseCase _getRecentCapturesQuery;
     private readonly IOpenRecentCaptureUseCase _openRecentCaptureCommand;
+    private readonly IRecentCapturesChangeNotifier _recentCapturesChangeNotifier;
     private readonly IFactoryServiceWithArgs<RecentCaptureViewModel, string> _recentCaptureViewModelFactory;
     private readonly ObservableCollection<RecentCaptureViewModel> _recentCaptures = [];
 
@@ -41,7 +43,7 @@ public sealed partial class HomePageViewModel : AsyncLoadableViewModelBase
     public IRelayCommand NewVideoCaptureCommand { get; }
     public IRelayCommand NewAudioCaptureCommand { get; }
     public IAsyncRelayCommand ClearRecentCapturesCommand { get; }
-    public IAsyncRelayCommand<RecentCaptureViewModel> DeleteRecentCaptureCommand { get; }
+    public IAsyncRelayCommand<RecentCaptureViewModel> RemoveRecentCaptureCommand { get; }
     public IAsyncRelayCommand<RecentCaptureViewModel> OpenRecentCaptureCommand { get; }
     public IAsyncRelayCommand LoadMoreRecentCapturesCommand { get; }
     public IAsyncRelayCommand LeaveStoreReviewCommand { get; }
@@ -100,10 +102,11 @@ public sealed partial class HomePageViewModel : AsyncLoadableViewModelBase
         IOpenAudioCapturePageUseCase openAudioCapturePageCommand,
         IAppMetricsService appMetricsService,
         IStoreService storeService,
-        IClearTempFilesUseCase clearTempFilesCommand,
-        IDeleteRecentCaptureUseCase deleteRecentCaptureCommand,
+        IClearRecentCapturesUseCase clearRecentCapturesCommand,
+        IRemoveRecentCaptureUseCase removeRecentCaptureCommand,
         IGetRecentCapturesUseCase getRecentCapturesQuery,
         IOpenRecentCaptureUseCase openRecentCaptureCommand,
+        IRecentCapturesChangeNotifier recentCapturesChangeNotifier,
         IImageCaptureState imageCaptureState,
         IVideoCaptureState videoCaptureState,
         IAudioCaptureState audioCaptureState,
@@ -115,10 +118,11 @@ public sealed partial class HomePageViewModel : AsyncLoadableViewModelBase
         _audioCaptureState = audioCaptureState;
         _appMetricsService = appMetricsService;
         _storeService = storeService;
-        _clearTempFilesCommand = clearTempFilesCommand;
-        _deleteRecentCaptureCommand = deleteRecentCaptureCommand;
+        _clearRecentCapturesCommand = clearRecentCapturesCommand;
+        _removeRecentCaptureCommand = removeRecentCaptureCommand;
         _getRecentCapturesQuery = getRecentCapturesQuery;
         _openRecentCaptureCommand = openRecentCaptureCommand;
+        _recentCapturesChangeNotifier = recentCapturesChangeNotifier;
         _recentCaptureViewModelFactory = recentCaptureViewModelFactory;
 
         NewImageCaptureCommand = TelemetryCommandFactory.Async(
@@ -148,9 +152,9 @@ public sealed partial class HomePageViewModel : AsyncLoadableViewModelBase
             telemetryService,
             "home",
             () => !IsLoadingRecentCaptures);
-        DeleteRecentCaptureCommand = TelemetryCommandFactory.Async<RecentCaptureViewModel>(
-            "delete_recent_capture",
-            DeleteRecentCaptureAsync,
+        RemoveRecentCaptureCommand = TelemetryCommandFactory.Async<RecentCaptureViewModel>(
+            "remove_recent_capture",
+            RemoveRecentCaptureAsync,
             telemetryService,
             "home");
         OpenRecentCaptureCommand = TelemetryCommandFactory.Async<RecentCaptureViewModel>(
@@ -172,6 +176,7 @@ public sealed partial class HomePageViewModel : AsyncLoadableViewModelBase
         _imageCaptureState.NewImageCaptured += OnNewImageCaptured;
         _videoCaptureState.NewVideoCaptured += OnNewVideoCaptured;
         _audioCaptureState.NewAudioCaptured += OnNewAudioCaptured;
+        _recentCapturesChangeNotifier.RecentCapturesChanged += OnRecentCapturesChanged;
 
         if (_appMetricsService.ShouldShowStoreReviewReminder())
         {
@@ -187,6 +192,7 @@ public sealed partial class HomePageViewModel : AsyncLoadableViewModelBase
         _imageCaptureState.NewImageCaptured -= OnNewImageCaptured;
         _videoCaptureState.NewVideoCaptured -= OnNewVideoCaptured;
         _audioCaptureState.NewAudioCaptured -= OnNewAudioCaptured;
+        _recentCapturesChangeNotifier.RecentCapturesChanged -= OnRecentCapturesChanged;
         base.Dispose();
     }
 
@@ -201,6 +207,11 @@ public sealed partial class HomePageViewModel : AsyncLoadableViewModelBase
     }
 
     private void OnNewAudioCaptured(object? sender, AudioFile e)
+    {
+        _ = RefreshRecentCapturesAsync(CancellationToken.None);
+    }
+
+    private void OnRecentCapturesChanged(object? sender, EventArgs e)
     {
         _ = RefreshRecentCapturesAsync(CancellationToken.None);
     }
@@ -231,28 +242,28 @@ public sealed partial class HomePageViewModel : AsyncLoadableViewModelBase
 
     private async Task ClearRecentCapturesAsync()
     {
-        var response = await _clearTempFilesCommand.ExecuteAsync(
-            new ClearTempFilesRequest(),
+        var response = await _clearRecentCapturesCommand.ExecuteAsync(
+            new ClearRecentCapturesRequest(),
             CancellationToken.None);
 
-        if (response.Value?.Succeeded == true)
+        if (response.Value?.Cleared == true)
         {
             await RefreshRecentCapturesAsync(CancellationToken.None);
         }
     }
 
-    private async Task DeleteRecentCaptureAsync(RecentCaptureViewModel? model)
+    private async Task RemoveRecentCaptureAsync(RecentCaptureViewModel? model)
     {
         if (model == null)
         {
             return;
         }
 
-        var response = await _deleteRecentCaptureCommand.ExecuteAsync(
-            new DeleteRecentCaptureRequest(model.FilePath),
+        var response = await _removeRecentCaptureCommand.ExecuteAsync(
+            new RemoveRecentCaptureRequest(model.FilePath),
             CancellationToken.None);
 
-        if (response.Value?.Deleted == true)
+        if (response.Value?.Removed == true)
         {
             _recentCaptures.Remove(model);
             RaiseRecentCaptureStateChanged();
