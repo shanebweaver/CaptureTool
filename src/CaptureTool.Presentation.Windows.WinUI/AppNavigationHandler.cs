@@ -232,11 +232,10 @@ internal partial class AppNavigationHandler : INavigationHandler, IWindowHandleP
 
     private async void OnSelectionOverlayHostLostFocus(object? sender, EventArgs e)
     {
-        if (_navigationService.CanGoBack)
-        {
-            await _showMainWindowCommand.ExecuteAsync(new ShowMainWindowRequest());
-        }
-        else
+        var response = await _showMainWindowCommand.ExecuteAsync(
+            new ShowMainWindowRequest(CreateIfUnavailable: false));
+
+        if (response.Value?.Succeeded != true)
         {
             _shutdownHandler.Shutdown();
         }
