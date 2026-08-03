@@ -1,3 +1,4 @@
+using CaptureTool.Application.Abstractions.Capture.Video.CancelVideoCapture;
 using CaptureTool.Application.Capture.Video;
 using CaptureTool.Domain.Capture;
 using CaptureTool.Domain.FileSystem;
@@ -22,6 +23,7 @@ internal sealed class FakeVideoCaptureWorkflow : IVideoCaptureWorkflow
     public NewCaptureArgs? StartedCaptureArgs { get; private set; }
     public bool PrepareWasCalled { get; private set; }
     public int CancelCallCount { get; private set; }
+    public CancelVideoCaptureReason? LastCancelReason { get; private set; }
     public int StopCallCount { get; private set; }
     public bool? LastDesktopAudioEnabled { get; private set; }
     public bool? LastAudioInputMuted { get; private set; }
@@ -29,6 +31,7 @@ internal sealed class FakeVideoCaptureWorkflow : IVideoCaptureWorkflow
     public bool SelectAudioInputSourceWasCalled { get; private set; }
     public bool? LastPausedState { get; private set; }
     public bool ThrowOnCancel { get; set; }
+    public Exception? StartException { get; set; }
     public PendingVideoFile PendingVideo { get; set; } = new("capture.mp4");
 
     public void PrepareForVideoCapture()
@@ -39,6 +42,11 @@ internal sealed class FakeVideoCaptureWorkflow : IVideoCaptureWorkflow
     public void StartVideoCapture(NewCaptureArgs args)
     {
         StartedCaptureArgs = args;
+        if (StartException is not null)
+        {
+            throw StartException;
+        }
+
         IsRecording = true;
     }
 
@@ -51,9 +59,10 @@ internal sealed class FakeVideoCaptureWorkflow : IVideoCaptureWorkflow
         return PendingVideo;
     }
 
-    public void CancelVideoCapture()
+    public void CancelVideoCapture(CancelVideoCaptureReason reason = CancelVideoCaptureReason.User)
     {
         CancelCallCount++;
+        LastCancelReason = reason;
         if (ThrowOnCancel)
         {
             throw new InvalidOperationException("Cancel failed.");

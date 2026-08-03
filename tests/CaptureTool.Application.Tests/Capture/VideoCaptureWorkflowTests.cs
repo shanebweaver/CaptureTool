@@ -1,4 +1,5 @@
 using CaptureTool.Application.Abstractions.Capture;
+using CaptureTool.Application.Abstractions.Capture.Video.CancelVideoCapture;
 using CaptureTool.Application.Abstractions.Clipboard;
 using CaptureTool.Application.Abstractions.Files;
 using CaptureTool.Application.Abstractions.Logging;
@@ -6,12 +7,14 @@ using CaptureTool.Application.Abstractions.Library.RecentCaptures;
 using CaptureTool.Application.Abstractions.Settings;
 using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Application.Abstractions.TaskEnvironment;
+using CaptureTool.Application.Abstractions.Telemetry;
 using CaptureTool.Application.Capture.Video;
 using CaptureTool.Domain.Capture;
 using CaptureTool.Domain.FileSystem;
 using FluentAssertions;
 using Moq;
 using System.Drawing;
+using System.Runtime.InteropServices;
 
 namespace CaptureTool.Application.Tests.Capture;
 
@@ -61,6 +64,156 @@ public sealed class VideoCaptureWorkflowTests
         act.Should().Throw<InvalidOperationException>();
         context.Workflow.IsRecording.Should().BeFalse();
         context.Workflow.IsFinalizing.Should().BeFalse();
+    }
+
+    [TestMethod]
+    public void StartVideoCapture_ShouldTrackBoundedFailureStageAndReason_WhenRecorderStartFails()
+    {
+        List<(string Name, IReadOnlyDictionary<string, object?> Properties)> events = [];
+        var telemetry = new Mock<ITelemetryService>();
+        telemetry
+            .Setup(service => service.TrackEvent(
+                It.IsAny<string>(),
+                It.IsAny<IReadOnlyDictionary<string, object?>?>()))
+            .Callback<string, IReadOnlyDictionary<string, object?>?>(
+                (name, properties) => events.Add(
+                    (name, properties ?? new Dictionary<string, object?>())));
+        TestWorkflowContext context = CreateContext(telemetryService: telemetry.Object);
+        context.Workflow.PrepareForVideoCapture();
+        context.ScreenRecorder
+            .Setup(recorder => recorder.StartRecording(It.IsAny<CaptureRecordingOptions>()))
+            .Throws(new InvalidOperationException(
+                "Recorder failed with private details.",
+                new VideoCaptureNotSupportedException(VideoCaptureUnsupportedReason.GraphicsCapture)));
+
+        Action act = () => context.Workflow.StartVideoCapture(CreateCaptureArgs());
+
+        act.Should().Throw<InvalidOperationException>();
+        var failedEvent = events.Single(trackedEvent => trackedEvent.Name == TelemetryEvents.CaptureFailed);
+        failedEvent.Properties[TelemetryProperties.CaptureType].Should().Be(nameof(CaptureType.Rectangle));
+        failedEvent.Properties[TelemetryProperties.DesktopAudioEnabled].Should().Be(true);
+        failedEvent.Properties[TelemetryProperties.AudioInputEnabled].Should().Be(false);
+        failedEvent.Properties[TelemetryProperties.FailureStage].Should().Be(TelemetryFailureStages.RecorderStart);
+        failedEvent.Properties[TelemetryProperties.FailureReason].Should().Be(TelemetryFailureReasons.GraphicsUnsupported);
+        failedEvent.Properties.Values
+            .OfType<string>()
+            .Should().NotContain(text =>
+                text.Contains("private", StringComparison.OrdinalIgnoreCase) || text.Contains("1234"));
+    }
+
+    [TestMethod]
+    public void StartVideoCapture_ShouldClassifyNativeCodecUnavailableHResult()
+    {
+        List<(string Name, IReadOnlyDictionary<string, object?> Properties)> events = [];
+        var telemetry = new Mock<ITelemetryService>();
+        telemetry
+            .Setup(service => service.TrackEvent(
+                It.IsAny<string>(),
+                It.IsAny<IReadOnlyDictionary<string, object?>?>()))
+            .Callback<string, IReadOnlyDictionary<string, object?>?>(
+                (name, properties) => events.Add(
+                    (name, properties ?? new Dictionary<string, object?>())));
+        TestWorkflowContext context = CreateContext(telemetryService: telemetry.Object);
+        context.ScreenRecorder
+            .Setup(recorder => recorder.StartRecording(It.IsAny<CaptureRecordingOptions>()))
+            .Throws(new ExternalException(
+                "Native codec unavailable.",
+                unchecked((int)0xC00D5212)));
+
+        Action act = () => context.Workflow.StartVideoCapture(CreateCaptureArgs());
+
+        act.Should().Throw<ExternalException>();
+        var failedEvent = events.Single(trackedEvent => trackedEvent.Name == TelemetryEvents.CaptureFailed);
+        failedEvent.Properties[TelemetryProperties.FailureReason]
+            .Should().Be(TelemetryFailureReasons.ComponentUnavailable);
+    }
+
+    [TestMethod]
+    public void StartVideoCapture_ShouldTrackTargetUnavailable_WhenSelectedTargetIsInvalidated()
+    {
+        List<(string Name, IReadOnlyDictionary<string, object?> Properties)> events = [];
+        var telemetry = new Mock<ITelemetryService>();
+        telemetry
+            .Setup(service => service.TrackEvent(
+                It.IsAny<string>(),
+                It.IsAny<IReadOnlyDictionary<string, object?>?>()))
+            .Callback<string, IReadOnlyDictionary<string, object?>?>(
+                (name, properties) => events.Add(
+                    (name, properties ?? new Dictionary<string, object?>())));
+        TestWorkflowContext context = CreateContext(telemetryService: telemetry.Object);
+        context.ScreenRecorder
+            .Setup(recorder => recorder.StartRecording(It.IsAny<CaptureRecordingOptions>()))
+            .Throws(new VideoCaptureTargetUnavailableException());
+
+        Action act = () => context.Workflow.StartVideoCapture(CreateCaptureArgs());
+
+        act.Should().Throw<VideoCaptureTargetUnavailableException>();
+        var failedEvent = events.Single(trackedEvent => trackedEvent.Name == TelemetryEvents.CaptureFailed);
+        failedEvent.Properties[TelemetryProperties.FailureStage].Should().Be(TelemetryFailureStages.RecorderStart);
+        failedEvent.Properties[TelemetryProperties.FailureReason].Should().Be(TelemetryFailureReasons.TargetUnavailable);
+    }
+
+    [TestMethod]
+    public void StartVideoCapture_WhenDeviceIsUnsupported_ShouldTrackAndRejectBeforeRecorder()
+    {
+        List<(string Name, IReadOnlyDictionary<string, object?> Properties)> events = [];
+        var telemetry = new Mock<ITelemetryService>();
+        telemetry
+            .Setup(service => service.TrackEvent(
+                It.IsAny<string>(),
+                It.IsAny<IReadOnlyDictionary<string, object?>?>()))
+            .Callback<string, IReadOnlyDictionary<string, object?>?>(
+                (name, properties) => events.Add(
+                    (name, properties ?? new Dictionary<string, object?>())));
+        var support = new Mock<IVideoCaptureSupportService>();
+        support
+            .Setup(service => service.GetSupportStatus())
+            .Returns(VideoCaptureSupportStatus.Unsupported(VideoCaptureUnsupportedReason.OperatingSystem));
+        TestWorkflowContext context = CreateContext(
+            telemetryService: telemetry.Object,
+            supportService: support.Object);
+
+        Action act = () => context.Workflow.StartVideoCapture(CreateCaptureArgs(CaptureType.FullScreen));
+
+        act.Should().Throw<VideoCaptureNotSupportedException>()
+            .Which.Reason.Should().Be(VideoCaptureUnsupportedReason.OperatingSystem);
+        context.ScreenRecorder.Verify(
+            recorder => recorder.StartRecording(It.IsAny<CaptureRecordingOptions>()),
+            Times.Never);
+        events.Should().ContainSingle(trackedEvent => trackedEvent.Name == TelemetryEvents.CaptureRequested);
+        var failedEvent = events.Single(trackedEvent => trackedEvent.Name == TelemetryEvents.CaptureFailed);
+        failedEvent.Properties[TelemetryProperties.CaptureType].Should().Be(nameof(CaptureType.FullScreen));
+        failedEvent.Properties[TelemetryProperties.FailureStage].Should().Be(TelemetryFailureStages.RecorderStart);
+        failedEvent.Properties[TelemetryProperties.FailureReason].Should().Be(TelemetryFailureReasons.PlatformUnsupported);
+    }
+
+    [TestMethod]
+    public void CaptureTelemetry_ShouldPreserveRequestedCaptureTypeAcrossLifecycle()
+    {
+        List<(string Name, IReadOnlyDictionary<string, object?> Properties)> events = [];
+        var telemetry = new Mock<ITelemetryService>();
+        telemetry
+            .Setup(service => service.TrackEvent(
+                It.IsAny<string>(),
+                It.IsAny<IReadOnlyDictionary<string, object?>?>()))
+            .Callback<string, IReadOnlyDictionary<string, object?>?>(
+                (name, properties) => events.Add(
+                    (name, properties ?? new Dictionary<string, object?>())));
+        TestWorkflowContext context = CreateContext(telemetryService: telemetry.Object);
+
+        context.Workflow.StartVideoCapture(CreateCaptureArgs(CaptureType.FullScreen));
+        context.ScreenRecorder.Raise(recorder => recorder.RecordingStarted += null, EventArgs.Empty);
+        context.Workflow.CancelVideoCapture();
+
+        events
+            .Where(trackedEvent => trackedEvent.Name is
+                TelemetryEvents.CaptureRequested or
+                TelemetryEvents.CaptureStarted or
+                TelemetryEvents.CaptureCanceled)
+            .Should().OnlyContain(trackedEvent =>
+                Equals(
+                    trackedEvent.Properties[TelemetryProperties.CaptureType],
+                    nameof(CaptureType.FullScreen)));
     }
 
     [TestMethod]
@@ -157,7 +310,16 @@ public sealed class VideoCaptureWorkflowTests
     [TestMethod]
     public void CancelVideoCapture_ShouldStopRecorderClearSessionAndRaisePausedFalse()
     {
-        TestWorkflowContext context = CreateContext();
+        List<(string Name, IReadOnlyDictionary<string, object?> Properties)> events = [];
+        var telemetry = new Mock<ITelemetryService>();
+        telemetry
+            .Setup(service => service.TrackEvent(
+                It.IsAny<string>(),
+                It.IsAny<IReadOnlyDictionary<string, object?>?>()))
+            .Callback<string, IReadOnlyDictionary<string, object?>?>(
+                (name, properties) => events.Add(
+                    (name, properties ?? new Dictionary<string, object?>())));
+        TestWorkflowContext context = CreateContext(telemetryService: telemetry.Object);
         List<bool> raisedStates = [];
         context.Workflow.PausedStateChanged += (_, state) => raisedStates.Add(state);
 
@@ -168,6 +330,34 @@ public sealed class VideoCaptureWorkflowTests
         context.Workflow.IsRecording.Should().BeFalse();
         context.ScreenRecorder.Verify(recorder => recorder.StopRecording(), Times.Once);
         raisedStates.Should().Equal(true, false);
+        events.Should().ContainSingle(trackedEvent => trackedEvent.Name == TelemetryEvents.CaptureCanceled);
+        events.Should().NotContain(trackedEvent => trackedEvent.Name == TelemetryEvents.CaptureFailed);
+    }
+
+    [TestMethod]
+    public void CancelVideoCapture_WhenFirstFrameTimesOut_ShouldTrackFailedInsteadOfCanceled()
+    {
+        List<(string Name, IReadOnlyDictionary<string, object?> Properties)> events = [];
+        var telemetry = new Mock<ITelemetryService>();
+        telemetry
+            .Setup(service => service.TrackEvent(
+                It.IsAny<string>(),
+                It.IsAny<IReadOnlyDictionary<string, object?>?>()))
+            .Callback<string, IReadOnlyDictionary<string, object?>?>(
+                (name, properties) => events.Add(
+                    (name, properties ?? new Dictionary<string, object?>())));
+        TestWorkflowContext context = CreateContext(telemetryService: telemetry.Object);
+        context.Workflow.StartVideoCapture(CreateCaptureArgs());
+
+        context.Workflow.CancelVideoCapture(CancelVideoCaptureReason.StartTimeout);
+
+        context.Workflow.IsRecording.Should().BeFalse();
+        context.ScreenRecorder.Verify(recorder => recorder.StopRecording(), Times.Once);
+        events.Should().NotContain(trackedEvent => trackedEvent.Name == TelemetryEvents.CaptureCanceled);
+        var failedEvent = events.Single(trackedEvent => trackedEvent.Name == TelemetryEvents.CaptureFailed);
+        failedEvent.Properties[TelemetryProperties.Outcome].Should().Be(TelemetryOutcomes.Failed);
+        failedEvent.Properties[TelemetryProperties.FailureStage].Should().Be(TelemetryFailureStages.FirstFrame);
+        failedEvent.Properties[TelemetryProperties.FailureReason].Should().Be(TelemetryFailureReasons.StartTimeout);
     }
 
     [TestMethod]
@@ -191,7 +381,9 @@ public sealed class VideoCaptureWorkflowTests
 
     private static TestWorkflowContext CreateContext(
         bool defaultDesktopAudioEnabled = true,
-        bool runBackgroundTasksImmediately = true)
+        bool runBackgroundTasksImmediately = true,
+        ITelemetryService? telemetryService = null,
+        IVideoCaptureSupportService? supportService = null)
     {
         var screenRecorder = new Mock<IScreenRecorder>();
         var recentCaptureCatalog = new Mock<IRecentCaptureCatalog>();
@@ -230,6 +422,15 @@ public sealed class VideoCaptureWorkflowTests
             .Callback<Action>(action => action())
             .Returns(true);
 
+        if (supportService is null)
+        {
+            var supported = new Mock<IVideoCaptureSupportService>();
+            supported
+                .Setup(service => service.GetSupportStatus())
+                .Returns(VideoCaptureSupportStatus.Supported);
+            supportService = supported.Object;
+        }
+
         var fileNameGenerator = new VideoCaptureFileNameGenerator(TestClock.Instance);
         var postProcessor = new VideoCapturePostProcessor(
             Mock.Of<IClipboardService>(),
@@ -246,9 +447,11 @@ public sealed class VideoCaptureWorkflowTests
             settings.Object,
             storage.Object,
             backgroundTaskRunner.Object,
+            supportService,
             new VideoCaptureStateStore(),
             postProcessor,
-            fileNameGenerator);
+            fileNameGenerator,
+            telemetryService);
 
         return new TestWorkflowContext(
             workflow,
@@ -258,7 +461,7 @@ public sealed class VideoCaptureWorkflowTests
             () => finalizeAction);
     }
 
-    private static NewCaptureArgs CreateCaptureArgs()
+    private static NewCaptureArgs CreateCaptureArgs(CaptureType captureType = CaptureType.Rectangle)
     {
         MonitorCaptureResult monitor = new(
             IntPtr.Zero,
@@ -268,7 +471,10 @@ public sealed class VideoCaptureWorkflowTests
             new Rectangle(0, 0, 1920, 1080),
             true);
 
-        return new NewCaptureArgs(monitor, new Rectangle(0, 0, 1920, 1080));
+        return new NewCaptureArgs(
+            monitor,
+            new Rectangle(0, 0, 1920, 1080),
+            captureType);
     }
 
     private sealed class TestWorkflowContext(

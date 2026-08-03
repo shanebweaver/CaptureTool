@@ -1794,4 +1794,10 @@ SOFTWARE.
   <data name="TelemetryConsentDialog_DontAllowButton" xml:space="preserve">
     <value>No enviar</value>
   </data>
+  <data name="CaptureOverlay_StartRecordingFailedMessage" xml:space="preserve">
+    <value>No se pudo iniciar la grabación. Inténtalo de nuevo.</value>
+  </data>
+  <data name="CaptureOverlay_RecordingUnsupportedMessage" xml:space="preserve">
+    <value>La grabación de pantalla no es compatible con este dispositivo.</value>
+  </data>
 </root>

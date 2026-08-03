@@ -9,6 +9,8 @@ public static class TelemetryProperties
     public const string ClearHistory = "clear_history";
     public const string DesktopAudioEnabled = "desktop_audio_enabled";
     public const string Enabled = "enabled";
+    public const string FailureReason = "failure_reason";
+    public const string FailureStage = "failure_stage";
     public const string FromRoute = "from_route";
     public const string IsBackNavigation = "is_back_navigation";
     public const string MediaType = "media_type";

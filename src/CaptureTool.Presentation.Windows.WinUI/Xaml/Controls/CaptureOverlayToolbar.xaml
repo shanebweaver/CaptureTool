@@ -41,10 +41,12 @@
 
             <Grid>
                 <Button
+                    x:Name="StartVideoCaptureButton"
                     x:Uid="CaptureOverlay_StartVideoCaptureButton"
                     MinWidth="100"
                     Background="#AAFF3340"
                     Command="{x:Bind StartVideoCaptureCommand, Mode=OneWay}"
+                    IsEnabled="{x:Bind CanStartRecording, Mode=OneWay}"
                     Visibility="{x:Bind utils:VisibilityUtility.InverseBoolToVisibility(IsRecording), Mode=OneWay}">
                     <StackPanel Orientation="Horizontal" Spacing="8">
                         <FontIcon
@@ -57,6 +59,7 @@
                     </StackPanel>
                 </Button>
                 <Button
+                    x:Name="StopVideoCaptureButton"
                     x:Uid="CaptureOverlay_StopVideoCaptureButton"
                     MinWidth="100"
                     Background="#AAFF3340"

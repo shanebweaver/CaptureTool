@@ -1,16 +1,17 @@
 using CaptureTool.Application.Abstractions.Audio;
+using CaptureTool.Presentation.Windows.WinUI.Utils;
+using Microsoft.Windows.ApplicationModel.Resources;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using System.Collections;
 using System.Windows.Input;
-using Windows.ApplicationModel.Resources;
 using Windows.System;
 
 namespace CaptureTool.Presentation.Windows.WinUI.Xaml.Controls;
 
 public sealed partial class AudioInputSelector : UserControlBase
 {
-    private readonly ResourceLoader _resourceLoader = new();
+    private ResourceLoader? _resourceLoader;
 
     public static readonly DependencyProperty AudioInputSourcesProperty = DependencyProperty.Register(
         nameof(AudioInputSources),
@@ -235,21 +236,33 @@ public sealed partial class AudioInputSelector : UserControlBase
     {
         return isAvailable
             ? selectedAudioInputSource?.DisplayName ?? string.Empty
-            : _resourceLoader.GetString("AudioInputSelector_NoInputDevice");
+            : WinUIResourceLoader.GetString(
+                ref _resourceLoader,
+                "AudioInputSelector_NoInputDevice",
+                "No input device");
     }
 
     private string GetSelectedAudioInputSourceDisplayName(bool isAvailable, AudioInputSource? selectedAudioInputSource)
     {
         return isAvailable
             ? selectedAudioInputSource?.DisplayName ?? string.Empty
-            : _resourceLoader.GetString("AudioInputSelector_NoInputDevice");
+            : WinUIResourceLoader.GetString(
+                ref _resourceLoader,
+                "AudioInputSelector_NoInputDevice",
+                "No input device");
     }
 
     private string GetMuteButtonText(bool isMuted)
     {
-        return _resourceLoader.GetString(isMuted
-            ? "AudioInputSelector_UnmuteButton"
-            : "AudioInputSelector_MuteButton");
+        return isMuted
+            ? WinUIResourceLoader.GetString(
+                ref _resourceLoader,
+                "AudioInputSelector_UnmuteButton",
+                "Unmute microphone")
+            : WinUIResourceLoader.GetString(
+                ref _resourceLoader,
+                "AudioInputSelector_MuteButton",
+                "Mute microphone");
     }
 
     private static string GetPropertyName(DependencyProperty property)

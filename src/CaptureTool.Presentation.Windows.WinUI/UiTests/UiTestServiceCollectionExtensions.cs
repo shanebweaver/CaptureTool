@@ -1,6 +1,7 @@
 using CaptureTool.Application.Abstractions.Edit.Image.Rendering;
 using CaptureTool.Application.Abstractions.Edit.Image.TextExtraction;
 using CaptureTool.Application.Abstractions.Localization;
+using CaptureTool.Application.Abstractions.Logging;
 using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Application.Abstractions.Themes;
 using Microsoft.Extensions.DependencyInjection;
@@ -20,6 +21,7 @@ internal static class UiTestServiceCollectionExtensions
         services.AddSingleton<IThemeService, UiTestThemeService>();
         services.AddSingleton<ITextExtractionFeatureAvailability, UiTestTextExtractionFeatureAvailability>();
         services.AddSingleton<ITextExtractionService, UiTestTextExtractionService>();
+        services.AddSingleton<ILogService, UiTestFileLogService>();
 
         return services;
     }

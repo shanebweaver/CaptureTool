@@ -39,7 +39,9 @@ internal sealed class CancelVideoCaptureUseCase : ICancelVideoCaptureUseCase
                 }
 
                 bool shouldWarnBeforeDiscard = _settingsService.Get(CaptureToolSettings.Settings_Capture_WarnBeforeDiscard);
-                if (shouldWarnBeforeDiscard)
+                if (shouldWarnBeforeDiscard &&
+                    !request.SkipConfirmation &&
+                    request.Reason != CancelVideoCaptureReason.StartTimeout)
                 {
                     bool shouldDiscardCapture = await _confirmationService.ConfirmDiscardActiveCaptureAsync(token);
                     if (!shouldDiscardCapture || token.IsCancellationRequested)
@@ -48,7 +50,7 @@ internal sealed class CancelVideoCaptureUseCase : ICancelVideoCaptureUseCase
                     }
                 }
 
-                _videoCaptureWorkflow.CancelVideoCapture();
+                _videoCaptureWorkflow.CancelVideoCapture(request.Reason);
                 return new CancelVideoCaptureResponse();
             },
             cancellationToken: cancellationToken);

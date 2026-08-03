@@ -95,6 +95,50 @@ public sealed class CaptureOverlayNavigationUseCaseTests
     }
 
     [TestMethod]
+    public async Task CancelVideoCaptureUseCase_WhenConfirmationIsSkipped_CancelsWithoutPrompt()
+    {
+        var videoCapture = new FakeVideoCaptureWorkflow { IsRecording = true };
+        var confirmationService = new Mock<ICaptureDiscardConfirmationService>();
+        ICancelVideoCaptureUseCase useCase = CreateCancelVideoCaptureUseCase(
+            videoCapture,
+            shouldWarnBeforeDiscard: true,
+            confirmationService: confirmationService.Object);
+
+        CancelVideoCaptureResponse response = (await useCase.ExecuteAsync(
+            new CancelVideoCaptureRequest(SkipConfirmation: true),
+            TestContext.CancellationToken)).Value!;
+
+        Assert.IsTrue(response.Succeeded);
+        Assert.AreEqual(1, videoCapture.CancelCallCount);
+        Assert.AreEqual(CancelVideoCaptureReason.User, videoCapture.LastCancelReason);
+        confirmationService.Verify(
+            service => service.ConfirmDiscardActiveCaptureAsync(It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [TestMethod]
+    public async Task CancelVideoCaptureUseCase_WhenStartTimesOut_UsesFailureCancellationReasonWithoutPrompt()
+    {
+        var videoCapture = new FakeVideoCaptureWorkflow { IsRecording = true };
+        var confirmationService = new Mock<ICaptureDiscardConfirmationService>();
+        ICancelVideoCaptureUseCase useCase = CreateCancelVideoCaptureUseCase(
+            videoCapture,
+            shouldWarnBeforeDiscard: true,
+            confirmationService: confirmationService.Object);
+
+        CancelVideoCaptureResponse response = (await useCase.ExecuteAsync(
+            new CancelVideoCaptureRequest(Reason: CancelVideoCaptureReason.StartTimeout),
+            TestContext.CancellationToken)).Value!;
+
+        Assert.IsTrue(response.Succeeded);
+        Assert.AreEqual(1, videoCapture.CancelCallCount);
+        Assert.AreEqual(CancelVideoCaptureReason.StartTimeout, videoCapture.LastCancelReason);
+        confirmationService.Verify(
+            service => service.ConfirmDiscardActiveCaptureAsync(It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [TestMethod]
     public async Task CancelVideoCaptureUseCase_WhenCaptureWarningsEnabledAndUserConfirms_Cancels()
     {
         var videoCapture = new FakeVideoCaptureWorkflow { IsRecording = true };

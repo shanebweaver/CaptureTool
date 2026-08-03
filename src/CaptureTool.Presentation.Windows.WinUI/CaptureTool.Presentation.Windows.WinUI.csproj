@@ -60,6 +60,40 @@
   <ItemGroup>
     <Content Include="Fonts\FluentSystemIcons-Regular.ttf" />
   </ItemGroup>
+
+  <!-- Validate both package architectures without modifying Visual Studio's
+       loose MSIX layout. The MSIX tooling must remain the sole owner of AppX;
+       copying a self-contained test output into a framework-dependent layout
+       mixes incompatible Windows App SDK runtime binaries. -->
+  <Target Name="ValidateCaptureKitPackageAssets"
+          AfterTargets="Build"
+          Condition="'$(DesignTimeBuild)' != 'true'">
+    <PropertyGroup>
+      <_CaptureToolCaptureKitRuntimeIdentifier Condition="'$(RuntimeIdentifier)' == 'win-x64' or ('$(RuntimeIdentifier)' == '' and '$(Platform)' == 'x64')">win-x64</_CaptureToolCaptureKitRuntimeIdentifier>
+      <_CaptureToolCaptureKitRuntimeIdentifier Condition="'$(RuntimeIdentifier)' == 'win-arm64' or ('$(RuntimeIdentifier)' == '' and '$(Platform)' == 'ARM64')">win-arm64</_CaptureToolCaptureKitRuntimeIdentifier>
+      <_CaptureToolCaptureKitWindowsRoot>$(NuGetPackageRoot)capturekit.windows\$(CaptureKitPackageVersion)\</_CaptureToolCaptureKitWindowsRoot>
+      <_CaptureToolCaptureKitAbstractionsRoot>$(NuGetPackageRoot)capturekit.abstractions\$(CaptureKitPackageVersion)\</_CaptureToolCaptureKitAbstractionsRoot>
+    </PropertyGroup>
+
+    <Error Condition="('$(RuntimeIdentifier)' == 'win-x64' and '$(Platform)' == 'ARM64') or ('$(RuntimeIdentifier)' == 'win-arm64' and '$(Platform)' == 'x64')"
+           Text="RuntimeIdentifier $(RuntimeIdentifier) conflicts with Platform $(Platform)." />
+    <Error Condition="'$(_CaptureToolCaptureKitRuntimeIdentifier)' == ''"
+           Text="Could not determine the CaptureKit runtime identifier for $(Platform)/$(RuntimeIdentifier)." />
+
+    <ItemGroup>
+      <_CaptureToolCaptureKitAsset Include="$(_CaptureToolCaptureKitAbstractionsRoot)lib\net10.0\CaptureKit.Abstractions.dll" />
+      <_CaptureToolCaptureKitAsset Include="$(_CaptureToolCaptureKitWindowsRoot)lib\net10.0-windows10.0.26100\CaptureKit.Windows.dll" />
+      <_CaptureToolCaptureKitAsset Include="$(_CaptureToolCaptureKitWindowsRoot)runtimes\$(_CaptureToolCaptureKitRuntimeIdentifier)\native\CaptureKit.Windows.Native.Recording.dll" />
+      <_CaptureToolCaptureKitAsset Include="$(_CaptureToolCaptureKitWindowsRoot)runtimes\$(_CaptureToolCaptureKitRuntimeIdentifier)\native\CaptureKit.Windows.Native.Screenshot.dll" />
+      <_CaptureToolCaptureKitAsset Include="$(_CaptureToolCaptureKitWindowsRoot)runtimes\$(_CaptureToolCaptureKitRuntimeIdentifier)\native\CaptureKit.Windows.Native.Recording.pdb"
+                                   Condition="Exists('$(_CaptureToolCaptureKitWindowsRoot)runtimes\$(_CaptureToolCaptureKitRuntimeIdentifier)\native\CaptureKit.Windows.Native.Recording.pdb')" />
+      <_CaptureToolCaptureKitAsset Include="$(_CaptureToolCaptureKitWindowsRoot)runtimes\$(_CaptureToolCaptureKitRuntimeIdentifier)\native\CaptureKit.Windows.Native.Screenshot.pdb"
+                                   Condition="Exists('$(_CaptureToolCaptureKitWindowsRoot)runtimes\$(_CaptureToolCaptureKitRuntimeIdentifier)\native\CaptureKit.Windows.Native.Screenshot.pdb')" />
+    </ItemGroup>
+
+    <Error Condition="!Exists('%(_CaptureToolCaptureKitAsset.Identity)')"
+           Text="CaptureKit $(CaptureKitPackageVersion) is missing required asset %(_CaptureToolCaptureKitAsset.Identity)." />
+  </Target>
     
   <!-- 
     Don't generate the XAML main function and use the one in Program.cs instead.

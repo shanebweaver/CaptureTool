@@ -1,4 +1,5 @@
 using CaptureTool.Application.Abstractions.Capture.Video.StartVideoCapture;
+using CaptureTool.Application.Abstractions.Capture;
 using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Application.Abstractions.UseCases;
 using CaptureTool.Application.UseCases;
@@ -34,8 +35,19 @@ internal sealed class StartVideoCaptureUseCase : IStartVideoCaptureUseCase
             activityId: ActivityId,
             useCase: () =>
             {
-                _videoCaptureWorkflow.StartVideoCapture(request.CaptureArgs);
-                return new StartVideoCaptureResponse();
+                try
+                {
+                    _videoCaptureWorkflow.StartVideoCapture(request.CaptureArgs);
+                    return new StartVideoCaptureResponse();
+                }
+                catch (VideoCaptureNotSupportedException)
+                {
+                    // The workflow already emitted bounded capture-failure telemetry.
+                    // Return a structured result so presentation can show the right UX.
+                    return new StartVideoCaptureResponse(
+                        Succeeded: false,
+                        FailureReason: StartVideoCaptureFailureReason.NotSupported);
+                }
             },
             cancellationToken: cancellationToken);
     }

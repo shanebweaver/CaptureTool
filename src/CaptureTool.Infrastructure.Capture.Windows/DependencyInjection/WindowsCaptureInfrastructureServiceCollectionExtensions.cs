@@ -11,6 +11,7 @@ public static class WindowsCaptureInfrastructureServiceCollectionExtensions
         services.AddCaptureKitWindows();
         services.AddSingleton<IScreenCapture, WindowsScreenCapture>();
         services.AddSingleton<IScreenRecorder, WindowsScreenRecorder>();
+        services.AddSingleton<IVideoCaptureSupportService, WindowsVideoCaptureSupportService>();
         services.AddSingleton<IAudioRecorder, WindowsAudioRecorder>();
 
         return services;

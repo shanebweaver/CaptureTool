@@ -3,6 +3,7 @@ using CaptureTool.Application.Abstractions.Capture;
 using CaptureTool.Application.Abstractions.Capture.Overlay.CloseCaptureOverlay;
 using CaptureTool.Application.Abstractions.Capture.Overlay.GetAudioInputSources;
 using CaptureTool.Application.Abstractions.Capture.Overlay.GoBackFromCaptureOverlay;
+using CaptureTool.Application.Abstractions.Capture.Video.CancelVideoCapture;
 using CaptureTool.Application.Abstractions.Capture.Video.PrepareVideoCapture;
 using CaptureTool.Application.Abstractions.Capture.Video.SelectAudioInputSource;
 using CaptureTool.Application.Abstractions.Capture.Video.SetVideoCaptureAudioInputMuted;
@@ -10,6 +11,7 @@ using CaptureTool.Application.Abstractions.Capture.Video.StartVideoCapture;
 using CaptureTool.Application.Abstractions.Capture.Video.StopVideoCapture;
 using CaptureTool.Application.Abstractions.Capture.Video.ToggleVideoCaptureDesktopAudio;
 using CaptureTool.Application.Abstractions.Capture.Video.ToggleVideoCapturePauseResume;
+using CaptureTool.Application.Abstractions.Localization;
 using CaptureTool.Application.Abstractions.TaskEnvironment;
 using CaptureTool.Application.Abstractions.Themes;
 using CaptureTool.Application.Abstractions.UseCases;
@@ -29,20 +31,136 @@ public sealed class CaptureOverlayViewModelAudioInputTests
         TestContext context = CreateViewModel([]);
         context.ViewModel.Load(CreateOptions());
 
-        await context.ViewModel.StartVideoCaptureCommand.ExecuteAsync(null);
+        Task startTask = context.ViewModel.StartVideoCaptureCommand.ExecuteAsync(null);
         await Task.Delay(250);
 
-        Assert.IsTrue(context.ViewModel.IsRecording);
+        Assert.IsTrue(context.ViewModel.IsStarting);
+        Assert.IsFalse(context.ViewModel.IsRecording);
         Assert.AreEqual(TimeSpan.Zero, context.ViewModel.CaptureTime);
 
         context.VideoCaptureState.Raise(state => state.RecordingStarted += null!, EventArgs.Empty);
+        await startTask;
         for (int i = 0; i < 20 && context.ViewModel.CaptureTime == TimeSpan.Zero; i++)
         {
             await Task.Delay(50);
         }
 
         Assert.IsTrue(context.ViewModel.CaptureTime > TimeSpan.Zero);
+        Assert.IsFalse(context.ViewModel.IsStarting);
+        Assert.IsTrue(context.ViewModel.IsRecording);
 
+        context.ViewModel.Dispose();
+    }
+
+    [TestMethod]
+    [DataRow(CaptureType.Rectangle, 0L)]
+    [DataRow(CaptureType.Window, 0x1234L)]
+    [DataRow(CaptureType.FullScreen, 0L)]
+    public async Task StartVideoCaptureCommand_ShouldPreserveCaptureTarget(CaptureType captureType, long windowHandle)
+    {
+        TestContext context = CreateViewModel([]);
+        StartVideoCaptureRequest? capturedRequest = null;
+        context.StartVideoCapture
+            .Setup(useCase => useCase.ExecuteAsync(It.IsAny<StartVideoCaptureRequest>(), It.IsAny<CancellationToken>()))
+            .Callback<StartVideoCaptureRequest, CancellationToken>((request, _) => capturedRequest = request)
+            .ReturnsAsync(UseCaseResponse<StartVideoCaptureResponse>.Success(new StartVideoCaptureResponse()));
+        Rectangle area = new(31, 47, 1280, 720);
+
+        context.ViewModel.Load(CreateOptions(captureType, (nint)windowHandle, area));
+        Task startTask = context.ViewModel.StartVideoCaptureCommand.ExecuteAsync(null);
+        for (int i = 0; i < 20 && capturedRequest == null; i++)
+        {
+            await Task.Delay(10);
+        }
+        context.VideoCaptureState.Raise(state => state.RecordingStarted += null!, EventArgs.Empty);
+        await startTask;
+
+        Assert.IsNotNull(capturedRequest);
+        Assert.AreEqual(captureType, capturedRequest.CaptureArgs.CaptureType);
+        Assert.AreEqual((nint)windowHandle, capturedRequest.CaptureArgs.WindowHandle);
+        Assert.AreEqual(area, capturedRequest.CaptureArgs.Area);
+        Assert.AreEqual((nint)123, capturedRequest.CaptureArgs.Monitor.HMonitor);
+        context.ViewModel.Dispose();
+    }
+
+    [TestMethod]
+    public async Task StartVideoCaptureCommand_WhenRecordingStartedTimesOut_ShouldCancelAndResetState()
+    {
+        TestContext context = CreateViewModel([], TimeSpan.FromMilliseconds(50));
+        context.ViewModel.Load(CreateOptions());
+
+        await context.ViewModel.StartVideoCaptureCommand.ExecuteAsync(null);
+
+        Assert.IsFalse(context.ViewModel.IsStarting);
+        Assert.IsFalse(context.ViewModel.IsRecording);
+        Assert.IsTrue(context.ViewModel.HasRecordingError);
+        context.CancelVideoCapture.Verify(useCase => useCase.ExecuteAsync(
+            It.Is<CancelVideoCaptureRequest>(request =>
+                request.SkipConfirmation &&
+                request.Reason == CancelVideoCaptureReason.StartTimeout),
+            It.IsAny<CancellationToken>()), Times.Once);
+        context.ViewModel.Dispose();
+    }
+
+    [TestMethod]
+    public async Task Dispose_WhileRecordingIsStarting_ShouldCancelWaitAndIgnoreLateStartedEvent()
+    {
+        TestContext context = CreateViewModel([], TimeSpan.FromSeconds(1));
+        context.ViewModel.Load(CreateOptions());
+        Task startTask = context.ViewModel.StartVideoCaptureCommand.ExecuteAsync(null);
+        Assert.IsTrue(context.ViewModel.IsStarting);
+
+        context.ViewModel.Dispose();
+        context.VideoCaptureState.Raise(state => state.RecordingStarted += null!, EventArgs.Empty);
+        await startTask;
+
+        Assert.IsFalse(context.ViewModel.IsStarting);
+        Assert.IsFalse(context.ViewModel.IsRecording);
+        Assert.IsFalse(context.ViewModel.HasRecordingError);
+    }
+
+    [TestMethod]
+    public async Task StartVideoCaptureCommand_WhenUseCaseFails_ShouldResetStateAndShowError()
+    {
+        TestContext context = CreateViewModel([]);
+        context.StartVideoCapture
+            .Setup(useCase => useCase.ExecuteAsync(It.IsAny<StartVideoCaptureRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(UseCaseResponse<StartVideoCaptureResponse>.Failure());
+        context.ViewModel.Load(CreateOptions());
+
+        await context.ViewModel.StartVideoCaptureCommand.ExecuteAsync(null);
+
+        Assert.IsFalse(context.ViewModel.IsStarting);
+        Assert.IsFalse(context.ViewModel.IsRecording);
+        Assert.IsFalse(context.ViewModel.IsPaused);
+        Assert.AreEqual(TimeSpan.Zero, context.ViewModel.CaptureTime);
+        Assert.IsTrue(context.ViewModel.HasRecordingError);
+        Assert.AreEqual("Recording couldn't start. Try again.", context.ViewModel.RecordingErrorMessage);
+        context.ViewModel.Dispose();
+    }
+
+    [TestMethod]
+    public async Task StartVideoCaptureCommand_WhenUseCaseReportsUnsupported_ShouldShowUnsupportedError()
+    {
+        TestContext context = CreateViewModel([]);
+        context.StartVideoCapture
+            .Setup(service => service.ExecuteAsync(
+                It.IsAny<StartVideoCaptureRequest>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(UseCaseResponse<StartVideoCaptureResponse>.Success(
+                new StartVideoCaptureResponse(
+                    Succeeded: false,
+                    FailureReason: StartVideoCaptureFailureReason.NotSupported)));
+        context.ViewModel.Load(CreateOptions());
+
+        await context.ViewModel.StartVideoCaptureCommand.ExecuteAsync(null);
+
+        Assert.IsFalse(context.ViewModel.IsStarting);
+        Assert.IsFalse(context.ViewModel.IsRecording);
+        Assert.AreEqual("Screen recording isn't supported on this device.", context.ViewModel.RecordingErrorMessage);
+        context.StartVideoCapture.Verify(useCase => useCase.ExecuteAsync(
+            It.IsAny<StartVideoCaptureRequest>(),
+            It.IsAny<CancellationToken>()), Times.Once);
         context.ViewModel.Dispose();
     }
 
@@ -147,7 +265,9 @@ public sealed class CaptureOverlayViewModelAudioInputTests
             It.IsAny<CancellationToken>()), Times.Never);
     }
 
-    private static TestContext CreateViewModel(IReadOnlyList<AudioInputSource> sources)
+    private static TestContext CreateViewModel(
+        IReadOnlyList<AudioInputSource> sources,
+        TimeSpan? recordingStartTimeout = null)
     {
         Mock<IGetAudioInputSourcesUseCase> getAudioInputSources = new();
         getAudioInputSources
@@ -171,6 +291,11 @@ public sealed class CaptureOverlayViewModelAudioInputTests
             .Setup(useCase => useCase.ExecuteAsync(It.IsAny<StartVideoCaptureRequest>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(UseCaseResponse<StartVideoCaptureResponse>.Success(new StartVideoCaptureResponse()));
 
+        Mock<ICancelVideoCaptureUseCase> cancelVideoCapture = new();
+        cancelVideoCapture
+            .Setup(useCase => useCase.ExecuteAsync(It.IsAny<CancelVideoCaptureRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(UseCaseResponse<CancelVideoCaptureResponse>.Success(new CancelVideoCaptureResponse()));
+
         Mock<IPrepareVideoCaptureUseCase> prepareVideoCapture = new();
         prepareVideoCapture
             .Setup(useCase => useCase.ExecuteAsync(It.IsAny<PrepareVideoCaptureRequest>(), It.IsAny<CancellationToken>()))
@@ -189,10 +314,20 @@ public sealed class CaptureOverlayViewModelAudioInputTests
 
         Mock<IVideoCaptureState> videoCaptureState = new();
 
+        Mock<ILocalizationService> localizationService = new();
+        localizationService
+            .Setup(service => service.GetString(It.IsAny<string>()))
+            .Returns((string resourceKey) => resourceKey switch
+            {
+                "CaptureOverlay_RecordingUnsupportedMessage" => "Screen recording isn't supported on this device.",
+                _ => "Recording couldn't start. Try again."
+            });
+
         CaptureOverlayViewModel viewModel = new(
             Mock.Of<ICloseCaptureOverlayUseCase>(),
             Mock.Of<IGoBackFromCaptureOverlayUseCase>(),
             startVideoCapture.Object,
+            cancelVideoCapture.Object,
             Mock.Of<IStopVideoCaptureUseCase>(),
             Mock.Of<IToggleVideoCaptureDesktopAudioUseCase>(),
             Mock.Of<IToggleVideoCapturePauseResumeUseCase>(),
@@ -203,28 +338,47 @@ public sealed class CaptureOverlayViewModelAudioInputTests
             audioInputDetection.Object,
             themeService.Object,
             videoCaptureState.Object,
-            taskEnvironment.Object);
+            taskEnvironment.Object,
+            localizationService.Object,
+            recordingStartTimeout);
 
-        return new TestContext(viewModel, audioInputDetection, videoCaptureState, selectAudioInputSource, setAudioInputMuted);
+        return new TestContext(
+            viewModel,
+            audioInputDetection,
+            videoCaptureState,
+            startVideoCapture,
+            cancelVideoCapture,
+            selectAudioInputSource,
+            setAudioInputMuted);
     }
 
-    private static CaptureOverlayViewModelOptions CreateOptions()
+    private static CaptureOverlayViewModelOptions CreateOptions(
+        CaptureType captureType = CaptureType.Rectangle,
+        nint windowHandle = 0,
+        Rectangle? area = null)
     {
         MonitorCaptureResult monitor = new(
-            IntPtr.Zero,
+            123,
             [],
             96,
             new Rectangle(0, 0, 1920, 1080),
             new Rectangle(0, 0, 1920, 1080),
             true);
 
-        return new CaptureOverlayViewModelOptions(monitor, new Rectangle(0, 0, 1920, 1080));
+        return new CaptureOverlayViewModelOptions(
+            new NewCaptureArgs(
+                monitor,
+                area ?? new Rectangle(0, 0, 1920, 1080),
+                captureType,
+                windowHandle));
     }
 
     private sealed record TestContext(
         CaptureOverlayViewModel ViewModel,
         Mock<IAudioInputDetectionService> AudioInputDetection,
         Mock<IVideoCaptureState> VideoCaptureState,
+        Mock<IStartVideoCaptureUseCase> StartVideoCapture,
+        Mock<ICancelVideoCaptureUseCase> CancelVideoCapture,
         Mock<ISelectAudioInputSourceUseCase> SelectAudioInputSource,
         Mock<ISetVideoCaptureAudioInputMutedUseCase> SetAudioInputMuted);
 }

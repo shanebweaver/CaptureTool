@@ -10,6 +10,38 @@ public static class PartnerCenterTelemetryEventNameFormatter
     private const string SchemaPrefix = "ct1";
     private const int MaximumEventNameLength = 96;
 
+    private static readonly string[] CaptureDimensions =
+    [
+        TelemetryProperties.MediaType,
+        TelemetryProperties.CaptureType,
+        TelemetryProperties.DesktopAudioEnabled,
+        TelemetryProperties.AudioInputEnabled
+    ];
+
+    private static readonly IReadOnlyDictionary<string, HashSet<string>> AllowedDimensionValues =
+        new Dictionary<string, HashSet<string>>(StringComparer.Ordinal)
+        {
+            [TelemetryProperties.FailureStage] = new(StringComparer.Ordinal)
+            {
+                TelemetryFailureStages.FirstFrame,
+                TelemetryFailureStages.RecorderStart
+            },
+            [TelemetryProperties.FailureReason] = new(StringComparer.Ordinal)
+            {
+                TelemetryFailureReasons.AccessDenied,
+                TelemetryFailureReasons.ComponentUnavailable,
+                TelemetryFailureReasons.ConfigurationUnsupported,
+                TelemetryFailureReasons.GraphicsUnsupported,
+                TelemetryFailureReasons.InitializationFailed,
+                TelemetryFailureReasons.InvalidConfiguration,
+                TelemetryFailureReasons.OutputUnavailable,
+                TelemetryFailureReasons.PlatformUnsupported,
+                TelemetryFailureReasons.ResourceExhausted,
+                TelemetryFailureReasons.StartTimeout,
+                TelemetryFailureReasons.TargetUnavailable
+            }
+        };
+
     private static readonly IReadOnlyDictionary<string, string[]> DimensionsByEvent =
         new Dictionary<string, string[]>(StringComparer.Ordinal)
         {
@@ -18,15 +50,20 @@ public static class PartnerCenterTelemetryEventNameFormatter
             [TelemetryEvents.AppShutdownRequested] =
                 [TelemetryProperties.Source],
             [TelemetryEvents.CaptureRequested] =
-                [TelemetryProperties.MediaType],
+                [.. CaptureDimensions],
             [TelemetryEvents.CaptureStarted] =
-                [TelemetryProperties.MediaType],
+                [.. CaptureDimensions],
             [TelemetryEvents.CaptureCompleted] =
-                [TelemetryProperties.MediaType, TelemetryProperties.Outcome],
+                [.. CaptureDimensions, TelemetryProperties.Outcome],
             [TelemetryEvents.CaptureCanceled] =
-                [TelemetryProperties.MediaType, TelemetryProperties.Outcome],
+                [.. CaptureDimensions, TelemetryProperties.Outcome],
             [TelemetryEvents.CaptureFailed] =
-                [TelemetryProperties.MediaType, TelemetryProperties.Outcome],
+                [
+                    .. CaptureDimensions,
+                    TelemetryProperties.Outcome,
+                    TelemetryProperties.FailureStage,
+                    TelemetryProperties.FailureReason
+                ],
             [TelemetryEvents.DiagnosticsAction] =
                 [TelemetryProperties.Action, TelemetryProperties.Outcome],
             [TelemetryEvents.EditorOpened] =
@@ -72,7 +109,11 @@ public static class PartnerCenterTelemetryEventNameFormatter
             {
                 if (properties.TryGetValue(dimension, out object? value) && value is not null)
                 {
-                    AppendSegment(builder, FormatValue(value));
+                    string formattedValue = FormatValue(value);
+                    if (IsAllowedDimensionValue(dimension, formattedValue))
+                    {
+                        AppendSegment(builder, formattedValue);
+                    }
                 }
             }
         }
@@ -88,6 +129,12 @@ public static class PartnerCenterTelemetryEventNameFormatter
             .ToLowerInvariant()[..8];
         int prefixLength = MaximumEventNameLength - hash.Length - 1;
         return $"{formattedName[..prefixLength].TrimEnd('_')}_{hash}";
+    }
+
+    private static bool IsAllowedDimensionValue(string dimension, string value)
+    {
+        return !AllowedDimensionValues.TryGetValue(dimension, out HashSet<string>? allowedValues) ||
+            allowedValues.Contains(value);
     }
 
     private static void AppendSegment(StringBuilder builder, string value)

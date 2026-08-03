@@ -1794,4 +1794,10 @@ SOFTWARE.
   <data name="TelemetryConsentDialog_DontAllowButton" xml:space="preserve">
     <value>不发送</value>
   </data>
+  <data name="CaptureOverlay_StartRecordingFailedMessage" xml:space="preserve">
+    <value>无法开始录制。请重试。</value>
+  </data>
+  <data name="CaptureOverlay_RecordingUnsupportedMessage" xml:space="preserve">
+    <value>此设备不支持屏幕录制。</value>
+  </data>
 </root>

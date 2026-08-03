@@ -19,6 +19,12 @@ public sealed partial class CaptureOverlayToolbar : UserControlBase
         typeof(CaptureOverlayToolbar),
         new PropertyMetadata(DependencyProperty.UnsetValue));
 
+    public static readonly DependencyProperty IsStartingProperty = DependencyProperty.Register(
+        nameof(IsStarting),
+        typeof(bool),
+        typeof(CaptureOverlayToolbar),
+        new PropertyMetadata(DependencyProperty.UnsetValue));
+
     public static readonly DependencyProperty IsPausedProperty = DependencyProperty.Register(
         nameof(IsPaused),
         typeof(bool),
@@ -115,6 +121,7 @@ public sealed partial class CaptureOverlayToolbar : UserControlBase
     }
 
     public bool IsRunning => IsRecording && !IsPaused;
+    public bool CanStartRecording => !IsStarting;
 
     public bool IsLocalAudioEnabled
     {
@@ -129,6 +136,16 @@ public sealed partial class CaptureOverlayToolbar : UserControlBase
         {
             Set(IsRecordingProperty, value);
             RaisePropertyChanged(nameof(IsRunning));
+        }
+    }
+
+    public bool IsStarting
+    {
+        get => Get<bool>(IsStartingProperty);
+        set
+        {
+            Set(IsStartingProperty, value);
+            RaisePropertyChanged(nameof(CanStartRecording));
         }
     }
 

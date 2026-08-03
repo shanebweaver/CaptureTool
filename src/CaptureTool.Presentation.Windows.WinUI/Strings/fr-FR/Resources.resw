@@ -1794,4 +1794,10 @@ SOFTWARE.
   <data name="TelemetryConsentDialog_DontAllowButton" xml:space="preserve">
     <value>Ne pas envoyer</value>
   </data>
+  <data name="CaptureOverlay_StartRecordingFailedMessage" xml:space="preserve">
+    <value>L’enregistrement n’a pas pu démarrer. Réessayez.</value>
+  </data>
+  <data name="CaptureOverlay_RecordingUnsupportedMessage" xml:space="preserve">
+    <value>L’enregistrement d’écran n’est pas pris en charge sur cet appareil.</value>
+  </data>
 </root>

@@ -16,18 +16,89 @@ public sealed class PartnerCenterTelemetryEventNameFormatterTests
     }
 
     [TestMethod]
-    public void Format_CaptureCompleted_ShouldRetainAggregateMediaAndOutcomeDimensions()
+    [DataRow(
+        TelemetryEvents.CaptureRequested,
+        "ct1_capture_requested_video_rectangle_true_false")]
+    [DataRow(
+        TelemetryEvents.CaptureStarted,
+        "ct1_capture_started_video_rectangle_true_false")]
+    [DataRow(
+        TelemetryEvents.CaptureCompleted,
+        "ct1_capture_completed_video_rectangle_true_false_succeeded")]
+    public void Format_CaptureFunnel_ShouldRetainCaptureAndAudioDimensions(
+        string eventName,
+        string expected)
     {
         string result = PartnerCenterTelemetryEventNameFormatter.Format(
-            TelemetryEvents.CaptureCompleted,
+            eventName,
             new Dictionary<string, object?>
             {
                 [TelemetryProperties.MediaType] = "video",
-                [TelemetryProperties.CaptureType] = "monitor",
+                [TelemetryProperties.CaptureType] = "rectangle",
+                [TelemetryProperties.DesktopAudioEnabled] = true,
+                [TelemetryProperties.AudioInputEnabled] = false,
                 [TelemetryProperties.Outcome] = TelemetryOutcomes.Succeeded
             });
 
-        Assert.AreEqual("ct1_capture_completed_video_succeeded", result);
+        Assert.AreEqual(expected, result);
+    }
+
+    [TestMethod]
+    public void Format_CaptureFailed_ShouldRetainBoundedStartupFailureDimensions()
+    {
+        string result = PartnerCenterTelemetryEventNameFormatter.Format(
+            TelemetryEvents.CaptureFailed,
+            new Dictionary<string, object?>
+            {
+                [TelemetryProperties.MediaType] = "video",
+                [TelemetryProperties.CaptureType] = "rectangle",
+                [TelemetryProperties.DesktopAudioEnabled] = true,
+                [TelemetryProperties.AudioInputEnabled] = false,
+                [TelemetryProperties.Outcome] = TelemetryOutcomes.Failed,
+                [TelemetryProperties.FailureStage] = TelemetryFailureStages.RecorderStart,
+                [TelemetryProperties.FailureReason] = TelemetryFailureReasons.TargetUnavailable
+            });
+
+        Assert.AreEqual(
+            "ct1_capture_failed_video_rectangle_true_false_failed_recorder_start_target_unavailable",
+            result);
+    }
+
+    [TestMethod]
+    public void Format_CaptureFailed_ShouldRejectUnreviewedFailureValues()
+    {
+        string result = PartnerCenterTelemetryEventNameFormatter.Format(
+            TelemetryEvents.CaptureFailed,
+            new Dictionary<string, object?>
+            {
+                [TelemetryProperties.MediaType] = "video",
+                [TelemetryProperties.Outcome] = TelemetryOutcomes.Failed,
+                [TelemetryProperties.FailureStage] = TelemetryFailureStages.RecorderStart,
+                [TelemetryProperties.FailureReason] = @"C:\private\capture.mp4: device 1234"
+            });
+
+        Assert.AreEqual("ct1_capture_failed_video_failed_recorder_start", result);
+    }
+
+    [TestMethod]
+    public void Format_CaptureFailed_ShouldRetainFirstFrameTimeoutDimensions()
+    {
+        string result = PartnerCenterTelemetryEventNameFormatter.Format(
+            TelemetryEvents.CaptureFailed,
+            new Dictionary<string, object?>
+            {
+                [TelemetryProperties.MediaType] = "video",
+                [TelemetryProperties.CaptureType] = "window",
+                [TelemetryProperties.DesktopAudioEnabled] = false,
+                [TelemetryProperties.AudioInputEnabled] = false,
+                [TelemetryProperties.Outcome] = TelemetryOutcomes.Failed,
+                [TelemetryProperties.FailureStage] = TelemetryFailureStages.FirstFrame,
+                [TelemetryProperties.FailureReason] = TelemetryFailureReasons.StartTimeout
+            });
+
+        Assert.AreEqual(
+            "ct1_capture_failed_video_window_false_false_failed_first_frame_start_timeout",
+            result);
     }
 
     [TestMethod]
