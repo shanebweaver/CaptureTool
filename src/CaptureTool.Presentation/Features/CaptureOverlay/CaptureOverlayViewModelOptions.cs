@@ -1,10 +1,8 @@
 using CaptureTool.Domain.Capture;
-using System.Drawing;
 
 namespace CaptureTool.Presentation.Features.CaptureOverlay;
 
-public readonly partial struct CaptureOverlayViewModelOptions(MonitorCaptureResult monitor, Rectangle area)
+public readonly partial struct CaptureOverlayViewModelOptions(NewCaptureArgs captureArgs)
 {
-    public MonitorCaptureResult Monitor { get; } = monitor;
-    public Rectangle Area { get; } = area;
+    public NewCaptureArgs CaptureArgs { get; } = captureArgs;
 }

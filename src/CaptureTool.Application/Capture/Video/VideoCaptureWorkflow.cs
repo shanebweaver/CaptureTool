@@ -1,10 +1,12 @@
 using CaptureTool.Application.Abstractions.Capture;
+using CaptureTool.Application.Abstractions.Capture.Video.CancelVideoCapture;
 using CaptureTool.Application.Abstractions.Settings;
 using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Application.Abstractions.TaskEnvironment;
 using CaptureTool.Application.Abstractions.Telemetry;
 using CaptureTool.Domain.Capture;
 using CaptureTool.Domain.FileSystem;
+using System.Runtime.InteropServices;
 
 namespace CaptureTool.Application.Capture.Video;
 
@@ -14,6 +16,7 @@ internal sealed class VideoCaptureWorkflow : IVideoCaptureWorkflow
     private readonly ISettingsService _settingsService;
     private readonly IStorageService _storageService;
     private readonly IBackgroundTaskRunner _backgroundTaskRunner;
+    private readonly IVideoCaptureSupportService _videoCaptureSupportService;
     private readonly VideoCaptureStateStore _stateStore;
     private readonly VideoCapturePostProcessor _postProcessor;
     private readonly VideoCaptureFileNameGenerator _fileNameGenerator;
@@ -39,6 +42,7 @@ internal sealed class VideoCaptureWorkflow : IVideoCaptureWorkflow
         ISettingsService settingsService,
         IStorageService storageService,
         IBackgroundTaskRunner backgroundTaskRunner,
+        IVideoCaptureSupportService videoCaptureSupportService,
         VideoCaptureStateStore stateStore,
         VideoCapturePostProcessor postProcessor,
         VideoCaptureFileNameGenerator fileNameGenerator,
@@ -48,6 +52,7 @@ internal sealed class VideoCaptureWorkflow : IVideoCaptureWorkflow
         _settingsService = settingsService;
         _storageService = storageService;
         _backgroundTaskRunner = backgroundTaskRunner;
+        _videoCaptureSupportService = videoCaptureSupportService;
         _stateStore = stateStore;
         _postProcessor = postProcessor;
         _fileNameGenerator = fileNameGenerator;
@@ -65,25 +70,49 @@ internal sealed class VideoCaptureWorkflow : IVideoCaptureWorkflow
     public void StartVideoCapture(NewCaptureArgs args)
     {
         TrackCapture(TelemetryEvents.CaptureRequested, args.CaptureType.ToString(), Snapshot.AudioSettings);
+        VideoCaptureSupportStatus supportStatus;
+        try
+        {
+            supportStatus = _videoCaptureSupportService.GetSupportStatus();
+        }
+        catch (Exception)
+        {
+            supportStatus = VideoCaptureSupportStatus.Unsupported(VideoCaptureUnsupportedReason.GraphicsCapture);
+        }
+
+        if (!supportStatus.IsSupported)
+        {
+            TrackCapture(
+                TelemetryEvents.CaptureFailed,
+                args.CaptureType.ToString(),
+                Snapshot.AudioSettings,
+                TelemetryOutcomes.Failed,
+                TelemetryFailureStages.RecorderStart,
+                ClassifyUnsupportedReason(supportStatus.UnsupportedReason));
+            throw new VideoCaptureNotSupportedException(supportStatus.UnsupportedReason);
+        }
+
         string tempVideoPath = Path.Combine(
             _storageService.GetApplicationTemporaryFolderPath(),
             _fileNameGenerator.GetNewCaptureFileName());
 
         CaptureRecordingTarget target = CreateRecordingTarget(args);
-        VideoCaptureSession session = _stateStore.StartSession(tempVideoPath, target);
+        VideoCaptureSession session = _stateStore.StartSession(tempVideoPath, target, args.CaptureType);
 
         try
         {
             _screenRecorder.StartRecording(session.CreateRecordingOptions());
         }
-        catch
+        catch (Exception ex)
         {
             _stateStore.ClearSession(session.Id);
             TrackCapture(
                 TelemetryEvents.CaptureFailed,
                 args.CaptureType.ToString(),
                 session.AudioSettings,
-                TelemetryOutcomes.Failed);
+                TelemetryOutcomes.Failed,
+                TelemetryFailureStages.RecorderStart,
+                ClassifyRecorderStartFailure(ex));
             throw;
         }
     }
@@ -105,7 +134,7 @@ internal sealed class VideoCaptureWorkflow : IVideoCaptureWorkflow
         return finalization.PendingVideo;
     }
 
-    public void CancelVideoCapture()
+    public void CancelVideoCapture(CancelVideoCaptureReason reason = CancelVideoCaptureReason.User)
     {
         VideoCaptureSession? session = _stateStore.GetCancelableSession();
         if (session is null)
@@ -114,6 +143,7 @@ internal sealed class VideoCaptureWorkflow : IVideoCaptureWorkflow
         }
 
         bool wasPaused = session.Status == VideoCaptureStatus.Paused;
+        bool isStartTimeout = reason == CancelVideoCaptureReason.StartTimeout;
 
         try
         {
@@ -123,9 +153,11 @@ internal sealed class VideoCaptureWorkflow : IVideoCaptureWorkflow
         {
             TrackCapture(
                 TelemetryEvents.CaptureFailed,
-                session.Target.Kind.ToString(),
+                session.CaptureType.ToString(),
                 session.AudioSettings,
-                TelemetryOutcomes.Failed);
+                TelemetryOutcomes.Failed,
+                isStartTimeout ? TelemetryFailureStages.FirstFrame : null,
+                isStartTimeout ? TelemetryFailureReasons.StartTimeout : null);
             throw;
         }
         finally
@@ -139,10 +171,12 @@ internal sealed class VideoCaptureWorkflow : IVideoCaptureWorkflow
         }
 
         TrackCapture(
-            TelemetryEvents.CaptureCanceled,
-            session.Target.Kind.ToString(),
+            isStartTimeout ? TelemetryEvents.CaptureFailed : TelemetryEvents.CaptureCanceled,
+            session.CaptureType.ToString(),
             session.AudioSettings,
-            TelemetryOutcomes.Canceled);
+            isStartTimeout ? TelemetryOutcomes.Failed : TelemetryOutcomes.Canceled,
+            isStartTimeout ? TelemetryFailureStages.FirstFrame : null,
+            isStartTimeout ? TelemetryFailureReasons.StartTimeout : null);
     }
 
     public void SetIsDesktopAudioEnabled(bool value)
@@ -224,7 +258,7 @@ internal sealed class VideoCaptureWorkflow : IVideoCaptureWorkflow
             _postProcessor.Process(finalization.PendingVideo);
             TrackCapture(
                 TelemetryEvents.CaptureCompleted,
-                finalization.Target.Kind.ToString(),
+                finalization.CaptureType.ToString(),
                 finalization.AudioSettings,
                 TelemetryOutcomes.Succeeded);
         }
@@ -233,7 +267,7 @@ internal sealed class VideoCaptureWorkflow : IVideoCaptureWorkflow
             finalization.PendingVideo.Fail(ex);
             TrackCapture(
                 TelemetryEvents.CaptureFailed,
-                finalization.Target.Kind.ToString(),
+                finalization.CaptureType.ToString(),
                 finalization.AudioSettings,
                 TelemetryOutcomes.Failed);
             throw;
@@ -251,7 +285,7 @@ internal sealed class VideoCaptureWorkflow : IVideoCaptureWorkflow
             VideoCaptureSession session = _stateStore.GetRequiredActiveSession();
             TrackCapture(
                 TelemetryEvents.CaptureStarted,
-                session.Target.Kind.ToString(),
+                session.CaptureType.ToString(),
                 session.AudioSettings);
             RecordingStarted?.Invoke(this, EventArgs.Empty);
         }
@@ -261,7 +295,9 @@ internal sealed class VideoCaptureWorkflow : IVideoCaptureWorkflow
         string eventName,
         string captureType,
         VideoCaptureAudioSettings audioSettings,
-        string? outcome = null)
+        string? outcome = null,
+        string? failureStage = null,
+        string? failureReason = null)
     {
         var properties = new Dictionary<string, object?>
         {
@@ -277,7 +313,101 @@ internal sealed class VideoCaptureWorkflow : IVideoCaptureWorkflow
             properties[TelemetryProperties.Outcome] = outcome;
         }
 
+        if (failureStage is not null)
+        {
+            properties[TelemetryProperties.FailureStage] = failureStage;
+        }
+
+        if (failureReason is not null)
+        {
+            properties[TelemetryProperties.FailureReason] = failureReason;
+        }
+
         _telemetryService?.TrackEvent(eventName, properties);
+    }
+
+    private static string ClassifyRecorderStartFailure(Exception exception)
+    {
+        foreach (Exception candidate in EnumerateExceptions(exception))
+        {
+            string? reason = candidate switch
+            {
+                VideoCaptureTargetUnavailableException => TelemetryFailureReasons.TargetUnavailable,
+                VideoCaptureNotSupportedException notSupportedException =>
+                    ClassifyUnsupportedReason(notSupportedException.Reason),
+                PlatformNotSupportedException => TelemetryFailureReasons.PlatformUnsupported,
+                DllNotFoundException or EntryPointNotFoundException or TypeLoadException or FileNotFoundException =>
+                    TelemetryFailureReasons.ComponentUnavailable,
+                UnauthorizedAccessException => TelemetryFailureReasons.AccessDenied,
+                OutOfMemoryException => TelemetryFailureReasons.ResourceExhausted,
+                ArgumentException => TelemetryFailureReasons.InvalidConfiguration,
+                NotSupportedException => TelemetryFailureReasons.ConfigurationUnsupported,
+                IOException => TelemetryFailureReasons.OutputUnavailable,
+                COMException comException => ClassifyComFailure(comException.HResult),
+                ExternalException externalException => ClassifyComFailure(externalException.ErrorCode),
+                _ => null
+            };
+
+            if (reason is not null)
+            {
+                return reason;
+            }
+        }
+
+        return TelemetryFailureReasons.InitializationFailed;
+    }
+
+    private static string ClassifyUnsupportedReason(VideoCaptureUnsupportedReason reason)
+    {
+        return reason switch
+        {
+            VideoCaptureUnsupportedReason.OperatingSystem => TelemetryFailureReasons.PlatformUnsupported,
+            VideoCaptureUnsupportedReason.GraphicsCapture => TelemetryFailureReasons.GraphicsUnsupported,
+            _ => TelemetryFailureReasons.InitializationFailed
+        };
+    }
+
+    private static string? ClassifyComFailure(int hResult)
+    {
+        return hResult switch
+        {
+            unchecked((int)0x80070005) => TelemetryFailureReasons.AccessDenied,
+            unchecked((int)0x80040154) or unchecked((int)0x80004002) =>
+                TelemetryFailureReasons.ComponentUnavailable,
+            unchecked((int)0xC00D36B0) or unchecked((int)0xC00D5212) =>
+                TelemetryFailureReasons.ComponentUnavailable,
+            unchecked((int)0x887A0004) or unchecked((int)0x887A0022) =>
+                TelemetryFailureReasons.GraphicsUnsupported,
+            unchecked((int)0x80070057) => TelemetryFailureReasons.InvalidConfiguration,
+            unchecked((int)0x80004001) or unchecked((int)0x80070032) or
+                unchecked((int)0xC00D36B4) or unchecked((int)0xC00D36C4) =>
+                TelemetryFailureReasons.ConfigurationUnsupported,
+            unchecked((int)0x8007000E) => TelemetryFailureReasons.ResourceExhausted,
+            _ => null
+        };
+    }
+
+    private static IEnumerable<Exception> EnumerateExceptions(Exception exception)
+    {
+        var pending = new Stack<Exception>();
+        pending.Push(exception);
+
+        while (pending.TryPop(out Exception? current))
+        {
+            yield return current;
+
+            if (current is AggregateException aggregateException)
+            {
+                for (int index = aggregateException.InnerExceptions.Count - 1; index >= 0; index--)
+                {
+                    pending.Push(aggregateException.InnerExceptions[index]);
+                }
+            }
+            else if (current.InnerException is not null)
+            {
+                pending.Push(current.InnerException);
+            }
+        }
     }
 
     private static CaptureRecordingTarget CreateRecordingTarget(NewCaptureArgs args)

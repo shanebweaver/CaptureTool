@@ -3,6 +3,7 @@ using CaptureTool.Application.Abstractions.Capture;
 using CaptureTool.Application.Abstractions.Capture.Overlay.CloseCaptureOverlay;
 using CaptureTool.Application.Abstractions.Capture.Overlay.GetAudioInputSources;
 using CaptureTool.Application.Abstractions.Capture.Overlay.GoBackFromCaptureOverlay;
+using CaptureTool.Application.Abstractions.Capture.Video.CancelVideoCapture;
 using CaptureTool.Application.Abstractions.Capture.Video.PrepareVideoCapture;
 using CaptureTool.Application.Abstractions.Capture.Video.SelectAudioInputSource;
 using CaptureTool.Application.Abstractions.Capture.Video.SetVideoCaptureAudioInputMuted;
@@ -12,6 +13,8 @@ using CaptureTool.Application.Abstractions.Capture.Video.ToggleVideoCaptureDeskt
 using CaptureTool.Application.Abstractions.Capture.Video.ToggleVideoCapturePauseResume;
 using CaptureTool.Application.Abstractions.TaskEnvironment;
 using CaptureTool.Application.Abstractions.Themes;
+using CaptureTool.Application.Abstractions.Localization;
+using CaptureTool.Application.Abstractions.UseCases;
 using CaptureTool.Domain.Capture;
 using CaptureTool.Presentation.Shared.Commands;
 using CaptureTool.Presentation.ViewModels;
@@ -25,7 +28,13 @@ namespace CaptureTool.Presentation.Features.CaptureOverlay;
 
 public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<CaptureOverlayViewModelOptions>
 {
+    private const string StartRecordingFailedMessageResourceKey = "CaptureOverlay_StartRecordingFailedMessage";
+    private const string StartRecordingFailedMessageFallback = "Recording couldn't start. Try again.";
+    private const string RecordingUnsupportedMessageResourceKey = "CaptureOverlay_RecordingUnsupportedMessage";
+    private const string RecordingUnsupportedMessageFallback = "Screen recording isn't supported on this device.";
+
     private readonly IStartVideoCaptureUseCase _startVideoCaptureCommand;
+    private readonly ICancelVideoCaptureUseCase _cancelVideoCaptureCommand;
     private readonly IStopVideoCaptureUseCase _stopVideoCaptureCommand;
     private readonly IToggleVideoCapturePauseResumeUseCase _toggleVideoCapturePauseResumeCommand;
     private readonly IPrepareVideoCaptureUseCase _prepareVideoCaptureCommand;
@@ -35,12 +44,17 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
     private readonly IAudioInputDetectionService _audioInputDetectionService;
     private readonly IVideoCaptureState _videoCaptureState;
     private readonly ITaskEnvironment _taskEnvironment;
+    private readonly ILocalizationService _localizationService;
 
-    private MonitorCaptureResult? _monitorCaptureResult;
-    private Rectangle? _captureArea;
+    private NewCaptureArgs? _captureArgs;
 
     private static readonly TimeSpan TimerInterval = TimeSpan.FromMilliseconds(100);
+    private static readonly TimeSpan DefaultRecordingStartTimeout = TimeSpan.FromSeconds(5);
     private Timer? _timer;
+    private CancellationTokenSource? _recordingStartCancellationTokenSource;
+    private TaskCompletionSource? _recordingStartedCompletionSource;
+    private readonly TimeSpan _recordingStartTimeout;
+    private bool _isDisposed;
     private DateTime _captureStartTime;
     private TimeSpan _pausedDuration;
     private DateTime? _pauseStartTime;
@@ -51,6 +65,26 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
         get;
         private set => Set(ref field, value);
     }
+
+    public bool IsStarting
+    {
+        get;
+        private set => Set(ref field, value);
+    }
+
+    public string RecordingErrorMessage
+    {
+        get;
+        private set
+        {
+            if (Set(ref field, value))
+            {
+                RaisePropertyChanged(nameof(HasRecordingError));
+            }
+        }
+    } = string.Empty;
+
+    public bool HasRecordingError => !string.IsNullOrWhiteSpace(RecordingErrorMessage);
 
     public bool IsPaused
     {
@@ -116,11 +150,13 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
     public IRelayCommand ToggleAudioInputMuteCommand { get; }
     public IAsyncRelayCommand TogglePauseResumeCommand { get; }
     public IRelayCommand<AudioInputSource> SelectAudioInputSourceCommand { get; }
+    public IRelayCommand DismissRecordingErrorCommand { get; }
 
     public CaptureOverlayViewModel(
         ICloseCaptureOverlayUseCase closeOverlayCommand,
         IGoBackFromCaptureOverlayUseCase goBackCommand,
         IStartVideoCaptureUseCase startVideoCaptureCommand,
+        ICancelVideoCaptureUseCase cancelVideoCaptureCommand,
         IStopVideoCaptureUseCase stopVideoCaptureCommand,
         IToggleVideoCaptureDesktopAudioUseCase toggleVideoCaptureDesktopAudioCommand,
         IToggleVideoCapturePauseResumeUseCase toggleVideoCapturePauseResumeCommand,
@@ -131,9 +167,12 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
         IAudioInputDetectionService audioInputDetectionService,
         IThemeService themeService,
         IVideoCaptureState videoCaptureState,
-        ITaskEnvironment taskEnvironment)
+        ITaskEnvironment taskEnvironment,
+        ILocalizationService localizationService,
+        TimeSpan? recordingStartTimeout = null)
     {
         _startVideoCaptureCommand = startVideoCaptureCommand;
+        _cancelVideoCaptureCommand = cancelVideoCaptureCommand;
         _stopVideoCaptureCommand = stopVideoCaptureCommand;
         _toggleVideoCapturePauseResumeCommand = toggleVideoCapturePauseResumeCommand;
         _prepareVideoCaptureCommand = prepareVideoCaptureCommand;
@@ -143,6 +182,8 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
         _audioInputDetectionService = audioInputDetectionService;
         _videoCaptureState = videoCaptureState;
         _taskEnvironment = taskEnvironment;
+        _localizationService = localizationService;
+        _recordingStartTimeout = recordingStartTimeout ?? DefaultRecordingStartTimeout;
 
         DefaultAppTheme = themeService.DefaultTheme;
         CurrentAppTheme = themeService.CurrentTheme;
@@ -157,6 +198,7 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
         ToggleAudioInputMuteCommand = new RelayCommand(ToggleAudioInputMute);
         TogglePauseResumeCommand = new AsyncRelayCommand(TogglePauseResumeAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
         SelectAudioInputSourceCommand = new AsyncRelayCommand<AudioInputSource>(SelectAudioInputSourceAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
+        DismissRecordingErrorCommand = new RelayCommand(DismissRecordingError);
     }
 
     public override void Load(CaptureOverlayViewModelOptions options)
@@ -178,8 +220,7 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
         _audioInputDetectionService.AudioInputSourcesChanged += OnAudioInputSourcesChanged;
         StartAudioInputDetection();
 
-        _monitorCaptureResult = options.Monitor;
-        _captureArea = options.Area;
+        _captureArgs = options.CaptureArgs;
 
         base.Load(options);
     }
@@ -196,16 +237,19 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
     {
         _taskEnvironment.TryExecute(() =>
         {
-            if (!IsRecording)
+            if (_isDisposed || (!IsStarting && !IsRecording))
             {
                 return;
             }
 
+            IsStarting = false;
+            IsRecording = true;
             _captureStartTime = DateTime.UtcNow;
             _pausedDuration = TimeSpan.Zero;
             _pauseStartTime = IsPaused ? _captureStartTime : null;
             CaptureTime = TimeSpan.Zero;
             StartTimer();
+            _recordingStartedCompletionSource?.TrySetResult();
         });
     }
 
@@ -243,6 +287,9 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
 
     public override void Dispose()
     {
+        _isDisposed = true;
+        IsStarting = false;
+        CancelRecordingStartWait();
         _videoCaptureState.RecordingStarted -= OnRecordingStarted;
         _videoCaptureState.DesktopAudioStateChanged -= OnDesktopAudioStateChanged;
         _videoCaptureState.PausedStateChanged -= OnPausedStateChanged;
@@ -266,27 +313,149 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
             _timer = null;
         }
 
-        // Explicitly null the MonitorCaptureResult to release the PixelBuffer
-        _monitorCaptureResult = null;
-        _captureArea = null;
+        // Explicitly null the capture arguments to release the monitor PixelBuffer.
+        _captureArgs = null;
 
         base.Dispose();
     }
 
     private async Task StartVideoCaptureAsync()
     {
-        if (IsRecording || _monitorCaptureResult == null || _captureArea == null)
+        if (IsRecording || IsStarting || _captureArgs == null)
         {
             return;
         }
 
-        IsRecording = true;
+        DismissRecordingError();
+
+        IsStarting = true;
+        var recordingStartCancellationTokenSource = new CancellationTokenSource();
+        var recordingStartedCompletionSource = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        _recordingStartCancellationTokenSource = recordingStartCancellationTokenSource;
+        _recordingStartedCompletionSource = recordingStartedCompletionSource;
         CaptureTime = TimeSpan.Zero;
         _pausedDuration = TimeSpan.Zero;
         _pauseStartTime = null;
-        NewCaptureArgs args = new(_monitorCaptureResult.Value, _captureArea.Value);
 
-        await _startVideoCaptureCommand.ExecuteAsync(new StartVideoCaptureRequest(args), CancellationToken.None);
+        UseCaseResponse<StartVideoCaptureResponse> response;
+        try
+        {
+            response = await _startVideoCaptureCommand.ExecuteAsync(
+                new StartVideoCaptureRequest(_captureArgs.Value),
+                CancellationToken.None);
+        }
+        catch (Exception)
+        {
+            HandleRecordingStartFailure();
+            ClearRecordingStartWait(recordingStartCancellationTokenSource);
+            return;
+        }
+
+        if (response.Result != UseCaseResult.Succeeded || response.Value?.Succeeded != true)
+        {
+            bool isUnsupported = response.Value?.FailureReason == StartVideoCaptureFailureReason.NotSupported;
+            HandleRecordingStartFailure(
+                showMessage: response.Result != UseCaseResult.Cancelled && !isUnsupported);
+            if (isUnsupported)
+            {
+                ShowRecordingError(RecordingUnsupportedMessageResourceKey, RecordingUnsupportedMessageFallback);
+            }
+            ClearRecordingStartWait(recordingStartCancellationTokenSource);
+            return;
+        }
+
+        try
+        {
+            await recordingStartedCompletionSource.Task.WaitAsync(
+                _recordingStartTimeout,
+                recordingStartCancellationTokenSource.Token);
+        }
+        catch (TimeoutException)
+        {
+            if (!_isDisposed &&
+                ReferenceEquals(_recordingStartCancellationTokenSource, recordingStartCancellationTokenSource) &&
+                IsStarting)
+            {
+                // Mark the attempt inactive before cancelling so a late native callback is ignored.
+                IsStarting = false;
+                try
+                {
+                    await _cancelVideoCaptureCommand.ExecuteAsync(
+                        new CancelVideoCaptureRequest(
+                            SkipConfirmation: true,
+                            Reason: CancelVideoCaptureReason.StartTimeout),
+                        CancellationToken.None);
+                }
+                catch (Exception)
+                {
+                    // The start failure remains the actionable error for the user.
+                }
+
+                HandleRecordingStartFailure();
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // Disposal or another terminal start outcome cancelled the wait.
+        }
+        finally
+        {
+            ClearRecordingStartWait(recordingStartCancellationTokenSource);
+        }
+    }
+
+    private void HandleRecordingStartFailure(bool showMessage = true)
+    {
+        IsStarting = false;
+        IsRecording = false;
+        IsPaused = false;
+        CaptureTime = TimeSpan.Zero;
+        _pausedDuration = TimeSpan.Zero;
+        _pauseStartTime = null;
+        StopTimer();
+
+        if (showMessage)
+        {
+            ShowRecordingError(StartRecordingFailedMessageResourceKey, StartRecordingFailedMessageFallback);
+        }
+    }
+
+    private void ShowRecordingError(string resourceKey, string fallback)
+    {
+        string message;
+        try
+        {
+            message = _localizationService.GetString(resourceKey);
+        }
+        catch (Exception)
+        {
+            message = string.Empty;
+        }
+
+        RecordingErrorMessage = string.IsNullOrWhiteSpace(message) ? fallback : message;
+    }
+
+    private void DismissRecordingError()
+    {
+        RecordingErrorMessage = string.Empty;
+    }
+
+    private void CancelRecordingStartWait()
+    {
+        _recordingStartCancellationTokenSource?.Cancel();
+        _recordingStartedCompletionSource?.TrySetCanceled();
+    }
+
+    private void ClearRecordingStartWait(CancellationTokenSource cancellationTokenSource)
+    {
+        if (!ReferenceEquals(_recordingStartCancellationTokenSource, cancellationTokenSource))
+        {
+            return;
+        }
+
+        _recordingStartCancellationTokenSource = null;
+        _recordingStartedCompletionSource = null;
+        cancellationTokenSource.Dispose();
     }
 
     private async Task StopVideoCaptureAsync()

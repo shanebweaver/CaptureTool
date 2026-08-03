@@ -225,6 +225,7 @@
                         <Button
                             x:Name="NewVideoCaptureButton"
                             x:Uid="NewCaptureButton_Video"
+                            AutomationProperties.AutomationId="Home_NewVideoCaptureButton"
                             Command="{x:Bind ViewModel.NewVideoCaptureCommand}"
                             Style="{StaticResource NewCaptureButtonStyle}"
                             Translation="0,0,18">

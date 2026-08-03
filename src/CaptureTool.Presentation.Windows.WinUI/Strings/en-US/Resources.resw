@@ -2024,4 +2024,10 @@ SOFTWARE.
   <data name="TelemetryConsentDialog_DontAllowButton" xml:space="preserve">
     <value>Don't send</value>
   </data>
+  <data name="CaptureOverlay_StartRecordingFailedMessage" xml:space="preserve">
+    <value>Recording couldn't start. Try again.</value>
+  </data>
+  <data name="CaptureOverlay_RecordingUnsupportedMessage" xml:space="preserve">
+    <value>Screen recording isn't supported on this device.</value>
+  </data>
 </root>

@@ -27,7 +27,10 @@ internal sealed class VideoCaptureStateStore
         }
     }
 
-    public VideoCaptureSession StartSession(string tempVideoPath, CaptureRecordingTarget target)
+    public VideoCaptureSession StartSession(
+        string tempVideoPath,
+        CaptureRecordingTarget target,
+        CaptureType captureType)
     {
         lock (_lock)
         {
@@ -36,7 +39,7 @@ internal sealed class VideoCaptureStateStore
                 throw new InvalidOperationException("A video is already being recorded.");
             }
 
-            _activeSession = new VideoCaptureSession(tempVideoPath, target, _idleAudioSettings);
+            _activeSession = new VideoCaptureSession(tempVideoPath, target, _idleAudioSettings, captureType);
             return _activeSession;
         }
     }
@@ -81,6 +84,7 @@ internal sealed class VideoCaptureStateStore
                 pendingVideo,
                 wasPaused,
                 _activeSession.Target,
+                _activeSession.CaptureType,
                 _activeSession.AudioSettings);
         }
     }

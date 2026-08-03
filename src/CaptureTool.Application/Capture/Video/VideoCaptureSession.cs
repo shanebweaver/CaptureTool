@@ -9,6 +9,7 @@ internal sealed class VideoCaptureSession
 
     public Guid Id { get; } = Guid.NewGuid();
     public CaptureRecordingTarget Target { get; }
+    public CaptureType CaptureType { get; }
     public string TempVideoPath { get; }
     public VideoCaptureStatus Status { get; private set; } = VideoCaptureStatus.Recording;
     public VideoCaptureAudioSettings AudioSettings { get; private set; }
@@ -17,11 +18,13 @@ internal sealed class VideoCaptureSession
     public VideoCaptureSession(
         string tempVideoPath,
         CaptureRecordingTarget target,
-        VideoCaptureAudioSettings audioSettings)
+        VideoCaptureAudioSettings audioSettings,
+        CaptureType captureType = CaptureType.Rectangle)
     {
         TempVideoPath = tempVideoPath;
         Target = target;
         AudioSettings = audioSettings;
+        CaptureType = captureType;
     }
 
     public CaptureRecordingOptions CreateRecordingOptions()

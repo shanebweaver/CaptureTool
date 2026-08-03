@@ -8,4 +8,5 @@ internal readonly record struct VideoCaptureFinalization(
     PendingVideoFile PendingVideo,
     bool WasPaused,
     CaptureRecordingTarget Target,
+    CaptureType CaptureType,
     VideoCaptureAudioSettings AudioSettings);

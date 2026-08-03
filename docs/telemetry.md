@@ -15,7 +15,8 @@ The telemetry is designed for anonymous aggregate counts, not individual usage h
 
 2. **Capture funnel**
    - Capture requested, started, completed, canceled, and failed.
-   - Media type (image, video, or audio), capture type (area, monitor, or all screens), capture mode, and privacy-safe audio configuration flags.
+   - Media type (image, video, or audio), capture type (rectangle, monitor, window, all screens, or audio only), capture mode, and privacy-safe audio configuration flags when applicable.
+   - For startup failures, a stable failure stage and allow-listed reason category; never the exception message or raw HRESULT.
    - Duration and output-size buckets where useful; never capture screen coordinates or content.
 
 3. **Editing feature adoption**
@@ -76,7 +77,7 @@ Capture Tool does not attach user, account, device, installation, session, hardw
 - `feedback.opened` and `diagnostics.action`
 - `ui.command_invoked`, `ui.command_completed`, `user.action`, and `use_case.completed`
 
-Outcomes use `succeeded`, `canceled`, or `failed`. Capture events include only media/capture categories and audio-enabled flags. Editor and output events contain stable tool/operation names. Navigation records route and parameter type names, never parameter values. Settings events are protected by an explicit allow-list; folder settings are excluded and language values are reduced to `system_default` or `override`. Store product identifiers and activation sources are normalized to a small known vocabulary.
+Outcomes use `succeeded`, `canceled`, or `failed`. Capture funnel events include media type, capture type, and, when applicable, desktop-audio/audio-input enabled flags. A video failure raised while starting the recorder includes a bounded failure stage and reason. Synchronous initialization failures use `failure_stage=recorder_start`; a session that does not produce its first frame before the startup deadline uses `failure_stage=first_frame` and `failure_reason=start_timeout`. Other bounded reasons are `access_denied`, `component_unavailable`, `configuration_unsupported`, `graphics_unsupported`, `initialization_failed`, `invalid_configuration`, `output_unavailable`, `platform_unsupported`, `resource_exhausted`, and `target_unavailable`. The classifier uses exception types and a small mapping of known HRESULTs, but never records an HRESULT, exception message, path, or device identifier. Editor and output events contain stable tool/operation names. Navigation records route and parameter type names, never parameter values. Settings events are protected by an explicit allow-list; folder settings are excluded and language values are reduced to `system_default` or `override`. Store product identifiers and activation sources are normalized to a small known vocabulary.
 
 The use-case executor publishes `use_case.completed` for operational reliability, while command adapters publish user/UI action signals. Both keep detailed lifecycle/error information in `ILogService` and publish only structured outcomes through telemetry. Semantic events are emitted at workflow boundaries so aggregate reports can describe funnels without depending on UI controls.
 
@@ -87,10 +88,12 @@ The use-case executor publishes `use_case.completed` for operational reliability
 The Store API accepts one string and no property bag. `PartnerCenterTelemetryEventNameFormatter` converts each event and a small, event-specific set of allow-listed dimensions into a brief `ct1_...` name. Examples include:
 
 - `ct1_app_started`
-- `ct1_capture_completed_video_succeeded`
+- `ct1_capture_completed_video_rectangle_true_false_succeeded`
+- `ct1_capture_failed_video_rectangle_true_false_failed_recorder_start_target_unavailable`
+- `ct1_capture_failed_video_window_false_false_failed_first_frame_start_timeout`
 - `ct1_ui_command_invoked_image_editor_open_selection_overlay`
 
-Unexpected properties are ignored. Names are normalized to lowercase ASCII and capped at 96 characters with a deterministic suffix when necessary. No identifier or user content is encoded in the event name.
+Unexpected properties are ignored. Failure stages and reasons are protected by explicit value allow-lists, so an unreviewed value cannot be encoded in the Store event name. Names are normalized to lowercase ASCII and capped at 96 characters with a deterministic suffix when necessary. No identifier or user content is encoded in the event name.
 
 ## Verifying events in Partner Center
 

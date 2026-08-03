@@ -36,10 +36,11 @@ internal sealed partial class CaptureOverlayHost : IDisposable
     private CaptureOverlayView? _overlayView;
     private CaptureOverlayBorder? _borderControl;
 
-    private static (HWND hwnd, DesktopWindowXamlSource xamlSource, CaptureOverlayView view) CreateCaptureOverlayWindow(MonitorCaptureResult monitor, Rectangle area)
+    private static (HWND hwnd, DesktopWindowXamlSource xamlSource, CaptureOverlayView view) CreateCaptureOverlayWindow(NewCaptureArgs args)
     {
         unsafe
         {
+            MonitorCaptureResult monitor = args.Monitor;
             const string className = "CaptureOverlayWindow";
 
             WNDCLASSEXW wndClass = new()
@@ -82,7 +83,7 @@ internal sealed partial class CaptureOverlayHost : IDisposable
             WindowId windowId = Win32Interop.GetWindowIdFromWindow(hwnd);
             xamlSource.Initialize(windowId);
 
-            CaptureOverlayView view = new(monitor, area);
+            CaptureOverlayView view = new(args);
             xamlSource.Content = view;
 
             Win32WindowHelpers.HorizontalCenterOnScreen(hwnd);
@@ -160,7 +161,7 @@ internal sealed partial class CaptureOverlayHost : IDisposable
         var monitor = args.Monitor;
         var area = args.Area;
 
-        var overlayResult = CreateCaptureOverlayWindow(monitor, area);
+        var overlayResult = CreateCaptureOverlayWindow(args);
         _hwnd = overlayResult.hwnd;
         _xamlSource = overlayResult.xamlSource;
         _overlayView = overlayResult.view;
