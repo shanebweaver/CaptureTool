@@ -9,6 +9,7 @@ public interface IFileSystem
     DateTime GetLastWriteTimeUtc(string filePath);
     void SetLastWriteTimeUtc(string filePath, DateTime lastWriteTimeUtc);
     void CreateDirectory(string folderPath);
+    void CreateEmptyFile(string filePath);
     void CopyFile(string sourcePath, string destinationPath, bool overwrite);
     void DeleteFile(string filePath);
     void DeleteDirectory(string folderPath, bool recursive);

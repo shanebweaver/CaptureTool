@@ -1,5 +1,4 @@
 using CaptureTool.Application.Abstractions.Clipboard;
-using CaptureTool.Application.Abstractions.Files;
 using CaptureTool.Application.Abstractions.Logging;
 using CaptureTool.Application.Abstractions.Library.RecentCaptures;
 using CaptureTool.Application.Abstractions.Settings;
@@ -14,7 +13,7 @@ namespace CaptureTool.Application.Capture.Audio;
 internal sealed class AudioCapturePostProcessor
 {
     private readonly IClipboardService _clipboardService;
-    private readonly IFileSystem _fileSystem;
+    private readonly CaptureFileAllocator _fileAllocator;
     private readonly ISettingsService _settingsService;
     private readonly IStorageService _storageService;
     private readonly ITaskEnvironment _taskEnvironment;
@@ -25,7 +24,7 @@ internal sealed class AudioCapturePostProcessor
 
     public AudioCapturePostProcessor(
         IClipboardService clipboardService,
-        IFileSystem fileSystem,
+        CaptureFileAllocator fileAllocator,
         ISettingsService settingsService,
         IStorageService storageService,
         ITaskEnvironment taskEnvironment,
@@ -35,7 +34,7 @@ internal sealed class AudioCapturePostProcessor
         ITelemetryService? telemetryService = null)
     {
         _clipboardService = clipboardService;
-        _fileSystem = fileSystem;
+        _fileAllocator = fileAllocator;
         _settingsService = settingsService;
         _storageService = storageService;
         _taskEnvironment = taskEnvironment;
@@ -92,9 +91,10 @@ internal sealed class AudioCapturePostProcessor
                 audioFolder = _storageService.GetSystemDefaultMusicFolderPath();
             }
 
-            string newFilePath = Path.Combine(audioFolder, _fileNameGenerator.GetNewCaptureFileName());
-
-            _fileSystem.CopyFile(audioFile.FilePath, newFilePath, overwrite: false);
+            string newFilePath = _fileAllocator.CopyToUniqueFile(
+                audioFile.FilePath,
+                audioFolder,
+                _fileNameGenerator.GetNewCaptureFileName);
             _recentCaptureCatalog.ReplacePath(audioFile.FilePath, newFilePath);
             TrackOutput("auto_save", TelemetryOutcomes.Succeeded);
         }

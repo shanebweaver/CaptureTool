@@ -5,6 +5,7 @@ using CaptureTool.Application.Abstractions.Logging;
 using CaptureTool.Application.Abstractions.Settings;
 using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Application.Abstractions.TaskEnvironment;
+using CaptureTool.Application.Capture;
 using CaptureTool.Application.Capture.Audio;
 using CaptureTool.Application.Capture.Image;
 using CaptureTool.Application.Capture.Video;
@@ -29,7 +30,7 @@ public sealed class CapturePostProcessorTests
             DestinationFolder);
         ImageCapturePostProcessor processor = new(
             Mock.Of<IClipboardService>(),
-            fileSystem.Object,
+            new CaptureFileAllocator(fileSystem.Object),
             settings.Object,
             Mock.Of<IStorageService>(),
             CreateImmediateTaskEnvironment().Object,
@@ -60,7 +61,7 @@ public sealed class CapturePostProcessorTests
             DestinationFolder);
         VideoCapturePostProcessor processor = new(
             Mock.Of<IClipboardService>(),
-            fileSystem.Object,
+            new CaptureFileAllocator(fileSystem.Object),
             settings.Object,
             Mock.Of<IStorageService>(),
             CreateImmediateTaskEnvironment().Object,
@@ -91,7 +92,7 @@ public sealed class CapturePostProcessorTests
             DestinationFolder);
         AudioCapturePostProcessor processor = new(
             Mock.Of<IClipboardService>(),
-            fileSystem.Object,
+            new CaptureFileAllocator(fileSystem.Object),
             settings.Object,
             Mock.Of<IStorageService>(),
             CreateImmediateTaskEnvironment().Object,

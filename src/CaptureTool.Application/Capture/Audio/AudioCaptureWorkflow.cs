@@ -14,6 +14,7 @@ internal sealed class AudioCaptureWorkflow : IAudioCaptureWorkflow
     private readonly IFileSystem _fileSystem;
     private readonly ISettingsService _settingsService;
     private readonly IStorageService _storageService;
+    private readonly CaptureFileAllocator _fileAllocator;
     private readonly AudioCaptureStateStore _stateStore;
     private readonly AudioCapturePostProcessor _postProcessor;
     private readonly AudioCaptureFileNameGenerator _fileNameGenerator;
@@ -39,6 +40,7 @@ internal sealed class AudioCaptureWorkflow : IAudioCaptureWorkflow
         IFileSystem fileSystem,
         ISettingsService settingsService,
         IStorageService storageService,
+        CaptureFileAllocator fileAllocator,
         AudioCaptureStateStore stateStore,
         AudioCapturePostProcessor postProcessor,
         AudioCaptureFileNameGenerator fileNameGenerator,
@@ -48,6 +50,7 @@ internal sealed class AudioCaptureWorkflow : IAudioCaptureWorkflow
         _fileSystem = fileSystem;
         _settingsService = settingsService;
         _storageService = storageService;
+        _fileAllocator = fileAllocator;
         _stateStore = stateStore;
         _postProcessor = postProcessor;
         _fileNameGenerator = fileNameGenerator;
@@ -62,19 +65,25 @@ internal sealed class AudioCaptureWorkflow : IAudioCaptureWorkflow
         _stateStore.PrepareForAudioCapture(defaultDesktopAudioEnabled);
         TrackCapture(TelemetryEvents.CaptureRequested);
 
-        string tempAudioPath = Path.Combine(
+        string tempAudioPath = _fileAllocator.ReserveUniqueFile(
             _storageService.GetApplicationTemporaryFolderPath(),
-            _fileNameGenerator.GetNewCaptureFileName());
+            _fileNameGenerator.GetNewCaptureFileName);
 
-        AudioCaptureSession session = _stateStore.StartSession(tempAudioPath);
+        AudioCaptureSession? session = null;
 
         try
         {
+            session = _stateStore.StartSession(tempAudioPath);
             _audioRecorder.StartCapture(session.TempAudioPath);
         }
         catch
         {
-            _stateStore.StopSession(session.Id);
+            if (session is not null)
+            {
+                _stateStore.StopSession(session.Id);
+            }
+
+            _fileAllocator.TryDeleteFile(tempAudioPath);
             TrackCapture(TelemetryEvents.CaptureFailed, TelemetryOutcomes.Failed);
             throw;
         }

@@ -62,19 +62,27 @@ This affects temporary capture identity and persistent auto-save destinations fo
 
 1. Capture post-processors must copy to auto-save destinations with overwrite disabled.
 2. A destination collision must never modify the existing destination.
-3. If an auto-save copy fails, the current behavior remains: log/telemetry records the output failure, the temporary capture remains available, and recent-capture path replacement does not occur.
-4. Explicit Save As operations are outside this rule because the file picker and user intent own their overwrite semantics.
+3. A destination collision must generate a new candidate and retry, up to a bounded maximum of 10 attempts.
+4. If an auto-save copy fails for a reason other than collision, the current behavior remains: log/telemetry records the output failure, the temporary capture remains available, and recent-capture path replacement does not occur.
+5. Explicit Save As operations are outside this rule because the file picker and user intent own their overwrite semantics.
+
+### Temporary capture safety
+
+1. A temporary destination must be reserved atomically with create-new semantics before an image or recorder adapter receives its path.
+2. A temporary-path collision must generate a new candidate and retry, up to a bounded maximum of 10 attempts.
+3. A failed image save or recorder start must remove the reservation without masking the original failure.
+4. A successfully started capture owns the reserved file and continues through the existing lifecycle.
 
 ## Design Decision
 
-Use a full timestamp for readability, a GUID suffix for collision resistance across threads and processes, and `overwrite: false` as the hard data-safety boundary.
+Use a full timestamp for readability, a GUID suffix for collision resistance across threads and processes, and a shared allocator as the hard data-safety boundary. The allocator atomically reserves temporary paths with `FileMode.CreateNew`, copies auto-save output with `overwrite: false`, and retries confirmed collisions up to 10 times.
 
 The alternatives are weaker:
 
 - A fuller timestamp alone still admits collisions at the clock's resolution and under injected/frozen clocks.
 - An in-process sequence does not protect across restarts or processes and introduces singleton lifecycle state.
 - Checking `FileExists` before an overwrite-enabled copy has a time-of-check/time-of-use race.
-- Retrying a generated GUID collision adds complexity without improving the no-data-loss invariant: a create-new copy already preserves the existing file, while the temporary capture remains recoverable if the astronomically unlikely collision occurs.
+- Relying on GUID probability alone does not enforce the no-overwrite invariant and leaves behavior to individual capture adapters.
 
 ## Acceptance Criteria
 
@@ -83,7 +91,10 @@ The alternatives are weaker:
 - Each filename contains the complete expected timestamp and a 32-character GUID suffix.
 - Image filenames end in `.png`, video filenames in `.mp4`, and audio filenames in `.wav`.
 - Image, video, and audio auto-save calls use `overwrite: false`.
+- Temporary image, video, and audio destinations are reserved with create-new semantics.
+- Confirmed collisions retry with a new candidate and stop after 10 attempts.
 - A pre-existing auto-save destination is never overwritten.
+- A pre-existing temporary destination is never overwritten by allocation.
 - Recent-capture path replacement occurs only after a successful copy.
 - Existing capture and application tests remain green.
 
@@ -93,7 +104,9 @@ The alternatives are weaker:
 
 - Add focused unit tests for the canonical filename format and same-clock uniqueness across all media generators.
 - Add a parallel-generation test over the shared filename implementation.
-- Verify each post-processor passes `overwrite: false` to `IFileSystem.CopyFile`.
+- Add deterministic allocator tests for temporary reservation, auto-save copy, collision retry, non-collision failure, and bounded exhaustion.
+- Verify failed image/recorder startup cleans its reserved temporary file.
+- Verify the Windows image adapter replaces an app-owned reservation with encoded image data.
 - Run the full `CaptureTool.Application.Tests` project.
 - Run the infrastructure filesystem tests to retain coverage of create-new copy semantics.
 
@@ -105,8 +118,9 @@ No UI validation is required for this isolated naming change. If a packaged smok
 
 - **Longer filenames:** The additional timestamp fields and GUID remain far below Windows path-component limits.
 - **External filename parsing:** No supported contract documents the old pattern. The `Capture_` prefix and media extensions remain stable.
-- **Random collision:** A GUID collision is operationally negligible; `overwrite: false` remains the definitive guard against data loss.
-- **Auto-save failure after collision:** The existing temporary capture is retained and output failure is logged, preserving user data.
+- **Random collision:** A GUID collision is operationally negligible, but create-new/copy-no-overwrite semantics and bounded retry enforce the invariant independently of probability.
+- **Adapter writes to a reserved file:** The reservation is an app-owned empty file. Existing image and CaptureKit adapters already accept a destination path they create or replace; startup failure cleanup removes a rejected reservation.
+- **Collision retry exhaustion:** The operation fails without modifying the pre-existing files, and normal capture failure handling remains in control.
 
 ## Rollout
 

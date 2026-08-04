@@ -2,6 +2,7 @@ using CaptureTool.Application.Abstractions.Ai;
 using CaptureTool.Application.Abstractions.Edit.External;
 using CaptureTool.Application.Abstractions.EditSessions;
 using CaptureTool.Application.Ai;
+using CaptureTool.Application.Capture;
 using CaptureTool.Application.Edit.External;
 using CaptureTool.Application.EditSessions;
 using CaptureTool.Application.UseCases;
@@ -41,6 +42,7 @@ public static class ApplicationServiceCollectionExtensions
         services.AddTransient<IOpenExternalEditorUseCase, OpenExternalEditorUseCase>();
         services.AddSingleton<IActiveEditSessionService, ActiveEditSessionService>();
         services.AddSingleton<IEditSessionGuard, EditSessionGuard>();
+        services.AddSingleton<CaptureFileAllocator>();
 
         return services;
     }
