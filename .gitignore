@@ -365,3 +365,6 @@ FodyWeavers.xsd
 
 # vcpkg
 vcpkg_installed/
+
+# GitHub CodeQL generated source-root link
+/_codeql_detected_source_root
