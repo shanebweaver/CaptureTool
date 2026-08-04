@@ -282,6 +282,36 @@ public sealed class CaptureOverlayViewModelAudioInputTests
     }
 
     [TestMethod]
+    public async Task ToggleDesktopAudioCommand_WhenRecordingStartedMuted_UsesCommittedEnabledState()
+    {
+        TestContext context = CreateViewModel([]);
+        context.ViewModel.Load(CreateOptions());
+
+        await context.ViewModel.ToggleDesktopAudioCommand.ExecuteAsync(null);
+
+        Assert.IsTrue(context.ViewModel.IsDesktopAudioEnabled);
+        context.ToggleDesktopAudio.Verify(useCase => useCase.ExecuteAsync(
+            It.IsAny<ToggleVideoCaptureDesktopAudioRequest>(),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [TestMethod]
+    public async Task ToggleDesktopAudioCommand_WhenUseCaseFails_PreservesMutedState()
+    {
+        TestContext context = CreateViewModel([]);
+        context.ToggleDesktopAudio
+            .Setup(useCase => useCase.ExecuteAsync(
+                It.IsAny<ToggleVideoCaptureDesktopAudioRequest>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(UseCaseResponse<ToggleVideoCaptureDesktopAudioResponse>.Failure());
+        context.ViewModel.Load(CreateOptions());
+
+        await context.ViewModel.ToggleDesktopAudioCommand.ExecuteAsync(null);
+
+        Assert.IsFalse(context.ViewModel.IsDesktopAudioEnabled);
+    }
+
+    [TestMethod]
     public async Task ToggleAudioInputMuteCommand_WhenUseCaseSucceeds_UsesCommittedStateEvent()
     {
         TestContext context = CreateViewModel([new("default", "Built-in microphone", true)]);
@@ -351,9 +381,27 @@ public sealed class CaptureOverlayViewModelAudioInputTests
 
         string? selectedAudioInputSourceId = null;
         bool isAudioInputMuted = false;
+        bool isDesktopAudioEnabled = false;
         Mock<IVideoCaptureState> videoCaptureState = new();
         videoCaptureState.SetupGet(state => state.SelectedAudioInputSourceId).Returns(() => selectedAudioInputSourceId);
         videoCaptureState.SetupGet(state => state.IsAudioInputMuted).Returns(() => isAudioInputMuted);
+        videoCaptureState.SetupGet(state => state.IsDesktopAudioEnabled).Returns(() => isDesktopAudioEnabled);
+
+        Mock<IToggleVideoCaptureDesktopAudioUseCase> toggleDesktopAudio = new();
+        toggleDesktopAudio
+            .Setup(useCase => useCase.ExecuteAsync(
+                It.IsAny<ToggleVideoCaptureDesktopAudioRequest>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(() =>
+            {
+                isDesktopAudioEnabled = !isDesktopAudioEnabled;
+                videoCaptureState.Raise(
+                    state => state.DesktopAudioStateChanged += null!,
+                    videoCaptureState.Object,
+                    isDesktopAudioEnabled);
+                return UseCaseResponse<ToggleVideoCaptureDesktopAudioResponse>.Success(
+                    new ToggleVideoCaptureDesktopAudioResponse());
+            });
 
         Mock<ISelectAudioInputSourceUseCase> selectAudioInputSource = new();
         selectAudioInputSource
@@ -398,7 +446,7 @@ public sealed class CaptureOverlayViewModelAudioInputTests
             startVideoCapture.Object,
             cancelVideoCapture.Object,
             Mock.Of<IStopVideoCaptureUseCase>(),
-            Mock.Of<IToggleVideoCaptureDesktopAudioUseCase>(),
+            toggleDesktopAudio.Object,
             Mock.Of<IToggleVideoCapturePauseResumeUseCase>(),
             prepareVideoCapture.Object,
             getAudioInputSources.Object,
@@ -417,6 +465,7 @@ public sealed class CaptureOverlayViewModelAudioInputTests
             videoCaptureState,
             startVideoCapture,
             cancelVideoCapture,
+            toggleDesktopAudio,
             selectAudioInputSource,
             setAudioInputMuted);
     }
@@ -448,6 +497,7 @@ public sealed class CaptureOverlayViewModelAudioInputTests
         Mock<IVideoCaptureState> VideoCaptureState,
         Mock<IStartVideoCaptureUseCase> StartVideoCapture,
         Mock<ICancelVideoCaptureUseCase> CancelVideoCapture,
+        Mock<IToggleVideoCaptureDesktopAudioUseCase> ToggleDesktopAudio,
         Mock<ISelectAudioInputSourceUseCase> SelectAudioInputSource,
         Mock<ISetVideoCaptureAudioInputMutedUseCase> SetAudioInputMuted);
 }

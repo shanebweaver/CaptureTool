@@ -36,6 +36,7 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
     private readonly IStartVideoCaptureUseCase _startVideoCaptureCommand;
     private readonly ICancelVideoCaptureUseCase _cancelVideoCaptureCommand;
     private readonly IStopVideoCaptureUseCase _stopVideoCaptureCommand;
+    private readonly IToggleVideoCaptureDesktopAudioUseCase _toggleVideoCaptureDesktopAudioCommand;
     private readonly IToggleVideoCapturePauseResumeUseCase _toggleVideoCapturePauseResumeCommand;
     private readonly IPrepareVideoCaptureUseCase _prepareVideoCaptureCommand;
     private readonly IGetAudioInputSourcesUseCase _getAudioInputSourcesCommand;
@@ -146,7 +147,7 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
     public IRelayCommand GoBackCommand { get; }
     public IAsyncRelayCommand StartVideoCaptureCommand { get; }
     public IAsyncRelayCommand StopVideoCaptureCommand { get; }
-    public IRelayCommand ToggleDesktopAudioCommand { get; }
+    public IAsyncRelayCommand ToggleDesktopAudioCommand { get; }
     public IAsyncRelayCommand ToggleAudioInputMuteCommand { get; }
     public IAsyncRelayCommand TogglePauseResumeCommand { get; }
     public IAsyncRelayCommand<AudioInputSource> SelectAudioInputSourceCommand { get; }
@@ -174,6 +175,7 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
         _startVideoCaptureCommand = startVideoCaptureCommand;
         _cancelVideoCaptureCommand = cancelVideoCaptureCommand;
         _stopVideoCaptureCommand = stopVideoCaptureCommand;
+        _toggleVideoCaptureDesktopAudioCommand = toggleVideoCaptureDesktopAudioCommand;
         _toggleVideoCapturePauseResumeCommand = toggleVideoCapturePauseResumeCommand;
         _prepareVideoCaptureCommand = prepareVideoCaptureCommand;
         _getAudioInputSourcesCommand = getAudioInputSourcesCommand;
@@ -194,7 +196,7 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
         GoBackCommand = goBackCommand.ToRelayCommand(() => new GoBackFromCaptureOverlayRequest());
         StartVideoCaptureCommand = new AsyncRelayCommand(StartVideoCaptureAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
         StopVideoCaptureCommand = new AsyncRelayCommand(StopVideoCaptureAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
-        ToggleDesktopAudioCommand = toggleVideoCaptureDesktopAudioCommand.ToRelayCommand(() => new ToggleVideoCaptureDesktopAudioRequest());
+        ToggleDesktopAudioCommand = new AsyncRelayCommand(ToggleDesktopAudioAsync);
         ToggleAudioInputMuteCommand = new AsyncRelayCommand(ToggleAudioInputMuteAsync);
         TogglePauseResumeCommand = new AsyncRelayCommand(TogglePauseResumeAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
         SelectAudioInputSourceCommand = new AsyncRelayCommand<AudioInputSource>(SelectAudioInputSourceAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
@@ -500,6 +502,19 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
         }
 
         await _toggleVideoCapturePauseResumeCommand.ExecuteAsync(new ToggleVideoCapturePauseResumeRequest(), CancellationToken.None);
+    }
+
+    private async Task ToggleDesktopAudioAsync()
+    {
+        UseCaseResponse<ToggleVideoCaptureDesktopAudioResponse> response =
+            await _toggleVideoCaptureDesktopAudioCommand.ExecuteAsync(
+                new ToggleVideoCaptureDesktopAudioRequest(),
+                CancellationToken.None);
+
+        if (response.Result == UseCaseResult.Succeeded)
+        {
+            IsDesktopAudioEnabled = _videoCaptureState.IsDesktopAudioEnabled;
+        }
     }
 
     private async Task RefreshAudioInputSourcesAsync()

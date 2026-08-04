@@ -22,6 +22,7 @@ These mismatches are privacy-sensitive because a displayed disabled or muted sou
 - Start audio-only recording from an explicit immutable settings snapshot.
 - Keep active-session state equal to the settings last accepted by the platform recorder.
 - Keep presentation mute, desktop-audio, and source selection synchronized with committed workflow state.
+- Keep every audio route mutable for the lifetime of a capture, including enabling a route that was disabled when recording started.
 - Preserve idle configuration so users can choose sources before capture starts.
 - Add deterministic failure-path coverage for every live routing operation.
 
@@ -39,6 +40,7 @@ These mismatches are privacy-sensitive because a displayed disabled or muted sou
 - As a user muting a microphone during recording, I see muted only after the recorder accepts the change.
 - As a user changing an input source, a platform failure leaves the previous effective source selected instead of displaying an uncommitted choice.
 - As a user configuring a capture before it starts, my desktop-audio and microphone choices are included in the recorder's startup options.
+- As a user who starts a video with local audio muted, I can unmute local audio during that same recording.
 
 ## Product Requirements
 
@@ -58,6 +60,7 @@ These mismatches are privacy-sensitive because a displayed disabled or muted sou
 4. If the platform call throws, the previous state and displayed value must remain in effect and the use case must return a failed response through the existing executor boundary.
 5. Idle routing changes must update application state without calling a recorder that has no active session.
 6. The transactional rule applies to desktop audio, microphone mute, microphone source, and microphone input volume where that operation exists.
+7. A disabled startup value is an initial routing state, not a declaration that the route is unavailable. A live false-to-true transition must be sent to the active recorder and committed on success.
 
 ### Presentation synchronization
 
@@ -66,6 +69,7 @@ These mismatches are privacy-sensitive because a displayed disabled or muted sou
 3. The video overlay microphone-mute command must await its use-case response and must not optimistically change the displayed value.
 4. Source-selection UI must not retain a requested source when its use case fails.
 5. Existing bounded error handling may report the failed action, but it must not invent a successful state transition.
+6. After a successful desktop-audio command, the video overlay must synchronize directly from committed capture state; the state-change event remains the notification path for changes initiated elsewhere.
 
 ## Design Decision
 
@@ -88,6 +92,7 @@ This design keeps platform exceptions inside the existing use-case executor path
 - Failed live desktop-audio, mute, source, or volume operations leave application state unchanged.
 - Failed live operations do not publish success state-change events.
 - Successful live operations update the recorder before committing and publishing state.
+- A video recording started with desktop audio disabled can enable desktop audio without restarting the capture.
 - Idle audio-routing changes do not call an inactive recorder.
 - The video overlay does not change its displayed mute/source state after a failed use case.
 - Existing audio and video capture behavior and non-UI tests remain green.
@@ -100,6 +105,7 @@ This design keeps platform exceptions inside the existing use-case executor path
 - Assert `WindowsAudioRecorder` maps immutable startup options to CaptureKit options.
 - Inject failures for audio-only desktop-audio, mute, and source changes and verify state/event rollback semantics.
 - Inject failures for video desktop-audio, mute, source, and volume changes and verify state/event rollback semantics.
+- Start a video workflow with desktop audio disabled, enable it while recording, and assert the active recorder receives `true` before state and presentation commit the new value.
 - Add presentation tests for failed video mute and source selection.
 - Run all application, presentation, Windows capture infrastructure, generic infrastructure, Windows edit infrastructure, and MCP server tests.
 

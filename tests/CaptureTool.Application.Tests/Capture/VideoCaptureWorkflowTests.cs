@@ -408,6 +408,25 @@ public sealed class VideoCaptureWorkflowTests
     }
 
     [TestMethod]
+    public void SetIsDesktopAudioEnabled_WhenRecordingStartedDisabled_CanEnableDuringCapture()
+    {
+        TestWorkflowContext context = CreateContext(defaultDesktopAudioEnabled: false);
+        context.Workflow.PrepareForVideoCapture();
+        context.Workflow.StartVideoCapture(CreateCaptureArgs());
+        context.ScreenRecorder
+            .Setup(recorder => recorder.SetAudioCaptureEnabled(true))
+            .Callback(() => context.Workflow.IsDesktopAudioEnabled.Should().BeFalse());
+        bool? raisedValue = null;
+        context.Workflow.DesktopAudioStateChanged += (_, value) => raisedValue = value;
+
+        context.Workflow.SetIsDesktopAudioEnabled(true);
+
+        context.ScreenRecorder.Verify(recorder => recorder.SetAudioCaptureEnabled(true), Times.Once);
+        context.Workflow.IsDesktopAudioEnabled.Should().BeTrue();
+        raisedValue.Should().BeTrue();
+    }
+
+    [TestMethod]
     public void AudioChanges_ShouldNotCallRecorder_WhenIdle()
     {
         TestWorkflowContext context = CreateContext();
