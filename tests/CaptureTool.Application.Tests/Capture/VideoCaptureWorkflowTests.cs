@@ -8,6 +8,7 @@ using CaptureTool.Application.Abstractions.Settings;
 using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Application.Abstractions.TaskEnvironment;
 using CaptureTool.Application.Abstractions.Telemetry;
+using CaptureTool.Application.Capture;
 using CaptureTool.Application.Capture.Video;
 using CaptureTool.Domain.Capture;
 using CaptureTool.Domain.FileSystem;
@@ -64,6 +65,9 @@ public sealed class VideoCaptureWorkflowTests
         act.Should().Throw<InvalidOperationException>();
         context.Workflow.IsRecording.Should().BeFalse();
         context.Workflow.IsFinalizing.Should().BeFalse();
+        context.FileSystem.Verify(
+            service => service.DeleteFile(It.Is<string>(path => path.EndsWith(".mp4", StringComparison.Ordinal))),
+            Times.Once);
     }
 
     [TestMethod]
@@ -432,9 +436,11 @@ public sealed class VideoCaptureWorkflowTests
         }
 
         var fileNameGenerator = new VideoCaptureFileNameGenerator(TestClock.Instance);
+        var fileSystem = new Mock<IFileSystem>();
+        var fileAllocator = new CaptureFileAllocator(fileSystem.Object);
         var postProcessor = new VideoCapturePostProcessor(
             Mock.Of<IClipboardService>(),
-            Mock.Of<IFileSystem>(),
+            fileAllocator,
             settings.Object,
             storage.Object,
             taskEnvironment.Object,
@@ -446,6 +452,7 @@ public sealed class VideoCaptureWorkflowTests
             screenRecorder.Object,
             settings.Object,
             storage.Object,
+            fileAllocator,
             backgroundTaskRunner.Object,
             supportService,
             new VideoCaptureStateStore(),
@@ -456,6 +463,7 @@ public sealed class VideoCaptureWorkflowTests
         return new TestWorkflowContext(
             workflow,
             screenRecorder,
+            fileSystem,
             backgroundTaskRunner,
             recentCaptureCatalog,
             () => finalizeAction);
@@ -480,12 +488,14 @@ public sealed class VideoCaptureWorkflowTests
     private sealed class TestWorkflowContext(
         VideoCaptureWorkflow workflow,
         Mock<IScreenRecorder> screenRecorder,
+        Mock<IFileSystem> fileSystem,
         Mock<IBackgroundTaskRunner> backgroundTaskRunner,
         Mock<IRecentCaptureCatalog> recentCaptureCatalog,
         Func<Action?> getFinalizeAction)
     {
         public VideoCaptureWorkflow Workflow { get; } = workflow;
         public Mock<IScreenRecorder> ScreenRecorder { get; } = screenRecorder;
+        public Mock<IFileSystem> FileSystem { get; } = fileSystem;
         public Mock<IBackgroundTaskRunner> BackgroundTaskRunner { get; } = backgroundTaskRunner;
         public Mock<IRecentCaptureCatalog> RecentCaptureCatalog { get; } = recentCaptureCatalog;
         public Action? FinalizeAction => getFinalizeAction();

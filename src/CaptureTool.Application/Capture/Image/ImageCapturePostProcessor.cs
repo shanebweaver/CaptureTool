@@ -1,5 +1,4 @@
 using CaptureTool.Application.Abstractions.Clipboard;
-using CaptureTool.Application.Abstractions.Files;
 using CaptureTool.Application.Abstractions.Logging;
 using CaptureTool.Application.Abstractions.Library.RecentCaptures;
 using CaptureTool.Application.Abstractions.Settings;
@@ -14,7 +13,7 @@ namespace CaptureTool.Application.Capture.Image;
 internal sealed class ImageCapturePostProcessor
 {
     private readonly IClipboardService _clipboardService;
-    private readonly IFileSystem _fileSystem;
+    private readonly CaptureFileAllocator _fileAllocator;
     private readonly ISettingsService _settingsService;
     private readonly IStorageService _storageService;
     private readonly ITaskEnvironment _taskEnvironment;
@@ -25,7 +24,7 @@ internal sealed class ImageCapturePostProcessor
 
     public ImageCapturePostProcessor(
         IClipboardService clipboardService,
-        IFileSystem fileSystem,
+        CaptureFileAllocator fileAllocator,
         ISettingsService settingsService,
         IStorageService storageService,
         ITaskEnvironment taskEnvironment,
@@ -35,7 +34,7 @@ internal sealed class ImageCapturePostProcessor
         ITelemetryService? telemetryService = null)
     {
         _clipboardService = clipboardService;
-        _fileSystem = fileSystem;
+        _fileAllocator = fileAllocator;
         _settingsService = settingsService;
         _storageService = storageService;
         _taskEnvironment = taskEnvironment;
@@ -94,9 +93,10 @@ internal sealed class ImageCapturePostProcessor
                     screenshotsFolder = _storageService.GetSystemDefaultScreenshotsFolderPath();
                 }
 
-                string newFilePath = Path.Combine(screenshotsFolder, _fileNameGenerator.GetNewCaptureFileName());
-
-                _fileSystem.CopyFile(imageFile.FilePath, newFilePath, true);
+                string newFilePath = _fileAllocator.CopyToUniqueFile(
+                    imageFile.FilePath,
+                    screenshotsFolder,
+                    _fileNameGenerator.GetNewCaptureFileName);
                 imageFile.PersistentFilePath = newFilePath;
                 _recentCaptureCatalog.ReplacePath(imageFile.FilePath, newFilePath);
                 TrackOutput("auto_save", TelemetryOutcomes.Succeeded);

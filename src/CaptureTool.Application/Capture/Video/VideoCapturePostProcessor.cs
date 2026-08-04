@@ -1,5 +1,4 @@
 using CaptureTool.Application.Abstractions.Clipboard;
-using CaptureTool.Application.Abstractions.Files;
 using CaptureTool.Application.Abstractions.Logging;
 using CaptureTool.Application.Abstractions.Library.RecentCaptures;
 using CaptureTool.Application.Abstractions.Settings;
@@ -14,7 +13,7 @@ namespace CaptureTool.Application.Capture.Video;
 internal sealed class VideoCapturePostProcessor
 {
     private readonly IClipboardService _clipboardService;
-    private readonly IFileSystem _fileSystem;
+    private readonly CaptureFileAllocator _fileAllocator;
     private readonly ISettingsService _settingsService;
     private readonly IStorageService _storageService;
     private readonly ITaskEnvironment _taskEnvironment;
@@ -25,7 +24,7 @@ internal sealed class VideoCapturePostProcessor
 
     public VideoCapturePostProcessor(
         IClipboardService clipboardService,
-        IFileSystem fileSystem,
+        CaptureFileAllocator fileAllocator,
         ISettingsService settingsService,
         IStorageService storageService,
         ITaskEnvironment taskEnvironment,
@@ -35,7 +34,7 @@ internal sealed class VideoCapturePostProcessor
         ITelemetryService? telemetryService = null)
     {
         _clipboardService = clipboardService;
-        _fileSystem = fileSystem;
+        _fileAllocator = fileAllocator;
         _settingsService = settingsService;
         _storageService = storageService;
         _taskEnvironment = taskEnvironment;
@@ -92,9 +91,10 @@ internal sealed class VideoCapturePostProcessor
                 videosFolder = _storageService.GetSystemDefaultVideosFolderPath();
             }
 
-            string newFilePath = Path.Combine(videosFolder, _fileNameGenerator.GetNewCaptureFileName());
-
-            _fileSystem.CopyFile(videoFile.FilePath, newFilePath, true);
+            string newFilePath = _fileAllocator.CopyToUniqueFile(
+                videoFile.FilePath,
+                videosFolder,
+                _fileNameGenerator.GetNewCaptureFileName);
             _recentCaptureCatalog.ReplacePath(videoFile.FilePath, newFilePath);
             TrackOutput("auto_save", TelemetryOutcomes.Succeeded);
         }

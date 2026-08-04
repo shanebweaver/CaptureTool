@@ -10,6 +10,7 @@ namespace CaptureTool.Application.Capture.Image;
 internal sealed class ImageCaptureWorkflow : IImageCaptureWorkflow, IImageCaptureState
 {
     private readonly IStorageService _storageService;
+    private readonly CaptureFileAllocator _fileAllocator;
     private readonly IScreenCapture _screenCapture;
     private readonly ImageCapturePostProcessor _postProcessor;
     private readonly ImageCaptureFileNameGenerator _fileNameGenerator;
@@ -19,12 +20,14 @@ internal sealed class ImageCaptureWorkflow : IImageCaptureWorkflow, IImageCaptur
 
     public ImageCaptureWorkflow(
         IStorageService storageService,
+        CaptureFileAllocator fileAllocator,
         IScreenCapture screenCapture,
         ImageCapturePostProcessor postProcessor,
         ImageCaptureFileNameGenerator fileNameGenerator,
         ITelemetryService? telemetryService = null)
     {
         _storageService = storageService;
+        _fileAllocator = fileAllocator;
         _screenCapture = screenCapture;
         _postProcessor = postProcessor;
         _fileNameGenerator = fileNameGenerator;
@@ -41,16 +44,18 @@ internal sealed class ImageCaptureWorkflow : IImageCaptureWorkflow, IImageCaptur
     {
         TrackCapture(TelemetryEvents.CaptureRequested, "all_screens");
 
+        string? tempPath = null;
+        bool captureCreated = false;
         try
         {
             TrackCapture(TelemetryEvents.CaptureStarted, "all_screens");
-            string tempPath = Path.Combine(
+            tempPath = _fileAllocator.ReserveUniqueFile(
                 _storageService.GetApplicationTemporaryFolderPath(),
-                _fileNameGenerator.GetNewCaptureFileName()
-            );
+                _fileNameGenerator.GetNewCaptureFileName);
 
             using System.Drawing.Image combined = _screenCapture.CombineMonitors([.. monitors]);
             _screenCapture.SaveImageToFile(combined, tempPath);
+            captureCreated = true;
 
             ImageFile imageFile = CompleteCapture(new ImageFile(tempPath));
             TrackCapture(TelemetryEvents.CaptureCompleted, "all_screens", TelemetryOutcomes.Succeeded);
@@ -58,6 +63,11 @@ internal sealed class ImageCaptureWorkflow : IImageCaptureWorkflow, IImageCaptur
         }
         catch
         {
+            if (!captureCreated && tempPath is not null)
+            {
+                _fileAllocator.TryDeleteFile(tempPath);
+            }
+
             TrackCapture(TelemetryEvents.CaptureFailed, "all_screens", TelemetryOutcomes.Failed);
             throw;
         }
@@ -68,19 +78,21 @@ internal sealed class ImageCaptureWorkflow : IImageCaptureWorkflow, IImageCaptur
         string captureType = args.CaptureType.ToString();
         TrackCapture(TelemetryEvents.CaptureRequested, captureType);
 
+        string? tempPath = null;
+        bool captureCreated = false;
         try
         {
             TrackCapture(TelemetryEvents.CaptureStarted, captureType);
-            string tempPath = Path.Combine(
+            tempPath = _fileAllocator.ReserveUniqueFile(
                 _storageService.GetApplicationTemporaryFolderPath(),
-                _fileNameGenerator.GetNewCaptureFileName()
-            );
+                _fileNameGenerator.GetNewCaptureFileName);
 
             MonitorCaptureResult monitor = args.Monitor;
             Rectangle area = args.Area;
             using Bitmap image = _screenCapture.CreateBitmapFromMonitorCaptureResult(monitor);
             using Bitmap cropped = _screenCapture.CreateCroppedBitmap(image, area, monitor.Scale);
             _screenCapture.SaveImageToFile(cropped, tempPath);
+            captureCreated = true;
 
             ImageFile imageFile = CompleteCapture(new ImageFile(tempPath));
             TrackCapture(TelemetryEvents.CaptureCompleted, captureType, TelemetryOutcomes.Succeeded);
@@ -88,6 +100,11 @@ internal sealed class ImageCaptureWorkflow : IImageCaptureWorkflow, IImageCaptur
         }
         catch
         {
+            if (!captureCreated && tempPath is not null)
+            {
+                _fileAllocator.TryDeleteFile(tempPath);
+            }
+
             TrackCapture(TelemetryEvents.CaptureFailed, captureType, TelemetryOutcomes.Failed);
             throw;
         }

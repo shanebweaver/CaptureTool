@@ -27,6 +27,11 @@ internal sealed class TestFileSystem : IFileSystem
 
     public void CreateDirectory(string folderPath) => Directory.CreateDirectory(folderPath);
 
+    public void CreateEmptyFile(string filePath)
+    {
+        using FileStream stream = new(filePath, FileMode.CreateNew, FileAccess.Write, FileShare.None);
+    }
+
     public void CopyFile(string sourcePath, string destinationPath, bool overwrite) =>
         File.Copy(sourcePath, destinationPath, overwrite);
 

@@ -15,6 +15,7 @@ internal sealed class VideoCaptureWorkflow : IVideoCaptureWorkflow
     private readonly IScreenRecorder _screenRecorder;
     private readonly ISettingsService _settingsService;
     private readonly IStorageService _storageService;
+    private readonly CaptureFileAllocator _fileAllocator;
     private readonly IBackgroundTaskRunner _backgroundTaskRunner;
     private readonly IVideoCaptureSupportService _videoCaptureSupportService;
     private readonly VideoCaptureStateStore _stateStore;
@@ -41,6 +42,7 @@ internal sealed class VideoCaptureWorkflow : IVideoCaptureWorkflow
         IScreenRecorder screenRecorder,
         ISettingsService settingsService,
         IStorageService storageService,
+        CaptureFileAllocator fileAllocator,
         IBackgroundTaskRunner backgroundTaskRunner,
         IVideoCaptureSupportService videoCaptureSupportService,
         VideoCaptureStateStore stateStore,
@@ -51,6 +53,7 @@ internal sealed class VideoCaptureWorkflow : IVideoCaptureWorkflow
         _screenRecorder = screenRecorder;
         _settingsService = settingsService;
         _storageService = storageService;
+        _fileAllocator = fileAllocator;
         _backgroundTaskRunner = backgroundTaskRunner;
         _videoCaptureSupportService = videoCaptureSupportService;
         _stateStore = stateStore;
@@ -92,24 +95,30 @@ internal sealed class VideoCaptureWorkflow : IVideoCaptureWorkflow
             throw new VideoCaptureNotSupportedException(supportStatus.UnsupportedReason);
         }
 
-        string tempVideoPath = Path.Combine(
+        string tempVideoPath = _fileAllocator.ReserveUniqueFile(
             _storageService.GetApplicationTemporaryFolderPath(),
-            _fileNameGenerator.GetNewCaptureFileName());
+            _fileNameGenerator.GetNewCaptureFileName);
 
         CaptureRecordingTarget target = CreateRecordingTarget(args);
-        VideoCaptureSession session = _stateStore.StartSession(tempVideoPath, target, args.CaptureType);
+        VideoCaptureSession? session = null;
 
         try
         {
+            session = _stateStore.StartSession(tempVideoPath, target, args.CaptureType);
             _screenRecorder.StartRecording(session.CreateRecordingOptions());
         }
         catch (Exception ex)
         {
-            _stateStore.ClearSession(session.Id);
+            if (session is not null)
+            {
+                _stateStore.ClearSession(session.Id);
+            }
+
+            _fileAllocator.TryDeleteFile(tempVideoPath);
             TrackCapture(
                 TelemetryEvents.CaptureFailed,
                 args.CaptureType.ToString(),
-                session.AudioSettings,
+                session?.AudioSettings ?? Snapshot.AudioSettings,
                 TelemetryOutcomes.Failed,
                 TelemetryFailureStages.RecorderStart,
                 ClassifyRecorderStartFailure(ex));

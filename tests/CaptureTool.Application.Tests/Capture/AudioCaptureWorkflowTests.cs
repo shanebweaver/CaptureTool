@@ -6,6 +6,7 @@ using CaptureTool.Application.Abstractions.Library.RecentCaptures;
 using CaptureTool.Application.Abstractions.Settings;
 using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Application.Abstractions.TaskEnvironment;
+using CaptureTool.Application.Capture;
 using CaptureTool.Application.Capture.Audio;
 using CaptureTool.Domain.Capture;
 using CaptureTool.Domain.FileSystem;
@@ -50,12 +51,16 @@ public sealed class AudioCaptureWorkflowTests
         recorder
             .Setup(service => service.StartCapture(It.IsAny<string>()))
             .Throws(new InvalidOperationException("failed"));
-        AudioCaptureWorkflow workflow = CreateWorkflow(recorder);
+        var fileSystem = new Mock<IFileSystem>();
+        AudioCaptureWorkflow workflow = CreateWorkflow(recorder, fileSystem: fileSystem);
 
         workflow.Invoking(service => service.StartCapture()).Should().Throw<InvalidOperationException>();
 
         workflow.IsRecording.Should().BeFalse();
         workflow.CaptureState.Should().Be(AudioCaptureState.Stopped);
+        fileSystem.Verify(
+            service => service.DeleteFile(It.Is<string>(path => path.EndsWith(".wav", StringComparison.Ordinal))),
+            Times.Once);
     }
 
     [TestMethod]
@@ -168,7 +173,7 @@ public sealed class AudioCaptureWorkflowTests
             service => service.CopyFile(
                 audioFile.FilePath,
                 It.Is<string>(path => path.StartsWith(@"C:\Audio", StringComparison.OrdinalIgnoreCase) && path.EndsWith(".wav")),
-                true),
+                false),
             Times.Once);
         await copied.Task.WaitAsync(TimeSpan.FromSeconds(1), CancellationToken.None);
         recentCaptureCatalog.Verify(
@@ -259,6 +264,7 @@ public sealed class AudioCaptureWorkflowTests
         Mock<IRecentCaptureCatalog>? recentCaptureCatalog = null)
     {
         settings ??= CreateSettings();
+        fileSystem ??= new Mock<IFileSystem>();
 
         storage ??= new Mock<IStorageService>();
         storage.Setup(service => service.GetApplicationTemporaryFolderPath()).Returns(@"C:\Temp");
@@ -271,9 +277,10 @@ public sealed class AudioCaptureWorkflowTests
             .Returns(true);
 
         AudioCaptureFileNameGenerator fileNameGenerator = new(TestClock.Instance);
+        var fileAllocator = new CaptureFileAllocator(fileSystem.Object);
         AudioCapturePostProcessor postProcessor = new(
             clipboard?.Object ?? Mock.Of<IClipboardService>(),
-            fileSystem?.Object ?? Mock.Of<IFileSystem>(),
+            fileAllocator,
             settings.Object,
             storage.Object,
             taskEnvironment.Object,
@@ -283,9 +290,10 @@ public sealed class AudioCaptureWorkflowTests
 
         return new AudioCaptureWorkflow(
             recorder.Object,
-            fileSystem?.Object ?? Mock.Of<IFileSystem>(),
+            fileSystem.Object,
             settings.Object,
             storage.Object,
+            fileAllocator,
             new AudioCaptureStateStore(),
             postProcessor,
             fileNameGenerator);

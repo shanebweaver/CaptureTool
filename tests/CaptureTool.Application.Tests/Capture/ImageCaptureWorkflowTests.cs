@@ -1,11 +1,13 @@
 using CaptureTool.Application.Abstractions.Capture;
 using CaptureTool.Application.Abstractions.Clipboard;
+using CaptureTool.Application.Abstractions.Files;
 using CaptureTool.Application.Abstractions.Logging;
 using CaptureTool.Application.Abstractions.Library.RecentCaptures;
 using CaptureTool.Application.Abstractions.Settings;
 using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Application.Abstractions.TaskEnvironment;
 using CaptureTool.Application.Abstractions.Telemetry;
+using CaptureTool.Application.Capture;
 using CaptureTool.Application.Capture.Image;
 using CaptureTool.Domain.Capture;
 using CaptureTool.Domain.FileSystem;
@@ -107,6 +109,34 @@ public sealed class ImageCaptureWorkflowTests
     }
 
     [TestMethod]
+    public void CaptureMonitors_WhenImageSaveFails_DeletesReservedFile()
+    {
+        const string TempFolder = @"C:\Temp";
+        var fileSystem = new Mock<IFileSystem>();
+        var screenCapture = new Mock<IScreenCapture>();
+        screenCapture
+            .Setup(service => service.CombineMonitors(It.IsAny<IList<MonitorCaptureResult>>()))
+            .Returns(new Bitmap(2, 2));
+        screenCapture
+            .Setup(service => service.SaveImageToFile(It.IsAny<Image>(), It.IsAny<string>()))
+            .Throws(new InvalidOperationException("Save failed."));
+        ImageCaptureWorkflow workflow = CreateWorkflow(
+            TempFolder,
+            screenCapture: screenCapture.Object,
+            fileSystem: fileSystem.Object);
+
+        Assert.ThrowsExactly<InvalidOperationException>(() =>
+            workflow.CaptureMonitors([CreateMonitor()]));
+
+        fileSystem.Verify(
+            service => service.CreateEmptyFile(It.Is<string>(path => path.EndsWith(".png", StringComparison.Ordinal))),
+            Times.Once);
+        fileSystem.Verify(
+            service => service.DeleteFile(It.Is<string>(path => path.EndsWith(".png", StringComparison.Ordinal))),
+            Times.Once);
+    }
+
+    [TestMethod]
     public void CaptureMonitors_WhenAutoSaveAndCopyEnabled_CopiesToClipboardAndSavesToConfiguredFolder()
     {
         string tempFolder = CreateTestFolder();
@@ -146,7 +176,8 @@ public sealed class ImageCaptureWorkflowTests
         ISettingsService? settings = null,
         IScreenCapture? screenCapture = null,
         ITelemetryService? telemetry = null,
-        IRecentCaptureCatalog? recentCaptureCatalog = null)
+        IRecentCaptureCatalog? recentCaptureCatalog = null,
+        IFileSystem? fileSystem = null)
     {
         var storage = new Mock<IStorageService>();
         storage.Setup(service => service.GetApplicationTemporaryFolderPath()).Returns(tempFolder);
@@ -164,9 +195,10 @@ public sealed class ImageCaptureWorkflowTests
         defaultSettings.Setup(service => service.Get(CaptureToolSettings.Settings_ImageCapture_AutoSaveFolder)).Returns("");
 
         var fileNameGenerator = new ImageCaptureFileNameGenerator(TestClock.Instance);
+        var fileAllocator = new CaptureFileAllocator(fileSystem ?? TestFileSystem.Instance);
         var postProcessor = new ImageCapturePostProcessor(
             clipboard ?? Mock.Of<IClipboardService>(),
-            TestFileSystem.Instance,
+            fileAllocator,
             settings ?? defaultSettings.Object,
             storage.Object,
             taskEnvironment.Object,
@@ -177,6 +209,7 @@ public sealed class ImageCaptureWorkflowTests
 
         return new ImageCaptureWorkflow(
             storage.Object,
+            fileAllocator,
             screenCapture ?? Mock.Of<IScreenCapture>(),
             postProcessor,
             fileNameGenerator,
