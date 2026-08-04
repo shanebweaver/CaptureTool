@@ -10,6 +10,8 @@ internal sealed class FakeVideoCaptureWorkflow : IVideoCaptureWorkflow
     public event EventHandler<VideoFile>? NewVideoCaptured;
     public event EventHandler? RecordingStarted;
     public event EventHandler<bool>? DesktopAudioStateChanged;
+    public event EventHandler<bool>? AudioInputMutedStateChanged;
+    public event EventHandler<string?>? AudioInputSourceChanged;
     public event EventHandler<bool>? PausedStateChanged;
 
     public bool IsDesktopAudioEnabled { get; set; }
@@ -82,6 +84,7 @@ internal sealed class FakeVideoCaptureWorkflow : IVideoCaptureWorkflow
     {
         IsAudioInputMuted = value;
         LastAudioInputMuted = value;
+        AudioInputMutedStateChanged?.Invoke(this, value);
     }
 
     public void SelectAudioInputSource(string? sourceId)
@@ -89,16 +92,12 @@ internal sealed class FakeVideoCaptureWorkflow : IVideoCaptureWorkflow
         SelectedAudioInputSourceId = sourceId;
         LastSelectedAudioInputSourceId = sourceId;
         SelectAudioInputSourceWasCalled = true;
+        AudioInputSourceChanged?.Invoke(this, sourceId);
     }
 
     public void SetAudioInputVolume(int volumePercentage)
     {
         AudioInputVolumePercentage = volumePercentage;
-    }
-
-    public void ToggleDesktopAudioCapture(bool enabled)
-    {
-        LastDesktopAudioEnabled = enabled;
     }
 
     public void ToggleIsPaused(bool isPaused)

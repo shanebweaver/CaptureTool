@@ -14,6 +14,5 @@ internal interface IVideoCaptureWorkflow : IVideoCaptureState
     void SetIsAudioInputMuted(bool value);
     void SelectAudioInputSource(string? sourceId);
     void SetAudioInputVolume(int volumePercentage);
-    void ToggleDesktopAudioCapture(bool enabled);
     void ToggleIsPaused(bool isPaused);
 }

@@ -369,6 +369,10 @@ public sealed class VideoCaptureWorkflowTests
     {
         TestWorkflowContext context = CreateContext();
         context.Workflow.StartVideoCapture(CreateCaptureArgs());
+        List<string?> raisedSources = [];
+        List<bool> raisedMutedStates = [];
+        context.Workflow.AudioInputSourceChanged += (_, sourceId) => raisedSources.Add(sourceId);
+        context.Workflow.AudioInputMutedStateChanged += (_, isMuted) => raisedMutedStates.Add(isMuted);
 
         context.Workflow.SelectAudioInputSource("microphone-id");
         context.Workflow.SetIsAudioInputMuted(true);
@@ -377,10 +381,118 @@ public sealed class VideoCaptureWorkflowTests
         context.Workflow.SelectedAudioInputSourceId.Should().Be("microphone-id");
         context.Workflow.IsAudioInputMuted.Should().BeTrue();
         context.Workflow.AudioInputVolumePercentage.Should().Be(37);
+        raisedSources.Should().Equal("microphone-id");
+        raisedMutedStates.Should().Equal(true);
         context.ScreenRecorder.Verify(recorder => recorder.SetAudioInputSource("microphone-id"), Times.Once);
         context.ScreenRecorder.Verify(recorder => recorder.SetAudioInputSource(null), Times.Once);
         context.ScreenRecorder.Verify(recorder => recorder.SetAudioCaptureEnabled(It.IsAny<bool>()), Times.Never);
         context.ScreenRecorder.Verify(recorder => recorder.SetAudioInputVolume(37), Times.Once);
+    }
+
+    [TestMethod]
+    public void SetIsDesktopAudioEnabled_WhenRecording_UpdatesRecorderBeforeStateAndPublishesCommittedValue()
+    {
+        TestWorkflowContext context = CreateContext();
+        context.Workflow.PrepareForVideoCapture();
+        context.Workflow.StartVideoCapture(CreateCaptureArgs());
+        context.ScreenRecorder
+            .Setup(recorder => recorder.SetAudioCaptureEnabled(false))
+            .Callback(() => context.Workflow.IsDesktopAudioEnabled.Should().BeTrue());
+        bool? raisedValue = null;
+        context.Workflow.DesktopAudioStateChanged += (_, value) => raisedValue = value;
+
+        context.Workflow.SetIsDesktopAudioEnabled(false);
+
+        context.Workflow.IsDesktopAudioEnabled.Should().BeFalse();
+        raisedValue.Should().BeFalse();
+    }
+
+    [TestMethod]
+    public void AudioChanges_ShouldNotCallRecorder_WhenIdle()
+    {
+        TestWorkflowContext context = CreateContext();
+
+        context.Workflow.SetIsDesktopAudioEnabled(false);
+        context.Workflow.SelectAudioInputSource("microphone-id");
+        context.Workflow.SetIsAudioInputMuted(true);
+        context.Workflow.SetAudioInputVolume(37);
+
+        context.ScreenRecorder.Verify(recorder => recorder.SetAudioCaptureEnabled(It.IsAny<bool>()), Times.Never);
+        context.ScreenRecorder.Verify(recorder => recorder.SetAudioInputSource(It.IsAny<string?>()), Times.Never);
+        context.ScreenRecorder.Verify(recorder => recorder.SetAudioInputVolume(It.IsAny<int>()), Times.Never);
+    }
+
+    [TestMethod]
+    public void SetIsDesktopAudioEnabled_WhenRecorderRejectsChange_PreservesStateAndDoesNotRaiseEvent()
+    {
+        TestWorkflowContext context = CreateContext();
+        context.Workflow.PrepareForVideoCapture();
+        context.Workflow.StartVideoCapture(CreateCaptureArgs());
+        context.ScreenRecorder
+            .Setup(recorder => recorder.SetAudioCaptureEnabled(false))
+            .Throws(new InvalidOperationException("Platform rejected desktop audio change."));
+        bool eventRaised = false;
+        context.Workflow.DesktopAudioStateChanged += (_, _) => eventRaised = true;
+
+        context.Workflow.Invoking(workflow => workflow.SetIsDesktopAudioEnabled(false))
+            .Should().Throw<InvalidOperationException>();
+
+        context.Workflow.IsDesktopAudioEnabled.Should().BeTrue();
+        eventRaised.Should().BeFalse();
+    }
+
+    [TestMethod]
+    public void SetIsAudioInputMuted_WhenRecorderRejectsChange_PreservesStateAndDoesNotRaiseEvent()
+    {
+        TestWorkflowContext context = CreateContext();
+        context.Workflow.SelectAudioInputSource("microphone-id");
+        context.Workflow.StartVideoCapture(CreateCaptureArgs());
+        context.ScreenRecorder
+            .Setup(recorder => recorder.SetAudioInputSource(null))
+            .Throws(new InvalidOperationException("Platform rejected mute change."));
+        bool eventRaised = false;
+        context.Workflow.AudioInputMutedStateChanged += (_, _) => eventRaised = true;
+
+        context.Workflow.Invoking(workflow => workflow.SetIsAudioInputMuted(true))
+            .Should().Throw<InvalidOperationException>();
+
+        context.Workflow.IsAudioInputMuted.Should().BeFalse();
+        context.Workflow.SelectedAudioInputSourceId.Should().Be("microphone-id");
+        eventRaised.Should().BeFalse();
+    }
+
+    [TestMethod]
+    public void SelectAudioInputSource_WhenRecorderRejectsChange_PreservesStateAndDoesNotRaiseEvent()
+    {
+        TestWorkflowContext context = CreateContext();
+        context.Workflow.SelectAudioInputSource("original-microphone");
+        context.Workflow.StartVideoCapture(CreateCaptureArgs());
+        context.ScreenRecorder
+            .Setup(recorder => recorder.SetAudioInputSource("new-microphone"))
+            .Throws(new InvalidOperationException("Platform rejected source change."));
+        bool eventRaised = false;
+        context.Workflow.AudioInputSourceChanged += (_, _) => eventRaised = true;
+
+        context.Workflow.Invoking(workflow => workflow.SelectAudioInputSource("new-microphone"))
+            .Should().Throw<InvalidOperationException>();
+
+        context.Workflow.SelectedAudioInputSourceId.Should().Be("original-microphone");
+        eventRaised.Should().BeFalse();
+    }
+
+    [TestMethod]
+    public void SetAudioInputVolume_WhenRecorderRejectsChange_PreservesState()
+    {
+        TestWorkflowContext context = CreateContext();
+        context.Workflow.StartVideoCapture(CreateCaptureArgs());
+        context.ScreenRecorder
+            .Setup(recorder => recorder.SetAudioInputVolume(37))
+            .Throws(new InvalidOperationException("Platform rejected volume change."));
+
+        context.Workflow.Invoking(workflow => workflow.SetAudioInputVolume(37))
+            .Should().Throw<InvalidOperationException>();
+
+        context.Workflow.AudioInputVolumePercentage.Should().Be(100);
     }
 
     private static TestWorkflowContext CreateContext(

@@ -9,9 +9,6 @@ public class WindowsAudioRecorder : IAudioRecorder
     private readonly IAudioCaptureService _audioCaptureService;
     private IAudioCaptureSession? _session;
     private string? _outputPath;
-    private bool _isMuted;
-    private bool _isDesktopAudioEnabled = true;
-    private string? _audioInputSourceId;
 
     public event EventHandler<AudioCaptureLevel>? AudioLevelCaptured;
 
@@ -30,24 +27,24 @@ public class WindowsAudioRecorder : IAudioRecorder
         GetActiveSession().Resume();
     }
 
-    public void StartCapture(string outputPath)
+    public void StartCapture(AudioCaptureRecordingOptions options)
     {
-        if (string.IsNullOrWhiteSpace(outputPath))
+        if (string.IsNullOrWhiteSpace(options.OutputPath))
         {
-            throw new ArgumentException("Audio output path is required.", nameof(outputPath));
+            throw new ArgumentException("Audio output path is required.", nameof(options));
         }
 
-        _outputPath = outputPath;
+        _outputPath = options.OutputPath;
 
-        var options = new AudioCaptureOptions(
-            outputPath,
-            _isDesktopAudioEnabled,
-            GetActiveAudioInputSourceId(),
-            100);
+        var captureOptions = new AudioCaptureOptions(
+            options.OutputPath,
+            options.CaptureDesktopAudio,
+            options.AudioInputSourceId,
+            options.AudioInputVolumePercentage);
 
         try
         {
-            _session = _audioCaptureService.CreateSession(options);
+            _session = _audioCaptureService.CreateSession(captureOptions);
             _session.SampleCaptured += OnSampleCaptured;
             _session.Start();
         }
@@ -78,38 +75,18 @@ public class WindowsAudioRecorder : IAudioRecorder
         }
     }
 
-    public void ToggleDesktopAudio()
+    public void SetDesktopAudioEnabled(bool enabled)
     {
-        _isDesktopAudioEnabled = !_isDesktopAudioEnabled;
-        if (!string.IsNullOrWhiteSpace(_outputPath))
-        {
-            GetActiveSession().SetAudioCaptureEnabled(_isDesktopAudioEnabled);
-        }
+        GetActiveSession().SetAudioCaptureEnabled(enabled);
     }
 
     public void SetAudioInputSource(string? sourceId)
     {
-        _audioInputSourceId = string.IsNullOrWhiteSpace(sourceId)
+        string? normalizedSourceId = string.IsNullOrWhiteSpace(sourceId)
             ? null
             : sourceId;
-
-        if (!string.IsNullOrWhiteSpace(_outputPath))
-        {
-            GetActiveSession().SetAudioInputSource(GetActiveAudioInputSourceId());
-        }
+        GetActiveSession().SetAudioInputSource(normalizedSourceId);
     }
-
-    public void ToggleMute()
-    {
-        _isMuted = !_isMuted;
-        if (!string.IsNullOrWhiteSpace(_outputPath))
-        {
-            GetActiveSession().SetAudioInputSource(GetActiveAudioInputSourceId());
-        }
-    }
-
-    private string? GetActiveAudioInputSourceId()
-        => _isMuted ? null : _audioInputSourceId;
 
     private IAudioCaptureSession GetActiveSession()
         => _session ?? throw new InvalidOperationException("No audio capture session is active.");

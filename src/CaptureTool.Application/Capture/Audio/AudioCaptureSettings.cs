@@ -10,6 +10,9 @@ internal readonly record struct AudioCaptureSettings(
         IsDesktopAudioEnabled: true,
         SelectedAudioInputSourceId: null);
 
+    public string? ActiveAudioInputSourceId
+        => IsMuted ? null : SelectedAudioInputSourceId;
+
     public AudioCaptureSettings PrepareForCapture(bool defaultDesktopAudioEnabled)
         => this with
         {

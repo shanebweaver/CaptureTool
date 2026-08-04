@@ -7,6 +7,8 @@ public interface IVideoCaptureState
     event EventHandler<VideoFile>? NewVideoCaptured;
     event EventHandler? RecordingStarted;
     event EventHandler<bool>? DesktopAudioStateChanged;
+    event EventHandler<bool>? AudioInputMutedStateChanged;
+    event EventHandler<string?>? AudioInputSourceChanged;
     event EventHandler<bool>? PausedStateChanged;
 
     bool IsDesktopAudioEnabled { get; }

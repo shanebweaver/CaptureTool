@@ -26,7 +26,6 @@ internal sealed class ToggleVideoCaptureDesktopAudioUseCase : IToggleVideoCaptur
             {
                 bool newValue = !_videoCaptureWorkflow.IsDesktopAudioEnabled;
                 _videoCaptureWorkflow.SetIsDesktopAudioEnabled(newValue);
-                _videoCaptureWorkflow.ToggleDesktopAudioCapture(newValue);
                 return new ToggleVideoCaptureDesktopAudioResponse();
             },
             cancellationToken: cancellationToken);

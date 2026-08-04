@@ -1,3 +1,4 @@
+using CaptureTool.Application.Abstractions.Capture;
 using CaptureTool.Domain.Capture;
 
 namespace CaptureTool.Application.Capture.Audio;
@@ -17,6 +18,12 @@ internal sealed class AudioCaptureSession
 
     public bool IsRecording => CaptureState is AudioCaptureState.Recording or AudioCaptureState.Paused;
     public bool IsPaused => CaptureState == AudioCaptureState.Paused;
+
+    public AudioCaptureRecordingOptions CreateRecordingOptions()
+        => new(
+            TempAudioPath,
+            Settings.IsDesktopAudioEnabled,
+            Settings.ActiveAudioInputSourceId);
 
     public AudioCaptureState PauseOrResume()
     {

@@ -1,4 +1,5 @@
 using CaptureKit.Abstractions;
+using CaptureTool.Application.Abstractions.Capture;
 using FluentAssertions;
 using Moq;
 
@@ -19,13 +20,16 @@ public sealed class WindowsAudioRecorderTests
             .Returns(session.Object);
         WindowsAudioRecorder recorder = new(service.Object);
 
-        recorder.ToggleDesktopAudio();
-        recorder.SetAudioInputSource("microphone");
-        recorder.StartCapture(@"C:\Temp\capture.wav");
+        recorder.StartCapture(new AudioCaptureRecordingOptions(
+            @"C:\Temp\capture.wav",
+            CaptureDesktopAudio: false,
+            AudioInputSourceId: "microphone",
+            AudioInputVolumePercentage: 37));
 
         capturedOptions.Should().NotBeNull();
         capturedOptions!.CaptureAudio.Should().BeFalse();
         capturedOptions.AudioInputSourceId.Should().Be("microphone");
+        capturedOptions.AudioInputVolumePercentage.Should().Be(37);
     }
 
     [TestMethod]
@@ -38,9 +42,9 @@ public sealed class WindowsAudioRecorderTests
             .Returns(session.Object);
         WindowsAudioRecorder recorder = new(service.Object);
 
-        recorder.StartCapture(@"C:\Temp\capture.wav");
+        recorder.StartCapture(new AudioCaptureRecordingOptions(@"C:\Temp\capture.wav", true, "microphone"));
         recorder.SetAudioInputSource("microphone");
-        recorder.ToggleMute();
+        recorder.SetAudioInputSource(null);
 
         session.Verify(captureSession => captureSession.SetAudioInputSource("microphone"), Times.Once);
         session.Verify(captureSession => captureSession.SetAudioInputSource(null), Times.Once);
@@ -48,7 +52,7 @@ public sealed class WindowsAudioRecorderTests
     }
 
     [TestMethod]
-    public void ToggleDesktopAudioWhileRecording_ShouldOnlyUpdateDesktopAudio()
+    public void SetDesktopAudioWhileRecording_ShouldOnlyUpdateDesktopAudio()
     {
         Mock<IAudioCaptureSession> session = new();
         Mock<IAudioCaptureService> service = new();
@@ -57,8 +61,8 @@ public sealed class WindowsAudioRecorderTests
             .Returns(session.Object);
         WindowsAudioRecorder recorder = new(service.Object);
 
-        recorder.StartCapture(@"C:\Temp\capture.wav");
-        recorder.ToggleDesktopAudio();
+        recorder.StartCapture(new AudioCaptureRecordingOptions(@"C:\Temp\capture.wav", true));
+        recorder.SetDesktopAudioEnabled(false);
 
         session.Verify(captureSession => captureSession.SetAudioCaptureEnabled(false), Times.Once);
         session.Verify(captureSession => captureSession.SetAudioInputSource(It.IsAny<string?>()), Times.Never);

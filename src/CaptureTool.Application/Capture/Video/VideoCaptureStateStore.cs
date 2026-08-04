@@ -120,19 +120,18 @@ internal sealed class VideoCaptureStateStore
         }
     }
 
-    public VideoCaptureStateSnapshot UpdateAudioSettings(Func<VideoCaptureAudioSettings, VideoCaptureAudioSettings> update)
+    public VideoCaptureStateSnapshot SetAudioSettings(VideoCaptureAudioSettings audioSettings)
     {
         lock (_lock)
         {
             if (_activeSession is not null)
             {
-                VideoCaptureAudioSettings audioSettings = update(_activeSession.AudioSettings);
                 _activeSession.SetAudioSettings(audioSettings);
                 _idleAudioSettings = audioSettings;
                 return VideoCaptureStateSnapshot.FromSession(_activeSession);
             }
 
-            _idleAudioSettings = update(_idleAudioSettings);
+            _idleAudioSettings = audioSettings;
             return VideoCaptureStateSnapshot.Idle(_idleAudioSettings);
         }
     }
