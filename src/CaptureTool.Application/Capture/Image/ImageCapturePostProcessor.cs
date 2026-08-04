@@ -96,7 +96,7 @@ internal sealed class ImageCapturePostProcessor
 
                 string newFilePath = Path.Combine(screenshotsFolder, _fileNameGenerator.GetNewCaptureFileName());
 
-                _fileSystem.CopyFile(imageFile.FilePath, newFilePath, true);
+                _fileSystem.CopyFile(imageFile.FilePath, newFilePath, overwrite: false);
                 imageFile.PersistentFilePath = newFilePath;
                 _recentCaptureCatalog.ReplacePath(imageFile.FilePath, newFilePath);
                 TrackOutput("auto_save", TelemetryOutcomes.Succeeded);

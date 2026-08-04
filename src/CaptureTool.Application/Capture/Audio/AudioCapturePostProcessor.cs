@@ -94,7 +94,7 @@ internal sealed class AudioCapturePostProcessor
 
             string newFilePath = Path.Combine(audioFolder, _fileNameGenerator.GetNewCaptureFileName());
 
-            _fileSystem.CopyFile(audioFile.FilePath, newFilePath, true);
+            _fileSystem.CopyFile(audioFile.FilePath, newFilePath, overwrite: false);
             _recentCaptureCatalog.ReplacePath(audioFile.FilePath, newFilePath);
             TrackOutput("auto_save", TelemetryOutcomes.Succeeded);
         }

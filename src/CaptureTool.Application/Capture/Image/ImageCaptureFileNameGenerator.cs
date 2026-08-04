@@ -14,6 +14,6 @@ internal sealed class ImageCaptureFileNameGenerator
     public string GetNewCaptureFileName()
     {
         DateTime timestamp = _clock.Now;
-        return $"Capture_{timestamp:yyyy-MM-dd}_{timestamp:FFFFF}.png";
+        return CaptureFileNameFormatter.Create(timestamp, "png");
     }
 }

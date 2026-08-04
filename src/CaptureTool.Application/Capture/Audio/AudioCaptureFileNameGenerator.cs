@@ -14,6 +14,6 @@ internal sealed class AudioCaptureFileNameGenerator
     public string GetNewCaptureFileName()
     {
         DateTime timestamp = _clock.Now;
-        return $"Capture_{timestamp:yyyy-MM-dd}_{timestamp:FFFFF}.wav";
+        return CaptureFileNameFormatter.Create(timestamp, "wav");
     }
 }

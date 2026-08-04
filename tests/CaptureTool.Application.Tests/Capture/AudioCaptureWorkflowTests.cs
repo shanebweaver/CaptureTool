@@ -168,7 +168,7 @@ public sealed class AudioCaptureWorkflowTests
             service => service.CopyFile(
                 audioFile.FilePath,
                 It.Is<string>(path => path.StartsWith(@"C:\Audio", StringComparison.OrdinalIgnoreCase) && path.EndsWith(".wav")),
-                true),
+                false),
             Times.Once);
         await copied.Task.WaitAsync(TimeSpan.FromSeconds(1), CancellationToken.None);
         recentCaptureCatalog.Verify(

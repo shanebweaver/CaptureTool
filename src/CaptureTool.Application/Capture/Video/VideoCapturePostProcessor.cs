@@ -94,7 +94,7 @@ internal sealed class VideoCapturePostProcessor
 
             string newFilePath = Path.Combine(videosFolder, _fileNameGenerator.GetNewCaptureFileName());
 
-            _fileSystem.CopyFile(videoFile.FilePath, newFilePath, true);
+            _fileSystem.CopyFile(videoFile.FilePath, newFilePath, overwrite: false);
             _recentCaptureCatalog.ReplacePath(videoFile.FilePath, newFilePath);
             TrackOutput("auto_save", TelemetryOutcomes.Succeeded);
         }
