@@ -3,7 +3,6 @@ using CaptureTool.Infrastructure.Capture.Windows;
 using CaptureTool.Presentation.Features.SelectionOverlay;
 using CaptureTool.Presentation.Windows.WinUI.Utils;
 using Microsoft.UI.Xaml;
-using System.Drawing;
 using Windows.Win32;
 
 namespace CaptureTool.Presentation.Windows.WinUI.Xaml.Windows;
@@ -57,23 +56,16 @@ internal sealed partial class SelectionOverlayHost : IDisposable
 
             _monitors.Add(monitor);
 
-            // Scale window dimensions per monitor.
-            Rectangle monitorBounds = monitor.MonitorBounds;
-            float scale = monitor.Scale;
-            IEnumerable<WindowInfo> monitorWindows = allWindows
-                .Where(w =>
-                    monitorBounds.IntersectsWith(w.Position) ||
-                    monitorBounds.Contains(w.Position))
-                .Select(w => new WindowInfo(
-                    w.Handle,
-                    w.Title,
-                    new Rectangle(
-                        (int)((w.Position.X - monitorBounds.X) / scale),
-                        (int)((w.Position.Y - monitorBounds.Y) / scale),
-                        (int)(w.Position.Width / scale),
-                        (int)(w.Position.Height / scale))));
+            List<WindowInfo> monitorWindows = [];
+            foreach (WindowInfo candidateWindow in allWindows)
+            {
+                if (SelectionOverlayWindowGeometry.TryProjectToMonitor(candidateWindow, monitor, out WindowInfo projectedWindow))
+                {
+                    monitorWindows.Add(projectedWindow);
+                }
+            }
 
-            SelectionOverlayWindowOptions overlayOptions = new(monitor, [.. monitorWindows], options);
+            SelectionOverlayWindowOptions overlayOptions = new(monitor, monitorWindows, options);
             SelectionOverlayWindow window = new(overlayOptions);
             _windows.Add(window);
 
