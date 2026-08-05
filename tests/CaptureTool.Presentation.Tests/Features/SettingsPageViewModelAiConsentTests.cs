@@ -36,6 +36,7 @@ using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Application.Abstractions.Store;
 using CaptureTool.Application.Abstractions.Telemetry;
 using CaptureTool.Application.Abstractions.Themes;
+using CaptureTool.Application.Abstractions.UseCases;
 using CaptureTool.Domain.Ai;
 using CaptureTool.Presentation.Factories;
 using CaptureTool.Presentation.Features.Settings;
@@ -126,6 +127,22 @@ public sealed class SettingsPageViewModelAiConsentTests
 
         viewModel.IsAiConsentSettingsVisible.Should().BeFalse();
         viewModel.AiFeatureConsents.Should().BeEmpty();
+    }
+
+    [TestMethod]
+    public async Task RestoreDefaultSettingsCommand_WhenRestoreFails_ShouldKeepDisplayedTheme()
+    {
+        var restoreDefaults = new Mock<IRestoreDefaultsUseCase>();
+        restoreDefaults
+            .Setup(service => service.ExecuteAsync(It.IsAny<RestoreDefaultsRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(UseCaseResponse<RestoreDefaultsResponse>.Failure());
+        SettingsPageViewModel viewModel = CreateViewModel(restoreDefaultsUseCase: restoreDefaults.Object);
+        await viewModel.LoadAsync(TestContext.CancellationToken);
+        int selectedThemeIndex = viewModel.SelectedAppThemeIndex;
+
+        await viewModel.RestoreDefaultSettingsCommand.ExecuteAsync(null);
+
+        viewModel.SelectedAppThemeIndex.Should().Be(selectedThemeIndex);
     }
 
     [TestMethod]
@@ -228,7 +245,8 @@ public sealed class SettingsPageViewModelAiConsentTests
         bool isImageObjectExtractionEnabled = false,
         bool isVideoSuperResolutionEnabled = false,
         string telemetryConsentValue = TelemetryConsentSettingValues.Unknown,
-        ITelemetryConsentService? telemetryConsentService = null)
+        ITelemetryConsentService? telemetryConsentService = null,
+        IRestoreDefaultsUseCase? restoreDefaultsUseCase = null)
     {
         var localization = new Mock<ILocalizationService>();
         localization
@@ -318,7 +336,7 @@ public sealed class SettingsPageViewModelAiConsentTests
             Mock.Of<IOpenVideosFolderUseCase>(),
             Mock.Of<IOpenTempFolderUseCase>(),
             Mock.Of<IClearTempFilesUseCase>(),
-            Mock.Of<IRestoreDefaultsUseCase>(),
+            restoreDefaultsUseCase ?? Mock.Of<IRestoreDefaultsUseCase>(),
             aiFeatureConsentService.Object,
             Mock.Of<IAiConsentSettingsFeatureAvailability>(service =>
                 service.IsAiConsentSettingsEnabled == isAiConsentSettingsEnabled),

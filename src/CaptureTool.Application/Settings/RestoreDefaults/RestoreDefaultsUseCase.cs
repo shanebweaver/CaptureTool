@@ -2,6 +2,7 @@ using CaptureTool.Application.Abstractions.Localization;
 using CaptureTool.Application.Abstractions.Settings;
 using CaptureTool.Application.Abstractions.Settings.RestoreDefaults;
 using CaptureTool.Application.Abstractions.Telemetry;
+using CaptureTool.Application.Abstractions.Themes;
 using CaptureTool.Application.Abstractions.UseCases;
 using CaptureTool.Application.UseCases;
 
@@ -15,17 +16,20 @@ internal sealed class RestoreDefaultsUseCase : IRestoreDefaultsUseCase
     private readonly ISettingsService _settingsService;
     private readonly ILocalizationService _localizationService;
     private readonly ITelemetryConsentService _telemetryConsentService;
+    private readonly IThemeService _themeService;
 
     public RestoreDefaultsUseCase(
         ISettingsService settingsService,
         ILocalizationService localizationService,
         ITelemetryConsentService telemetryConsentService,
+        IThemeService themeService,
         IUseCaseExecutor useCaseExecutor)
     {
         _useCaseExecutor = useCaseExecutor;
         _settingsService = settingsService;
         _localizationService = localizationService;
         _telemetryConsentService = telemetryConsentService;
+        _themeService = themeService;
     }
 
     public bool CanExecute(RestoreDefaultsRequest request) => true;
@@ -36,6 +40,7 @@ internal sealed class RestoreDefaultsUseCase : IRestoreDefaultsUseCase
             activityId: ActivityId,
             useCase: async _ =>
             {
+                _themeService.ResetCurrentTheme();
                 _settingsService.ClearAllSettings();
                 _telemetryConsentService.SetState(TelemetryConsentState.Unknown);
                 _localizationService.OverrideLanguage(null);

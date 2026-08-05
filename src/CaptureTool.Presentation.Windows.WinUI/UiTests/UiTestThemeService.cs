@@ -27,4 +27,9 @@ internal sealed class UiTestThemeService : IThemeService
         CurrentTheme = appTheme;
         CurrentThemeChanged?.Invoke(this, appTheme);
     }
+
+    public void ResetCurrentTheme()
+    {
+        UpdateCurrentTheme(AppTheme.SystemDefault);
+    }
 }

@@ -731,7 +731,11 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
 
     private async Task RestoreDefaultSettingsAsync()
     {
-        await _restoreDefaultsAction.ExecuteAsync(new RestoreDefaultsRequest(), CancellationToken.None);
+        var response = await _restoreDefaultsAction.ExecuteAsync(new RestoreDefaultsRequest(), CancellationToken.None);
+        if (response.Value?.Succeeded != true)
+        {
+            return;
+        }
 
         ImageCaptureAutoCopy = _settingsService.Get(CaptureToolSettings.Settings_ImageCapture_AutoCopy);
         ImageCaptureAutoSave = _settingsService.Get(CaptureToolSettings.Settings_ImageCapture_AutoSave);
