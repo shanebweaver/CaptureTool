@@ -3,7 +3,6 @@ using CaptureTool.Domain.Edit.Drawable;
 using Microsoft.Graphics.Canvas;
 using Microsoft.Graphics.Canvas.Effects;
 using Microsoft.Graphics.Canvas.Text;
-using Microsoft.UI;
 using System.Numerics;
 using Windows.Foundation;
 using Windows.Storage.Streams;
@@ -13,11 +12,22 @@ namespace CaptureTool.Infrastructure.Edit.Windows;
 
 public static partial class Win2DImageCanvasRenderer
 {
-    private static readonly Color ClearColor = Colors.Transparent;
+    private static readonly Color ClearColor = Color.FromArgb(0, 0, 0, 0);
+    private static readonly Color ImageBackgroundColor = Color.FromArgb(255, 255, 255, 255);
     private const float TextPadding = 2f;
     private const float TextCornerRadius = 4f;
 
     public static void Render(IDrawable[] drawables, ImageCanvasRenderOptions options, CanvasDrawingSession drawingSession, float scale = 1f)
+    {
+        Render(drawables, options, drawingSession, GetPreparedImage, scale);
+    }
+
+    internal static void Render(
+        IDrawable[] drawables,
+        ImageCanvasRenderOptions options,
+        CanvasDrawingSession drawingSession,
+        Func<ImageDrawable, ICanvasImage> imageResolver,
+        float scale = 1f)
     {
         drawingSession.Clear(ClearColor);
 
@@ -30,7 +40,7 @@ public static partial class Win2DImageCanvasRenderer
 
             foreach (IDrawable drawable in drawables)
             {
-                Draw(drawable, tempSession);
+                Draw(drawable, tempSession, imageResolver);
             }
         }
 
@@ -60,6 +70,14 @@ public static partial class Win2DImageCanvasRenderer
 
     public static void Draw(IDrawable drawable, CanvasDrawingSession drawingSession)
     {
+        Draw(drawable, drawingSession, GetPreparedImage);
+    }
+
+    private static void Draw(
+        IDrawable drawable,
+        CanvasDrawingSession drawingSession,
+        Func<ImageDrawable, ICanvasImage> imageResolver)
+    {
         if (drawable is TextDrawable textDrawable)
             DrawText(textDrawable, drawingSession);
         else if (drawable is RectangleDrawable rectangleDrawable)
@@ -71,7 +89,7 @@ public static partial class Win2DImageCanvasRenderer
         else if (drawable is ArrowDrawable arrowDrawable)
             DrawArrow(arrowDrawable, drawingSession);
         else if (drawable is ImageDrawable imageDrawable)
-            DrawImage(imageDrawable, drawingSession);
+            DrawImage(imageDrawable, drawingSession, imageResolver(imageDrawable));
     }
 
     private static void DrawText(TextDrawable drawable, CanvasDrawingSession drawingSession)
@@ -201,30 +219,32 @@ public static partial class Win2DImageCanvasRenderer
         drawingSession.DrawLine(endPoint, arrowRight, strokeColor, drawable.StrokeWidth);
     }
 
-    private static void DrawImage(ImageDrawable drawable, CanvasDrawingSession drawingSession)
+    private static void DrawImage(ImageDrawable drawable, CanvasDrawingSession drawingSession, ICanvasImage preparedImage)
     {
-        ICanvasImage? preparedImage = drawable.GetPreparedImage();
-        if (preparedImage != null)
+        if (drawable.ImageEffect is ImageChromaKeyEffect imageChromaKeyEffect && imageChromaKeyEffect.IsEnabled)
         {
-            if (drawable.ImageEffect is ImageChromaKeyEffect imageChromaKeyEffect && imageChromaKeyEffect.IsEnabled)
-            {
-                var keyColor = Color.FromArgb(
-                    imageChromaKeyEffect.Color.A,
-                    imageChromaKeyEffect.Color.R,
-                    imageChromaKeyEffect.Color.G,
-                    imageChromaKeyEffect.Color.B);
-                var tolerance = imageChromaKeyEffect.Tolerance;
-                var softness = imageChromaKeyEffect.Desaturation;
+            var keyColor = Color.FromArgb(
+                imageChromaKeyEffect.Color.A,
+                imageChromaKeyEffect.Color.R,
+                imageChromaKeyEffect.Color.G,
+                imageChromaKeyEffect.Color.B);
+            var tolerance = imageChromaKeyEffect.Tolerance;
+            var softness = imageChromaKeyEffect.Desaturation;
 
-                drawingSession.Clear(Colors.White);
-                drawable.GetChromaKeyProcessor().DrawChromaKeyMaskedImage(drawingSession, preparedImage, drawable.Offset, keyColor, tolerance, softness);
-            }
-            else
-            {
-                drawingSession.Clear(Colors.White);
-                drawingSession.DrawImage(preparedImage, drawable.Offset);
-            }
+            drawingSession.Clear(ImageBackgroundColor);
+            drawable.GetChromaKeyProcessor().DrawChromaKeyMaskedImage(drawingSession, preparedImage, drawable.Offset, keyColor, tolerance, softness);
         }
+        else
+        {
+            drawingSession.Clear(ImageBackgroundColor);
+            drawingSession.DrawImage(preparedImage, drawable.Offset);
+        }
+    }
+
+    private static ICanvasImage GetPreparedImage(ImageDrawable drawable)
+    {
+        return drawable.GetPreparedImage()
+            ?? throw new InvalidOperationException($"No render resource is available for image '{drawable.File.FilePath}'.");
     }
 
     public static async Task PrepareAsync(ImageDrawable imageDrawable, ICanvasResourceCreator resourceCreator)
