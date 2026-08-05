@@ -5,7 +5,7 @@ namespace CaptureTool.Application.Abstractions.Capture;
 
 public interface IAudioCaptureState
 {
-    event EventHandler<AudioCaptureState>? CaptureStateChanged;
+    event EventHandler<AudioCaptureStateChange>? CaptureStateChanged;
     event EventHandler<bool>? MutedStateChanged;
     event EventHandler<bool>? DesktopAudioStateChanged;
     event EventHandler<string?>? AudioInputSourceChanged;

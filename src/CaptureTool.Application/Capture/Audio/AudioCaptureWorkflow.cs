@@ -21,7 +21,7 @@ internal sealed class AudioCaptureWorkflow : IAudioCaptureWorkflow
     private readonly ITelemetryService? _telemetryService;
     private readonly Lock _audioRoutingLock = new();
 
-    public event EventHandler<AudioCaptureState>? CaptureStateChanged;
+    public event EventHandler<AudioCaptureStateChange>? CaptureStateChanged;
     public event EventHandler<bool>? MutedStateChanged;
     public event EventHandler<bool>? DesktopAudioStateChanged;
     public event EventHandler<string?>? AudioInputSourceChanged;
@@ -96,34 +96,39 @@ internal sealed class AudioCaptureWorkflow : IAudioCaptureWorkflow
             throw;
         }
 
-        CaptureStateChanged?.Invoke(this, AudioCaptureState.Recording);
+        CaptureStateChanged?.Invoke(this, new AudioCaptureStateChange(AudioCaptureState.Recording));
         TrackCapture(TelemetryEvents.CaptureStarted);
     }
 
     public AudioFile StopCapture()
     {
         Guid sessionId = _stateStore.GetRequiredActiveSessionId();
-        AudioFile audioFile;
+        AudioCaptureFailure? failure = null;
+        AudioCaptureFailureStage failureStage = AudioCaptureFailureStage.RecorderStop;
 
         try
         {
-            audioFile = _audioRecorder.StopCapture();
+            AudioFile audioFile = _audioRecorder.StopCapture();
+            failureStage = AudioCaptureFailureStage.PostProcessing;
+
+            NewAudioCaptured?.Invoke(this, audioFile);
+            _postProcessor.Process(audioFile);
+            TrackCapture(TelemetryEvents.CaptureCompleted, TelemetryOutcomes.Succeeded);
+            return audioFile;
         }
-        catch
+        catch (Exception exception)
         {
+            failure = AudioCaptureFailure.FromException(failureStage, exception);
             TrackCapture(TelemetryEvents.CaptureFailed, TelemetryOutcomes.Failed);
             throw;
         }
         finally
         {
             _stateStore.StopSession(sessionId);
+            CaptureStateChanged?.Invoke(
+                this,
+                new AudioCaptureStateChange(AudioCaptureState.Stopped, failure));
         }
-
-        CaptureStateChanged?.Invoke(this, AudioCaptureState.Stopped);
-        NewAudioCaptured?.Invoke(this, audioFile);
-        _postProcessor.Process(audioFile);
-        TrackCapture(TelemetryEvents.CaptureCompleted, TelemetryOutcomes.Succeeded);
-        return audioFile;
     }
 
     public void CancelCapture()
@@ -147,7 +152,7 @@ internal sealed class AudioCaptureWorkflow : IAudioCaptureWorkflow
         finally
         {
             _stateStore.StopSession(session.Id);
-            CaptureStateChanged?.Invoke(this, AudioCaptureState.Stopped);
+            CaptureStateChanged?.Invoke(this, new AudioCaptureStateChange(AudioCaptureState.Stopped));
         }
 
         try
@@ -183,7 +188,7 @@ internal sealed class AudioCaptureWorkflow : IAudioCaptureWorkflow
         }
 
         AudioCaptureState newState = _stateStore.PauseOrResume(sessionId);
-        CaptureStateChanged?.Invoke(this, newState);
+        CaptureStateChanged?.Invoke(this, new AudioCaptureStateChange(newState));
     }
 
     public void ToggleLocalAudio()

@@ -7,6 +7,7 @@ using CaptureTool.Application.Abstractions.Capture.Audio.SelectAudioCaptureInput
 using CaptureTool.Application.Abstractions.Capture.Audio.StartAudioCapture;
 using CaptureTool.Application.Abstractions.Capture.Audio.StopAudioCapture;
 using CaptureTool.Application.Abstractions.Capture.Audio.ToggleLocalAudioCapture;
+using CaptureTool.Application.Abstractions.Localization;
 using CaptureTool.Application.Abstractions.TaskEnvironment;
 using CaptureTool.Domain.Capture;
 using CaptureTool.Domain.FileSystem;
@@ -22,6 +23,8 @@ namespace CaptureTool.Presentation.Features.AudioCapture;
 
 public sealed partial class AudioCapturePageViewModel : ViewModelBase
 {
+    private const string StopCaptureFailedMessageResourceKey = "AudioCapture_StopCaptureFailedMessage";
+    private const string StopCaptureFailedMessageFallback = "Recording couldn't be finalized. Try recording again.";
     private const int WaveformBarCount = 128;
     private const double WaveformMinBarHeight = 0;
     private const double WaveformMaxBarHeight = 132;
@@ -63,6 +66,20 @@ public sealed partial class AudioCapturePageViewModel : ViewModelBase
         private set => Set(ref field, value);
     }
 
+    public string CaptureErrorMessage
+    {
+        get;
+        private set
+        {
+            if (Set(ref field, value))
+            {
+                RaisePropertyChanged(nameof(HasCaptureError));
+            }
+        }
+    } = string.Empty;
+
+    public bool HasCaptureError => !string.IsNullOrWhiteSpace(CaptureErrorMessage);
+
     public TimeSpan CaptureTime
     {
         get;
@@ -75,6 +92,7 @@ public sealed partial class AudioCapturePageViewModel : ViewModelBase
     private readonly ISelectAudioCaptureInputSourceUseCase _selectAudioInputSourceCommand;
     private readonly ITaskEnvironment _taskEnvironment;
     private readonly IAudioWaveformHistory _waveformHistory;
+    private readonly ILocalizationService _localizationService;
     private readonly List<double> _capturedWaveformLevels = [];
     private readonly object _capturedWaveformLevelsSyncRoot = new();
     private static readonly TimeSpan TimerInterval = TimeSpan.FromMilliseconds(100);
@@ -87,6 +105,7 @@ public sealed partial class AudioCapturePageViewModel : ViewModelBase
 
     public ObservableCollection<AudioInputSource> AudioInputSources { get; }
     public ObservableCollection<AudioWaveformBarViewModel> WaveformBars { get; }
+    public IRelayCommand DismissCaptureErrorCommand { get; }
 
     public AudioInputSource? SelectedAudioInputSource
     {
@@ -117,7 +136,8 @@ public sealed partial class AudioCapturePageViewModel : ViewModelBase
         ISelectAudioCaptureInputSourceUseCase selectAudioInputSourceAction,
         IToggleLocalAudioCaptureUseCase toggleDesktopAudioAction,
         ITaskEnvironment taskEnvironment,
-        IAudioWaveformHistory waveformHistory)
+        IAudioWaveformHistory waveformHistory,
+        ILocalizationService localizationService)
     {
         _audioCaptureState = audioCaptureState;
         _audioInputDetectionService = audioInputDetectionService;
@@ -125,6 +145,7 @@ public sealed partial class AudioCapturePageViewModel : ViewModelBase
         _selectAudioInputSourceCommand = selectAudioInputSourceAction;
         _taskEnvironment = taskEnvironment;
         _waveformHistory = waveformHistory;
+        _localizationService = localizationService;
         SelectedAudioInputSourceIndex = -1;
         AudioInputSources = [];
         WaveformBars = [];
@@ -136,6 +157,7 @@ public sealed partial class AudioCapturePageViewModel : ViewModelBase
         PauseCommand = pauseAction.ToRelayCommand(() => new PauseAudioCaptureRequest());
         MuteCommand = muteAction.ToRelayCommand(() => new MuteAudioCaptureRequest());
         ToggleDesktopAudioCommand = toggleDesktopAudioAction.ToRelayCommand(() => new ToggleLocalAudioCaptureRequest());
+        DismissCaptureErrorCommand = new RelayCommand(DismissCaptureError);
 
         // Subscribe to service events for state synchronization
         _audioCaptureState.CaptureStateChanged += OnCaptureStateChanged;
@@ -160,12 +182,43 @@ public sealed partial class AudioCapturePageViewModel : ViewModelBase
         IsDesktopAudioEnabled = _audioCaptureState.IsDesktopAudioEnabled;
     }
 
-    private void OnCaptureStateChanged(object? sender, AudioCaptureState value)
+    private void OnCaptureStateChanged(object? sender, AudioCaptureStateChange value)
     {
         _taskEnvironment.TryExecute(() =>
         {
-            ApplyCaptureState(value);
+            ApplyCaptureState(value.State);
+
+            if (value.Failure is not null)
+            {
+                ShowCaptureError();
+            }
+            else if (value.State == AudioCaptureState.Recording)
+            {
+                DismissCaptureError();
+            }
         });
+    }
+
+    private void ShowCaptureError()
+    {
+        string message;
+        try
+        {
+            message = _localizationService.GetString(StopCaptureFailedMessageResourceKey);
+        }
+        catch (Exception)
+        {
+            message = string.Empty;
+        }
+
+        CaptureErrorMessage = string.IsNullOrWhiteSpace(message)
+            ? StopCaptureFailedMessageFallback
+            : message;
+    }
+
+    private void DismissCaptureError()
+    {
+        CaptureErrorMessage = string.Empty;
     }
 
     private void OnMutedStateChanged(object? sender, bool value)
