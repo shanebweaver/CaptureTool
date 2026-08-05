@@ -60,6 +60,10 @@
       <Platform Solution="*|x64" Project="x64" />
     </Project>
     <Project Path="tests/CaptureTool.Infrastructure.Tests/CaptureTool.Infrastructure.Tests.csproj" />
+    <Project Path="tests/CaptureTool.Infrastructure.Windows.Tests/CaptureTool.Infrastructure.Windows.Tests.csproj">
+      <Platform Solution="*|ARM64" Project="ARM64" />
+      <Platform Solution="*|x64" Project="x64" />
+    </Project>
     <Project Path="tests/CaptureTool.Mcp.CaptureServer.Tests/CaptureTool.Mcp.CaptureServer.Tests.csproj">
       <Platform Solution="*|ARM64" Project="ARM64" />
       <Platform Solution="*|x64" Project="x64" />

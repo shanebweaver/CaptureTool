@@ -11,6 +11,7 @@ using CaptureTool.Application.Abstractions.Edit.Video.OpenVideoEditPage;
 using CaptureTool.Application.Abstractions.EditSessions;
 using CaptureTool.Application.Abstractions.Library.RecentCaptures;
 using CaptureTool.Application.Abstractions.Library.RecentCaptures.OpenRecentCapture;
+using CaptureTool.Application.Abstractions.Logging;
 using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Application.Abstractions.Settings;
 using CaptureTool.Application.Abstractions.Settings.OpenSettingsPage;
@@ -26,6 +27,7 @@ using CaptureTool.Application.Abstractions.Store.GetChromaKeyAddOn;
 using CaptureTool.Application.Abstractions.Store.LeaveStorePage;
 using CaptureTool.Application.Abstractions.Store.OpenStorePage;
 using CaptureTool.Application.Abstractions.Store.PurchaseChromaKeyAddOn;
+using CaptureTool.Application.Abstractions.Telemetry;
 using CaptureTool.Application.Abstractions.UseCases;
 using CaptureTool.Application.Capture.Audio;
 using CaptureTool.Application.Capture.Audio.CancelAudioCapture;
@@ -47,6 +49,7 @@ using CaptureTool.Application.Store.LeaveStorePage;
 using CaptureTool.Application.Store.OpenStorePage;
 using CaptureTool.Application.Store.PurchaseChromaKeyAddOn;
 using CaptureTool.Application.Tests.Capture.Audio;
+using CaptureTool.Application.UseCases;
 using CaptureTool.Domain.FileSystem;
 using Moq;
 
@@ -232,6 +235,35 @@ public sealed class SimpleApplicationUseCaseTests
 
         Assert.IsFalse(response.Succeeded);
         Assert.AreEqual(1, audioCapture.StopCallCount);
+    }
+
+    [TestMethod]
+    public async Task StopAudioCaptureUseCase_WhenWorkflowStopFails_DoesNotNavigateToAudioEdit()
+    {
+        var audioCapture = new FakeAudioCaptureWorkflow
+        {
+            IsRecording = true,
+            StopException = new InvalidOperationException("Recorder stop failed."),
+        };
+        var navigation = new Mock<INavigationService>();
+        var useCase = new StopAudioCaptureUseCase(
+            audioCapture,
+            navigation.Object,
+            new UseCaseExecutor(Mock.Of<ILogService>(), Mock.Of<ITelemetryService>()));
+
+        UseCaseResponse<StopAudioCaptureResponse> response = await useCase.ExecuteAsync(
+            new StopAudioCaptureRequest(),
+            TestContext.CancellationToken);
+
+        Assert.AreEqual(UseCaseResult.Failed, response.Result);
+        Assert.AreEqual(1, audioCapture.StopCallCount);
+        navigation.Verify(
+            service => service.NavigateAsync(
+                It.IsAny<object>(),
+                It.IsAny<object?>(),
+                It.IsAny<bool>(),
+                It.IsAny<CancellationToken>()),
+            Times.Never);
     }
 
     [TestMethod]

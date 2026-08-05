@@ -10,4 +10,5 @@ public interface IThemeService
 
     void Initialize(AppTheme defualtTheme);
     void UpdateCurrentTheme(AppTheme appTheme);
+    void ResetCurrentTheme();
 }
