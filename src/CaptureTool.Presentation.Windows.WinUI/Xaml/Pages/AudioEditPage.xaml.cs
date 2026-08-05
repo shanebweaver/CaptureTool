@@ -1,5 +1,7 @@
+using CaptureTool.Application.Abstractions.Logging;
 using CaptureTool.Presentation.Features.Audio;
 using CaptureTool.Presentation.Features.AudioEdit;
+using CaptureTool.Presentation.Features.Media;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -23,6 +25,7 @@ public sealed partial class AudioEditPage : AudioEditPageBase
     private const double WaveformPlayheadScrollMargin = 24;
     private static readonly TimeSpan WaveformUpdateInterval = TimeSpan.FromMilliseconds(50);
 
+    private readonly ILogService _logService;
     private MediaPlayer? _mediaPlayer;
     private string? _currentAudioPath;
     private TimeSpan _audioDuration;
@@ -34,6 +37,7 @@ public sealed partial class AudioEditPage : AudioEditPageBase
     public AudioEditPage()
     {
         InitializeComponent();
+        _logService = App.Current.ServiceProvider.GetService<ILogService>();
         _mediaPlayer = CreateMediaPlayer();
         AudioPlayer.SetMediaPlayer(_mediaPlayer);
         AudioPlayer.Loaded += AudioPlayer_Loaded;
@@ -45,6 +49,7 @@ public sealed partial class AudioEditPage : AudioEditPageBase
         var mediaPlayer = new MediaPlayer();
         mediaPlayer.MediaOpened += MediaPlayer_MediaOpened;
         mediaPlayer.MediaEnded += MediaPlayer_MediaEnded;
+        mediaPlayer.MediaFailed += MediaPlayer_MediaFailed;
         mediaPlayer.PlaybackSession.PositionChanged += PlaybackSession_PositionChanged;
         mediaPlayer.PlaybackSession.PlaybackStateChanged += PlaybackSession_PlaybackStateChanged;
         return mediaPlayer;
@@ -119,6 +124,7 @@ public sealed partial class AudioEditPage : AudioEditPageBase
 
         _mediaPlayer.MediaOpened -= MediaPlayer_MediaOpened;
         _mediaPlayer.MediaEnded -= MediaPlayer_MediaEnded;
+        _mediaPlayer.MediaFailed -= MediaPlayer_MediaFailed;
         _mediaPlayer.PlaybackSession.PositionChanged -= PlaybackSession_PositionChanged;
         _mediaPlayer.PlaybackSession.PlaybackStateChanged -= PlaybackSession_PlaybackStateChanged;
         _mediaPlayer.Source = null;
@@ -134,7 +140,8 @@ public sealed partial class AudioEditPage : AudioEditPageBase
     private void ViewModel_PropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
         if (e.PropertyName == nameof(AudioEditPageViewModel.AudioPath) ||
-            e.PropertyName == nameof(AudioEditPageViewModel.IsAudioReady))
+            e.PropertyName == nameof(AudioEditPageViewModel.IsAudioReady) ||
+            e.PropertyName == nameof(AudioEditPageViewModel.MediaLoadState))
         {
             TryInitializeAudio();
         }
@@ -142,7 +149,9 @@ public sealed partial class AudioEditPage : AudioEditPageBase
 
     private bool TryInitializeAudio()
     {
-        if (!string.IsNullOrEmpty(ViewModel.AudioPath) && ViewModel.IsAudioReady)
+        if (!string.IsNullOrEmpty(ViewModel.AudioPath) &&
+            ViewModel.IsAudioReady &&
+            ViewModel.MediaLoadState == MediaLoadState.Loading)
         {
             _ = InitializeAudioAsync(ViewModel.AudioPath);
             return true;
@@ -169,9 +178,10 @@ public sealed partial class AudioEditPage : AudioEditPageBase
             _mediaPlayer?.Source = mediaSource;
             _ = LoadWaveformAsync(filePath);
         }
-        catch (Exception)
+        catch (Exception exception)
         {
-            // Audio not ready yet or file doesn't exist
+            _logService.LogException(exception, "Failed to initialize audio playback.");
+            ViewModel.ReportMediaFailed(MediaFailureCategory.FileUnavailable);
         }
     }
 
@@ -204,6 +214,7 @@ public sealed partial class AudioEditPage : AudioEditPageBase
     {
         DispatcherQueue.TryEnqueue(() =>
         {
+            ViewModel.ReportMediaOpened();
             _audioDuration = sender.PlaybackSession.NaturalDuration;
             bool shouldScrollToResumePosition = _resumePosition is not null;
             if (_resumePosition is { } resumePosition)
@@ -217,6 +228,19 @@ public sealed partial class AudioEditPage : AudioEditPageBase
             AlignCapturedWaveformTimelineToDuration(_audioDuration);
             UpdateWaveformPlayhead(sender.PlaybackSession.Position, scrollIntoView: shouldScrollToResumePosition);
             UpdateWaveformTimer(sender.PlaybackSession);
+        });
+    }
+
+    private void MediaPlayer_MediaFailed(MediaPlayer sender, MediaPlayerFailedEventArgs args)
+    {
+        DispatcherQueue.TryEnqueue(() =>
+        {
+            StopWaveformTimer();
+            _logService.LogWarning($"Audio playback failed ({args.Error}): {args.ErrorMessage}");
+            MediaFailureCategory category = args.Error == MediaPlayerError.SourceNotSupported
+                ? MediaFailureCategory.Unsupported
+                : MediaFailureCategory.Playback;
+            ViewModel.ReportMediaFailed(category);
         });
     }
 

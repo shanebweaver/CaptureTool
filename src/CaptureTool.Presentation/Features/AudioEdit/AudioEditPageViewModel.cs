@@ -1,11 +1,13 @@
 using CaptureTool.Application.Abstractions.Edit.Audio.CopyAudioFile;
 using CaptureTool.Application.Abstractions.Edit.Audio.SaveAudioFile;
 using CaptureTool.Application.Abstractions.Edit.External;
+using CaptureTool.Application.Abstractions.Localization;
 using CaptureTool.Application.Abstractions.Settings.OpenAudioFolder;
 using CaptureTool.Application.Abstractions.Telemetry;
 using CaptureTool.Application.Abstractions.UseCases;
 using CaptureTool.Domain.FileSystem;
 using CaptureTool.Presentation.Features.Audio;
+using CaptureTool.Presentation.Features.Media;
 using CaptureTool.Presentation.ViewModels;
 using CommunityToolkit.Mvvm.Input;
 using System.Collections.ObjectModel;
@@ -21,6 +23,7 @@ public sealed partial class AudioEditPageViewModel : LoadableViewModelBase<Audio
     public IAsyncRelayCommand CopyCommand { get; }
     public IAsyncRelayCommand OpenInClipchampCommand { get; }
     public IAsyncRelayCommand OpenAudioFolderCommand { get; }
+    public IRelayCommand RetryMediaCommand { get; }
 
     public string? AudioPath
     {
@@ -34,11 +37,45 @@ public sealed partial class AudioEditPageViewModel : LoadableViewModelBase<Audio
         private set => Set(ref field, value);
     }
 
+    public MediaLoadState MediaLoadState
+    {
+        get;
+        private set
+        {
+            if (Set(ref field, value))
+            {
+                RaisePropertyChanged(nameof(IsMediaLoading));
+                RaisePropertyChanged(nameof(IsMediaReady));
+                RaisePropertyChanged(nameof(HasMediaFailure));
+                RaisePropertyChanged(nameof(CanRetryMedia));
+                RetryMediaCommand.NotifyCanExecuteChanged();
+            }
+        }
+    }
+
+    public MediaFailureCategory? MediaFailureCategory
+    {
+        get;
+        private set => Set(ref field, value);
+    }
+
+    public string MediaFailureMessage
+    {
+        get;
+        private set => Set(ref field, value);
+    }
+
+    public bool IsMediaLoading => MediaLoadState == MediaLoadState.Loading;
+    public bool IsMediaReady => MediaLoadState == MediaLoadState.Ready;
+    public bool HasMediaFailure => MediaLoadState == MediaLoadState.Failed;
+    public bool CanRetryMedia => HasMediaFailure;
+
     private readonly ISaveAudioFileUseCase _saveAction;
     private readonly ICopyAudioFileUseCase _copyAction;
     private readonly IOpenExternalEditorUseCase _openExternalEditorAction;
     private readonly IOpenAudioFolderUseCase _openAudioFolderAction;
     private readonly IAudioWaveformHistory _waveformHistory;
+    private readonly ILocalizationService? _localizationService;
     private readonly ITelemetryService? _telemetryService;
 
     public ObservableCollection<AudioWaveformBarViewModel> WaveformBars
@@ -53,7 +90,8 @@ public sealed partial class AudioEditPageViewModel : LoadableViewModelBase<Audio
         IOpenExternalEditorUseCase openExternalEditorAction,
         IOpenAudioFolderUseCase openAudioFolderAction,
         IAudioWaveformHistory waveformHistory,
-        ITelemetryService? telemetryService = null)
+        ITelemetryService? telemetryService = null,
+        ILocalizationService? localizationService = null)
     {
         _saveAction = saveAction;
         _copyAction = copyAction;
@@ -61,13 +99,17 @@ public sealed partial class AudioEditPageViewModel : LoadableViewModelBase<Audio
         _openAudioFolderAction = openAudioFolderAction;
         _waveformHistory = waveformHistory;
         _telemetryService = telemetryService;
+        _localizationService = localizationService;
 
         SaveCommand = new AsyncRelayCommand(SaveAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
         CopyCommand = new AsyncRelayCommand(CopyAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
         OpenInClipchampCommand = new AsyncRelayCommand(OpenInClipchampAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
         OpenAudioFolderCommand = new AsyncRelayCommand(OpenAudioFolderAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
+        RetryMediaCommand = new RelayCommand(RetryMedia, () => CanRetryMedia);
 
         IsAudioReady = false;
+        MediaLoadState = MediaLoadState.Loading;
+        MediaFailureMessage = string.Empty;
         WaveformBars = [];
         ResetWaveform();
     }
@@ -79,10 +121,55 @@ public sealed partial class AudioEditPageViewModel : LoadableViewModelBase<Audio
 
         AudioPath = audio.FilePath;
         IsAudioReady = true;
+        BeginMediaLoading();
         ResetWaveform();
 
         base.Load(audio);
         TrackEditorOpened();
+    }
+
+    public void ReportMediaOpened()
+    {
+        MediaFailureCategory = null;
+        MediaFailureMessage = string.Empty;
+        MediaLoadState = MediaLoadState.Ready;
+    }
+
+    public void ReportMediaFailed(MediaFailureCategory category)
+    {
+        MediaFailureCategory = category;
+        MediaFailureMessage = GetMediaFailureMessage(category);
+        MediaLoadState = MediaLoadState.Failed;
+    }
+
+    private void RetryMedia()
+    {
+        if (!CanRetryMedia)
+        {
+            return;
+        }
+
+        BeginMediaLoading();
+    }
+
+    private void BeginMediaLoading()
+    {
+        MediaFailureCategory = null;
+        MediaFailureMessage = string.Empty;
+        MediaLoadState = MediaLoadState.Loading;
+    }
+
+    private string GetMediaFailureMessage(MediaFailureCategory category)
+    {
+        string resourceKey = category switch
+        {
+            global::CaptureTool.Presentation.Features.Media.MediaFailureCategory.FileUnavailable => "MediaFailure_FileUnavailable",
+            global::CaptureTool.Presentation.Features.Media.MediaFailureCategory.Unsupported => "MediaFailure_Unsupported",
+            _ => "MediaFailure_Playback"
+        };
+
+        string? localized = _localizationService?.GetString(resourceKey);
+        return string.IsNullOrWhiteSpace(localized) ? resourceKey : localized;
     }
 
     public IReadOnlyList<double>? GetCapturedWaveformLevels(string audioPath)
