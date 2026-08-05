@@ -143,6 +143,148 @@ public sealed class LocalSettingsServiceTests
     }
 
     [TestMethod]
+    public async Task TrySetAndSaveAsync_WhenStorageThrows_KeepsCommittedValueAndSuppressesNotification()
+    {
+        var logService = new TestLogService();
+        var jsonStorage = new TestJsonStorageService { WriteException = new IOException("nope") };
+        var telemetry = new RecordingTelemetryService();
+        using var service = new LocalSettingsService(logService, jsonStorage, telemetry);
+        IBoolSettingDefinition definition = CaptureToolSettings.Settings_ImageCapture_AutoCopy;
+        await service.InitializeAsync("settings.json", TestContext.CancellationToken);
+        int changedCount = 0;
+        service.SettingsChanged += _ => changedCount++;
+
+        SettingsMutationResult result = await service.TrySetAndSaveAsync(
+            definition,
+            false,
+            TestContext.CancellationToken);
+
+        Assert.AreEqual(SettingsMutationStatus.PersistenceFailed, result.Status);
+        Assert.IsTrue(service.Get(definition));
+        Assert.IsFalse(service.IsSet(definition));
+        Assert.AreEqual(0, changedCount);
+        Assert.IsEmpty(telemetry.Events);
+        StringAssert.Contains(logService.LastMessage!, "settings mutation save operation");
+    }
+
+    [TestMethod]
+    public async Task TrySetAndSaveAsync_WhenWriteSucceeds_CommitsThenNotifies()
+    {
+        var jsonStorage = new TestJsonStorageService();
+        var telemetry = new RecordingTelemetryService();
+        using var service = new LocalSettingsService(
+            new TestLogService(),
+            jsonStorage,
+            telemetry);
+        IBoolSettingDefinition definition = CaptureToolSettings.Settings_ImageCapture_AutoCopy;
+        await service.InitializeAsync("settings.json", TestContext.CancellationToken);
+        ISettingDefinition[]? changed = null;
+        service.SettingsChanged += settings => changed = settings;
+
+        SettingsMutationResult result = await service.TrySetAndSaveAsync(
+            definition,
+            false,
+            TestContext.CancellationToken);
+
+        Assert.AreEqual(SettingsMutationStatus.Saved, result.Status);
+        Assert.IsFalse(service.Get(definition));
+        Assert.IsTrue(service.IsSet(definition));
+        Assert.IsNotNull(changed);
+        Assert.AreEqual(definition.Key, changed.Single().Key);
+        Assert.AreEqual(definition.Key, jsonStorage.WrittenSettings!.Single().Key);
+        Assert.HasCount(1, telemetry.Events);
+    }
+
+    [TestMethod]
+    public async Task TryClearAllAndSaveAsync_WhileWriteIsPending_KeepsCommittedValuesReadableThenNotifies()
+    {
+        var writeStarted = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var continueWrite = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var jsonStorage = new TestJsonStorageService
+        {
+            WriteStarted = writeStarted,
+            ContinueWrite = continueWrite,
+        };
+        using var service = new LocalSettingsService(new TestLogService(), jsonStorage);
+        var first = new BoolSettingDefinition("first", false);
+        var second = new StringSettingDefinition("second", "default");
+        await service.InitializeAsync("settings.json", TestContext.CancellationToken);
+        service.Set(first, true);
+        service.Set(second, "saved");
+        ISettingDefinition[]? changed = null;
+        service.SettingsChanged += settings => changed = settings;
+
+        Task<SettingsMutationResult> clearTask = service.TryClearAllAndSaveAsync(
+            TestContext.CancellationToken);
+        await writeStarted.Task;
+        bool[] concurrentReads = await Task.WhenAll(
+            Enumerable.Range(0, 16).Select(_ => Task.Run(() => service.Get(first))));
+
+        Assert.IsTrue(concurrentReads.All(value => value));
+        Assert.IsNull(changed);
+
+        continueWrite.SetResult(true);
+        SettingsMutationResult result = await clearTask;
+
+        Assert.AreEqual(SettingsMutationStatus.Saved, result.Status);
+        Assert.IsFalse(service.Get(first));
+        Assert.AreEqual("default", service.Get(second));
+        Assert.IsNotNull(changed);
+        CollectionAssert.AreEquivalent(
+            new[] { "first", "second" },
+            changed.Select(setting => setting.Key).ToArray());
+        Assert.IsEmpty(jsonStorage.WrittenSettings!);
+    }
+
+    [TestMethod]
+    public async Task TrySetAndSaveAsync_WhenLaterMutationOccurs_DoesNotOverwriteLaterValue()
+    {
+        var writeStarted = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var continueWrite = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var jsonStorage = new TestJsonStorageService
+        {
+            WriteStarted = writeStarted,
+            ContinueWrite = continueWrite,
+        };
+        using var service = new LocalSettingsService(new TestLogService(), jsonStorage);
+        var definition = new BoolSettingDefinition("enabled", false);
+        await service.InitializeAsync("settings.json", TestContext.CancellationToken);
+
+        Task<SettingsMutationResult> saveTask = service.TrySetAndSaveAsync(
+            definition,
+            true,
+            TestContext.CancellationToken);
+        await writeStarted.Task;
+
+        service.Set(definition, false);
+        continueWrite.SetResult(true);
+        SettingsMutationResult result = await saveTask;
+
+        Assert.AreEqual(SettingsMutationStatus.Saved, result.Status);
+        Assert.IsFalse(service.Get(definition));
+    }
+
+    [TestMethod]
+    public async Task ClearAllSettings_UsesNotificationPathForRemovedSettings()
+    {
+        using var service = new LocalSettingsService(new TestLogService(), new TestJsonStorageService());
+        var first = new BoolSettingDefinition("first", false);
+        var second = new IntSettingDefinition("second", 0);
+        await service.InitializeAsync("settings.json", TestContext.CancellationToken);
+        service.Set(first, true);
+        service.Set(second, 2);
+        ISettingDefinition[]? changed = null;
+        service.SettingsChanged += settings => changed = settings;
+
+        service.ClearAllSettings();
+
+        Assert.IsNotNull(changed);
+        CollectionAssert.AreEquivalent(
+            new[] { "first", "second" },
+            changed.Select(setting => setting.Key).ToArray());
+    }
+
+    [TestMethod]
     public async Task AfterDispose_InitializeAndSaveReturnWithoutStorageAccess()
     {
         var jsonStorage = new TestJsonStorageService();
@@ -158,13 +300,32 @@ public sealed class LocalSettingsServiceTests
         Assert.AreEqual(0, jsonStorage.WriteCount);
     }
 
+    [TestMethod]
+    public async Task TrySetAndSaveAsync_AfterDispose_ReturnsServiceUnavailable()
+    {
+        var jsonStorage = new TestJsonStorageService();
+        var service = new LocalSettingsService(new TestLogService(), jsonStorage);
+        await service.InitializeAsync("settings.json", TestContext.CancellationToken);
+        service.Dispose();
+
+        SettingsMutationResult result = await service.TrySetAndSaveAsync(
+            new BoolSettingDefinition("enabled", false),
+            true,
+            TestContext.CancellationToken);
+
+        Assert.AreEqual(SettingsMutationStatus.ServiceUnavailable, result.Status);
+        Assert.AreEqual(0, jsonStorage.WriteCount);
+    }
+
     public TestContext TestContext { get; set; } = null!;
 
     private sealed class TestJsonStorageService : IJsonStorageService
     {
         public List<SettingDefinition>? ReadResult { get; init; }
         public List<SettingDefinition>? WrittenSettings { get; private set; }
-        public Exception? WriteException { get; init; }
+        public Exception? WriteException { get; set; }
+        public TaskCompletionSource<bool>? WriteStarted { get; init; }
+        public TaskCompletionSource<bool>? ContinueWrite { get; init; }
         public int ReadCount { get; private set; }
         public int WriteCount { get; private set; }
 
@@ -174,7 +335,7 @@ public sealed class LocalSettingsServiceTests
             return Task.FromResult((T?)(object?)ReadResult);
         }
 
-        public Task WriteAsync<T>(FileReference file, T value, JsonTypeInfo<T> jsonTypeInfo)
+        public async Task WriteAsync<T>(FileReference file, T value, JsonTypeInfo<T> jsonTypeInfo)
         {
             WriteCount++;
             if (WriteException is not null)
@@ -182,8 +343,13 @@ public sealed class LocalSettingsServiceTests
                 throw WriteException;
             }
 
+            WriteStarted?.TrySetResult(true);
+            if (ContinueWrite is not null)
+            {
+                await ContinueWrite.Task;
+            }
+
             WrittenSettings = (List<SettingDefinition>)(object)value!;
-            return Task.CompletedTask;
         }
     }
 

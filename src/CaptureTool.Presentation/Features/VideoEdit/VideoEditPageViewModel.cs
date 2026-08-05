@@ -578,12 +578,12 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
         bool consented = await _aiFeatureConsentDialogService.RequestConsentAsync(
             featureId,
             cancellationToken);
-        await _aiFeatureConsentService.SetConsentAsync(
+        bool saved = await _aiFeatureConsentService.SetConsentAsync(
             featureId,
             consented,
             cancellationToken);
         UpdateVideoSuperResolutionAvailability();
-        return consented;
+        return consented && saved;
     }
 
     private void ShowOriginalVideo()
@@ -856,12 +856,12 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
             return AiFeatureConsentState.Granted;
         }
 
-        public Task SetConsentAsync(
+        public Task<bool> SetConsentAsync(
             AiFeatureId featureId,
             bool isGranted,
             CancellationToken cancellationToken = default)
         {
-            return Task.CompletedTask;
+            return Task.FromResult(true);
         }
     }
 

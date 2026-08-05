@@ -38,7 +38,7 @@ public sealed class ImageEditPageViewModelObjectEraseTests
             .Returns(AiFeatureConsentState.Denied);
         consent
             .Setup(x => x.SetConsentAsync(AiFeatureId.ImageObjectErase, false, It.IsAny<CancellationToken>()))
-            .Returns(Task.CompletedTask);
+            .ReturnsAsync(true);
         dialog
             .Setup(x => x.RequestConsentAsync(AiFeatureId.ImageObjectErase, It.IsAny<CancellationToken>()))
             .ReturnsAsync(false);

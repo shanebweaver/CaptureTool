@@ -39,7 +39,7 @@ public sealed class ImageEditPageViewModelObjectExtractionTests
             .Returns(AiFeatureConsentState.Denied);
         consent
             .Setup(x => x.SetConsentAsync(AiFeatureId.ImageObjectExtraction, false, It.IsAny<CancellationToken>()))
-            .Returns(Task.CompletedTask);
+            .ReturnsAsync(true);
         dialog
             .Setup(x => x.RequestConsentAsync(AiFeatureId.ImageObjectExtraction, It.IsAny<CancellationToken>()))
             .ReturnsAsync(false);

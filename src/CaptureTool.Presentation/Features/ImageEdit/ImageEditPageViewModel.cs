@@ -2234,14 +2234,14 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         }
 
         bool consented = await _aiFeatureConsentDialogService.RequestConsentAsync(featureId, cancellationToken);
-        await _aiFeatureConsentService.SetConsentAsync(featureId, consented, cancellationToken);
+        bool saved = await _aiFeatureConsentService.SetConsentAsync(featureId, consented, cancellationToken);
         UpdateCanToggleSuperResolution();
         UpdateCanToggleTextExtraction();
         UpdateCanToggleImageDescription();
         UpdateCanToggleForegroundExtraction();
         UpdateCanToggleObjectErase();
         UpdateCanToggleObjectExtraction();
-        return consented;
+        return consented && saved;
     }
 
     private async Task EnsureTextExtractionCurrentAsync()
@@ -3252,9 +3252,9 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
             return AiFeatureConsentState.Granted;
         }
 
-        public Task SetConsentAsync(AiFeatureId featureId, bool isGranted, CancellationToken cancellationToken = default)
+        public Task<bool> SetConsentAsync(AiFeatureId featureId, bool isGranted, CancellationToken cancellationToken = default)
         {
-            return Task.CompletedTask;
+            return Task.FromResult(true);
         }
     }
 

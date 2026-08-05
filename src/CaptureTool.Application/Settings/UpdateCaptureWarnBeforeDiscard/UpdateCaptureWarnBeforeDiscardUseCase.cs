@@ -26,9 +26,11 @@ internal sealed class UpdateCaptureWarnBeforeDiscardUseCase : IUpdateCaptureWarn
             activityId: ActivityId,
             useCase: async _ =>
             {
-                _settingsService.Set(CaptureToolSettings.Settings_Capture_WarnBeforeDiscard, request.IsEnabled);
-                await _settingsService.TrySaveAsync(cancellationToken);
-                return new UpdateCaptureWarnBeforeDiscardResponse();
+                SettingsMutationResult result = await _settingsService.TrySetAndSaveAsync(
+                    CaptureToolSettings.Settings_Capture_WarnBeforeDiscard,
+                    request.IsEnabled,
+                    cancellationToken);
+                return new UpdateCaptureWarnBeforeDiscardResponse(result.Succeeded);
             },
             cancellationToken: cancellationToken);
     }

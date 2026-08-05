@@ -96,6 +96,48 @@ public partial class LocalSettingsService : ISettingsService, IDisposable
     public void Set(IStringSettingDefinition settingDefinition, string value)
         => LockAndSet(new StringSettingDefinition(settingDefinition.Key, value));
 
+    public Task<SettingsMutationResult> TrySetAndSaveAsync(
+        IBoolSettingDefinition settingDefinition,
+        bool value,
+        CancellationToken cancellationToken) =>
+        TryMutateAndSaveAsync(
+            settings => SetCandidate(settings, new BoolSettingDefinition(settingDefinition.Key, value)),
+            cancellationToken);
+
+    public Task<SettingsMutationResult> TrySetAndSaveAsync(
+        IDoubleSettingDefinition settingDefinition,
+        double value,
+        CancellationToken cancellationToken) =>
+        TryMutateAndSaveAsync(
+            settings => SetCandidate(settings, new DoubleSettingDefinition(settingDefinition.Key, value)),
+            cancellationToken);
+
+    public Task<SettingsMutationResult> TrySetAndSaveAsync(
+        IIntSettingDefinition settingDefinition,
+        int value,
+        CancellationToken cancellationToken) =>
+        TryMutateAndSaveAsync(
+            settings => SetCandidate(settings, new IntSettingDefinition(settingDefinition.Key, value)),
+            cancellationToken);
+
+    public Task<SettingsMutationResult> TrySetAndSaveAsync(
+        IStringSettingDefinition settingDefinition,
+        string value,
+        CancellationToken cancellationToken) =>
+        TryMutateAndSaveAsync(
+            settings => SetCandidate(settings, new StringSettingDefinition(settingDefinition.Key, value)),
+            cancellationToken);
+
+    public Task<SettingsMutationResult> TryUnsetAndSaveAsync(
+        ISettingDefinition settingDefinition,
+        CancellationToken cancellationToken) =>
+        TryMutateAndSaveAsync(
+            settings => UnsetCandidate(settings, settingDefinition),
+            cancellationToken);
+
+    public Task<SettingsMutationResult> TryClearAllAndSaveAsync(CancellationToken cancellationToken) =>
+        TryMutateAndSaveAsync(ClearCandidate, cancellationToken);
+
     public async Task InitializeAsync(string filePath, CancellationToken cancellationToken)
     {
         if (_disposed)
@@ -213,7 +255,12 @@ public partial class LocalSettingsService : ISettingsService, IDisposable
 
             try
             {
-                List<SettingDefinition> settingsList = [.. _settings.Values];
+                List<SettingDefinition> settingsList;
+                lock (_accessLock)
+                {
+                    settingsList = [.. _settings.Values];
+                }
+
                 await _jsonStorageService.WriteAsync(GetSettingsFile(), settingsList, SettingDefinitionContext.Default.ListSettingDefinition);
                 return true;
             }
@@ -250,6 +297,153 @@ public partial class LocalSettingsService : ISettingsService, IDisposable
                 FireSettingsChangedEvent(settingDefinition);
                 TrackSettingChanged(settingDefinition.Key, GetSafeTelemetryValue(settingDefinition));
             }
+        }
+    }
+
+    private async Task<SettingsMutationResult> TryMutateAndSaveAsync(
+        Func<Dictionary<string, SettingDefinition>, ISettingDefinition[]> mutate,
+        CancellationToken cancellationToken)
+    {
+        if (_disposed)
+        {
+            return SettingsMutationResult.ServiceUnavailable;
+        }
+
+        await _semaphore.WaitAsync(cancellationToken);
+
+        try
+        {
+            Dictionary<string, SettingDefinition> originalSettings;
+            Dictionary<string, SettingDefinition> candidateSettings;
+            ISettingDefinition[] changedSettings;
+            lock (_accessLock)
+            {
+                ThrowIfNotInitialized();
+                originalSettings = new Dictionary<string, SettingDefinition>(_settings, StringComparer.Ordinal);
+                candidateSettings = new Dictionary<string, SettingDefinition>(_settings, StringComparer.Ordinal);
+                changedSettings = mutate(candidateSettings);
+            }
+
+            try
+            {
+                await _jsonStorageService.WriteAsync(
+                    GetSettingsFile(),
+                    candidateSettings.Values.ToList(),
+                    SettingDefinitionContext.Default.ListSettingDefinition);
+            }
+            catch (Exception e)
+            {
+                LogException(e, "Unable to perform settings mutation save operation.");
+                return SettingsMutationResult.PersistenceFailed;
+            }
+
+            ISettingDefinition[] committedSettings;
+            lock (_accessLock)
+            {
+                committedSettings = CommitCandidateChanges(
+                    originalSettings,
+                    candidateSettings,
+                    changedSettings);
+                if (committedSettings.Length > 0)
+                {
+                    FireSettingsChangedEvent(committedSettings);
+                    TrackCommittedSettings(candidateSettings, committedSettings);
+                }
+            }
+
+            return SettingsMutationResult.Saved;
+        }
+        finally
+        {
+            _semaphore.Release();
+        }
+    }
+
+    private static ISettingDefinition[] SetCandidate<T>(
+        Dictionary<string, SettingDefinition> settings,
+        SettingDefinition<T> settingDefinition)
+    {
+        if (settings.TryGetValue(settingDefinition.Key, out SettingDefinition? existingSetting) &&
+            existingSetting is ISettingDefinitionWithValue<T> existingSettingT &&
+            EqualityComparer<T>.Default.Equals(existingSettingT.Value, settingDefinition.Value))
+        {
+            return [];
+        }
+
+        settings[settingDefinition.Key] = settingDefinition;
+        return [settingDefinition];
+    }
+
+    private static ISettingDefinition[] UnsetCandidate(
+        Dictionary<string, SettingDefinition> settings,
+        ISettingDefinition settingDefinition)
+    {
+        return settingDefinition.Key != null && settings.Remove(settingDefinition.Key)
+            ? [settingDefinition]
+            : [];
+    }
+
+    private static ISettingDefinition[] ClearCandidate(Dictionary<string, SettingDefinition> settings)
+    {
+        ISettingDefinition[] removedSettings = [.. settings.Values];
+        settings.Clear();
+        return removedSettings;
+    }
+
+    private ISettingDefinition[] CommitCandidateChanges(
+        Dictionary<string, SettingDefinition> originalSettings,
+        Dictionary<string, SettingDefinition> candidateSettings,
+        ISettingDefinition[] changedSettings)
+    {
+        List<ISettingDefinition> committedSettings = [];
+        foreach (ISettingDefinition changedSetting in changedSettings)
+        {
+            if (changedSetting.Key == null)
+            {
+                continue;
+            }
+
+            bool originallySet = originalSettings.TryGetValue(
+                changedSetting.Key,
+                out SettingDefinition? originalSetting);
+            bool currentlySet = _settings.TryGetValue(
+                changedSetting.Key,
+                out SettingDefinition? currentSetting);
+            bool currentMatchesOriginal = originallySet
+                ? currentlySet && ReferenceEquals(currentSetting, originalSetting)
+                : !currentlySet;
+            if (!currentMatchesOriginal)
+            {
+                continue;
+            }
+
+            if (candidateSettings.TryGetValue(changedSetting.Key, out SettingDefinition? candidateSetting))
+            {
+                _settings[changedSetting.Key] = candidateSetting;
+            }
+            else
+            {
+                _settings.Remove(changedSetting.Key);
+            }
+
+            committedSettings.Add(changedSetting);
+        }
+
+        return [.. committedSettings];
+    }
+
+    private void TrackCommittedSettings(
+        Dictionary<string, SettingDefinition> candidateSettings,
+        ISettingDefinition[] changedSettings)
+    {
+        foreach (ISettingDefinition changedSetting in changedSettings)
+        {
+            object? value = candidateSettings.TryGetValue(
+                changedSetting.Key,
+                out SettingDefinition? candidateSetting)
+                ? GetSafeTelemetryValue(candidateSetting)
+                : "default";
+            TrackSettingChanged(changedSetting.Key, value);
         }
     }
 
@@ -294,16 +488,17 @@ public partial class LocalSettingsService : ISettingsService, IDisposable
             });
     }
 
-    private static object? GetSafeTelemetryValue<T>(SettingDefinition<T> settingDefinition)
+    private static object? GetSafeTelemetryValue(ISettingDefinition settingDefinition)
     {
-        if (settingDefinition.Value is bool value)
+        if (settingDefinition is ISettingDefinitionWithValue<bool> boolSetting)
         {
-            return value;
+            return boolSetting.Value;
         }
 
         if (settingDefinition.Key == CaptureToolSettings.Settings_LanguageOverride.Key)
         {
-            return settingDefinition.Value is not string languageOverride ||
+            return settingDefinition is not ISettingDefinitionWithValue<string> stringSetting ||
+                stringSetting.Value is not string languageOverride ||
                 string.IsNullOrWhiteSpace(languageOverride)
                 ? "system_default"
                 : "override";
@@ -334,6 +529,19 @@ public partial class LocalSettingsService : ISettingsService, IDisposable
 
     public void ClearAllSettings()
     {
-        _settings.Clear();
+        lock (_accessLock)
+        {
+            ThrowIfNotInitialized();
+            ISettingDefinition[] removedSettings = [.. _settings.Values];
+            _settings.Clear();
+            if (removedSettings.Length > 0)
+            {
+                FireSettingsChangedEvent(removedSettings);
+                foreach (ISettingDefinition removedSetting in removedSettings)
+                {
+                    TrackSettingChanged(removedSetting.Key, "default");
+                }
+            }
+        }
     }
 }

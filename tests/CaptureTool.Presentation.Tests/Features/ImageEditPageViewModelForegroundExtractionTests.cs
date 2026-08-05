@@ -38,7 +38,7 @@ public sealed class ImageEditPageViewModelForegroundExtractionTests
             .Returns(AiFeatureConsentState.Denied);
         consent
             .Setup(x => x.SetConsentAsync(AiFeatureId.ImageForegroundExtraction, false, It.IsAny<CancellationToken>()))
-            .Returns(Task.CompletedTask);
+            .ReturnsAsync(true);
         dialog
             .Setup(x => x.RequestConsentAsync(AiFeatureId.ImageForegroundExtraction, It.IsAny<CancellationToken>()))
             .ReturnsAsync(false);
