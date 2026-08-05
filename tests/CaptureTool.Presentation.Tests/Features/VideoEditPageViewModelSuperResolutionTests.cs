@@ -62,6 +62,12 @@ public sealed class VideoEditPageViewModelSuperResolutionTests
         consent
             .Setup(service => service.GetConsentState(AiFeatureId.VideoSuperResolution))
             .Returns(AiFeatureConsentState.Unknown);
+        consent
+            .Setup(service => service.SetConsentAsync(
+                AiFeatureId.VideoSuperResolution,
+                true,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
         var dialog = new Mock<IAiFeatureConsentDialogService>();
         dialog
             .Setup(service => service.RequestConsentAsync(
@@ -94,6 +100,12 @@ public sealed class VideoEditPageViewModelSuperResolutionTests
         consent
             .Setup(service => service.GetConsentState(AiFeatureId.VideoSuperResolution))
             .Returns(AiFeatureConsentState.Unknown);
+        consent
+            .Setup(service => service.SetConsentAsync(
+                AiFeatureId.VideoSuperResolution,
+                false,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
         var dialog = new Mock<IAiFeatureConsentDialogService>();
         dialog
             .Setup(service => service.RequestConsentAsync(

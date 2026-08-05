@@ -27,9 +27,11 @@ internal sealed class UpdateImageAutoSaveUseCase : IUpdateImageAutoSaveUseCase
             activityId: ActivityId,
             useCase: async _ =>
             {
-                _settingsService.Set(CaptureToolSettings.Settings_ImageCapture_AutoSave, request.IsEnabled);
-                await _settingsService.TrySaveAsync(cancellationToken);
-                return new UpdateImageAutoSaveResponse();
+                SettingsMutationResult result = await _settingsService.TrySetAndSaveAsync(
+                    CaptureToolSettings.Settings_ImageCapture_AutoSave,
+                    request.IsEnabled,
+                    cancellationToken);
+                return new UpdateImageAutoSaveResponse(result.Succeeded);
             },
             cancellationToken: cancellationToken);
     }

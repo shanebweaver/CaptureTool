@@ -36,9 +36,11 @@ internal sealed class ChangeVideosFolderUseCase : IChangeVideosFolderUseCase
                     return new ChangeVideosFolderResponse(false);
                 }
 
-                _settings.Set(CaptureToolSettings.Settings_VideoCapture_AutoSaveFolder, folder.FolderPath);
-                await _settings.TrySaveAsync(cancellationToken);
-                return new ChangeVideosFolderResponse();
+                SettingsMutationResult result = await _settings.TrySetAndSaveAsync(
+                    CaptureToolSettings.Settings_VideoCapture_AutoSaveFolder,
+                    folder.FolderPath,
+                    cancellationToken);
+                return new ChangeVideosFolderResponse(result.Succeeded);
             },
             cancellationToken: cancellationToken);
     }

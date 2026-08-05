@@ -8,6 +8,6 @@ public interface IAiFeatureConsentService
 
     AiFeatureConsentState GetConsentState(AiFeatureId featureId);
 
-    Task SetConsentAsync(AiFeatureId featureId, bool isGranted, CancellationToken cancellationToken = default);
+    Task<bool> SetConsentAsync(AiFeatureId featureId, bool isGranted, CancellationToken cancellationToken = default);
 }
 

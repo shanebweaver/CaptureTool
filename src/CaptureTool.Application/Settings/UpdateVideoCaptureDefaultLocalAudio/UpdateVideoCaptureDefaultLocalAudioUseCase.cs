@@ -27,9 +27,11 @@ internal sealed class UpdateVideoCaptureDefaultLocalAudioUseCase : IUpdateVideoC
             activityId: ActivityId,
             useCase: async _ =>
             {
-                _settingsService.Set(CaptureToolSettings.Settings_VideoCapture_DefaultLocalAudioEnabled, request.IsEnabled);
-                await _settingsService.TrySaveAsync(cancellationToken);
-                return new UpdateVideoCaptureDefaultLocalAudioResponse();
+                SettingsMutationResult result = await _settingsService.TrySetAndSaveAsync(
+                    CaptureToolSettings.Settings_VideoCapture_DefaultLocalAudioEnabled,
+                    request.IsEnabled,
+                    cancellationToken);
+                return new UpdateVideoCaptureDefaultLocalAudioResponse(result.Succeeded);
             },
             cancellationToken: cancellationToken);
     }

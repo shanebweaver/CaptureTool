@@ -57,6 +57,12 @@ public sealed class DiagnosticsUseCaseTests
     {
         var logService = new Mock<ILogService>();
         var settings = new Mock<ISettingsService>();
+        settings
+            .Setup(service => service.TrySetAndSaveAsync(
+                CaptureToolSettings.VerboseLogging,
+                true,
+                TestContext.CancellationToken))
+            .ReturnsAsync(SettingsMutationResult.Saved);
         var useCase = new UpdateLoggingStateUseCase(logService.Object, settings.Object, TestUseCaseExecutor.Instance);
 
         UpdateLoggingStateResponse response = (await useCase.ExecuteAsync(new UpdateLoggingStateRequest(true), TestContext.CancellationToken)).Value!;
@@ -64,8 +70,10 @@ public sealed class DiagnosticsUseCaseTests
         Assert.IsTrue(response.Succeeded);
         logService.Verify(service => service.Enable(), Times.Once);
         logService.Verify(service => service.Disable(), Times.Never);
-        settings.Verify(service => service.Set(CaptureToolSettings.VerboseLogging, true), Times.Once);
-        settings.Verify(service => service.TrySaveAsync(TestContext.CancellationToken), Times.Once);
+        settings.Verify(service => service.TrySetAndSaveAsync(
+            CaptureToolSettings.VerboseLogging,
+            true,
+            TestContext.CancellationToken), Times.Once);
     }
 
     [TestMethod]
@@ -73,6 +81,12 @@ public sealed class DiagnosticsUseCaseTests
     {
         var logService = new Mock<ILogService>();
         var settings = new Mock<ISettingsService>();
+        settings
+            .Setup(service => service.TrySetAndSaveAsync(
+                CaptureToolSettings.VerboseLogging,
+                false,
+                TestContext.CancellationToken))
+            .ReturnsAsync(SettingsMutationResult.Saved);
         var useCase = new UpdateLoggingStateUseCase(logService.Object, settings.Object, TestUseCaseExecutor.Instance);
 
         UpdateLoggingStateResponse response = (await useCase.ExecuteAsync(new UpdateLoggingStateRequest(false), TestContext.CancellationToken)).Value!;
@@ -80,8 +94,35 @@ public sealed class DiagnosticsUseCaseTests
         Assert.IsTrue(response.Succeeded);
         logService.Verify(service => service.Disable(), Times.Once);
         logService.Verify(service => service.Enable(), Times.Never);
-        settings.Verify(service => service.Set(CaptureToolSettings.VerboseLogging, false), Times.Once);
-        settings.Verify(service => service.TrySaveAsync(TestContext.CancellationToken), Times.Once);
+        settings.Verify(service => service.TrySetAndSaveAsync(
+            CaptureToolSettings.VerboseLogging,
+            false,
+            TestContext.CancellationToken), Times.Once);
+    }
+
+    [TestMethod]
+    public async Task UpdateLoggingStateUseCase_WhenPersistenceFails_DoesNotChangeLoggingState()
+    {
+        var logService = new Mock<ILogService>();
+        var settings = new Mock<ISettingsService>();
+        settings
+            .Setup(service => service.TrySetAndSaveAsync(
+                CaptureToolSettings.VerboseLogging,
+                true,
+                TestContext.CancellationToken))
+            .ReturnsAsync(SettingsMutationResult.PersistenceFailed);
+        var useCase = new UpdateLoggingStateUseCase(
+            logService.Object,
+            settings.Object,
+            TestUseCaseExecutor.Instance);
+
+        UpdateLoggingStateResponse response = (await useCase.ExecuteAsync(
+            new UpdateLoggingStateRequest(true),
+            TestContext.CancellationToken)).Value!;
+
+        Assert.IsFalse(response.Succeeded);
+        logService.Verify(service => service.Enable(), Times.Never);
+        logService.Verify(service => service.Disable(), Times.Never);
     }
 
     public TestContext TestContext { get; set; } = null!;

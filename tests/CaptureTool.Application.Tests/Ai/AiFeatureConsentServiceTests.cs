@@ -40,13 +40,19 @@ public sealed class AiFeatureConsentServiceTests
     [TestMethod]
     public async Task SetConsentAsync_PersistsFeatureConsent()
     {
-        var settings = new Mock<ISettingsService>();
+        Mock<ISettingsService> settings = CreatePersistingSettings();
         var service = new AiFeatureConsentService(settings.Object);
 
-        await service.SetConsentAsync(AiFeatureId.TextExtraction, true, TestContext.CancellationToken);
+        bool saved = await service.SetConsentAsync(
+            AiFeatureId.TextExtraction,
+            true,
+            TestContext.CancellationToken);
 
-        settings.Verify(service => service.Set(CaptureToolSettings.Settings_AiConsent_TextExtraction, true), Times.Once);
-        settings.Verify(service => service.TrySaveAsync(TestContext.CancellationToken), Times.Once);
+        saved.Should().BeTrue();
+        settings.Verify(service => service.TrySetAndSaveAsync(
+            CaptureToolSettings.Settings_AiConsent_TextExtraction,
+            true,
+            TestContext.CancellationToken), Times.Once);
     }
 
     [TestMethod]
@@ -63,12 +69,15 @@ public sealed class AiFeatureConsentServiceTests
     [TestMethod]
     public async Task SetConsentAsync_PersistsImageDescriptionConsent()
     {
-        var settings = new Mock<ISettingsService>();
+        Mock<ISettingsService> settings = CreatePersistingSettings();
         var service = new AiFeatureConsentService(settings.Object);
 
         await service.SetConsentAsync(AiFeatureId.ImageDescription, true, TestContext.CancellationToken);
 
-        settings.Verify(service => service.Set(CaptureToolSettings.Settings_AiConsent_ImageDescription, true), Times.Once);
+        settings.Verify(service => service.TrySetAndSaveAsync(
+            CaptureToolSettings.Settings_AiConsent_ImageDescription,
+            true,
+            TestContext.CancellationToken), Times.Once);
     }
 
     [TestMethod]
@@ -85,12 +94,15 @@ public sealed class AiFeatureConsentServiceTests
     [TestMethod]
     public async Task SetConsentAsync_PersistsBackgroundRemovalConsent()
     {
-        var settings = new Mock<ISettingsService>();
+        Mock<ISettingsService> settings = CreatePersistingSettings();
         var service = new AiFeatureConsentService(settings.Object);
 
         await service.SetConsentAsync(AiFeatureId.ImageForegroundExtraction, true, TestContext.CancellationToken);
 
-        settings.Verify(service => service.Set(CaptureToolSettings.Settings_AiConsent_ImageForegroundExtraction, true), Times.Once);
+        settings.Verify(service => service.TrySetAndSaveAsync(
+            CaptureToolSettings.Settings_AiConsent_ImageForegroundExtraction,
+            true,
+            TestContext.CancellationToken), Times.Once);
     }
 
     [TestMethod]
@@ -107,12 +119,15 @@ public sealed class AiFeatureConsentServiceTests
     [TestMethod]
     public async Task SetConsentAsync_PersistsObjectEraseConsent()
     {
-        var settings = new Mock<ISettingsService>();
+        Mock<ISettingsService> settings = CreatePersistingSettings();
         var service = new AiFeatureConsentService(settings.Object);
 
         await service.SetConsentAsync(AiFeatureId.ImageObjectErase, true, TestContext.CancellationToken);
 
-        settings.Verify(service => service.Set(CaptureToolSettings.Settings_AiConsent_ImageObjectErase, true), Times.Once);
+        settings.Verify(service => service.TrySetAndSaveAsync(
+            CaptureToolSettings.Settings_AiConsent_ImageObjectErase,
+            true,
+            TestContext.CancellationToken), Times.Once);
     }
 
     [TestMethod]
@@ -129,12 +144,15 @@ public sealed class AiFeatureConsentServiceTests
     [TestMethod]
     public async Task SetConsentAsync_PersistsObjectExtractionConsent()
     {
-        var settings = new Mock<ISettingsService>();
+        Mock<ISettingsService> settings = CreatePersistingSettings();
         var service = new AiFeatureConsentService(settings.Object);
 
         await service.SetConsentAsync(AiFeatureId.ImageObjectExtraction, true, TestContext.CancellationToken);
 
-        settings.Verify(service => service.Set(CaptureToolSettings.Settings_AiConsent_ImageObjectExtraction, true), Times.Once);
+        settings.Verify(service => service.TrySetAndSaveAsync(
+            CaptureToolSettings.Settings_AiConsent_ImageObjectExtraction,
+            true,
+            TestContext.CancellationToken), Times.Once);
     }
 
     [TestMethod]
@@ -151,7 +169,7 @@ public sealed class AiFeatureConsentServiceTests
     [TestMethod]
     public async Task SetConsentAsync_PersistsVideoSuperResolutionConsent()
     {
-        var settings = new Mock<ISettingsService>();
+        Mock<ISettingsService> settings = CreatePersistingSettings();
         var service = new AiFeatureConsentService(settings.Object);
 
         await service.SetConsentAsync(
@@ -160,10 +178,43 @@ public sealed class AiFeatureConsentServiceTests
             TestContext.CancellationToken);
 
         settings.Verify(
-            service => service.Set(
+            service => service.TrySetAndSaveAsync(
                 CaptureToolSettings.Settings_AiConsent_VideoSuperResolution,
-                true),
+                true,
+                TestContext.CancellationToken),
             Times.Once);
+    }
+
+    [TestMethod]
+    public async Task SetConsentAsync_WhenPersistenceFails_ReturnsFalse()
+    {
+        var settings = new Mock<ISettingsService>();
+        settings
+            .Setup(service => service.TrySetAndSaveAsync(
+                CaptureToolSettings.Settings_AiConsent_TextExtraction,
+                true,
+                TestContext.CancellationToken))
+            .ReturnsAsync(SettingsMutationResult.PersistenceFailed);
+        var service = new AiFeatureConsentService(settings.Object);
+
+        bool saved = await service.SetConsentAsync(
+            AiFeatureId.TextExtraction,
+            true,
+            TestContext.CancellationToken);
+
+        saved.Should().BeFalse();
+    }
+
+    private static Mock<ISettingsService> CreatePersistingSettings()
+    {
+        var settings = new Mock<ISettingsService>();
+        settings
+            .Setup(service => service.TrySetAndSaveAsync(
+                It.IsAny<IBoolSettingDefinition>(),
+                It.IsAny<bool>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(SettingsMutationResult.Saved);
+        return settings;
     }
 
     public TestContext TestContext { get; set; } = null!;
