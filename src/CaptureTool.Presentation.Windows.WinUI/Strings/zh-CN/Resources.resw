@@ -1071,6 +1071,12 @@ SOFTWARE.
   <data name="CaptureOverlay_LocalAudioToggleButton.ToolTipService.ToolTip" xml:space="preserve">
     <value>切换系统音频捕获</value>
   </data>
+  <data name="CaptureOverlay_LocalAudioVolumeLabel.Text" xml:space="preserve">
+    <value>系统音频音量</value>
+  </data>
+  <data name="CaptureOverlay_LocalAudioVolumeSlider.AutomationProperties.Name" xml:space="preserve">
+    <value>系统音频音量</value>
+  </data>
   <data name="CaptureOverlay_PauseResumeButton.AutomationProperties.Name" xml:space="preserve">
     <value>暂停或继续录制</value>
   </data>

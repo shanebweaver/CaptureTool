@@ -11,7 +11,7 @@ public sealed class VideoCaptureSessionTests
     public void CreateRecordingOptions_ShouldUseSessionTargetPathAndAudioSettings()
     {
         var target = CaptureRecordingTarget.Rectangle(10, 1, 2, 3, 4);
-        var audio = new VideoCaptureAudioSettings(false, false, 42, "microphone");
+        var audio = new VideoCaptureAudioSettings(false, false, 42, "microphone", 64);
         var session = new VideoCaptureSession(@"C:\Temp\capture.mp4", target, audio);
 
         CaptureRecordingOptions options = session.CreateRecordingOptions();
@@ -21,6 +21,7 @@ public sealed class VideoCaptureSessionTests
         options.CaptureAudio.Should().BeFalse();
         options.AudioInputSourceId.Should().Be("microphone");
         options.AudioInputVolumePercentage.Should().Be(42);
+        options.DesktopAudioVolumePercentage.Should().Be(64);
     }
 
     [TestMethod]

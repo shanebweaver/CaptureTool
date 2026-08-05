@@ -8,9 +8,14 @@ public interface IAudioRecorder
 
     void Pause();
     void Resume();
-    void StartCapture(string outputPath);
+    void StartCapture(AudioCaptureRecordingOptions options);
     AudioFile StopCapture();
+    void SetDesktopAudioEnabled(bool enabled);
     void SetAudioInputSource(string? sourceId);
-    void ToggleDesktopAudio();
-    void ToggleMute();
 }
+
+public readonly record struct AudioCaptureRecordingOptions(
+    string OutputPath,
+    bool CaptureDesktopAudio,
+    string? AudioInputSourceId = null,
+    int AudioInputVolumePercentage = 100);

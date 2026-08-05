@@ -1,9 +1,11 @@
 using CaptureTool.Application.Abstractions.Capture.Audio.SelectAudioCaptureInputSource;
 using CaptureTool.Application.Abstractions.Capture.Video.PrepareVideoCapture;
 using CaptureTool.Application.Abstractions.Capture.Video.SetVideoCaptureAudioInputMuted;
+using CaptureTool.Application.Abstractions.Capture.Video.SetVideoCaptureDesktopAudioVolume;
 using CaptureTool.Application.Capture.Audio.SelectAudioCaptureInputSource;
 using CaptureTool.Application.Capture.Video.PrepareVideoCapture;
 using CaptureTool.Application.Capture.Video.SetVideoCaptureAudioInputMuted;
+using CaptureTool.Application.Capture.Video.SetVideoCaptureDesktopAudioVolume;
 using CaptureTool.Application.Tests.Capture.Audio;
 using CaptureTool.Application.Tests.Capture.Video;
 
@@ -41,6 +43,22 @@ public sealed class WorkflowControlUseCaseTests
         Assert.IsNotNull(response.Value);
         Assert.IsTrue(workflow.IsAudioInputMuted);
         Assert.IsTrue(workflow.LastAudioInputMuted);
+    }
+
+    [TestMethod]
+    public async Task SetVideoCaptureDesktopAudioVolume_UpdatesWorkflow()
+    {
+        var workflow = new FakeVideoCaptureWorkflow();
+        var useCase = new SetVideoCaptureDesktopAudioVolumeUseCase(
+            workflow,
+            TestUseCaseExecutor.Instance);
+
+        var response = await useCase.ExecuteAsync(
+            new SetVideoCaptureDesktopAudioVolumeRequest(64),
+            TestContext.CancellationToken);
+
+        Assert.IsNotNull(response.Value);
+        Assert.AreEqual(64, workflow.DesktopAudioVolumePercentage);
     }
 
     [TestMethod]

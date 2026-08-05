@@ -8,6 +8,7 @@ public interface IAudioCaptureState
     event EventHandler<AudioCaptureState>? CaptureStateChanged;
     event EventHandler<bool>? MutedStateChanged;
     event EventHandler<bool>? DesktopAudioStateChanged;
+    event EventHandler<string?>? AudioInputSourceChanged;
     event EventHandler<AudioFile>? NewAudioCaptured;
     event EventHandler<AudioCaptureLevel>? AudioLevelCaptured;
 

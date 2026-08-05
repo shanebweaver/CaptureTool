@@ -211,6 +211,56 @@ public sealed class WindowsScreenRecorderTests
         session.Verify(value => value.Stop(), Times.Once);
     }
 
+    [TestMethod]
+    public void SetAudioCaptureEnabled_WhenRecordingStartedMuted_ShouldForwardUnmuteToActiveSession()
+    {
+        var session = new Mock<IVideoCaptureSession>();
+        VideoCaptureOptions? capturedOptions = null;
+        var captureService = new Mock<IVideoCaptureService>();
+        captureService
+            .Setup(service => service.CreateSession(It.IsAny<VideoCaptureOptions>()))
+            .Callback<VideoCaptureOptions>(options => capturedOptions = options)
+            .Returns(session.Object);
+        var recorder = new WindowsScreenRecorder(
+            captureService.Object,
+            CreateSupportedService().Object,
+            _ => { });
+        CaptureRecordingOptions options = CreateOptions() with { CaptureAudio = false };
+
+        recorder.StartRecording(options);
+        recorder.SetAudioCaptureEnabled(true);
+
+        capturedOptions.Should().NotBeNull();
+        capturedOptions!.CaptureAudio.Should().BeFalse();
+        session.Verify(value => value.SetAudioCaptureEnabled(true), Times.Once);
+        recorder.StopRecording();
+    }
+
+    [TestMethod]
+    public void DesktopAudioVolume_ShouldMapAtStartupAndRemainMutable()
+    {
+        var session = new Mock<IVideoCaptureSession>();
+        VideoCaptureOptions? capturedOptions = null;
+        var captureService = new Mock<IVideoCaptureService>();
+        captureService
+            .Setup(service => service.CreateSession(It.IsAny<VideoCaptureOptions>()))
+            .Callback<VideoCaptureOptions>(options => capturedOptions = options)
+            .Returns(session.Object);
+        var recorder = new WindowsScreenRecorder(
+            captureService.Object,
+            CreateSupportedService().Object,
+            _ => { });
+        CaptureRecordingOptions options = CreateOptions() with { DesktopAudioVolumePercentage = 37 };
+
+        recorder.StartRecording(options);
+        recorder.SetDesktopAudioVolume(64);
+
+        capturedOptions.Should().NotBeNull();
+        capturedOptions!.SystemAudioVolumePercentage.Should().Be(37);
+        session.Verify(value => value.SetSystemAudioVolume(64), Times.Once);
+        recorder.StopRecording();
+    }
+
     private static Mock<AppVideoCaptureSupportService> CreateSupportedService()
     {
         var supportService = new Mock<AppVideoCaptureSupportService>();

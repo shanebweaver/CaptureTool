@@ -19,6 +19,19 @@ namespace CaptureTool.Application.Tests.Capture;
 public sealed class AudioCaptureWorkflowTests
 {
     [TestMethod]
+    public void AudioCaptureSession_WhenMicrophoneIsMuted_OmitsActiveInputFromRecordingOptions()
+    {
+        AudioCaptureSettings settings = AudioCaptureSettings.Default
+            .WithAudioInputSource("microphone-id")
+            .WithMuted(true);
+        var session = new AudioCaptureSession(@"C:\Temp\capture.wav", settings);
+
+        AudioCaptureRecordingOptions options = session.CreateRecordingOptions();
+
+        options.AudioInputSourceId.Should().BeNull();
+    }
+
+    [TestMethod]
     public void StartCapture_WhenStopped_StartsRecorderAndRaisesStateChanged()
     {
         var recorder = new Mock<IAudioRecorder>();
@@ -31,7 +44,9 @@ public sealed class AudioCaptureWorkflowTests
         workflow.IsRecording.Should().BeTrue();
         workflow.CaptureState.Should().Be(AudioCaptureState.Recording);
         raisedState.Should().Be(AudioCaptureState.Recording);
-        recorder.Verify(service => service.StartCapture(It.Is<string>(path => path.EndsWith(".wav"))), Times.Once);
+        recorder.Verify(service => service.StartCapture(It.Is<AudioCaptureRecordingOptions>(options =>
+            options.OutputPath.EndsWith(".wav") &&
+            options.CaptureDesktopAudio)), Times.Once);
     }
 
     [TestMethod]
@@ -49,7 +64,7 @@ public sealed class AudioCaptureWorkflowTests
     {
         var recorder = new Mock<IAudioRecorder>();
         recorder
-            .Setup(service => service.StartCapture(It.IsAny<string>()))
+            .Setup(service => service.StartCapture(It.IsAny<AudioCaptureRecordingOptions>()))
             .Throws(new InvalidOperationException("failed"));
         var fileSystem = new Mock<IFileSystem>();
         AudioCaptureWorkflow workflow = CreateWorkflow(recorder, fileSystem: fileSystem);
@@ -73,6 +88,21 @@ public sealed class AudioCaptureWorkflowTests
         workflow.StartCapture();
 
         workflow.IsDesktopAudioEnabled.Should().BeFalse();
+        recorder.Verify(service => service.StartCapture(It.Is<AudioCaptureRecordingOptions>(options =>
+            !options.CaptureDesktopAudio)), Times.Once);
+    }
+
+    [TestMethod]
+    public void StartCapture_AppliesSelectedAudioInputSource()
+    {
+        var recorder = new Mock<IAudioRecorder>();
+        AudioCaptureWorkflow workflow = CreateWorkflow(recorder);
+        workflow.SelectAudioInputSource("microphone-id");
+
+        workflow.StartCapture();
+
+        recorder.Verify(service => service.StartCapture(It.Is<AudioCaptureRecordingOptions>(options =>
+            options.AudioInputSourceId == "microphone-id")), Times.Once);
     }
 
     [TestMethod]
@@ -216,12 +246,13 @@ public sealed class AudioCaptureWorkflowTests
         AudioCaptureWorkflow workflow = CreateWorkflow(recorder);
         bool? raisedValue = null;
         workflow.MutedStateChanged += (_, value) => raisedValue = value;
+        workflow.StartCapture();
 
         workflow.ToggleMute();
 
         workflow.IsMuted.Should().BeTrue();
         raisedValue.Should().BeTrue();
-        recorder.Verify(service => service.ToggleMute(), Times.Once);
+        recorder.Verify(service => service.SetAudioInputSource(null), Times.Once);
     }
 
     [TestMethod]
@@ -229,8 +260,12 @@ public sealed class AudioCaptureWorkflowTests
     {
         var recorder = new Mock<IAudioRecorder>();
         AudioCaptureWorkflow workflow = CreateWorkflow(recorder);
+        recorder
+            .Setup(service => service.SetDesktopAudioEnabled(false))
+            .Callback(() => workflow.IsDesktopAudioEnabled.Should().BeTrue());
         bool? raisedValue = null;
         workflow.DesktopAudioStateChanged += (_, value) => raisedValue = value;
+        workflow.StartCapture();
 
         workflow.IsDesktopAudioEnabled.Should().BeTrue();
 
@@ -238,7 +273,7 @@ public sealed class AudioCaptureWorkflowTests
 
         workflow.IsDesktopAudioEnabled.Should().BeFalse();
         raisedValue.Should().BeFalse();
-        recorder.Verify(service => service.ToggleDesktopAudio(), Times.Once);
+        recorder.Verify(service => service.SetDesktopAudioEnabled(false), Times.Once);
     }
 
     [TestMethod]
@@ -246,13 +281,89 @@ public sealed class AudioCaptureWorkflowTests
     {
         var recorder = new Mock<IAudioRecorder>();
         AudioCaptureWorkflow workflow = CreateWorkflow(recorder);
+        workflow.StartCapture();
+        List<string?> raisedSources = [];
+        workflow.AudioInputSourceChanged += (_, sourceId) => raisedSources.Add(sourceId);
 
         workflow.SelectAudioInputSource("microphone");
         workflow.SelectAudioInputSource(" ");
 
         workflow.SelectedAudioInputSourceId.Should().BeNull();
+        raisedSources.Should().Equal("microphone", null);
         recorder.Verify(service => service.SetAudioInputSource("microphone"), Times.Once);
         recorder.Verify(service => service.SetAudioInputSource(null), Times.Once);
+    }
+
+    [TestMethod]
+    public void AudioRoutingChanges_WhenIdle_DoNotCallRecorder()
+    {
+        var recorder = new Mock<IAudioRecorder>();
+        AudioCaptureWorkflow workflow = CreateWorkflow(recorder);
+
+        workflow.ToggleLocalAudio();
+        workflow.SelectAudioInputSource("microphone");
+        workflow.ToggleMute();
+
+        recorder.Verify(service => service.SetDesktopAudioEnabled(It.IsAny<bool>()), Times.Never);
+        recorder.Verify(service => service.SetAudioInputSource(It.IsAny<string?>()), Times.Never);
+    }
+
+    [TestMethod]
+    public void ToggleLocalAudio_WhenRecorderRejectsChange_PreservesStateAndDoesNotRaiseEvent()
+    {
+        var recorder = new Mock<IAudioRecorder>();
+        recorder
+            .Setup(service => service.SetDesktopAudioEnabled(false))
+            .Throws(new InvalidOperationException("Platform rejected desktop audio change."));
+        AudioCaptureWorkflow workflow = CreateWorkflow(recorder);
+        workflow.StartCapture();
+        bool eventRaised = false;
+        workflow.DesktopAudioStateChanged += (_, _) => eventRaised = true;
+
+        workflow.Invoking(service => service.ToggleLocalAudio()).Should().Throw<InvalidOperationException>();
+
+        workflow.IsDesktopAudioEnabled.Should().BeTrue();
+        eventRaised.Should().BeFalse();
+    }
+
+    [TestMethod]
+    public void ToggleMute_WhenRecorderRejectsChange_PreservesStateAndDoesNotRaiseEvent()
+    {
+        var recorder = new Mock<IAudioRecorder>();
+        recorder
+            .Setup(service => service.SetAudioInputSource(null))
+            .Throws(new InvalidOperationException("Platform rejected mute change."));
+        AudioCaptureWorkflow workflow = CreateWorkflow(recorder);
+        workflow.SelectAudioInputSource("microphone");
+        workflow.StartCapture();
+        bool eventRaised = false;
+        workflow.MutedStateChanged += (_, _) => eventRaised = true;
+
+        workflow.Invoking(service => service.ToggleMute()).Should().Throw<InvalidOperationException>();
+
+        workflow.IsMuted.Should().BeFalse();
+        workflow.SelectedAudioInputSourceId.Should().Be("microphone");
+        eventRaised.Should().BeFalse();
+    }
+
+    [TestMethod]
+    public void SelectAudioInputSource_WhenRecorderRejectsChange_PreservesStateAndDoesNotRaiseEvent()
+    {
+        var recorder = new Mock<IAudioRecorder>();
+        recorder
+            .Setup(service => service.SetAudioInputSource("new-microphone"))
+            .Throws(new InvalidOperationException("Platform rejected source change."));
+        AudioCaptureWorkflow workflow = CreateWorkflow(recorder);
+        workflow.SelectAudioInputSource("original-microphone");
+        workflow.StartCapture();
+        bool eventRaised = false;
+        workflow.AudioInputSourceChanged += (_, _) => eventRaised = true;
+
+        workflow.Invoking(service => service.SelectAudioInputSource("new-microphone"))
+            .Should().Throw<InvalidOperationException>();
+
+        workflow.SelectedAudioInputSourceId.Should().Be("original-microphone");
+        eventRaised.Should().BeFalse();
     }
 
     private static AudioCaptureWorkflow CreateWorkflow(

@@ -19,10 +19,12 @@ internal sealed class AudioCaptureWorkflow : IAudioCaptureWorkflow
     private readonly AudioCapturePostProcessor _postProcessor;
     private readonly AudioCaptureFileNameGenerator _fileNameGenerator;
     private readonly ITelemetryService? _telemetryService;
+    private readonly Lock _audioRoutingLock = new();
 
     public event EventHandler<AudioCaptureState>? CaptureStateChanged;
     public event EventHandler<bool>? MutedStateChanged;
     public event EventHandler<bool>? DesktopAudioStateChanged;
+    public event EventHandler<string?>? AudioInputSourceChanged;
     public event EventHandler<AudioFile>? NewAudioCaptured;
     public event EventHandler<AudioCaptureLevel>? AudioLevelCaptured;
 
@@ -62,7 +64,10 @@ internal sealed class AudioCaptureWorkflow : IAudioCaptureWorkflow
     public void StartCapture()
     {
         bool defaultDesktopAudioEnabled = _settingsService.Get(CaptureToolSettings.Settings_AudioCapture_DefaultLocalAudioEnabled);
-        _stateStore.PrepareForAudioCapture(defaultDesktopAudioEnabled);
+        lock (_audioRoutingLock)
+        {
+            _stateStore.PrepareForAudioCapture(defaultDesktopAudioEnabled);
+        }
         TrackCapture(TelemetryEvents.CaptureRequested);
 
         string tempAudioPath = _fileAllocator.ReserveUniqueFile(
@@ -73,8 +78,11 @@ internal sealed class AudioCaptureWorkflow : IAudioCaptureWorkflow
 
         try
         {
-            session = _stateStore.StartSession(tempAudioPath);
-            _audioRecorder.StartCapture(session.TempAudioPath);
+            lock (_audioRoutingLock)
+            {
+                session = _stateStore.StartSession(tempAudioPath);
+                _audioRecorder.StartCapture(session.CreateRecordingOptions());
+            }
         }
         catch
         {
@@ -180,26 +188,60 @@ internal sealed class AudioCaptureWorkflow : IAudioCaptureWorkflow
 
     public void ToggleLocalAudio()
     {
-        _audioRecorder.ToggleDesktopAudio();
+        (AudioCaptureStateSnapshot snapshot, bool changed) = UpdateAudioSettings(
+            settings => settings.WithDesktopAudioEnabled(!settings.IsDesktopAudioEnabled),
+            settings => _audioRecorder.SetDesktopAudioEnabled(settings.IsDesktopAudioEnabled));
 
-        AudioCaptureStateSnapshot snapshot = _stateStore.UpdateSettings(
-            settings => settings.WithDesktopAudioEnabled(!settings.IsDesktopAudioEnabled));
-
-        DesktopAudioStateChanged?.Invoke(this, snapshot.IsDesktopAudioEnabled);
+        if (changed)
+        {
+            DesktopAudioStateChanged?.Invoke(this, snapshot.IsDesktopAudioEnabled);
+        }
     }
 
     public void SelectAudioInputSource(string? sourceId)
     {
-        AudioCaptureStateSnapshot snapshot = _stateStore.UpdateSettings(settings => settings.WithAudioInputSource(sourceId));
-        _audioRecorder.SetAudioInputSource(snapshot.SelectedAudioInputSourceId);
+        (AudioCaptureStateSnapshot snapshot, bool changed) = UpdateAudioSettings(
+            settings => settings.WithAudioInputSource(sourceId),
+            settings => _audioRecorder.SetAudioInputSource(settings.ActiveAudioInputSourceId));
+
+        if (changed)
+        {
+            AudioInputSourceChanged?.Invoke(this, snapshot.SelectedAudioInputSourceId);
+        }
     }
 
     public void ToggleMute()
     {
-        _audioRecorder.ToggleMute();
+        (AudioCaptureStateSnapshot snapshot, bool changed) = UpdateAudioSettings(
+            settings => settings.WithMuted(!settings.IsMuted),
+            settings => _audioRecorder.SetAudioInputSource(settings.ActiveAudioInputSourceId));
 
-        AudioCaptureStateSnapshot snapshot = _stateStore.UpdateSettings(settings => settings.WithMuted(!settings.IsMuted));
-        MutedStateChanged?.Invoke(this, snapshot.IsMuted);
+        if (changed)
+        {
+            MutedStateChanged?.Invoke(this, snapshot.IsMuted);
+        }
+    }
+
+    private (AudioCaptureStateSnapshot Snapshot, bool Changed) UpdateAudioSettings(
+        Func<AudioCaptureSettings, AudioCaptureSettings> update,
+        Action<AudioCaptureSettings> applyToRecorder)
+    {
+        lock (_audioRoutingLock)
+        {
+            AudioCaptureStateSnapshot current = Snapshot;
+            AudioCaptureSettings candidate = update(current.Settings);
+            if (candidate == current.Settings)
+            {
+                return (current, false);
+            }
+
+            if (current.IsRecording)
+            {
+                applyToRecorder(candidate);
+            }
+
+            return (_stateStore.SetSettings(candidate), true);
+        }
     }
 
     private void OnAudioLevelCaptured(object? sender, AudioCaptureLevel level)

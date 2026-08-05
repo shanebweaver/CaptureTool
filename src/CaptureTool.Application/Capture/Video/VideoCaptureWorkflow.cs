@@ -22,13 +22,18 @@ internal sealed class VideoCaptureWorkflow : IVideoCaptureWorkflow
     private readonly VideoCapturePostProcessor _postProcessor;
     private readonly VideoCaptureFileNameGenerator _fileNameGenerator;
     private readonly ITelemetryService? _telemetryService;
+    private readonly Lock _audioRoutingLock = new();
 
     public event EventHandler<VideoFile>? NewVideoCaptured;
     public event EventHandler? RecordingStarted;
     public event EventHandler<bool>? DesktopAudioStateChanged;
+    public event EventHandler<int>? DesktopAudioVolumeChanged;
+    public event EventHandler<bool>? AudioInputMutedStateChanged;
+    public event EventHandler<string?>? AudioInputSourceChanged;
     public event EventHandler<bool>? PausedStateChanged;
 
     public bool IsDesktopAudioEnabled => Snapshot.IsDesktopAudioEnabled;
+    public int DesktopAudioVolumePercentage => Snapshot.DesktopAudioVolumePercentage;
     public bool IsAudioInputMuted => Snapshot.IsAudioInputMuted;
     public int AudioInputVolumePercentage => Snapshot.AudioInputVolumePercentage;
     public bool IsRecording => Snapshot.IsRecording;
@@ -67,7 +72,10 @@ internal sealed class VideoCaptureWorkflow : IVideoCaptureWorkflow
     public void PrepareForVideoCapture()
     {
         bool defaultDesktopAudioEnabled = _settingsService.Get(CaptureToolSettings.Settings_VideoCapture_DefaultLocalAudioEnabled);
-        _stateStore.PrepareForVideoCapture(defaultDesktopAudioEnabled);
+        lock (_audioRoutingLock)
+        {
+            _stateStore.PrepareForVideoCapture(defaultDesktopAudioEnabled);
+        }
     }
 
     public void StartVideoCapture(NewCaptureArgs args)
@@ -104,8 +112,11 @@ internal sealed class VideoCaptureWorkflow : IVideoCaptureWorkflow
 
         try
         {
-            session = _stateStore.StartSession(tempVideoPath, target, args.CaptureType);
-            _screenRecorder.StartRecording(session.CreateRecordingOptions());
+            lock (_audioRoutingLock)
+            {
+                session = _stateStore.StartSession(tempVideoPath, target, args.CaptureType);
+                _screenRecorder.StartRecording(session.CreateRecordingOptions());
+            }
         }
         catch (Exception ex)
         {
@@ -190,46 +201,78 @@ internal sealed class VideoCaptureWorkflow : IVideoCaptureWorkflow
 
     public void SetIsDesktopAudioEnabled(bool value)
     {
-        _stateStore.UpdateAudioSettings(settings => settings.WithDesktopAudioEnabled(value));
-        DesktopAudioStateChanged?.Invoke(this, value);
+        (VideoCaptureStateSnapshot snapshot, bool changed) = UpdateAudioSettings(
+            settings => settings.WithDesktopAudioEnabled(value),
+            settings => _screenRecorder.SetAudioCaptureEnabled(settings.ShouldCaptureDesktopAudio));
+
+        if (changed)
+        {
+            DesktopAudioStateChanged?.Invoke(this, snapshot.IsDesktopAudioEnabled);
+        }
     }
 
-    public void ToggleDesktopAudioCapture(bool enabled)
+    public void SetDesktopAudioVolume(int volumePercentage)
     {
-        VideoCaptureStateSnapshot snapshot = Snapshot;
-        if (snapshot.IsRecording)
+        (VideoCaptureStateSnapshot snapshot, bool changed) = UpdateAudioSettings(
+            settings => settings.WithDesktopAudioVolume(volumePercentage),
+            settings => _screenRecorder.SetDesktopAudioVolume(settings.DesktopAudioVolumePercentage));
+
+        if (changed)
         {
-            _screenRecorder.SetAudioCaptureEnabled(snapshot.AudioSettings.ShouldCaptureDesktopAudio);
+            DesktopAudioVolumeChanged?.Invoke(this, snapshot.DesktopAudioVolumePercentage);
         }
     }
 
     public void SetIsAudioInputMuted(bool value)
     {
-        VideoCaptureStateSnapshot snapshot = _stateStore.UpdateAudioSettings(settings => settings.WithAudioInputMuted(value));
+        (VideoCaptureStateSnapshot snapshot, bool changed) = UpdateAudioSettings(
+            settings => settings.WithAudioInputMuted(value),
+            settings => _screenRecorder.SetAudioInputSource(settings.ActiveAudioInputSourceId));
 
-        if (snapshot.IsRecording)
+        if (changed)
         {
-            _screenRecorder.SetAudioInputSource(snapshot.AudioSettings.ActiveAudioInputSourceId);
+            AudioInputMutedStateChanged?.Invoke(this, snapshot.IsAudioInputMuted);
         }
     }
 
     public void SelectAudioInputSource(string? sourceId)
     {
-        VideoCaptureStateSnapshot snapshot = _stateStore.UpdateAudioSettings(settings => settings.WithAudioInputSource(sourceId));
+        (VideoCaptureStateSnapshot snapshot, bool changed) = UpdateAudioSettings(
+            settings => settings.WithAudioInputSource(sourceId),
+            settings => _screenRecorder.SetAudioInputSource(settings.ActiveAudioInputSourceId));
 
-        if (snapshot.IsRecording)
+        if (changed)
         {
-            _screenRecorder.SetAudioInputSource(snapshot.AudioSettings.ActiveAudioInputSourceId);
+            AudioInputSourceChanged?.Invoke(this, snapshot.SelectedAudioInputSourceId);
         }
     }
 
     public void SetAudioInputVolume(int volumePercentage)
     {
-        VideoCaptureStateSnapshot snapshot = _stateStore.UpdateAudioSettings(settings => settings.WithAudioInputVolume(volumePercentage));
+        UpdateAudioSettings(
+            settings => settings.WithAudioInputVolume(volumePercentage),
+            settings => _screenRecorder.SetAudioInputVolume(settings.AudioInputVolumePercentage));
+    }
 
-        if (snapshot.IsRecording)
+    private (VideoCaptureStateSnapshot Snapshot, bool Changed) UpdateAudioSettings(
+        Func<VideoCaptureAudioSettings, VideoCaptureAudioSettings> update,
+        Action<VideoCaptureAudioSettings> applyToRecorder)
+    {
+        lock (_audioRoutingLock)
         {
-            _screenRecorder.SetAudioInputVolume(snapshot.AudioSettings.AudioInputVolumePercentage);
+            VideoCaptureStateSnapshot current = Snapshot;
+            VideoCaptureAudioSettings candidate = update(current.AudioSettings);
+            if (candidate == current.AudioSettings)
+            {
+                return (current, false);
+            }
+
+            if (current.IsRecording)
+            {
+                applyToRecorder(candidate);
+            }
+
+            return (_stateStore.SetAudioSettings(candidate), true);
         }
     }
 

@@ -86,19 +86,18 @@ internal sealed class AudioCaptureStateStore
         }
     }
 
-    public AudioCaptureStateSnapshot UpdateSettings(Func<AudioCaptureSettings, AudioCaptureSettings> update)
+    public AudioCaptureStateSnapshot SetSettings(AudioCaptureSettings settings)
     {
         lock (_lock)
         {
             if (_activeSession is not null)
             {
-                AudioCaptureSettings settings = update(_activeSession.Settings);
                 _activeSession.SetSettings(settings);
                 _idleSettings = settings;
                 return AudioCaptureStateSnapshot.FromSession(_activeSession);
             }
 
-            _idleSettings = update(_idleSettings);
+            _idleSettings = settings;
             return AudioCaptureStateSnapshot.Stopped(_idleSettings);
         }
     }

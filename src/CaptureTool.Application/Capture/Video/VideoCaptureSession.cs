@@ -33,7 +33,8 @@ internal sealed class VideoCaptureSession
             TempVideoPath,
             AudioSettings.ShouldCaptureDesktopAudio,
             AudioInputSourceId: AudioSettings.ActiveAudioInputSourceId,
-            AudioInputVolumePercentage: AudioSettings.AudioInputVolumePercentage);
+            AudioInputVolumePercentage: AudioSettings.AudioInputVolumePercentage,
+            DesktopAudioVolumePercentage: AudioSettings.DesktopAudioVolumePercentage);
 
     public PendingVideoFile BeginFinalizing()
     {

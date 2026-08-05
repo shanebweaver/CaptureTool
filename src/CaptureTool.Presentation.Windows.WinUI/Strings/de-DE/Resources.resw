@@ -1077,6 +1077,12 @@ SOFTWARE.
   <data name="CaptureOverlay_LocalAudioToggleButton.ToolTipService.ToolTip" xml:space="preserve">
     <value>Systemaudioaufnahme umschalten</value>
   </data>
+  <data name="CaptureOverlay_LocalAudioVolumeLabel.Text" xml:space="preserve">
+    <value>Systemaudiolautstärke</value>
+  </data>
+  <data name="CaptureOverlay_LocalAudioVolumeSlider.AutomationProperties.Name" xml:space="preserve">
+    <value>Systemaudiolautstärke</value>
+  </data>
   <data name="CaptureOverlay_PauseResumeButton.AutomationProperties.Name" xml:space="preserve">
     <value>Aufnahme anhalten oder fortsetzen</value>
   </data>

@@ -1,7 +1,7 @@
 <Project>
   <PropertyGroup>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
-    <CaptureKitPackageVersion>1.0.3</CaptureKitPackageVersion>
+    <CaptureKitPackageVersion>1.0.5</CaptureKitPackageVersion>
   </PropertyGroup>
   <ItemGroup>
     <PackageVersion Include="CaptureKit.Abstractions" Version="$(CaptureKitPackageVersion)" />

@@ -10,9 +10,13 @@ internal sealed class FakeVideoCaptureWorkflow : IVideoCaptureWorkflow
     public event EventHandler<VideoFile>? NewVideoCaptured;
     public event EventHandler? RecordingStarted;
     public event EventHandler<bool>? DesktopAudioStateChanged;
+    public event EventHandler<int>? DesktopAudioVolumeChanged;
+    public event EventHandler<bool>? AudioInputMutedStateChanged;
+    public event EventHandler<string?>? AudioInputSourceChanged;
     public event EventHandler<bool>? PausedStateChanged;
 
     public bool IsDesktopAudioEnabled { get; set; }
+    public int DesktopAudioVolumePercentage { get; set; } = 100;
     public bool IsAudioInputMuted { get; set; }
     public int AudioInputVolumePercentage { get; set; } = 100;
     public bool IsRecording { get; set; }
@@ -78,10 +82,17 @@ internal sealed class FakeVideoCaptureWorkflow : IVideoCaptureWorkflow
         DesktopAudioStateChanged?.Invoke(this, value);
     }
 
+    public void SetDesktopAudioVolume(int volumePercentage)
+    {
+        DesktopAudioVolumePercentage = volumePercentage;
+        DesktopAudioVolumeChanged?.Invoke(this, volumePercentage);
+    }
+
     public void SetIsAudioInputMuted(bool value)
     {
         IsAudioInputMuted = value;
         LastAudioInputMuted = value;
+        AudioInputMutedStateChanged?.Invoke(this, value);
     }
 
     public void SelectAudioInputSource(string? sourceId)
@@ -89,16 +100,12 @@ internal sealed class FakeVideoCaptureWorkflow : IVideoCaptureWorkflow
         SelectedAudioInputSourceId = sourceId;
         LastSelectedAudioInputSourceId = sourceId;
         SelectAudioInputSourceWasCalled = true;
+        AudioInputSourceChanged?.Invoke(this, sourceId);
     }
 
     public void SetAudioInputVolume(int volumePercentage)
     {
         AudioInputVolumePercentage = volumePercentage;
-    }
-
-    public void ToggleDesktopAudioCapture(bool enabled)
-    {
-        LastDesktopAudioEnabled = enabled;
     }
 
     public void ToggleIsPaused(bool isPaused)

@@ -61,7 +61,8 @@ public partial class WindowsScreenRecorder : IScreenRecorder
                     options.VideoBitrate,
                     options.AudioBitrate,
                     options.AudioInputSourceId,
-                    options.AudioInputVolumePercentage);
+                    options.AudioInputVolumePercentage,
+                    SystemAudioVolumePercentage: options.DesktopAudioVolumePercentage);
 
                 _session = _videoCaptureService.CreateSession(captureOptions);
                 _session.FrameCaptured += OnFrameCaptured;
@@ -120,6 +121,9 @@ public partial class WindowsScreenRecorder : IScreenRecorder
 
     public void SetAudioCaptureEnabled(bool enabled)
         => ExecuteOnSession(session => session.SetAudioCaptureEnabled(enabled), "update audio capture state");
+
+    public void SetDesktopAudioVolume(int volumePercentage)
+        => ExecuteOnSession(session => session.SetSystemAudioVolume(volumePercentage), "update local audio volume");
 
     public void SetAudioInputSource(string? sourceId)
         => ExecuteOnSession(session => session.SetAudioInputSource(sourceId), "update audio input source");

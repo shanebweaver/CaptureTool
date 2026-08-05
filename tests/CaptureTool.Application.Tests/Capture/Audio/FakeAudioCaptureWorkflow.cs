@@ -10,6 +10,7 @@ internal sealed class FakeAudioCaptureWorkflow : IAudioCaptureWorkflow
     public event EventHandler<AudioCaptureState>? CaptureStateChanged;
     public event EventHandler<bool>? MutedStateChanged;
     public event EventHandler<bool>? DesktopAudioStateChanged;
+    public event EventHandler<string?>? AudioInputSourceChanged;
     public event EventHandler<AudioFile>? NewAudioCaptured;
     public event EventHandler<AudioCaptureLevel>? AudioLevelCaptured
     {
@@ -73,6 +74,7 @@ internal sealed class FakeAudioCaptureWorkflow : IAudioCaptureWorkflow
     {
         SelectAudioInputSourceCallCount++;
         SelectedAudioInputSourceId = sourceId;
+        AudioInputSourceChanged?.Invoke(this, sourceId);
     }
 
     public void ToggleLocalAudio()
