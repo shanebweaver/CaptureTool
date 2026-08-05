@@ -3,7 +3,7 @@ using CaptureTool.Presentation.Windows.WinUI.Utils;
 
 namespace CaptureTool.Presentation.Windows.WinUI.Xaml.Windows;
 
-internal sealed partial class MainWindowHost : INavigationHandler, IDisposable
+internal sealed partial class MainWindowHost : IDisposable
 {
     private MainWindow? _mainWindow;
 
@@ -73,8 +73,11 @@ internal sealed partial class MainWindowHost : INavigationHandler, IDisposable
         _mainWindow = null;
     }
 
-    public void HandleNavigationRequest(INavigationRequest request)
+    public Task<NavigationResult> HandleNavigationRequestAsync(
+        INavigationRequest request,
+        CancellationToken cancellationToken = default)
     {
-        _mainWindow?.HandleNavigationRequest(request);
+        Initialize();
+        return _mainWindow!.HandleNavigationRequestAsync(request, cancellationToken);
     }
 }

@@ -76,6 +76,7 @@ public sealed class MediaEditUseCaseTests
         var audioFile = new AudioFile(audioPath);
         var videoFile = new VideoFile(@"C:\capture.mp4");
         var navigation = new Mock<INavigationService>();
+        TestNavigationService.AcceptAll(navigation);
         var audioCaptureNavigationGuard = new AllowAudioCaptureNavigationGuard();
         INavigationCoordinator coordinator = TestNavigationCoordinator.Create(
             navigation.Object,
@@ -93,8 +94,8 @@ public sealed class MediaEditUseCaseTests
         await audioUseCase.ExecuteAsync(new OpenAudioEditPageRequest(audioFile), TestContext.CancellationToken);
         await videoUseCase.ExecuteAsync(new OpenVideoEditPageRequest(videoFile), TestContext.CancellationToken);
 
-        navigation.Verify(service => service.Navigate(NavigationRoute.AudioEdit, audioFile, false), Times.Once);
-        navigation.Verify(service => service.Navigate(NavigationRoute.VideoEdit, videoFile, false), Times.Once);
+        navigation.Verify(service => service.NavigateAsync(NavigationRoute.AudioEdit, audioFile, false, It.IsAny<CancellationToken>()), Times.Once);
+        navigation.Verify(service => service.NavigateAsync(NavigationRoute.VideoEdit, videoFile, false, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [TestMethod]

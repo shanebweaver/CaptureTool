@@ -59,6 +59,7 @@ public sealed class SimpleApplicationUseCaseTests
     public async Task NavigationUseCases_NavigateToExpectedRoutes()
     {
         var navigation = new Mock<INavigationService>();
+        TestNavigationService.AcceptAll(navigation);
         var editGuard = new Mock<IEditSessionGuard>();
         editGuard
             .Setup(service => service.CanLeaveCurrentSessionAsync(It.IsAny<CancellationToken>()))
@@ -83,19 +84,22 @@ public sealed class SimpleApplicationUseCaseTests
         await new OpenImageEditPageUseCase(coordinator, TestUseCaseExecutor.Instance)
             .ExecuteAsync(new OpenImageEditPageRequest(imageFile), TestContext.CancellationToken);
 
-        navigation.Verify(service => service.Navigate(NavigationRoute.About, null, false), Times.Once);
-        navigation.Verify(service => service.Navigate(NavigationRoute.Home, null, true), Times.Once);
-        navigation.Verify(service => service.Navigate(NavigationRoute.Store, null, false), Times.Once);
-        navigation.Verify(service => service.Navigate(NavigationRoute.Settings, null, false), Times.Once);
-        navigation.Verify(service => service.Navigate(NavigationRoute.AudioCapture, null, false), Times.Once);
-        navigation.Verify(service => service.Navigate(NavigationRoute.ImageEdit, imageFile, false), Times.Once);
+        navigation.Verify(service => service.NavigateAsync(NavigationRoute.About, null, false, It.IsAny<CancellationToken>()), Times.Once);
+        navigation.Verify(service => service.NavigateAsync(NavigationRoute.Home, null, true, It.IsAny<CancellationToken>()), Times.Once);
+        navigation.Verify(service => service.NavigateAsync(NavigationRoute.Store, null, false, It.IsAny<CancellationToken>()), Times.Once);
+        navigation.Verify(service => service.NavigateAsync(NavigationRoute.Settings, null, false, It.IsAny<CancellationToken>()), Times.Once);
+        navigation.Verify(service => service.NavigateAsync(NavigationRoute.AudioCapture, null, false, It.IsAny<CancellationToken>()), Times.Once);
+        navigation.Verify(service => service.NavigateAsync(NavigationRoute.ImageEdit, imageFile, false, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [TestMethod]
     public async Task LeavePageUseCases_WhenBackFails_NavigateHomeAndClearHistory()
     {
         var navigation = new Mock<INavigationService>();
-        navigation.Setup(service => service.TryGoBack()).Returns(false);
+        TestNavigationService.AcceptAll(navigation);
+        navigation
+            .Setup(service => service.TryGoBackAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(NavigationResult.NoChange);
         INavigationCoordinator coordinator = TestNavigationCoordinator.Create(navigation.Object);
 
         await new LeaveAboutPageUseCase(coordinator, TestUseCaseExecutor.Instance)
@@ -103,7 +107,9 @@ public sealed class SimpleApplicationUseCaseTests
         await new LeaveStorePageUseCase(coordinator, TestUseCaseExecutor.Instance)
             .ExecuteAsync(new LeaveStorePageRequest(), TestContext.CancellationToken);
 
-        navigation.Verify(service => service.Navigate(NavigationRoute.Home, null, true), Times.Exactly(2));
+        navigation.Verify(
+            service => service.NavigateAsync(NavigationRoute.Home, null, true, It.IsAny<CancellationToken>()),
+            Times.Exactly(2));
     }
 
     [TestMethod]
@@ -159,6 +165,7 @@ public sealed class SimpleApplicationUseCaseTests
     {
         var audioCapture = new FakeAudioCaptureWorkflow();
         var navigation = new Mock<INavigationService>();
+        TestNavigationService.AcceptAll(navigation);
         var audioFile = new AudioFile("capture.wav");
         audioCapture.AudioFile = audioFile;
 
@@ -175,7 +182,41 @@ public sealed class SimpleApplicationUseCaseTests
         Assert.AreEqual(1, audioCapture.PauseCallCount);
         Assert.AreEqual(1, audioCapture.StopCallCount);
         Assert.AreEqual(1, audioCapture.ToggleLocalAudioCallCount);
-        navigation.Verify(service => service.Navigate(NavigationRoute.AudioEdit, audioFile, false), Times.Once);
+        navigation.Verify(
+            service => service.NavigateAsync(
+                NavigationRoute.AudioEdit,
+                audioFile,
+                false,
+                TestContext.CancellationToken),
+            Times.Once);
+    }
+
+    [TestMethod]
+    public async Task StopAudioCaptureUseCase_WhenHostRejects_ReportsFailure()
+    {
+        var audioCapture = new FakeAudioCaptureWorkflow
+        {
+            AudioFile = new AudioFile("capture.wav")
+        };
+        var navigation = new Mock<INavigationService>();
+        navigation
+            .Setup(service => service.NavigateAsync(
+                NavigationRoute.AudioEdit,
+                audioCapture.AudioFile,
+                false,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(NavigationResult.Rejected);
+        var useCase = new StopAudioCaptureUseCase(
+            audioCapture,
+            navigation.Object,
+            TestUseCaseExecutor.Instance);
+
+        StopAudioCaptureResponse response = (await useCase.ExecuteAsync(
+            new StopAudioCaptureRequest(),
+            TestContext.CancellationToken)).Value!;
+
+        Assert.IsFalse(response.Succeeded);
+        Assert.AreEqual(1, audioCapture.StopCallCount);
     }
 
     [TestMethod]

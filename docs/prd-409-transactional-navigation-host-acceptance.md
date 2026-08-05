@@ -2,7 +2,7 @@
 
 - Issue: [#409](https://github.com/shanebweaver/CaptureTool/issues/409)
 - Severity: High
-- Status: Ready for implementation
+- Status: Implemented
 - Affected features: `APP-02`, `APP-07`, `CAP-05`
 
 ## Summary
@@ -112,10 +112,10 @@ State queries must remain safe while an asynchronous transition is pending and m
 
 ## Acceptance criteria
 
-- [ ] Declining active-video cancellation leaves the capture overlay route committed and its controls eligible.
-- [ ] History, telemetry, and `Navigated` commit only after host acceptance.
-- [ ] Rejection, cancellation, and host failure leave the last committed navigation state intact.
-- [ ] Navigation exceptions flow through awaited use-case/activation error boundaries.
-- [ ] Navigate, back, and back-to operations use the same transactional contract.
-- [ ] #408 leave guards and transition serialization remain intact.
-- [ ] Existing non-UI tests pass and the WinUI x64 Debug project builds.
+- [x] Declining active-video cancellation leaves the capture overlay route committed and its controls eligible.
+- [x] History, telemetry, and `Navigated` commit only after host acceptance.
+- [x] Rejection, cancellation, and host failure leave the last committed navigation state intact.
+- [x] Navigation exceptions flow through awaited use-case/activation error boundaries.
+- [x] Navigate, back, and back-to operations use the same transactional contract.
+- [x] #408 leave guards and transition serialization remain intact.
+- [x] Existing non-UI tests pass and the WinUI x64 Debug project builds.

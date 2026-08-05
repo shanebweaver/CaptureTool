@@ -20,7 +20,6 @@ internal partial class AppNavigationHandler : INavigationHandler, IWindowHandleP
 
     private readonly IShutdownHandler _shutdownHandler;
     private readonly ICancelVideoCaptureUseCase _cancelVideoCaptureCommand;
-    private readonly INavigationService _navigationService;
     private readonly IShowMainWindowUseCase _showMainWindowCommand;
 
     private readonly SemaphoreSlim _semaphoreNavigation = new(1, 1);
@@ -33,47 +32,54 @@ internal partial class AppNavigationHandler : INavigationHandler, IWindowHandleP
     public AppNavigationHandler(
         IShutdownHandler shutdownHandler,
         ICancelVideoCaptureUseCase cancelVideoCaptureCommand,
-        INavigationService navigationService,
         IShowMainWindowUseCase showMainWindowCommand)
     {
         _shutdownHandler = shutdownHandler;
         _cancelVideoCaptureCommand = cancelVideoCaptureCommand;
-        _navigationService = navigationService;
         _showMainWindowCommand = showMainWindowCommand;
     }
 
-    public async void HandleNavigationRequest(INavigationRequest request)
+    public async Task<NavigationResult> HandleNavigationRequestAsync(
+        INavigationRequest request,
+        CancellationToken cancellationToken = default)
     {
-        await _semaphoreNavigation.WaitAsync();
+        await _semaphoreNavigation.WaitAsync(cancellationToken);
 
         try
         {
             if (CaptureToolNavigationRouteHelper.IsMainWindowRoute(request.Route))
             {
-                switch (_activeHost)
+                UXHost previousHost = _activeHost;
+                if (previousHost == UXHost.CaptureOverlay &&
+                    !await TryCancelVideoCaptureAsync(cancellationToken))
                 {
-                    case UXHost.MainWindow:
-                        break;
-
-                    case UXHost.SelectionOverlay:
-                        await DisposeSelectionOverlayHostAsync();
-                        _mainWindowHost.ExcludeWindowFromCapture(false);
-                        break;
-
-                    case UXHost.CaptureOverlay:
-                        if (!await TryCancelVideoCaptureAsync())
-                        {
-                            return;
-                        }
-
-                        await DisposeCaptureOverlayHostAsync();
-                        _mainWindowHost.ExcludeWindowFromCapture(false);
-                        break;
+                    return NavigationResult.Rejected;
                 }
 
+                NavigationResult mainWindowResult = await _mainWindowHost.HandleNavigationRequestAsync(
+                    request,
+                    cancellationToken);
+                if (mainWindowResult == NavigationResult.Rejected)
+                {
+                    return mainWindowResult;
+                }
+
+                if (previousHost == UXHost.SelectionOverlay)
+                {
+                    await DisposeSelectionOverlayHostAsync();
+                }
+                else if (previousHost == UXHost.CaptureOverlay)
+                {
+                    await DisposeCaptureOverlayHostAsync();
+                }
+
+                _mainWindowHost.ExcludeWindowFromCapture(false);
                 _mainWindowHost.Show();
-                _mainWindowHost.HandleNavigationRequest(request);
+
+                // NoChange means the requested page was already visible in the hidden main window.
+                // Switching back from an overlay still accepts the application-level transition.
                 _activeHost = UXHost.MainWindow;
+                return NavigationResult.Accepted;
             }
             else if (request.Route is NavigationRoute imageRoute && imageRoute == NavigationRoute.SelectionOverlay)
             {
@@ -87,17 +93,17 @@ internal partial class AppNavigationHandler : INavigationHandler, IWindowHandleP
                     case UXHost.MainWindow:
                         _mainWindowHost.ExcludeWindowFromCapture(true);
                         _mainWindowHost.Hide();
-                        await Task.Delay(200);
+                        await Task.Delay(200, cancellationToken);
                         break;
 
                     case UXHost.SelectionOverlay:
                         _selectionOverlayHost?.UpdateOptions(options);
-                        return;
+                        return NavigationResult.Accepted;
 
                     case UXHost.CaptureOverlay:
-                        if (!await TryCancelVideoCaptureAsync())
+                        if (!await TryCancelVideoCaptureAsync(cancellationToken))
                         {
-                            return;
+                            return NavigationResult.Rejected;
                         }
 
                         await DisposeCaptureOverlayHostAsync();
@@ -107,6 +113,7 @@ internal partial class AppNavigationHandler : INavigationHandler, IWindowHandleP
                 // Create fresh instance using factory pattern
                 await CreateSelectionOverlayHostAsync(options);
                 _activeHost = UXHost.SelectionOverlay;
+                return NavigationResult.Accepted;
             }
             else if (request.Route is NavigationRoute videoRoute && videoRoute == NavigationRoute.CaptureOverlay)
             {
@@ -120,7 +127,7 @@ internal partial class AppNavigationHandler : INavigationHandler, IWindowHandleP
                     case UXHost.MainWindow:
                         _mainWindowHost.ExcludeWindowFromCapture(true);
                         _mainWindowHost.Hide();
-                        await Task.Delay(200);
+                        await Task.Delay(200, cancellationToken);
                         break;
 
                     case UXHost.SelectionOverlay:
@@ -128,12 +135,13 @@ internal partial class AppNavigationHandler : INavigationHandler, IWindowHandleP
                         break;
 
                     case UXHost.CaptureOverlay:
-                        return;
+                        return NavigationResult.Rejected;
                 }
 
                 // Create fresh instance using factory pattern
                 await CreateCaptureOverlayHostAsync(args);
                 _activeHost = UXHost.CaptureOverlay;
+                return NavigationResult.Accepted;
             }
             else
             {
@@ -146,9 +154,11 @@ internal partial class AppNavigationHandler : INavigationHandler, IWindowHandleP
         }
     }
 
-    private async Task<bool> TryCancelVideoCaptureAsync()
+    private async Task<bool> TryCancelVideoCaptureAsync(CancellationToken cancellationToken)
     {
-        var response = await _cancelVideoCaptureCommand.ExecuteAsync(new CancelVideoCaptureRequest());
+        var response = await _cancelVideoCaptureCommand.ExecuteAsync(
+            new CancelVideoCaptureRequest(),
+            cancellationToken);
         return response.Value?.Succeeded == true;
     }
 

@@ -13,6 +13,7 @@ public sealed class NavigationCoordinatorTests
     public async Task NavigateAsync_WhenGuardsAccept_DispatchesNavigation()
     {
         var navigation = new Mock<INavigationService>();
+        TestNavigationService.AcceptAll(navigation);
         var editGuard = CreateGuard<IEditSessionGuard>(
             guard => guard.CanLeaveCurrentSessionAsync(It.IsAny<CancellationToken>()));
         var audioGuard = CreateGuard<IAudioCaptureNavigationGuard>(
@@ -25,7 +26,9 @@ public sealed class NavigationCoordinatorTests
             cancellationToken: TestContext.CancellationToken);
 
         Assert.IsTrue(navigated);
-        navigation.Verify(service => service.Navigate(NavigationRoute.Home, null, true), Times.Once);
+        navigation.Verify(
+            service => service.NavigateAsync(NavigationRoute.Home, null, true, TestContext.CancellationToken),
+            Times.Once);
         editGuard.Verify(
             guard => guard.CanLeaveCurrentSessionAsync(TestContext.CancellationToken),
             Times.Once);
@@ -38,6 +41,7 @@ public sealed class NavigationCoordinatorTests
     public async Task NavigateAsync_WhenEditGuardRejects_DoesNotEvaluateAudioOrNavigate()
     {
         var navigation = new Mock<INavigationService>();
+        TestNavigationService.AcceptAll(navigation);
         var editGuard = new Mock<IEditSessionGuard>();
         editGuard
             .Setup(guard => guard.CanLeaveCurrentSessionAsync(It.IsAny<CancellationToken>()))
@@ -54,7 +58,11 @@ public sealed class NavigationCoordinatorTests
             guard => guard.CanNavigateAwayFromActiveCaptureAsync(It.IsAny<CancellationToken>()),
             Times.Never);
         navigation.Verify(
-            service => service.Navigate(It.IsAny<object>(), It.IsAny<object?>(), It.IsAny<bool>()),
+            service => service.NavigateAsync(
+                It.IsAny<object>(),
+                It.IsAny<object?>(),
+                It.IsAny<bool>(),
+                It.IsAny<CancellationToken>()),
             Times.Never);
     }
 
@@ -62,6 +70,7 @@ public sealed class NavigationCoordinatorTests
     public async Task NavigateAsync_WhenAudioGuardRejects_DoesNotNavigate()
     {
         var navigation = new Mock<INavigationService>();
+        TestNavigationService.AcceptAll(navigation);
         var editGuard = CreateGuard<IEditSessionGuard>(
             guard => guard.CanLeaveCurrentSessionAsync(It.IsAny<CancellationToken>()));
         var audioGuard = new Mock<IAudioCaptureNavigationGuard>();
@@ -76,8 +85,43 @@ public sealed class NavigationCoordinatorTests
 
         Assert.IsFalse(navigated);
         navigation.Verify(
-            service => service.Navigate(It.IsAny<object>(), It.IsAny<object?>(), It.IsAny<bool>()),
+            service => service.NavigateAsync(
+                It.IsAny<object>(),
+                It.IsAny<object?>(),
+                It.IsAny<bool>(),
+                It.IsAny<CancellationToken>()),
             Times.Never);
+    }
+
+    [TestMethod]
+    public async Task NavigateAsync_WhenHostRejects_ReturnsFalse()
+    {
+        var navigation = new Mock<INavigationService>();
+        TestNavigationService.AcceptAll(navigation);
+        navigation
+            .Setup(service => service.NavigateAsync(
+                NavigationRoute.Store,
+                null,
+                false,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(NavigationResult.Rejected);
+        var editGuard = CreateGuard<IEditSessionGuard>(
+            guard => guard.CanLeaveCurrentSessionAsync(It.IsAny<CancellationToken>()));
+        var audioGuard = CreateGuard<IAudioCaptureNavigationGuard>(
+            guard => guard.CanNavigateAwayFromActiveCaptureAsync(It.IsAny<CancellationToken>()));
+        var coordinator = new NavigationCoordinator(navigation.Object, editGuard.Object, audioGuard.Object);
+
+        bool navigated = await coordinator.NavigateAsync(
+            NavigationRoute.Store,
+            cancellationToken: TestContext.CancellationToken);
+
+        Assert.IsFalse(navigated);
+        editGuard.Verify(
+            guard => guard.CanLeaveCurrentSessionAsync(TestContext.CancellationToken),
+            Times.Once);
+        audioGuard.Verify(
+            guard => guard.CanNavigateAwayFromActiveCaptureAsync(TestContext.CancellationToken),
+            Times.Once);
     }
 
     [TestMethod]
@@ -87,6 +131,7 @@ public sealed class NavigationCoordinatorTests
         currentRequest.SetupGet(request => request.Route).Returns(NavigationRoute.ImageEdit);
         currentRequest.SetupGet(request => request.Parameter).Returns("capture.png");
         var navigation = new Mock<INavigationService>();
+        TestNavigationService.AcceptAll(navigation);
         navigation.SetupGet(service => service.CurrentRequest).Returns(currentRequest.Object);
         var editGuard = new Mock<IEditSessionGuard>();
         var audioGuard = new Mock<IAudioCaptureNavigationGuard>();
@@ -102,7 +147,11 @@ public sealed class NavigationCoordinatorTests
             guard => guard.CanLeaveCurrentSessionAsync(It.IsAny<CancellationToken>()),
             Times.Never);
         navigation.Verify(
-            service => service.Navigate(It.IsAny<object>(), It.IsAny<object?>(), It.IsAny<bool>()),
+            service => service.NavigateAsync(
+                It.IsAny<object>(),
+                It.IsAny<object?>(),
+                It.IsAny<bool>(),
+                It.IsAny<CancellationToken>()),
             Times.Never);
     }
 
@@ -110,6 +159,7 @@ public sealed class NavigationCoordinatorTests
     public async Task ExecuteTransitionAsync_NestedNavigation_EvaluatesLeavePolicyOnce()
     {
         var navigation = new Mock<INavigationService>();
+        TestNavigationService.AcceptAll(navigation);
         var editGuard = CreateGuard<IEditSessionGuard>(
             guard => guard.CanLeaveCurrentSessionAsync(It.IsAny<CancellationToken>()));
         var audioGuard = CreateGuard<IAudioCaptureNavigationGuard>(
@@ -127,7 +177,9 @@ public sealed class NavigationCoordinatorTests
         audioGuard.Verify(
             guard => guard.CanNavigateAwayFromActiveCaptureAsync(TestContext.CancellationToken),
             Times.Once);
-        navigation.Verify(service => service.Navigate(NavigationRoute.VideoEdit, null, false), Times.Once);
+        navigation.Verify(
+            service => service.NavigateAsync(NavigationRoute.VideoEdit, null, false, TestContext.CancellationToken),
+            Times.Once);
     }
 
     [TestMethod]
@@ -152,6 +204,7 @@ public sealed class NavigationCoordinatorTests
         var audioGuard = CreateGuard<IAudioCaptureNavigationGuard>(
             guard => guard.CanNavigateAwayFromActiveCaptureAsync(It.IsAny<CancellationToken>()));
         var navigation = new Mock<INavigationService>();
+        TestNavigationService.AcceptAll(navigation);
         var coordinator = new NavigationCoordinator(navigation.Object, editGuard.Object, audioGuard.Object);
 
         Task<bool> first = coordinator.NavigateAsync(NavigationRoute.Home);
@@ -178,13 +231,16 @@ public sealed class NavigationCoordinatorTests
         var audioGuard = CreateGuard<IAudioCaptureNavigationGuard>(
             guard => guard.CanNavigateAwayFromActiveCaptureAsync(It.IsAny<CancellationToken>()));
         var navigation = new Mock<INavigationService>();
+        TestNavigationService.AcceptAll(navigation);
         var coordinator = new NavigationCoordinator(navigation.Object, editGuard.Object, audioGuard.Object);
 
         await Assert.ThrowsExactlyAsync<InvalidOperationException>(
             () => coordinator.NavigateAsync(NavigationRoute.Home));
 
         Assert.IsTrue(await coordinator.NavigateAsync(NavigationRoute.Store));
-        navigation.Verify(service => service.Navigate(NavigationRoute.Store, null, false), Times.Once);
+        navigation.Verify(
+            service => service.NavigateAsync(NavigationRoute.Store, null, false, It.IsAny<CancellationToken>()),
+            Times.Once);
     }
 
     [TestMethod]
@@ -200,13 +256,16 @@ public sealed class NavigationCoordinatorTests
         var audioGuard = CreateGuard<IAudioCaptureNavigationGuard>(
             guard => guard.CanNavigateAwayFromActiveCaptureAsync(It.IsAny<CancellationToken>()));
         var navigation = new Mock<INavigationService>();
+        TestNavigationService.AcceptAll(navigation);
         var coordinator = new NavigationCoordinator(navigation.Object, editGuard.Object, audioGuard.Object);
 
         await Assert.ThrowsExactlyAsync<TaskCanceledException>(
             () => coordinator.NavigateAsync(NavigationRoute.Home));
 
         Assert.IsTrue(await coordinator.NavigateAsync(NavigationRoute.Store));
-        navigation.Verify(service => service.Navigate(NavigationRoute.Store, null, false), Times.Once);
+        navigation.Verify(
+            service => service.NavigateAsync(NavigationRoute.Store, null, false, It.IsAny<CancellationToken>()),
+            Times.Once);
     }
 
     private static Mock<TGuard> CreateGuard<TGuard>(System.Linq.Expressions.Expression<Func<TGuard, Task<bool>>> expression)
