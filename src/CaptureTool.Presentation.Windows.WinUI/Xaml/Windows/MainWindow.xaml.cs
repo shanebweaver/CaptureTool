@@ -80,7 +80,6 @@ public sealed partial class MainWindow : Window
         Activated += OnActivated;
         AppWindow.Closing += OnAppWindowClosing;
         Closed += OnClosed;
-        ViewModel.NavigationRequested += OnViewModelNavigationRequested;
         ViewModel.PropertyChanged += OnViewModelPropertyChanged;
 
         UpdateRequestedAppTheme();
@@ -154,13 +153,20 @@ public sealed partial class MainWindow : Window
         }
 
         _uiTestLaunchNavigationHandled = true;
-        DispatcherQueue.TryEnqueue(() =>
+        DispatcherQueue.TryEnqueue(async () =>
         {
-            INavigationService navigationService = App.Current.ServiceProvider.GetService<INavigationService>();
-            navigationService.Navigate(
-                NavigationRoute.ImageEdit,
-                new ImageFile(options.ImageFilePath),
-                true);
+            try
+            {
+                INavigationService navigationService = App.Current.ServiceProvider.GetService<INavigationService>();
+                await navigationService.NavigateAsync(
+                    NavigationRoute.ImageEdit,
+                    new ImageFile(options.ImageFilePath),
+                    true);
+            }
+            catch (Exception ex)
+            {
+                _logService.LogException(ex, "Failed to navigate to the UI test image.");
+            }
         });
     }
 
@@ -339,7 +345,6 @@ public sealed partial class MainWindow : Window
         _notificationTimer.Stop();
         _notificationTimer.Tick -= NotificationTimer_Tick;
 
-        ViewModel.NavigationRequested -= OnViewModelNavigationRequested;
         ViewModel.PropertyChanged -= OnViewModelPropertyChanged;
 
         ViewModel.Dispose();
@@ -375,40 +380,85 @@ public sealed partial class MainWindow : Window
         }
     }
 
-    public void HandleNavigationRequest(INavigationRequest request)
+    public async Task<NavigationResult> HandleNavigationRequestAsync(
+        INavigationRequest request,
+        CancellationToken cancellationToken = default)
     {
-        bool navigationRequested = ViewModel.HandleNavigationRequest(request);
-        if (!navigationRequested)
+        if (ViewModel.IsCurrentNavigationRequest(request))
         {
             DispatcherQueue.TryEnqueue(ResumeMediaPlayback);
+            return NavigationResult.NoChange;
         }
+
+        var completion = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        bool enqueued = DispatcherQueue.TryEnqueue(() =>
+        {
+            try
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                Type pageType = PageLocator.GetPageType(request.Route);
+                int backTargetIndex = request.IsBackNavigation
+                    ? FindBackTargetIndex(pageType, request.Parameter)
+                    : -1;
+                if (backTargetIndex >= 0)
+                {
+                    while (NavigationFrame.BackStack.Count - 1 > backTargetIndex)
+                    {
+                        NavigationFrame.BackStack.RemoveAt(NavigationFrame.BackStack.Count - 1);
+                    }
+
+                    NavigationFrame.GoBack();
+                    NavigationFrame.ForwardStack.Clear();
+                    GC.Collect();
+                }
+                else
+                {
+                    NavigationFrame.Navigate(pageType, request.Parameter);
+                }
+
+                if (request.ClearHistory)
+                {
+                    NavigationFrame.ForwardStack.Clear();
+                    NavigationFrame.BackStack.Clear();
+                    GC.Collect();
+                }
+
+                ResumeMediaPlayback();
+                completion.SetResult();
+            }
+            catch (OperationCanceledException ex)
+            {
+                completion.SetCanceled(ex.CancellationToken);
+            }
+            catch (Exception ex)
+            {
+                completion.SetException(ex);
+            }
+        });
+
+        if (!enqueued)
+        {
+            return NavigationResult.Rejected;
+        }
+
+        await completion.Task;
+        ViewModel.CommitNavigationRequest(request);
+        return NavigationResult.Accepted;
     }
 
-    private void OnViewModelNavigationRequested(object? sender, INavigationRequest navigationRequest)
+    private int FindBackTargetIndex(Type pageType, object? parameter)
     {
-        DispatcherQueue.TryEnqueue(() =>
+        for (int i = NavigationFrame.BackStack.Count - 1; i >= 0; i--)
         {
-            Type pageType = PageLocator.GetPageType(navigationRequest.Route);
-            if (navigationRequest.IsBackNavigation && NavigationFrame.CanGoBack)
+            var entry = NavigationFrame.BackStack[i];
+            if (entry.SourcePageType == pageType && Equals(entry.Parameter, parameter))
             {
-                NavigationFrame.GoBack();
-                NavigationFrame.ForwardStack.Clear();
-                GC.Collect();
+                return i;
             }
-            else
-            {
-                NavigationFrame.Navigate(pageType, navigationRequest.Parameter);
-            }
+        }
 
-            if (navigationRequest.ClearHistory)
-            {
-                NavigationFrame.ForwardStack.Clear();
-                NavigationFrame.BackStack.Clear();
-                GC.Collect();
-            }
-
-            ResumeMediaPlayback();
-        });
+        return -1;
     }
 
     private void RestoreAppWindowSizeAndPosition()

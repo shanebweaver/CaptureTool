@@ -140,14 +140,19 @@ public sealed class SettingsPageUseCaseTests
     public async Task LeaveSettingsPageUseCase_WhenCannotGoBack_NavigatesHomeAndClearsHistory()
     {
         var navigation = new Mock<INavigationService>();
-        navigation.Setup(service => service.TryGoBack()).Returns(false);
+        TestNavigationService.AcceptAll(navigation);
+        navigation
+            .Setup(service => service.TryGoBackAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(NavigationResult.NoChange);
         INavigationCoordinator coordinator = TestNavigationCoordinator.Create(navigation.Object);
         var useCase = new LeaveSettingsPageUseCase(coordinator, TestUseCaseExecutor.Instance);
 
         LeaveSettingsPageResponse response = (await useCase.ExecuteAsync(new LeaveSettingsPageRequest(), TestContext.CancellationToken)).Value!;
 
         Assert.IsTrue(response.Succeeded);
-        navigation.Verify(service => service.Navigate(NavigationRoute.Home, null, true), Times.Once);
+        navigation.Verify(
+            service => service.NavigateAsync(NavigationRoute.Home, null, true, It.IsAny<CancellationToken>()),
+            Times.Once);
     }
 
     [TestMethod]

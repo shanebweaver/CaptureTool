@@ -83,7 +83,11 @@ public sealed class ActivationHandlerTests
             useCase => useCase.ExecuteAsync(It.IsAny<ShowHomePageRequest>(), It.IsAny<CancellationToken>()),
             Times.Never);
         fixture.NavigationService.Verify(
-            service => service.Navigate(target.Route, target.Parameter, target.ClearHistory),
+            service => service.NavigateAsync(
+                target.Route,
+                target.Parameter,
+                target.ClearHistory,
+                It.IsAny<CancellationToken>()),
             Times.Once);
     }
 
@@ -203,13 +207,18 @@ public sealed class ActivationHandlerTests
             new Uri("ms-screenclip://capture?source=PrintScreen"));
 
         navigation.Verify(
-            service => service.Navigate(
+            service => service.NavigateAsync(
                 NavigationRoute.SelectionOverlay,
                 It.Is<CaptureOptions>(options => options.CaptureMode == CaptureMode.Image),
-                false),
+                false,
+                It.IsAny<CancellationToken>()),
             shouldNavigate ? Times.Once : Times.Never);
         navigation.Verify(
-            service => service.Navigate(NavigationRoute.Home, null, true),
+            service => service.NavigateAsync(
+                NavigationRoute.Home,
+                null,
+                true,
+                It.IsAny<CancellationToken>()),
             shouldNavigate ? Times.Once : Times.Never);
         session.Verify(
             value => value.SaveToSourceAsync(It.IsAny<CancellationToken>()),
@@ -236,13 +245,18 @@ public sealed class ActivationHandlerTests
             new Uri("ms-screenclip://capture?source=ScreenRecorderHotKey"));
 
         navigation.Verify(
-            service => service.Navigate(
+            service => service.NavigateAsync(
                 NavigationRoute.SelectionOverlay,
                 It.Is<CaptureOptions>(options => options.CaptureMode == CaptureMode.Video),
-                false),
+                false,
+                It.IsAny<CancellationToken>()),
             shouldNavigate ? Times.Once : Times.Never);
         navigation.Verify(
-            service => service.Navigate(NavigationRoute.Home, null, true),
+            service => service.NavigateAsync(
+                NavigationRoute.Home,
+                null,
+                true,
+                It.IsAny<CancellationToken>()),
             shouldNavigate ? Times.Once : Times.Never);
         session.Verify(
             value => value.SaveAsync(It.IsAny<CancellationToken>()),
@@ -261,7 +275,11 @@ public sealed class ActivationHandlerTests
             new Uri("ms-screenclip://capture?source=Other"));
 
         navigation.Verify(
-            service => service.Navigate(It.IsAny<object>(), It.IsAny<object?>(), It.IsAny<bool>()),
+            service => service.NavigateAsync(
+                It.IsAny<object>(),
+                It.IsAny<object?>(),
+                It.IsAny<bool>(),
+                It.IsAny<CancellationToken>()),
             Times.Never);
     }
 
@@ -280,7 +298,11 @@ public sealed class ActivationHandlerTests
         await handler.HandleLaunchActivationAsync();
 
         navigation.Verify(
-            service => service.Navigate(It.IsAny<object>(), It.IsAny<object?>(), It.IsAny<bool>()),
+            service => service.NavigateAsync(
+                It.IsAny<object>(),
+                It.IsAny<object?>(),
+                It.IsAny<bool>(),
+                It.IsAny<CancellationToken>()),
             Times.Never);
     }
 
@@ -318,6 +340,7 @@ public sealed class ActivationHandlerTests
             .Setup(guard => guard.CanNavigateAwayFromActiveCaptureAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
         var navigation = new Mock<INavigationService>();
+        TestNavigationService.AcceptAll(navigation);
         var coordinator = new NavigationCoordinator(navigation.Object, editGuard, audioGuard.Object);
         var openSelection = new OpenSelectionOverlayUseCase(coordinator, activeSession, TestUseCaseExecutor.Instance);
         var showHome = new ShowHomePageUseCase(coordinator, TestUseCaseExecutor.Instance);
@@ -342,6 +365,7 @@ public sealed class ActivationHandlerTests
     {
         public ActivationHandlerFixture()
         {
+            TestNavigationService.AcceptAll(NavigationService);
             OpenSelectionOverlay
                 .Setup(useCase => useCase.ExecuteAsync(It.IsAny<OpenSelectionOverlayRequest>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(UseCaseResponse<OpenSelectionOverlayResponse>.Success(new OpenSelectionOverlayResponse()));

@@ -16,6 +16,7 @@ public class StartVideoCaptureUseCaseTests
     public async Task ExecuteAsync_ShouldStartRecording_WithoutNavigating()
     {
         var navigationService = new Mock<INavigationService>();
+        TestNavigationService.AcceptAll(navigationService);
         var videoCaptureWorkflow = new FakeVideoCaptureWorkflow();
         var useCase = new StartVideoCaptureUseCase(navigationService.Object, videoCaptureWorkflow, TestUseCaseExecutor.Instance);
         var args = new NewCaptureArgs(
@@ -32,7 +33,11 @@ public class StartVideoCaptureUseCaseTests
 
         Assert.AreEqual(args, videoCaptureWorkflow.StartedCaptureArgs);
         navigationService.Verify(
-            service => service.Navigate(It.IsAny<object>(), It.IsAny<object?>(), It.IsAny<bool>()),
+            service => service.NavigateAsync(
+                It.IsAny<object>(),
+                It.IsAny<object?>(),
+                It.IsAny<bool>(),
+                It.IsAny<CancellationToken>()),
             Times.Never);
     }
 
@@ -40,6 +45,7 @@ public class StartVideoCaptureUseCaseTests
     public async Task ExecuteAsync_WhenWorkflowReportsUnsupported_ReturnsStructuredResult()
     {
         var navigationService = new Mock<INavigationService>();
+        TestNavigationService.AcceptAll(navigationService);
         var videoCaptureWorkflow = new FakeVideoCaptureWorkflow
         {
             StartException = new VideoCaptureNotSupportedException(

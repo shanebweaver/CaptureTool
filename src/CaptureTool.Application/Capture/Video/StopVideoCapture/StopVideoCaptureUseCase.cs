@@ -32,13 +32,16 @@ internal sealed class StopVideoCaptureUseCase : IStopVideoCaptureUseCase
     {
         return _useCaseExecutor.ExecuteAsync(
             activityId: ActivityId,
-            useCase: () =>
+            useCase: async token =>
             {
                 var pendingVideo = _videoCaptureWorkflow.StopVideoCapture();
                 // This is the successful completion of the active video workflow,
                 // so it intentionally bypasses user-initiated leave confirmation.
-                _navigationService.Navigate(NavigationRoute.VideoEdit, pendingVideo);
-                return new StopVideoCaptureResponse();
+                NavigationResult navigationResult = await _navigationService.NavigateAsync(
+                    NavigationRoute.VideoEdit,
+                    pendingVideo,
+                    cancellationToken: token);
+                return new StopVideoCaptureResponse(navigationResult == NavigationResult.Accepted);
             },
             cancellationToken: cancellationToken);
     }

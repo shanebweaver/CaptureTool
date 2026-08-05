@@ -13,11 +13,11 @@ public readonly struct NavigationRequest : INavigationRequest
         object route,
         object? parameter = null,
         bool isBackNavigation = false,
-        bool clearHistroy = false)
+        bool clearHistory = false)
     {
         Route = route;
         Parameter = parameter;
         IsBackNavigation = isBackNavigation;
-        ClearHistory = clearHistroy;
+        ClearHistory = clearHistory;
     }
 }
