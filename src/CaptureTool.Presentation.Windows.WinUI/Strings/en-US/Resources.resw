@@ -2039,4 +2039,40 @@ SOFTWARE.
   <data name="AudioCapture_StopCaptureFailedMessage" xml:space="preserve">
     <value>Recording couldn't be finalized. Try recording again.</value>
   </data>
+  <data name="MediaFailure_Finalization" xml:space="preserve">
+    <value>The recording couldn't be finalized. Open the recordings folder to check the file.</value>
+    <comment>Shown when a video recording fails to finish writing.</comment>
+  </data>
+  <data name="MediaFailure_FileUnavailable" xml:space="preserve">
+    <value>This media file is unavailable. Check that it still exists, then try again.</value>
+    <comment>Shown when a video or audio file cannot be opened.</comment>
+  </data>
+  <data name="MediaFailure_Unsupported" xml:space="preserve">
+    <value>This media format or codec isn't supported.</value>
+    <comment>Shown when the platform cannot decode a video or audio source.</comment>
+  </data>
+  <data name="MediaFailure_Playback" xml:space="preserve">
+    <value>This media couldn't be played. Try again or open the recordings folder.</value>
+    <comment>Shown for a general asynchronous video or audio playback failure.</comment>
+  </data>
+  <data name="MediaFailure_RetryButton.Content" xml:space="preserve">
+    <value>Try again</value>
+    <comment>Button that retries loading failed media.</comment>
+  </data>
+  <data name="VideoEdit_MediaFailureOpenFolderButton.Content" xml:space="preserve">
+    <value>Open screen recordings folder</value>
+    <comment>Recovery button shown when video loading fails.</comment>
+  </data>
+  <data name="AudioEdit_MediaFailureOpenFolderButton.Content" xml:space="preserve">
+    <value>Open audio recordings folder</value>
+    <comment>Recovery button shown when audio loading fails.</comment>
+  </data>
+  <data name="VideoEdit_LoadingMediaText.Text" xml:space="preserve">
+    <value>Opening video...</value>
+    <comment>Shown while the video playback pipeline opens a source.</comment>
+  </data>
+  <data name="AudioEdit_LoadingMediaText.Text" xml:space="preserve">
+    <value>Opening audio...</value>
+    <comment>Shown while the audio playback pipeline opens a source.</comment>
+  </data>
 </root>
