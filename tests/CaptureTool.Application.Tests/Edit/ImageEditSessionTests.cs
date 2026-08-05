@@ -328,6 +328,155 @@ public sealed class ImageEditSessionTests
     }
 
     [TestMethod]
+    public void History_ShouldRebaseCropAcrossResolutionChanges()
+    {
+        var session = new ImageEditSession(new Size(100, 50));
+        var history = new ImageEditHistory();
+        history.Execute(
+            session,
+            new SetCropCommand(
+                new Rectangle(0, 0, 100, 50),
+                new Rectangle(10, 5, 60, 30)));
+
+        session.ResizeImage(new Size(200, 100));
+
+        Assert.IsTrue(history.Undo(session));
+        Assert.AreEqual(new Rectangle(0, 0, 200, 100), session.CropRect);
+
+        Assert.IsTrue(history.Redo(session));
+        Assert.AreEqual(new Rectangle(20, 10, 120, 60), session.CropRect);
+    }
+
+    [TestMethod]
+    public void History_ShouldRebaseEveryModifiedDrawableTypeAcrossResolutionChanges()
+    {
+        var rectangle = new RectangleDrawable(new Vector2(1, 2), new Size(10, 20), Color.Red, Color.Blue, 2);
+        var ellipse = new EllipseDrawable(new Vector2(2, 3), new Size(11, 21), Color.Green, Color.Yellow, 3);
+        var line = new LineDrawable(new Vector2(3, 4), new Vector2(13, 14), Color.Purple, 4);
+        var arrow = new ArrowDrawable(new Vector2(4, 5), new Vector2(14, 15), Color.Orange, 5);
+        var text = new TextDrawable(new Vector2(5, 6), new Size(15, 25), "old", Color.Black, Color.White, "Segoe UI", 10);
+        var session = new ImageEditSession(
+            new Size(100, 50),
+            ImageOrientation.RotateNoneFlipNone,
+            new Rectangle(0, 0, 100, 50),
+            [rectangle, ellipse, line, arrow, text]);
+        var history = new ImageEditHistory();
+        IDrawable[] replacements =
+        [
+            new RectangleDrawable(new Vector2(11, 12), new Size(20, 30), Color.Aqua, Color.Beige, 6),
+            new EllipseDrawable(new Vector2(12, 13), new Size(21, 31), Color.Brown, Color.Coral, 7),
+            new LineDrawable(new Vector2(13, 14), new Vector2(23, 24), Color.Cyan, 8),
+            new ArrowDrawable(new Vector2(14, 15), new Vector2(24, 25), Color.Gold, 9),
+            new TextDrawable(new Vector2(15, 16), new Size(25, 35), "new", Color.Navy, Color.Silver, "Consolas", 20),
+        ];
+
+        for (int i = 0; i < replacements.Length; i++)
+        {
+            history.Execute(
+                session,
+                new ModifyDrawableCommand(
+                    i,
+                    new ModifyShapeOperation.ShapeState(session.Drawables[i]),
+                    new ModifyShapeOperation.ShapeState(replacements[i])));
+        }
+
+        session.ResizeImage(new Size(200, 100));
+
+        for (int i = replacements.Length - 1; i >= 0; i--)
+        {
+            Assert.IsTrue(history.Undo(session));
+        }
+
+        Assert.AreEqual(new Vector2(2, 4), rectangle.Offset);
+        Assert.AreEqual(new Size(20, 40), rectangle.Size);
+        Assert.AreEqual(4, rectangle.StrokeWidth);
+        Assert.AreEqual(new Vector2(4, 6), ellipse.Offset);
+        Assert.AreEqual(new Size(22, 42), ellipse.Size);
+        Assert.AreEqual(6, ellipse.StrokeWidth);
+        Assert.AreEqual(new Vector2(6, 8), line.Offset);
+        Assert.AreEqual(new Vector2(26, 28), line.EndPoint);
+        Assert.AreEqual(8, line.StrokeWidth);
+        Assert.AreEqual(new Vector2(8, 10), arrow.Offset);
+        Assert.AreEqual(new Vector2(28, 30), arrow.EndPoint);
+        Assert.AreEqual(10, arrow.StrokeWidth);
+        Assert.AreEqual(new Vector2(10, 12), text.Offset);
+        Assert.AreEqual(new Size(30, 50), text.Size);
+        Assert.AreEqual(20, text.FontSize);
+
+        for (int i = 0; i < replacements.Length; i++)
+        {
+            Assert.IsTrue(history.Redo(session));
+        }
+
+        Assert.AreEqual(new Vector2(22, 24), rectangle.Offset);
+        Assert.AreEqual(new Size(40, 60), rectangle.Size);
+        Assert.AreEqual(new Vector2(24, 26), ellipse.Offset);
+        Assert.AreEqual(new Size(42, 62), ellipse.Size);
+        Assert.AreEqual(new Vector2(26, 28), line.Offset);
+        Assert.AreEqual(new Vector2(46, 48), line.EndPoint);
+        Assert.AreEqual(new Vector2(28, 30), arrow.Offset);
+        Assert.AreEqual(new Vector2(48, 50), arrow.EndPoint);
+        Assert.AreEqual(new Vector2(30, 32), text.Offset);
+        Assert.AreEqual(new Size(50, 70), text.Size);
+        Assert.AreEqual(40, text.FontSize);
+    }
+
+    [TestMethod]
+    public void History_ShouldRebaseDetachedDrawablesWithoutDoubleScalingLiveDrawables()
+    {
+        var added = new RectangleDrawable(new Vector2(2, 3), new Size(10, 20), Color.Red, Color.Blue, 2);
+        var addSession = new ImageEditSession(new Size(100, 50));
+        var addHistory = new ImageEditHistory();
+        addHistory.Execute(addSession, new AddDrawableCommand(added));
+        Assert.IsTrue(addHistory.Undo(addSession));
+
+        addSession.ResizeImage(new Size(200, 100));
+        Assert.IsTrue(addHistory.Redo(addSession));
+
+        Assert.AreEqual(new Vector2(4, 6), added.Offset);
+        Assert.AreEqual(new Size(20, 40), added.Size);
+        Assert.AreEqual(4, added.StrokeWidth);
+
+        var deleted = new RectangleDrawable(new Vector2(4, 5), new Size(15, 25), Color.Green, Color.Yellow, 3);
+        var deleteSession = new ImageEditSession(
+            new Size(100, 50),
+            ImageOrientation.RotateNoneFlipNone,
+            new Rectangle(0, 0, 100, 50),
+            [deleted]);
+        var deleteHistory = new ImageEditHistory();
+        deleteHistory.Execute(deleteSession, new DeleteDrawableCommand(0));
+
+        deleteSession.ResizeImage(new Size(200, 100));
+        Assert.IsTrue(deleteHistory.Undo(deleteSession));
+
+        Assert.AreEqual(new Vector2(8, 10), deleted.Offset);
+        Assert.AreEqual(new Size(30, 50), deleted.Size);
+        Assert.AreEqual(6, deleted.StrokeWidth);
+    }
+
+    [TestMethod]
+    public void History_ShouldRebaseEntriesRecordedAtDifferentResolutionsIndependently()
+    {
+        var session = new ImageEditSession(new Size(100, 50));
+        var history = new ImageEditHistory();
+        history.Execute(
+            session,
+            new SetCropCommand(new Rectangle(0, 0, 100, 50), new Rectangle(10, 5, 80, 40)));
+
+        session.ResizeImage(new Size(200, 100));
+        history.Execute(
+            session,
+            new SetCropCommand(new Rectangle(20, 10, 160, 80), new Rectangle(40, 20, 120, 60)));
+        session.ResizeImage(new Size(100, 50));
+
+        Assert.IsTrue(history.Undo(session));
+        Assert.AreEqual(new Rectangle(10, 5, 80, 40), session.CropRect);
+
+        Assert.IsTrue(history.Undo(session));
+        Assert.AreEqual(new Rectangle(0, 0, 100, 50), session.CropRect);
+    }
+
+    [TestMethod]
     public void ModifyDrawableCommand_ShouldRestoreShapeState()
     {
         var rectangle = new RectangleDrawable(new Vector2(1, 2), new Size(10, 20), Color.Red, Color.Blue, 3);
