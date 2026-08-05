@@ -151,6 +151,33 @@ public sealed class ImageEditPageViewModelSuperResolutionTests
     }
 
     [TestMethod]
+    public async Task ToggleSuperResolutionCommand_ShouldRebaseExistingCropHistory()
+    {
+        var service = new Mock<IImageSuperResolutionService>();
+        service
+            .Setup(x => x.GetReadyState())
+            .Returns(ImageSuperResolutionReadyState.Ready);
+        service
+            .Setup(x => x.GenerateAsync(It.IsAny<ImageSuperResolutionRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(ImageSuperResolutionResult.Success(new ImageFile("super.png"), new Size(200, 100)));
+        ImageEditPageViewModel viewModel = CreateViewModel(service: service.Object);
+        await viewModel.LoadAsync(new ImageFile("original.png"), CancellationToken.None);
+
+        Rectangle originalCrop = viewModel.CropRect;
+        viewModel.UpdateCropRectCommand.Execute(new Rectangle(10, 5, 60, 30));
+        viewModel.OnCropInteractionComplete(originalCrop);
+        await viewModel.ToggleSuperResolutionCommand.ExecuteAsync(null);
+
+        viewModel.CropRect.Should().Be(new Rectangle(20, 10, 120, 60));
+
+        viewModel.UndoCommand.Execute(null);
+        viewModel.CropRect.Should().Be(new Rectangle(0, 0, 200, 100));
+
+        viewModel.RedoCommand.Execute(null);
+        viewModel.CropRect.Should().Be(new Rectangle(20, 10, 120, 60));
+    }
+
+    [TestMethod]
     public async Task ToggleSuperResolutionCommand_WhenPreparationConsentIsDenied_ShouldNotGenerate()
     {
         var service = new Mock<IImageSuperResolutionService>();

@@ -2,7 +2,7 @@ using CaptureTool.Domain.Edit.Drawable;
 
 namespace CaptureTool.Domain.Edit.Operations;
 
-public sealed class AddDrawableCommand : IImageEditCommand
+public sealed class AddDrawableCommand : IImageEditCommand, IResolutionAwareImageEditCommand
 {
     private readonly IDrawable _drawable;
     private int? _index;
@@ -33,5 +33,13 @@ public sealed class AddDrawableCommand : IImageEditCommand
         }
 
         session.RemoveDrawable(_drawable);
+    }
+
+    void IResolutionAwareImageEditCommand.Rebase(ImageEditSession session, double scaleX, double scaleY)
+    {
+        if (!session.Drawables.Any(drawable => ReferenceEquals(drawable, _drawable)))
+        {
+            ImageEditSession.ScaleDrawable(_drawable, scaleX, scaleY);
+        }
     }
 }

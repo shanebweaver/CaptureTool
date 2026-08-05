@@ -220,7 +220,7 @@ public sealed class ImageEditSession
         }
     }
 
-    private static void ScaleDrawable(IDrawable drawable, double scaleX, double scaleY)
+    internal static void ScaleDrawable(IDrawable drawable, double scaleX, double scaleY)
     {
         double averageScale = (scaleX + scaleY) / 2;
         switch (drawable)
@@ -262,13 +262,35 @@ public sealed class ImageEditSession
         }
     }
 
-    private static Rectangle ScaleRectangle(Rectangle rectangle, double scaleX, double scaleY)
+    internal static Rectangle ScaleRectangle(Rectangle rectangle, double scaleX, double scaleY)
     {
         return new(
             ScaleInt(rectangle.X, scaleX),
             ScaleInt(rectangle.Y, scaleY),
             ScaleInt(rectangle.Width, scaleX),
             ScaleInt(rectangle.Height, scaleY));
+    }
+
+    internal static ModifyShapeOperation.ShapeState ScaleShapeState(
+        ModifyShapeOperation.ShapeState state,
+        double scaleX,
+        double scaleY)
+    {
+        double averageScale = (scaleX + scaleY) / 2;
+        return new ModifyShapeOperation.ShapeState
+        {
+            Offset = ScaleVector(state.Offset, scaleX, scaleY),
+            Size = ScaleSize(state.Size, scaleX, scaleY),
+            EndPoint = ScaleVector(state.EndPoint, scaleX, scaleY),
+            StrokeColor = state.StrokeColor,
+            FillColor = state.FillColor,
+            StrokeWidth = ScaleInt(state.StrokeWidth, averageScale),
+            Text = state.Text,
+            TextColor = state.TextColor,
+            TextBackgroundColor = state.TextBackgroundColor,
+            FontFamily = state.FontFamily,
+            FontSize = (float)Math.Max(0, state.FontSize * averageScale),
+        };
     }
 
     private Rectangle GetFullImageCropRect()
