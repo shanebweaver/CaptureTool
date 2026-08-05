@@ -12,6 +12,7 @@ using CaptureTool.Application.Abstractions.UseCases;
 using CaptureTool.Domain.Ai;
 using CaptureTool.Domain.Capture;
 using CaptureTool.Domain.FileSystem;
+using CaptureTool.Presentation.Features.Media;
 using CaptureTool.Presentation.Notifications;
 using CaptureTool.Presentation.ViewModels;
 using CommunityToolkit.Mvvm.Input;
@@ -57,6 +58,7 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
     public IAsyncRelayCommand OpenVideosFolderCommand { get; }
     public IAsyncRelayCommand ToggleVideoSuperResolutionCommand { get; }
     public IRelayCommand ToggleTrimModeCommand { get; }
+    public IRelayCommand RetryMediaCommand { get; }
 
     public string? VideoPath
     {
@@ -73,8 +75,48 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
     public bool IsFinalizingVideo
     {
         get;
+        private set
+        {
+            if (Set(ref field, value))
+            {
+                RaisePropertyChanged(nameof(IsMediaLoading));
+            }
+        }
+    }
+
+    public MediaLoadState MediaLoadState
+    {
+        get;
+        private set
+        {
+            if (Set(ref field, value))
+            {
+                RaisePropertyChanged(nameof(IsMediaLoading));
+                RaisePropertyChanged(nameof(IsMediaReady));
+                RaisePropertyChanged(nameof(HasMediaFailure));
+                RaisePropertyChanged(nameof(CanRetryMedia));
+                RetryMediaCommand.NotifyCanExecuteChanged();
+            }
+        }
+    }
+
+    public MediaFailureCategory? MediaFailureCategory
+    {
+        get;
         private set => Set(ref field, value);
     }
+
+    public string MediaFailureMessage
+    {
+        get;
+        private set => Set(ref field, value);
+    }
+
+    public bool IsMediaLoading => MediaLoadState == MediaLoadState.Loading && !IsFinalizingVideo;
+    public bool IsMediaReady => MediaLoadState == MediaLoadState.Ready;
+    public bool HasMediaFailure => MediaLoadState == MediaLoadState.Failed;
+    public bool CanRetryMedia => HasMediaFailure &&
+        MediaFailureCategory != global::CaptureTool.Presentation.Features.Media.MediaFailureCategory.Finalization;
 
     public bool IsVideoSuperResolutionFeatureEnabled
     {
@@ -208,9 +250,12 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
             ToggleVideoSuperResolutionAsync,
             AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
         ToggleTrimModeCommand = new RelayCommand(ToggleTrimMode);
+        RetryMediaCommand = new RelayCommand(RetryMedia, () => CanRetryMedia);
 
         IsVideoReady = false;
         IsFinalizingVideo = false;
+        MediaLoadState = MediaLoadState.Loading;
+        MediaFailureMessage = string.Empty;
         IsInTrimMode = false;
         VideoDurationSeconds = 0;
         TrimStartSeconds = 0;
@@ -232,6 +277,7 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
         IsVideoSuperResolutionActive = false;
         IsVideoSuperResolutionGenerating = false;
         VideoSuperResolutionStatusMessage = string.Empty;
+        BeginMediaLoading();
         IsVideoSuperResolutionFeatureEnabled =
             _videoSuperResolutionFeatureAvailability.IsVideoSuperResolutionEnabled;
         ResetTrimRange(0);
@@ -262,13 +308,61 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
             await pendingVideo.WhenReadyAsync();
             IsVideoReady = true;
             IsFinalizingVideo = false;
+            BeginMediaLoading();
             UpdateVideoSuperResolutionAvailability();
         }
-        catch (Exception)
+        catch (Exception exception)
         {
+            _logService.LogException(exception, "Video finalization failed.");
+            IsVideoReady = false;
             IsFinalizingVideo = false;
+            ReportMediaFailed(global::CaptureTool.Presentation.Features.Media.MediaFailureCategory.Finalization);
             UpdateVideoSuperResolutionAvailability();
         }
+    }
+
+    public void ReportMediaOpened()
+    {
+        MediaFailureCategory = null;
+        MediaFailureMessage = string.Empty;
+        MediaLoadState = MediaLoadState.Ready;
+    }
+
+    public void ReportMediaFailed(MediaFailureCategory category)
+    {
+        MediaFailureCategory = category;
+        MediaFailureMessage = GetMediaFailureMessage(category);
+        MediaLoadState = MediaLoadState.Failed;
+    }
+
+    private void RetryMedia()
+    {
+        if (!CanRetryMedia)
+        {
+            return;
+        }
+
+        BeginMediaLoading();
+    }
+
+    private void BeginMediaLoading()
+    {
+        MediaFailureCategory = null;
+        MediaFailureMessage = string.Empty;
+        MediaLoadState = MediaLoadState.Loading;
+    }
+
+    private string GetMediaFailureMessage(MediaFailureCategory category)
+    {
+        string resourceKey = category switch
+        {
+            global::CaptureTool.Presentation.Features.Media.MediaFailureCategory.Finalization => "MediaFailure_Finalization",
+            global::CaptureTool.Presentation.Features.Media.MediaFailureCategory.FileUnavailable => "MediaFailure_FileUnavailable",
+            global::CaptureTool.Presentation.Features.Media.MediaFailureCategory.Unsupported => "MediaFailure_Unsupported",
+            _ => "MediaFailure_Playback"
+        };
+
+        return GetLocalizedString(resourceKey);
     }
 
     public void SetVideoDuration(TimeSpan duration)
@@ -493,6 +587,7 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
         }
 
         VideoPath = _originalVideoPath;
+        BeginMediaLoading();
         IsVideoSuperResolutionActive = false;
         UpdateHasUnsavedChanges();
         UpdateVideoSuperResolutionAvailability();
@@ -501,6 +596,7 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
     private void ShowSuperResolutionVideo(string videoPath)
     {
         VideoPath = videoPath;
+        BeginMediaLoading();
         IsVideoSuperResolutionActive = true;
         VideoSuperResolutionStatusMessage = string.Empty;
         UpdateHasUnsavedChanges();

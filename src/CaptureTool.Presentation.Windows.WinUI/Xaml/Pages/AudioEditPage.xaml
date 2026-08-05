@@ -8,6 +8,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="using:CaptureTool.Presentation.Windows.WinUI.Xaml.Pages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:utils="using:CaptureTool.Presentation.Windows.WinUI.Utils"
     d:DataContext="{d:DesignInstance Type=audioedit:AudioEditPageViewModel}"
     mc:Ignorable="d">
 
@@ -27,7 +28,7 @@
                 x:Uid="AudioEdit_OpenInClipchampButton"
                 Command="{x:Bind ViewModel.OpenInClipchampCommand}"
                 Icon="Edit"
-                IsEnabled="{x:Bind ViewModel.IsAudioReady, Mode=OneWay}">
+                IsEnabled="{x:Bind ViewModel.IsMediaReady, Mode=OneWay}">
                 <AppBarButton.Label>Open in Clipchamp</AppBarButton.Label>
             </AppBarButton>
 
@@ -36,7 +37,7 @@
                 x:Uid="AudioEdit_CopyButton"
                 Command="{x:Bind ViewModel.CopyCommand}"
                 Icon="Copy"
-                IsEnabled="{x:Bind ViewModel.IsAudioReady, Mode=OneWay}">
+                IsEnabled="{x:Bind ViewModel.IsMediaReady, Mode=OneWay}">
                 <AppBarButton.KeyboardAccelerators>
                     <KeyboardAccelerator Key="C" Modifiers="Control" />
                 </AppBarButton.KeyboardAccelerators>
@@ -47,7 +48,7 @@
                 x:Uid="AudioEdit_SaveButton"
                 Command="{x:Bind ViewModel.SaveCommand}"
                 Icon="Save"
-                IsEnabled="{x:Bind ViewModel.IsAudioReady, Mode=OneWay}">
+                IsEnabled="{x:Bind ViewModel.IsMediaReady, Mode=OneWay}">
                 <AppBarButton.Label>Save as</AppBarButton.Label>
                 <AppBarButton.KeyboardAccelerators>
                     <KeyboardAccelerator Key="S" Modifiers="Control" />
@@ -74,7 +75,7 @@
                 Background="{ThemeResource CardBackgroundFillColorDefault}"
                 BorderBrush="{ThemeResource CardStrokeColorDefault}"
                 BorderThickness="0,1"
-                Visibility="{x:Bind ViewModel.IsAudioReady, Mode=OneWay}">
+                Visibility="{x:Bind ViewModel.IsMediaReady, Mode=OneWay}">
                 <Grid
                     x:Name="WaveformSurface"
                     Grid.Row="1"
@@ -135,7 +136,59 @@
                 x:Name="AudioPlayer"
                 Grid.Row="1"
                 AreTransportControlsEnabled="True"
-                Visibility="{x:Bind ViewModel.IsAudioReady, Mode=OneWay}" />
+                Visibility="{x:Bind ViewModel.IsMediaReady, Mode=OneWay}" />
+
+            <Grid
+                Grid.RowSpan="2"
+                Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.IsMediaLoading), Mode=OneWay}">
+                <StackPanel
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Spacing="16">
+                    <ProgressRing
+                        Width="48"
+                        Height="48"
+                        IsActive="True" />
+                    <TextBlock
+                        x:Uid="AudioEdit_LoadingMediaText"
+                        HorizontalAlignment="Center"
+                        FontSize="16"
+                        Opacity="0.7"
+                        Text="Opening audio..." />
+                </StackPanel>
+            </Grid>
+
+            <Grid
+                Grid.RowSpan="2"
+                Background="{ThemeResource AcrylicBackgroundFillColorBaseBrush}"
+                Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.HasMediaFailure), Mode=OneWay}">
+                <StackPanel
+                    MaxWidth="520"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Spacing="16">
+                    <FontIcon FontSize="32" Glyph="&#xE783;" />
+                    <TextBlock
+                        HorizontalAlignment="Center"
+                        FontSize="16"
+                        Text="{x:Bind ViewModel.MediaFailureMessage, Mode=OneWay}"
+                        TextAlignment="Center"
+                        TextWrapping="Wrap" />
+                    <StackPanel
+                        HorizontalAlignment="Center"
+                        Orientation="Horizontal"
+                        Spacing="8">
+                        <Button
+                            x:Uid="MediaFailure_RetryButton"
+                            Command="{x:Bind ViewModel.RetryMediaCommand}"
+                            Content="Try again" />
+                        <Button
+                            x:Uid="AudioEdit_MediaFailureOpenFolderButton"
+                            Command="{x:Bind ViewModel.OpenAudioFolderCommand}"
+                            Content="Open audio recordings folder" />
+                    </StackPanel>
+                </StackPanel>
+            </Grid>
         </Grid>
     </Grid>
 
