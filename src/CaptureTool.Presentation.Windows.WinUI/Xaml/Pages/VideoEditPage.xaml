@@ -30,7 +30,7 @@
                 Command="{x:Bind ViewModel.ToggleTrimModeCommand}"
                 Icon="Trim"
                 IsChecked="{x:Bind ViewModel.IsInTrimMode, Mode=OneWay}"
-                IsEnabled="{x:Bind ViewModel.IsVideoReady, Mode=OneWay}" />
+                IsEnabled="{x:Bind ViewModel.IsMediaReady, Mode=OneWay}" />
 
             <AppBarToggleButton
                 x:Uid="VideoEdit_SuperResolutionButton"
@@ -51,7 +51,7 @@
                 x:Uid="VideoEdit_EditInClipchampButton"
                 Command="{x:Bind ViewModel.EditInClipchampCommand}"
                 Icon="Edit"
-                IsEnabled="{x:Bind ViewModel.IsVideoReady, Mode=OneWay}">
+                IsEnabled="{x:Bind ViewModel.IsMediaReady, Mode=OneWay}">
                 <AppBarButton.Label>Edit in Clipchamp</AppBarButton.Label>
             </AppBarButton>
 
@@ -60,7 +60,7 @@
                 x:Uid="VideoEdit_CopyButton"
                 Command="{x:Bind ViewModel.CopyCommand}"
                 Icon="Copy"
-                IsEnabled="{x:Bind ViewModel.IsVideoReady, Mode=OneWay}">
+                IsEnabled="{x:Bind ViewModel.IsMediaReady, Mode=OneWay}">
                 <AppBarButton.KeyboardAccelerators>
                     <KeyboardAccelerator Key="C" Modifiers="Control" />
                 </AppBarButton.KeyboardAccelerators>
@@ -71,7 +71,7 @@
                 x:Uid="VideoEdit_SaveButton"
                 Command="{x:Bind ViewModel.SaveCommand}"
                 Icon="Save"
-                IsEnabled="{x:Bind ViewModel.IsVideoReady, Mode=OneWay}">
+                IsEnabled="{x:Bind ViewModel.IsMediaReady, Mode=OneWay}">
                 <AppBarButton.Label>Save as</AppBarButton.Label>
                 <AppBarButton.KeyboardAccelerators>
                     <KeyboardAccelerator Key="S" Modifiers="Control" />
@@ -90,7 +90,7 @@
             <MediaPlayerElement
                 x:Name="OriginalVideoPlayer"
                 AreTransportControlsEnabled="{x:Bind ViewModel.AreTransportControlsVisible, Mode=OneWay}"
-                Visibility="{x:Bind ViewModel.IsVideoReady, Mode=OneWay}" />
+                Visibility="{x:Bind ViewModel.IsMediaReady, Mode=OneWay}" />
             <MediaPlayerElement
                 x:Name="RenderedTrimVideoPlayer"
                 AreTransportControlsEnabled="{x:Bind ViewModel.AreTransportControlsVisible, Mode=OneWay}"
@@ -150,6 +150,56 @@
                         FontSize="16"
                         Opacity="0.7"
                         Text="Finalizing video..." />
+                </StackPanel>
+            </Grid>
+
+            <Grid Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.IsMediaLoading), Mode=OneWay}">
+                <StackPanel
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Spacing="16">
+                    <ProgressRing
+                        Width="48"
+                        Height="48"
+                        IsActive="True" />
+                    <TextBlock
+                        x:Uid="VideoEdit_LoadingMediaText"
+                        HorizontalAlignment="Center"
+                        FontSize="16"
+                        Opacity="0.7"
+                        Text="Opening video..." />
+                </StackPanel>
+            </Grid>
+
+            <Grid
+                Background="{ThemeResource AcrylicBackgroundFillColorBaseBrush}"
+                Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.HasMediaFailure), Mode=OneWay}">
+                <StackPanel
+                    MaxWidth="520"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Spacing="16">
+                    <FontIcon FontSize="32" Glyph="&#xE783;" />
+                    <TextBlock
+                        HorizontalAlignment="Center"
+                        FontSize="16"
+                        Text="{x:Bind ViewModel.MediaFailureMessage, Mode=OneWay}"
+                        TextAlignment="Center"
+                        TextWrapping="Wrap" />
+                    <StackPanel
+                        HorizontalAlignment="Center"
+                        Orientation="Horizontal"
+                        Spacing="8">
+                        <Button
+                            x:Uid="MediaFailure_RetryButton"
+                            Command="{x:Bind ViewModel.RetryMediaCommand}"
+                            Content="Try again"
+                            Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.CanRetryMedia), Mode=OneWay}" />
+                        <Button
+                            x:Uid="VideoEdit_MediaFailureOpenFolderButton"
+                            Command="{x:Bind ViewModel.OpenVideosFolderCommand}"
+                            Content="Open screen recordings folder" />
+                    </StackPanel>
                 </StackPanel>
             </Grid>
         </Grid>
@@ -214,7 +264,7 @@
                     Padding="0"
                     VerticalAlignment="Center"
                     Click="TrimPreviewPlayButton_Click"
-                    IsEnabled="{x:Bind ViewModel.IsVideoReady, Mode=OneWay}">
+                    IsEnabled="{x:Bind ViewModel.IsMediaReady, Mode=OneWay}">
                     <FontIcon x:Name="TrimPreviewPlayIcon" Glyph="&#xE768;" />
                 </Button>
 

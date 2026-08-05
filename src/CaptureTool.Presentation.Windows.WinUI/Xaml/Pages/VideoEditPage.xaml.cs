@@ -1,6 +1,7 @@
 using CaptureTool.Application.Abstractions.Logging;
 using CaptureTool.Application.Abstractions.Media;
 using CaptureTool.Application.Abstractions.Storage;
+using CaptureTool.Presentation.Features.Media;
 using CaptureTool.Presentation.Features.VideoEdit;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Navigation;
@@ -58,6 +59,7 @@ public sealed partial class VideoEditPage : VideoEditPageBase
         var mediaPlayer = new MediaPlayer();
         mediaPlayer.MediaOpened += MediaPlayer_MediaOpened;
         mediaPlayer.MediaEnded += MediaPlayer_MediaEnded;
+        mediaPlayer.MediaFailed += MediaPlayer_MediaFailed;
         mediaPlayer.PlaybackSession.PlaybackStateChanged += PlaybackSession_PlaybackStateChanged;
         mediaPlayer.PlaybackSession.PositionChanged += PlaybackSession_PositionChanged;
         return mediaPlayer;
@@ -132,6 +134,7 @@ public sealed partial class VideoEditPage : VideoEditPageBase
 
         mediaPlayer.MediaOpened -= MediaPlayer_MediaOpened;
         mediaPlayer.MediaEnded -= MediaPlayer_MediaEnded;
+        mediaPlayer.MediaFailed -= MediaPlayer_MediaFailed;
         mediaPlayer.PlaybackSession.PlaybackStateChanged -= PlaybackSession_PlaybackStateChanged;
         mediaPlayer.PlaybackSession.PositionChanged -= PlaybackSession_PositionChanged;
         mediaPlayer.Source = null;
@@ -148,7 +151,9 @@ public sealed partial class VideoEditPage : VideoEditPageBase
     private void ViewModel_PropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
         if (e.PropertyName == nameof(VideoEditPageViewModel.VideoPath) ||
-            e.PropertyName == nameof(VideoEditPageViewModel.IsVideoReady))
+            e.PropertyName == nameof(VideoEditPageViewModel.IsVideoReady) ||
+            e.PropertyName == nameof(VideoEditPageViewModel.MediaLoadState) ||
+            e.PropertyName == nameof(VideoEditPageViewModel.IsFinalizingVideo))
         {
             TryInitializeVideo();
         }
@@ -184,7 +189,9 @@ public sealed partial class VideoEditPage : VideoEditPageBase
 
     private bool TryInitializeVideo()
     {
-        if (!string.IsNullOrEmpty(ViewModel.VideoPath) && ViewModel.IsVideoReady)
+        if (!string.IsNullOrEmpty(ViewModel.VideoPath) &&
+            ViewModel.IsVideoReady &&
+            ViewModel.MediaLoadState == MediaLoadState.Loading)
         {
             _ = InitializeVideoAsync(ViewModel.VideoPath);
             return true;
@@ -211,9 +218,10 @@ public sealed partial class VideoEditPage : VideoEditPageBase
                 ShowOriginalPlayer();
             }
         }
-        catch (Exception)
+        catch (Exception exception)
         {
-            // Video not ready yet or file doesn't exist.
+            _logService.LogException(exception, "Failed to initialize video playback.");
+            ViewModel.ReportMediaFailed(MediaFailureCategory.FileUnavailable);
         }
     }
 
@@ -226,7 +234,30 @@ public sealed partial class VideoEditPage : VideoEditPageBase
                 ViewModel.SetVideoDuration(sender.PlaybackSession.NaturalDuration);
                 _hasLoadedOriginalDuration = true;
             }
+            if (sender == _originalMediaPlayer)
+            {
+                ViewModel.ReportMediaOpened();
+            }
             SyncMediaPositionToPlayhead();
+        });
+    }
+
+    private void MediaPlayer_MediaFailed(MediaPlayer sender, MediaPlayerFailedEventArgs args)
+    {
+        DispatcherQueue.TryEnqueue(() =>
+        {
+            _logService.LogWarning($"Video playback failed ({args.Error}): {args.ErrorMessage}");
+            if (sender == _renderedTrimMediaPlayer)
+            {
+                ShowOriginalPlayer();
+                return;
+            }
+
+            PauseMediaPlayers();
+            MediaFailureCategory category = args.Error == MediaPlayerError.SourceNotSupported
+                ? MediaFailureCategory.Unsupported
+                : MediaFailureCategory.Playback;
+            ViewModel.ReportMediaFailed(category);
         });
     }
 
@@ -524,7 +555,7 @@ public sealed partial class VideoEditPage : VideoEditPageBase
     {
         _renderedTrimMediaPlayer?.Pause();
         _isRenderedTrimPlayerActive = false;
-        OriginalVideoPlayer.Visibility = ViewModel.IsVideoReady ? Visibility.Visible : Visibility.Collapsed;
+        OriginalVideoPlayer.Visibility = ViewModel.IsMediaReady ? Visibility.Visible : Visibility.Collapsed;
         RenderedTrimVideoPlayer.Visibility = Visibility.Collapsed;
         SyncMediaPositionToPlayhead();
     }
@@ -534,7 +565,7 @@ public sealed partial class VideoEditPage : VideoEditPageBase
         _originalMediaPlayer?.Pause();
         _isRenderedTrimPlayerActive = true;
         OriginalVideoPlayer.Visibility = Visibility.Collapsed;
-        RenderedTrimVideoPlayer.Visibility = ViewModel.IsVideoReady ? Visibility.Visible : Visibility.Collapsed;
+        RenderedTrimVideoPlayer.Visibility = ViewModel.IsMediaReady ? Visibility.Visible : Visibility.Collapsed;
         SyncMediaPositionToPlayhead();
     }
 
