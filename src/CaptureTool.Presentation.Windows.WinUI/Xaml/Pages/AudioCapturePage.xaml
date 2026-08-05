@@ -16,6 +16,7 @@
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
             <RowDefinition />
         </Grid.RowDefinitions>
 
@@ -118,7 +119,16 @@
             </AppBarButton>
         </CommandBar>
 
-        <Grid Grid.Row="1" MinHeight="220">
+        <InfoBar
+            Grid.Row="1"
+            Margin="12,8,12,0"
+            CloseButtonCommand="{x:Bind ViewModel.DismissCaptureErrorCommand, Mode=OneWay}"
+            IsClosable="True"
+            IsOpen="{x:Bind ViewModel.HasCaptureError, Mode=OneWay}"
+            Message="{x:Bind ViewModel.CaptureErrorMessage, Mode=OneWay}"
+            Severity="Error" />
+
+        <Grid Grid.Row="2" MinHeight="220">
             <Border
                 Padding="20,32"
                 HorizontalAlignment="Stretch"

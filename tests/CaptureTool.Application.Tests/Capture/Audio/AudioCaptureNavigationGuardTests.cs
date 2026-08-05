@@ -55,5 +55,30 @@ public sealed class AudioCaptureNavigationGuardTests
         Assert.AreEqual(1, audioCapture.StopCallCount);
     }
 
+    [TestMethod]
+    public async Task CanNavigateAwayFromActiveCaptureAsync_AfterStopFailure_DoesNotPromptAgain()
+    {
+        var audioCapture = new FakeAudioCaptureWorkflow
+        {
+            IsRecording = true,
+            StopException = new InvalidOperationException("Recorder stop failed."),
+        };
+        var confirmationService = new Mock<IAudioCaptureNavigationConfirmationService>();
+        confirmationService
+            .Setup(service => service.ConfirmStopActiveRecordingAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+        var guard = new AudioCaptureNavigationGuard(audioCapture, confirmationService.Object);
+
+        await Assert.ThrowsExactlyAsync<InvalidOperationException>(
+            () => guard.CanNavigateAwayFromActiveCaptureAsync(TestContext.CancellationToken));
+        bool canNavigateAfterFailure = await guard.CanNavigateAwayFromActiveCaptureAsync(TestContext.CancellationToken);
+
+        Assert.IsTrue(canNavigateAfterFailure);
+        Assert.AreEqual(1, audioCapture.StopCallCount);
+        confirmationService.Verify(
+            service => service.ConfirmStopActiveRecordingAsync(It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
     public TestContext TestContext { get; set; } = null!;
 }
