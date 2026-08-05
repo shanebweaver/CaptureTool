@@ -1,3 +1,5 @@
+using CaptureTool.Presentation.Activation;
+using CaptureTool.Presentation.Windows.WinUI.Activation;
 using CaptureTool.Presentation.Windows.WinUI.UiTests;
 using Microsoft.UI.Dispatching;
 using Microsoft.Win32.SafeHandles;
@@ -18,6 +20,7 @@ public class Program
     public static int Main(string[] args)
     {
         UiTestLaunchOptions.Initialize(args);
+        var redirectedActivations = new StartupActivationQueue<ActivationMaterializationResult>();
 
         // Initialize COM wrappers and single-instance
         WinRT.ComWrappersSupport.InitializeComWrappers();
@@ -31,8 +34,10 @@ public class Program
                 return 0;
             }
 
-            // Subscribe before app startup
-            instance.Activated += (_, e) => App.Current.Activate(e);
+            // Materialize redirected data before the redirecting process can exit,
+            // then retain it until the primary launch and UI dispatcher are ready.
+            instance.Activated += (_, e) => redirectedActivations.Enqueue(
+                ActivationMaterializer.Materialize(e));
         }
 
         // Start WinUI app
@@ -41,7 +46,7 @@ public class Program
             SynchronizationContext.SetSynchronizationContext(
                 new DispatcherQueueSynchronizationContext(
                     DispatcherQueue.GetForCurrentThread()));
-            var app = new App();
+            var app = new App(redirectedActivations);
         });
 
         return 0;
