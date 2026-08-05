@@ -375,7 +375,7 @@ public sealed class SimpleApplicationUseCaseTests
         INavigationCoordinator coordinator = TestNavigationCoordinator.Create(Mock.Of<INavigationService>());
         var useCase = new OpenRecentCaptureUseCase(
             TestFileSystem.Instance,
-            CreateRecentCaptureStorage(),
+            CreateRecentCaptureScratchStore(),
             catalog.Object,
             audioEdit.Object,
             imageEdit.Object,
@@ -416,7 +416,7 @@ public sealed class SimpleApplicationUseCaseTests
         INavigationCoordinator coordinator = TestNavigationCoordinator.Create(Mock.Of<INavigationService>());
         var useCase = new OpenRecentCaptureUseCase(
             TestFileSystem.Instance,
-            CreateRecentCaptureStorage(),
+            CreateRecentCaptureScratchStore(),
             Mock.Of<IRecentCaptureCatalog>(),
             Mock.Of<IOpenAudioEditPageUseCase>(),
             Mock.Of<IOpenImageEditPageUseCase>(),
@@ -440,13 +440,22 @@ public sealed class SimpleApplicationUseCaseTests
         return path;
     }
 
-    private static IStorageService CreateRecentCaptureStorage()
+    private static IScratchArtifactStore CreateRecentCaptureScratchStore()
     {
-        var storage = new Mock<IStorageService>();
-        storage.Setup(service => service.GetApplicationTemporaryFolderPath())
-            .Returns(Path.Combine(Path.GetTempPath(), "CaptureToolTests", "RecentWorkingFiles"));
-        storage.Setup(service => service.GetTemporaryFileName()).Returns(Guid.NewGuid().ToString());
-        return storage.Object;
+        var scratchArtifactStore = new Mock<IScratchArtifactStore>();
+        scratchArtifactStore
+            .Setup(service => service.CreateLeasedArtifactPath("recent-capture-working-copy", It.IsAny<string>()))
+            .Returns((string _, string extension) =>
+            {
+                string ownerFolder = Path.Combine(
+                    Path.GetTempPath(),
+                    "CaptureToolTests",
+                    "RecentWorkingFiles",
+                    Guid.NewGuid().ToString("N"));
+                Directory.CreateDirectory(ownerFolder);
+                return Path.Combine(ownerFolder, $"working{extension}");
+            });
+        return scratchArtifactStore.Object;
     }
 
     public TestContext TestContext { get; set; } = null!;

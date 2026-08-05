@@ -50,7 +50,7 @@ internal sealed class ImageCaptureWorkflow : IImageCaptureWorkflow, IImageCaptur
         {
             TrackCapture(TelemetryEvents.CaptureStarted, "all_screens");
             tempPath = _fileAllocator.ReserveUniqueFile(
-                _storageService.GetApplicationTemporaryFolderPath(),
+                _storageService.GetApplicationRetainedCaptureFolderPath(),
                 _fileNameGenerator.GetNewCaptureFileName);
 
             using System.Drawing.Image combined = _screenCapture.CombineMonitors([.. monitors]);
@@ -84,7 +84,7 @@ internal sealed class ImageCaptureWorkflow : IImageCaptureWorkflow, IImageCaptur
         {
             TrackCapture(TelemetryEvents.CaptureStarted, captureType);
             tempPath = _fileAllocator.ReserveUniqueFile(
-                _storageService.GetApplicationTemporaryFolderPath(),
+                _storageService.GetApplicationRetainedCaptureFolderPath(),
                 _fileNameGenerator.GetNewCaptureFileName);
 
             MonitorCaptureResult monitor = args.Monitor;

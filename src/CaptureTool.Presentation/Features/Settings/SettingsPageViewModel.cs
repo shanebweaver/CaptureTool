@@ -483,7 +483,7 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
         }
 
         AudioFolderPath = audioFolder;
-        TemporaryFilesFolderPath = _storageService.GetApplicationTemporaryFolderPath();
+        TemporaryFilesFolderPath = _storageService.GetApplicationScratchFolderPath();
 
         await base.LoadAsync(cancellationToken);
     }

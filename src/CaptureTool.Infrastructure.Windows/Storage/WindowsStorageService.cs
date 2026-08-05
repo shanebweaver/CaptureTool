@@ -10,9 +10,14 @@ public sealed partial class WindowsStorageService : IStorageService
         return ApplicationData.GetDefault().LocalPath;
     }
 
-    public string GetApplicationTemporaryFolderPath()
+    public string GetApplicationRetainedCaptureFolderPath()
     {
-        return ApplicationData.GetDefault().TemporaryPath;
+        return Path.Combine(ApplicationData.GetDefault().LocalPath, "Captures");
+    }
+
+    public string GetApplicationScratchFolderPath()
+    {
+        return Path.Combine(ApplicationData.GetDefault().TemporaryPath, "Scratch");
     }
 
     public string GetSystemDefaultScreenshotsFolderPath()

@@ -316,7 +316,7 @@ public class VideoEditPageViewModelTrimTests
     private static ICopyVideoFileUseCase CreateCopyUseCase(Mock<IVideoFileTrimmer>? trimmer = null)
     {
         var storage = new Mock<IStorageService>();
-        storage.Setup(service => service.GetApplicationTemporaryFolderPath()).Returns(Path.GetTempPath());
+        storage.Setup(service => service.GetApplicationScratchFolderPath()).Returns(Path.GetTempPath());
         storage.Setup(service => service.GetTemporaryFileName()).Returns($"{Guid.NewGuid()}.tmp");
 
         var videoTrimmer = trimmer ?? new Mock<IVideoFileTrimmer>();
@@ -327,7 +327,7 @@ public class VideoEditPageViewModelTrimTests
             {
                 if (request.TrimStart.HasValue && request.TrimEnd.HasValue)
                 {
-                    string destinationPath = Path.Combine(storage.Object.GetApplicationTemporaryFolderPath(), storage.Object.GetTemporaryFileName());
+                    string destinationPath = Path.Combine(storage.Object.GetApplicationScratchFolderPath(), storage.Object.GetTemporaryFileName());
                     await videoTrimmer.Object.TrimAsync(request.VideoPath, destinationPath, request.TrimStart.Value, request.TrimEnd.Value, cancellationToken);
                 }
                 return UseCaseResponse<CopyVideoFileResponse>.Success(new CopyVideoFileResponse());

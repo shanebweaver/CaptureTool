@@ -116,28 +116,19 @@ public sealed class SettingsPageUseCaseTests
     }
 
     [TestMethod]
-    public async Task ClearTempFilesUseCase_DeletesFilesAndFoldersInTemporaryFolder()
+    public async Task ClearTempFilesUseCase_ClearsOnlyUnleasedScratchArtifacts()
     {
-        string tempFolder = CreateTestFolder();
-        string filePath = Path.Combine(tempFolder, "capture.tmp");
-        string directoryPath = Path.Combine(tempFolder, "nested");
-        Directory.CreateDirectory(directoryPath);
-        await File.WriteAllTextAsync(filePath, "file", TestContext.CancellationToken);
-        await File.WriteAllTextAsync(Path.Combine(directoryPath, "child.tmp"), "child", TestContext.CancellationToken);
-        var storage = new Mock<IStorageService>();
-        storage.Setup(service => service.GetApplicationTemporaryFolderPath()).Returns(tempFolder);
+        var scratchArtifactStore = new Mock<IScratchArtifactStore>();
         var recentCapturesChangeNotifier = new Mock<IRecentCapturesChangeNotifier>();
         var useCase = new ClearTempFilesUseCase(
-            Mock.Of<ILogService>(),
-            storage.Object,
-            TestFileSystem.Instance,
+            scratchArtifactStore.Object,
             TestUseCaseExecutor.Instance,
             recentCapturesChangeNotifier.Object);
 
         ClearTempFilesResponse response = (await useCase.ExecuteAsync(new ClearTempFilesRequest(), TestContext.CancellationToken)).Value!;
 
         Assert.IsTrue(response.Succeeded);
-        Assert.IsEmpty(Directory.EnumerateFileSystemEntries(tempFolder).ToArray());
+        scratchArtifactStore.Verify(store => store.ClearUnleasedArtifacts(), Times.Once);
         recentCapturesChangeNotifier.Verify(
             notifier => notifier.NotifyRecentCapturesChanged(),
             Times.Once);
@@ -175,13 +166,13 @@ public sealed class SettingsPageUseCaseTests
         storage.Setup(service => service.GetSystemDefaultScreenshotsFolderPath()).Returns(missingFolder);
         storage.Setup(service => service.GetSystemDefaultVideosFolderPath()).Returns(missingFolder);
         storage.Setup(service => service.GetSystemDefaultMusicFolderPath()).Returns(missingFolder);
-        storage.Setup(service => service.GetApplicationTemporaryFolderPath()).Returns(missingFolder);
+        storage.Setup(service => service.GetApplicationScratchFolderPath()).Returns(missingFolder);
         folderLauncher.Setup(service => service.TryOpenFolder(missingFolder)).Returns(false);
 
         var screenshots = new OpenScreenshotsFolderUseCase(settings.Object, storage.Object, folderLauncher.Object, TestUseCaseExecutor.Instance);
         var videos = new OpenVideosFolderUseCase(settings.Object, storage.Object, folderLauncher.Object, TestUseCaseExecutor.Instance);
         var audio = new OpenAudioFolderUseCase(settings.Object, storage.Object, folderLauncher.Object, TestUseCaseExecutor.Instance);
-        var temp = new OpenTempFolderUseCase(storage.Object, folderLauncher.Object, TestUseCaseExecutor.Instance);
+        var temp = new OpenTempFolderUseCase(storage.Object, folderLauncher.Object, TestFileSystem.Instance, TestUseCaseExecutor.Instance);
 
         OpenScreenshotsFolderResponse screenshotsResponse = (await screenshots.ExecuteAsync(new OpenScreenshotsFolderRequest(), TestContext.CancellationToken)).Value!;
         OpenVideosFolderResponse videosResponse = (await videos.ExecuteAsync(new OpenVideosFolderRequest(), TestContext.CancellationToken)).Value!;

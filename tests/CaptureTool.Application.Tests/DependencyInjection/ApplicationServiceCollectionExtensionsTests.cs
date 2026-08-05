@@ -12,6 +12,7 @@ using CaptureTool.Application.Abstractions.Library.RecentCaptures.ClearRecentCap
 using CaptureTool.Application.Abstractions.Library.RecentCaptures.RemoveRecentCapture;
 using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Application.Abstractions.Settings.OpenSettingsPage;
+using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Application.Activation;
 using CaptureTool.Application.Ai;
 using CaptureTool.Application.Capture.Audio;
@@ -29,6 +30,7 @@ using CaptureTool.Application.Library.RecentCaptures.ClearRecentCaptures;
 using CaptureTool.Application.Library.RecentCaptures.RemoveRecentCapture;
 using CaptureTool.Application.Navigation;
 using CaptureTool.Application.Settings.OpenSettingsPage;
+using CaptureTool.Application.Storage;
 using CaptureTool.Application.UseCases;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -52,6 +54,7 @@ public sealed class ApplicationServiceCollectionExtensionsTests
         AssertHasRegistration<IActiveEditSessionService, ActiveEditSessionService>(services, ServiceLifetime.Singleton);
         AssertHasRegistration<IEditSessionGuard, EditSessionGuard>(services, ServiceLifetime.Singleton);
         AssertHasRegistration<INavigationCoordinator, NavigationCoordinator>(services, ServiceLifetime.Singleton);
+        AssertHasRegistration<IScratchArtifactStore, ScratchArtifactStore>(services, ServiceLifetime.Singleton);
         AssertHasRegistration<IRecentCapturesChangeNotifier, RecentCapturesChangeNotifier>(services, ServiceLifetime.Singleton);
         AssertHasRegistration<IClearRecentCapturesUseCase, ClearRecentCapturesUseCase>(services, ServiceLifetime.Transient);
         AssertHasRegistration<IRemoveRecentCaptureUseCase, RemoveRecentCaptureUseCase>(services, ServiceLifetime.Transient);

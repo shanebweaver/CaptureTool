@@ -3,6 +3,7 @@ using CaptureTool.Application.Abstractions.Edit.Audio.SaveAudioFile;
 using CaptureTool.Application.Abstractions.Edit.External;
 using CaptureTool.Application.Abstractions.Localization;
 using CaptureTool.Application.Abstractions.Settings.OpenAudioFolder;
+using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Application.Abstractions.Telemetry;
 using CaptureTool.Application.Abstractions.UseCases;
 using CaptureTool.Domain.FileSystem;
@@ -77,6 +78,7 @@ public sealed partial class AudioEditPageViewModel : LoadableViewModelBase<Audio
     private readonly IAudioWaveformHistory _waveformHistory;
     private readonly ILocalizationService? _localizationService;
     private readonly ITelemetryService? _telemetryService;
+    private readonly IScratchArtifactStore? _scratchArtifactStore;
 
     public ObservableCollection<AudioWaveformBarViewModel> WaveformBars
     {
@@ -91,7 +93,8 @@ public sealed partial class AudioEditPageViewModel : LoadableViewModelBase<Audio
         IOpenAudioFolderUseCase openAudioFolderAction,
         IAudioWaveformHistory waveformHistory,
         ITelemetryService? telemetryService = null,
-        ILocalizationService? localizationService = null)
+        ILocalizationService? localizationService = null,
+        IScratchArtifactStore? scratchArtifactStore = null)
     {
         _saveAction = saveAction;
         _copyAction = copyAction;
@@ -100,6 +103,7 @@ public sealed partial class AudioEditPageViewModel : LoadableViewModelBase<Audio
         _waveformHistory = waveformHistory;
         _telemetryService = telemetryService;
         _localizationService = localizationService;
+        _scratchArtifactStore = scratchArtifactStore;
 
         SaveCommand = new AsyncRelayCommand(SaveAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
         CopyCommand = new AsyncRelayCommand(CopyAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
@@ -112,6 +116,17 @@ public sealed partial class AudioEditPageViewModel : LoadableViewModelBase<Audio
         MediaFailureMessage = string.Empty;
         WaveformBars = [];
         ResetWaveform();
+    }
+
+    public override void Dispose()
+    {
+        if (!string.IsNullOrWhiteSpace(AudioPath))
+        {
+            _scratchArtifactStore?.DeleteArtifact(AudioPath);
+        }
+
+        AudioPath = null;
+        base.Dispose();
     }
 
     public override void Load(AudioFile audio)

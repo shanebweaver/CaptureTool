@@ -375,7 +375,7 @@ public sealed class SettingsPageViewModelAiConsentTests
             .Setup(service => service.GetSystemDefaultMusicFolderPath())
             .Returns(@"C:\Music");
         storage
-            .Setup(service => service.GetApplicationTemporaryFolderPath())
+            .Setup(service => service.GetApplicationScratchFolderPath())
             .Returns(@"C:\Temp");
 
         return new SettingsPageViewModel(

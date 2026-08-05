@@ -180,7 +180,7 @@ public sealed class ImageCaptureWorkflowTests
         IFileSystem? fileSystem = null)
     {
         var storage = new Mock<IStorageService>();
-        storage.Setup(service => service.GetApplicationTemporaryFolderPath()).Returns(tempFolder);
+        storage.Setup(service => service.GetApplicationRetainedCaptureFolderPath()).Returns(tempFolder);
         storage.Setup(service => service.GetSystemDefaultScreenshotsFolderPath()).Returns(tempFolder);
 
         var taskEnvironment = new Mock<ITaskEnvironment>();

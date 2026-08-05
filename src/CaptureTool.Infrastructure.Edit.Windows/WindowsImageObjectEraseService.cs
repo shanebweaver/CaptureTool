@@ -13,13 +13,11 @@ namespace CaptureTool.Infrastructure.Edit.Windows;
 
 public sealed class WindowsImageObjectEraseService : IImageObjectEraseService
 {
-    private const string EditCacheFolderName = "ImageEdit";
+    private readonly IScratchArtifactStore _scratchArtifactStore;
 
-    private readonly IStorageService _storageService;
-
-    public WindowsImageObjectEraseService(IStorageService storageService)
+    public WindowsImageObjectEraseService(IScratchArtifactStore scratchArtifactStore)
     {
-        _storageService = storageService;
+        _scratchArtifactStore = scratchArtifactStore;
     }
 
     public ObjectEraseReadyState GetReadyState()
@@ -101,6 +99,7 @@ public sealed class WindowsImageObjectEraseService : IImageObjectEraseService
             return ObjectEraseResult.NotReady;
         }
 
+        string? outputPath = null;
         try
         {
             StorageFile sourceFile = await StorageFile.GetFileFromPathAsync(request.SourceImage.FilePath);
@@ -139,14 +138,11 @@ public sealed class WindowsImageObjectEraseService : IImageObjectEraseService
                 CancellationToken.None);
             cancellationToken.ThrowIfCancellationRequested();
 
-            StorageFolder temporaryFolder = await StorageFolder.GetFolderFromPathAsync(
-                _storageService.GetApplicationTemporaryFolderPath());
-            StorageFolder outputFolder = await temporaryFolder.CreateFolderAsync(
-                EditCacheFolderName,
-                CreationCollisionOption.OpenIfExists);
+            outputPath = _scratchArtifactStore.CreateLeasedArtifactPath("image-object-erase", ".png");
+            StorageFolder outputFolder = await StorageFolder.GetFolderFromPathAsync(Path.GetDirectoryName(outputPath));
             StorageFile outputFile = await outputFolder.CreateFileAsync(
-                GetOutputFileName(request.SourceImage.FilePath),
-                CreationCollisionOption.GenerateUniqueName);
+                Path.GetFileName(outputPath),
+                CreationCollisionOption.ReplaceExisting);
             await SaveBitmapAsync(resultBitmap, outputFile, cancellationToken);
 
             cancellationToken.ThrowIfCancellationRequested();
@@ -154,10 +150,12 @@ public sealed class WindowsImageObjectEraseService : IImageObjectEraseService
         }
         catch (OperationCanceledException)
         {
+            _scratchArtifactStore.DeleteArtifact(outputPath ?? string.Empty);
             return ObjectEraseResult.Cancelled;
         }
         catch (Exception ex)
         {
+            _scratchArtifactStore.DeleteArtifact(outputPath ?? string.Empty);
             return ObjectEraseResult.Failed(ex.Message);
         }
     }
