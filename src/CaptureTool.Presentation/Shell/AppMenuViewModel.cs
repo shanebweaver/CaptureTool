@@ -1,7 +1,6 @@
 using CaptureTool.Application.Abstractions.Capture;
 using CaptureTool.Application.Abstractions.Capture.Audio.OpenAudioCapturePage;
 using CaptureTool.Application.Abstractions.Capture.Overlay.OpenSelectionOverlay;
-using CaptureTool.Application.Abstractions.EditSessions;
 using CaptureTool.Application.Abstractions.Library.RecentCaptures;
 using CaptureTool.Application.Abstractions.Library.RecentCaptures.GetRecentCaptures;
 using CaptureTool.Application.Abstractions.Library.RecentCaptures.OpenRecentCapture;
@@ -37,7 +36,6 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
     private readonly IOpenStorePageUseCase _openStorePageCommand;
     private readonly IShowHomePageUseCase _showHomePageCommand;
     private readonly IExitApplicationUseCase _exitApplicationCommand;
-    private readonly IEditSessionGuard _editSessionGuard;
     private readonly IFactoryServiceWithArgs<RecentCaptureViewModel, string> _recentCaptureViewModelFactory;
     private readonly IRecentCapturesChangeNotifier _recentCapturesChangeNotifier;
     private int _recentCapturesRefreshVersion;
@@ -87,7 +85,6 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
         IAudioCaptureState audioCaptureState,
         IFactoryServiceWithArgs<RecentCaptureViewModel, string> recentCaptureViewModelFactory,
         IRecentCapturesChangeNotifier recentCapturesChangeNotifier,
-        IEditSessionGuard? editSessionGuard = null,
         ITelemetryService? telemetryService = null)
     {
         _imageCaptureState = imageCaptureState;
@@ -101,7 +98,6 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
         _openStorePageCommand = openStorePageCommand;
         _showHomePageCommand = showHomePageCommand;
         _exitApplicationCommand = exitApplicationCommand;
-        _editSessionGuard = editSessionGuard ?? new AllowEditSessionGuard();
         _recentCaptureViewModelFactory = recentCaptureViewModelFactory;
         _recentCapturesChangeNotifier = recentCapturesChangeNotifier;
 
@@ -210,11 +206,6 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
 
     private async Task OpenFileAsync()
     {
-        if (!await _editSessionGuard.CanLeaveCurrentSessionAsync(CancellationToken.None))
-        {
-            return;
-        }
-
         var response = await _openFileCommand.ExecuteAsync(new OpenFileRequest(), CancellationToken.None);
         if (response.Value?.Opened == true)
         {
@@ -224,11 +215,6 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
 
     private async Task NavigateHomeAsync()
     {
-        if (!await _editSessionGuard.CanLeaveCurrentSessionAsync(CancellationToken.None))
-        {
-            return;
-        }
-
         await _showHomePageCommand.ExecuteAsync(new ShowHomePageRequest(), CancellationToken.None);
     }
 
@@ -242,11 +228,6 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
         if (!File.Exists(model.FilePath))
         {
             await RefreshRecentCapturesAsync();
-            return;
-        }
-
-        if (!await _editSessionGuard.CanLeaveCurrentSessionAsync(CancellationToken.None))
-        {
             return;
         }
 
@@ -278,49 +259,21 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
 
     private async Task OpenSelectionOverlayAsync(CaptureOptions captureOptions)
     {
-        if (!await _editSessionGuard.CanLeaveCurrentSessionAsync(CancellationToken.None))
-        {
-            return;
-        }
-
         await _openSelectionOverlayCommand.ExecuteAsync(new OpenSelectionOverlayRequest(captureOptions), CancellationToken.None);
     }
 
     private async Task OpenAudioCapturePageAsync()
     {
-        if (!await _editSessionGuard.CanLeaveCurrentSessionAsync(CancellationToken.None))
-        {
-            return;
-        }
-
         await _openAudioCapturePageCommand.ExecuteAsync(new OpenAudioCapturePageRequest(), CancellationToken.None);
     }
 
     private async Task OpenStorePageAsync()
     {
-        if (!await _editSessionGuard.CanLeaveCurrentSessionAsync(CancellationToken.None))
-        {
-            return;
-        }
-
         await _openStorePageCommand.ExecuteAsync(new OpenStorePageRequest(), CancellationToken.None);
     }
 
     private async Task ExitApplicationAsync()
     {
-        if (!await _editSessionGuard.CanLeaveCurrentSessionAsync(CancellationToken.None))
-        {
-            return;
-        }
-
         await _exitApplicationCommand.ExecuteAsync(new ExitApplicationRequest(), CancellationToken.None);
-    }
-
-    private sealed class AllowEditSessionGuard : IEditSessionGuard
-    {
-        public Task<bool> CanLeaveCurrentSessionAsync(CancellationToken cancellationToken = default)
-        {
-            return Task.FromResult(true);
-        }
     }
 }

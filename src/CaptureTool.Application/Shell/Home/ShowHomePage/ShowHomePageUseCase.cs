@@ -1,4 +1,3 @@
-using CaptureTool.Application.Abstractions.Capture.Audio;
 using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Application.Abstractions.Shell.Home.ShowHomePage;
 using CaptureTool.Application.Abstractions.UseCases;
@@ -10,17 +9,14 @@ internal sealed class ShowHomePageUseCase : IShowHomePageUseCase
 {
     private const string ActivityId = "ShowHomePage";
 
-    private readonly INavigationService _navigationService;
+    private readonly INavigationCoordinator _navigationCoordinator;
     private readonly IUseCaseExecutor _useCaseExecutor;
-    private readonly IAudioCaptureNavigationGuard _audioCaptureNavigationGuard;
 
     public ShowHomePageUseCase(
-        INavigationService navigationService,
-        IUseCaseExecutor useCaseExecutor,
-        IAudioCaptureNavigationGuard audioCaptureNavigationGuard)
+        INavigationCoordinator navigationCoordinator,
+        IUseCaseExecutor useCaseExecutor)
     {
-        _navigationService = navigationService;
-        _audioCaptureNavigationGuard = audioCaptureNavigationGuard;
+        _navigationCoordinator = navigationCoordinator;
         _useCaseExecutor = useCaseExecutor;
     }
 
@@ -30,13 +26,11 @@ internal sealed class ShowHomePageUseCase : IShowHomePageUseCase
             activityId: ActivityId,
             useCase: async _ =>
             {
-                if (!await _audioCaptureNavigationGuard.CanNavigateAwayFromActiveCaptureAsync(cancellationToken))
-                {
-                    return new ShowHomePageResponse(false);
-                }
-
-                _navigationService.Navigate(NavigationRoute.Home, clearHistory: true);
-                return new ShowHomePageResponse();
+                bool navigated = await _navigationCoordinator.NavigateAsync(
+                    NavigationRoute.Home,
+                    clearHistory: true,
+                    cancellationToken: cancellationToken);
+                return new ShowHomePageResponse(navigated);
             },
             cancellationToken: cancellationToken);
     }

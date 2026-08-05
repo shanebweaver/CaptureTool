@@ -1,5 +1,3 @@
-using CaptureTool.Application.Abstractions.Capture.Audio;
-using CaptureTool.Application.Abstractions.EditSessions;
 using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Application.Abstractions.Settings.OpenSettingsPage;
 using CaptureTool.Application.Abstractions.UseCases;
@@ -12,19 +10,14 @@ internal sealed class OpenSettingsPageUseCase : IOpenSettingsPageUseCase
     private const string ActivityId = "OpenSettingsPage";
 
     private readonly IUseCaseExecutor _useCaseExecutor;
-    private readonly INavigationService _navigationService;
-    private readonly IEditSessionGuard _editSessionGuard;
-    private readonly IAudioCaptureNavigationGuard _audioCaptureNavigationGuard;
+    private readonly INavigationCoordinator _navigationCoordinator;
 
-    public OpenSettingsPageUseCase(INavigationService navigationService,
-        IEditSessionGuard editSessionGuard,
-        IUseCaseExecutor useCaseExecutor,
-        IAudioCaptureNavigationGuard audioCaptureNavigationGuard)
+    public OpenSettingsPageUseCase(
+        INavigationCoordinator navigationCoordinator,
+        IUseCaseExecutor useCaseExecutor)
     {
         _useCaseExecutor = useCaseExecutor;
-        _navigationService = navigationService;
-        _editSessionGuard = editSessionGuard;
-        _audioCaptureNavigationGuard = audioCaptureNavigationGuard;
+        _navigationCoordinator = navigationCoordinator;
     }
 
     public bool CanExecute(OpenSettingsPageRequest request) => true;
@@ -35,18 +28,10 @@ internal sealed class OpenSettingsPageUseCase : IOpenSettingsPageUseCase
             activityId: ActivityId,
             useCase: async _ =>
             {
-                if (!await _editSessionGuard.CanLeaveCurrentSessionAsync(cancellationToken))
-                {
-                    return new OpenSettingsPageResponse();
-                }
-
-                if (!await _audioCaptureNavigationGuard.CanNavigateAwayFromActiveCaptureAsync(cancellationToken))
-                {
-                    return new OpenSettingsPageResponse(false);
-                }
-
-                _navigationService.Navigate(NavigationRoute.Settings);
-                return new OpenSettingsPageResponse();
+                bool navigated = await _navigationCoordinator.NavigateAsync(
+                    NavigationRoute.Settings,
+                    cancellationToken: cancellationToken);
+                return new OpenSettingsPageResponse(navigated);
             },
             cancellationToken: cancellationToken);
     }

@@ -1,4 +1,3 @@
-using CaptureTool.Application.Abstractions.Capture.Audio;
 using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Application.Abstractions.Store.OpenStorePage;
 using CaptureTool.Application.Abstractions.UseCases;
@@ -11,16 +10,14 @@ internal sealed class OpenStorePageUseCase : IOpenStorePageUseCase
     private const string ActivityId = "OpenStorePage";
 
     private readonly IUseCaseExecutor _useCaseExecutor;
-    private readonly INavigationService _navigationService;
-    private readonly IAudioCaptureNavigationGuard _audioCaptureNavigationGuard;
+    private readonly INavigationCoordinator _navigationCoordinator;
 
-    public OpenStorePageUseCase(INavigationService navigationService,
-        IUseCaseExecutor useCaseExecutor,
-        IAudioCaptureNavigationGuard audioCaptureNavigationGuard)
+    public OpenStorePageUseCase(
+        INavigationCoordinator navigationCoordinator,
+        IUseCaseExecutor useCaseExecutor)
     {
         _useCaseExecutor = useCaseExecutor;
-        _navigationService = navigationService;
-        _audioCaptureNavigationGuard = audioCaptureNavigationGuard;
+        _navigationCoordinator = navigationCoordinator;
     }
 
     public Task<UseCaseResponse<OpenStorePageResponse>> ExecuteAsync(OpenStorePageRequest request, CancellationToken cancellationToken = default)
@@ -29,13 +26,10 @@ internal sealed class OpenStorePageUseCase : IOpenStorePageUseCase
             activityId: ActivityId,
             useCase: async _ =>
             {
-                if (!await _audioCaptureNavigationGuard.CanNavigateAwayFromActiveCaptureAsync(cancellationToken))
-                {
-                    return new OpenStorePageResponse(false);
-                }
-
-                _navigationService.Navigate(NavigationRoute.Store);
-                return new OpenStorePageResponse();
+                bool navigated = await _navigationCoordinator.NavigateAsync(
+                    NavigationRoute.Store,
+                    cancellationToken: cancellationToken);
+                return new OpenStorePageResponse(navigated);
             },
             cancellationToken: cancellationToken);
     }

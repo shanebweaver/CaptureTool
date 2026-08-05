@@ -1,4 +1,3 @@
-using CaptureTool.Application.Abstractions.Capture.Audio;
 using CaptureTool.Application.Abstractions.Files;
 using CaptureTool.Application.Abstractions.Library.RecentCaptures;
 using CaptureTool.Application.Abstractions.Navigation;
@@ -17,28 +16,25 @@ internal sealed class OpenFileUseCase : IOpenFileUseCase
 
     private readonly IUseCaseExecutor _useCaseExecutor;
     private readonly IFilePickerService _filePickerService;
-    private readonly INavigationService _navigationService;
+    private readonly INavigationCoordinator _navigationCoordinator;
     private readonly IStorageService _storageService;
     private readonly IFileSystem _fileSystem;
     private readonly IRecentCaptureCatalog _recentCaptureCatalog;
-    private readonly IAudioCaptureNavigationGuard _audioCaptureNavigationGuard;
 
     public OpenFileUseCase(
         IFilePickerService filePickerService,
-        INavigationService navigationService,
+        INavigationCoordinator navigationCoordinator,
         IStorageService storageService,
         IFileSystem fileSystem,
         IRecentCaptureCatalog recentCaptureCatalog,
-        IUseCaseExecutor useCaseExecutor,
-        IAudioCaptureNavigationGuard audioCaptureNavigationGuard)
+        IUseCaseExecutor useCaseExecutor)
     {
         _useCaseExecutor = useCaseExecutor;
         _filePickerService = filePickerService;
-        _navigationService = navigationService;
+        _navigationCoordinator = navigationCoordinator;
         _storageService = storageService;
         _fileSystem = fileSystem;
         _recentCaptureCatalog = recentCaptureCatalog;
-        _audioCaptureNavigationGuard = audioCaptureNavigationGuard;
     }
 
     public Task<UseCaseResponse<OpenFileResponse>> ExecuteAsync(OpenFileRequest request, CancellationToken cancellationToken = default)
@@ -47,55 +43,55 @@ internal sealed class OpenFileUseCase : IOpenFileUseCase
             activityId: ActivityId,
             useCase: async _ =>
             {
-                if (!await _audioCaptureNavigationGuard.CanNavigateAwayFromActiveCaptureAsync(cancellationToken))
-                {
-                    return new OpenFileResponse(false);
-                }
+                bool opened = await _navigationCoordinator.ExecuteTransitionAsync(
+                    async token =>
+                    {
+                        FileReference? file = await _filePickerService.PickFileAsync(
+                            FilePickerType.CaptureMedia,
+                            UserFolder.Pictures);
+                        if (file is null || token.IsCancellationRequested)
+                        {
+                            return false;
+                        }
 
-                FileReference? file = await _filePickerService.PickFileAsync(FilePickerType.CaptureMedia, UserFolder.Pictures);
-                if (file is null)
-                {
-                    return new OpenFileResponse(false);
-                }
+                        CaptureFileType fileType = CaptureFileTypeDetector.DetectFileType(file.FilePath);
+                        if (fileType == CaptureFileType.Unknown)
+                        {
+                            return false;
+                        }
 
-                if (cancellationToken.IsCancellationRequested)
-                {
-                    return new OpenFileResponse(false);
-                }
+                        string temporaryFolderPath = _storageService.GetApplicationTemporaryFolderPath();
+                        bool isTemporaryFile = IsFileInFolder(file.FilePath, temporaryFolderPath);
+                        string filePath = isTemporaryFile
+                            ? file.FilePath
+                            : CopyFileToFolder(file.FilePath, temporaryFolderPath);
+                        bool navigated = fileType switch
+                        {
+                            CaptureFileType.Audio => await _navigationCoordinator.NavigateAsync(
+                                NavigationRoute.AudioEdit,
+                                new AudioFile(filePath),
+                                cancellationToken: token),
+                            CaptureFileType.Image => await _navigationCoordinator.NavigateAsync(
+                                NavigationRoute.ImageEdit,
+                                new ImageFile(filePath, isTemporaryFile ? null : file.FilePath),
+                                cancellationToken: token),
+                            CaptureFileType.Video => await _navigationCoordinator.NavigateAsync(
+                                NavigationRoute.VideoEdit,
+                                new VideoFile(filePath),
+                                cancellationToken: token),
+                            _ => false
+                        };
 
-                CaptureFileType fileType = CaptureFileTypeDetector.DetectFileType(file.FilePath);
-                if (fileType == CaptureFileType.Unknown)
-                {
-                    return new OpenFileResponse(false);
-                }
+                        if (navigated)
+                        {
+                            _recentCaptureCatalog.RecordOpened(file.FilePath, fileType);
+                        }
 
-                string temporaryFolderPath = _storageService.GetApplicationTemporaryFolderPath();
-                bool isTemporaryFile = IsFileInFolder(file.FilePath, temporaryFolderPath);
-                string filePath = isTemporaryFile
-                    ? file.FilePath
-                    : CopyFileToFolder(file.FilePath, temporaryFolderPath);
-                switch (fileType)
-                {
-                    case CaptureFileType.Audio:
-                        _navigationService.Navigate(NavigationRoute.AudioEdit, new AudioFile(filePath));
-                        break;
+                        return navigated;
+                    },
+                    cancellationToken);
 
-                    case CaptureFileType.Image:
-                        _navigationService.Navigate(
-                            NavigationRoute.ImageEdit,
-                            new ImageFile(filePath, isTemporaryFile ? null : file.FilePath));
-                        break;
-
-                    case CaptureFileType.Video:
-                        _navigationService.Navigate(NavigationRoute.VideoEdit, new VideoFile(filePath));
-                        break;
-
-                    default:
-                        return new OpenFileResponse(false);
-                }
-
-                _recentCaptureCatalog.RecordOpened(file.FilePath, fileType);
-                return new OpenFileResponse();
+                return new OpenFileResponse(opened);
             },
             cancellationToken: cancellationToken);
     }

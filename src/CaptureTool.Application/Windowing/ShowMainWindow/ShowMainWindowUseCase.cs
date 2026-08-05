@@ -9,34 +9,44 @@ internal sealed class ShowMainWindowUseCase : IShowMainWindowUseCase
 {
     private const string ActivityId = "ShowMainWindow";
 
-    private readonly INavigationService _navigationService;
+    private readonly INavigationCoordinator _navigationCoordinator;
     private readonly IUseCaseExecutor _useCaseExecutor;
 
     public ShowMainWindowUseCase(
-        INavigationService navigationService,
+        INavigationCoordinator navigationCoordinator,
         IUseCaseExecutor useCaseExecutor)
     {
-        _navigationService = navigationService;
+        _navigationCoordinator = navigationCoordinator;
         _useCaseExecutor = useCaseExecutor;
     }
 
     public bool CanExecute(ShowMainWindowRequest request)
     {
-        return _navigationService.CanGoBack;
+        return _navigationCoordinator.CanGoBack;
     }
 
     public Task<UseCaseResponse<ShowMainWindowResponse>> ExecuteAsync(ShowMainWindowRequest request, CancellationToken cancellationToken = default)
     {
         return _useCaseExecutor.ExecuteAsync(
             activityId: ActivityId,
-            useCase: () =>
+            useCase: async token =>
             {
-                bool success = _navigationService.TryGoBackTo(r => CaptureToolNavigationRouteHelper.IsMainWindowRoute(r.Route));
-                if (!success && request.CreateIfUnavailable)
-                {
-                    _navigationService.Navigate(NavigationRoute.Home, clearHistory: true);
-                    success = true;
-                }
+                bool success = await _navigationCoordinator.ExecuteTransitionAsync(
+                    async transitionToken =>
+                    {
+                        if (await _navigationCoordinator.TryGoBackToAsync(
+                            r => CaptureToolNavigationRouteHelper.IsMainWindowRoute(r.Route),
+                            transitionToken))
+                        {
+                            return true;
+                        }
+
+                        return request.CreateIfUnavailable && await _navigationCoordinator.NavigateAsync(
+                            NavigationRoute.Home,
+                            clearHistory: true,
+                            cancellationToken: transitionToken);
+                    },
+                    token);
 
                 return new ShowMainWindowResponse(success);
             },

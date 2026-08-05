@@ -65,18 +65,22 @@ public sealed class SimpleApplicationUseCaseTests
             .ReturnsAsync(true);
         var imageFile = new ImageFile("capture.png");
         var audioCaptureNavigationGuard = new AllowAudioCaptureNavigationGuard();
+        INavigationCoordinator coordinator = TestNavigationCoordinator.Create(
+            navigation.Object,
+            editGuard.Object,
+            audioCaptureNavigationGuard);
 
-        await new OpenAboutPageUseCase(navigation.Object, editGuard.Object, TestUseCaseExecutor.Instance, audioCaptureNavigationGuard)
+        await new OpenAboutPageUseCase(coordinator, TestUseCaseExecutor.Instance)
             .ExecuteAsync(new OpenAboutPageRequest(), TestContext.CancellationToken);
-        await new ShowHomePageUseCase(navigation.Object, TestUseCaseExecutor.Instance, audioCaptureNavigationGuard)
+        await new ShowHomePageUseCase(coordinator, TestUseCaseExecutor.Instance)
             .ExecuteAsync(new ShowHomePageRequest(), TestContext.CancellationToken);
-        await new OpenStorePageUseCase(navigation.Object, TestUseCaseExecutor.Instance, audioCaptureNavigationGuard)
+        await new OpenStorePageUseCase(coordinator, TestUseCaseExecutor.Instance)
             .ExecuteAsync(new OpenStorePageRequest(), TestContext.CancellationToken);
-        await new OpenSettingsPageUseCase(navigation.Object, editGuard.Object, TestUseCaseExecutor.Instance, audioCaptureNavigationGuard)
+        await new OpenSettingsPageUseCase(coordinator, TestUseCaseExecutor.Instance)
             .ExecuteAsync(new OpenSettingsPageRequest(), TestContext.CancellationToken);
-        await new OpenAudioCapturePageUseCase(navigation.Object, TestUseCaseExecutor.Instance, audioCaptureNavigationGuard)
+        await new OpenAudioCapturePageUseCase(coordinator, TestUseCaseExecutor.Instance)
             .ExecuteAsync(new OpenAudioCapturePageRequest(), TestContext.CancellationToken);
-        await new OpenImageEditPageUseCase(navigation.Object, TestUseCaseExecutor.Instance, audioCaptureNavigationGuard)
+        await new OpenImageEditPageUseCase(coordinator, TestUseCaseExecutor.Instance)
             .ExecuteAsync(new OpenImageEditPageRequest(imageFile), TestContext.CancellationToken);
 
         navigation.Verify(service => service.Navigate(NavigationRoute.About, null, false), Times.Once);
@@ -92,10 +96,11 @@ public sealed class SimpleApplicationUseCaseTests
     {
         var navigation = new Mock<INavigationService>();
         navigation.Setup(service => service.TryGoBack()).Returns(false);
+        INavigationCoordinator coordinator = TestNavigationCoordinator.Create(navigation.Object);
 
-        await new LeaveAboutPageUseCase(navigation.Object, TestUseCaseExecutor.Instance)
+        await new LeaveAboutPageUseCase(coordinator, TestUseCaseExecutor.Instance)
             .ExecuteAsync(new LeaveAboutPageRequest(), TestContext.CancellationToken);
-        await new LeaveStorePageUseCase(navigation.Object, TestUseCaseExecutor.Instance)
+        await new LeaveStorePageUseCase(coordinator, TestUseCaseExecutor.Instance)
             .ExecuteAsync(new LeaveStorePageRequest(), TestContext.CancellationToken);
 
         navigation.Verify(service => service.Navigate(NavigationRoute.Home, null, true), Times.Exactly(2));
@@ -105,7 +110,8 @@ public sealed class SimpleApplicationUseCaseTests
     public async Task ShutdownUseCases_RespectShutdownStateAndInvokeHandler()
     {
         var shutdown = new Mock<IShutdownHandler>();
-        var exit = new ExitApplicationUseCase(shutdown.Object, TestUseCaseExecutor.Instance);
+        INavigationCoordinator coordinator = TestNavigationCoordinator.Create(Mock.Of<INavigationService>());
+        var exit = new ExitApplicationUseCase(shutdown.Object, coordinator, TestUseCaseExecutor.Instance);
         var restart = new RestartApplicationUseCase(shutdown.Object, TestUseCaseExecutor.Instance);
 
         Assert.IsTrue(exit.CanExecute(new ExitApplicationRequest()));
@@ -122,6 +128,30 @@ public sealed class SimpleApplicationUseCaseTests
         shutdown.Setup(handler => handler.IsShuttingDown).Returns(true);
         Assert.IsFalse(exit.CanExecute(new ExitApplicationRequest()));
         Assert.IsFalse(restart.CanExecute(new RestartApplicationRequest()));
+    }
+
+    [TestMethod]
+    public async Task ExitApplicationUseCase_WhenLeavePolicyRejects_DoesNotShutdown()
+    {
+        var shutdown = new Mock<IShutdownHandler>();
+        var editGuard = new Mock<IEditSessionGuard>();
+        editGuard
+            .Setup(guard => guard.CanLeaveCurrentSessionAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
+        INavigationCoordinator coordinator = TestNavigationCoordinator.Create(
+            Mock.Of<INavigationService>(),
+            editGuard.Object);
+        var exit = new ExitApplicationUseCase(
+            shutdown.Object,
+            coordinator,
+            TestUseCaseExecutor.Instance);
+
+        ExitApplicationResponse response = (await exit.ExecuteAsync(
+            new ExitApplicationRequest(),
+            TestContext.CancellationToken)).Value!;
+
+        Assert.IsFalse(response.Succeeded);
+        shutdown.Verify(handler => handler.Shutdown(), Times.Never);
     }
 
     [TestMethod]
@@ -269,6 +299,7 @@ public sealed class SimpleApplicationUseCaseTests
             .Setup(useCase => useCase.ExecuteAsync(It.IsAny<OpenVideoEditPageRequest>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(UseCaseResponse<OpenVideoEditPageResponse>.Success(new OpenVideoEditPageResponse()));
         var catalog = new Mock<IRecentCaptureCatalog>();
+        INavigationCoordinator coordinator = TestNavigationCoordinator.Create(Mock.Of<INavigationService>());
         var useCase = new OpenRecentCaptureUseCase(
             TestFileSystem.Instance,
             CreateRecentCaptureStorage(),
@@ -276,6 +307,7 @@ public sealed class SimpleApplicationUseCaseTests
             audioEdit.Object,
             imageEdit.Object,
             videoEdit.Object,
+            coordinator,
             TestUseCaseExecutor.Instance);
 
         Assert.IsTrue(useCase.CanExecute(new OpenRecentCaptureRequest(audioPath)));
@@ -308,6 +340,7 @@ public sealed class SimpleApplicationUseCaseTests
     public async Task OpenRecentCaptureUseCase_ReturnsNotOpenedForMissingOrUnknownFiles()
     {
         string unknownPath = await CreateTempFileAsync("capture.bin");
+        INavigationCoordinator coordinator = TestNavigationCoordinator.Create(Mock.Of<INavigationService>());
         var useCase = new OpenRecentCaptureUseCase(
             TestFileSystem.Instance,
             CreateRecentCaptureStorage(),
@@ -315,6 +348,7 @@ public sealed class SimpleApplicationUseCaseTests
             Mock.Of<IOpenAudioEditPageUseCase>(),
             Mock.Of<IOpenImageEditPageUseCase>(),
             Mock.Of<IOpenVideoEditPageUseCase>(),
+            coordinator,
             TestUseCaseExecutor.Instance);
 
         Assert.IsFalse(useCase.CanExecute(new OpenRecentCaptureRequest("")));

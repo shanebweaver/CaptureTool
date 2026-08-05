@@ -29,6 +29,8 @@ internal sealed class StopAudioCaptureUseCase : IStopAudioCaptureUseCase
             useCase: () =>
             {
                 var audioFile = _audioCaptureWorkflow.StopCapture();
+                // This is the successful completion of the active audio workflow,
+                // not an attempt to abandon it; the audio leave guard must not run.
                 _navigationService.Navigate(NavigationRoute.AudioEdit, audioFile);
                 return new StopAudioCaptureResponse();
             },

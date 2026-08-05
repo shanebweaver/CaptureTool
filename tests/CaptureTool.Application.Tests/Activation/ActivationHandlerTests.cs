@@ -1,6 +1,7 @@
 using CaptureTool.Application.Abstractions.Activation;
 using CaptureTool.Application.Abstractions.Cancellation;
 using CaptureTool.Application.Abstractions.Capture.Overlay.OpenSelectionOverlay;
+using CaptureTool.Application.Abstractions.EditSessions;
 using CaptureTool.Application.Abstractions.Localization;
 using CaptureTool.Application.Abstractions.Logging;
 using CaptureTool.Application.Abstractions.Metrics;
@@ -11,6 +12,10 @@ using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Application.Abstractions.Telemetry;
 using CaptureTool.Application.Abstractions.UseCases;
 using CaptureTool.Application.Activation;
+using CaptureTool.Application.Capture.Overlay.OpenSelectionOverlay;
+using CaptureTool.Application.EditSessions;
+using CaptureTool.Application.Navigation;
+using CaptureTool.Application.Shell.Home.ShowHomePage;
 using CaptureTool.Domain.Capture;
 using Moq;
 
@@ -178,6 +183,153 @@ public sealed class ActivationHandlerTests
             Times.Once);
     }
 
+    [TestMethod]
+    [DataRow(EditSessionLeaveDecision.SaveToSource, true)]
+    [DataRow(EditSessionLeaveDecision.Discard, true)]
+    [DataRow(EditSessionLeaveDecision.Cancel, false)]
+    public async Task HandleProtocolActivationAsync_WithDirtyImageSession_ObeysLeaveDecision(
+        EditSessionLeaveDecision decision,
+        bool shouldNavigate)
+    {
+        var session = new Mock<ISourceSaveableSession>();
+        session.SetupGet(value => value.HasUnsavedChanges).Returns(true);
+        session
+            .Setup(value => value.SaveToSourceAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+
+        Mock<INavigationService> navigation = await HandleProtocolWithDirtySessionAsync(
+            session.Object,
+            decision,
+            new Uri("ms-screenclip://capture?source=PrintScreen"));
+
+        navigation.Verify(
+            service => service.Navigate(
+                NavigationRoute.SelectionOverlay,
+                It.Is<CaptureOptions>(options => options.CaptureMode == CaptureMode.Image),
+                false),
+            shouldNavigate ? Times.Once : Times.Never);
+        session.Verify(
+            value => value.SaveToSourceAsync(It.IsAny<CancellationToken>()),
+            decision == EditSessionLeaveDecision.SaveToSource ? Times.Once : Times.Never);
+    }
+
+    [TestMethod]
+    [DataRow(EditSessionLeaveDecision.SaveAs, true)]
+    [DataRow(EditSessionLeaveDecision.Discard, true)]
+    [DataRow(EditSessionLeaveDecision.Cancel, false)]
+    public async Task HandleProtocolActivationAsync_WithDirtyVideoSession_ObeysLeaveDecision(
+        EditSessionLeaveDecision decision,
+        bool shouldNavigate)
+    {
+        var session = new Mock<IEditableSession>();
+        session.SetupGet(value => value.HasUnsavedChanges).Returns(true);
+        session
+            .Setup(value => value.SaveAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+
+        Mock<INavigationService> navigation = await HandleProtocolWithDirtySessionAsync(
+            session.Object,
+            decision,
+            new Uri("ms-screenclip://capture?source=ScreenRecorderHotKey"));
+
+        navigation.Verify(
+            service => service.Navigate(
+                NavigationRoute.SelectionOverlay,
+                It.Is<CaptureOptions>(options => options.CaptureMode == CaptureMode.Video),
+                false),
+            shouldNavigate ? Times.Once : Times.Never);
+        session.Verify(
+            value => value.SaveAsync(It.IsAny<CancellationToken>()),
+            decision == EditSessionLeaveDecision.SaveAs ? Times.Once : Times.Never);
+    }
+
+    [TestMethod]
+    public async Task HandleProtocolActivationAsync_WithUnknownSourceAndCanceledLeave_DoesNotShowHome()
+    {
+        var session = new Mock<IEditableSession>();
+        session.SetupGet(value => value.HasUnsavedChanges).Returns(true);
+
+        Mock<INavigationService> navigation = await HandleProtocolWithDirtySessionAsync(
+            session.Object,
+            EditSessionLeaveDecision.Cancel,
+            new Uri("ms-screenclip://capture?source=Other"));
+
+        navigation.Verify(
+            service => service.Navigate(It.IsAny<object>(), It.IsAny<object?>(), It.IsAny<bool>()),
+            Times.Never);
+    }
+
+    [TestMethod]
+    public async Task HandleLaunchActivationAsync_WithDirtySessionAndCanceledLeave_DoesNotNavigateToLaunchTarget()
+    {
+        var session = new Mock<IEditableSession>();
+        session.SetupGet(value => value.HasUnsavedChanges).Returns(true);
+        LaunchNavigationTarget launchTarget = new(NavigationRoute.ImageEdit, "image.png");
+        (CaptureToolActivationHandler handler, Mock<INavigationService> navigation) =
+            CreateHandlerWithDirtySession(
+                session.Object,
+                EditSessionLeaveDecision.Cancel,
+                launchTarget);
+
+        await handler.HandleLaunchActivationAsync();
+
+        navigation.Verify(
+            service => service.Navigate(It.IsAny<object>(), It.IsAny<object?>(), It.IsAny<bool>()),
+            Times.Never);
+    }
+
+    private static async Task<Mock<INavigationService>> HandleProtocolWithDirtySessionAsync(
+        IEditableSession session,
+        EditSessionLeaveDecision decision,
+        Uri protocolUri)
+    {
+        (CaptureToolActivationHandler handler, Mock<INavigationService> navigation) =
+            CreateHandlerWithDirtySession(session, decision);
+
+        await handler.HandleProtocolActivationAsync(protocolUri);
+        return navigation;
+    }
+
+    private static (CaptureToolActivationHandler Handler, Mock<INavigationService> Navigation)
+        CreateHandlerWithDirtySession(
+            IEditableSession session,
+            EditSessionLeaveDecision decision,
+            LaunchNavigationTarget? launchTarget = null)
+    {
+        var activeSession = new ActiveEditSessionService();
+        activeSession.SetCurrentSession(session);
+        var confirmation = new Mock<IEditSessionConfirmationService>();
+        confirmation
+            .Setup(service => service.ConfirmLeaveAsync(session, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(decision);
+        var settings = new Mock<ISettingsService>();
+        settings
+            .Setup(service => service.Get(CaptureToolSettings.Settings_Edit_WarnBeforeDiscard))
+            .Returns(true);
+        var editGuard = new EditSessionGuard(activeSession, confirmation.Object, settings.Object);
+        var audioGuard = new Mock<CaptureTool.Application.Abstractions.Capture.Audio.IAudioCaptureNavigationGuard>();
+        audioGuard
+            .Setup(guard => guard.CanNavigateAwayFromActiveCaptureAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+        var navigation = new Mock<INavigationService>();
+        var coordinator = new NavigationCoordinator(navigation.Object, editGuard, audioGuard.Object);
+        var openSelection = new OpenSelectionOverlayUseCase(coordinator, TestUseCaseExecutor.Instance);
+        var showHome = new ShowHomePageUseCase(coordinator, TestUseCaseExecutor.Instance);
+        var launchTargetProvider = new Mock<ILaunchNavigationTargetProvider>();
+        launchTargetProvider
+            .Setup(provider => provider.GetLaunchNavigationTarget())
+            .Returns(launchTarget);
+        var handler = new CaptureToolActivationHandler(
+            openSelection,
+            showHome,
+            Mock.Of<ILogService>(),
+            new FakeStartupInitializer(),
+            launchTargetProvider.Object,
+            coordinator);
+
+        return (handler, navigation);
+    }
+
     public TestContext TestContext { get; set; } = null!;
 
     private sealed class ActivationHandlerFixture
@@ -197,7 +349,7 @@ public sealed class ActivationHandlerTests
                 LogService.Object,
                 StartupInitializer,
                 LaunchNavigationTargetProvider.Object,
-                NavigationService.Object);
+                TestNavigationCoordinator.Create(NavigationService.Object));
         }
 
         public CaptureToolActivationHandler Handler { get; }

@@ -1,4 +1,3 @@
-using CaptureTool.Application.Abstractions.Capture.Audio;
 using CaptureTool.Application.Abstractions.Edit.Audio.OpenAudioEditPage;
 using CaptureTool.Application.Abstractions.Files;
 using CaptureTool.Application.Abstractions.Navigation;
@@ -11,20 +10,17 @@ internal sealed class OpenAudioEditPageUseCase : IOpenAudioEditPageUseCase
 {
     private const string ActivityId = "OpenAudioEditPage";
 
-    private readonly INavigationService _navigationService;
+    private readonly INavigationCoordinator _navigationCoordinator;
     private readonly IUseCaseExecutor _useCaseExecutor;
     private readonly IFileSystem _fileSystem;
-    private readonly IAudioCaptureNavigationGuard _audioCaptureNavigationGuard;
 
     public OpenAudioEditPageUseCase(
-        INavigationService navigationService,
+        INavigationCoordinator navigationCoordinator,
         IFileSystem fileSystem,
-        IUseCaseExecutor useCaseExecutor,
-        IAudioCaptureNavigationGuard audioCaptureNavigationGuard)
+        IUseCaseExecutor useCaseExecutor)
     {
-        _navigationService = navigationService;
+        _navigationCoordinator = navigationCoordinator;
         _fileSystem = fileSystem;
-        _audioCaptureNavigationGuard = audioCaptureNavigationGuard;
         _useCaseExecutor = useCaseExecutor;
     }
 
@@ -40,13 +36,11 @@ internal sealed class OpenAudioEditPageUseCase : IOpenAudioEditPageUseCase
             activityId: ActivityId,
             useCase: async _ =>
             {
-                if (!await _audioCaptureNavigationGuard.CanNavigateAwayFromActiveCaptureAsync(cancellationToken))
-                {
-                    return new OpenAudioEditPageResponse(false);
-                }
-
-                _navigationService.Navigate(NavigationRoute.AudioEdit, request.AudioFile);
-                return new OpenAudioEditPageResponse();
+                bool navigated = await _navigationCoordinator.NavigateAsync(
+                    NavigationRoute.AudioEdit,
+                    request.AudioFile,
+                    cancellationToken: cancellationToken);
+                return new OpenAudioEditPageResponse(navigated);
             },
             cancellationToken: cancellationToken);
     }

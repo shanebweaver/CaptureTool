@@ -2,7 +2,7 @@
 
 - Issue: [#408](https://github.com/shanebweaver/CaptureTool/issues/408)
 - Severity: High
-- Status: Ready for implementation
+- Status: Implemented
 - Affected features: `APP-01`, `APP-02`, `APP-07`
 
 ## Summary
@@ -120,14 +120,14 @@ Use real coordinator/guard behavior with fake image and video `IEditableSession`
 
 ## Acceptance criteria
 
-- [ ] A dirty image edit cannot be replaced by image/video protocol activation without the configured leave decision.
-- [ ] A dirty video edit cannot be replaced by image/video protocol activation without the configured leave decision.
-- [ ] Save proceeds only after a successful save; failed or cancelled saves retain the editor.
-- [ ] Discard proceeds and Cancel retains the editor.
-- [ ] Menu, nested use-case, protocol, and exit paths share the same application leave-policy boundary.
-- [ ] Competing transitions cannot display overlapping leave confirmations.
-- [ ] No ordinary application navigation caller can bypass the coordinator unintentionally.
-- [ ] Existing non-UI tests pass and the WinUI x64 Debug project builds.
+- [x] A dirty image edit cannot be replaced by image/video protocol activation without the configured leave decision.
+- [x] A dirty video edit cannot be replaced by image/video protocol activation without the configured leave decision.
+- [x] Save proceeds only after a successful save; failed or cancelled saves retain the editor.
+- [x] Discard proceeds and Cancel retains the editor.
+- [x] Menu, nested use-case, protocol, and exit paths share the same application leave-policy boundary.
+- [x] Competing transitions cannot display overlapping leave confirmations.
+- [x] No ordinary application navigation caller can bypass the coordinator unintentionally.
+- [x] Existing non-UI tests pass and the WinUI x64 Debug project builds.
 
 ## Follow-up boundary
 

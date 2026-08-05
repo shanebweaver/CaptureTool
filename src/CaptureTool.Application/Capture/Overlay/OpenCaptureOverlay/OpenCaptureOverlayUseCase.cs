@@ -1,4 +1,3 @@
-using CaptureTool.Application.Abstractions.Capture.Audio;
 using CaptureTool.Application.Abstractions.Capture.Overlay.OpenCaptureOverlay;
 using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Application.Abstractions.UseCases;
@@ -11,16 +10,14 @@ internal sealed class OpenCaptureOverlayUseCase : IOpenCaptureOverlayUseCase
     private const string ActivityId = "OpenCaptureOverlay";
 
     private readonly IUseCaseExecutor _useCaseExecutor;
-    private readonly INavigationService _navigationService;
-    private readonly IAudioCaptureNavigationGuard _audioCaptureNavigationGuard;
+    private readonly INavigationCoordinator _navigationCoordinator;
 
-    public OpenCaptureOverlayUseCase(INavigationService navigationService,
-        IUseCaseExecutor useCaseExecutor,
-        IAudioCaptureNavigationGuard audioCaptureNavigationGuard)
+    public OpenCaptureOverlayUseCase(
+        INavigationCoordinator navigationCoordinator,
+        IUseCaseExecutor useCaseExecutor)
     {
         _useCaseExecutor = useCaseExecutor;
-        _navigationService = navigationService;
-        _audioCaptureNavigationGuard = audioCaptureNavigationGuard;
+        _navigationCoordinator = navigationCoordinator;
     }
 
     public Task<UseCaseResponse<OpenCaptureOverlayResponse>> ExecuteAsync(OpenCaptureOverlayRequest request, CancellationToken cancellationToken = default)
@@ -29,13 +26,11 @@ internal sealed class OpenCaptureOverlayUseCase : IOpenCaptureOverlayUseCase
             activityId: ActivityId,
             useCase: async _ =>
             {
-                if (!await _audioCaptureNavigationGuard.CanNavigateAwayFromActiveCaptureAsync(cancellationToken))
-                {
-                    return new OpenCaptureOverlayResponse(false);
-                }
-
-                _navigationService.Navigate(NavigationRoute.CaptureOverlay, request.CaptureArgs);
-                return new OpenCaptureOverlayResponse();
+                bool navigated = await _navigationCoordinator.NavigateAsync(
+                    NavigationRoute.CaptureOverlay,
+                    request.CaptureArgs,
+                    cancellationToken: cancellationToken);
+                return new OpenCaptureOverlayResponse(navigated);
             },
             cancellationToken: cancellationToken);
     }

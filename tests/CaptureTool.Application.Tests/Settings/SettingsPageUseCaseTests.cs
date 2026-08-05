@@ -141,7 +141,8 @@ public sealed class SettingsPageUseCaseTests
     {
         var navigation = new Mock<INavigationService>();
         navigation.Setup(service => service.TryGoBack()).Returns(false);
-        var useCase = new LeaveSettingsPageUseCase(navigation.Object, TestUseCaseExecutor.Instance);
+        INavigationCoordinator coordinator = TestNavigationCoordinator.Create(navigation.Object);
+        var useCase = new LeaveSettingsPageUseCase(coordinator, TestUseCaseExecutor.Instance);
 
         LeaveSettingsPageResponse response = (await useCase.ExecuteAsync(new LeaveSettingsPageRequest(), TestContext.CancellationToken)).Value!;
 

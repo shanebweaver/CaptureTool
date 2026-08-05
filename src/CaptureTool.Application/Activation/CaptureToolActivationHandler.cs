@@ -17,7 +17,7 @@ internal sealed class CaptureToolActivationHandler : IActivationHandler
     private readonly ILogService _logService;
     private readonly IApplicationStartupInitializer _startupInitializer;
     private readonly ILaunchNavigationTargetProvider _launchNavigationTargetProvider;
-    private readonly INavigationService _navigationService;
+    private readonly INavigationCoordinator _navigationCoordinator;
     private readonly ITelemetryService? _telemetryService;
 
     private readonly SemaphoreSlim _semaphoreActivation = new(1, 1);
@@ -28,7 +28,7 @@ internal sealed class CaptureToolActivationHandler : IActivationHandler
         ILogService logService,
         IApplicationStartupInitializer startupInitializer,
         ILaunchNavigationTargetProvider launchNavigationTargetProvider,
-        INavigationService navigationService,
+        INavigationCoordinator navigationCoordinator,
         ITelemetryService? telemetryService = null)
     {
         _openSelectionOverlay = openSelectionOverlay;
@@ -36,7 +36,7 @@ internal sealed class CaptureToolActivationHandler : IActivationHandler
         _logService = logService;
         _startupInitializer = startupInitializer;
         _launchNavigationTargetProvider = launchNavigationTargetProvider;
-        _navigationService = navigationService;
+        _navigationCoordinator = navigationCoordinator;
         _telemetryService = telemetryService;
     }
 
@@ -55,7 +55,7 @@ internal sealed class CaptureToolActivationHandler : IActivationHandler
             }
             else
             {
-                _navigationService.Navigate(
+                await _navigationCoordinator.NavigateAsync(
                     launchTarget.Route,
                     launchTarget.Parameter,
                     launchTarget.ClearHistory);

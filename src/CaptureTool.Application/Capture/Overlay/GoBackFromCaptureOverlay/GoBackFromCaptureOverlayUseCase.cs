@@ -15,24 +15,24 @@ internal sealed class GoBackFromCaptureOverlayUseCase : IGoBackFromCaptureOverla
     private readonly IUseCaseExecutor _useCaseExecutor;
     private readonly IVideoCaptureWorkflow _videoCaptureWorkflow;
     private readonly ICancelVideoCaptureUseCase _cancelVideoCaptureUseCase;
-    private readonly INavigationService _navigationService;
+    private readonly INavigationCoordinator _navigationCoordinator;
 
     public GoBackFromCaptureOverlayUseCase(
         IVideoCaptureWorkflow videoCaptureWorkflow,
         ICancelVideoCaptureUseCase cancelVideoCaptureUseCase,
-        INavigationService navigationService,
+        INavigationCoordinator navigationCoordinator,
         IUseCaseExecutor useCaseExecutor)
     {
         _useCaseExecutor = useCaseExecutor;
         _videoCaptureWorkflow = videoCaptureWorkflow;
         _cancelVideoCaptureUseCase = cancelVideoCaptureUseCase;
-        _navigationService = navigationService;
+        _navigationCoordinator = navigationCoordinator;
     }
 
     public bool CanExecute(GoBackFromCaptureOverlayRequest request)
     {
-        bool canExecute = _navigationService.CanGoBack
-            && _navigationService.CurrentRequest?.Route is NavigationRoute.CaptureOverlay;
+        bool canExecute = _navigationCoordinator.CanGoBack
+            && _navigationCoordinator.CurrentRequest?.Route is NavigationRoute.CaptureOverlay;
 
         return canExecute;
     }
@@ -49,9 +49,25 @@ internal sealed class GoBackFromCaptureOverlayUseCase : IGoBackFromCaptureOverla
                     return new GoBackFromCaptureOverlayResponse(false);
                 }
 
-                if (!_navigationService.TryGoBack())
+                bool navigated = await _navigationCoordinator.ExecuteTransitionAsync(
+                    async transitionToken =>
+                    {
+                        if (await _navigationCoordinator.TryGoBackAsync(transitionToken))
+                        {
+                            return true;
+                        }
+
+                        return await _navigationCoordinator.NavigateAsync(
+                            NavigationRoute.SelectionOverlay,
+                            CaptureOptions.VideoDefault,
+                            clearHistory: true,
+                            cancellationToken: transitionToken);
+                    },
+                    token);
+
+                if (!navigated)
                 {
-                    _navigationService.Navigate(NavigationRoute.SelectionOverlay, CaptureOptions.VideoDefault, true);
+                    return new GoBackFromCaptureOverlayResponse(false);
                 }
 
                 return new GoBackFromCaptureOverlayResponse(discardResult.VideoCaptureCanceled);

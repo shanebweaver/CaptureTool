@@ -4,6 +4,7 @@ using CaptureTool.Application.Abstractions.Edit.Video.OpenVideoEditPage;
 using CaptureTool.Application.Abstractions.Files;
 using CaptureTool.Application.Abstractions.Library.RecentCaptures;
 using CaptureTool.Application.Abstractions.Library.RecentCaptures.OpenRecentCapture;
+using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Application.Abstractions.UseCases;
 using CaptureTool.Application.UseCases;
@@ -23,6 +24,7 @@ internal sealed class OpenRecentCaptureUseCase : IOpenRecentCaptureUseCase
     private readonly IOpenAudioEditPageUseCase _goToAudioEdit;
     private readonly IOpenImageEditPageUseCase _goToImageEdit;
     private readonly IOpenVideoEditPageUseCase _goToVideoEdit;
+    private readonly INavigationCoordinator _navigationCoordinator;
 
     public OpenRecentCaptureUseCase(
         IFileSystem fileSystem,
@@ -31,6 +33,7 @@ internal sealed class OpenRecentCaptureUseCase : IOpenRecentCaptureUseCase
         IOpenAudioEditPageUseCase goToAudioEdit,
         IOpenImageEditPageUseCase goToImageEdit,
         IOpenVideoEditPageUseCase goToVideoEdit,
+        INavigationCoordinator navigationCoordinator,
         IUseCaseExecutor useCaseExecutor)
     {
         _useCaseExecutor = useCaseExecutor;
@@ -40,6 +43,7 @@ internal sealed class OpenRecentCaptureUseCase : IOpenRecentCaptureUseCase
         _goToAudioEdit = goToAudioEdit;
         _goToImageEdit = goToImageEdit;
         _goToVideoEdit = goToVideoEdit;
+        _navigationCoordinator = navigationCoordinator;
     }
 
     public bool CanExecute(OpenRecentCaptureRequest request)
@@ -64,33 +68,38 @@ internal sealed class OpenRecentCaptureUseCase : IOpenRecentCaptureUseCase
                     return new OpenRecentCaptureResponse(false);
                 }
 
-                string workingFilePath = PrepareWorkingFile(request.FilePath);
-                switch (fileType)
-                {
-                    case CaptureFileType.Audio:
-                        await _goToAudioEdit.ExecuteAsync(new OpenAudioEditPageRequest(new AudioFile(workingFilePath)), cancellationToken);
-                        break;
+                bool opened = await _navigationCoordinator.ExecuteTransitionAsync(
+                    async token =>
+                    {
+                        string workingFilePath = PrepareWorkingFile(request.FilePath);
+                        bool navigated = fileType switch
+                        {
+                            CaptureFileType.Audio => (await _goToAudioEdit.ExecuteAsync(
+                                new OpenAudioEditPageRequest(new AudioFile(workingFilePath)),
+                                token)).Value?.Succeeded == true,
+                            CaptureFileType.Image => (await _goToImageEdit.ExecuteAsync(
+                                new OpenImageEditPageRequest(new ImageFile(
+                                    workingFilePath,
+                                    string.Equals(workingFilePath, request.FilePath, StringComparison.OrdinalIgnoreCase)
+                                        ? null
+                                        : request.FilePath)),
+                                token)).Value?.Succeeded == true,
+                            CaptureFileType.Video => (await _goToVideoEdit.ExecuteAsync(
+                                new OpenVideoEditPageRequest(new VideoFile(workingFilePath)),
+                                token)).Value?.Succeeded == true,
+                            _ => false
+                        };
 
-                    case CaptureFileType.Image:
-                        await _goToImageEdit.ExecuteAsync(
-                            new OpenImageEditPageRequest(new ImageFile(
-                                workingFilePath,
-                                string.Equals(workingFilePath, request.FilePath, StringComparison.OrdinalIgnoreCase)
-                                    ? null
-                                    : request.FilePath)),
-                            cancellationToken);
-                        break;
+                        if (navigated)
+                        {
+                            _recentCaptureCatalog.Touch(request.FilePath);
+                        }
 
-                    case CaptureFileType.Video:
-                        await _goToVideoEdit.ExecuteAsync(new OpenVideoEditPageRequest(new VideoFile(workingFilePath)), cancellationToken);
-                        break;
+                        return navigated;
+                    },
+                    cancellationToken);
 
-                    default:
-                        return new OpenRecentCaptureResponse(false);
-                }
-
-                _recentCaptureCatalog.Touch(request.FilePath);
-                return new OpenRecentCaptureResponse();
+                return new OpenRecentCaptureResponse(opened);
             },
             cancellationToken: cancellationToken);
     }
