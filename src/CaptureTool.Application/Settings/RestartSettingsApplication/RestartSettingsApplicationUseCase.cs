@@ -27,8 +27,8 @@ internal sealed class RestartSettingsApplicationUseCase : IRestartSettingsApplic
             activityId: ActivityId,
             useCase: () =>
             {
-                _shutdownHandler.TryRestart();
-                return new RestartSettingsApplicationResponse();
+                bool succeeded = _shutdownHandler.TryRestart();
+                return new RestartSettingsApplicationResponse(succeeded);
             },
             cancellationToken: cancellationToken);
     }

@@ -189,6 +189,7 @@ public sealed class SettingsPageUseCaseTests
     public async Task RestartSettingsApplicationUseCase_RespectsShutdownStateAndRestarts()
     {
         var shutdown = new Mock<IShutdownHandler>();
+        shutdown.Setup(handler => handler.TryRestart()).Returns(true);
         var useCase = new RestartSettingsApplicationUseCase(shutdown.Object, TestUseCaseExecutor.Instance);
 
         Assert.IsTrue(useCase.CanExecute(new RestartSettingsApplicationRequest()));
@@ -199,6 +200,22 @@ public sealed class SettingsPageUseCaseTests
 
         shutdown.Setup(handler => handler.IsShuttingDown).Returns(true);
         Assert.IsFalse(useCase.CanExecute(new RestartSettingsApplicationRequest()));
+    }
+
+    [TestMethod]
+    public async Task RestartSettingsApplicationUseCase_WhenRestartFails_ReturnsFailure()
+    {
+        var shutdown = new Mock<IShutdownHandler>();
+        shutdown.Setup(handler => handler.TryRestart()).Returns(false);
+        var useCase = new RestartSettingsApplicationUseCase(
+            shutdown.Object,
+            TestUseCaseExecutor.Instance);
+
+        RestartSettingsApplicationResponse response = (await useCase.ExecuteAsync(
+            new RestartSettingsApplicationRequest(),
+            TestContext.CancellationToken)).Value!;
+
+        Assert.IsFalse(response.Succeeded);
     }
 
     [TestMethod]
