@@ -23,6 +23,35 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
 {
     private const double TrimComparisonToleranceSeconds = 0.01;
 
+    private enum VideoVariant
+    {
+        Original,
+        SuperResolution,
+    }
+
+    private readonly record struct VideoEditSnapshot(
+        double? TrimStartSeconds,
+        double? TrimEndSeconds,
+        VideoVariant Variant)
+    {
+        public bool IsEquivalentTo(VideoEditSnapshot other)
+        {
+            return Variant == other.Variant &&
+                AreEquivalent(TrimStartSeconds, other.TrimStartSeconds) &&
+                AreEquivalent(TrimEndSeconds, other.TrimEndSeconds);
+        }
+
+        private static bool AreEquivalent(double? first, double? second)
+        {
+            if (!first.HasValue || !second.HasValue)
+            {
+                return first.HasValue == second.HasValue;
+            }
+
+            return Math.Abs(first.Value - second.Value) <= TrimComparisonToleranceSeconds;
+        }
+    }
+
     public IAsyncRelayCommand SaveCommand { get; }
     public IAsyncRelayCommand CopyCommand { get; }
     public IAsyncRelayCommand EditInClipchampCommand { get; }
@@ -175,6 +204,7 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
     private readonly ITelemetryService? _telemetryService;
     private string? _originalVideoPath;
     private string? _superResolutionVideoPath;
+    private VideoEditSnapshot? _savedEditSnapshot;
 
     public string EditSessionName => "video edit session";
 
@@ -242,6 +272,7 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
 
         _originalVideoPath = video.FilePath;
         _superResolutionVideoPath = null;
+        _savedEditSnapshot = null;
         VideoPath = _originalVideoPath;
         IsVideoSuperResolutionActive = false;
         IsVideoSuperResolutionGenerating = false;
@@ -250,7 +281,8 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
         IsVideoSuperResolutionFeatureEnabled =
             _videoSuperResolutionFeatureAvailability.IsVideoSuperResolutionEnabled;
         ResetTrimRange(0);
-        HasUnsavedChanges = false;
+        _savedEditSnapshot = CaptureEditSnapshot();
+        UpdateHasUnsavedChanges();
 
         if (video is PendingVideoFile pendingVideo)
         {
@@ -380,6 +412,7 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
         TrimEndSeconds = durationSeconds;
         PlayheadSeconds = 0;
         RaisePropertyChanged(nameof(IsTrimmed));
+        UpdateHasUnsavedChanges();
     }
 
     private void KeepPlayheadInTrimRange()
@@ -411,7 +444,8 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
                 TrackEditTool("trim", TelemetryOutcomes.Succeeded);
             }
 
-            HasUnsavedChanges = false;
+            _savedEditSnapshot = CaptureEditSnapshot();
+            UpdateHasUnsavedChanges();
             return true;
         }
 
@@ -555,7 +589,7 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
         VideoPath = _originalVideoPath;
         BeginMediaLoading();
         IsVideoSuperResolutionActive = false;
-        HasUnsavedChanges = IsTrimmed || !string.IsNullOrWhiteSpace(_superResolutionVideoPath);
+        UpdateHasUnsavedChanges();
         UpdateVideoSuperResolutionAvailability();
     }
 
@@ -565,7 +599,7 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
         BeginMediaLoading();
         IsVideoSuperResolutionActive = true;
         VideoSuperResolutionStatusMessage = string.Empty;
-        HasUnsavedChanges = true;
+        UpdateHasUnsavedChanges();
         UpdateVideoSuperResolutionAvailability();
         TrackEditTool("super_resolution", TelemetryOutcomes.Succeeded);
     }
@@ -683,7 +717,23 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
 
     private void OnTrimChanged()
     {
-        HasUnsavedChanges = IsTrimmed || IsVideoSuperResolutionActive;
+        UpdateHasUnsavedChanges();
+    }
+
+    private VideoEditSnapshot CaptureEditSnapshot()
+    {
+        return new VideoEditSnapshot(
+            IsTrimmed ? TrimStartSeconds : null,
+            IsTrimmed ? TrimEndSeconds : null,
+            IsVideoSuperResolutionActive
+                ? VideoVariant.SuperResolution
+                : VideoVariant.Original);
+    }
+
+    private void UpdateHasUnsavedChanges()
+    {
+        HasUnsavedChanges = _savedEditSnapshot.HasValue &&
+            !_savedEditSnapshot.Value.IsEquivalentTo(CaptureEditSnapshot());
     }
 
     private void TrackEditorOpened()

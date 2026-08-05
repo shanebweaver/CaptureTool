@@ -13,7 +13,6 @@ namespace CaptureTool.Infrastructure.Edit.Windows;
 public static partial class Win2DImageCanvasRenderer
 {
     private static readonly Color ClearColor = Color.FromArgb(0, 0, 0, 0);
-    private static readonly Color ImageBackgroundColor = Color.FromArgb(255, 255, 255, 255);
     private const float TextPadding = 2f;
     private const float TextCornerRadius = 4f;
 
@@ -231,12 +230,10 @@ public static partial class Win2DImageCanvasRenderer
             var tolerance = imageChromaKeyEffect.Tolerance;
             var softness = imageChromaKeyEffect.Desaturation;
 
-            drawingSession.Clear(ImageBackgroundColor);
             drawable.GetChromaKeyProcessor().DrawChromaKeyMaskedImage(drawingSession, preparedImage, drawable.Offset, keyColor, tolerance, softness);
         }
         else
         {
-            drawingSession.Clear(ImageBackgroundColor);
             drawingSession.DrawImage(preparedImage, drawable.Offset);
         }
     }
