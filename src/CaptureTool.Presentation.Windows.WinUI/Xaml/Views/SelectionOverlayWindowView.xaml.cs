@@ -37,8 +37,8 @@ public sealed partial class SelectionOverlayWindowView : SelectionOverlayWindowV
 
         if (ViewModel.IsLoaded)
         {
-            SelectionOverlay.WindowRects = ViewModel.MonitorWindows;
-            SelectionOverlay.SelectionRect = ViewModel.CaptureArea;
+            SelectionOverlay.Windows = ViewModel.MonitorWindows;
+            SelectionOverlay.UpdateSelectionRect(ViewModel.CaptureArea);
 
             CaptureType? selectedCaptureType = ViewModel.GetSelectedCaptureType();
             if (selectedCaptureType != null)
@@ -116,10 +116,10 @@ public sealed partial class SelectionOverlayWindowView : SelectionOverlayWindowV
                 UpdateSelectionOverlayCursor();
                 break;
             case nameof(SelectionOverlayWindowViewModel.CaptureArea):
-                SelectionOverlay.SelectionRect = ViewModel.CaptureArea;
+                SelectionOverlay.UpdateSelectionRect(ViewModel.CaptureArea);
                 break;
             case nameof(SelectionOverlayWindowViewModel.MonitorWindows):
-                SelectionOverlay.WindowRects = ViewModel.MonitorWindows;
+                SelectionOverlay.Windows = ViewModel.MonitorWindows;
                 break;
         }
     }
@@ -148,11 +148,11 @@ public sealed partial class SelectionOverlayWindowView : SelectionOverlayWindowV
         };
     }
 
-    private void SelectionOverlay_SelectionComplete(object? _, Rectangle captureArea)
+    private void SelectionOverlay_SelectionComplete(object? _, SelectionOverlaySelection selection)
     {
-        ViewModel.UpdateCaptureAreaCommand.Execute(captureArea);
+        ViewModel.UpdateSelectionCommand.Execute(selection);
 
-        if (captureArea.Height >= 40 && captureArea.Width >= 40)
+        if (selection.Area.Height >= 40 && selection.Area.Width >= 40)
         {
             ViewModel.RequestCaptureCommand.Execute(_);
         }

@@ -199,7 +199,7 @@ public sealed partial class SelectionOverlayHostViewModel : ViewModelBase
             if (ReferenceEquals(target, windowVM))
                 continue;
 
-            target.UpdateCaptureAreaCommand.Execute(Rectangle.Empty);
+            target.UpdateSelectionCommand.Execute(SelectionOverlaySelection.Empty);
         }
     }
 
@@ -215,7 +215,7 @@ public sealed partial class SelectionOverlayHostViewModel : ViewModelBase
             if (ReferenceEquals(target, windowVM))
                 continue;
 
-            target.UpdateCaptureAreaCommand.Execute(Rectangle.Empty);
+            target.UpdateSelectionCommand.Execute(SelectionOverlaySelection.Empty);
         }
     }
 }

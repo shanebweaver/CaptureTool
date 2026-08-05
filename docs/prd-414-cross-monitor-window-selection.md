@@ -3,7 +3,7 @@
 - Issue: [#414](https://github.com/shanebweaver/CaptureTool/issues/414)
 - Finding: `ARCH-09`
 - Severity: Medium
-- Status: Proposed
+- Status: Implemented
 - Affected features: `CAP-01`, `CAP-02`, `CAP-04`
 
 ## Summary
@@ -101,9 +101,9 @@ When one overlay receives a non-empty selection, the other monitor overlays must
 
 ## Acceptance criteria
 
-- [ ] Cross-monitor window selections never extend outside the local overlay canvas.
-- [ ] Left, top, right, bottom, negative-origin, mixed-DPI, and one-pixel intersections have regression coverage.
-- [ ] Window identity is carried explicitly from pointer selection to `NewCaptureArgs`.
-- [ ] Rectangle equality is no longer used to recover a selected handle.
-- [ ] Clearing or changing selections cannot reuse a stale window handle.
-- [ ] Existing non-UI tests pass and the WinUI x64 Debug project builds.
+- [x] Cross-monitor window selections never extend outside the local overlay canvas.
+- [x] Left, top, right, bottom, negative-origin, mixed-DPI, and one-pixel intersections have regression coverage.
+- [x] Window identity is carried explicitly from pointer selection to `NewCaptureArgs`.
+- [x] Rectangle equality is no longer used to recover a selected handle.
+- [x] Clearing or changing selections cannot reuse a stale window handle.
+- [x] Existing non-UI tests pass and the WinUI x64 Debug project builds.
