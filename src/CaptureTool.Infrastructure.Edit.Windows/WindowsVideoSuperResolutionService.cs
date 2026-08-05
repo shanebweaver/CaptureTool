@@ -24,11 +24,11 @@ public sealed class WindowsVideoSuperResolutionService : IVideoSuperResolutionSe
     private const double MinSupportedFrameRate = 15;
     private const double MaxSupportedFrameRate = 60;
 
-    private readonly IStorageService _storageService;
+    private readonly IScratchArtifactStore _scratchArtifactStore;
 
-    public WindowsVideoSuperResolutionService(IStorageService storageService)
+    public WindowsVideoSuperResolutionService(IScratchArtifactStore scratchArtifactStore)
     {
-        _storageService = storageService;
+        _scratchArtifactStore = scratchArtifactStore;
     }
 
     public VideoSuperResolutionReadyState GetReadyState()
@@ -92,6 +92,7 @@ public sealed class WindowsVideoSuperResolutionService : IVideoSuperResolutionSe
             return VideoSuperResolutionResult.NotReady;
         }
 
+        string? outputPath = null;
         string? videoOnlyPath = null;
         try
         {
@@ -117,9 +118,9 @@ public sealed class WindowsVideoSuperResolutionService : IVideoSuperResolutionSe
                 return VideoSuperResolutionResult.UnsupportedVideo();
             }
 
-            StorageFolder outputFolder = await StorageFolder.GetFolderFromPathAsync(
-                _storageService.GetApplicationTemporaryFolderPath());
-            string outputFileName = GetOutputFileName(request.SourceVideo.FilePath);
+            outputPath = _scratchArtifactStore.CreateLeasedArtifactPath("video-super-resolution", ".mp4");
+            StorageFolder outputFolder = await StorageFolder.GetFolderFromPathAsync(Path.GetDirectoryName(outputPath));
+            string outputFileName = Path.GetFileName(outputPath);
             string videoOnlyFileName = $"{Path.GetFileNameWithoutExtension(outputFileName)}.video.mp4";
             StorageFile videoOnlyFile = await outputFolder.CreateFileAsync(
                 videoOnlyFileName,
@@ -167,10 +168,12 @@ public sealed class WindowsVideoSuperResolutionService : IVideoSuperResolutionSe
         }
         catch (OperationCanceledException)
         {
+            _scratchArtifactStore.DeleteArtifact(outputPath ?? string.Empty);
             return VideoSuperResolutionResult.Cancelled;
         }
         catch (Exception ex)
         {
+            _scratchArtifactStore.DeleteArtifact(outputPath ?? string.Empty);
             return VideoSuperResolutionResult.Failed(ex.Message);
         }
         finally

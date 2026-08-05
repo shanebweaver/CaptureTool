@@ -7,6 +7,7 @@ using CaptureTool.Application.Abstractions.EditSessions;
 using CaptureTool.Application.Abstractions.Localization;
 using CaptureTool.Application.Abstractions.Logging;
 using CaptureTool.Application.Abstractions.Settings.OpenVideosFolder;
+using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Application.Abstractions.Telemetry;
 using CaptureTool.Application.Abstractions.UseCases;
 using CaptureTool.Domain.Ai;
@@ -202,6 +203,8 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
     private readonly ILocalizationService _localizationService;
     private readonly IAppNotificationService _notificationService;
     private readonly ITelemetryService? _telemetryService;
+    private readonly IScratchArtifactStore? _scratchArtifactStore;
+    private readonly HashSet<string> _scratchArtifactPaths = new(StringComparer.OrdinalIgnoreCase);
     private string? _originalVideoPath;
     private string? _superResolutionVideoPath;
     private VideoEditSnapshot? _savedEditSnapshot;
@@ -226,7 +229,8 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
         IAiFeatureConsentDialogService? aiFeatureConsentDialogService = null,
         ILocalizationService? localizationService = null,
         IAppNotificationService? notificationService = null,
-        ITelemetryService? telemetryService = null)
+        ITelemetryService? telemetryService = null,
+        IScratchArtifactStore? scratchArtifactStore = null)
     {
         _saveAction = saveAction;
         _copyAction = copyAction;
@@ -241,6 +245,7 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
         _localizationService = localizationService ?? new ResourceKeyLocalizationService();
         _notificationService = notificationService ?? new NullAppNotificationService();
         _telemetryService = telemetryService;
+        _scratchArtifactStore = scratchArtifactStore;
 
         SaveCommand = new AsyncRelayCommand(SaveCommandAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
         CopyCommand = new AsyncRelayCommand(CopyAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
@@ -271,6 +276,7 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
         StartLoading();
 
         _originalVideoPath = video.FilePath;
+        TrackScratchArtifact(video.FilePath);
         _superResolutionVideoPath = null;
         _savedEditSnapshot = null;
         VideoPath = _originalVideoPath;
@@ -539,6 +545,7 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
             }
 
             _superResolutionVideoPath = result.VideoFile.FilePath;
+            TrackScratchArtifact(_superResolutionVideoPath);
             ShowSuperResolutionVideo(_superResolutionVideoPath);
         }
         catch (OperationCanceledException)
@@ -571,12 +578,12 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
         bool consented = await _aiFeatureConsentDialogService.RequestConsentAsync(
             featureId,
             cancellationToken);
-        await _aiFeatureConsentService.SetConsentAsync(
+        bool saved = await _aiFeatureConsentService.SetConsentAsync(
             featureId,
             consented,
             cancellationToken);
         UpdateVideoSuperResolutionAvailability();
-        return consented;
+        return consented && saved;
     }
 
     private void ShowOriginalVideo()
@@ -602,6 +609,36 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
         UpdateHasUnsavedChanges();
         UpdateVideoSuperResolutionAvailability();
         TrackEditTool("super_resolution", TelemetryOutcomes.Succeeded);
+    }
+
+    public override void Dispose()
+    {
+        foreach (string artifactPath in _scratchArtifactPaths)
+        {
+            _scratchArtifactStore?.DeleteArtifact(artifactPath);
+        }
+        _scratchArtifactPaths.Clear();
+        _originalVideoPath = null;
+        _superResolutionVideoPath = null;
+        VideoPath = null;
+        base.Dispose();
+    }
+
+    private void TrackScratchArtifact(string artifactPath)
+    {
+        if (string.IsNullOrWhiteSpace(artifactPath))
+        {
+            return;
+        }
+
+        if (LoadState == CaptureTool.Presentation.Loading.LoadState.Disposed)
+        {
+            _scratchArtifactStore?.DeleteArtifact(artifactPath);
+        }
+        else
+        {
+            _scratchArtifactPaths.Add(artifactPath);
+        }
     }
 
     private void UpdateVideoSuperResolutionAvailability()
@@ -819,12 +856,12 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
             return AiFeatureConsentState.Granted;
         }
 
-        public Task SetConsentAsync(
+        public Task<bool> SetConsentAsync(
             AiFeatureId featureId,
             bool isGranted,
             CancellationToken cancellationToken = default)
         {
-            return Task.CompletedTask;
+            return Task.FromResult(true);
         }
     }
 

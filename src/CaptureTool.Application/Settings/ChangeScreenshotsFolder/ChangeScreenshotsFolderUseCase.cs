@@ -37,9 +37,11 @@ internal sealed class ChangeScreenshotsFolderUseCase : IChangeScreenshotsFolderU
                     return new ChangeScreenshotsFolderResponse(false);
                 }
 
-                _settings.Set(CaptureToolSettings.Settings_ImageCapture_AutoSaveFolder, folder.FolderPath);
-                await _settings.TrySaveAsync(cancellationToken);
-                return new ChangeScreenshotsFolderResponse();
+                SettingsMutationResult result = await _settings.TrySetAndSaveAsync(
+                    CaptureToolSettings.Settings_ImageCapture_AutoSaveFolder,
+                    folder.FolderPath,
+                    cancellationToken);
+                return new ChangeScreenshotsFolderResponse(result.Succeeded);
             },
             cancellationToken: cancellationToken);
     }

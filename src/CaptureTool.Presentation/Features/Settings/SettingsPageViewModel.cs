@@ -483,14 +483,21 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
         }
 
         AudioFolderPath = audioFolder;
-        TemporaryFilesFolderPath = _storageService.GetApplicationTemporaryFolderPath();
+        TemporaryFilesFolderPath = _storageService.GetApplicationScratchFolderPath();
 
         await base.LoadAsync(cancellationToken);
     }
 
     public async Task UpdateAiFeatureConsentAsync(AiFeatureId featureId, bool isConsented)
     {
-        await _aiFeatureConsentService.SetConsentAsync(featureId, isConsented, CancellationToken.None);
+        bool saved = await _aiFeatureConsentService.SetConsentAsync(
+            featureId,
+            isConsented,
+            CancellationToken.None);
+        if (!saved)
+        {
+            return;
+        }
 
         AiFeatureConsentViewModel? featureConsent = AiFeatureConsents.FirstOrDefault(consent => consent.FeatureId == featureId);
         featureConsent?.ApplyConsent(isConsented);
@@ -510,8 +517,29 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
             return;
         }
 
-        await _updateAppLanguageAction.ExecuteAsync(new UpdateAppLanguageRequest(index), CancellationToken.None);
+        var response = await _updateAppLanguageAction.ExecuteAsync(
+            new UpdateAppLanguageRequest(index),
+            CancellationToken.None);
+        if (response.Value?.Succeeded != true)
+        {
+            SelectedAppLanguageIndex = GetCommittedAppLanguageIndex();
+        }
+
         UpdateShowAppLanguageRestartMessage();
+    }
+
+    private int GetCommittedAppLanguageIndex()
+    {
+        string? languageOverride = _localizationService.LanguageOverride?.Value;
+        for (var index = 0; index < AppLanguages.Count - 1; index++)
+        {
+            if (AppLanguages[index].Language?.Value == languageOverride)
+            {
+                return index;
+            }
+        }
+
+        return AppLanguages.Count - 1;
     }
 
     private void UpdateShowAppLanguageRestartMessage()
@@ -556,62 +584,102 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
 
     private async Task UpdateImageCaptureAutoSaveAsync(bool value)
     {
-        ImageCaptureAutoSave = value;
-        await _updateImageAutoSaveAction.ExecuteAsync(new UpdateImageAutoSaveRequest(value), CancellationToken.None);
+        var response = await _updateImageAutoSaveAction.ExecuteAsync(
+            new UpdateImageAutoSaveRequest(value),
+            CancellationToken.None);
+        ImageCaptureAutoSave = response.Value?.Succeeded == true
+            ? value
+            : _settingsService.Get(CaptureToolSettings.Settings_ImageCapture_AutoSave);
     }
 
     private async Task UpdateImageCaptureAutoCopyAsync(bool value)
     {
-        ImageCaptureAutoCopy = value;
-        await _updateImageAutoCopyAction.ExecuteAsync(new UpdateImageAutoCopyRequest(value), CancellationToken.None);
+        var response = await _updateImageAutoCopyAction.ExecuteAsync(
+            new UpdateImageAutoCopyRequest(value),
+            CancellationToken.None);
+        ImageCaptureAutoCopy = response.Value?.Succeeded == true
+            ? value
+            : _settingsService.Get(CaptureToolSettings.Settings_ImageCapture_AutoCopy);
     }
 
     private async Task UpdateVideoCaptureAutoSaveAsync(bool value)
     {
-        VideoCaptureAutoSave = value;
-        await _updateVideoCaptureAutoSaveAction.ExecuteAsync(new UpdateVideoCaptureAutoSaveRequest(value), CancellationToken.None);
+        var response = await _updateVideoCaptureAutoSaveAction.ExecuteAsync(
+            new UpdateVideoCaptureAutoSaveRequest(value),
+            CancellationToken.None);
+        VideoCaptureAutoSave = response.Value?.Succeeded == true
+            ? value
+            : _settingsService.Get(CaptureToolSettings.Settings_VideoCapture_AutoSave);
     }
 
     private async Task UpdateVideoCaptureAutoCopyAsync(bool value)
     {
-        VideoCaptureAutoCopy = value;
-        await _updateVideoCaptureAutoCopyAction.ExecuteAsync(new UpdateVideoCaptureAutoCopyRequest(value), CancellationToken.None);
+        var response = await _updateVideoCaptureAutoCopyAction.ExecuteAsync(
+            new UpdateVideoCaptureAutoCopyRequest(value),
+            CancellationToken.None);
+        VideoCaptureAutoCopy = response.Value?.Succeeded == true
+            ? value
+            : _settingsService.Get(CaptureToolSettings.Settings_VideoCapture_AutoCopy);
     }
 
     private async Task UpdateAudioCaptureAutoSaveAsync(bool value)
     {
-        AudioCaptureAutoSave = value;
-        await _updateAudioCaptureAutoSaveAction.ExecuteAsync(new UpdateAudioCaptureAutoSaveRequest(value), CancellationToken.None);
+        var response = await _updateAudioCaptureAutoSaveAction.ExecuteAsync(
+            new UpdateAudioCaptureAutoSaveRequest(value),
+            CancellationToken.None);
+        AudioCaptureAutoSave = response.Value?.Succeeded == true
+            ? value
+            : _settingsService.Get(CaptureToolSettings.Settings_AudioCapture_AutoSave);
     }
 
     private async Task UpdateAudioCaptureAutoCopyAsync(bool value)
     {
-        AudioCaptureAutoCopy = value;
-        await _updateAudioCaptureAutoCopyAction.ExecuteAsync(new UpdateAudioCaptureAutoCopyRequest(value), CancellationToken.None);
+        var response = await _updateAudioCaptureAutoCopyAction.ExecuteAsync(
+            new UpdateAudioCaptureAutoCopyRequest(value),
+            CancellationToken.None);
+        AudioCaptureAutoCopy = response.Value?.Succeeded == true
+            ? value
+            : _settingsService.Get(CaptureToolSettings.Settings_AudioCapture_AutoCopy);
     }
 
     private async Task UpdateVideoCaptureDefaultLocalAudioAsync(bool value)
     {
-        VideoCaptureDefaultLocalAudio = value;
-        await _updateVideoCaptureDefaultLocalAudioAction.ExecuteAsync(new UpdateVideoCaptureDefaultLocalAudioRequest(value), CancellationToken.None);
+        var response = await _updateVideoCaptureDefaultLocalAudioAction.ExecuteAsync(
+            new UpdateVideoCaptureDefaultLocalAudioRequest(value),
+            CancellationToken.None);
+        VideoCaptureDefaultLocalAudio = response.Value?.Succeeded == true
+            ? value
+            : _settingsService.Get(CaptureToolSettings.Settings_VideoCapture_DefaultLocalAudioEnabled);
     }
 
     private async Task UpdateAudioCaptureDefaultLocalAudioAsync(bool value)
     {
-        AudioCaptureDefaultLocalAudio = value;
-        await _updateAudioCaptureDefaultLocalAudioAction.ExecuteAsync(new UpdateAudioCaptureDefaultLocalAudioRequest(value), CancellationToken.None);
+        var response = await _updateAudioCaptureDefaultLocalAudioAction.ExecuteAsync(
+            new UpdateAudioCaptureDefaultLocalAudioRequest(value),
+            CancellationToken.None);
+        AudioCaptureDefaultLocalAudio = response.Value?.Succeeded == true
+            ? value
+            : _settingsService.Get(CaptureToolSettings.Settings_AudioCapture_DefaultLocalAudioEnabled);
     }
 
     private async Task UpdateEditWarnBeforeDiscardAsync(bool value)
     {
-        EditWarnBeforeDiscard = value;
-        await _updateEditWarnBeforeDiscardAction.ExecuteAsync(new UpdateEditWarnBeforeDiscardRequest(value), CancellationToken.None);
+        var response = await _updateEditWarnBeforeDiscardAction.ExecuteAsync(
+            new UpdateEditWarnBeforeDiscardRequest(value),
+            CancellationToken.None);
+        EditWarnBeforeDiscard = response.Value?.Succeeded == true
+            ? value
+            : _settingsService.Get(CaptureToolSettings.Settings_Edit_WarnBeforeDiscard);
     }
 
     private async Task UpdateCaptureWarnBeforeDiscardAsync(bool value)
     {
-        CaptureWarnBeforeDiscard = value;
-        await _updateCaptureWarnBeforeDiscardAction.ExecuteAsync(new UpdateCaptureWarnBeforeDiscardRequest(value), CancellationToken.None);
+        var response = await _updateCaptureWarnBeforeDiscardAction.ExecuteAsync(
+            new UpdateCaptureWarnBeforeDiscardRequest(value),
+            CancellationToken.None);
+        CaptureWarnBeforeDiscard = response.Value?.Succeeded == true
+            ? value
+            : _settingsService.Get(CaptureToolSettings.Settings_Capture_WarnBeforeDiscard);
     }
 
     private async Task UpdateStoreReviewRemindersEnabledAsync(bool value)
@@ -622,23 +690,24 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
 
     private async Task UpdateOptionalUsageDataEnabledAsync(bool value)
     {
-        OptionalUsageDataEnabled = value;
         TelemetryConsentState state = value
             ? TelemetryConsentState.Granted
             : TelemetryConsentState.Denied;
-        if (state == TelemetryConsentState.Denied)
+        SettingsMutationResult result = await _settingsService.TrySetAndSaveAsync(
+            CaptureToolSettings.Settings_TelemetryConsent,
+            TelemetryConsentSettingValues.Serialize(state),
+            CancellationToken.None);
+        if (!result.Succeeded)
         {
-            _telemetryConsentService?.SetState(state);
+            OptionalUsageDataEnabled =
+                TelemetryConsentSettingValues.Parse(
+                    _settingsService.Get(CaptureToolSettings.Settings_TelemetryConsent)) ==
+                TelemetryConsentState.Granted;
+            return;
         }
 
-        _settingsService.Set(
-            CaptureToolSettings.Settings_TelemetryConsent,
-            TelemetryConsentSettingValues.Serialize(state));
-        await _settingsService.TrySaveAsync(CancellationToken.None);
-        if (state == TelemetryConsentState.Granted)
-        {
-            _telemetryConsentService?.SetState(state);
-        }
+        OptionalUsageDataEnabled = value;
+        _telemetryConsentService?.SetState(state);
     }
 
     private async Task OpenStoreReviewAsync()
@@ -731,7 +800,9 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
 
     private async Task RestoreDefaultSettingsAsync()
     {
-        var response = await _restoreDefaultsAction.ExecuteAsync(new RestoreDefaultsRequest(), CancellationToken.None);
+        var response = await _restoreDefaultsAction.ExecuteAsync(
+            new RestoreDefaultsRequest(),
+            CancellationToken.None);
         if (response.Value?.Succeeded != true)
         {
             return;

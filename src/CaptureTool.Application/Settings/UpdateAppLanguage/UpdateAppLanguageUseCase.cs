@@ -41,19 +41,27 @@ internal sealed class UpdateAppLanguageUseCase : IUpdateAppLanguageUseCase
                 }
 
                 var language = request.LanguageIndex == languages.Length ? null : languages[request.LanguageIndex];
-                _localization.OverrideLanguage(language);
-
+                SettingsMutationResult result;
                 if (language?.Value is string value)
                 {
-                    _settings.Set(CaptureToolSettings.Settings_LanguageOverride, value);
+                    result = await _settings.TrySetAndSaveAsync(
+                        CaptureToolSettings.Settings_LanguageOverride,
+                        value,
+                        cancellationToken);
                 }
                 else
                 {
-                    _settings.Unset(CaptureToolSettings.Settings_LanguageOverride);
+                    result = await _settings.TryUnsetAndSaveAsync(
+                        CaptureToolSettings.Settings_LanguageOverride,
+                        cancellationToken);
                 }
 
-                await _settings.TrySaveAsync(cancellationToken);
-                return new UpdateAppLanguageResponse();
+                if (result.Succeeded)
+                {
+                    _localization.OverrideLanguage(language);
+                }
+
+                return new UpdateAppLanguageResponse(result.Succeeded);
             },
             cancellationToken: cancellationToken);
     }

@@ -14,19 +14,19 @@ internal sealed class CopyVideoFileUseCase : ICopyVideoFileUseCase
 
     private readonly IUseCaseExecutor _useCaseExecutor;
     private readonly IClipboardService _clipboardService;
-    private readonly IStorageService _storageService;
+    private readonly IScratchArtifactStore _scratchArtifactStore;
     private readonly IVideoFileTrimmer _videoFileTrimmer;
     private readonly IFileSystem _fileSystem;
 
     public CopyVideoFileUseCase(IClipboardService clipboardService,
-        IStorageService storageService,
+        IScratchArtifactStore scratchArtifactStore,
         IVideoFileTrimmer videoFileTrimmer,
         IFileSystem fileSystem,
         IUseCaseExecutor useCaseExecutor)
     {
         _useCaseExecutor = useCaseExecutor;
         _clipboardService = clipboardService;
-        _storageService = storageService;
+        _scratchArtifactStore = scratchArtifactStore;
         _videoFileTrimmer = videoFileTrimmer;
         _fileSystem = fileSystem;
     }
@@ -50,21 +50,46 @@ internal sealed class CopyVideoFileUseCase : ICopyVideoFileUseCase
                 string clipboardVideoPath = request.VideoPath;
                 if (TryGetTrim(request, out TimeSpan trimStart, out TimeSpan trimEnd))
                 {
-                    clipboardVideoPath = Path.Combine(
-                    _storageService.GetApplicationTemporaryFolderPath(),
-                    $"{Path.GetFileNameWithoutExtension(_storageService.GetTemporaryFileName())}.mp4");
+                    clipboardVideoPath = _scratchArtifactStore.CreateLeasedArtifactPath("clipboard-video-trim", ".mp4");
 
-                    await _videoFileTrimmer.TrimAsync(
-                    request.VideoPath,
-                    clipboardVideoPath,
-                    trimStart,
-                    trimEnd,
-                    cancellationToken);
+                    try
+                    {
+                        await _videoFileTrimmer.TrimAsync(
+                            request.VideoPath,
+                            clipboardVideoPath,
+                            trimStart,
+                            trimEnd,
+                            cancellationToken);
+                    }
+                    catch
+                    {
+                        _scratchArtifactStore.DeleteArtifact(clipboardVideoPath);
+                        throw;
+                    }
                 }
 
-                ClipboardFile clipboardVideo = new(clipboardVideoPath);
-                Task task = _clipboardService.CopyFileAsync(clipboardVideo);
-                await task.WaitAsync(cancellationToken);
+                bool ownsScratchArtifact = !string.Equals(
+                    clipboardVideoPath,
+                    request.VideoPath,
+                    StringComparison.OrdinalIgnoreCase);
+                try
+                {
+                    ClipboardFile clipboardVideo = new(clipboardVideoPath);
+                    Task task = _clipboardService.CopyFileAsync(clipboardVideo);
+                    await task.WaitAsync(cancellationToken);
+                    if (ownsScratchArtifact)
+                    {
+                        _scratchArtifactStore.RelinquishArtifact(clipboardVideoPath);
+                    }
+                }
+                catch
+                {
+                    if (ownsScratchArtifact)
+                    {
+                        _scratchArtifactStore.DeleteArtifact(clipboardVideoPath);
+                    }
+                    throw;
+                }
                 return new CopyVideoFileResponse();
             },
             cancellationToken: cancellationToken);

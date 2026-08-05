@@ -11,6 +11,8 @@ namespace CaptureTool.Application.Activation;
 
 internal sealed class ApplicationStartupInitializer : IApplicationStartupInitializer
 {
+    private static readonly TimeSpan ScratchArtifactMaximumAge = TimeSpan.FromDays(7);
+
     private readonly ICancellationService _cancellationService;
     private readonly ISettingsService _settingsService;
     private readonly ILogService _logService;
@@ -19,6 +21,7 @@ internal sealed class ApplicationStartupInitializer : IApplicationStartupInitial
     private readonly INavigationHandler _navigationHandler;
     private readonly INavigationService _navigationService;
     private readonly IStorageService _storageService;
+    private readonly IScratchArtifactStore _scratchArtifactStore;
     private readonly ITelemetryService? _telemetryService;
     private readonly ITelemetryConsentService? _telemetryConsentService;
     private readonly SemaphoreSlim _semaphore = new(1, 1);
@@ -34,6 +37,7 @@ internal sealed class ApplicationStartupInitializer : IApplicationStartupInitial
         INavigationHandler navigationHandler,
         INavigationService navigationService,
         IStorageService storageService,
+        IScratchArtifactStore scratchArtifactStore,
         ITelemetryService? telemetryService = null,
         ITelemetryConsentService? telemetryConsentService = null)
     {
@@ -45,6 +49,7 @@ internal sealed class ApplicationStartupInitializer : IApplicationStartupInitial
         _navigationHandler = navigationHandler;
         _navigationService = navigationService;
         _storageService = storageService;
+        _scratchArtifactStore = scratchArtifactStore;
         _telemetryService = telemetryService;
         _telemetryConsentService = telemetryConsentService;
     }
@@ -72,6 +77,8 @@ internal sealed class ApplicationStartupInitializer : IApplicationStartupInitial
                 _logService.Enable();
             }
 
+            ScavengeScratchArtifacts();
+
             string languageOverride = _settingsService.Get(CaptureToolSettings.Settings_LanguageOverride);
             _localizationService.Initialize(languageOverride);
 
@@ -83,6 +90,18 @@ internal sealed class ApplicationStartupInitializer : IApplicationStartupInitial
         finally
         {
             _semaphore.Release();
+        }
+    }
+
+    private void ScavengeScratchArtifacts()
+    {
+        try
+        {
+            _scratchArtifactStore.ScavengeStaleArtifacts(ScratchArtifactMaximumAge);
+        }
+        catch (Exception ex)
+        {
+            _logService.LogException(ex, "Failed to scavenge stale scratch artifacts.");
         }
     }
 

@@ -6,6 +6,7 @@ using CaptureTool.Application.Abstractions.Edit.Video.SuperResolution;
 using CaptureTool.Application.Abstractions.Localization;
 using CaptureTool.Application.Abstractions.Logging;
 using CaptureTool.Application.Abstractions.Settings.OpenVideosFolder;
+using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Application.Abstractions.UseCases;
 using CaptureTool.Domain.Ai;
 using CaptureTool.Domain.FileSystem;
@@ -56,12 +57,34 @@ public sealed class VideoEditPageViewModelSuperResolutionTests
     }
 
     [TestMethod]
+    public async Task Dispose_ShouldReleaseWorkingCopyAndGeneratedDerivative()
+    {
+        var scratchArtifactStore = new Mock<IScratchArtifactStore>();
+        VideoEditPageViewModel viewModel = CreateViewModel(
+            service: CreateReadyService("enhanced.mp4"),
+            scratchArtifactStore: scratchArtifactStore.Object);
+        viewModel.Load(new VideoFile("working.mp4"));
+        await viewModel.ToggleVideoSuperResolutionCommand.ExecuteAsync(null);
+
+        viewModel.Dispose();
+
+        scratchArtifactStore.Verify(store => store.DeleteArtifact("working.mp4"), Times.Once);
+        scratchArtifactStore.Verify(store => store.DeleteArtifact("enhanced.mp4"), Times.Once);
+    }
+
+    [TestMethod]
     public async Task ToggleVideoSuperResolutionCommand_WhenConsentUnknown_ShouldRequestAndPersistConsent()
     {
         var consent = new Mock<IAiFeatureConsentService>();
         consent
             .Setup(service => service.GetConsentState(AiFeatureId.VideoSuperResolution))
             .Returns(AiFeatureConsentState.Unknown);
+        consent
+            .Setup(service => service.SetConsentAsync(
+                AiFeatureId.VideoSuperResolution,
+                true,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
         var dialog = new Mock<IAiFeatureConsentDialogService>();
         dialog
             .Setup(service => service.RequestConsentAsync(
@@ -94,6 +117,12 @@ public sealed class VideoEditPageViewModelSuperResolutionTests
         consent
             .Setup(service => service.GetConsentState(AiFeatureId.VideoSuperResolution))
             .Returns(AiFeatureConsentState.Unknown);
+        consent
+            .Setup(service => service.SetConsentAsync(
+                AiFeatureId.VideoSuperResolution,
+                false,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
         var dialog = new Mock<IAiFeatureConsentDialogService>();
         dialog
             .Setup(service => service.RequestConsentAsync(
@@ -274,7 +303,8 @@ public sealed class VideoEditPageViewModelSuperResolutionTests
         Mock<IVideoSuperResolutionService>? service = null,
         ISaveVideoFileUseCase? saveAction = null,
         IAiFeatureConsentService? consentService = null,
-        IAiFeatureConsentDialogService? consentDialogService = null)
+        IAiFeatureConsentDialogService? consentDialogService = null,
+        IScratchArtifactStore? scratchArtifactStore = null)
     {
         service ??= CreateReadyService("enhanced.mp4");
         consentService ??= Mock.Of<IAiFeatureConsentService>(consent =>
@@ -297,7 +327,8 @@ public sealed class VideoEditPageViewModelSuperResolutionTests
             consentService,
             consentDialogService ?? Mock.Of<IAiFeatureConsentDialogService>(),
             localization.Object,
-            Mock.Of<IAppNotificationService>());
+            Mock.Of<IAppNotificationService>(),
+            scratchArtifactStore: scratchArtifactStore);
     }
 
     public TestContext TestContext { get; set; } = null!;

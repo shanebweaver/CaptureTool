@@ -28,9 +28,11 @@ internal sealed class UpdateAudioCaptureDefaultLocalAudioUseCase : IUpdateAudioC
             activityId: ActivityId,
             useCase: async _ =>
             {
-                _settingsService.Set(CaptureToolSettings.Settings_AudioCapture_DefaultLocalAudioEnabled, request.IsEnabled);
-                await _settingsService.TrySaveAsync(cancellationToken);
-                return new UpdateAudioCaptureDefaultLocalAudioResponse();
+                SettingsMutationResult result = await _settingsService.TrySetAndSaveAsync(
+                    CaptureToolSettings.Settings_AudioCapture_DefaultLocalAudioEnabled,
+                    request.IsEnabled,
+                    cancellationToken);
+                return new UpdateAudioCaptureDefaultLocalAudioResponse(result.Succeeded);
             },
             cancellationToken: cancellationToken);
     }

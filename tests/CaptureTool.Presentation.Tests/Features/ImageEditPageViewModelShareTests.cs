@@ -148,7 +148,7 @@ public sealed class ImageEditPageViewModelShareTests
             .Returns(new Size(100, 200));
 
         storage
-            .Setup(service => service.GetApplicationTemporaryFolderPath())
+            .Setup(service => service.GetApplicationScratchFolderPath())
             .Returns(tempFolder);
         storage
             .Setup(service => service.GetTemporaryFileName())

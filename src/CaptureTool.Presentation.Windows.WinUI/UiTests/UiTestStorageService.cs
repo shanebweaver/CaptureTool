@@ -27,9 +27,14 @@ internal sealed class UiTestStorageService : IStorageService
         return Environment.GetFolderPath(Environment.SpecialFolder.MyPictures);
     }
 
-    public string GetApplicationTemporaryFolderPath()
+    public string GetApplicationRetainedCaptureFolderPath()
     {
-        return _temporaryFolderPath;
+        return Path.Combine(_dataFolderPath, "Captures");
+    }
+
+    public string GetApplicationScratchFolderPath()
+    {
+        return Path.Combine(_temporaryFolderPath, "Scratch");
     }
 
     public string GetTemporaryFileName()

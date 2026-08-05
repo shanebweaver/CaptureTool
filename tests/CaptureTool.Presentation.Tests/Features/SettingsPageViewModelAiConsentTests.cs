@@ -76,6 +76,42 @@ public sealed class SettingsPageViewModelAiConsentTests
     }
 
     [TestMethod]
+    public async Task UpdateOptionalUsageDataEnabledCommand_WhenPersistenceFails_RevertsConsentGate()
+    {
+        var telemetryConsent = new Mock<ITelemetryConsentService>();
+        SettingsPageViewModel viewModel = CreateViewModel(
+            telemetryConsentService: telemetryConsent.Object,
+            settingsMutationStatus: SettingsMutationStatus.PersistenceFailed);
+        await viewModel.LoadAsync(TestContext.CancellationToken);
+
+        await viewModel.UpdateOptionalUsageDataEnabledCommand.ExecuteAsync(true);
+
+        viewModel.OptionalUsageDataEnabled.Should().BeFalse();
+        telemetryConsent.Verify(
+            service => service.SetState(It.IsAny<TelemetryConsentState>()),
+            Times.Never);
+    }
+
+    [TestMethod]
+    public async Task UpdateImageCaptureAutoSaveCommand_WhenPersistenceFails_RevertsOptimisticValue()
+    {
+        var updateAction = new Mock<IUpdateImageAutoSaveUseCase>();
+        updateAction
+            .Setup(action => action.ExecuteAsync(
+                new UpdateImageAutoSaveRequest(false),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(UseCaseResponse<UpdateImageAutoSaveResponse>.Success(
+                new UpdateImageAutoSaveResponse(false)));
+        SettingsPageViewModel viewModel = CreateViewModel(
+            updateImageAutoSaveAction: updateAction.Object);
+        await viewModel.LoadAsync(TestContext.CancellationToken);
+
+        await viewModel.UpdateImageCaptureAutoSaveCommand.ExecuteAsync(false);
+
+        viewModel.ImageCaptureAutoSave.Should().BeTrue();
+    }
+
+    [TestMethod]
     public async Task LoadAsync_WhenAiConsentSettingsFeatureDisabled_ShouldHideSectionAndRows()
     {
         SettingsPageViewModel viewModel = CreateViewModel(isAiConsentSettingsEnabled: false);
@@ -114,6 +150,20 @@ public sealed class SettingsPageViewModelAiConsentTests
         viewModel.AiFeatureConsents.Should().ContainSingle(consent =>
             consent.FeatureId == AiFeatureId.TextExtraction &&
             consent.DisplayName == "Localized text extraction");
+    }
+
+    [TestMethod]
+    public async Task UpdateAiFeatureConsentAsync_WhenPersistenceFails_KeepsCommittedConsent()
+    {
+        SettingsPageViewModel viewModel = CreateViewModel(
+            isImageSuperResolutionEnabled: false,
+            isTextExtractionEnabled: true,
+            aiConsentSaveSucceeded: false);
+        await viewModel.LoadAsync(TestContext.CancellationToken);
+
+        await viewModel.UpdateAiFeatureConsentAsync(AiFeatureId.TextExtraction, false);
+
+        viewModel.AiFeatureConsents.Single().IsConsented.Should().BeTrue();
     }
 
     [TestMethod]
@@ -246,6 +296,9 @@ public sealed class SettingsPageViewModelAiConsentTests
         bool isVideoSuperResolutionEnabled = false,
         string telemetryConsentValue = TelemetryConsentSettingValues.Unknown,
         ITelemetryConsentService? telemetryConsentService = null,
+        SettingsMutationStatus settingsMutationStatus = SettingsMutationStatus.Saved,
+        IUpdateImageAutoSaveUseCase? updateImageAutoSaveAction = null,
+        bool aiConsentSaveSucceeded = true,
         IRestoreDefaultsUseCase? restoreDefaultsUseCase = null)
     {
         var localization = new Mock<ILocalizationService>();
@@ -275,6 +328,12 @@ public sealed class SettingsPageViewModelAiConsentTests
         settings
             .Setup(service => service.Get(CaptureToolSettings.Settings_TelemetryConsent))
             .Returns(telemetryConsentValue);
+        settings
+            .Setup(service => service.TrySetAndSaveAsync(
+                It.IsAny<IStringSettingDefinition>(),
+                It.IsAny<string>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new SettingsMutationResult(settingsMutationStatus));
 
         var aiFeatureConsentService = new Mock<IAiFeatureConsentService>();
         aiFeatureConsentService
@@ -288,6 +347,12 @@ public sealed class SettingsPageViewModelAiConsentTests
                 new(AiFeatureId.ImageObjectExtraction, "Object extraction", AiFeatureConsentState.Granted),
                 new(AiFeatureId.VideoSuperResolution, "Video super resolution", AiFeatureConsentState.Granted)
             ]);
+        aiFeatureConsentService
+            .Setup(service => service.SetConsentAsync(
+                It.IsAny<AiFeatureId>(),
+                It.IsAny<bool>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(aiConsentSaveSucceeded);
 
         var appLanguageViewModelFactory = new Mock<IFactoryServiceWithArgs<AppLanguageViewModel, IAppLanguage?>>();
         appLanguageViewModelFactory
@@ -310,14 +375,14 @@ public sealed class SettingsPageViewModelAiConsentTests
             .Setup(service => service.GetSystemDefaultMusicFolderPath())
             .Returns(@"C:\Music");
         storage
-            .Setup(service => service.GetApplicationTemporaryFolderPath())
+            .Setup(service => service.GetApplicationScratchFolderPath())
             .Returns(@"C:\Temp");
 
         return new SettingsPageViewModel(
             Mock.Of<ILeaveSettingsPageUseCase>(),
             Mock.Of<IRestartSettingsApplicationUseCase>(),
             Mock.Of<IUpdateImageAutoCopyUseCase>(),
-            Mock.Of<IUpdateImageAutoSaveUseCase>(),
+            updateImageAutoSaveAction ?? Mock.Of<IUpdateImageAutoSaveUseCase>(),
             Mock.Of<IUpdateAudioCaptureAutoCopyUseCase>(),
             Mock.Of<IUpdateAudioCaptureAutoSaveUseCase>(),
             Mock.Of<IUpdateAudioCaptureDefaultLocalAudioUseCase>(),

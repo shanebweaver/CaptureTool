@@ -17,14 +17,14 @@ internal sealed class OpenFileUseCase : IOpenFileUseCase
     private readonly IUseCaseExecutor _useCaseExecutor;
     private readonly IFilePickerService _filePickerService;
     private readonly INavigationCoordinator _navigationCoordinator;
-    private readonly IStorageService _storageService;
+    private readonly IScratchArtifactStore _scratchArtifactStore;
     private readonly IFileSystem _fileSystem;
     private readonly IRecentCaptureCatalog _recentCaptureCatalog;
 
     public OpenFileUseCase(
         IFilePickerService filePickerService,
         INavigationCoordinator navigationCoordinator,
-        IStorageService storageService,
+        IScratchArtifactStore scratchArtifactStore,
         IFileSystem fileSystem,
         IRecentCaptureCatalog recentCaptureCatalog,
         IUseCaseExecutor useCaseExecutor)
@@ -32,7 +32,7 @@ internal sealed class OpenFileUseCase : IOpenFileUseCase
         _useCaseExecutor = useCaseExecutor;
         _filePickerService = filePickerService;
         _navigationCoordinator = navigationCoordinator;
-        _storageService = storageService;
+        _scratchArtifactStore = scratchArtifactStore;
         _fileSystem = fileSystem;
         _recentCaptureCatalog = recentCaptureCatalog;
     }
@@ -60,27 +60,37 @@ internal sealed class OpenFileUseCase : IOpenFileUseCase
                             return false;
                         }
 
-                        string temporaryFolderPath = _storageService.GetApplicationTemporaryFolderPath();
-                        bool isTemporaryFile = IsFileInFolder(file.FilePath, temporaryFolderPath);
-                        string filePath = isTemporaryFile
-                            ? file.FilePath
-                            : CopyFileToFolder(file.FilePath, temporaryFolderPath);
-                        bool navigated = fileType switch
+                        string workingFilePath = CopyFileToScratch(file.FilePath);
+                        bool navigated;
+                        try
                         {
-                            CaptureFileType.Audio => await _navigationCoordinator.NavigateAsync(
-                                NavigationRoute.AudioEdit,
-                                new AudioFile(filePath),
-                                cancellationToken: token),
-                            CaptureFileType.Image => await _navigationCoordinator.NavigateAsync(
-                                NavigationRoute.ImageEdit,
-                                new ImageFile(filePath, isTemporaryFile ? null : file.FilePath),
-                                cancellationToken: token),
-                            CaptureFileType.Video => await _navigationCoordinator.NavigateAsync(
-                                NavigationRoute.VideoEdit,
-                                new VideoFile(filePath),
-                                cancellationToken: token),
-                            _ => false
-                        };
+                            navigated = fileType switch
+                            {
+                                CaptureFileType.Audio => await _navigationCoordinator.NavigateAsync(
+                                    NavigationRoute.AudioEdit,
+                                    new AudioFile(workingFilePath),
+                                    cancellationToken: token),
+                                CaptureFileType.Image => await _navigationCoordinator.NavigateAsync(
+                                    NavigationRoute.ImageEdit,
+                                    new ImageFile(workingFilePath, file.FilePath),
+                                    cancellationToken: token),
+                                CaptureFileType.Video => await _navigationCoordinator.NavigateAsync(
+                                    NavigationRoute.VideoEdit,
+                                    new VideoFile(workingFilePath),
+                                    cancellationToken: token),
+                                _ => false
+                            };
+                        }
+                        catch
+                        {
+                            _scratchArtifactStore.DeleteArtifact(workingFilePath);
+                            throw;
+                        }
+
+                        if (!navigated)
+                        {
+                            _scratchArtifactStore.DeleteArtifact(workingFilePath);
+                        }
 
                         if (navigated)
                         {
@@ -96,24 +106,18 @@ internal sealed class OpenFileUseCase : IOpenFileUseCase
             cancellationToken: cancellationToken);
     }
 
-    private static bool IsFileInFolder(string sourcePath, string folderPath)
+    private string CopyFileToScratch(string sourcePath)
     {
-        string fullFolderPath = Path.GetFullPath(folderPath)
-            .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar) + Path.DirectorySeparatorChar;
-        string fullSourcePath = Path.GetFullPath(sourcePath);
-
-        return fullSourcePath.StartsWith(fullFolderPath, StringComparison.OrdinalIgnoreCase);
-    }
-
-    private string CopyFileToFolder(string sourcePath, string folderPath)
-    {
-        _fileSystem.CreateDirectory(folderPath);
-
-        string destinationPath = Path.Combine(
-            folderPath,
-            $"{Path.GetFileNameWithoutExtension(_storageService.GetTemporaryFileName())}{Path.GetExtension(sourcePath)}");
-
-        _fileSystem.CopyFile(sourcePath, destinationPath, true);
-        return destinationPath;
+        string artifactPath = _scratchArtifactStore.CreateLeasedArtifactPath("imported-working-copy", Path.GetExtension(sourcePath));
+        try
+        {
+            _fileSystem.CopyFile(sourcePath, artifactPath, true);
+            return artifactPath;
+        }
+        catch
+        {
+            _scratchArtifactStore.DeleteArtifact(artifactPath);
+            throw;
+        }
     }
 }

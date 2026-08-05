@@ -94,11 +94,14 @@ internal sealed class TelemetryConsentDialogService
             TelemetryConsentState state = result == ContentDialogResult.Primary
                 ? TelemetryConsentState.Granted
                 : TelemetryConsentState.Denied;
-            _settingsService.Set(
+            SettingsMutationResult saveResult = await _settingsService.TrySetAndSaveAsync(
                 CaptureToolSettings.Settings_TelemetryConsent,
-                TelemetryConsentSettingValues.Serialize(state));
-            await _settingsService.TrySaveAsync(cancellationToken);
-            _consentService.SetState(state);
+                TelemetryConsentSettingValues.Serialize(state),
+                cancellationToken);
+            if (saveResult.Succeeded)
+            {
+                _consentService.SetState(state);
+            }
         }
         finally
         {

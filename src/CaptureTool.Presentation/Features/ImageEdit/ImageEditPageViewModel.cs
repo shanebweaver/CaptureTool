@@ -67,6 +67,8 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     private readonly IShareService _shareService;
     private readonly IOpenExternalEditorUseCase _openExternalEditorAction;
     private readonly IStorageService _storageService;
+    private readonly IScratchArtifactStore? _scratchArtifactStore;
+    private readonly HashSet<string> _scratchArtifactPaths = new(StringComparer.OrdinalIgnoreCase);
     private readonly ISettingsService _settingsService;
     private readonly IOpenScreenshotsFolderUseCase _openScreenshotsFolderAction;
     private readonly ILogService _logService;
@@ -739,7 +741,8 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         IImageObjectEraseService? imageObjectEraseService = null,
         IImageObjectEraseFeatureAvailability? imageObjectEraseFeatureAvailability = null,
         IImageObjectExtractionFeatureAvailability? imageObjectExtractionFeatureAvailability = null,
-        ITelemetryService? telemetryService = null)
+        ITelemetryService? telemetryService = null,
+        IScratchArtifactStore? scratchArtifactStore = null)
     {
         _localizationService = localizationService;
         _cancellationService = cancellationService;
@@ -763,6 +766,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         _shareService = shareService;
         _openExternalEditorAction = openExternalEditorAction;
         _storageService = storageService;
+        _scratchArtifactStore = scratchArtifactStore;
         _imageCanvasExporter = imageCanvasExporter;
         _settingsService = settingsService;
         _openScreenshotsFolderAction = openScreenshotsFolderAction;
@@ -897,6 +901,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         {
             Vector2 topLeft = Vector2.Zero;
             ImageFile = imageFile;
+            TrackScratchArtifact(imageFile.FilePath);
             _editSession = new ImageEditSession(_imageMetadataService.GetImageFileSize(imageFile));
             SyncImageGeometryFromSession();
             _originalImageFile = imageFile;
@@ -945,6 +950,11 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         _settingsService.SettingsChanged -= SettingsService_SettingsChanged;
         ChromaKeyTool.SettingsChanged -= ChromaKeyTool_SettingsChanged;
         ChromaKeyTool.InteractionCommitted -= ChromaKeyTool_InteractionCommitted;
+        foreach (string artifactPath in _scratchArtifactPaths)
+        {
+            _scratchArtifactStore?.DeleteArtifact(artifactPath);
+        }
+        _scratchArtifactPaths.Clear();
         _imageDrawable = null;
         _originalImageFile = null;
         _originalImageSize = Size.Empty;
@@ -1625,9 +1635,29 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
     private string GetTemporaryPaintImagePath()
     {
-        return Path.Combine(
-            _storageService.GetApplicationTemporaryFolderPath(),
-            $"{Path.GetFileNameWithoutExtension(_storageService.GetTemporaryFileName())}.png");
+        string artifactPath = _scratchArtifactStore?.CreateLeasedArtifactPath("paint-export", ".png") ??
+            Path.Combine(
+                _storageService.GetApplicationScratchFolderPath(),
+                $"{Path.GetFileNameWithoutExtension(_storageService.GetTemporaryFileName())}.png");
+        TrackScratchArtifact(artifactPath);
+        return artifactPath;
+    }
+
+    private void TrackScratchArtifact(string artifactPath)
+    {
+        if (string.IsNullOrWhiteSpace(artifactPath))
+        {
+            return;
+        }
+
+        if (LoadState == CaptureTool.Presentation.Loading.LoadState.Disposed)
+        {
+            _scratchArtifactStore?.DeleteArtifact(artifactPath);
+        }
+        else
+        {
+            _scratchArtifactPaths.Add(artifactPath);
+        }
     }
 
     public void OnCropInteractionComplete(Rectangle oldCropRect)
@@ -1910,6 +1940,8 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
                 return;
             }
 
+            TrackScratchArtifact(result.ImageFile.FilePath);
+
             if (cancellationToken.IsCancellationRequested ||
                 !ReferenceEquals(_foregroundExtractionCancellationTokenSource, cancellationTokenSource) ||
                 !IsForegroundExtractionModeActive ||
@@ -2022,6 +2054,8 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
                 ShowObjectEraseFailure(GetObjectEraseFailureMessage(result));
                 return;
             }
+
+            TrackScratchArtifact(result.ImageFile.FilePath);
 
             if (cancellationToken.IsCancellationRequested ||
                 !ReferenceEquals(_objectEraseCancellationTokenSource, cancellationTokenSource) ||
@@ -2136,6 +2170,8 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
                 return;
             }
 
+            TrackScratchArtifact(result.ImageFile.FilePath);
+
             if (cancellationToken.IsCancellationRequested ||
                 !ReferenceEquals(_objectExtractionCancellationTokenSource, cancellationTokenSource) ||
                 !IsObjectExtractionModeActive ||
@@ -2198,14 +2234,14 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         }
 
         bool consented = await _aiFeatureConsentDialogService.RequestConsentAsync(featureId, cancellationToken);
-        await _aiFeatureConsentService.SetConsentAsync(featureId, consented, cancellationToken);
+        bool saved = await _aiFeatureConsentService.SetConsentAsync(featureId, consented, cancellationToken);
         UpdateCanToggleSuperResolution();
         UpdateCanToggleTextExtraction();
         UpdateCanToggleImageDescription();
         UpdateCanToggleForegroundExtraction();
         UpdateCanToggleObjectErase();
         UpdateCanToggleObjectExtraction();
-        return consented;
+        return consented && saved;
     }
 
     private async Task EnsureTextExtractionCurrentAsync()
@@ -2498,6 +2534,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
                 return;
             }
 
+            TrackScratchArtifact(result.ImageFile.FilePath);
             _superResolutionImageFile = result.ImageFile;
             _superResolutionImageSize = result.ImageSize;
             ApplySuperResolutionImageVariant();
@@ -3215,9 +3252,9 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
             return AiFeatureConsentState.Granted;
         }
 
-        public Task SetConsentAsync(AiFeatureId featureId, bool isGranted, CancellationToken cancellationToken = default)
+        public Task<bool> SetConsentAsync(AiFeatureId featureId, bool isGranted, CancellationToken cancellationToken = default)
         {
-            return Task.CompletedTask;
+            return Task.FromResult(true);
         }
     }
 

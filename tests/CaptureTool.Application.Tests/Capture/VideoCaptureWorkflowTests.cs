@@ -576,7 +576,7 @@ public sealed class VideoCaptureWorkflowTests
 
         var storage = new Mock<IStorageService>();
         storage
-            .Setup(service => service.GetApplicationTemporaryFolderPath())
+            .Setup(service => service.GetApplicationRetainedCaptureFolderPath())
             .Returns(@"C:\Temp");
 
         var backgroundTaskRunner = new Mock<IBackgroundTaskRunner>();

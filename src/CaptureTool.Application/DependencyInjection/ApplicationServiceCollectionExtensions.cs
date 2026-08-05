@@ -2,11 +2,13 @@ using CaptureTool.Application.Abstractions.Ai;
 using CaptureTool.Application.Abstractions.Edit.External;
 using CaptureTool.Application.Abstractions.EditSessions;
 using CaptureTool.Application.Abstractions.Navigation;
+using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Application.Ai;
 using CaptureTool.Application.Capture;
 using CaptureTool.Application.Edit.External;
 using CaptureTool.Application.EditSessions;
 using CaptureTool.Application.Navigation;
+using CaptureTool.Application.Storage;
 using CaptureTool.Application.UseCases;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -46,6 +48,7 @@ public static class ApplicationServiceCollectionExtensions
         services.AddSingleton<IEditSessionGuard, EditSessionGuard>();
         services.AddSingleton<INavigationCoordinator, NavigationCoordinator>();
         services.AddSingleton<CaptureFileAllocator>();
+        services.AddSingleton<IScratchArtifactStore, ScratchArtifactStore>();
 
         return services;
     }

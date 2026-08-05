@@ -104,7 +104,7 @@ internal sealed class VideoCaptureWorkflow : IVideoCaptureWorkflow
         }
 
         string tempVideoPath = _fileAllocator.ReserveUniqueFile(
-            _storageService.GetApplicationTemporaryFolderPath(),
+            _storageService.GetApplicationRetainedCaptureFolderPath(),
             _fileNameGenerator.GetNewCaptureFileName);
 
         CaptureRecordingTarget target = CreateRecordingTarget(args);

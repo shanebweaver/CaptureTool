@@ -27,9 +27,11 @@ internal sealed class UpdateVideoCaptureAutoSaveUseCase : IUpdateVideoCaptureAut
             activityId: ActivityId,
             useCase: async _ =>
             {
-                _settingsService.Set(CaptureToolSettings.Settings_VideoCapture_AutoSave, request.IsEnabled);
-                await _settingsService.TrySaveAsync(cancellationToken);
-                return new UpdateVideoCaptureAutoSaveResponse();
+                SettingsMutationResult result = await _settingsService.TrySetAndSaveAsync(
+                    CaptureToolSettings.Settings_VideoCapture_AutoSave,
+                    request.IsEnabled,
+                    cancellationToken);
+                return new UpdateVideoCaptureAutoSaveResponse(result.Succeeded);
             },
             cancellationToken: cancellationToken);
     }

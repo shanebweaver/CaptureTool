@@ -52,6 +52,9 @@ public sealed class ActivationHandlerTests
         fixture.LogService.Verify(service => service.Enable(), Times.Once);
         fixture.Localization.Verify(service => service.Initialize("fr-FR"), Times.Once);
         fixture.NavigationService.Verify(service => service.SetNavigationHandler(fixture.NavigationHandler.Object), Times.Once);
+        fixture.ScratchArtifactStore.Verify(
+            service => service.ScavengeStaleArtifacts(TimeSpan.FromDays(7)),
+            Times.Once);
     }
 
     [TestMethod]
@@ -101,6 +104,25 @@ public sealed class ActivationHandlerTests
 
         fixture.TelemetryConsent.Verify(
             service => service.SetState(TelemetryConsentState.Granted),
+            Times.Once);
+    }
+
+    [TestMethod]
+    public async Task ApplicationStartupInitializer_WhenScratchScavengingFails_ShouldContinueInitialization()
+    {
+        StartupInitializerFixture fixture = new();
+        var exception = new IOException("scratch unavailable");
+        fixture.ScratchArtifactStore
+            .Setup(service => service.ScavengeStaleArtifacts(TimeSpan.FromDays(7)))
+            .Throws(exception);
+
+        await fixture.Initializer.InitializeAsync(TestContext.CancellationToken);
+
+        fixture.NavigationService.Verify(
+            service => service.SetNavigationHandler(fixture.NavigationHandler.Object),
+            Times.Once);
+        fixture.LogService.Verify(
+            service => service.LogException(exception, "Failed to scavenge stale scratch artifacts."),
             Times.Once);
     }
 
@@ -443,6 +465,7 @@ public sealed class ActivationHandlerTests
                 NavigationHandler.Object,
                 NavigationService.Object,
                 StorageService.Object,
+                ScratchArtifactStore.Object,
                 telemetryConsentService: TelemetryConsent.Object);
         }
 
@@ -456,6 +479,7 @@ public sealed class ActivationHandlerTests
         public Mock<INavigationHandler> NavigationHandler { get; } = new();
         public Mock<INavigationService> NavigationService { get; } = new();
         public Mock<IStorageService> StorageService { get; } = new();
+        public Mock<IScratchArtifactStore> ScratchArtifactStore { get; } = new();
         public Mock<ITelemetryConsentService> TelemetryConsent { get; } = new();
     }
 }

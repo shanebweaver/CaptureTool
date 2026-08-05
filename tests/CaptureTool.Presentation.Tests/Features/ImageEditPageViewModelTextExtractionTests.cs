@@ -58,7 +58,7 @@ public sealed class ImageEditPageViewModelTextExtractionTests
         consent
             .Setup(service => service.SetConsentAsync(AiFeatureId.TextExtraction, false, It.IsAny<CancellationToken>()))
             .Callback(() => consentState = AiFeatureConsentState.Denied)
-            .Returns(Task.CompletedTask);
+            .ReturnsAsync(true);
         consent
             .Setup(service => service.GetConsentState(AiFeatureId.ImageSuperResolution))
             .Returns(AiFeatureConsentState.Granted);
@@ -103,7 +103,7 @@ public sealed class ImageEditPageViewModelTextExtractionTests
         consent
             .Setup(service => service.SetConsentAsync(AiFeatureId.TextExtraction, true, It.IsAny<CancellationToken>()))
             .Callback(() => consentState = AiFeatureConsentState.Granted)
-            .Returns(Task.CompletedTask);
+            .ReturnsAsync(true);
         consent
             .Setup(service => service.GetConsentState(AiFeatureId.ImageSuperResolution))
             .Returns(AiFeatureConsentState.Granted);
