@@ -7,6 +7,7 @@
     xmlns:local="using:CaptureTool.Presentation.Windows.WinUI.Xaml.Pages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:shell="using:CaptureTool.Presentation.Shell"
+    xmlns:utils="using:CaptureTool.Presentation.Windows.WinUI.Utils"
     d:DataContext="{d:DesignInstance Type=shell:ErrorPageViewModel}"
     mc:Ignorable="d">
 
@@ -30,9 +31,24 @@
                 Foreground="Red"
                 TextAlignment="Center"
                 TextWrapping="WrapWholeWords" />
-            <Button HorizontalAlignment="Center" Command="{x:Bind ViewModel.RestartAppCommand}">
-                <TextBlock x:Uid="ErrorPage_RestartAppButtonLabel" />
-            </Button>
+            <TextBlock
+                x:Uid="ErrorPage_RestartFailedLabel"
+                MaxWidth="480"
+                HorizontalAlignment="Center"
+                TextAlignment="Center"
+                TextWrapping="Wrap"
+                Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.HasRestartFailed), Mode=OneWay}" />
+            <StackPanel
+                HorizontalAlignment="Center"
+                Orientation="Horizontal"
+                Spacing="8">
+                <Button Command="{x:Bind ViewModel.RestartAppCommand}">
+                    <TextBlock x:Uid="ErrorPage_RestartAppButtonLabel" />
+                </Button>
+                <Button Command="{x:Bind ViewModel.ExitAppCommand}">
+                    <TextBlock x:Uid="ErrorPage_ExitAppButtonLabel" />
+                </Button>
+            </StackPanel>
         </StackPanel>
     </Grid>
 </local:ErrorPageBase>

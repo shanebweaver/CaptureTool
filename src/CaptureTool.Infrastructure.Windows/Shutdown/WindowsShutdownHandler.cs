@@ -2,7 +2,6 @@ using CaptureTool.Application.Abstractions.Cancellation;
 using CaptureTool.Application.Abstractions.Logging;
 using CaptureTool.Application.Abstractions.Shutdown;
 using CaptureTool.Application.Abstractions.Telemetry;
-using Microsoft.Windows.AppLifecycle;
 
 namespace CaptureTool.Infrastructure.Windows.Shutdown;
 
@@ -10,6 +9,7 @@ public sealed partial class WindowsShutdownHandler : IShutdownHandler
 {
     private readonly ICancellationService _cancellationService;
     private readonly ILogService _logService;
+    private readonly IWindowsAppRestartService _restartService;
     private readonly ITelemetryService? _telemetryService;
 
     public bool IsShuttingDown { get; private set; }
@@ -18,9 +18,23 @@ public sealed partial class WindowsShutdownHandler : IShutdownHandler
         ILogService logService,
         ICancellationService cancellationService,
         ITelemetryService? telemetryService = null)
+        : this(
+            logService,
+            cancellationService,
+            new WindowsAppRestartService(),
+            telemetryService)
+    {
+    }
+
+    internal WindowsShutdownHandler(
+        ILogService logService,
+        ICancellationService cancellationService,
+        IWindowsAppRestartService restartService,
+        ITelemetryService? telemetryService = null)
     {
         _logService = logService;
         _cancellationService = cancellationService;
+        _restartService = restartService;
         _telemetryService = telemetryService;
     }
 
@@ -33,8 +47,8 @@ public sealed partial class WindowsShutdownHandler : IShutdownHandler
         }
 
         TrackShutdownRequested("restart");
-        Teardown();
-        global::Windows.ApplicationModel.Core.AppRestartFailureReason restartError = AppInstance.Restart(string.Empty);
+        global::Windows.ApplicationModel.Core.AppRestartFailureReason restartError =
+            _restartService.Restart(string.Empty);
 
         switch (restartError)
         {

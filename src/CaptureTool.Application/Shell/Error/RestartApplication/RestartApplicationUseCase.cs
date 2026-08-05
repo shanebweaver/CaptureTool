@@ -30,8 +30,8 @@ internal sealed class RestartApplicationUseCase : IRestartApplicationUseCase
             activityId: ActivityId,
             useCase: () =>
             {
-                _shutdownHandler.TryRestart();
-                return new RestartApplicationResponse();
+                bool succeeded = _shutdownHandler.TryRestart();
+                return new RestartApplicationResponse(succeeded);
             },
             cancellationToken: cancellationToken);
     }

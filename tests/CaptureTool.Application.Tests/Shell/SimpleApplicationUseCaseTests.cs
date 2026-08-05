@@ -116,6 +116,7 @@ public sealed class SimpleApplicationUseCaseTests
     public async Task ShutdownUseCases_RespectShutdownStateAndInvokeHandler()
     {
         var shutdown = new Mock<IShutdownHandler>();
+        shutdown.Setup(handler => handler.TryRestart()).Returns(true);
         INavigationCoordinator coordinator = TestNavigationCoordinator.Create(Mock.Of<INavigationService>());
         var exit = new ExitApplicationUseCase(shutdown.Object, coordinator, TestUseCaseExecutor.Instance);
         var restart = new RestartApplicationUseCase(shutdown.Object, TestUseCaseExecutor.Instance);
@@ -134,6 +135,20 @@ public sealed class SimpleApplicationUseCaseTests
         shutdown.Setup(handler => handler.IsShuttingDown).Returns(true);
         Assert.IsFalse(exit.CanExecute(new ExitApplicationRequest()));
         Assert.IsFalse(restart.CanExecute(new RestartApplicationRequest()));
+    }
+
+    [TestMethod]
+    public async Task RestartApplicationUseCase_WhenRestartFails_ReturnsFailure()
+    {
+        var shutdown = new Mock<IShutdownHandler>();
+        shutdown.Setup(handler => handler.TryRestart()).Returns(false);
+        var restart = new RestartApplicationUseCase(shutdown.Object, TestUseCaseExecutor.Instance);
+
+        RestartApplicationResponse response = (await restart.ExecuteAsync(
+            new RestartApplicationRequest(),
+            TestContext.CancellationToken)).Value!;
+
+        Assert.IsFalse(response.Succeeded);
     }
 
     [TestMethod]

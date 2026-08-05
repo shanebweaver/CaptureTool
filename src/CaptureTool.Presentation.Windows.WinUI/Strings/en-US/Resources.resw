@@ -177,6 +177,14 @@
     <value>Restart app</value>
     <comment>The label for the restart button on the error page.</comment>
   </data>
+  <data name="ErrorPage_RestartFailedLabel.Text" xml:space="preserve">
+    <value>The app couldn't restart. Try again or exit the app.</value>
+    <comment>The recovery message shown when Windows rejects an application restart request.</comment>
+  </data>
+  <data name="ErrorPage_ExitAppButtonLabel.Text" xml:space="preserve">
+    <value>Exit app</value>
+    <comment>The fallback exit action shown on the error page.</comment>
+  </data>
   <data name="Settings_HeaderLabel.Text" xml:space="preserve">
     <value>Settings</value>
     <comment>The label for the header for the settings page.</comment>
