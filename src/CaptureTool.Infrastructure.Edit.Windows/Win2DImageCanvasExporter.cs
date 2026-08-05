@@ -46,32 +46,29 @@ public sealed partial class Win2DImageCanvasExporter : IImageCanvasExporter
             options,
             GetFileFormat(filePath));
 
-        string? directoryPath = Path.GetDirectoryName(filePath);
-        if (!string.IsNullOrWhiteSpace(directoryPath))
-        {
-            Directory.CreateDirectory(directoryPath);
-        }
+        await SaveStreamAtomicallyAsync(filePath, stream);
+    }
 
-        if (!File.Exists(filePath))
+    private static async Task SaveStreamAtomicallyAsync(string filePath, IRandomAccessStream stream)
+    {
+        await AtomicImageFileWriter.WriteAsync(filePath, async temporaryFilePath =>
         {
-            using FileStream _ = File.Create(filePath);
-        }
+            StorageFile file = await StorageFile.GetFileFromPathAsync(temporaryFilePath);
+            CachedFileManager.DeferUpdates(file);
 
-        StorageFile file = await StorageFile.GetFileFromPathAsync(filePath);
-        CachedFileManager.DeferUpdates(file);
+            using (var fileStream = await file.OpenAsync(FileAccessMode.ReadWrite))
+            {
+                fileStream.Size = 0;
+                stream.Seek(0);
+                await RandomAccessStream.CopyAsync(stream, fileStream);
+            }
 
-        using (var fileStream = await file.OpenAsync(FileAccessMode.ReadWrite))
-        {
-            fileStream.Size = 0;
-            stream.Seek(0);
-            await RandomAccessStream.CopyAsync(stream, fileStream);
-        }
-
-        FileUpdateStatus status = await CachedFileManager.CompleteUpdatesAsync(file);
-        if (status != FileUpdateStatus.Complete)
-        {
-            throw new Exception("File could not be saved.");
-        }
+            FileUpdateStatus status = await CachedFileManager.CompleteUpdatesAsync(file);
+            if (status != FileUpdateStatus.Complete)
+            {
+                throw new Exception("File could not be saved.");
+            }
+        });
     }
 
     private static async Task<InMemoryRandomAccessStream> RenderToRandomAccessStreamAsync(

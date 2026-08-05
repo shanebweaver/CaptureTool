@@ -1421,16 +1421,19 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         {
             ImageCanvasRenderOptions options = GetImageCanvasRenderOptions();
             IDrawable[] drawables = [.. Drawables];
-            await _imageCanvasExporter.SaveImageAsync(_originalImageFile.FilePath, drawables, options);
-
             string? persistentFilePath = _originalImageFile.PersistentFilePath;
-            if (!string.IsNullOrWhiteSpace(persistentFilePath) &&
-                !string.Equals(
-                    Path.GetFullPath(persistentFilePath),
-                    Path.GetFullPath(_originalImageFile.FilePath),
-                    StringComparison.OrdinalIgnoreCase))
+            bool hasDistinctPersistentFile = !string.IsNullOrWhiteSpace(persistentFilePath) &&
+                !AreSamePath(persistentFilePath, _originalImageFile.FilePath);
+            string destinationPath = hasDistinctPersistentFile
+                ? persistentFilePath!
+                : _originalImageFile.FilePath;
+
+            cancellationToken.ThrowIfCancellationRequested();
+            await _imageCanvasExporter.SaveImageAsync(destinationPath, drawables, options);
+
+            if (!hasDistinctPersistentFile)
             {
-                await _imageCanvasExporter.SaveImageAsync(persistentFilePath, drawables, options);
+                RebaseToSavedSource(options.CropRect.Size);
             }
 
             MarkChangesSaved();
@@ -1443,6 +1446,45 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
             TrackOutput("save", TelemetryOutcomes.Failed);
             return false;
         }
+    }
+
+    private static bool AreSamePath(string firstPath, string secondPath)
+    {
+        return string.Equals(
+            Path.GetFullPath(firstPath),
+            Path.GetFullPath(secondPath),
+            StringComparison.OrdinalIgnoreCase);
+    }
+
+    private void RebaseToSavedSource(Size savedImageSize)
+    {
+        if (_originalImageFile is null)
+        {
+            return;
+        }
+
+        CancelSuperResolutionWork();
+        _superResolutionImageFile = null;
+        _superResolutionImageSize = Size.Empty;
+        IsSuperResolutionActive = false;
+        IsSuperResolutionGenerating = false;
+        SuperResolutionStatusMessage = string.Empty;
+
+        _editSession = new ImageEditSession(savedImageSize);
+        _imageDrawable = new ImageDrawable(Vector2.Zero, _originalImageFile, savedImageSize);
+        _editSession.AddDrawable(_imageDrawable);
+        _originalImageSize = savedImageSize;
+        ImageFile = _originalImageFile;
+
+        _editHistory.Clear();
+        ChromaKeyTool.Reset();
+        IncrementEditRevision();
+        SyncImageGeometryFromSession();
+        SyncDrawablesFromSession();
+        UpdateUndoRedoStackProperties();
+        UpdateCanToggleSuperResolution();
+        RequestCanvasUpdate(CanvasUpdateMode.ReloadResources);
+        ForceZoomAndCenterRequested?.Invoke(this, EventArgs.Empty);
     }
 
     private async Task SaveAsCommandAsync()
