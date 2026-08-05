@@ -2,7 +2,7 @@
 
 - Issue: [#408](https://github.com/shanebweaver/CaptureTool/issues/408)
 - Severity: High
-- Status: Implementation follow-up in progress
+- Status: Implemented
 - Affected features: `APP-01`, `APP-02`, `APP-07`
 
 ## Summary
@@ -136,9 +136,9 @@ Use real coordinator/guard behavior with fake image and video `IEditableSession`
 - [x] Competing transitions cannot display overlapping leave confirmations.
 - [x] No ordinary application navigation caller can bypass the coordinator unintentionally.
 - [x] Existing non-UI tests pass and the WinUI x64 Debug project builds.
-- [ ] An accepted dirty-edit leave retires that editor and seeds Home beneath the selection overlay.
-- [ ] Closing the selection overlay after that transition returns Home without another edit confirmation.
-- [ ] Cancel retains the dirty editor, while a clean editor remains a valid overlay return destination.
+- [x] An accepted dirty-edit leave retires that editor and seeds Home beneath the selection overlay.
+- [x] Closing the selection overlay after that transition returns Home without another edit confirmation.
+- [x] Cancel retains the dirty editor, while a clean editor remains a valid overlay return destination.
 
 ## Follow-up boundary
 

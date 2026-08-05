@@ -208,6 +208,9 @@ public sealed class ActivationHandlerTests
                 It.Is<CaptureOptions>(options => options.CaptureMode == CaptureMode.Image),
                 false),
             shouldNavigate ? Times.Once : Times.Never);
+        navigation.Verify(
+            service => service.Navigate(NavigationRoute.Home, null, true),
+            shouldNavigate ? Times.Once : Times.Never);
         session.Verify(
             value => value.SaveToSourceAsync(It.IsAny<CancellationToken>()),
             decision == EditSessionLeaveDecision.SaveToSource ? Times.Once : Times.Never);
@@ -237,6 +240,9 @@ public sealed class ActivationHandlerTests
                 NavigationRoute.SelectionOverlay,
                 It.Is<CaptureOptions>(options => options.CaptureMode == CaptureMode.Video),
                 false),
+            shouldNavigate ? Times.Once : Times.Never);
+        navigation.Verify(
+            service => service.Navigate(NavigationRoute.Home, null, true),
             shouldNavigate ? Times.Once : Times.Never);
         session.Verify(
             value => value.SaveAsync(It.IsAny<CancellationToken>()),
@@ -313,7 +319,7 @@ public sealed class ActivationHandlerTests
             .ReturnsAsync(true);
         var navigation = new Mock<INavigationService>();
         var coordinator = new NavigationCoordinator(navigation.Object, editGuard, audioGuard.Object);
-        var openSelection = new OpenSelectionOverlayUseCase(coordinator, TestUseCaseExecutor.Instance);
+        var openSelection = new OpenSelectionOverlayUseCase(coordinator, activeSession, TestUseCaseExecutor.Instance);
         var showHome = new ShowHomePageUseCase(coordinator, TestUseCaseExecutor.Instance);
         var launchTargetProvider = new Mock<ILaunchNavigationTargetProvider>();
         launchTargetProvider
