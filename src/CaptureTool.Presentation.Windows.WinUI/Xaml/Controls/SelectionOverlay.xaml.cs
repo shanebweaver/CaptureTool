@@ -1,4 +1,5 @@
 using CaptureTool.Domain.Capture;
+using CaptureTool.Presentation.Features.SelectionOverlay;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
@@ -13,6 +14,7 @@ public sealed partial class SelectionOverlay : UserControlBase
     private Point _newSelectionAnchor;
 
     private Rectangle _selectionRect = Rectangle.Empty;
+    private nint _selectedWindowHandle;
     public Rectangle SelectionRect
     {
         get => _selectionRect;
@@ -40,21 +42,21 @@ public sealed partial class SelectionOverlay : UserControlBase
         }
     }
 
-    private IEnumerable<Rectangle> _windowRects = [];
-    public IEnumerable<Rectangle> WindowRects
+    private IEnumerable<WindowInfo> _windows = [];
+    public IEnumerable<WindowInfo> Windows
     {
-        get => _windowRects;
+        get => _windows;
         set
         {
-            if (_windowRects != value)
+            if (_windows != value)
             {
-                _windowRects = value;
+                _windows = value;
                 RaisePropertyChanged();
             }
         }
     }
 
-    public event EventHandler<Rectangle>? SelectionComplete;
+    public event EventHandler<SelectionOverlaySelection>? SelectionComplete;
 
     public SelectionOverlay()
     {
@@ -94,6 +96,11 @@ public sealed partial class SelectionOverlay : UserControlBase
 
     public void UpdateSelectionRect(Rectangle rect)
     {
+        if (rect.IsEmpty)
+        {
+            _selectedWindowHandle = 0;
+        }
+
         SelectionRect = rect;
         UpdateSelectionBoundary();
     }
@@ -126,6 +133,7 @@ public sealed partial class SelectionOverlay : UserControlBase
             {
                 _isCreatingNewSelection = true;
                 _newSelectionAnchor = pointerPos;
+                _selectedWindowHandle = 0;
 
                 // Start with a 1x1 rectangle at the pointer position
                 UpdateSelectionRect(new Rectangle(
@@ -242,7 +250,8 @@ public sealed partial class SelectionOverlay : UserControlBase
             }
             else
             {
-                SelectionComplete?.Invoke(this, SelectionRect);
+                nint windowHandle = CaptureType == CaptureType.Window ? _selectedWindowHandle : 0;
+                SelectionComplete?.Invoke(this, new SelectionOverlaySelection(SelectionRect, windowHandle));
             }
 
             _isCreatingNewSelection = false;
@@ -274,18 +283,14 @@ public sealed partial class SelectionOverlay : UserControlBase
     {
         var pointerPoint = new System.Drawing.Point((int)pointerPos.X, (int)pointerPos.Y);
 
-        foreach (var windowRect in WindowRects)
+        foreach (WindowInfo window in Windows)
         {
+            Rectangle windowRect = window.Position;
             if (windowRect.Contains(pointerPoint))
             {
-                var adjusted = new Rectangle(
-                    Math.Max(windowRect.X, 0),
-                    Math.Max(windowRect.Y, 0),
-                    windowRect.Width + Math.Min(windowRect.X, 0),
-                    windowRect.Height + Math.Min(windowRect.Y, 0));
-
-                UpdateSelectionRect(adjusted);
-                return IsValidSelection(adjusted);
+                _selectedWindowHandle = window.Handle;
+                UpdateSelectionRect(windowRect);
+                return IsValidSelection(windowRect);
             }
         }
 

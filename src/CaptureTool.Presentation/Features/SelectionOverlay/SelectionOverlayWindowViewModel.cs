@@ -40,7 +40,7 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
     public IAsyncRelayCommand CloseOverlayCommand { get; }
     public IRelayCommand<(int Index, SelectionUpdateSource Source)> UpdateSelectedCaptureModeCommand { get; }
     public IRelayCommand<(int Index, SelectionUpdateSource Source)> UpdateSelectedCaptureTypeCommand { get; }
-    public IRelayCommand<Rectangle> UpdateCaptureAreaCommand { get; }
+    public IRelayCommand<SelectionOverlaySelection> UpdateSelectionCommand { get; }
     public IRelayCommand<CaptureOptions> UpdateCaptureOptionsCommand { get; }
 
     public event EventHandler<CaptureOptions>? CaptureOptionsUpdated;
@@ -117,17 +117,17 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
         private set => Set(ref field, value);
     }
 
-    public IList<Rectangle> MonitorWindows
+    public IList<WindowInfo> MonitorWindows
     {
         get;
         private set => Set(ref field, value);
     }
 
-    private IList<WindowInfo> WindowInfos
+    public nint SelectedWindowHandle
     {
         get;
-        set;
-    } = [];
+        private set => Set(ref field, value);
+    }
 
     public AppTheme CurrentAppTheme
     {
@@ -180,7 +180,7 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
         CloseOverlayCommand = new AsyncRelayCommand(CloseOverlayAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
         UpdateSelectedCaptureModeCommand = new RelayCommand<(int Index, SelectionUpdateSource Source)>(UpdateSelectedCaptureMode);
         UpdateSelectedCaptureTypeCommand = new RelayCommand<(int Index, SelectionUpdateSource Source)>(UpdateSelectedCaptureType);
-        UpdateCaptureAreaCommand = new RelayCommand<Rectangle>(UpdateCaptureArea);
+        UpdateSelectionCommand = new RelayCommand<SelectionOverlaySelection>(UpdateSelection);
         UpdateCaptureOptionsCommand = new RelayCommand<CaptureOptions>(UpdateCaptureOptions);
 
         CaptureModeViewModel imageModeVM = captureModeViewModelFactory.Create(CaptureMode.Image);
@@ -198,8 +198,7 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
         StartLoading();
 
         Monitor = options.Monitor;
-        WindowInfos = [.. options.MonitorWindows];
-        MonitorWindows = [.. WindowInfos.Select(w => w.Position)];
+        MonitorWindows = [.. options.MonitorWindows];
 
         var targetMode = SupportedCaptureModes.First(vm => vm.CaptureMode == options.CaptureOptions.CaptureMode);
         UpdateSelectedCaptureMode((_supportedCaptureModes.IndexOf(targetMode), SelectionUpdateSource.Programmatic));
@@ -229,9 +228,10 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
         }
     }
 
-    private void UpdateCaptureArea(Rectangle area)
+    private void UpdateSelection(SelectionOverlaySelection selection)
     {
-        CaptureArea = area;
+        SelectedWindowHandle = selection.Area.IsEmpty ? 0 : selection.WindowHandle;
+        CaptureArea = selection.Area;
     }
 
     private void UpdateCaptureOptions(CaptureOptions options)
@@ -242,7 +242,7 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
         var targetType = SupportedCaptureTypes.First(vm => vm.CaptureType == options.CaptureType);
         UpdateSelectedCaptureType((_supportedCaptureTypes.IndexOf(targetType), SelectionUpdateSource.Programmatic));
 
-        UpdateCaptureArea(Rectangle.Empty);
+        UpdateSelection(SelectionOverlaySelection.Empty);
 
         CaptureOptionsUpdated?.Invoke(this, options);
     }
@@ -330,28 +330,10 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
         else if (SupportedCaptureModes[SelectedCaptureModeIndex].CaptureMode == CaptureMode.Video)
         {
             CaptureType captureType = GetSelectedCaptureType() ?? CaptureType.FullScreen;
-            NewCaptureArgs args = new(Monitor.Value, CaptureArea, captureType, GetSelectedWindowHandle(captureType, CaptureArea));
+            nint windowHandle = captureType == CaptureType.Window ? SelectedWindowHandle : 0;
+            NewCaptureArgs args = new(Monitor.Value, CaptureArea, captureType, windowHandle);
             await _openVideoCaptureOverlayCommand.ExecuteAsync(new OpenCaptureOverlayRequest(args), CancellationToken.None);
         }
-    }
-
-    private nint GetSelectedWindowHandle(CaptureType captureType, Rectangle captureArea)
-    {
-        if (captureType != CaptureType.Window)
-        {
-            return 0;
-        }
-
-        return WindowInfos.FirstOrDefault(w => GetSelectableWindowRectangle(w.Position) == captureArea).Handle;
-    }
-
-    private static Rectangle GetSelectableWindowRectangle(Rectangle windowRect)
-    {
-        return new Rectangle(
-            Math.Max(windowRect.X, 0),
-            Math.Max(windowRect.Y, 0),
-            windowRect.Width + Math.Min(windowRect.X, 0),
-            windowRect.Height + Math.Min(windowRect.Y, 0));
     }
 
     public override void Dispose()
@@ -359,6 +341,7 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
         // Explicitly null Monitor to release the ~100MB PixelBuffer reference
         Monitor = null;
         MonitorWindows = [];
+        SelectedWindowHandle = 0;
 
         // Clear collections to release any remaining references
         _supportedCaptureTypes.Clear();

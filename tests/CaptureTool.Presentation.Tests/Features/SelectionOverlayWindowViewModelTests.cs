@@ -96,9 +96,80 @@ public sealed class SelectionOverlayWindowViewModelTests
         shutdownHandler.Verify(handler => handler.Shutdown(), Times.Once);
     }
 
+    [TestMethod]
+    public async Task RequestCaptureCommand_WindowSelection_UsesExplicitWindowHandle()
+    {
+        var openCaptureOverlay = new Mock<IOpenCaptureOverlayUseCase>();
+        OpenCaptureOverlayRequest? capturedRequest = null;
+        openCaptureOverlay
+            .Setup(useCase => useCase.ExecuteAsync(
+                It.IsAny<OpenCaptureOverlayRequest>(),
+                It.IsAny<CancellationToken>()))
+            .Callback<OpenCaptureOverlayRequest, CancellationToken>((request, _) => capturedRequest = request)
+            .ReturnsAsync(UseCaseResponse<OpenCaptureOverlayResponse>.Success(new OpenCaptureOverlayResponse()));
+        Rectangle duplicateArea = new(20, 30, 400, 300);
+        WindowInfo[] windows =
+        [
+            new WindowInfo(111, "first", duplicateArea),
+            new WindowInfo(222, "second", duplicateArea),
+        ];
+        SelectionOverlayWindowViewModel viewModel = CreateViewModel(openCaptureOverlay: openCaptureOverlay);
+        viewModel.Load(CreateOptions(CaptureOptions.VideoDefault, windows));
+        viewModel.UpdateSelectedCaptureTypeCommand.Execute((1, SelectionUpdateSource.UserInteraction));
+        viewModel.UpdateSelectionCommand.Execute(new SelectionOverlaySelection(duplicateArea, 222));
+
+        await viewModel.RequestCaptureCommand.ExecuteAsync(null);
+
+        Assert.IsNotNull(capturedRequest);
+        Assert.AreEqual(CaptureType.Window, capturedRequest.CaptureArgs.CaptureType);
+        Assert.AreEqual(duplicateArea, capturedRequest.CaptureArgs.Area);
+        Assert.AreEqual((nint)222, capturedRequest.CaptureArgs.WindowHandle);
+    }
+
+    [TestMethod]
+    public async Task RequestCaptureCommand_NonWindowSelection_DoesNotReuseWindowHandle()
+    {
+        var openCaptureOverlay = new Mock<IOpenCaptureOverlayUseCase>();
+        OpenCaptureOverlayRequest? capturedRequest = null;
+        openCaptureOverlay
+            .Setup(useCase => useCase.ExecuteAsync(
+                It.IsAny<OpenCaptureOverlayRequest>(),
+                It.IsAny<CancellationToken>()))
+            .Callback<OpenCaptureOverlayRequest, CancellationToken>((request, _) => capturedRequest = request)
+            .ReturnsAsync(UseCaseResponse<OpenCaptureOverlayResponse>.Success(new OpenCaptureOverlayResponse()));
+        SelectionOverlayWindowViewModel viewModel = CreateViewModel(openCaptureOverlay: openCaptureOverlay);
+        viewModel.Load(CreateOptions(CaptureOptions.VideoDefault));
+        viewModel.UpdateSelectionCommand.Execute(new SelectionOverlaySelection(new Rectangle(20, 30, 400, 300), 222));
+
+        await viewModel.RequestCaptureCommand.ExecuteAsync(null);
+
+        Assert.IsNotNull(capturedRequest);
+        Assert.AreEqual(CaptureType.FullScreen, capturedRequest.CaptureArgs.CaptureType);
+        Assert.AreEqual(nint.Zero, capturedRequest.CaptureArgs.WindowHandle);
+    }
+
+    [TestMethod]
+    public void UpdateSelectionCommand_ClearingOrReplacingSelection_ClearsWindowHandle()
+    {
+        SelectionOverlayWindowViewModel viewModel = CreateViewModel();
+        viewModel.Load(CreateOptions(CaptureOptions.VideoDefault));
+        viewModel.UpdateSelectionCommand.Execute(new SelectionOverlaySelection(new Rectangle(20, 30, 400, 300), 222));
+
+        viewModel.UpdateSelectionCommand.Execute(SelectionOverlaySelection.Empty);
+
+        Assert.AreEqual(Rectangle.Empty, viewModel.CaptureArea);
+        Assert.AreEqual(nint.Zero, viewModel.SelectedWindowHandle);
+
+        viewModel.UpdateSelectionCommand.Execute(new SelectionOverlaySelection(new Rectangle(40, 50, 500, 400)));
+
+        Assert.AreEqual(new Rectangle(40, 50, 500, 400), viewModel.CaptureArea);
+        Assert.AreEqual(nint.Zero, viewModel.SelectedWindowHandle);
+    }
+
     private static SelectionOverlayWindowViewModel CreateViewModel(
         Mock<IShowMainWindowUseCase>? showMainWindow = null,
-        Mock<IShutdownHandler>? shutdownHandler = null)
+        Mock<IShutdownHandler>? shutdownHandler = null,
+        Mock<IOpenCaptureOverlayUseCase>? openCaptureOverlay = null)
     {
         Mock<ILocalizationService> localizationService = new();
         localizationService
@@ -111,7 +182,7 @@ public sealed class SelectionOverlayWindowViewModelTests
 
         return new SelectionOverlayWindowViewModel(
             Mock.Of<IOpenImageEditPageUseCase>(),
-            Mock.Of<IOpenCaptureOverlayUseCase>(),
+            openCaptureOverlay?.Object ?? Mock.Of<IOpenCaptureOverlayUseCase>(),
             showMainWindow?.Object ?? Mock.Of<IShowMainWindowUseCase>(),
             Mock.Of<ICaptureImageUseCase>(),
             themeService.Object,
@@ -120,7 +191,9 @@ public sealed class SelectionOverlayWindowViewModelTests
             new CaptureTypeViewModelFactory(localizationService.Object));
     }
 
-    private static SelectionOverlayWindowOptions CreateOptions(CaptureOptions captureOptions)
+    private static SelectionOverlayWindowOptions CreateOptions(
+        CaptureOptions captureOptions,
+        IEnumerable<WindowInfo>? windows = null)
     {
         MonitorCaptureResult monitor = new(
             IntPtr.Zero,
@@ -130,6 +203,6 @@ public sealed class SelectionOverlayWindowViewModelTests
             new Rectangle(0, 0, 1920, 1080),
             true);
 
-        return new SelectionOverlayWindowOptions(monitor, [], captureOptions);
+        return new SelectionOverlayWindowOptions(monitor, windows ?? [], captureOptions);
     }
 }

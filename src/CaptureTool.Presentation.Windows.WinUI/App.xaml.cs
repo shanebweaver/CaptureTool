@@ -1,6 +1,8 @@
 using CaptureTool.Application.Abstractions.Activation;
 using CaptureTool.Application.Abstractions.Logging;
 using CaptureTool.Application.Abstractions.Themes;
+using CaptureTool.Presentation.Activation;
+using CaptureTool.Presentation.Windows.WinUI.Activation;
 using CaptureTool.Presentation.Windows.WinUI.UiTests;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
@@ -12,11 +14,18 @@ public partial class App : Microsoft.UI.Xaml.Application
 {
     internal new static App Current => (App)Microsoft.UI.Xaml.Application.Current;
 
+    private readonly StartupActivationQueue<ActivationMaterializationResult> _redirectedActivations;
+
     internal AppServiceProvider ServiceProvider { get; }
     internal DispatcherQueue DispatcherQueue { get; }
 
-    public App()
+    public App() : this(new StartupActivationQueue<ActivationMaterializationResult>())
     {
+    }
+
+    internal App(StartupActivationQueue<ActivationMaterializationResult> redirectedActivations)
+    {
+        _redirectedActivations = redirectedActivations;
         UnhandledException += App_UnhandledException;
         DispatcherQueue = DispatcherQueue.GetForCurrentThread();
         ServiceProvider = new();
@@ -47,25 +56,15 @@ public partial class App : Microsoft.UI.Xaml.Application
         }
 
         AppActivationArguments args = AppInstance.GetCurrent().GetActivatedEventArgs();
-        if (TryMaterializeActivation(args, out MaterializedActivation activation))
-        {
-            await ActivateAsync(activation);
-        }
+        await HandleMaterializedActivationAsync(ActivationMaterializer.Materialize(args));
+        _redirectedActivations.Attach(Activate);
     }
 
-    internal void Activate(AppActivationArguments args)
+    internal void Activate(ActivationMaterializationResult activation)
     {
-        // Redirected activation data can be backed by a COM proxy to the process
-        // performing the redirect. Materialize it before this callback returns and
-        // that process is allowed to exit.
-        if (!TryMaterializeActivation(args, out MaterializedActivation activation))
-        {
-            return;
-        }
-
         bool enqueued = DispatcherQueue.TryEnqueue(async () =>
         {
-            await ActivateAsync(activation);
+            await HandleMaterializedActivationAsync(activation);
         });
 
         if (!enqueued)
@@ -74,35 +73,22 @@ public partial class App : Microsoft.UI.Xaml.Application
         }
     }
 
-    private bool TryMaterializeActivation(
-        AppActivationArguments args,
-        out MaterializedActivation activation)
+    private async Task HandleMaterializedActivationAsync(ActivationMaterializationResult result)
     {
-        try
+        if (result.Activation is MaterializedActivation activation)
         {
-            ExtendedActivationKind kind = args.Kind;
-            Uri? protocolUri = null;
-
-            if (kind == ExtendedActivationKind.Protocol)
-            {
-                if (args.Data is not global::Windows.ApplicationModel.Activation.IProtocolActivatedEventArgs protocolArgs)
-                {
-                    ServiceProvider.GetService<ILogService>().LogWarning("Protocol activation data is not of expected type.");
-                    activation = default;
-                    return false;
-                }
-
-                protocolUri = new Uri(protocolArgs.Uri.AbsoluteUri);
-            }
-
-            activation = new MaterializedActivation(kind, protocolUri);
-            return true;
+            await ActivateAsync(activation);
+            return;
         }
-        catch (Exception e)
+
+        string message = result.FailureMessage ?? "Activation data is unavailable.";
+        if (result.FailureException is Exception exception)
         {
-            ServiceProvider.GetService<ILogService>().LogException(e, "Failed to read activation data.");
-            activation = default;
-            return false;
+            ServiceProvider.GetService<ILogService>().LogException(exception, message);
+        }
+        else
+        {
+            ServiceProvider.GetService<ILogService>().LogWarning(message);
         }
     }
 
@@ -138,8 +124,4 @@ public partial class App : Microsoft.UI.Xaml.Application
             ServiceProvider.GetService<ILogService>().LogException(e, "Activation failed.");
         }
     }
-
-    private readonly record struct MaterializedActivation(
-        ExtendedActivationKind Kind,
-        Uri? ProtocolUri);
 }
