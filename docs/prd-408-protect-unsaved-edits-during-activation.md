@@ -2,7 +2,7 @@
 
 - Issue: [#408](https://github.com/shanebweaver/CaptureTool/issues/408)
 - Severity: High
-- Status: Implemented
+- Status: Implementation follow-up in progress
 - Affected features: `APP-01`, `APP-02`, `APP-07`
 
 ## Summary
@@ -46,6 +46,8 @@ When a protocol activation arrives while an image or video edit has unsaved chan
 - **Save cancellation or failure:** keep the current editor and do not navigate.
 - **Warnings disabled:** preserve the existing preference and navigate without a prompt.
 
+After Save, Save As, Discard, or warnings-disabled acceptance, the previous dirty editor is no longer a valid return destination. The selection overlay must be opened over a fresh Home history entry so closing the overlay returns to Home without a second leave prompt. Cancel still retains the editor and does not open the overlay. A clean editor remains a valid return destination when capture selection is canceled.
+
 Clean sessions continue immediately without a dialog. Repeated or competing requests must not display overlapping confirmation dialogs.
 
 ## Functional requirements
@@ -79,6 +81,9 @@ Add an application abstraction and implementation that:
 - Unsupported URI schemes remain ignored without initializing or prompting.
 - Activation telemetry remains recorded using the current normalized source values.
 - Exceptions remain bounded by the activation handler's existing logging boundary.
+- When an accepted transition leaves a dirty editor for the selection overlay, replace that editor's history with Home before presenting the overlay.
+- Closing that overlay returns to Home without evaluating the retired edit session again.
+- Opening the selection overlay from a clean editor preserves the editor as the cancellation destination.
 
 ## Reliability requirements
 
@@ -110,6 +115,9 @@ Use real coordinator/guard behavior with fake image and video `IEditableSession`
 - recording protocol activation + dirty video session: Save, Discard, and Cancel;
 - unknown protocol activation + dirty session obeys the same policy before Home;
 - rejected decisions never reach the navigation service.
+- accepted Save/Save As/Discard decisions seed Home beneath the selection overlay;
+- closing the resulting selection overlay returns Home without a second confirmation;
+- a clean editor remains beneath the selection overlay and is restored when selection is canceled.
 
 ### Existing behavior
 
@@ -128,6 +136,9 @@ Use real coordinator/guard behavior with fake image and video `IEditableSession`
 - [x] Competing transitions cannot display overlapping leave confirmations.
 - [x] No ordinary application navigation caller can bypass the coordinator unintentionally.
 - [x] Existing non-UI tests pass and the WinUI x64 Debug project builds.
+- [ ] An accepted dirty-edit leave retires that editor and seeds Home beneath the selection overlay.
+- [ ] Closing the selection overlay after that transition returns Home without another edit confirmation.
+- [ ] Cancel retains the dirty editor, while a clean editor remains a valid overlay return destination.
 
 ## Follow-up boundary
 
