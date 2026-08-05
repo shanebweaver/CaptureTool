@@ -17,10 +17,15 @@ internal sealed partial class SelectionOverlayHost : IDisposable
     private readonly HashSet<MonitorCaptureResult> _monitors = [];
     private readonly HashSet<SelectionOverlayWindow> _windows = [];
     private readonly HashSet<nint> _windowHandles = [];
+    private readonly SelectionOverlayHostLifetime _lifetime;
     private SelectionOverlayHostViewModel? _viewModel;
     private DispatcherTimer? _foregroundTimer;
     private SelectionOverlayWindow? _primaryWindow;
-    private bool _disposed;
+
+    public SelectionOverlayHost()
+    {
+        _lifetime = new SelectionOverlayHostLifetime(CloseCore);
+    }
 
     public event EventHandler? LostFocus;
 
@@ -144,23 +149,28 @@ internal sealed partial class SelectionOverlayHost : IDisposable
 
     public void Close()
     {
-        if (_disposed)
-        {
-            return;
-        }
+        _lifetime.Close();
+    }
 
+    private void CloseCore()
+    {
         StopForegroundMonitor();
 
-        if (_primaryWindow != null)
-        {
-            _primaryWindow = null;
-        }
+        _primaryWindow = null;
 
-        if (_viewModel != null)
+        SelectionOverlayHostViewModel? viewModel = _viewModel;
+        _viewModel = null;
+        if (viewModel != null)
         {
-            _viewModel.AllScreensCaptureRequested -= OnAllScreensCaptureRequested;
-            _viewModel.Dispose();
-            _viewModel = null;
+            try
+            {
+                viewModel.AllScreensCaptureRequested -= OnAllScreensCaptureRequested;
+                viewModel.Dispose();
+            }
+            catch
+            {
+                // Continue releasing native overlay resources if view-model teardown fails.
+            }
         }
 
         foreach (SelectionOverlayWindow window in _windows)
@@ -215,24 +225,25 @@ internal sealed partial class SelectionOverlayHost : IDisposable
 
     private void StopForegroundMonitor()
     {
-        if (_foregroundTimer != null)
+        DispatcherTimer? foregroundTimer = _foregroundTimer;
+        _foregroundTimer = null;
+        if (foregroundTimer != null)
         {
-            _foregroundTimer.Tick -= OnForegroundTimerTick;
-            _foregroundTimer.Stop();
-            _foregroundTimer = null;
+            try
+            {
+                foregroundTimer.Tick -= OnForegroundTimerTick;
+                foregroundTimer.Stop();
+            }
+            catch
+            {
+                // Continue host cleanup even if the dispatcher is already unavailable.
+            }
         }
     }
 
     public void Dispose()
     {
-        if (_disposed)
-        {
-            return;
-        }
-
-        _disposed = true;
-
-        Close();
+        _lifetime.Dispose();
         GC.SuppressFinalize(this);
     }
 }
