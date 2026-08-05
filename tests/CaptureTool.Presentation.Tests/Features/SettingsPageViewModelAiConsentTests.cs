@@ -180,6 +180,22 @@ public sealed class SettingsPageViewModelAiConsentTests
     }
 
     [TestMethod]
+    public async Task RestoreDefaultSettingsCommand_WhenRestoreFails_ShouldKeepDisplayedTheme()
+    {
+        var restoreDefaults = new Mock<IRestoreDefaultsUseCase>();
+        restoreDefaults
+            .Setup(service => service.ExecuteAsync(It.IsAny<RestoreDefaultsRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(UseCaseResponse<RestoreDefaultsResponse>.Failure());
+        SettingsPageViewModel viewModel = CreateViewModel(restoreDefaultsUseCase: restoreDefaults.Object);
+        await viewModel.LoadAsync(TestContext.CancellationToken);
+        int selectedThemeIndex = viewModel.SelectedAppThemeIndex;
+
+        await viewModel.RestoreDefaultSettingsCommand.ExecuteAsync(null);
+
+        viewModel.SelectedAppThemeIndex.Should().Be(selectedThemeIndex);
+    }
+
+    [TestMethod]
     public async Task LoadAsync_WhenOnlyImageDescriptionFeatureEnabled_ShouldShowImageDescriptionConsentOnly()
     {
         SettingsPageViewModel viewModel = CreateViewModel(
@@ -282,7 +298,8 @@ public sealed class SettingsPageViewModelAiConsentTests
         ITelemetryConsentService? telemetryConsentService = null,
         SettingsMutationStatus settingsMutationStatus = SettingsMutationStatus.Saved,
         IUpdateImageAutoSaveUseCase? updateImageAutoSaveAction = null,
-        bool aiConsentSaveSucceeded = true)
+        bool aiConsentSaveSucceeded = true,
+        IRestoreDefaultsUseCase? restoreDefaultsUseCase = null)
     {
         var localization = new Mock<ILocalizationService>();
         localization
@@ -384,7 +401,7 @@ public sealed class SettingsPageViewModelAiConsentTests
             Mock.Of<IOpenVideosFolderUseCase>(),
             Mock.Of<IOpenTempFolderUseCase>(),
             Mock.Of<IClearTempFilesUseCase>(),
-            Mock.Of<IRestoreDefaultsUseCase>(),
+            restoreDefaultsUseCase ?? Mock.Of<IRestoreDefaultsUseCase>(),
             aiFeatureConsentService.Object,
             Mock.Of<IAiConsentSettingsFeatureAvailability>(service =>
                 service.IsAiConsentSettingsEnabled == isAiConsentSettingsEnabled),
