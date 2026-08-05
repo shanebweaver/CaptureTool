@@ -7,7 +7,7 @@ namespace CaptureTool.Application.Tests.Capture.Audio;
 
 internal sealed class FakeAudioCaptureWorkflow : IAudioCaptureWorkflow
 {
-    public event EventHandler<AudioCaptureState>? CaptureStateChanged;
+    public event EventHandler<AudioCaptureStateChange>? CaptureStateChanged;
     public event EventHandler<bool>? MutedStateChanged;
     public event EventHandler<bool>? DesktopAudioStateChanged;
     public event EventHandler<string?>? AudioInputSourceChanged;
@@ -33,13 +33,14 @@ internal sealed class FakeAudioCaptureWorkflow : IAudioCaptureWorkflow
     public int ToggleLocalAudioCallCount { get; private set; }
     public int SelectAudioInputSourceCallCount { get; private set; }
     public AudioFile AudioFile { get; set; } = new("capture.wav");
+    public Exception? StopException { get; set; }
 
     public void StartCapture()
     {
         StartCallCount++;
         IsRecording = true;
         CaptureState = AudioCaptureState.Recording;
-        CaptureStateChanged?.Invoke(this, CaptureState);
+        CaptureStateChanged?.Invoke(this, new AudioCaptureStateChange(CaptureState));
     }
 
     public AudioFile StopCapture()
@@ -48,7 +49,15 @@ internal sealed class FakeAudioCaptureWorkflow : IAudioCaptureWorkflow
         IsRecording = false;
         IsPaused = false;
         CaptureState = AudioCaptureState.Stopped;
-        CaptureStateChanged?.Invoke(this, CaptureState);
+        AudioCaptureFailure? failure = StopException is null
+            ? null
+            : AudioCaptureFailure.FromException(AudioCaptureFailureStage.RecorderStop, StopException);
+        CaptureStateChanged?.Invoke(this, new AudioCaptureStateChange(CaptureState, failure));
+        if (StopException is not null)
+        {
+            throw StopException;
+        }
+
         NewAudioCaptured?.Invoke(this, AudioFile);
         return AudioFile;
     }
@@ -59,7 +68,7 @@ internal sealed class FakeAudioCaptureWorkflow : IAudioCaptureWorkflow
         IsRecording = false;
         IsPaused = false;
         CaptureState = AudioCaptureState.Stopped;
-        CaptureStateChanged?.Invoke(this, CaptureState);
+        CaptureStateChanged?.Invoke(this, new AudioCaptureStateChange(CaptureState));
     }
 
     public void PauseCapture()
@@ -67,7 +76,7 @@ internal sealed class FakeAudioCaptureWorkflow : IAudioCaptureWorkflow
         PauseCallCount++;
         IsPaused = !IsPaused;
         CaptureState = IsPaused ? AudioCaptureState.Paused : AudioCaptureState.Recording;
-        CaptureStateChanged?.Invoke(this, CaptureState);
+        CaptureStateChanged?.Invoke(this, new AudioCaptureStateChange(CaptureState));
     }
 
     public void SelectAudioInputSource(string? sourceId)
