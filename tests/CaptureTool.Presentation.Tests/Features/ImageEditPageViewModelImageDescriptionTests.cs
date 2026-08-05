@@ -56,7 +56,7 @@ public sealed class ImageEditPageViewModelImageDescriptionTests
             .Returns(AiFeatureConsentState.Denied);
         consent
             .Setup(x => x.SetConsentAsync(AiFeatureId.ImageDescription, false, It.IsAny<CancellationToken>()))
-            .Returns(Task.CompletedTask);
+            .ReturnsAsync(true);
         dialog
             .Setup(x => x.RequestConsentAsync(AiFeatureId.ImageDescription, It.IsAny<CancellationToken>()))
             .ReturnsAsync(false);
@@ -95,7 +95,7 @@ public sealed class ImageEditPageViewModelImageDescriptionTests
             .Returns(AiFeatureConsentState.Unknown);
         consent
             .Setup(x => x.SetConsentAsync(AiFeatureId.ImageDescription, true, It.IsAny<CancellationToken>()))
-            .Returns(Task.CompletedTask);
+            .ReturnsAsync(true);
         dialog
             .Setup(x => x.RequestConsentAsync(AiFeatureId.ImageDescription, It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);

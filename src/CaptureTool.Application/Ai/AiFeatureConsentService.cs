@@ -39,13 +39,16 @@ internal sealed class AiFeatureConsentService : IAiFeatureConsentService
             : AiFeatureConsentState.Denied;
     }
 
-    public async Task SetConsentAsync(
+    public async Task<bool> SetConsentAsync(
         AiFeatureId featureId,
         bool isGranted,
         CancellationToken cancellationToken = default)
     {
-        _settingsService.Set(GetSettingDefinition(featureId), isGranted);
-        await _settingsService.TrySaveAsync(cancellationToken);
+        SettingsMutationResult result = await _settingsService.TrySetAndSaveAsync(
+            GetSettingDefinition(featureId),
+            isGranted,
+            cancellationToken);
+        return result.Succeeded;
     }
 
     private AiFeatureConsent CreateConsent(AiFeatureId featureId, string displayName)

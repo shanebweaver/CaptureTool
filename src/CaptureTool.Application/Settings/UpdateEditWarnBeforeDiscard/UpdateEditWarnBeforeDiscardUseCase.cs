@@ -26,9 +26,11 @@ internal sealed class UpdateEditWarnBeforeDiscardUseCase : IUpdateEditWarnBefore
             activityId: ActivityId,
             useCase: async _ =>
             {
-                _settingsService.Set(CaptureToolSettings.Settings_Edit_WarnBeforeDiscard, request.IsEnabled);
-                await _settingsService.TrySaveAsync(cancellationToken);
-                return new UpdateEditWarnBeforeDiscardResponse();
+                SettingsMutationResult result = await _settingsService.TrySetAndSaveAsync(
+                    CaptureToolSettings.Settings_Edit_WarnBeforeDiscard,
+                    request.IsEnabled,
+                    cancellationToken);
+                return new UpdateEditWarnBeforeDiscardResponse(result.Succeeded);
             },
             cancellationToken: cancellationToken);
     }

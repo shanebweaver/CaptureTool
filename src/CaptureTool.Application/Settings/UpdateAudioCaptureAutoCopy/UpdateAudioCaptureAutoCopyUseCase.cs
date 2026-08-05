@@ -28,9 +28,11 @@ internal sealed class UpdateAudioCaptureAutoCopyUseCase : IUpdateAudioCaptureAut
             activityId: ActivityId,
             useCase: async _ =>
             {
-                _settingsService.Set(CaptureToolSettings.Settings_AudioCapture_AutoCopy, request.IsEnabled);
-                await _settingsService.TrySaveAsync(cancellationToken);
-                return new UpdateAudioCaptureAutoCopyResponse();
+                SettingsMutationResult result = await _settingsService.TrySetAndSaveAsync(
+                    CaptureToolSettings.Settings_AudioCapture_AutoCopy,
+                    request.IsEnabled,
+                    cancellationToken);
+                return new UpdateAudioCaptureAutoCopyResponse(result.Succeeded);
             },
             cancellationToken: cancellationToken);
     }

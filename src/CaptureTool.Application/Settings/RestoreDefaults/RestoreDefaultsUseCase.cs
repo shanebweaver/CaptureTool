@@ -40,11 +40,15 @@ internal sealed class RestoreDefaultsUseCase : IRestoreDefaultsUseCase
             activityId: ActivityId,
             useCase: async _ =>
             {
+                SettingsMutationResult result = await _settingsService.TryClearAllAndSaveAsync(cancellationToken);
+                if (!result.Succeeded)
+                {
+                    return new RestoreDefaultsResponse(false);
+                }
+
                 _themeService.ResetCurrentTheme();
-                _settingsService.ClearAllSettings();
                 _telemetryConsentService.SetState(TelemetryConsentState.Unknown);
                 _localizationService.OverrideLanguage(null);
-                await _settingsService.TrySaveAsync(cancellationToken);
                 return new RestoreDefaultsResponse();
             },
             cancellationToken: cancellationToken);

@@ -38,9 +38,11 @@ internal sealed class ChangeAudioFolderUseCase : IChangeAudioFolderUseCase
                     return new ChangeAudioFolderResponse(false);
                 }
 
-                _settings.Set(CaptureToolSettings.Settings_AudioCapture_AutoSaveFolder, folder.FolderPath);
-                await _settings.TrySaveAsync(cancellationToken);
-                return new ChangeAudioFolderResponse();
+                SettingsMutationResult result = await _settings.TrySetAndSaveAsync(
+                    CaptureToolSettings.Settings_AudioCapture_AutoSaveFolder,
+                    folder.FolderPath,
+                    cancellationToken);
+                return new ChangeAudioFolderResponse(result.Succeeded);
             },
             cancellationToken: cancellationToken);
     }

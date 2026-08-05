@@ -29,6 +29,15 @@ internal sealed class UpdateLoggingStateUseCase : IUpdateLoggingStateUseCase
             activityId: ActivityId,
             useCase: async _ =>
             {
+                SettingsMutationResult result = await _settingsService.TrySetAndSaveAsync(
+                    CaptureToolSettings.VerboseLogging,
+                    request.IsEnabled,
+                    cancellationToken);
+                if (!result.Succeeded)
+                {
+                    return new UpdateLoggingStateResponse(false);
+                }
+
                 if (request.IsEnabled)
                 {
                     _logService.Enable();
@@ -38,8 +47,6 @@ internal sealed class UpdateLoggingStateUseCase : IUpdateLoggingStateUseCase
                     _logService.Disable();
                 }
 
-                _settingsService.Set(CaptureToolSettings.VerboseLogging, request.IsEnabled);
-                await _settingsService.TrySaveAsync(cancellationToken);
                 return new UpdateLoggingStateResponse();
             },
             cancellationToken: cancellationToken);

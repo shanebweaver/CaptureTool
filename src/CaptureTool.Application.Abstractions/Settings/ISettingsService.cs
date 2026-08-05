@@ -13,6 +13,27 @@ public interface ISettingsService
     void Unset(ISettingDefinition settingDefinition);
     void Unset(ISettingDefinition[] settingDefinitions);
 
+    Task<SettingsMutationResult> TrySetAndSaveAsync(
+        IBoolSettingDefinition settingDefinition,
+        bool value,
+        CancellationToken cancellationToken);
+    Task<SettingsMutationResult> TrySetAndSaveAsync(
+        IDoubleSettingDefinition settingDefinition,
+        double value,
+        CancellationToken cancellationToken);
+    Task<SettingsMutationResult> TrySetAndSaveAsync(
+        IIntSettingDefinition settingDefinition,
+        int value,
+        CancellationToken cancellationToken);
+    Task<SettingsMutationResult> TrySetAndSaveAsync(
+        IStringSettingDefinition settingDefinition,
+        string value,
+        CancellationToken cancellationToken);
+    Task<SettingsMutationResult> TryUnsetAndSaveAsync(
+        ISettingDefinition settingDefinition,
+        CancellationToken cancellationToken);
+    Task<SettingsMutationResult> TryClearAllAndSaveAsync(CancellationToken cancellationToken);
+
     Task InitializeAsync(string filePath, CancellationToken cancellationToken);
     Task<bool> TrySaveAsync(CancellationToken cancellationToken);
 
