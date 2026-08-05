@@ -62,7 +62,7 @@ public abstract class PageBase<VM> : Page where VM : IViewModel
         catch (Exception ex)
         {
             _logService.LogException(ex, "Failed to load page.");
-            _navigationService.Navigate(NavigationRoute.Error, ex);
+            await _navigationService.NavigateAsync(NavigationRoute.Error, ex);
         }
 
         base.OnNavigatedTo(e);

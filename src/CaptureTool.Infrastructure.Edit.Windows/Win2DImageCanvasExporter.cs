@@ -79,10 +79,12 @@ public sealed partial class Win2DImageCanvasExporter : IImageCanvasExporter
         float renderWidth = options.CropRect.Width;
         float renderHeight = options.CropRect.Height;
 
-        using CanvasRenderTarget renderTarget = new(CanvasDevice.GetSharedDevice(), renderWidth, renderHeight, options.Dpi);
+        CanvasDevice device = CanvasDevice.GetSharedDevice();
+        using CanvasRenderTarget renderTarget = new(device, renderWidth, renderHeight, options.Dpi);
+        using Win2DImageRenderResourceScope imageResources = await Win2DImageRenderResourceScope.CreateAsync(drawables, device);
         using CanvasDrawingSession drawingSession = renderTarget.CreateDrawingSession();
 
-        Win2DImageCanvasRenderer.Render(drawables, options, drawingSession);
+        Win2DImageCanvasRenderer.Render(drawables, options, drawingSession, imageResources.GetImage);
 
         drawingSession.Flush();
 

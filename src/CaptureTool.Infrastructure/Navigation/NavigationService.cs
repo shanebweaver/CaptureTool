@@ -6,14 +6,34 @@ namespace CaptureTool.Infrastructure.Navigation;
 public class NavigationService : INavigationService
 {
     private readonly Stack<NavigationRequest> _navigationStack = new();
-    private readonly Lock _navigationLock = new();
+    private readonly Lock _stateLock = new();
+    private readonly SemaphoreSlim _transitionGate = new(1, 1);
     private readonly ITelemetryService? _telemetryService;
     private INavigationHandler? _navigationHandler;
 
     public event EventHandler<INavigationEventArgs>? Navigated;
 
-    public INavigationRequest? CurrentRequest => _navigationStack.Count == 0 ? null : _navigationStack.Peek();
-    public bool CanGoBack => _navigationStack.Count > 1;
+    public INavigationRequest? CurrentRequest
+    {
+        get
+        {
+            lock (_stateLock)
+            {
+                return _navigationStack.Count == 0 ? null : _navigationStack.Peek();
+            }
+        }
+    }
+
+    public bool CanGoBack
+    {
+        get
+        {
+            lock (_stateLock)
+            {
+                return _navigationStack.Count > 1;
+            }
+        }
+    }
 
     public NavigationService(ITelemetryService? telemetryService = null)
     {
@@ -22,110 +42,182 @@ public class NavigationService : INavigationService
 
     public void SetNavigationHandler(INavigationHandler navigationHandler)
     {
-        _navigationHandler = navigationHandler;
-    }
+        ArgumentNullException.ThrowIfNull(navigationHandler);
 
-    public bool TryGoBack()
-    {
-        lock (_navigationLock)
+        lock (_stateLock)
         {
-            if (_navigationStack.Count <= 1)
-            {
-                return false;
-            }
-
-            INavigationRequest currentRequest = _navigationStack.Pop();
-            INavigationRequest backRequest = _navigationStack.Peek();
-
-            bool requestsMatch = CompareRequests(currentRequest, backRequest);
-            if (!requestsMatch)
-            {
-                RequestNavigation(
-                    new NavigationRequest(backRequest.Route, backRequest.Parameter, true, false),
-                    currentRequest.Route);
-            }
-
-            return true;
+            _navigationHandler = navigationHandler;
         }
     }
 
-    public bool TryGoBackTo(Func<INavigationRequest, bool> assesRequest)
+    public async Task<NavigationResult> NavigateAsync(
+        object route,
+        object? parameter = null,
+        bool clearHistory = false,
+        CancellationToken cancellationToken = default)
     {
-        lock (_navigationLock)
+        ArgumentNullException.ThrowIfNull(route);
+
+        await _transitionGate.WaitAsync(cancellationToken);
+        try
         {
-            if (_navigationStack.Count <= 1)
+            NavigationRequest? currentRequest;
+            lock (_stateLock)
             {
-                return false;
+                currentRequest = _navigationStack.Count == 0 ? null : _navigationStack.Peek();
             }
 
-            var entries = _navigationStack.ToArray();
-            int targetIndex = -1;
-            for (int i = 1; i < entries.Length; i++)
+            NavigationRequest newRequest = new(route, parameter, false, clearHistory);
+            if (CompareRequests(currentRequest, newRequest))
             {
-                if (assesRequest(entries[i]))
+                return NavigationResult.NoChange;
+            }
+
+            NavigationResult result = await DispatchAsync(newRequest, cancellationToken);
+            if (result != NavigationResult.Accepted)
+            {
+                return result;
+            }
+
+            lock (_stateLock)
+            {
+                if (clearHistory)
                 {
-                    targetIndex = i;
-                    break;
+                    _navigationStack.Clear();
                 }
+
+                _navigationStack.Push(newRequest);
             }
 
-            if (targetIndex == -1)
+            CompleteNavigation(newRequest, currentRequest?.Route);
+            return NavigationResult.Accepted;
+        }
+        finally
+        {
+            _transitionGate.Release();
+        }
+    }
+
+    public async Task<NavigationResult> TryGoBackAsync(CancellationToken cancellationToken = default)
+    {
+        await _transitionGate.WaitAsync(cancellationToken);
+        try
+        {
+            NavigationRequest currentRequest;
+            NavigationRequest backRequest;
+            lock (_stateLock)
             {
-                return false;
+                if (_navigationStack.Count <= 1)
+                {
+                    return NavigationResult.NoChange;
+                }
+
+                NavigationRequest[] entries = _navigationStack.ToArray();
+                currentRequest = entries[0];
+                backRequest = entries[1];
             }
 
-            var currentRequest = _navigationStack.Peek();
-            var targetRequest = entries[targetIndex];
-            if (CompareRequests(currentRequest, targetRequest))
+            NavigationRequest candidate = new(
+                backRequest.Route,
+                backRequest.Parameter,
+                isBackNavigation: true,
+                clearHistory: false);
+            NavigationResult result = await DispatchAsync(candidate, cancellationToken);
+            if (result != NavigationResult.Accepted)
             {
-                return false;
+                return result;
             }
 
-            for (int i = 0; i < targetIndex; i++)
+            lock (_stateLock)
             {
                 _navigationStack.Pop();
             }
 
-            NavigationRequest actualTop = _navigationStack.Peek();
-            RequestNavigation(
-                new NavigationRequest(actualTop.Route, actualTop.Parameter, isBackNavigation: true),
-                currentRequest.Route);
-            return true;
+            CompleteNavigation(candidate, currentRequest.Route);
+            return NavigationResult.Accepted;
+        }
+        finally
+        {
+            _transitionGate.Release();
         }
     }
 
-    public void Navigate(object route, object? parameter = null, bool clearHistory = false)
+    public async Task<NavigationResult> TryGoBackToAsync(
+        Func<INavigationRequest, bool> assessRequest,
+        CancellationToken cancellationToken = default)
     {
-        lock (_navigationLock)
+        ArgumentNullException.ThrowIfNull(assessRequest);
+
+        await _transitionGate.WaitAsync(cancellationToken);
+        try
         {
-            NavigationRequest? currentRequest = _navigationStack.Count == 0 ? null : _navigationStack.Peek();
-            NavigationRequest newRequest = new(route, parameter, false, clearHistory);
-
-            bool requestsMatch = CompareRequests(currentRequest, newRequest);
-            if (requestsMatch)
+            NavigationRequest currentRequest;
+            NavigationRequest targetRequest;
+            NavigationRequest[] entries;
+            int targetIndex;
+            lock (_stateLock)
             {
-                return;
+                if (_navigationStack.Count <= 1)
+                {
+                    return NavigationResult.NoChange;
+                }
+
+                entries = _navigationStack.ToArray();
             }
 
-            if (clearHistory)
+            targetIndex = Array.FindIndex(entries, 1, request => assessRequest(request));
+            if (targetIndex == -1)
             {
-                _navigationStack.Clear();
+                return NavigationResult.NoChange;
             }
 
-            _navigationStack.Push(newRequest);
+            currentRequest = entries[0];
+            targetRequest = entries[targetIndex];
 
-            RequestNavigation(newRequest, currentRequest?.Route);
+            NavigationRequest candidate = new(
+                targetRequest.Route,
+                targetRequest.Parameter,
+                isBackNavigation: true,
+                clearHistory: false);
+            NavigationResult result = await DispatchAsync(candidate, cancellationToken);
+            if (result != NavigationResult.Accepted)
+            {
+                return result;
+            }
+
+            lock (_stateLock)
+            {
+                for (int i = 0; i < targetIndex; i++)
+                {
+                    _navigationStack.Pop();
+                }
+            }
+
+            CompleteNavigation(candidate, currentRequest.Route);
+            return NavigationResult.Accepted;
+        }
+        finally
+        {
+            _transitionGate.Release();
         }
     }
 
-    private void RequestNavigation(NavigationRequest request, object? fromRoute)
+    private Task<NavigationResult> DispatchAsync(
+        NavigationRequest request,
+        CancellationToken cancellationToken)
     {
-        if (_navigationHandler is null)
+        INavigationHandler handler;
+        lock (_stateLock)
         {
-            throw new InvalidOperationException("Unable to navigate. No navigation handler is set.");
+            handler = _navigationHandler ??
+                throw new InvalidOperationException("Unable to navigate. No navigation handler is set.");
         }
 
-        _navigationHandler.HandleNavigationRequest(request);
+        return handler.HandleNavigationRequestAsync(request, cancellationToken);
+    }
+
+    private void CompleteNavigation(NavigationRequest request, object? fromRoute)
+    {
         TrackNavigation(request, fromRoute);
         Navigated?.Invoke(this, new NavigationEventArgs(request));
     }

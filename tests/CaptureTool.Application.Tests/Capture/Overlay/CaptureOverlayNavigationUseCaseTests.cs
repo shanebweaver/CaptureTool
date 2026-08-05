@@ -39,6 +39,7 @@ public sealed class CaptureOverlayNavigationUseCaseTests
     public async Task OpenOverlayUseCases_NavigateToExpectedOverlayRoutes()
     {
         var navigation = new Mock<INavigationService>();
+        TestNavigationService.AcceptAll(navigation);
         var captureOptions = CaptureOptions.VideoDefault;
         NewCaptureArgs captureArgs = CreateCaptureArgs();
         var audioCaptureNavigationGuard = new AllowAudioCaptureNavigationGuard();
@@ -61,9 +62,9 @@ public sealed class CaptureOverlayNavigationUseCaseTests
         await openSelection.ExecuteAsync(new OpenSelectionOverlayRequest(captureOptions), TestContext.CancellationToken);
         await openCapture.ExecuteAsync(new OpenCaptureOverlayRequest(captureArgs), TestContext.CancellationToken);
 
-        navigation.Verify(service => service.Navigate(NavigationRoute.SelectionOverlay, captureOptions, false), Times.Once);
-        navigation.Verify(service => service.Navigate(NavigationRoute.Home, null, true), Times.Never);
-        navigation.Verify(service => service.Navigate(NavigationRoute.CaptureOverlay, captureArgs, false), Times.Once);
+        navigation.Verify(service => service.NavigateAsync(NavigationRoute.SelectionOverlay, captureOptions, false, It.IsAny<CancellationToken>()), Times.Once);
+        navigation.Verify(service => service.NavigateAsync(NavigationRoute.Home, null, true, It.IsAny<CancellationToken>()), Times.Never);
+        navigation.Verify(service => service.NavigateAsync(NavigationRoute.CaptureOverlay, captureArgs, false, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [TestMethod]
@@ -86,11 +87,16 @@ public sealed class CaptureOverlayNavigationUseCaseTests
         INavigationRequest currentRequest = CreateNavigationRequest(NavigationRoute.ImageEdit);
         var navigationOrder = new List<(object Route, bool ClearHistory)>();
         var navigation = new Mock<INavigationService>();
+        TestNavigationService.AcceptAll(navigation);
         navigation.SetupGet(service => service.CurrentRequest).Returns(() => currentRequest);
         navigation.SetupGet(service => service.CanGoBack).Returns(true);
         navigation
-            .Setup(service => service.Navigate(It.IsAny<object>(), It.IsAny<object?>(), It.IsAny<bool>()))
-            .Callback<object, object?, bool>((route, _, clearHistory) =>
+            .Setup(service => service.NavigateAsync(
+                It.IsAny<object>(),
+                It.IsAny<object?>(),
+                It.IsAny<bool>(),
+                It.IsAny<CancellationToken>()))
+            .Callback<object, object?, bool, CancellationToken>((route, _, clearHistory, _) =>
             {
                 navigationOrder.Add((route, clearHistory));
                 currentRequest = CreateNavigationRequest((NavigationRoute)route);
@@ -98,15 +104,18 @@ public sealed class CaptureOverlayNavigationUseCaseTests
                 {
                     activeSession.ClearCurrentSession(session.Object);
                 }
-            });
+            })
+            .ReturnsAsync(NavigationResult.Accepted);
         navigation
-            .Setup(service => service.TryGoBackTo(It.IsAny<Func<INavigationRequest, bool>>()))
-            .Returns<Func<INavigationRequest, bool>>(assessRequest =>
+            .Setup(service => service.TryGoBackToAsync(
+                It.IsAny<Func<INavigationRequest, bool>>(),
+                It.IsAny<CancellationToken>()))
+            .Returns<Func<INavigationRequest, bool>, CancellationToken>((assessRequest, _) =>
             {
                 INavigationRequest homeRequest = CreateNavigationRequest(NavigationRoute.Home);
                 Assert.IsTrue(assessRequest(homeRequest));
                 currentRequest = homeRequest;
-                return true;
+                return Task.FromResult(NavigationResult.Accepted);
             });
 
         var coordinator = new NavigationCoordinator(
@@ -139,7 +148,9 @@ public sealed class CaptureOverlayNavigationUseCaseTests
             service => service.ConfirmLeaveAsync(session.Object, It.IsAny<CancellationToken>()),
             Times.Once);
         navigation.Verify(
-            service => service.TryGoBackTo(It.IsAny<Func<INavigationRequest, bool>>()),
+            service => service.TryGoBackToAsync(
+                It.IsAny<Func<INavigationRequest, bool>>(),
+                It.IsAny<CancellationToken>()),
             Times.Once);
     }
 
@@ -149,6 +160,7 @@ public sealed class CaptureOverlayNavigationUseCaseTests
         var pendingVideo = new PendingVideoFile("capture.mp4");
         var videoCapture = new FakeVideoCaptureWorkflow { PendingVideo = pendingVideo };
         var navigation = new Mock<INavigationService>();
+        TestNavigationService.AcceptAll(navigation);
         navigation.Setup(service => service.CurrentRequest).Returns(CreateNavigationRequest(NavigationRoute.CaptureOverlay));
         var useCase = new StopVideoCaptureUseCase(navigation.Object, videoCapture, TestUseCaseExecutor.Instance);
 
@@ -157,7 +169,37 @@ public sealed class CaptureOverlayNavigationUseCaseTests
 
         Assert.IsTrue(response.Succeeded);
         Assert.AreEqual(1, videoCapture.StopCallCount);
-        navigation.Verify(service => service.Navigate(NavigationRoute.VideoEdit, pendingVideo, false), Times.Once);
+        navigation.Verify(
+            service => service.NavigateAsync(
+                NavigationRoute.VideoEdit,
+                pendingVideo,
+                false,
+                TestContext.CancellationToken),
+            Times.Once);
+    }
+
+    [TestMethod]
+    public async Task StopVideoCaptureUseCase_WhenHostRejects_ReportsFailure()
+    {
+        var pendingVideo = new PendingVideoFile("capture.mp4");
+        var videoCapture = new FakeVideoCaptureWorkflow { PendingVideo = pendingVideo };
+        var navigation = new Mock<INavigationService>();
+        navigation.SetupGet(service => service.CurrentRequest).Returns(CreateNavigationRequest(NavigationRoute.CaptureOverlay));
+        navigation
+            .Setup(service => service.NavigateAsync(
+                NavigationRoute.VideoEdit,
+                pendingVideo,
+                false,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(NavigationResult.Rejected);
+        var useCase = new StopVideoCaptureUseCase(navigation.Object, videoCapture, TestUseCaseExecutor.Instance);
+
+        StopVideoCaptureResponse response = (await useCase.ExecuteAsync(
+            new StopVideoCaptureRequest(),
+            TestContext.CancellationToken)).Value!;
+
+        Assert.IsFalse(response.Succeeded);
+        Assert.AreEqual(1, videoCapture.StopCallCount);
     }
 
     [TestMethod]
@@ -278,9 +320,12 @@ public sealed class CaptureOverlayNavigationUseCaseTests
     {
         var videoCapture = new FakeVideoCaptureWorkflow { IsRecording = true };
         var navigation = new Mock<INavigationService>();
+        TestNavigationService.AcceptAll(navigation);
         navigation.Setup(service => service.CanGoBack).Returns(true);
         navigation.Setup(service => service.CurrentRequest).Returns(CreateNavigationRequest(NavigationRoute.CaptureOverlay));
-        navigation.Setup(service => service.TryGoBack()).Returns(false);
+        navigation
+            .Setup(service => service.TryGoBackAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(NavigationResult.NoChange);
         ICancelVideoCaptureUseCase cancelUseCase = CreateCancelVideoCaptureUseCase(videoCapture, shouldWarnBeforeDiscard: false);
         var useCase = new GoBackFromCaptureOverlayUseCase(
             videoCapture,
@@ -293,7 +338,13 @@ public sealed class CaptureOverlayNavigationUseCaseTests
 
         Assert.IsTrue(response.VideoCaptureCanceled);
         Assert.AreEqual(1, videoCapture.CancelCallCount);
-        navigation.Verify(service => service.Navigate(NavigationRoute.SelectionOverlay, CaptureOptions.VideoDefault, true), Times.Once);
+        navigation.Verify(
+            service => service.NavigateAsync(
+                NavigationRoute.SelectionOverlay,
+                CaptureOptions.VideoDefault,
+                true,
+                It.IsAny<CancellationToken>()),
+            Times.Once);
     }
 
     [TestMethod]
@@ -305,7 +356,10 @@ public sealed class CaptureOverlayNavigationUseCaseTests
             .Setup(useCase => useCase.ExecuteAsync(It.IsAny<CancelVideoCaptureRequest>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(UseCaseResponse<CancelVideoCaptureResponse>.Failure());
         var navigation = new Mock<INavigationService>();
-        navigation.Setup(service => service.TryGoBack()).Returns(true);
+        TestNavigationService.AcceptAll(navigation);
+        navigation
+            .Setup(service => service.TryGoBackAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(NavigationResult.Accepted);
         var useCase = new GoBackFromCaptureOverlayUseCase(
             videoCapture,
             cancelUseCase.Object,
@@ -315,8 +369,14 @@ public sealed class CaptureOverlayNavigationUseCaseTests
         GoBackFromCaptureOverlayResponse response = (await useCase.ExecuteAsync(new GoBackFromCaptureOverlayRequest(), TestContext.CancellationToken)).Value!;
 
         Assert.IsFalse(response.VideoCaptureCanceled);
-        navigation.Verify(service => service.TryGoBack(), Times.Never);
-        navigation.Verify(service => service.Navigate(It.IsAny<object>(), It.IsAny<object?>(), It.IsAny<bool>()), Times.Never);
+        navigation.Verify(service => service.TryGoBackAsync(It.IsAny<CancellationToken>()), Times.Never);
+        navigation.Verify(
+            service => service.NavigateAsync(
+                It.IsAny<object>(),
+                It.IsAny<object?>(),
+                It.IsAny<bool>(),
+                It.IsAny<CancellationToken>()),
+            Times.Never);
     }
 
     [TestMethod]
@@ -332,9 +392,12 @@ public sealed class CaptureOverlayNavigationUseCaseTests
             shouldWarnBeforeDiscard: true,
             confirmationService: confirmationService.Object);
         var navigation = new Mock<INavigationService>();
+        TestNavigationService.AcceptAll(navigation);
         navigation.Setup(service => service.CanGoBack).Returns(true);
         navigation.Setup(service => service.CurrentRequest).Returns(CreateNavigationRequest(NavigationRoute.CaptureOverlay));
-        navigation.Setup(service => service.TryGoBack()).Returns(true);
+        navigation
+            .Setup(service => service.TryGoBackAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(NavigationResult.Accepted);
         var useCase = new GoBackFromCaptureOverlayUseCase(
             videoCapture,
             cancelUseCase,
@@ -349,8 +412,14 @@ public sealed class CaptureOverlayNavigationUseCaseTests
         confirmationService.Verify(
             service => service.ConfirmDiscardActiveCaptureAsync(TestContext.CancellationToken),
             Times.Once);
-        navigation.Verify(service => service.TryGoBack(), Times.Never);
-        navigation.Verify(service => service.Navigate(It.IsAny<object>(), It.IsAny<object?>(), It.IsAny<bool>()), Times.Never);
+        navigation.Verify(service => service.TryGoBackAsync(It.IsAny<CancellationToken>()), Times.Never);
+        navigation.Verify(
+            service => service.NavigateAsync(
+                It.IsAny<object>(),
+                It.IsAny<object?>(),
+                It.IsAny<bool>(),
+                It.IsAny<CancellationToken>()),
+            Times.Never);
     }
 
     [TestMethod]
@@ -361,6 +430,7 @@ public sealed class CaptureOverlayNavigationUseCaseTests
         var showMainWindow = new Mock<IShowMainWindowUseCase>();
         var shutdownHandler = new Mock<IShutdownHandler>();
         var navigation = new Mock<INavigationService>();
+        TestNavigationService.AcceptAll(navigation);
         navigation.Setup(service => service.CanGoBack).Returns(true);
         navigation.Setup(service => service.CurrentRequest).Returns(CreateNavigationRequest(NavigationRoute.CaptureOverlay));
         showMainWindow
@@ -402,6 +472,7 @@ public sealed class CaptureOverlayNavigationUseCaseTests
         var showMainWindow = new Mock<IShowMainWindowUseCase>();
         var shutdownHandler = new Mock<IShutdownHandler>();
         var navigation = new Mock<INavigationService>();
+        TestNavigationService.AcceptAll(navigation);
         navigation.Setup(service => service.CanGoBack).Returns(true);
         navigation.Setup(service => service.CurrentRequest).Returns(CreateNavigationRequest(NavigationRoute.CaptureOverlay));
         var useCase = new CloseCaptureOverlayUseCase(
@@ -438,6 +509,7 @@ public sealed class CaptureOverlayNavigationUseCaseTests
             .ReturnsAsync(UseCaseResponse<ShowMainWindowResponse>.Success(new ShowMainWindowResponse(false)));
         var shutdownHandler = new Mock<IShutdownHandler>();
         var navigation = new Mock<INavigationService>();
+        TestNavigationService.AcceptAll(navigation);
         navigation.Setup(service => service.CanGoBack).Returns(true);
         navigation.Setup(service => service.CurrentRequest).Returns(CreateNavigationRequest(NavigationRoute.CaptureOverlay));
         var useCase = new CloseCaptureOverlayUseCase(
@@ -487,8 +559,13 @@ public sealed class CaptureOverlayNavigationUseCaseTests
     public async Task ShowMainWindowUseCase_WhenBackToMainWindowFails_NavigatesHomeAndClearsHistory()
     {
         var navigation = new Mock<INavigationService>();
+        TestNavigationService.AcceptAll(navigation);
         navigation.Setup(service => service.CanGoBack).Returns(true);
-        navigation.Setup(service => service.TryGoBackTo(It.IsAny<Func<INavigationRequest, bool>>())).Returns(false);
+        navigation
+            .Setup(service => service.TryGoBackToAsync(
+                It.IsAny<Func<INavigationRequest, bool>>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(NavigationResult.NoChange);
         var useCase = new ShowMainWindowUseCase(
             TestNavigationCoordinator.Create(navigation.Object),
             TestUseCaseExecutor.Instance);
@@ -497,15 +574,22 @@ public sealed class CaptureOverlayNavigationUseCaseTests
         ShowMainWindowResponse response = (await useCase.ExecuteAsync(new ShowMainWindowRequest(), TestContext.CancellationToken)).Value!;
 
         Assert.IsTrue(response.Succeeded);
-        navigation.Verify(service => service.Navigate(NavigationRoute.Home, null, true), Times.Once);
+        navigation.Verify(
+            service => service.NavigateAsync(NavigationRoute.Home, null, true, It.IsAny<CancellationToken>()),
+            Times.Once);
     }
 
     [TestMethod]
     public async Task ShowMainWindowUseCase_WhenCreationIsDisabledAndNoMainWindowExists_DoesNotNavigate()
     {
         var navigation = new Mock<INavigationService>();
+        TestNavigationService.AcceptAll(navigation);
         navigation.Setup(service => service.CanGoBack).Returns(true);
-        navigation.Setup(service => service.TryGoBackTo(It.IsAny<Func<INavigationRequest, bool>>())).Returns(false);
+        navigation
+            .Setup(service => service.TryGoBackToAsync(
+                It.IsAny<Func<INavigationRequest, bool>>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(NavigationResult.NoChange);
         var useCase = new ShowMainWindowUseCase(
             TestNavigationCoordinator.Create(navigation.Object),
             TestUseCaseExecutor.Instance);
@@ -516,7 +600,11 @@ public sealed class CaptureOverlayNavigationUseCaseTests
 
         Assert.IsFalse(response.Succeeded);
         navigation.Verify(
-            service => service.Navigate(It.IsAny<object>(), It.IsAny<object?>(), It.IsAny<bool>()),
+            service => service.NavigateAsync(
+                It.IsAny<object>(),
+                It.IsAny<object?>(),
+                It.IsAny<bool>(),
+                It.IsAny<CancellationToken>()),
             Times.Never);
     }
 

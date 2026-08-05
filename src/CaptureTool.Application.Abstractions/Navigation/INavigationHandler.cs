@@ -2,5 +2,7 @@ namespace CaptureTool.Application.Abstractions.Navigation;
 
 public interface INavigationHandler
 {
-    void HandleNavigationRequest(INavigationRequest request);
+    Task<NavigationResult> HandleNavigationRequestAsync(
+        INavigationRequest request,
+        CancellationToken cancellationToken = default);
 }

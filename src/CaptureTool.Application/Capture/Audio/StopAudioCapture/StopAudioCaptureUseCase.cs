@@ -26,13 +26,16 @@ internal sealed class StopAudioCaptureUseCase : IStopAudioCaptureUseCase
     {
         return _useCaseExecutor.ExecuteAsync(
             activityId: ActivityId,
-            useCase: () =>
+            useCase: async token =>
             {
                 var audioFile = _audioCaptureWorkflow.StopCapture();
                 // This is the successful completion of the active audio workflow,
                 // not an attempt to abandon it; the audio leave guard must not run.
-                _navigationService.Navigate(NavigationRoute.AudioEdit, audioFile);
-                return new StopAudioCaptureResponse();
+                NavigationResult navigationResult = await _navigationService.NavigateAsync(
+                    NavigationRoute.AudioEdit,
+                    audioFile,
+                    cancellationToken: token);
+                return new StopAudioCaptureResponse(navigationResult == NavigationResult.Accepted);
             },
             cancellationToken: cancellationToken);
     }

@@ -6,7 +6,13 @@ public interface INavigationService
     INavigationRequest? CurrentRequest { get; }
     bool CanGoBack { get; }
     void SetNavigationHandler(INavigationHandler handler);
-    void Navigate(object route, object? parameter = null, bool clearHistory = false);
-    bool TryGoBack();
-    bool TryGoBackTo(Func<INavigationRequest, bool> assessRequest);
+    Task<NavigationResult> NavigateAsync(
+        object route,
+        object? parameter = null,
+        bool clearHistory = false,
+        CancellationToken cancellationToken = default);
+    Task<NavigationResult> TryGoBackAsync(CancellationToken cancellationToken = default);
+    Task<NavigationResult> TryGoBackToAsync(
+        Func<INavigationRequest, bool> assessRequest,
+        CancellationToken cancellationToken = default);
 }

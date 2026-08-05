@@ -42,7 +42,11 @@ public class OpenFileUseCaseTests
             service => service.PickFileAsync(It.IsAny<FilePickerType>(), It.IsAny<UserFolder>()),
             Times.Never);
         navigationService.Verify(
-            service => service.Navigate(It.IsAny<object>(), It.IsAny<object?>(), It.IsAny<bool>()),
+            service => service.NavigateAsync(
+                It.IsAny<object>(),
+                It.IsAny<object?>(),
+                It.IsAny<bool>(),
+                It.IsAny<CancellationToken>()),
             Times.Never);
     }
 
@@ -51,6 +55,7 @@ public class OpenFileUseCaseTests
     {
         Mock<IFilePickerService> filePickerService = new();
         Mock<INavigationService> navigationService = new();
+        TestNavigationService.AcceptAll(navigationService);
         Mock<IStorageService> storageService = new();
         Mock<IRecentCaptureCatalog> recentCaptureCatalog = new();
         string tempFolder = CreateTestFolder();
@@ -82,11 +87,13 @@ public class OpenFileUseCaseTests
 
         Assert.IsTrue(File.Exists(copiedPath));
         navigationService.Verify(
-            service => service.Navigate(
+            service => service.NavigateAsync(
                 NavigationRoute.ImageEdit,
                 It.Is<ImageFile>(file =>
                     file.FilePath == copiedPath &&
-                    file.PersistentFilePath == sourcePath)),
+                    file.PersistentFilePath == sourcePath),
+                false,
+                It.IsAny<CancellationToken>()),
             Times.Once);
         storageService.Verify(service => service.GetTemporaryFileName(), Times.Once);
         recentCaptureCatalog.Verify(
@@ -99,6 +106,7 @@ public class OpenFileUseCaseTests
     {
         Mock<IFilePickerService> filePickerService = new();
         Mock<INavigationService> navigationService = new();
+        TestNavigationService.AcceptAll(navigationService);
         Mock<IStorageService> storageService = new();
         Mock<IRecentCaptureCatalog> recentCaptureCatalog = new();
         string tempFolder = CreateTestFolder();
@@ -130,9 +138,11 @@ public class OpenFileUseCaseTests
 
         Assert.IsTrue(File.Exists(copiedPath));
         navigationService.Verify(
-            service => service.Navigate(
+            service => service.NavigateAsync(
                 NavigationRoute.AudioEdit,
-                It.Is<AudioFile>(file => file.FilePath == copiedPath)),
+                It.Is<AudioFile>(file => file.FilePath == copiedPath),
+                false,
+                It.IsAny<CancellationToken>()),
             Times.Once);
         storageService.Verify(service => service.GetTemporaryFileName(), Times.Once);
         recentCaptureCatalog.Verify(
@@ -145,6 +155,7 @@ public class OpenFileUseCaseTests
     {
         Mock<IFilePickerService> filePickerService = new();
         Mock<INavigationService> navigationService = new();
+        TestNavigationService.AcceptAll(navigationService);
         Mock<IStorageService> storageService = new();
         Mock<IRecentCaptureCatalog> recentCaptureCatalog = new();
         string tempFolder = CreateTestFolder();
@@ -176,9 +187,11 @@ public class OpenFileUseCaseTests
 
         Assert.IsTrue(File.Exists(copiedPath));
         navigationService.Verify(
-            service => service.Navigate(
+            service => service.NavigateAsync(
                 NavigationRoute.VideoEdit,
-                It.Is<VideoFile>(file => file.FilePath == copiedPath)),
+                It.Is<VideoFile>(file => file.FilePath == copiedPath),
+                false,
+                It.IsAny<CancellationToken>()),
             Times.Once);
         storageService.Verify(service => service.GetTemporaryFileName(), Times.Once);
         recentCaptureCatalog.Verify(
@@ -191,6 +204,7 @@ public class OpenFileUseCaseTests
     {
         Mock<IFilePickerService> filePickerService = new();
         Mock<INavigationService> navigationService = new();
+        TestNavigationService.AcceptAll(navigationService);
         Mock<IStorageService> storageService = new();
         Mock<IRecentCaptureCatalog> recentCaptureCatalog = new();
         string tempFolder = CreateTestFolder();
@@ -217,11 +231,13 @@ public class OpenFileUseCaseTests
 
         Assert.AreEqual(oldLastWriteTimeUtc, File.GetLastWriteTimeUtc(sourcePath));
         navigationService.Verify(
-            service => service.Navigate(
+            service => service.NavigateAsync(
                 NavigationRoute.ImageEdit,
                 It.Is<ImageFile>(file =>
                     file.FilePath == sourcePath &&
-                    file.PersistentFilePath == null)),
+                    file.PersistentFilePath == null),
+                false,
+                It.IsAny<CancellationToken>()),
             Times.Once);
         storageService.Verify(service => service.GetTemporaryFileName(), Times.Never);
         recentCaptureCatalog.Verify(

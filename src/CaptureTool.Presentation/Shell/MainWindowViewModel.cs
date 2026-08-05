@@ -11,8 +11,6 @@ public sealed partial class MainWindowViewModel : ViewModelBase
     private readonly IThemeService _themeService;
     private readonly IAppNotificationService _notificationService;
 
-    public event EventHandler<INavigationRequest>? NavigationRequested;
-
     public IRelayCommand DismissNotificationCommand { get; }
 
     public AppTheme CurrentAppTheme
@@ -72,16 +70,15 @@ public sealed partial class MainWindowViewModel : ViewModelBase
         }
     }
 
-    public bool HandleNavigationRequest(INavigationRequest request)
+    public bool IsCurrentNavigationRequest(INavigationRequest request)
     {
-        if (_currentRequest?.Route == request.Route && _currentRequest?.Parameter == request.Parameter)
-        {
-            return false;
-        }
+        return _currentRequest?.Route == request.Route &&
+            _currentRequest?.Parameter == request.Parameter;
+    }
 
+    public void CommitNavigationRequest(INavigationRequest request)
+    {
         _currentRequest = request;
-        NavigationRequested?.Invoke(this, request);
-        return true;
     }
 
     public override void Dispose()
@@ -96,7 +93,6 @@ public sealed partial class MainWindowViewModel : ViewModelBase
             _themeService.CurrentThemeChanged -= OnCurrentThemeChanged;
             _notificationService.PropertyChanged -= OnNotificationServicePropertyChanged;
             _currentRequest = null;
-            NavigationRequested = null;
         }
         finally
         {

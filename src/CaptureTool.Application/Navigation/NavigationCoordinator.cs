@@ -48,11 +48,8 @@ internal sealed class NavigationCoordinator : INavigationCoordinator
 
         return ExecuteGuardedTransitionAsync(
             canSkipLeavePolicy: () => RequestsMatch(_navigationService.CurrentRequest, route, parameter),
-            transition: _ =>
-            {
-                _navigationService.Navigate(route, parameter, clearHistory);
-                return Task.FromResult(true);
-            },
+            transition: async token =>
+                await _navigationService.NavigateAsync(route, parameter, clearHistory, token) == NavigationResult.Accepted,
             cancellationToken);
     }
 
@@ -60,7 +57,8 @@ internal sealed class NavigationCoordinator : INavigationCoordinator
     {
         return ExecuteGuardedTransitionAsync(
             canSkipLeavePolicy: () => !_navigationService.CanGoBack,
-            transition: _ => Task.FromResult(_navigationService.TryGoBack()),
+            transition: async token =>
+                await _navigationService.TryGoBackAsync(token) == NavigationResult.Accepted,
             cancellationToken,
             skippedResult: false);
     }
@@ -73,7 +71,8 @@ internal sealed class NavigationCoordinator : INavigationCoordinator
 
         return ExecuteGuardedTransitionAsync(
             canSkipLeavePolicy: () => !_navigationService.CanGoBack,
-            transition: _ => Task.FromResult(_navigationService.TryGoBackTo(assessRequest)),
+            transition: async token =>
+                await _navigationService.TryGoBackToAsync(assessRequest, token) == NavigationResult.Accepted,
             cancellationToken,
             skippedResult: false);
     }
