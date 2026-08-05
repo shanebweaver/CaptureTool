@@ -1,4 +1,3 @@
-using CaptureTool.Application.Abstractions.Capture.Audio;
 using CaptureTool.Application.Abstractions.Edit.Image.OpenImageEditPage;
 using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Application.Abstractions.UseCases;
@@ -10,17 +9,14 @@ internal sealed class OpenImageEditPageUseCase : IOpenImageEditPageUseCase
 {
     private const string ActivityId = "OpenImageEditPage";
 
-    private readonly INavigationService _navigationService;
+    private readonly INavigationCoordinator _navigationCoordinator;
     private readonly IUseCaseExecutor _useCaseExecutor;
-    private readonly IAudioCaptureNavigationGuard _audioCaptureNavigationGuard;
 
     public OpenImageEditPageUseCase(
-        INavigationService navigationService,
-        IUseCaseExecutor useCaseExecutor,
-        IAudioCaptureNavigationGuard audioCaptureNavigationGuard)
+        INavigationCoordinator navigationCoordinator,
+        IUseCaseExecutor useCaseExecutor)
     {
-        _navigationService = navigationService;
-        _audioCaptureNavigationGuard = audioCaptureNavigationGuard;
+        _navigationCoordinator = navigationCoordinator;
         _useCaseExecutor = useCaseExecutor;
     }
 
@@ -35,13 +31,11 @@ internal sealed class OpenImageEditPageUseCase : IOpenImageEditPageUseCase
             activityId: ActivityId,
             useCase: async _ =>
             {
-                if (!await _audioCaptureNavigationGuard.CanNavigateAwayFromActiveCaptureAsync(cancellationToken))
-                {
-                    return new OpenImageEditPageResponse(false);
-                }
-
-                _navigationService.Navigate(NavigationRoute.ImageEdit, request.ImageFile);
-                return new OpenImageEditPageResponse();
+                bool navigated = await _navigationCoordinator.NavigateAsync(
+                    NavigationRoute.ImageEdit,
+                    request.ImageFile,
+                    cancellationToken: cancellationToken);
+                return new OpenImageEditPageResponse(navigated);
             },
             cancellationToken: cancellationToken);
     }

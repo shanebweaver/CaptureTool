@@ -9,14 +9,14 @@ internal sealed class LeaveAboutPageUseCase : ILeaveAboutPageUseCase
 {
     private const string ActivityId = "LeaveAboutPage";
 
-    private readonly INavigationService _navigationService;
+    private readonly INavigationCoordinator _navigationCoordinator;
     private readonly IUseCaseExecutor _useCaseExecutor;
 
     public LeaveAboutPageUseCase(
-        INavigationService navigationService,
+        INavigationCoordinator navigationCoordinator,
         IUseCaseExecutor useCaseExecutor)
     {
-        _navigationService = navigationService;
+        _navigationCoordinator = navigationCoordinator;
         _useCaseExecutor = useCaseExecutor;
     }
 
@@ -24,12 +24,15 @@ internal sealed class LeaveAboutPageUseCase : ILeaveAboutPageUseCase
     {
         return _useCaseExecutor.ExecuteAsync(
             activityId: ActivityId,
-            useCase: () =>
+            useCase: async token =>
             {
-                if (!_navigationService.TryGoBack())
-                {
-                    _navigationService.Navigate(NavigationRoute.Home, clearHistory: true);
-                }
+                await _navigationCoordinator.ExecuteTransitionAsync(
+                    async transitionToken => await _navigationCoordinator.TryGoBackAsync(transitionToken)
+                        || await _navigationCoordinator.NavigateAsync(
+                            NavigationRoute.Home,
+                            clearHistory: true,
+                            cancellationToken: transitionToken),
+                    token);
 
                 return new LeaveAboutPageResponse();
             },

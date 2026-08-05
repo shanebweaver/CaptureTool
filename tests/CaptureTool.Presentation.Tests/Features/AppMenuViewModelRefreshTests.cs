@@ -95,16 +95,13 @@ public sealed class AppMenuViewModelRefreshTests
     }
 
     [TestMethod]
-    public async Task NavigateHomeCommand_WhenEditSessionGuardBlocks_DoesNotShowHomePage()
+    public async Task NavigateHomeCommand_DelegatesLeavePolicyToShowHomeUseCase()
     {
         var showHomePageUseCase = new Mock<IShowHomePageUseCase>();
-        var editSessionGuard = new Mock<IEditSessionGuard>();
-        editSessionGuard
-            .Setup(guard => guard.CanLeaveCurrentSessionAsync(It.IsAny<CancellationToken>()))
-            .ReturnsAsync(false);
-        var viewModel = CreateViewModel(
-            showHomePageUseCase: showHomePageUseCase.Object,
-            editSessionGuard: editSessionGuard.Object);
+        showHomePageUseCase
+            .Setup(useCase => useCase.ExecuteAsync(It.IsAny<ShowHomePageRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(UseCaseResponse<ShowHomePageResponse>.Success(new ShowHomePageResponse(false)));
+        var viewModel = CreateViewModel(showHomePageUseCase: showHomePageUseCase.Object);
 
         viewModel.NavigateHomeCommand.Execute(null);
         await viewModel.NavigateHomeCommand.ExecutionTask!;
@@ -113,7 +110,7 @@ public sealed class AppMenuViewModelRefreshTests
             useCase => useCase.ExecuteAsync(
                 It.IsAny<ShowHomePageRequest>(),
                 It.IsAny<CancellationToken>()),
-            Times.Never);
+            Times.Once);
     }
 
     [TestMethod]
@@ -155,59 +152,50 @@ public sealed class AppMenuViewModelRefreshTests
     }
 
     [TestMethod]
-    public async Task NewImageCaptureCommand_WhenEditSessionGuardBlocks_DoesNotStartCapture()
+    public async Task NewImageCaptureCommand_DelegatesLeavePolicyToCaptureUseCase()
     {
         var openSelectionOverlayUseCase = new Mock<IOpenSelectionOverlayUseCase>();
-        var editSessionGuard = new Mock<IEditSessionGuard>();
-        editSessionGuard
-            .Setup(guard => guard.CanLeaveCurrentSessionAsync(It.IsAny<CancellationToken>()))
-            .ReturnsAsync(false);
-        var viewModel = CreateViewModel(
-            openSelectionOverlayUseCase: openSelectionOverlayUseCase.Object,
-            editSessionGuard: editSessionGuard.Object);
+        openSelectionOverlayUseCase
+            .Setup(useCase => useCase.ExecuteAsync(It.IsAny<OpenSelectionOverlayRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(UseCaseResponse<OpenSelectionOverlayResponse>.Success(new OpenSelectionOverlayResponse(false)));
+        var viewModel = CreateViewModel(openSelectionOverlayUseCase: openSelectionOverlayUseCase.Object);
 
         viewModel.NewImageCaptureCommand.Execute(null);
         await viewModel.NewImageCaptureCommand.ExecutionTask!;
 
         openSelectionOverlayUseCase.Verify(
             useCase => useCase.ExecuteAsync(It.IsAny<OpenSelectionOverlayRequest>(), It.IsAny<CancellationToken>()),
-            Times.Never);
+            Times.Once);
     }
 
     [TestMethod]
-    public async Task OpenFileCommand_WhenEditSessionGuardBlocks_DoesNotOpenFile()
+    public async Task OpenFileCommand_DelegatesLeavePolicyToOpenFileUseCase()
     {
         var openFileUseCase = new Mock<IOpenFileUseCase>();
-        var editSessionGuard = new Mock<IEditSessionGuard>();
-        editSessionGuard
-            .Setup(guard => guard.CanLeaveCurrentSessionAsync(It.IsAny<CancellationToken>()))
-            .ReturnsAsync(false);
-        var viewModel = CreateViewModel(
-            openFileUseCase: openFileUseCase.Object,
-            editSessionGuard: editSessionGuard.Object);
+        openFileUseCase
+            .Setup(useCase => useCase.ExecuteAsync(It.IsAny<OpenFileRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(UseCaseResponse<OpenFileResponse>.Success(new OpenFileResponse(false)));
+        var viewModel = CreateViewModel(openFileUseCase: openFileUseCase.Object);
 
         viewModel.OpenFileCommand.Execute(null);
         await viewModel.OpenFileCommand.ExecutionTask!;
 
         openFileUseCase.Verify(
             useCase => useCase.ExecuteAsync(It.IsAny<OpenFileRequest>(), It.IsAny<CancellationToken>()),
-            Times.Never);
+            Times.Once);
     }
 
     [TestMethod]
-    public async Task OpenRecentCaptureCommand_WhenEditSessionGuardBlocks_DoesNotOpenRecentCapture()
+    public async Task OpenRecentCaptureCommand_DelegatesLeavePolicyToRecentCaptureUseCase()
     {
         string filePath = Path.Combine(Path.GetTempPath(), "CaptureToolTests", Guid.NewGuid().ToString(), "capture.png");
         Directory.CreateDirectory(Path.GetDirectoryName(filePath)!);
         await File.WriteAllTextAsync(filePath, "capture", TestContext.CancellationToken);
         var openRecentCaptureUseCase = new Mock<IOpenRecentCaptureUseCase>();
-        var editSessionGuard = new Mock<IEditSessionGuard>();
-        editSessionGuard
-            .Setup(guard => guard.CanLeaveCurrentSessionAsync(It.IsAny<CancellationToken>()))
-            .ReturnsAsync(false);
-        var viewModel = CreateViewModel(
-            openRecentCaptureUseCase: openRecentCaptureUseCase.Object,
-            editSessionGuard: editSessionGuard.Object);
+        openRecentCaptureUseCase
+            .Setup(useCase => useCase.ExecuteAsync(It.IsAny<OpenRecentCaptureRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(UseCaseResponse<OpenRecentCaptureResponse>.Success(new OpenRecentCaptureResponse()));
+        var viewModel = CreateViewModel(openRecentCaptureUseCase: openRecentCaptureUseCase.Object);
         var recentCapture = new RecentCaptureViewModel(filePath);
 
         viewModel.OpenRecentCaptureCommand.Execute(recentCapture);
@@ -215,7 +203,7 @@ public sealed class AppMenuViewModelRefreshTests
 
         openRecentCaptureUseCase.Verify(
             useCase => useCase.ExecuteAsync(It.IsAny<OpenRecentCaptureRequest>(), It.IsAny<CancellationToken>()),
-            Times.Never);
+            Times.Once);
     }
 
     private static AppMenuViewModel CreateViewModel(
@@ -223,7 +211,6 @@ public sealed class AppMenuViewModelRefreshTests
         IOpenFileUseCase? openFileUseCase = null,
         IOpenRecentCaptureUseCase? openRecentCaptureUseCase = null,
         IShowHomePageUseCase? showHomePageUseCase = null,
-        IEditSessionGuard? editSessionGuard = null,
         IGetRecentCapturesUseCase? getRecentCapturesUseCase = null,
         IFactoryServiceWithArgs<RecentCaptureViewModel, string>? recentCaptureViewModelFactory = null,
         IRecentCapturesChangeNotifier? recentCapturesChangeNotifier = null)
@@ -244,8 +231,7 @@ public sealed class AppMenuViewModelRefreshTests
             Mock.Of<IVideoCaptureState>(),
             Mock.Of<IAudioCaptureState>(),
             recentCaptureViewModelFactory ?? Mock.Of<IFactoryServiceWithArgs<RecentCaptureViewModel, string>>(),
-            recentCapturesChangeNotifier ?? Mock.Of<IRecentCapturesChangeNotifier>(),
-            editSessionGuard);
+            recentCapturesChangeNotifier ?? Mock.Of<IRecentCapturesChangeNotifier>());
     }
 
     public TestContext TestContext { get; set; } = null!;

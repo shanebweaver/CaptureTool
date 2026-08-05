@@ -7,6 +7,7 @@ using CaptureTool.Application.Abstractions.Capture.Video.CancelVideoCapture;
 using CaptureTool.Application.Abstractions.Capture.Video.StopVideoCapture;
 using CaptureTool.Application.Abstractions.Capture.Video.ToggleVideoCaptureDesktopAudio;
 using CaptureTool.Application.Abstractions.Capture.Video.ToggleVideoCapturePauseResume;
+using CaptureTool.Application.Abstractions.EditSessions;
 using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Application.Abstractions.Settings;
 using CaptureTool.Application.Abstractions.Shutdown;
@@ -21,6 +22,8 @@ using CaptureTool.Application.Capture.Video.CancelVideoCapture;
 using CaptureTool.Application.Capture.Video.StopVideoCapture;
 using CaptureTool.Application.Capture.Video.ToggleVideoCaptureDesktopAudio;
 using CaptureTool.Application.Capture.Video.ToggleVideoCapturePauseResume;
+using CaptureTool.Application.EditSessions;
+using CaptureTool.Application.Navigation;
 using CaptureTool.Application.Tests.Capture.Video;
 using CaptureTool.Application.Windowing.ShowMainWindow;
 using CaptureTool.Domain.Capture;
@@ -39,21 +42,105 @@ public sealed class CaptureOverlayNavigationUseCaseTests
         var captureOptions = CaptureOptions.VideoDefault;
         NewCaptureArgs captureArgs = CreateCaptureArgs();
         var audioCaptureNavigationGuard = new AllowAudioCaptureNavigationGuard();
+        var cleanEditSession = new Mock<IEditableSession>();
+        cleanEditSession.SetupGet(session => session.HasUnsavedChanges).Returns(false);
+        var activeEditSession = new Mock<IActiveEditSessionService>();
+        activeEditSession.SetupGet(service => service.CurrentSession).Returns(cleanEditSession.Object);
+        INavigationCoordinator coordinator = TestNavigationCoordinator.Create(
+            navigation.Object,
+            audioCaptureNavigationGuard: audioCaptureNavigationGuard);
 
         var openSelection = new OpenSelectionOverlayUseCase(
-            navigation.Object,
-            TestUseCaseExecutor.Instance,
-            audioCaptureNavigationGuard);
+            coordinator,
+            activeEditSession.Object,
+            TestUseCaseExecutor.Instance);
         var openCapture = new OpenCaptureOverlayUseCase(
-            navigation.Object,
-            TestUseCaseExecutor.Instance,
-            audioCaptureNavigationGuard);
+            coordinator,
+            TestUseCaseExecutor.Instance);
 
         await openSelection.ExecuteAsync(new OpenSelectionOverlayRequest(captureOptions), TestContext.CancellationToken);
         await openCapture.ExecuteAsync(new OpenCaptureOverlayRequest(captureArgs), TestContext.CancellationToken);
 
         navigation.Verify(service => service.Navigate(NavigationRoute.SelectionOverlay, captureOptions, false), Times.Once);
+        navigation.Verify(service => service.Navigate(NavigationRoute.Home, null, true), Times.Never);
         navigation.Verify(service => service.Navigate(NavigationRoute.CaptureOverlay, captureArgs, false), Times.Once);
+    }
+
+    [TestMethod]
+    public async Task OpenSelectionOverlay_WhenDirtyEditLeaveIsAccepted_SeedsHomeAndOverlayCloseReturnsHomeWithoutAnotherPrompt()
+    {
+        var session = new Mock<IEditableSession>();
+        session.SetupGet(value => value.HasUnsavedChanges).Returns(true);
+        var activeSession = new ActiveEditSessionService();
+        activeSession.SetCurrentSession(session.Object);
+
+        var confirmation = new Mock<IEditSessionConfirmationService>();
+        confirmation
+            .Setup(service => service.ConfirmLeaveAsync(session.Object, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(EditSessionLeaveDecision.Discard);
+        var settings = new Mock<ISettingsService>();
+        settings
+            .Setup(service => service.Get(CaptureToolSettings.Settings_Edit_WarnBeforeDiscard))
+            .Returns(true);
+
+        INavigationRequest currentRequest = CreateNavigationRequest(NavigationRoute.ImageEdit);
+        var navigationOrder = new List<(object Route, bool ClearHistory)>();
+        var navigation = new Mock<INavigationService>();
+        navigation.SetupGet(service => service.CurrentRequest).Returns(() => currentRequest);
+        navigation.SetupGet(service => service.CanGoBack).Returns(true);
+        navigation
+            .Setup(service => service.Navigate(It.IsAny<object>(), It.IsAny<object?>(), It.IsAny<bool>()))
+            .Callback<object, object?, bool>((route, _, clearHistory) =>
+            {
+                navigationOrder.Add((route, clearHistory));
+                currentRequest = CreateNavigationRequest((NavigationRoute)route);
+                if (Equals(route, NavigationRoute.Home))
+                {
+                    activeSession.ClearCurrentSession(session.Object);
+                }
+            });
+        navigation
+            .Setup(service => service.TryGoBackTo(It.IsAny<Func<INavigationRequest, bool>>()))
+            .Returns<Func<INavigationRequest, bool>>(assessRequest =>
+            {
+                INavigationRequest homeRequest = CreateNavigationRequest(NavigationRoute.Home);
+                Assert.IsTrue(assessRequest(homeRequest));
+                currentRequest = homeRequest;
+                return true;
+            });
+
+        var coordinator = new NavigationCoordinator(
+            navigation.Object,
+            new EditSessionGuard(activeSession, confirmation.Object, settings.Object),
+            new AllowAudioCaptureNavigationGuard());
+        var openSelection = new OpenSelectionOverlayUseCase(
+            coordinator,
+            activeSession,
+            TestUseCaseExecutor.Instance);
+        var showMainWindow = new ShowMainWindowUseCase(coordinator, TestUseCaseExecutor.Instance);
+
+        OpenSelectionOverlayResponse openResponse = (await openSelection.ExecuteAsync(
+            new OpenSelectionOverlayRequest(CaptureOptions.ImageDefault),
+            TestContext.CancellationToken)).Value!;
+        ShowMainWindowResponse closeResponse = (await showMainWindow.ExecuteAsync(
+            new ShowMainWindowRequest(CreateIfUnavailable: false),
+            TestContext.CancellationToken)).Value!;
+
+        Assert.IsTrue(openResponse.Succeeded);
+        Assert.IsTrue(closeResponse.Succeeded);
+        CollectionAssert.AreEqual(
+            new[]
+            {
+                (Route: (object)NavigationRoute.Home, ClearHistory: true),
+                (Route: (object)NavigationRoute.SelectionOverlay, ClearHistory: false),
+            },
+            navigationOrder);
+        confirmation.Verify(
+            service => service.ConfirmLeaveAsync(session.Object, It.IsAny<CancellationToken>()),
+            Times.Once);
+        navigation.Verify(
+            service => service.TryGoBackTo(It.IsAny<Func<INavigationRequest, bool>>()),
+            Times.Once);
     }
 
     [TestMethod]
@@ -198,7 +285,7 @@ public sealed class CaptureOverlayNavigationUseCaseTests
         var useCase = new GoBackFromCaptureOverlayUseCase(
             videoCapture,
             cancelUseCase,
-            navigation.Object,
+            TestNavigationCoordinator.Create(navigation.Object),
             TestUseCaseExecutor.Instance);
 
         Assert.IsTrue(useCase.CanExecute(new GoBackFromCaptureOverlayRequest()));
@@ -222,7 +309,7 @@ public sealed class CaptureOverlayNavigationUseCaseTests
         var useCase = new GoBackFromCaptureOverlayUseCase(
             videoCapture,
             cancelUseCase.Object,
-            navigation.Object,
+            TestNavigationCoordinator.Create(navigation.Object),
             TestUseCaseExecutor.Instance);
 
         GoBackFromCaptureOverlayResponse response = (await useCase.ExecuteAsync(new GoBackFromCaptureOverlayRequest(), TestContext.CancellationToken)).Value!;
@@ -251,7 +338,7 @@ public sealed class CaptureOverlayNavigationUseCaseTests
         var useCase = new GoBackFromCaptureOverlayUseCase(
             videoCapture,
             cancelUseCase,
-            navigation.Object,
+            TestNavigationCoordinator.Create(navigation.Object),
             TestUseCaseExecutor.Instance);
 
         Assert.IsTrue(useCase.CanExecute(new GoBackFromCaptureOverlayRequest()));
@@ -402,7 +489,9 @@ public sealed class CaptureOverlayNavigationUseCaseTests
         var navigation = new Mock<INavigationService>();
         navigation.Setup(service => service.CanGoBack).Returns(true);
         navigation.Setup(service => service.TryGoBackTo(It.IsAny<Func<INavigationRequest, bool>>())).Returns(false);
-        var useCase = new ShowMainWindowUseCase(navigation.Object, TestUseCaseExecutor.Instance);
+        var useCase = new ShowMainWindowUseCase(
+            TestNavigationCoordinator.Create(navigation.Object),
+            TestUseCaseExecutor.Instance);
 
         Assert.IsTrue(useCase.CanExecute(new ShowMainWindowRequest()));
         ShowMainWindowResponse response = (await useCase.ExecuteAsync(new ShowMainWindowRequest(), TestContext.CancellationToken)).Value!;
@@ -417,7 +506,9 @@ public sealed class CaptureOverlayNavigationUseCaseTests
         var navigation = new Mock<INavigationService>();
         navigation.Setup(service => service.CanGoBack).Returns(true);
         navigation.Setup(service => service.TryGoBackTo(It.IsAny<Func<INavigationRequest, bool>>())).Returns(false);
-        var useCase = new ShowMainWindowUseCase(navigation.Object, TestUseCaseExecutor.Instance);
+        var useCase = new ShowMainWindowUseCase(
+            TestNavigationCoordinator.Create(navigation.Object),
+            TestUseCaseExecutor.Instance);
 
         ShowMainWindowResponse response = (await useCase.ExecuteAsync(
             new ShowMainWindowRequest(CreateIfUnavailable: false),

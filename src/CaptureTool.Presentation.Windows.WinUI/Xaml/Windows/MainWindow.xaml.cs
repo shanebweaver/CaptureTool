@@ -1,5 +1,3 @@
-using CaptureTool.Application.Abstractions.Capture.Audio;
-using CaptureTool.Application.Abstractions.EditSessions;
 using CaptureTool.Application.Abstractions.Logging;
 using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Application.Abstractions.Shutdown;
@@ -33,8 +31,7 @@ public sealed partial class MainWindow : Window
     private static readonly SizeInt32 MinWindowSize = new(500, 374);
     private const int NoPackageIdentityHResult = unchecked((int)0x80073D54);
 
-    private readonly IAudioCaptureNavigationGuard _audioCaptureNavigationGuard;
-    private readonly IEditSessionGuard _editSessionGuard;
+    private readonly INavigationCoordinator _navigationCoordinator;
     private readonly ILogService _logService;
     private readonly IShutdownHandler _shutdownHandler;
     private readonly WinUIAudioCaptureNavigationConfirmationService _audioCaptureNavigationConfirmationService;
@@ -53,8 +50,7 @@ public sealed partial class MainWindow : Window
 
     public MainWindow()
     {
-        _audioCaptureNavigationGuard = App.Current.ServiceProvider.GetService<IAudioCaptureNavigationGuard>();
-        _editSessionGuard = App.Current.ServiceProvider.GetService<IEditSessionGuard>();
+        _navigationCoordinator = App.Current.ServiceProvider.GetService<INavigationCoordinator>();
         _logService = App.Current.ServiceProvider.GetService<ILogService>();
         _shutdownHandler = App.Current.ServiceProvider.GetService<IShutdownHandler>();
         _audioCaptureNavigationConfirmationService = App.Current.ServiceProvider.GetService<WinUIAudioCaptureNavigationConfirmationService>();
@@ -314,17 +310,13 @@ public sealed partial class MainWindow : Window
     {
         try
         {
-            bool canClose = await _editSessionGuard.CanLeaveCurrentSessionAsync();
-            if (canClose)
-            {
-                canClose = await _audioCaptureNavigationGuard.CanNavigateAwayFromActiveCaptureAsync();
-            }
-
-            if (canClose)
-            {
-                _closeConfirmed = true;
-                Close();
-            }
+            await _navigationCoordinator.ExecuteTransitionAsync(
+                _ =>
+                {
+                    _closeConfirmed = true;
+                    Close();
+                    return Task.FromResult(true);
+                });
         }
         catch (Exception ex)
         {

@@ -1,3 +1,4 @@
+using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Application.Abstractions.Shell.AppMenu.ExitApplication;
 using CaptureTool.Application.Abstractions.Shutdown;
 using CaptureTool.Application.Abstractions.UseCases;
@@ -11,12 +12,16 @@ internal sealed class ExitApplicationUseCase : IExitApplicationUseCase
 
     private readonly IUseCaseExecutor _useCaseExecutor;
     private readonly IShutdownHandler _shutdownHandler;
+    private readonly INavigationCoordinator _navigationCoordinator;
 
-    public ExitApplicationUseCase(IShutdownHandler shutdownHandler,
+    public ExitApplicationUseCase(
+        IShutdownHandler shutdownHandler,
+        INavigationCoordinator navigationCoordinator,
         IUseCaseExecutor useCaseExecutor)
     {
         _useCaseExecutor = useCaseExecutor;
         _shutdownHandler = shutdownHandler;
+        _navigationCoordinator = navigationCoordinator;
     }
 
     public bool CanExecute(ExitApplicationRequest request)
@@ -29,10 +34,16 @@ internal sealed class ExitApplicationUseCase : IExitApplicationUseCase
     {
         return _useCaseExecutor.ExecuteAsync(
             activityId: ActivityId,
-            useCase: () =>
+            useCase: async token =>
             {
-                _shutdownHandler.Shutdown();
-                return new ExitApplicationResponse();
+                bool exited = await _navigationCoordinator.ExecuteTransitionAsync(
+                    _ =>
+                    {
+                        _shutdownHandler.Shutdown();
+                        return Task.FromResult(true);
+                    },
+                    token);
+                return new ExitApplicationResponse(exited);
             },
             cancellationToken: cancellationToken);
     }

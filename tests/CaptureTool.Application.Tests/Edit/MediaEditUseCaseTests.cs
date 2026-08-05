@@ -77,16 +77,17 @@ public sealed class MediaEditUseCaseTests
         var videoFile = new VideoFile(@"C:\capture.mp4");
         var navigation = new Mock<INavigationService>();
         var audioCaptureNavigationGuard = new AllowAudioCaptureNavigationGuard();
+        INavigationCoordinator coordinator = TestNavigationCoordinator.Create(
+            navigation.Object,
+            audioCaptureNavigationGuard: audioCaptureNavigationGuard);
 
         var audioUseCase = new OpenAudioEditPageUseCase(
-            navigation.Object,
+            coordinator,
             TestFileSystem.Instance,
-            TestUseCaseExecutor.Instance,
-            audioCaptureNavigationGuard);
+            TestUseCaseExecutor.Instance);
         var videoUseCase = new OpenVideoEditPageUseCase(
-            navigation.Object,
-            TestUseCaseExecutor.Instance,
-            audioCaptureNavigationGuard);
+            coordinator,
+            TestUseCaseExecutor.Instance);
 
         Assert.IsTrue(audioUseCase.CanExecute(new OpenAudioEditPageRequest(audioFile)));
         await audioUseCase.ExecuteAsync(new OpenAudioEditPageRequest(audioFile), TestContext.CancellationToken);

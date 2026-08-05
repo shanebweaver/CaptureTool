@@ -58,6 +58,28 @@ public sealed class EditSessionGuardTests
     }
 
     [TestMethod]
+    public async Task CanLeaveCurrentSessionAsync_ReturnsFalse_WhenSaveAsFails()
+    {
+        var session = new Mock<IEditableSession>();
+        session.SetupGet(s => s.HasUnsavedChanges).Returns(true);
+        session
+            .Setup(s => s.SaveAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
+
+        var confirmation = new Mock<IEditSessionConfirmationService>();
+        confirmation
+            .Setup(service => service.ConfirmLeaveAsync(session.Object, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(EditSessionLeaveDecision.SaveAs);
+
+        var active = new ActiveEditSessionService();
+        active.SetCurrentSession(session.Object);
+        var guard = CreateGuard(active, confirmation.Object);
+
+        Assert.IsFalse(await guard.CanLeaveCurrentSessionAsync(TestContext.CancellationToken));
+        session.Verify(s => s.SaveAsync(TestContext.CancellationToken), Times.Once);
+    }
+
+    [TestMethod]
     public async Task CanLeaveCurrentSessionAsync_SavesToSource_WhenSupportedAndUserChoosesSave()
     {
         var session = new Mock<ISourceSaveableSession>();

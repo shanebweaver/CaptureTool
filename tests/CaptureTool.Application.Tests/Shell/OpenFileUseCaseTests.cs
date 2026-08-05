@@ -1,4 +1,5 @@
 using CaptureTool.Application.Abstractions.Navigation;
+using CaptureTool.Application.Abstractions.EditSessions;
 using CaptureTool.Application.Abstractions.Library.RecentCaptures;
 using CaptureTool.Application.Abstractions.Shell.AppMenu.OpenFile;
 using CaptureTool.Application.Abstractions.Storage;
@@ -13,6 +14,38 @@ namespace CaptureTool.Application.Tests.Shell;
 [TestClass]
 public class OpenFileUseCaseTests
 {
+    [TestMethod]
+    public async Task ExecuteAsync_WhenLeavePolicyRejects_DoesNotOpenPickerOrNavigate()
+    {
+        var filePickerService = new Mock<IFilePickerService>();
+        var navigationService = new Mock<INavigationService>();
+        var editSessionGuard = new Mock<IEditSessionGuard>();
+        editSessionGuard
+            .Setup(guard => guard.CanLeaveCurrentSessionAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
+        OpenFileUseCase useCase = new(
+            filePickerService.Object,
+            TestNavigationCoordinator.Create(
+                navigationService.Object,
+                editSessionGuard.Object),
+            Mock.Of<IStorageService>(),
+            TestFileSystem.Instance,
+            Mock.Of<IRecentCaptureCatalog>(),
+            TestUseCaseExecutor.Instance);
+
+        OpenFileResponse response = (await useCase.ExecuteAsync(
+            new OpenFileRequest(),
+            TestContext.CancellationToken)).Value!;
+
+        Assert.IsFalse(response.Opened);
+        filePickerService.Verify(
+            service => service.PickFileAsync(It.IsAny<FilePickerType>(), It.IsAny<UserFolder>()),
+            Times.Never);
+        navigationService.Verify(
+            service => service.Navigate(It.IsAny<object>(), It.IsAny<object?>(), It.IsAny<bool>()),
+            Times.Never);
+    }
+
     [TestMethod]
     public async Task ExecuteAsync_WithImageFile_ShouldNavigateToImageEdit()
     {
@@ -39,12 +72,11 @@ public class OpenFileUseCaseTests
             .Returns("open-file.tmp");
         OpenFileUseCase useCase = new(
             filePickerService.Object,
-            navigationService.Object,
+            TestNavigationCoordinator.Create(navigationService.Object),
             storageService.Object,
             TestFileSystem.Instance,
             recentCaptureCatalog.Object,
-            TestUseCaseExecutor.Instance,
-            new AllowAudioCaptureNavigationGuard());
+            TestUseCaseExecutor.Instance);
 
         await useCase.ExecuteAsync(new OpenFileRequest(), TestContext.CancellationToken);
 
@@ -88,12 +120,11 @@ public class OpenFileUseCaseTests
             .Returns("open-file.tmp");
         OpenFileUseCase useCase = new(
             filePickerService.Object,
-            navigationService.Object,
+            TestNavigationCoordinator.Create(navigationService.Object),
             storageService.Object,
             TestFileSystem.Instance,
             recentCaptureCatalog.Object,
-            TestUseCaseExecutor.Instance,
-            new AllowAudioCaptureNavigationGuard());
+            TestUseCaseExecutor.Instance);
 
         await useCase.ExecuteAsync(new OpenFileRequest(), TestContext.CancellationToken);
 
@@ -135,12 +166,11 @@ public class OpenFileUseCaseTests
             .Returns("open-file.tmp");
         OpenFileUseCase useCase = new(
             filePickerService.Object,
-            navigationService.Object,
+            TestNavigationCoordinator.Create(navigationService.Object),
             storageService.Object,
             TestFileSystem.Instance,
             recentCaptureCatalog.Object,
-            TestUseCaseExecutor.Instance,
-            new AllowAudioCaptureNavigationGuard());
+            TestUseCaseExecutor.Instance);
 
         await useCase.ExecuteAsync(new OpenFileRequest(), TestContext.CancellationToken);
 
@@ -177,12 +207,11 @@ public class OpenFileUseCaseTests
             .Returns(tempFolder);
         OpenFileUseCase useCase = new(
             filePickerService.Object,
-            navigationService.Object,
+            TestNavigationCoordinator.Create(navigationService.Object),
             storageService.Object,
             TestFileSystem.Instance,
             recentCaptureCatalog.Object,
-            TestUseCaseExecutor.Instance,
-            new AllowAudioCaptureNavigationGuard());
+            TestUseCaseExecutor.Instance);
 
         await useCase.ExecuteAsync(new OpenFileRequest(), TestContext.CancellationToken);
 

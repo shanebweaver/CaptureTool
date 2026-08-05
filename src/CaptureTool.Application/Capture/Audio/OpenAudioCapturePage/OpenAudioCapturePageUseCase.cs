@@ -1,4 +1,3 @@
-using CaptureTool.Application.Abstractions.Capture.Audio;
 using CaptureTool.Application.Abstractions.Capture.Audio.OpenAudioCapturePage;
 using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Application.Abstractions.UseCases;
@@ -11,16 +10,14 @@ internal sealed class OpenAudioCapturePageUseCase : IOpenAudioCapturePageUseCase
     private const string ActivityId = "OpenAudioCapturePage";
 
     private readonly IUseCaseExecutor _useCaseExecutor;
-    private readonly INavigationService _navigationService;
-    private readonly IAudioCaptureNavigationGuard _audioCaptureNavigationGuard;
+    private readonly INavigationCoordinator _navigationCoordinator;
 
-    public OpenAudioCapturePageUseCase(INavigationService navigationService,
-        IUseCaseExecutor useCaseExecutor,
-        IAudioCaptureNavigationGuard audioCaptureNavigationGuard)
+    public OpenAudioCapturePageUseCase(
+        INavigationCoordinator navigationCoordinator,
+        IUseCaseExecutor useCaseExecutor)
     {
         _useCaseExecutor = useCaseExecutor;
-        _navigationService = navigationService;
-        _audioCaptureNavigationGuard = audioCaptureNavigationGuard;
+        _navigationCoordinator = navigationCoordinator;
     }
 
     public Task<UseCaseResponse<OpenAudioCapturePageResponse>> ExecuteAsync(OpenAudioCapturePageRequest request, CancellationToken cancellationToken = default)
@@ -29,13 +26,10 @@ internal sealed class OpenAudioCapturePageUseCase : IOpenAudioCapturePageUseCase
             activityId: ActivityId,
             useCase: async _ =>
             {
-                if (!await _audioCaptureNavigationGuard.CanNavigateAwayFromActiveCaptureAsync(cancellationToken))
-                {
-                    return new OpenAudioCapturePageResponse(false);
-                }
-
-                _navigationService.Navigate(NavigationRoute.AudioCapture);
-                return new OpenAudioCapturePageResponse();
+                bool navigated = await _navigationCoordinator.NavigateAsync(
+                    NavigationRoute.AudioCapture,
+                    cancellationToken: cancellationToken);
+                return new OpenAudioCapturePageResponse(navigated);
             },
             cancellationToken: cancellationToken);
     }

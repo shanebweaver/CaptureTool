@@ -35,6 +35,8 @@ internal sealed class StopVideoCaptureUseCase : IStopVideoCaptureUseCase
             useCase: () =>
             {
                 var pendingVideo = _videoCaptureWorkflow.StopVideoCapture();
+                // This is the successful completion of the active video workflow,
+                // so it intentionally bypasses user-initiated leave confirmation.
                 _navigationService.Navigate(NavigationRoute.VideoEdit, pendingVideo);
                 return new StopVideoCaptureResponse();
             },

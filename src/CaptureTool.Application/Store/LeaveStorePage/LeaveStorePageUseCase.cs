@@ -10,25 +10,28 @@ internal sealed class LeaveStorePageUseCase : ILeaveStorePageUseCase
     private const string ActivityId = "LeaveStorePage";
 
     private readonly IUseCaseExecutor _useCaseExecutor;
-    private readonly INavigationService _navigationService;
+    private readonly INavigationCoordinator _navigationCoordinator;
 
-    public LeaveStorePageUseCase(INavigationService navigationService,
+    public LeaveStorePageUseCase(INavigationCoordinator navigationCoordinator,
         IUseCaseExecutor useCaseExecutor)
     {
         _useCaseExecutor = useCaseExecutor;
-        _navigationService = navigationService;
+        _navigationCoordinator = navigationCoordinator;
     }
 
     public Task<UseCaseResponse<LeaveStorePageResponse>> ExecuteAsync(LeaveStorePageRequest request, CancellationToken cancellationToken = default)
     {
         return _useCaseExecutor.ExecuteAsync(
             activityId: ActivityId,
-            useCase: () =>
+            useCase: async token =>
             {
-                if (!_navigationService.TryGoBack())
-                {
-                    _navigationService.Navigate(NavigationRoute.Home, clearHistory: true);
-                }
+                await _navigationCoordinator.ExecuteTransitionAsync(
+                    async transitionToken => await _navigationCoordinator.TryGoBackAsync(transitionToken)
+                        || await _navigationCoordinator.NavigateAsync(
+                            NavigationRoute.Home,
+                            clearHistory: true,
+                            cancellationToken: transitionToken),
+                    token);
 
                 return new LeaveStorePageResponse();
             },
