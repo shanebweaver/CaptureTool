@@ -29,7 +29,7 @@ These mismatches are privacy-sensitive because a displayed disabled or muted sou
 ## Non-Goals
 
 - Changing CaptureKit's device enumeration, codec behavior, or mixing behavior beyond keeping video-session audio controls live throughout capture.
-- Adding audio mixing, per-source gain, or audio-only volume controls.
+- Adding equalization, effects, balance, or audio-only volume controls.
 - Changing persisted default values or settings-page UX.
 - Changing pause/resume behavior, which is not an audio-routing operation.
 - Guaranteeing that a device remains available after the platform accepts it.
@@ -41,6 +41,7 @@ These mismatches are privacy-sensitive because a displayed disabled or muted sou
 - As a user changing an input source, a platform failure leaves the previous effective source selected instead of displaying an uncommitted choice.
 - As a user configuring a capture before it starts, my desktop-audio and microphone choices are included in the recorder's startup options.
 - As a user who starts a video with local audio muted, I can unmute local audio during that same recording.
+- As a user recording a video, I can see and adjust local desktop-audio volume before and during capture without changing microphone volume.
 
 ## Product Requirements
 
@@ -62,6 +63,7 @@ These mismatches are privacy-sensitive because a displayed disabled or muted sou
 6. The transactional rule applies to desktop audio, microphone mute, microphone source, and microphone input volume where that operation exists.
 7. A disabled startup value is an initial routing state, not a declaration that the route is unavailable. A live false-to-true transition must be sent to the active recorder and committed on success.
 8. CaptureKit video sessions must always provision the local-audio pipeline. `CaptureAudio = false` is only the initial muted state: it must not record non-silent local-audio samples before the user enables it, and mute, unmute, source, and volume controls must remain available throughout capture.
+9. Desktop-audio volume must be modeled separately from microphone input volume, clamped to 0–100%, included in video startup options, and adjustable while muted or unmuted.
 
 ### Presentation synchronization
 
@@ -71,6 +73,8 @@ These mismatches are privacy-sensitive because a displayed disabled or muted sou
 4. Source-selection UI must not retain a requested source when its use case fails.
 5. Existing bounded error handling may report the failed action, but it must not invent a successful state transition.
 6. After a successful desktop-audio command, the video overlay must synchronize directly from committed capture state; the state-change event remains the notification path for changes initiated elsewhere.
+7. The local-audio toolbar control must be a split button: its primary action toggles mute, while its dropdown exposes a labeled 0–100% volume slider and the committed percentage value.
+8. Slider changes must be debounced before applying them to the workflow, and a rejected platform update must restore the last committed value.
 
 ## Design Decision
 
@@ -95,6 +99,9 @@ This design keeps platform exceptions inside the existing use-case executor path
 - Successful live operations update the recorder before committing and publishing state.
 - A video recording started with desktop audio disabled can enable desktop audio without restarting the capture.
 - Starting with every audio source disabled still creates a muted audio stream capable of accepting later live routing changes.
+- The capture toolbar exposes local-audio mute and volume together without conflating desktop volume with microphone input volume.
+- Desktop-audio volume selected before recording is applied at startup and can be changed during capture, including while local audio is muted.
+- A failed desktop-audio volume change leaves both workflow state and the displayed slider value unchanged.
 - Idle audio-routing changes do not call an inactive recorder.
 - The video overlay does not change its displayed mute/source state after a failed use case.
 - Existing audio and video capture behavior and non-UI tests remain green.
@@ -109,6 +116,8 @@ This design keeps platform exceptions inside the existing use-case executor path
 - Inject failures for video desktop-audio, mute, source, and volume changes and verify state/event rollback semantics.
 - Start a video workflow with desktop audio disabled, enable it while recording, and assert the active recorder receives `true` before state and presentation commit the new value.
 - Exercise CaptureKit with an initially muted video session and assert the audio source starts disabled, the AAC stream exists, a live false-to-true transition enables the source, and volume remains mutable.
+- Assert desktop-audio volume is distinct from microphone volume across CaptureKit interop, CaptureTool startup options, workflow state, and live recorder calls.
+- Add capture-overlay view-model tests for successful and rejected desktop-volume updates, including committed state synchronization.
 - Add presentation tests for failed video mute and source selection.
 - Run all application, presentation, Windows capture infrastructure, generic infrastructure, Windows edit infrastructure, and MCP server tests.
 

@@ -4,13 +4,15 @@ internal readonly record struct VideoCaptureAudioSettings(
     bool IsDesktopAudioEnabled,
     bool IsAudioInputMuted,
     int AudioInputVolumePercentage,
-    string? SelectedAudioInputSourceId)
+    string? SelectedAudioInputSourceId,
+    int DesktopAudioVolumePercentage = 100)
 {
     public static VideoCaptureAudioSettings Default { get; } = new(
         IsDesktopAudioEnabled: false,
         IsAudioInputMuted: false,
         AudioInputVolumePercentage: 100,
-        SelectedAudioInputSourceId: null);
+        SelectedAudioInputSourceId: null,
+        DesktopAudioVolumePercentage: 100);
 
     public bool ShouldCaptureAudio
         => IsDesktopAudioEnabled || !string.IsNullOrWhiteSpace(ActiveAudioInputSourceId);
@@ -26,11 +28,15 @@ internal readonly record struct VideoCaptureAudioSettings(
         {
             IsDesktopAudioEnabled = defaultDesktopAudioEnabled,
             IsAudioInputMuted = false,
-            AudioInputVolumePercentage = 100
+            AudioInputVolumePercentage = 100,
+            DesktopAudioVolumePercentage = 100
         };
 
     public VideoCaptureAudioSettings WithDesktopAudioEnabled(bool value)
         => this with { IsDesktopAudioEnabled = value };
+
+    public VideoCaptureAudioSettings WithDesktopAudioVolume(int volumePercentage)
+        => this with { DesktopAudioVolumePercentage = Math.Clamp(volumePercentage, 0, 100) };
 
     public VideoCaptureAudioSettings WithAudioInputMuted(bool value)
         => this with { IsAudioInputMuted = value };

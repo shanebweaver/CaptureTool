@@ -1071,6 +1071,12 @@ SOFTWARE.
   <data name="CaptureOverlay_LocalAudioToggleButton.ToolTipService.ToolTip" xml:space="preserve">
     <value>Activer/désactiver la capture de l’audio système</value>
   </data>
+  <data name="CaptureOverlay_LocalAudioVolumeLabel.Text" xml:space="preserve">
+    <value>Volume audio du système</value>
+  </data>
+  <data name="CaptureOverlay_LocalAudioVolumeSlider.AutomationProperties.Name" xml:space="preserve">
+    <value>Volume audio du système</value>
+  </data>
   <data name="CaptureOverlay_PauseResumeButton.AutomationProperties.Name" xml:space="preserve">
     <value>Suspendre ou reprendre l’enregistrement</value>
   </data>

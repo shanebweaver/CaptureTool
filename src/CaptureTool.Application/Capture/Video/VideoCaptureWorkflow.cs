@@ -27,11 +27,13 @@ internal sealed class VideoCaptureWorkflow : IVideoCaptureWorkflow
     public event EventHandler<VideoFile>? NewVideoCaptured;
     public event EventHandler? RecordingStarted;
     public event EventHandler<bool>? DesktopAudioStateChanged;
+    public event EventHandler<int>? DesktopAudioVolumeChanged;
     public event EventHandler<bool>? AudioInputMutedStateChanged;
     public event EventHandler<string?>? AudioInputSourceChanged;
     public event EventHandler<bool>? PausedStateChanged;
 
     public bool IsDesktopAudioEnabled => Snapshot.IsDesktopAudioEnabled;
+    public int DesktopAudioVolumePercentage => Snapshot.DesktopAudioVolumePercentage;
     public bool IsAudioInputMuted => Snapshot.IsAudioInputMuted;
     public int AudioInputVolumePercentage => Snapshot.AudioInputVolumePercentage;
     public bool IsRecording => Snapshot.IsRecording;
@@ -206,6 +208,18 @@ internal sealed class VideoCaptureWorkflow : IVideoCaptureWorkflow
         if (changed)
         {
             DesktopAudioStateChanged?.Invoke(this, snapshot.IsDesktopAudioEnabled);
+        }
+    }
+
+    public void SetDesktopAudioVolume(int volumePercentage)
+    {
+        (VideoCaptureStateSnapshot snapshot, bool changed) = UpdateAudioSettings(
+            settings => settings.WithDesktopAudioVolume(volumePercentage),
+            settings => _screenRecorder.SetDesktopAudioVolume(settings.DesktopAudioVolumePercentage));
+
+        if (changed)
+        {
+            DesktopAudioVolumeChanged?.Invoke(this, snapshot.DesktopAudioVolumePercentage);
         }
     }
 

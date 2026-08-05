@@ -1,5 +1,8 @@
 using CaptureTool.Application.Abstractions.Audio;
+using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Controls.Primitives;
 using System.Collections;
 using System.Windows.Input;
 
@@ -7,6 +10,8 @@ namespace CaptureTool.Presentation.Windows.WinUI.Xaml.Controls;
 
 public sealed partial class CaptureOverlayToolbar : UserControlBase
 {
+    private static readonly TimeSpan LocalAudioVolumeCommitDelay = TimeSpan.FromMilliseconds(150);
+
     public static readonly DependencyProperty IsLocalAudioEnabledProperty = DependencyProperty.Register(
         nameof(IsLocalAudioEnabled),
         typeof(bool),
@@ -18,6 +23,12 @@ public sealed partial class CaptureOverlayToolbar : UserControlBase
         typeof(bool),
         typeof(CaptureOverlayToolbar),
         new PropertyMetadata(DependencyProperty.UnsetValue));
+
+    public static readonly DependencyProperty LocalAudioVolumePercentageProperty = DependencyProperty.Register(
+        nameof(LocalAudioVolumePercentage),
+        typeof(int),
+        typeof(CaptureOverlayToolbar),
+        new PropertyMetadata(100, OnLocalAudioVolumePercentageChanged));
 
     public static readonly DependencyProperty IsStartingProperty = DependencyProperty.Register(
         nameof(IsStarting),
@@ -60,6 +71,12 @@ public sealed partial class CaptureOverlayToolbar : UserControlBase
         typeof(ICommand),
         typeof(CaptureOverlayToolbar),
         new PropertyMetadata(DependencyProperty.UnsetValue));
+
+    public static readonly DependencyProperty SetLocalAudioVolumeCommandProperty = DependencyProperty.Register(
+        nameof(SetLocalAudioVolumeCommand),
+        typeof(ICommand),
+        typeof(CaptureOverlayToolbar),
+        new PropertyMetadata(null));
 
     public static readonly DependencyProperty TogglePauseResumeCommandProperty = DependencyProperty.Register(
         nameof(TogglePauseResumeCommand),
@@ -115,9 +132,17 @@ public sealed partial class CaptureOverlayToolbar : UserControlBase
         typeof(CaptureOverlayToolbar),
         new PropertyMetadata(null, OnAudioInputBindablePropertyChanged));
 
+    private readonly DispatcherQueueTimer _localAudioVolumeCommitTimer;
+    private int _pendingLocalAudioVolumePercentage = 100;
+
     public CaptureOverlayToolbar()
     {
         InitializeComponent();
+        _localAudioVolumeCommitTimer = DispatcherQueue.CreateTimer();
+        _localAudioVolumeCommitTimer.Interval = LocalAudioVolumeCommitDelay;
+        _localAudioVolumeCommitTimer.IsRepeating = false;
+        _localAudioVolumeCommitTimer.Tick += LocalAudioVolumeCommitTimer_Tick;
+        Unloaded += CaptureOverlayToolbar_Unloaded;
     }
 
     public bool IsRunning => IsRecording && !IsPaused;
@@ -127,6 +152,12 @@ public sealed partial class CaptureOverlayToolbar : UserControlBase
     {
         get => Get<bool>(IsLocalAudioEnabledProperty);
         set => Set(IsLocalAudioEnabledProperty, value);
+    }
+
+    public int LocalAudioVolumePercentage
+    {
+        get => Get<int>(LocalAudioVolumePercentageProperty);
+        set => Set(LocalAudioVolumePercentageProperty, Math.Clamp(value, 0, 100));
     }
 
     public bool IsRecording
@@ -189,6 +220,12 @@ public sealed partial class CaptureOverlayToolbar : UserControlBase
         set => Set(ToggleLocalAudioCommandProperty, value);
     }
 
+    public ICommand SetLocalAudioVolumeCommand
+    {
+        get => Get<ICommand>(SetLocalAudioVolumeCommandProperty);
+        set => Set(SetLocalAudioVolumeCommandProperty, value);
+    }
+
     public ICommand TogglePauseResumeCommand
     {
         get => Get<ICommand>(TogglePauseResumeCommandProperty);
@@ -241,6 +278,65 @@ public sealed partial class CaptureOverlayToolbar : UserControlBase
     {
         get => Get<ICommand>(ToggleAudioInputMuteCommandProperty);
         set => Set(ToggleAudioInputMuteCommandProperty, value);
+    }
+
+    public string FormatVolumePercentage(int volumePercentage)
+        => $"{Math.Clamp(volumePercentage, 0, 100)}%";
+
+    private void LocalAudioToggleButton_Click(SplitButton sender, SplitButtonClickEventArgs args)
+    {
+        if (ToggleLocalAudioCommand?.CanExecute(null) == true)
+        {
+            ToggleLocalAudioCommand.Execute(null);
+        }
+    }
+
+    private void LocalAudioVolumeSlider_ValueChanged(object sender, RangeBaseValueChangedEventArgs args)
+    {
+        int volumePercentage = Math.Clamp((int)Math.Round(args.NewValue), 0, 100);
+        if (volumePercentage == LocalAudioVolumePercentage)
+        {
+            return;
+        }
+
+        // Keep the slider and percentage label responsive while the debounced
+        // command is pending. The view model re-applies committed state on failure.
+        LocalAudioVolumePercentage = volumePercentage;
+        _pendingLocalAudioVolumePercentage = volumePercentage;
+        _localAudioVolumeCommitTimer.Stop();
+        _localAudioVolumeCommitTimer.Start();
+    }
+
+    private void LocalAudioVolumeCommitTimer_Tick(DispatcherQueueTimer sender, object args)
+    {
+        int volumePercentage = _pendingLocalAudioVolumePercentage;
+        if (SetLocalAudioVolumeCommand is null)
+        {
+            return;
+        }
+
+        if (SetLocalAudioVolumeCommand.CanExecute(volumePercentage))
+        {
+            SetLocalAudioVolumeCommand.Execute(volumePercentage);
+            return;
+        }
+
+        _localAudioVolumeCommitTimer.Start();
+    }
+
+    private void CaptureOverlayToolbar_Unloaded(object sender, RoutedEventArgs e)
+    {
+        _localAudioVolumeCommitTimer.Stop();
+    }
+
+    private static void OnLocalAudioVolumePercentageChanged(
+        DependencyObject dependencyObject,
+        DependencyPropertyChangedEventArgs args)
+    {
+        if (dependencyObject is CaptureOverlayToolbar toolbar)
+        {
+            toolbar.RaisePropertyChanged(nameof(LocalAudioVolumePercentage));
+        }
     }
 
     private static void OnAudioInputBindablePropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)

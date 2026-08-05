@@ -30,6 +30,7 @@ public sealed class VideoCaptureWorkflowTests
         context.Workflow.PrepareForVideoCapture();
 
         context.Workflow.IsDesktopAudioEnabled.Should().BeFalse();
+        context.Workflow.DesktopAudioVolumePercentage.Should().Be(100);
         context.Workflow.IsAudioInputMuted.Should().BeFalse();
         context.Workflow.AudioInputVolumePercentage.Should().Be(100);
     }
@@ -41,6 +42,7 @@ public sealed class VideoCaptureWorkflowTests
         context.Workflow.PrepareForVideoCapture();
         context.Workflow.SelectAudioInputSource("microphone-id");
         context.Workflow.SetAudioInputVolume(42);
+        context.Workflow.SetDesktopAudioVolume(64);
 
         context.Workflow.StartVideoCapture(CreateCaptureArgs());
 
@@ -49,6 +51,7 @@ public sealed class VideoCaptureWorkflowTests
             options.CaptureAudio &&
             options.AudioInputSourceId == "microphone-id" &&
             options.AudioInputVolumePercentage == 42 &&
+            options.DesktopAudioVolumePercentage == 64 &&
             options.OutputPath.EndsWith(".mp4"))), Times.Once);
     }
 
@@ -427,16 +430,36 @@ public sealed class VideoCaptureWorkflowTests
     }
 
     [TestMethod]
+    public void SetDesktopAudioVolume_WhenRecording_UpdatesRecorderBeforeStateAndPublishesCommittedValue()
+    {
+        TestWorkflowContext context = CreateContext();
+        context.Workflow.StartVideoCapture(CreateCaptureArgs());
+        context.ScreenRecorder
+            .Setup(recorder => recorder.SetDesktopAudioVolume(64))
+            .Callback(() => context.Workflow.DesktopAudioVolumePercentage.Should().Be(100));
+        int? raisedValue = null;
+        context.Workflow.DesktopAudioVolumeChanged += (_, value) => raisedValue = value;
+
+        context.Workflow.SetDesktopAudioVolume(64);
+
+        context.Workflow.DesktopAudioVolumePercentage.Should().Be(64);
+        raisedValue.Should().Be(64);
+        context.ScreenRecorder.Verify(recorder => recorder.SetDesktopAudioVolume(64), Times.Once);
+    }
+
+    [TestMethod]
     public void AudioChanges_ShouldNotCallRecorder_WhenIdle()
     {
         TestWorkflowContext context = CreateContext();
 
         context.Workflow.SetIsDesktopAudioEnabled(false);
+        context.Workflow.SetDesktopAudioVolume(64);
         context.Workflow.SelectAudioInputSource("microphone-id");
         context.Workflow.SetIsAudioInputMuted(true);
         context.Workflow.SetAudioInputVolume(37);
 
         context.ScreenRecorder.Verify(recorder => recorder.SetAudioCaptureEnabled(It.IsAny<bool>()), Times.Never);
+        context.ScreenRecorder.Verify(recorder => recorder.SetDesktopAudioVolume(It.IsAny<int>()), Times.Never);
         context.ScreenRecorder.Verify(recorder => recorder.SetAudioInputSource(It.IsAny<string?>()), Times.Never);
         context.ScreenRecorder.Verify(recorder => recorder.SetAudioInputVolume(It.IsAny<int>()), Times.Never);
     }
@@ -512,6 +535,24 @@ public sealed class VideoCaptureWorkflowTests
             .Should().Throw<InvalidOperationException>();
 
         context.Workflow.AudioInputVolumePercentage.Should().Be(100);
+    }
+
+    [TestMethod]
+    public void SetDesktopAudioVolume_WhenRecorderRejectsChange_PreservesStateAndDoesNotRaiseEvent()
+    {
+        TestWorkflowContext context = CreateContext();
+        context.Workflow.StartVideoCapture(CreateCaptureArgs());
+        context.ScreenRecorder
+            .Setup(recorder => recorder.SetDesktopAudioVolume(64))
+            .Throws(new InvalidOperationException("Platform rejected desktop volume change."));
+        bool eventRaised = false;
+        context.Workflow.DesktopAudioVolumeChanged += (_, _) => eventRaised = true;
+
+        context.Workflow.Invoking(workflow => workflow.SetDesktopAudioVolume(64))
+            .Should().Throw<InvalidOperationException>();
+
+        context.Workflow.DesktopAudioVolumePercentage.Should().Be(100);
+        eventRaised.Should().BeFalse();
     }
 
     private static TestWorkflowContext CreateContext(

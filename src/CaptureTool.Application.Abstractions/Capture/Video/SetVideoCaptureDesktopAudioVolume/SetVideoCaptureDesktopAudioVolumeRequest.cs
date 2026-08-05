@@ -1,0 +1,3 @@
+namespace CaptureTool.Application.Abstractions.Capture.Video.SetVideoCaptureDesktopAudioVolume;
+
+public sealed record SetVideoCaptureDesktopAudioVolumeRequest(int VolumePercentage);

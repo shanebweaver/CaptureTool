@@ -84,22 +84,57 @@
                 <local:ClockTimer Time="{x:Bind CaptureTime, Mode=OneWay}" />
             </Grid>
 
-            <Button
+            <SplitButton
                 x:Name="LocalAudioToggleButton"
                 x:Uid="CaptureOverlay_LocalAudioToggleButton"
-                Command="{x:Bind ToggleLocalAudioCommand, Mode=OneWay}"
-                Style="{StaticResource IconButtonStyle}">
-                <Grid>
-                    <FontIcon
-                        FontFamily="{StaticResource FluentSystemIcons}"
-                        Glyph="{StaticResource DesktopSpeaker20Regular}"
-                        Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(IsLocalAudioEnabled), Mode=OneWay}" />
-                    <FontIcon
-                        FontFamily="{StaticResource FluentSystemIcons}"
-                        Glyph="{StaticResource DesktopSpeakerOff20Regular}"
-                        Visibility="{x:Bind utils:VisibilityUtility.InverseBoolToVisibility(IsLocalAudioEnabled), Mode=OneWay}" />
-                </Grid>
-            </Button>
+                Height="32"
+                Padding="6,0"
+                Background="Transparent"
+                BorderBrush="Transparent"
+                Click="LocalAudioToggleButton_Click">
+                <SplitButton.Content>
+                    <Grid Width="20">
+                        <FontIcon
+                            FontFamily="{StaticResource FluentSystemIcons}"
+                            Glyph="{StaticResource DesktopSpeaker20Regular}"
+                            Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(IsLocalAudioEnabled), Mode=OneWay}" />
+                        <FontIcon
+                            FontFamily="{StaticResource FluentSystemIcons}"
+                            Glyph="{StaticResource DesktopSpeakerOff20Regular}"
+                            Visibility="{x:Bind utils:VisibilityUtility.InverseBoolToVisibility(IsLocalAudioEnabled), Mode=OneWay}" />
+                    </Grid>
+                </SplitButton.Content>
+                <SplitButton.Flyout>
+                    <Flyout Placement="Bottom" ShouldConstrainToRootBounds="False">
+                        <StackPanel Width="240" Spacing="8">
+                            <Grid ColumnSpacing="12">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock
+                                    x:Uid="CaptureOverlay_LocalAudioVolumeLabel"
+                                    VerticalAlignment="Center"
+                                    Style="{StaticResource BodyStrongTextBlockStyle}" />
+                                <TextBlock
+                                    Grid.Column="1"
+                                    VerticalAlignment="Center"
+                                    Text="{x:Bind FormatVolumePercentage(LocalAudioVolumePercentage), Mode=OneWay}" />
+                            </Grid>
+                            <Slider
+                                x:Name="LocalAudioVolumeSlider"
+                                x:Uid="CaptureOverlay_LocalAudioVolumeSlider"
+                                LargeChange="10"
+                                Maximum="100"
+                                Minimum="0"
+                                SmallChange="1"
+                                StepFrequency="1"
+                                Value="{x:Bind LocalAudioVolumePercentage, Mode=OneWay}"
+                                ValueChanged="LocalAudioVolumeSlider_ValueChanged" />
+                        </StackPanel>
+                    </Flyout>
+                </SplitButton.Flyout>
+            </SplitButton>
 
             <local:AudioInputSelector
                 AudioInputSources="{x:Bind AudioInputSources, Mode=OneWay}"

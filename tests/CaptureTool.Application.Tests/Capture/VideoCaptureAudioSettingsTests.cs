@@ -42,6 +42,17 @@ public sealed class VideoCaptureAudioSettingsTests
     }
 
     [TestMethod]
+    public void WithDesktopAudioVolume_ShouldClampWithoutChangingInputVolume()
+    {
+        VideoCaptureAudioSettings settings = VideoCaptureAudioSettings.Default.WithAudioInputVolume(37);
+
+        settings.WithDesktopAudioVolume(-10).DesktopAudioVolumePercentage.Should().Be(0);
+        settings.WithDesktopAudioVolume(64).DesktopAudioVolumePercentage.Should().Be(64);
+        settings.WithDesktopAudioVolume(200).DesktopAudioVolumePercentage.Should().Be(100);
+        settings.WithDesktopAudioVolume(64).AudioInputVolumePercentage.Should().Be(37);
+    }
+
+    [TestMethod]
     public void WithAudioInputSource_ShouldNormalizeBlankSourceToNull()
     {
         VideoCaptureAudioSettings.Default.WithAudioInputSource("   ").SelectedAudioInputSourceId.Should().BeNull();
@@ -51,13 +62,14 @@ public sealed class VideoCaptureAudioSettingsTests
     [TestMethod]
     public void PrepareForCapture_ShouldResetCaptureDefaultsAndKeepSelectedSource()
     {
-        var settings = new VideoCaptureAudioSettings(false, true, 42, "microphone");
+        var settings = new VideoCaptureAudioSettings(false, true, 42, "microphone", 64);
 
         VideoCaptureAudioSettings prepared = settings.PrepareForCapture(defaultDesktopAudioEnabled: true);
 
         prepared.IsDesktopAudioEnabled.Should().BeTrue();
         prepared.IsAudioInputMuted.Should().BeFalse();
         prepared.AudioInputVolumePercentage.Should().Be(100);
+        prepared.DesktopAudioVolumePercentage.Should().Be(100);
         prepared.SelectedAudioInputSourceId.Should().Be("microphone");
     }
 }

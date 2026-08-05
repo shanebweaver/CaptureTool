@@ -11,6 +11,7 @@ internal interface IVideoCaptureWorkflow : IVideoCaptureState
     PendingVideoFile StopVideoCapture();
     void CancelVideoCapture(CancelVideoCaptureReason reason = CancelVideoCaptureReason.User);
     void SetIsDesktopAudioEnabled(bool value);
+    void SetDesktopAudioVolume(int volumePercentage);
     void SetIsAudioInputMuted(bool value);
     void SelectAudioInputSource(string? sourceId);
     void SetAudioInputVolume(int volumePercentage);

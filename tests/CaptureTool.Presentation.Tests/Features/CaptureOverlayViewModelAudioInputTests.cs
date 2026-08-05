@@ -7,6 +7,7 @@ using CaptureTool.Application.Abstractions.Capture.Video.CancelVideoCapture;
 using CaptureTool.Application.Abstractions.Capture.Video.PrepareVideoCapture;
 using CaptureTool.Application.Abstractions.Capture.Video.SelectAudioInputSource;
 using CaptureTool.Application.Abstractions.Capture.Video.SetVideoCaptureAudioInputMuted;
+using CaptureTool.Application.Abstractions.Capture.Video.SetVideoCaptureDesktopAudioVolume;
 using CaptureTool.Application.Abstractions.Capture.Video.StartVideoCapture;
 using CaptureTool.Application.Abstractions.Capture.Video.StopVideoCapture;
 using CaptureTool.Application.Abstractions.Capture.Video.ToggleVideoCaptureDesktopAudio;
@@ -312,6 +313,36 @@ public sealed class CaptureOverlayViewModelAudioInputTests
     }
 
     [TestMethod]
+    public async Task SetDesktopAudioVolumeCommand_WhenUseCaseSucceeds_UsesCommittedValue()
+    {
+        TestContext context = CreateViewModel([]);
+        context.ViewModel.Load(CreateOptions());
+
+        await context.ViewModel.SetDesktopAudioVolumeCommand.ExecuteAsync(64);
+
+        Assert.AreEqual(64, context.ViewModel.DesktopAudioVolumePercentage);
+        context.SetDesktopAudioVolume.Verify(useCase => useCase.ExecuteAsync(
+            It.Is<SetVideoCaptureDesktopAudioVolumeRequest>(request => request.VolumePercentage == 64),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [TestMethod]
+    public async Task SetDesktopAudioVolumeCommand_WhenUseCaseFails_RestoresCommittedValue()
+    {
+        TestContext context = CreateViewModel([]);
+        context.SetDesktopAudioVolume
+            .Setup(useCase => useCase.ExecuteAsync(
+                It.IsAny<SetVideoCaptureDesktopAudioVolumeRequest>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(UseCaseResponse<SetVideoCaptureDesktopAudioVolumeResponse>.Failure());
+        context.ViewModel.Load(CreateOptions());
+
+        await context.ViewModel.SetDesktopAudioVolumeCommand.ExecuteAsync(64);
+
+        Assert.AreEqual(100, context.ViewModel.DesktopAudioVolumePercentage);
+    }
+
+    [TestMethod]
     public async Task ToggleAudioInputMuteCommand_WhenUseCaseSucceeds_UsesCommittedStateEvent()
     {
         TestContext context = CreateViewModel([new("default", "Built-in microphone", true)]);
@@ -382,10 +413,12 @@ public sealed class CaptureOverlayViewModelAudioInputTests
         string? selectedAudioInputSourceId = null;
         bool isAudioInputMuted = false;
         bool isDesktopAudioEnabled = false;
+        int desktopAudioVolumePercentage = 100;
         Mock<IVideoCaptureState> videoCaptureState = new();
         videoCaptureState.SetupGet(state => state.SelectedAudioInputSourceId).Returns(() => selectedAudioInputSourceId);
         videoCaptureState.SetupGet(state => state.IsAudioInputMuted).Returns(() => isAudioInputMuted);
         videoCaptureState.SetupGet(state => state.IsDesktopAudioEnabled).Returns(() => isDesktopAudioEnabled);
+        videoCaptureState.SetupGet(state => state.DesktopAudioVolumePercentage).Returns(() => desktopAudioVolumePercentage);
 
         Mock<IToggleVideoCaptureDesktopAudioUseCase> toggleDesktopAudio = new();
         toggleDesktopAudio
@@ -401,6 +434,22 @@ public sealed class CaptureOverlayViewModelAudioInputTests
                     isDesktopAudioEnabled);
                 return UseCaseResponse<ToggleVideoCaptureDesktopAudioResponse>.Success(
                     new ToggleVideoCaptureDesktopAudioResponse());
+            });
+
+        Mock<ISetVideoCaptureDesktopAudioVolumeUseCase> setDesktopAudioVolume = new();
+        setDesktopAudioVolume
+            .Setup(useCase => useCase.ExecuteAsync(
+                It.IsAny<SetVideoCaptureDesktopAudioVolumeRequest>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync((SetVideoCaptureDesktopAudioVolumeRequest request, CancellationToken _) =>
+            {
+                desktopAudioVolumePercentage = Math.Clamp(request.VolumePercentage, 0, 100);
+                videoCaptureState.Raise(
+                    state => state.DesktopAudioVolumeChanged += null!,
+                    videoCaptureState.Object,
+                    desktopAudioVolumePercentage);
+                return UseCaseResponse<SetVideoCaptureDesktopAudioVolumeResponse>.Success(
+                    new SetVideoCaptureDesktopAudioVolumeResponse());
             });
 
         Mock<ISelectAudioInputSourceUseCase> selectAudioInputSource = new();
@@ -447,6 +496,7 @@ public sealed class CaptureOverlayViewModelAudioInputTests
             cancelVideoCapture.Object,
             Mock.Of<IStopVideoCaptureUseCase>(),
             toggleDesktopAudio.Object,
+            setDesktopAudioVolume.Object,
             Mock.Of<IToggleVideoCapturePauseResumeUseCase>(),
             prepareVideoCapture.Object,
             getAudioInputSources.Object,
@@ -466,6 +516,7 @@ public sealed class CaptureOverlayViewModelAudioInputTests
             startVideoCapture,
             cancelVideoCapture,
             toggleDesktopAudio,
+            setDesktopAudioVolume,
             selectAudioInputSource,
             setAudioInputMuted);
     }
@@ -498,6 +549,7 @@ public sealed class CaptureOverlayViewModelAudioInputTests
         Mock<IStartVideoCaptureUseCase> StartVideoCapture,
         Mock<ICancelVideoCaptureUseCase> CancelVideoCapture,
         Mock<IToggleVideoCaptureDesktopAudioUseCase> ToggleDesktopAudio,
+        Mock<ISetVideoCaptureDesktopAudioVolumeUseCase> SetDesktopAudioVolume,
         Mock<ISelectAudioInputSourceUseCase> SelectAudioInputSource,
         Mock<ISetVideoCaptureAudioInputMutedUseCase> SetAudioInputMuted);
 }

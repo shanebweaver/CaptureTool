@@ -8,6 +8,7 @@ internal readonly record struct VideoCaptureStateSnapshot(
     public bool IsFinalizing => Status == VideoCaptureStatus.Finalizing;
     public bool IsPaused => Status == VideoCaptureStatus.Paused;
     public bool IsDesktopAudioEnabled => AudioSettings.IsDesktopAudioEnabled;
+    public int DesktopAudioVolumePercentage => AudioSettings.DesktopAudioVolumePercentage;
     public bool IsAudioInputMuted => AudioSettings.IsAudioInputMuted;
     public int AudioInputVolumePercentage => AudioSettings.AudioInputVolumePercentage;
     public string? SelectedAudioInputSourceId => AudioSettings.SelectedAudioInputSourceId;

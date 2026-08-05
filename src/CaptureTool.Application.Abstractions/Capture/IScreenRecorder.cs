@@ -9,6 +9,7 @@ public interface IScreenRecorder
     void PauseRecording();
     void ResumeRecording();
     void SetAudioCaptureEnabled(bool enabled);
+    void SetDesktopAudioVolume(int volumePercentage);
     void SetAudioInputSource(string? sourceId);
     void SetAudioInputVolume(int volumePercentage);
 }
@@ -21,7 +22,8 @@ public readonly record struct CaptureRecordingOptions(
     uint VideoBitrate = 5_000_000,
     uint AudioBitrate = 128_000,
     string? AudioInputSourceId = null,
-    int AudioInputVolumePercentage = 100);
+    int AudioInputVolumePercentage = 100,
+    int DesktopAudioVolumePercentage = 100);
 
 public readonly record struct CaptureRecordingTarget(
     CaptureRecordingTargetKind Kind,
