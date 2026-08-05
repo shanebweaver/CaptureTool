@@ -185,6 +185,93 @@ public class VideoEditPageViewModelTrimTests
         Assert.IsTrue(viewModel.HasUnsavedChanges);
     }
 
+    [TestMethod]
+    public void SetVideoDuration_AfterLoad_ShouldKeepFullRangeSessionClean()
+    {
+        var viewModel = CreateViewModel();
+        viewModel.Load(new VideoFile("test.mp4"));
+
+        viewModel.SetVideoDuration(TimeSpan.FromSeconds(10));
+
+        Assert.IsFalse(viewModel.HasUnsavedChanges);
+    }
+
+    [TestMethod]
+    public async Task SaveTrimmedRange_ThenRestoreFullRange_ShouldMarkSessionDirty()
+    {
+        var viewModel = CreateViewModel();
+        viewModel.Load(new VideoFile("test.mp4"));
+        viewModel.SetVideoDuration(TimeSpan.FromSeconds(10));
+        viewModel.UpdateTrimStart(2);
+        viewModel.UpdateTrimEnd(8);
+
+        Assert.IsTrue(await viewModel.SaveAsync(TestContext.CancellationToken));
+        Assert.IsFalse(viewModel.HasUnsavedChanges);
+
+        viewModel.UpdateTrimStart(0);
+        viewModel.UpdateTrimEnd(10);
+
+        Assert.IsTrue(viewModel.HasUnsavedChanges);
+    }
+
+    [TestMethod]
+    public async Task SaveTrimmedRange_ThenReturnToSavedRange_ShouldClearDirtyState()
+    {
+        var viewModel = CreateViewModel();
+        viewModel.Load(new VideoFile("test.mp4"));
+        viewModel.SetVideoDuration(TimeSpan.FromSeconds(10));
+        viewModel.UpdateTrimStart(2);
+        viewModel.UpdateTrimEnd(8);
+        Assert.IsTrue(await viewModel.SaveAsync(TestContext.CancellationToken));
+
+        viewModel.UpdateTrimStart(3);
+        viewModel.UpdateTrimEnd(7);
+        Assert.IsTrue(viewModel.HasUnsavedChanges);
+
+        viewModel.UpdateTrimStart(2);
+        viewModel.UpdateTrimEnd(8);
+
+        Assert.IsFalse(viewModel.HasUnsavedChanges);
+    }
+
+    [TestMethod]
+    public async Task SavedTrimRange_WithinComparisonTolerance_ShouldRemainClean()
+    {
+        var viewModel = CreateViewModel();
+        viewModel.Load(new VideoFile("test.mp4"));
+        viewModel.SetVideoDuration(TimeSpan.FromSeconds(10));
+        viewModel.UpdateTrimStart(2);
+        viewModel.UpdateTrimEnd(8);
+        Assert.IsTrue(await viewModel.SaveAsync(TestContext.CancellationToken));
+
+        viewModel.UpdateTrimStart(2.005);
+        viewModel.UpdateTrimEnd(8.005);
+
+        Assert.IsFalse(viewModel.HasUnsavedChanges);
+    }
+
+    [TestMethod]
+    public async Task FailedSave_ShouldRetainLoadedBaseline()
+    {
+        var saveAction = new Mock<ISaveVideoFileUseCase>();
+        saveAction
+            .Setup(service => service.ExecuteAsync(
+                It.IsAny<SaveVideoFileRequest>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(UseCaseResponse<SaveVideoFileResponse>.Success(new SaveVideoFileResponse(false)));
+        var viewModel = CreateViewModel(saveAction: saveAction.Object);
+        viewModel.Load(new VideoFile("test.mp4"));
+        viewModel.SetVideoDuration(TimeSpan.FromSeconds(10));
+        viewModel.UpdateTrimStart(2);
+
+        Assert.IsFalse(await viewModel.SaveAsync(TestContext.CancellationToken));
+        Assert.IsTrue(viewModel.HasUnsavedChanges);
+
+        viewModel.UpdateTrimStart(0);
+
+        Assert.IsFalse(viewModel.HasUnsavedChanges);
+    }
+
     private static VideoEditPageViewModel CreateViewModel(
         ISaveVideoFileUseCase? saveAction = null,
         ICopyVideoFileUseCase? copyAction = null,

@@ -181,6 +181,68 @@ public sealed class VideoEditPageViewModelSuperResolutionTests
         viewModel.TrimEndSeconds.Should().Be(8);
     }
 
+    [TestMethod]
+    public async Task SaveEnhancedVariant_ThenSwitchAwayAndBack_ShouldCompareWithSavedVariant()
+    {
+        string enhancedPath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid():N}.mp4");
+        await File.WriteAllBytesAsync(enhancedPath, [0], TestContext.CancellationToken);
+        try
+        {
+            VideoEditPageViewModel viewModel = CreateViewModel(
+                service: CreateReadyService(enhancedPath),
+                saveAction: CreateSuccessfulSaveAction().Object);
+            viewModel.Load(new VideoFile("source.mp4"));
+            await viewModel.ToggleVideoSuperResolutionCommand.ExecuteAsync(null);
+
+            (await viewModel.SaveAsync(TestContext.CancellationToken)).Should().BeTrue();
+            viewModel.HasUnsavedChanges.Should().BeFalse();
+
+            await viewModel.ToggleVideoSuperResolutionCommand.ExecuteAsync(null);
+            viewModel.IsVideoSuperResolutionActive.Should().BeFalse();
+            viewModel.HasUnsavedChanges.Should().BeTrue();
+
+            await viewModel.ToggleVideoSuperResolutionCommand.ExecuteAsync(null);
+            viewModel.IsVideoSuperResolutionActive.Should().BeTrue();
+            viewModel.HasUnsavedChanges.Should().BeFalse();
+        }
+        finally
+        {
+            File.Delete(enhancedPath);
+        }
+    }
+
+    [TestMethod]
+    public async Task SaveOriginalVariant_WithEnhancedVideoCached_ShouldCompareWithSavedVariant()
+    {
+        string enhancedPath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid():N}.mp4");
+        await File.WriteAllBytesAsync(enhancedPath, [0], TestContext.CancellationToken);
+        try
+        {
+            VideoEditPageViewModel viewModel = CreateViewModel(
+                service: CreateReadyService(enhancedPath),
+                saveAction: CreateSuccessfulSaveAction().Object);
+            viewModel.Load(new VideoFile("source.mp4"));
+            await viewModel.ToggleVideoSuperResolutionCommand.ExecuteAsync(null);
+            await viewModel.ToggleVideoSuperResolutionCommand.ExecuteAsync(null);
+
+            (await viewModel.SaveAsync(TestContext.CancellationToken)).Should().BeTrue();
+            viewModel.IsVideoSuperResolutionActive.Should().BeFalse();
+            viewModel.HasUnsavedChanges.Should().BeFalse();
+
+            await viewModel.ToggleVideoSuperResolutionCommand.ExecuteAsync(null);
+            viewModel.IsVideoSuperResolutionActive.Should().BeTrue();
+            viewModel.HasUnsavedChanges.Should().BeTrue();
+
+            await viewModel.ToggleVideoSuperResolutionCommand.ExecuteAsync(null);
+            viewModel.IsVideoSuperResolutionActive.Should().BeFalse();
+            viewModel.HasUnsavedChanges.Should().BeFalse();
+        }
+        finally
+        {
+            File.Delete(enhancedPath);
+        }
+    }
+
     private static Mock<IVideoSuperResolutionService> CreateReadyService(
         string outputPath,
         VideoSuperResolutionReadyState readyState = VideoSuperResolutionReadyState.Ready)
@@ -195,6 +257,17 @@ public sealed class VideoEditPageViewModelSuperResolutionTests
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(VideoSuperResolutionResult.Success(new VideoFile(outputPath)));
         return service;
+    }
+
+    private static Mock<ISaveVideoFileUseCase> CreateSuccessfulSaveAction()
+    {
+        var saveAction = new Mock<ISaveVideoFileUseCase>();
+        saveAction
+            .Setup(action => action.ExecuteAsync(
+                It.IsAny<SaveVideoFileRequest>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(UseCaseResponse<SaveVideoFileResponse>.Success(new SaveVideoFileResponse()));
+        return saveAction;
     }
 
     private static VideoEditPageViewModel CreateViewModel(
