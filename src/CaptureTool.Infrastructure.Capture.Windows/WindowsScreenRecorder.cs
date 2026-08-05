@@ -61,7 +61,8 @@ public partial class WindowsScreenRecorder : IScreenRecorder
                     options.VideoBitrate,
                     options.AudioBitrate,
                     options.AudioInputSourceId,
-                    options.AudioInputVolumePercentage);
+                    options.AudioInputVolumePercentage,
+                    PrepareAudioPipeline: true);
 
                 _session = _videoCaptureService.CreateSession(captureOptions);
                 _session.FrameCaptured += OnFrameCaptured;

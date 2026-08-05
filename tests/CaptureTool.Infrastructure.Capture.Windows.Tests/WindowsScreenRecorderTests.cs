@@ -232,6 +232,7 @@ public sealed class WindowsScreenRecorderTests
 
         capturedOptions.Should().NotBeNull();
         capturedOptions!.CaptureAudio.Should().BeFalse();
+        capturedOptions.PrepareAudioPipeline.Should().BeTrue();
         session.Verify(value => value.SetAudioCaptureEnabled(true), Times.Once);
         recorder.StopRecording();
     }
