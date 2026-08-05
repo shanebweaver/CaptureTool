@@ -36,14 +36,14 @@ public sealed class AudioCaptureWorkflowTests
     {
         var recorder = new Mock<IAudioRecorder>();
         AudioCaptureWorkflow workflow = CreateWorkflow(recorder);
-        AudioCaptureState? raisedState = null;
+        AudioCaptureStateChange? raisedState = null;
         workflow.CaptureStateChanged += (_, state) => raisedState = state;
 
         workflow.StartCapture();
 
         workflow.IsRecording.Should().BeTrue();
         workflow.CaptureState.Should().Be(AudioCaptureState.Recording);
-        raisedState.Should().Be(AudioCaptureState.Recording);
+        raisedState.Should().Be(new AudioCaptureStateChange(AudioCaptureState.Recording));
         recorder.Verify(service => service.StartCapture(It.Is<AudioCaptureRecordingOptions>(options =>
             options.OutputPath.EndsWith(".wav") &&
             options.CaptureDesktopAudio)), Times.Once);
@@ -110,7 +110,7 @@ public sealed class AudioCaptureWorkflowTests
     {
         var recorder = new Mock<IAudioRecorder>();
         AudioCaptureWorkflow workflow = CreateWorkflow(recorder);
-        List<AudioCaptureState> raisedStates = [];
+        List<AudioCaptureStateChange> raisedStates = [];
         workflow.CaptureStateChanged += (_, state) => raisedStates.Add(state);
 
         workflow.StartCapture();
@@ -118,7 +118,10 @@ public sealed class AudioCaptureWorkflowTests
         workflow.PauseCapture();
 
         workflow.IsPaused.Should().BeFalse();
-        raisedStates.Should().Equal(AudioCaptureState.Recording, AudioCaptureState.Paused, AudioCaptureState.Recording);
+        raisedStates.Select(change => change.State).Should().Equal(
+            AudioCaptureState.Recording,
+            AudioCaptureState.Paused,
+            AudioCaptureState.Recording);
         recorder.Verify(service => service.Pause(), Times.Once);
         recorder.Verify(service => service.Resume(), Times.Once);
     }
@@ -139,15 +142,101 @@ public sealed class AudioCaptureWorkflowTests
         recorder.Setup(service => service.StopCapture()).Returns(audioFile);
         AudioCaptureWorkflow workflow = CreateWorkflow(recorder);
         AudioFile? raisedFile = null;
+        AudioCaptureStateChange? terminalState = null;
+        bool? wasRecordingWhenStoppedWasRaised = null;
+        int terminalStateCount = 0;
         workflow.NewAudioCaptured += (_, file) => raisedFile = file;
         workflow.StartCapture();
+        workflow.CaptureStateChanged += (_, change) =>
+        {
+            terminalStateCount++;
+            terminalState = change;
+            wasRecordingWhenStoppedWasRaised = workflow.IsRecording;
+        };
 
         AudioFile stoppedFile = workflow.StopCapture();
 
         workflow.CaptureState.Should().Be(AudioCaptureState.Stopped);
+        terminalState.Should().Be(new AudioCaptureStateChange(AudioCaptureState.Stopped));
+        terminalStateCount.Should().Be(1);
+        wasRecordingWhenStoppedWasRaised.Should().BeFalse();
         stoppedFile.Should().BeSameAs(audioFile);
         raisedFile.Should().BeSameAs(audioFile);
         recorder.Verify(service => service.StopCapture(), Times.Once);
+    }
+
+    [TestMethod]
+    public void StopCapture_WhenRecorderFails_PublishesTerminalFailureAfterClearingSession()
+    {
+        var stopException = new InvalidOperationException("Recorder finalization failed.");
+        var recorder = new Mock<IAudioRecorder>();
+        recorder.Setup(service => service.StopCapture()).Throws(stopException);
+        AudioCaptureWorkflow workflow = CreateWorkflow(recorder);
+        AudioCaptureStateChange? terminalState = null;
+        bool? wasRecordingWhenStoppedWasRaised = null;
+        bool capturedFileRaised = false;
+        int terminalStateCount = 0;
+        workflow.NewAudioCaptured += (_, _) => capturedFileRaised = true;
+        workflow.StartCapture();
+        workflow.CaptureStateChanged += (_, change) =>
+        {
+            terminalStateCount++;
+            terminalState = change;
+            wasRecordingWhenStoppedWasRaised = workflow.IsRecording;
+        };
+
+        workflow.Invoking(service => service.StopCapture()).Should().Throw<InvalidOperationException>()
+            .Which.Should().BeSameAs(stopException);
+
+        workflow.CaptureState.Should().Be(AudioCaptureState.Stopped);
+        workflow.IsRecording.Should().BeFalse();
+        terminalState.Should().NotBeNull();
+        terminalState!.State.Should().Be(AudioCaptureState.Stopped);
+        terminalStateCount.Should().Be(1);
+        terminalState.Failure.Should().Be(new AudioCaptureFailure(
+            AudioCaptureFailureStage.RecorderStop,
+            stopException.Message));
+        wasRecordingWhenStoppedWasRaised.Should().BeFalse();
+        capturedFileRaised.Should().BeFalse();
+    }
+
+    [TestMethod]
+    public void StopCapture_WhenPostProcessingFails_PublishesTerminalPostProcessingFailure()
+    {
+        var postProcessingException = new InvalidOperationException("Recent capture catalog failed.");
+        var recorder = new Mock<IAudioRecorder>();
+        var audioFile = new AudioFile(@"C:\Temp\capture.wav");
+        recorder.Setup(service => service.StopCapture()).Returns(audioFile);
+        var recentCaptureCatalog = new Mock<IRecentCaptureCatalog>();
+        recentCaptureCatalog
+            .Setup(catalog => catalog.RecordCaptured(audioFile.FilePath, CaptureFileType.Audio))
+            .Throws(postProcessingException);
+        AudioCaptureWorkflow workflow = CreateWorkflow(
+            recorder,
+            recentCaptureCatalog: recentCaptureCatalog);
+        AudioCaptureStateChange? terminalState = null;
+        AudioFile? raisedFile = null;
+        int terminalStateCount = 0;
+        workflow.NewAudioCaptured += (_, file) => raisedFile = file;
+        workflow.StartCapture();
+        workflow.CaptureStateChanged += (_, change) =>
+        {
+            terminalStateCount++;
+            terminalState = change;
+        };
+
+        workflow.Invoking(service => service.StopCapture()).Should().Throw<InvalidOperationException>()
+            .Which.Should().BeSameAs(postProcessingException);
+
+        workflow.CaptureState.Should().Be(AudioCaptureState.Stopped);
+        workflow.IsRecording.Should().BeFalse();
+        raisedFile.Should().BeSameAs(audioFile);
+        terminalState.Should().NotBeNull();
+        terminalState!.State.Should().Be(AudioCaptureState.Stopped);
+        terminalStateCount.Should().Be(1);
+        terminalState.Failure.Should().Be(new AudioCaptureFailure(
+            AudioCaptureFailureStage.PostProcessing,
+            postProcessingException.Message));
     }
 
     [TestMethod]
@@ -160,7 +249,7 @@ public sealed class AudioCaptureWorkflowTests
         fileSystem.Setup(service => service.FileExists(audioFile.FilePath)).Returns(true);
         AudioCaptureWorkflow workflow = CreateWorkflow(recorder, fileSystem: fileSystem);
         AudioFile? raisedFile = null;
-        AudioCaptureState? raisedState = null;
+        AudioCaptureStateChange? raisedState = null;
         workflow.NewAudioCaptured += (_, file) => raisedFile = file;
         workflow.CaptureStateChanged += (_, state) => raisedState = state;
         workflow.StartCapture();
@@ -168,7 +257,7 @@ public sealed class AudioCaptureWorkflowTests
         workflow.CancelCapture();
 
         workflow.CaptureState.Should().Be(AudioCaptureState.Stopped);
-        raisedState.Should().Be(AudioCaptureState.Stopped);
+        raisedState.Should().Be(new AudioCaptureStateChange(AudioCaptureState.Stopped));
         raisedFile.Should().BeNull();
         recorder.Verify(service => service.StopCapture(), Times.Once);
         fileSystem.Verify(service => service.DeleteFile(audioFile.FilePath), Times.Once);

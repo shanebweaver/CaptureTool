@@ -3,7 +3,7 @@
 - Issue: [#415](https://github.com/shanebweaver/CaptureTool/issues/415)
 - Finding: `ARCH-10`
 - Severity: Medium
-- Status: Proposed
+- Status: Implemented
 - Affected features: `CAP-07`, `APP-07`
 
 ## Summary
@@ -123,9 +123,9 @@ The WinUI page must expose the error through a dismissible error `InfoBar` witho
 
 ## Acceptance criteria
 
-- [ ] Recorder stop failure cannot leave the audio page showing an active recording.
-- [ ] Post-processing failure produces the same terminal cleanup with the correct failure stage.
-- [ ] Exactly one terminal state event follows each stop attempt.
-- [ ] The page shows a dismissible generic error and can start another recording.
-- [ ] Navigation protection sees no active session after failure, and audio-edit navigation is not attempted without a completed file.
-- [ ] Existing non-UI tests pass and the WinUI x64 Debug project builds.
+- [x] Recorder stop failure cannot leave the audio page showing an active recording.
+- [x] Post-processing failure produces the same terminal cleanup with the correct failure stage.
+- [x] Exactly one terminal state event follows each stop attempt.
+- [x] The page shows a dismissible generic error and can start another recording.
+- [x] Navigation protection sees no active session after failure, and audio-edit navigation is not attempted without a completed file.
+- [x] Existing non-UI tests pass and the WinUI x64 Debug project builds.

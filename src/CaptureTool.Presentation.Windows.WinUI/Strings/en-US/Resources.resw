@@ -2036,4 +2036,7 @@ SOFTWARE.
   <data name="CaptureOverlay_RecordingUnsupportedMessage" xml:space="preserve">
     <value>Screen recording isn't supported on this device.</value>
   </data>
+  <data name="AudioCapture_StopCaptureFailedMessage" xml:space="preserve">
+    <value>Recording couldn't be finalized. Try recording again.</value>
+  </data>
 </root>
