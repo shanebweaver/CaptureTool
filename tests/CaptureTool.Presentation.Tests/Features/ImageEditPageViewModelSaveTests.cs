@@ -11,6 +11,7 @@ using CaptureTool.Application.Abstractions.Settings;
 using CaptureTool.Application.Abstractions.Settings.OpenScreenshotsFolder;
 using CaptureTool.Application.Abstractions.Share;
 using CaptureTool.Application.Abstractions.Storage;
+using CaptureTool.Domain.Edit;
 using CaptureTool.Domain.Edit.Drawable;
 using CaptureTool.Domain.FileSystem;
 using CaptureTool.Presentation.Features.ImageEdit;
@@ -18,6 +19,7 @@ using CaptureTool.Presentation.Notifications;
 using FluentAssertions;
 using Moq;
 using System.Drawing;
+using System.Numerics;
 
 namespace CaptureTool.Presentation.Tests.Features;
 
@@ -25,7 +27,7 @@ namespace CaptureTool.Presentation.Tests.Features;
 public sealed class ImageEditPageViewModelSaveTests
 {
     [TestMethod]
-    public async Task SaveToSourceAsync_SavesWorkingAndPersistentFiles()
+    public async Task SaveToSourceAsync_WithPersistentSource_DoesNotModifyWorkingFile()
     {
         var exporter = new Mock<IImageCanvasExporter>();
         var picker = new Mock<IFilePickerService>();
@@ -44,7 +46,7 @@ public sealed class ImageEditPageViewModelSaveTests
         bool saved = await viewModel.SaveToSourceAsync();
 
         saved.Should().BeTrue();
-        savedPaths.Should().Equal("working.png", "original.png");
+        savedPaths.Should().Equal("original.png");
         viewModel.HasUnsavedChanges.Should().BeFalse();
         picker.Verify(
             service => service.PickSaveFileAsync(It.IsAny<FilePickerType>(), It.IsAny<UserFolder>()),
@@ -84,12 +86,6 @@ public sealed class ImageEditPageViewModelSaveTests
         var exporter = new Mock<IImageCanvasExporter>();
         exporter
             .Setup(service => service.SaveImageAsync(
-                "working.png",
-                It.IsAny<IDrawable[]>(),
-                It.IsAny<ImageCanvasRenderOptions>()))
-            .Returns(Task.CompletedTask);
-        exporter
-            .Setup(service => service.SaveImageAsync(
                 "original.png",
                 It.IsAny<IDrawable[]>(),
                 It.IsAny<ImageCanvasRenderOptions>()))
@@ -102,6 +98,92 @@ public sealed class ImageEditPageViewModelSaveTests
 
         saved.Should().BeFalse();
         viewModel.HasUnsavedChanges.Should().BeTrue();
+        exporter.Verify(
+            service => service.SaveImageAsync(
+                "working.png",
+                It.IsAny<IDrawable[]>(),
+                It.IsAny<ImageCanvasRenderOptions>()),
+            Times.Never);
+    }
+
+    [TestMethod]
+    public async Task SaveToSourceAsync_WithPersistentSource_PreservesLiveEditSession()
+    {
+        var exporter = new Mock<IImageCanvasExporter>();
+        exporter
+            .Setup(service => service.SaveImageAsync(
+                It.IsAny<string>(),
+                It.IsAny<IDrawable[]>(),
+                It.IsAny<ImageCanvasRenderOptions>()))
+            .Returns(Task.CompletedTask);
+        var imageFile = new ImageFile("working.png", "original.png");
+        ImageEditPageViewModel viewModel = await CreateLoadedViewModelAsync(imageFile, exporter.Object);
+        viewModel.RotateCommand.Execute(null);
+        var annotation = new RectangleDrawable(
+            Vector2.One,
+            new Size(10, 10),
+            Color.Red,
+            Color.Transparent,
+            2);
+        viewModel.AddDrawable(annotation);
+
+        bool saved = await viewModel.SaveToSourceAsync();
+
+        saved.Should().BeTrue();
+        viewModel.Drawables.Should().ContainInOrder(viewModel.Drawables.OfType<ImageDrawable>().Single(), annotation);
+        viewModel.Orientation.Should().Be(ImageOrientation.Rotate90FlipNone);
+        viewModel.HasUndoStack.Should().BeTrue();
+        viewModel.HasUnsavedChanges.Should().BeFalse();
+    }
+
+    [TestMethod]
+    public async Task SaveToSourceAsync_WithWorkingSource_RebasesFlattenedImageBeforeFurtherEdits()
+    {
+        var exporter = new Mock<IImageCanvasExporter>();
+        List<(string Path, int DrawableCount, ImageCanvasRenderOptions Options)> saves = [];
+        exporter
+            .Setup(service => service.SaveImageAsync(
+                It.IsAny<string>(),
+                It.IsAny<IDrawable[]>(),
+                It.IsAny<ImageCanvasRenderOptions>()))
+            .Callback<string, IDrawable[], ImageCanvasRenderOptions>(
+                (path, drawables, options) => saves.Add((path, drawables.Length, options)))
+            .Returns(Task.CompletedTask);
+        var imageFile = new ImageFile("working.png");
+        ImageEditPageViewModel viewModel = await CreateLoadedViewModelAsync(imageFile, exporter.Object);
+        viewModel.RotateCommand.Execute(null);
+        viewModel.AddDrawable(new RectangleDrawable(
+            Vector2.One,
+            new Size(10, 10),
+            Color.Red,
+            Color.Transparent,
+            2));
+        int reloadRequests = 0;
+        viewModel.ReloadCanvasResourcesRequested += (_, _) => reloadRequests++;
+
+        bool saved = await viewModel.SaveToSourceAsync();
+
+        saved.Should().BeTrue();
+        saves.Should().ContainSingle();
+        saves[0].Path.Should().Be("working.png");
+        saves[0].DrawableCount.Should().Be(2);
+        viewModel.Drawables.Should().ContainSingle().Which.Should().BeOfType<ImageDrawable>();
+        viewModel.Orientation.Should().Be(ImageOrientation.RotateNoneFlipNone);
+        viewModel.ImageSize.Should().Be(new Size(50, 100));
+        viewModel.CropRect.Should().Be(new Rectangle(Point.Empty, new Size(50, 100)));
+        viewModel.HasUndoStack.Should().BeFalse();
+        viewModel.HasRedoStack.Should().BeFalse();
+        viewModel.HasUnsavedChanges.Should().BeFalse();
+        reloadRequests.Should().Be(1);
+
+        viewModel.AddDrawable(new RectangleDrawable(
+            Vector2.One,
+            new Size(5, 5),
+            Color.Blue,
+            Color.Transparent,
+            1));
+
+        viewModel.Drawables.Should().HaveCount(2);
     }
 
     private static async Task<ImageEditPageViewModel> CreateLoadedViewModelAsync(
