@@ -15,11 +15,11 @@ public sealed class WindowsImageSuperResolutionService : IImageSuperResolutionSe
     private const int DocumentedMaxScaleFactor = 8;
     private const long MaxOutputPixels = 64L * 1024L * 1024L;
 
-    private readonly IStorageService _storageService;
+    private readonly IScratchArtifactStore _scratchArtifactStore;
 
-    public WindowsImageSuperResolutionService(IStorageService storageService)
+    public WindowsImageSuperResolutionService(IScratchArtifactStore scratchArtifactStore)
     {
-        _storageService = storageService;
+        _scratchArtifactStore = scratchArtifactStore;
     }
 
     public ImageSuperResolutionReadyState GetReadyState()
@@ -82,6 +82,7 @@ public sealed class WindowsImageSuperResolutionService : IImageSuperResolutionSe
             return ImageSuperResolutionResult.NotReady;
         }
 
+        string? outputPath = null;
         try
         {
             using ImageScaler imageScaler = await ImageScaler.CreateAsync();
@@ -105,9 +106,9 @@ public sealed class WindowsImageSuperResolutionService : IImageSuperResolutionSe
                 targetSize.Width,
                 targetSize.Height);
 
-            StorageFolder outputFolder = await StorageFolder.GetFolderFromPathAsync(_storageService.GetApplicationTemporaryFolderPath());
-            string outputFileName = GetOutputFileName(request.SourceImage.FilePath);
-            StorageFile outputFile = await outputFolder.CreateFileAsync(outputFileName, CreationCollisionOption.ReplaceExisting);
+            outputPath = _scratchArtifactStore.CreateLeasedArtifactPath("image-super-resolution", ".png");
+            StorageFolder outputFolder = await StorageFolder.GetFolderFromPathAsync(Path.GetDirectoryName(outputPath));
+            StorageFile outputFile = await outputFolder.CreateFileAsync(Path.GetFileName(outputPath), CreationCollisionOption.ReplaceExisting);
 
             await SaveSoftwareBitmapAsync(scaledBitmap, outputFile);
 
@@ -115,10 +116,12 @@ public sealed class WindowsImageSuperResolutionService : IImageSuperResolutionSe
         }
         catch (OperationCanceledException)
         {
+            _scratchArtifactStore.DeleteArtifact(outputPath ?? string.Empty);
             return ImageSuperResolutionResult.Cancelled;
         }
         catch (Exception ex)
         {
+            _scratchArtifactStore.DeleteArtifact(outputPath ?? string.Empty);
             return ImageSuperResolutionResult.Failed(ex.Message);
         }
     }

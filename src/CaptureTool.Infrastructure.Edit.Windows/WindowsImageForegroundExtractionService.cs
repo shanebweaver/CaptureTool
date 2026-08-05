@@ -13,13 +13,11 @@ namespace CaptureTool.Infrastructure.Edit.Windows;
 
 public sealed class WindowsImageForegroundExtractionService : IImageForegroundExtractionService
 {
-    private const string EditCacheFolderName = "ImageEdit";
+    private readonly IScratchArtifactStore _scratchArtifactStore;
 
-    private readonly IStorageService _storageService;
-
-    public WindowsImageForegroundExtractionService(IStorageService storageService)
+    public WindowsImageForegroundExtractionService(IScratchArtifactStore scratchArtifactStore)
     {
-        _storageService = storageService;
+        _scratchArtifactStore = scratchArtifactStore;
     }
 
     public ForegroundExtractionReadyState GetReadyState()
@@ -81,6 +79,7 @@ public sealed class WindowsImageForegroundExtractionService : IImageForegroundEx
             return ForegroundExtractionResult.NotReady;
         }
 
+        string? outputPath = null;
         try
         {
             StorageFile sourceFile = await StorageFile.GetFileFromPathAsync(request.SourceImage.FilePath);
@@ -115,14 +114,11 @@ public sealed class WindowsImageForegroundExtractionService : IImageForegroundEx
             byte[] maskPixels = CopyPixels(mask, mask.PixelWidth * mask.PixelHeight);
             ApplyMaskToAlpha(sourcePixels, maskPixels);
 
-            StorageFolder temporaryFolder = await StorageFolder.GetFolderFromPathAsync(
-                _storageService.GetApplicationTemporaryFolderPath());
-            StorageFolder outputFolder = await temporaryFolder.CreateFolderAsync(
-                EditCacheFolderName,
-                CreationCollisionOption.OpenIfExists);
+            outputPath = _scratchArtifactStore.CreateLeasedArtifactPath("image-foreground-extraction", ".png");
+            StorageFolder outputFolder = await StorageFolder.GetFolderFromPathAsync(Path.GetDirectoryName(outputPath));
             StorageFile outputFile = await outputFolder.CreateFileAsync(
-                GetOutputFileName(request.SourceImage.FilePath),
-                CreationCollisionOption.GenerateUniqueName);
+                Path.GetFileName(outputPath),
+                CreationCollisionOption.ReplaceExisting);
             await SavePixelsAsync(
                 sourcePixels,
                 sourceBitmap.PixelWidth,
@@ -135,10 +131,12 @@ public sealed class WindowsImageForegroundExtractionService : IImageForegroundEx
         }
         catch (OperationCanceledException)
         {
+            _scratchArtifactStore.DeleteArtifact(outputPath ?? string.Empty);
             return ForegroundExtractionResult.Cancelled;
         }
         catch (Exception ex)
         {
+            _scratchArtifactStore.DeleteArtifact(outputPath ?? string.Empty);
             return ForegroundExtractionResult.Failed(ex.Message);
         }
     }

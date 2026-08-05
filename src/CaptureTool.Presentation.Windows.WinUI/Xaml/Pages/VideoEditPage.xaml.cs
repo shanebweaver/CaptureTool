@@ -15,7 +15,7 @@ public sealed partial class VideoEditPage : VideoEditPageBase
 {
     private readonly DispatcherTimer _boundedPlaybackTimer;
     private readonly ILogService _logService;
-    private readonly IStorageService _storageService;
+    private readonly IScratchArtifactStore _scratchArtifactStore;
     private readonly IVideoFileTrimmer _videoFileTrimmer;
     private MediaPlayer? _originalMediaPlayer;
     private MediaPlayer? _renderedTrimMediaPlayer;
@@ -34,7 +34,7 @@ public sealed partial class VideoEditPage : VideoEditPageBase
     {
         InitializeComponent();
         _logService = App.Current.ServiceProvider.GetService<ILogService>();
-        _storageService = App.Current.ServiceProvider.GetService<IStorageService>();
+        _scratchArtifactStore = App.Current.ServiceProvider.GetService<IScratchArtifactStore>();
         _videoFileTrimmer = App.Current.ServiceProvider.GetService<IVideoFileTrimmer>();
 
         _originalMediaPlayer = CreateMediaPlayer();
@@ -472,15 +472,16 @@ public sealed partial class VideoEditPage : VideoEditPageBase
         }
 
         int renderVersion = ++_renderedTrimPreviewVersion;
+        string? renderedTrimPreviewPath = null;
         try
         {
             PauseTrimPreview();
             SetTrimPreviewLoading(true);
 
-            _renderedTrimPreviewPath ??= GetRenderedTrimPreviewPath();
+            renderedTrimPreviewPath = GetRenderedTrimPreviewPath();
             await _videoFileTrimmer.TrimAsync(
                 _originalVideoPath,
-                _renderedTrimPreviewPath,
+                renderedTrimPreviewPath,
                 TimeSpan.FromSeconds(ViewModel.TrimStartSeconds),
                 TimeSpan.FromSeconds(ViewModel.TrimEndSeconds));
 
@@ -489,7 +490,10 @@ public sealed partial class VideoEditPage : VideoEditPageBase
                 return;
             }
 
-            await LoadMediaSourceAsync(_renderedTrimMediaPlayer, _renderedTrimPreviewPath);
+            await LoadMediaSourceAsync(_renderedTrimMediaPlayer, renderedTrimPreviewPath);
+            DeleteRenderedTrimPreview();
+            _renderedTrimPreviewPath = renderedTrimPreviewPath;
+            renderedTrimPreviewPath = null;
             _renderedTrimPreviewStartSeconds = ViewModel.TrimStartSeconds;
             _renderedTrimPreviewEndSeconds = ViewModel.TrimEndSeconds;
             ViewModel.UpdatePlayhead(ViewModel.TrimStartSeconds);
@@ -502,6 +506,11 @@ public sealed partial class VideoEditPage : VideoEditPageBase
         }
         finally
         {
+            if (!string.IsNullOrWhiteSpace(renderedTrimPreviewPath))
+            {
+                _scratchArtifactStore.DeleteArtifact(renderedTrimPreviewPath);
+            }
+
             if (renderVersion == _renderedTrimPreviewVersion)
             {
                 SetTrimPreviewLoading(false);
@@ -545,9 +554,7 @@ public sealed partial class VideoEditPage : VideoEditPageBase
 
     private string GetRenderedTrimPreviewPath()
     {
-        return Path.Combine(
-            _storageService.GetApplicationTemporaryFolderPath(),
-            $"{Path.GetFileNameWithoutExtension(_storageService.GetTemporaryFileName())}.mp4");
+        return _scratchArtifactStore.CreateLeasedArtifactPath("video-trim-preview", ".mp4");
     }
 
     private bool IsRenderedTrimPreviewCurrent()
@@ -565,23 +572,10 @@ public sealed partial class VideoEditPage : VideoEditPageBase
             return;
         }
 
-        try
-        {
-            if (File.Exists(_renderedTrimPreviewPath))
-            {
-                File.Delete(_renderedTrimPreviewPath);
-            }
-        }
-        catch (Exception ex)
-        {
-            _logService.LogException(ex, "Failed to delete rendered trim preview.");
-        }
-        finally
-        {
-            _renderedTrimPreviewPath = null;
-            _renderedTrimPreviewStartSeconds = null;
-            _renderedTrimPreviewEndSeconds = null;
-        }
+        _scratchArtifactStore.DeleteArtifact(_renderedTrimPreviewPath);
+        _renderedTrimPreviewPath = null;
+        _renderedTrimPreviewStartSeconds = null;
+        _renderedTrimPreviewEndSeconds = null;
     }
 
     private MediaPlayer? ActiveMediaPlayer => _isRenderedTrimPlayerActive ? _renderedTrimMediaPlayer : _originalMediaPlayer;

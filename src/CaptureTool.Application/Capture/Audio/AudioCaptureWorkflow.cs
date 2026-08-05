@@ -71,7 +71,7 @@ internal sealed class AudioCaptureWorkflow : IAudioCaptureWorkflow
         TrackCapture(TelemetryEvents.CaptureRequested);
 
         string tempAudioPath = _fileAllocator.ReserveUniqueFile(
-            _storageService.GetApplicationTemporaryFolderPath(),
+            _storageService.GetApplicationRetainedCaptureFolderPath(),
             _fileNameGenerator.GetNewCaptureFileName);
 
         AudioCaptureSession? session = null;

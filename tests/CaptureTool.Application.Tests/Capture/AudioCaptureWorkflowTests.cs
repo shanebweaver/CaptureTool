@@ -378,7 +378,7 @@ public sealed class AudioCaptureWorkflowTests
         fileSystem ??= new Mock<IFileSystem>();
 
         storage ??= new Mock<IStorageService>();
-        storage.Setup(service => service.GetApplicationTemporaryFolderPath()).Returns(@"C:\Temp");
+        storage.Setup(service => service.GetApplicationRetainedCaptureFolderPath()).Returns(@"C:\Captures");
         storage.Setup(service => service.GetSystemDefaultMusicFolderPath()).Returns(@"C:\Music");
 
         var taskEnvironment = new Mock<ITaskEnvironment>();

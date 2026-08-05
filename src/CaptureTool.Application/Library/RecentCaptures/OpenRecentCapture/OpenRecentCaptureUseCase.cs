@@ -19,7 +19,7 @@ internal sealed class OpenRecentCaptureUseCase : IOpenRecentCaptureUseCase
 
     private readonly IUseCaseExecutor _useCaseExecutor;
     private readonly IFileSystem _fileSystem;
-    private readonly IStorageService _storageService;
+    private readonly IScratchArtifactStore _scratchArtifactStore;
     private readonly IRecentCaptureCatalog _recentCaptureCatalog;
     private readonly IOpenAudioEditPageUseCase _goToAudioEdit;
     private readonly IOpenImageEditPageUseCase _goToImageEdit;
@@ -28,7 +28,7 @@ internal sealed class OpenRecentCaptureUseCase : IOpenRecentCaptureUseCase
 
     public OpenRecentCaptureUseCase(
         IFileSystem fileSystem,
-        IStorageService storageService,
+        IScratchArtifactStore scratchArtifactStore,
         IRecentCaptureCatalog recentCaptureCatalog,
         IOpenAudioEditPageUseCase goToAudioEdit,
         IOpenImageEditPageUseCase goToImageEdit,
@@ -38,7 +38,7 @@ internal sealed class OpenRecentCaptureUseCase : IOpenRecentCaptureUseCase
     {
         _useCaseExecutor = useCaseExecutor;
         _fileSystem = fileSystem;
-        _storageService = storageService;
+        _scratchArtifactStore = scratchArtifactStore;
         _recentCaptureCatalog = recentCaptureCatalog;
         _goToAudioEdit = goToAudioEdit;
         _goToImageEdit = goToImageEdit;
@@ -72,23 +72,33 @@ internal sealed class OpenRecentCaptureUseCase : IOpenRecentCaptureUseCase
                     async token =>
                     {
                         string workingFilePath = PrepareWorkingFile(request.FilePath);
-                        bool navigated = fileType switch
+                        bool navigated;
+                        try
                         {
-                            CaptureFileType.Audio => (await _goToAudioEdit.ExecuteAsync(
-                                new OpenAudioEditPageRequest(new AudioFile(workingFilePath)),
-                                token)).Value?.Succeeded == true,
-                            CaptureFileType.Image => (await _goToImageEdit.ExecuteAsync(
-                                new OpenImageEditPageRequest(new ImageFile(
-                                    workingFilePath,
-                                    string.Equals(workingFilePath, request.FilePath, StringComparison.OrdinalIgnoreCase)
-                                        ? null
-                                        : request.FilePath)),
-                                token)).Value?.Succeeded == true,
-                            CaptureFileType.Video => (await _goToVideoEdit.ExecuteAsync(
-                                new OpenVideoEditPageRequest(new VideoFile(workingFilePath)),
-                                token)).Value?.Succeeded == true,
-                            _ => false
-                        };
+                            navigated = fileType switch
+                            {
+                                CaptureFileType.Audio => (await _goToAudioEdit.ExecuteAsync(
+                                    new OpenAudioEditPageRequest(new AudioFile(workingFilePath)),
+                                    token)).Value?.Succeeded == true,
+                                CaptureFileType.Image => (await _goToImageEdit.ExecuteAsync(
+                                    new OpenImageEditPageRequest(new ImageFile(workingFilePath, request.FilePath)),
+                                    token)).Value?.Succeeded == true,
+                                CaptureFileType.Video => (await _goToVideoEdit.ExecuteAsync(
+                                    new OpenVideoEditPageRequest(new VideoFile(workingFilePath)),
+                                    token)).Value?.Succeeded == true,
+                                _ => false
+                            };
+                        }
+                        catch
+                        {
+                            _scratchArtifactStore.DeleteArtifact(workingFilePath);
+                            throw;
+                        }
+
+                        if (!navigated)
+                        {
+                            _scratchArtifactStore.DeleteArtifact(workingFilePath);
+                        }
 
                         if (navigated)
                         {
@@ -106,26 +116,16 @@ internal sealed class OpenRecentCaptureUseCase : IOpenRecentCaptureUseCase
 
     private string PrepareWorkingFile(string sourcePath)
     {
-        string temporaryFolderPath = _storageService.GetApplicationTemporaryFolderPath();
-        if (IsFileInFolder(sourcePath, temporaryFolderPath))
+        string workingFilePath = _scratchArtifactStore.CreateLeasedArtifactPath("recent-capture-working-copy", Path.GetExtension(sourcePath));
+        try
         {
-            return sourcePath;
+            _fileSystem.CopyFile(sourcePath, workingFilePath, true);
+            return workingFilePath;
         }
-
-        _fileSystem.CreateDirectory(temporaryFolderPath);
-        string workingFilePath = Path.Combine(
-            temporaryFolderPath,
-            $"{Path.GetFileNameWithoutExtension(_storageService.GetTemporaryFileName())}{Path.GetExtension(sourcePath)}");
-        _fileSystem.CopyFile(sourcePath, workingFilePath, true);
-        return workingFilePath;
-    }
-
-    private static bool IsFileInFolder(string sourcePath, string folderPath)
-    {
-        string fullFolderPath = Path.GetFullPath(folderPath)
-            .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar) + Path.DirectorySeparatorChar;
-        string fullSourcePath = Path.GetFullPath(sourcePath);
-
-        return fullSourcePath.StartsWith(fullFolderPath, StringComparison.OrdinalIgnoreCase);
+        catch
+        {
+            _scratchArtifactStore.DeleteArtifact(workingFilePath);
+            throw;
+        }
     }
 }

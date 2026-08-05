@@ -1,6 +1,4 @@
-using CaptureTool.Application.Abstractions.Files;
 using CaptureTool.Application.Abstractions.Library.RecentCaptures;
-using CaptureTool.Application.Abstractions.Logging;
 using CaptureTool.Application.Abstractions.Settings.ClearTempFiles;
 using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Application.Abstractions.UseCases;
@@ -13,20 +11,16 @@ internal sealed class ClearTempFilesUseCase : IClearTempFilesUseCase
     private const string ActivityId = "ClearTempFiles";
 
     private readonly IUseCaseExecutor _useCaseExecutor;
-    private readonly ILogService _logService;
-    private readonly IStorageService _storageService;
-    private readonly IFileSystem _fileSystem;
+    private readonly IScratchArtifactStore _scratchArtifactStore;
     private readonly IRecentCapturesChangeNotifier _recentCapturesChangeNotifier;
 
-    public ClearTempFilesUseCase(ILogService logService, IStorageService storageService,
-        IFileSystem fileSystem,
+    public ClearTempFilesUseCase(
+        IScratchArtifactStore scratchArtifactStore,
         IUseCaseExecutor useCaseExecutor,
         IRecentCapturesChangeNotifier recentCapturesChangeNotifier)
     {
         _useCaseExecutor = useCaseExecutor;
-        _logService = logService;
-        _storageService = storageService;
-        _fileSystem = fileSystem;
+        _scratchArtifactStore = scratchArtifactStore;
         _recentCapturesChangeNotifier = recentCapturesChangeNotifier;
     }
 
@@ -38,26 +32,7 @@ internal sealed class ClearTempFilesUseCase : IClearTempFilesUseCase
             activityId: ActivityId,
             useCase: () =>
             {
-                string tempFolderPath = _storageService.GetApplicationTemporaryFolderPath();
-                foreach (var entry in _fileSystem.EnumerateFileSystemEntries(tempFolderPath))
-                {
-                    try
-                    {
-                        if (_fileSystem.DirectoryExists(entry))
-                        {
-                            _fileSystem.DeleteDirectory(entry, true);
-                        }
-                        else
-                        {
-                            _fileSystem.DeleteFile(entry);
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        _logService.LogException(ex, $"Failed to delete temporary file or folder: {entry}");
-                    }
-                }
-
+                _scratchArtifactStore.ClearUnleasedArtifacts();
                 _recentCapturesChangeNotifier.NotifyRecentCapturesChanged();
                 return new ClearTempFilesResponse();
             },

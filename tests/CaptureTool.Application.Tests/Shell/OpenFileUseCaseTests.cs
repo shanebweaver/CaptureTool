@@ -28,7 +28,7 @@ public class OpenFileUseCaseTests
             TestNavigationCoordinator.Create(
                 navigationService.Object,
                 editSessionGuard.Object),
-            Mock.Of<IStorageService>(),
+            Mock.Of<IScratchArtifactStore>(),
             TestFileSystem.Instance,
             Mock.Of<IRecentCaptureCatalog>(),
             TestUseCaseExecutor.Instance);
@@ -56,7 +56,7 @@ public class OpenFileUseCaseTests
         Mock<IFilePickerService> filePickerService = new();
         Mock<INavigationService> navigationService = new();
         TestNavigationService.AcceptAll(navigationService);
-        Mock<IStorageService> storageService = new();
+        Mock<IScratchArtifactStore> scratchArtifactStore = new();
         Mock<IRecentCaptureCatalog> recentCaptureCatalog = new();
         string tempFolder = CreateTestFolder();
         string sourceFolder = CreateTestFolder();
@@ -69,16 +69,13 @@ public class OpenFileUseCaseTests
         filePickerService
             .Setup(service => service.PickFileAsync(FilePickerType.CaptureMedia, UserFolder.Pictures))
             .ReturnsAsync(new FileReference(sourcePath));
-        storageService
-            .Setup(service => service.GetApplicationTemporaryFolderPath())
-            .Returns(tempFolder);
-        storageService
-            .Setup(service => service.GetTemporaryFileName())
-            .Returns("open-file.tmp");
+        scratchArtifactStore
+            .Setup(service => service.CreateLeasedArtifactPath("imported-working-copy", ".png"))
+            .Returns(copiedPath);
         OpenFileUseCase useCase = new(
             filePickerService.Object,
             TestNavigationCoordinator.Create(navigationService.Object),
-            storageService.Object,
+            scratchArtifactStore.Object,
             TestFileSystem.Instance,
             recentCaptureCatalog.Object,
             TestUseCaseExecutor.Instance);
@@ -95,7 +92,7 @@ public class OpenFileUseCaseTests
                 false,
                 It.IsAny<CancellationToken>()),
             Times.Once);
-        storageService.Verify(service => service.GetTemporaryFileName(), Times.Once);
+        scratchArtifactStore.Verify(service => service.CreateLeasedArtifactPath("imported-working-copy", ".png"), Times.Once);
         recentCaptureCatalog.Verify(
             catalog => catalog.RecordOpened(sourcePath, CaptureFileType.Image),
             Times.Once);
@@ -107,7 +104,7 @@ public class OpenFileUseCaseTests
         Mock<IFilePickerService> filePickerService = new();
         Mock<INavigationService> navigationService = new();
         TestNavigationService.AcceptAll(navigationService);
-        Mock<IStorageService> storageService = new();
+        Mock<IScratchArtifactStore> scratchArtifactStore = new();
         Mock<IRecentCaptureCatalog> recentCaptureCatalog = new();
         string tempFolder = CreateTestFolder();
         string sourceFolder = CreateTestFolder();
@@ -120,16 +117,13 @@ public class OpenFileUseCaseTests
         filePickerService
             .Setup(service => service.PickFileAsync(FilePickerType.CaptureMedia, UserFolder.Pictures))
             .ReturnsAsync(new FileReference(sourcePath));
-        storageService
-            .Setup(service => service.GetApplicationTemporaryFolderPath())
-            .Returns(tempFolder);
-        storageService
-            .Setup(service => service.GetTemporaryFileName())
-            .Returns("open-file.tmp");
+        scratchArtifactStore
+            .Setup(service => service.CreateLeasedArtifactPath("imported-working-copy", ".wav"))
+            .Returns(copiedPath);
         OpenFileUseCase useCase = new(
             filePickerService.Object,
             TestNavigationCoordinator.Create(navigationService.Object),
-            storageService.Object,
+            scratchArtifactStore.Object,
             TestFileSystem.Instance,
             recentCaptureCatalog.Object,
             TestUseCaseExecutor.Instance);
@@ -144,7 +138,7 @@ public class OpenFileUseCaseTests
                 false,
                 It.IsAny<CancellationToken>()),
             Times.Once);
-        storageService.Verify(service => service.GetTemporaryFileName(), Times.Once);
+        scratchArtifactStore.Verify(service => service.CreateLeasedArtifactPath("imported-working-copy", ".wav"), Times.Once);
         recentCaptureCatalog.Verify(
             catalog => catalog.RecordOpened(sourcePath, CaptureFileType.Audio),
             Times.Once);
@@ -156,7 +150,7 @@ public class OpenFileUseCaseTests
         Mock<IFilePickerService> filePickerService = new();
         Mock<INavigationService> navigationService = new();
         TestNavigationService.AcceptAll(navigationService);
-        Mock<IStorageService> storageService = new();
+        Mock<IScratchArtifactStore> scratchArtifactStore = new();
         Mock<IRecentCaptureCatalog> recentCaptureCatalog = new();
         string tempFolder = CreateTestFolder();
         string sourceFolder = CreateTestFolder();
@@ -169,16 +163,13 @@ public class OpenFileUseCaseTests
         filePickerService
             .Setup(service => service.PickFileAsync(FilePickerType.CaptureMedia, UserFolder.Pictures))
             .ReturnsAsync(new FileReference(sourcePath));
-        storageService
-            .Setup(service => service.GetApplicationTemporaryFolderPath())
-            .Returns(tempFolder);
-        storageService
-            .Setup(service => service.GetTemporaryFileName())
-            .Returns("open-file.tmp");
+        scratchArtifactStore
+            .Setup(service => service.CreateLeasedArtifactPath("imported-working-copy", ".mp4"))
+            .Returns(copiedPath);
         OpenFileUseCase useCase = new(
             filePickerService.Object,
             TestNavigationCoordinator.Create(navigationService.Object),
-            storageService.Object,
+            scratchArtifactStore.Object,
             TestFileSystem.Instance,
             recentCaptureCatalog.Object,
             TestUseCaseExecutor.Instance);
@@ -193,22 +184,23 @@ public class OpenFileUseCaseTests
                 false,
                 It.IsAny<CancellationToken>()),
             Times.Once);
-        storageService.Verify(service => service.GetTemporaryFileName(), Times.Once);
+        scratchArtifactStore.Verify(service => service.CreateLeasedArtifactPath("imported-working-copy", ".mp4"), Times.Once);
         recentCaptureCatalog.Verify(
             catalog => catalog.RecordOpened(sourcePath, CaptureFileType.Video),
             Times.Once);
     }
 
     [TestMethod]
-    public async Task ExecuteAsync_WithFileAlreadyInTemporaryFolder_ShouldNavigateToExistingFile()
+    public async Task ExecuteAsync_WithFileAlreadyInScratchFolder_ShouldCreateOwnedWorkingCopy()
     {
         Mock<IFilePickerService> filePickerService = new();
         Mock<INavigationService> navigationService = new();
         TestNavigationService.AcceptAll(navigationService);
-        Mock<IStorageService> storageService = new();
+        Mock<IScratchArtifactStore> scratchArtifactStore = new();
         Mock<IRecentCaptureCatalog> recentCaptureCatalog = new();
         string tempFolder = CreateTestFolder();
         string sourcePath = Path.Combine(tempFolder, "source.png");
+        string copiedPath = Path.Combine(tempFolder, "owned-copy.png");
         await File.WriteAllTextAsync(sourcePath, "image", TestContext.CancellationToken);
         DateTime oldLastWriteTimeUtc = new(2020, 1, 1, 0, 0, 0, DateTimeKind.Utc);
         File.SetLastWriteTimeUtc(sourcePath, oldLastWriteTimeUtc);
@@ -216,13 +208,13 @@ public class OpenFileUseCaseTests
         filePickerService
             .Setup(service => service.PickFileAsync(FilePickerType.CaptureMedia, UserFolder.Pictures))
             .ReturnsAsync(new FileReference(sourcePath));
-        storageService
-            .Setup(service => service.GetApplicationTemporaryFolderPath())
-            .Returns(tempFolder);
+        scratchArtifactStore
+            .Setup(service => service.CreateLeasedArtifactPath("imported-working-copy", ".png"))
+            .Returns(copiedPath);
         OpenFileUseCase useCase = new(
             filePickerService.Object,
             TestNavigationCoordinator.Create(navigationService.Object),
-            storageService.Object,
+            scratchArtifactStore.Object,
             TestFileSystem.Instance,
             recentCaptureCatalog.Object,
             TestUseCaseExecutor.Instance);
@@ -234,12 +226,12 @@ public class OpenFileUseCaseTests
             service => service.NavigateAsync(
                 NavigationRoute.ImageEdit,
                 It.Is<ImageFile>(file =>
-                    file.FilePath == sourcePath &&
-                    file.PersistentFilePath == null),
+                    file.FilePath == copiedPath &&
+                    file.PersistentFilePath == sourcePath),
                 false,
                 It.IsAny<CancellationToken>()),
             Times.Once);
-        storageService.Verify(service => service.GetTemporaryFileName(), Times.Never);
+        scratchArtifactStore.Verify(service => service.CreateLeasedArtifactPath("imported-working-copy", ".png"), Times.Once);
         recentCaptureCatalog.Verify(
             catalog => catalog.RecordOpened(sourcePath, CaptureFileType.Image),
             Times.Once);

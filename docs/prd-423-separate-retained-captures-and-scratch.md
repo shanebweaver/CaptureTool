@@ -3,7 +3,7 @@
 - Issue: [#423](https://github.com/shanebweaver/CaptureTool/issues/423)
 - Architecture finding: `ARCH-18`
 - Severity: Medium
-- Status: Planned
+- Status: Implemented
 - Affected features: `APP-05`, `APP-06`, `CAP-08`, `IMG-15`, `VID-02`, `VID-03`, `VID-04`, `PLT-02`
 
 ## Summary
@@ -106,14 +106,14 @@ Run all non-UI test projects and build the WinUI x64 Debug project.
 
 ## Acceptance criteria
 
-- [ ] Catalog-backed captures without auto-save survive the temporary-files clear command.
-- [ ] Captures and scratch artifacts use different application storage roots.
-- [ ] Active scratch artifacts cannot be removed by manual cleanup or startup scavenging.
-- [ ] Session-owned scratch artifacts are deleted deterministically on owner disposal.
-- [ ] Abandoned scratch directories older than seven days are removed at startup.
-- [ ] Clipboard file artifacts remain available after copy and are eligible for later cleanup.
-- [ ] Cleanup failures remain isolated, logged, and recoverable.
-- [ ] Existing non-UI tests pass and the WinUI x64 Debug project builds.
+- [x] Catalog-backed captures without auto-save survive the temporary-files clear command.
+- [x] Captures and scratch artifacts use different application storage roots.
+- [x] Active scratch artifacts cannot be removed by manual cleanup or startup scavenging.
+- [x] Session-owned scratch artifacts are deleted deterministically on owner disposal.
+- [x] Abandoned scratch directories older than seven days are removed at startup.
+- [x] Clipboard file artifacts remain available after copy and are eligible for later cleanup.
+- [x] Cleanup failures remain isolated, logged, and recoverable.
+- [x] Existing non-UI tests pass and the WinUI x64 Debug project builds.
 
 ## Rollout
 

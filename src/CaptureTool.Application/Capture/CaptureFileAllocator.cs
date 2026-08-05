@@ -56,6 +56,7 @@ internal sealed class CaptureFileAllocator
         Func<string> createFileName,
         Action<string> createFile)
     {
+        _fileSystem.CreateDirectory(folderPath);
         IOException? lastCollision = null;
 
         for (int attempt = 0; attempt < MaxAttempts; attempt++)

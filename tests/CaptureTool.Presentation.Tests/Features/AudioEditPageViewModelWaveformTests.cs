@@ -2,6 +2,7 @@ using CaptureTool.Application.Abstractions.Edit.Audio.CopyAudioFile;
 using CaptureTool.Application.Abstractions.Edit.Audio.SaveAudioFile;
 using CaptureTool.Application.Abstractions.Edit.External;
 using CaptureTool.Application.Abstractions.Settings.OpenAudioFolder;
+using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Application.Abstractions.UseCases;
 using CaptureTool.Domain.FileSystem;
 using CaptureTool.Presentation.Features.Audio;
@@ -77,15 +78,31 @@ public sealed class AudioEditPageViewModelWaveformTests
             Times.Once);
     }
 
+    [TestMethod]
+    public void Dispose_ShouldReleaseOwnedWorkingCopy()
+    {
+        var scratchArtifactStore = new Mock<IScratchArtifactStore>();
+        AudioEditPageViewModel viewModel = CreateViewModel(scratchArtifactStore: scratchArtifactStore.Object);
+        viewModel.Load(new AudioFile("scratch\\working.wav"));
+
+        viewModel.Dispose();
+
+        scratchArtifactStore.Verify(
+            store => store.DeleteArtifact("scratch\\working.wav"),
+            Times.Once);
+    }
+
     private static AudioEditPageViewModel CreateViewModel(
         IOpenExternalEditorUseCase? openExternalEditorAction = null,
-        IOpenAudioFolderUseCase? openAudioFolderAction = null)
+        IOpenAudioFolderUseCase? openAudioFolderAction = null,
+        IScratchArtifactStore? scratchArtifactStore = null)
     {
         return new AudioEditPageViewModel(
             Mock.Of<ISaveAudioFileUseCase>(),
             Mock.Of<ICopyAudioFileUseCase>(),
             openExternalEditorAction ?? Mock.Of<IOpenExternalEditorUseCase>(),
             openAudioFolderAction ?? Mock.Of<IOpenAudioFolderUseCase>(),
-            Mock.Of<IAudioWaveformHistory>());
+            Mock.Of<IAudioWaveformHistory>(),
+            scratchArtifactStore: scratchArtifactStore);
     }
 }

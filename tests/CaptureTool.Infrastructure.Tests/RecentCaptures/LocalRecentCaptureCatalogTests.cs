@@ -99,7 +99,8 @@ public sealed class LocalRecentCaptureCatalogTests
     private sealed class TestStorageService(string dataFolder) : IStorageService
     {
         public string GetApplicationDataFolderPath() => dataFolder;
-        public string GetApplicationTemporaryFolderPath() => Path.Combine(dataFolder, "Temp");
+        public string GetApplicationRetainedCaptureFolderPath() => Path.Combine(dataFolder, "Captures");
+        public string GetApplicationScratchFolderPath() => Path.Combine(dataFolder, "Temp", "Scratch");
         public string GetSystemDefaultMusicFolderPath() => Path.Combine(dataFolder, "Music");
         public string GetSystemDefaultScreenshotsFolderPath() => Path.Combine(dataFolder, "Pictures");
         public string GetSystemDefaultVideosFolderPath() => Path.Combine(dataFolder, "Videos");

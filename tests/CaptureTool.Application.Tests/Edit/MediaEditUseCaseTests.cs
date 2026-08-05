@@ -137,7 +137,7 @@ public sealed class MediaEditUseCaseTests
         var clipboard = new Mock<IClipboardService>();
         var useCase = new CopyVideoFileUseCase(
             clipboard.Object,
-            Mock.Of<IStorageService>(),
+            Mock.Of<IScratchArtifactStore>(),
             Mock.Of<IVideoFileTrimmer>(),
             TestFileSystem.Instance,
             TestUseCaseExecutor.Instance);
@@ -154,19 +154,21 @@ public sealed class MediaEditUseCaseTests
         string videoPath = await CreateTempFileAsync("source.mp4", "video");
         string tempFolder = CreateTestFolder();
         var clipboard = new Mock<IClipboardService>();
-        var storage = new Mock<IStorageService>();
+        var scratchArtifactStore = new Mock<IScratchArtifactStore>();
         var trimmer = new Mock<IVideoFileTrimmer>();
-        storage.Setup(service => service.GetApplicationTemporaryFolderPath()).Returns(tempFolder);
-        storage.Setup(service => service.GetTemporaryFileName()).Returns("trim.tmp");
-        var useCase = new CopyVideoFileUseCase(clipboard.Object, storage.Object, trimmer.Object, TestFileSystem.Instance, TestUseCaseExecutor.Instance);
+        string expectedTrimmedPath = Path.Combine(tempFolder, "trim.mp4");
+        scratchArtifactStore
+            .Setup(service => service.CreateLeasedArtifactPath("clipboard-video-trim", ".mp4"))
+            .Returns(expectedTrimmedPath);
+        var useCase = new CopyVideoFileUseCase(clipboard.Object, scratchArtifactStore.Object, trimmer.Object, TestFileSystem.Instance, TestUseCaseExecutor.Instance);
         var request = new CopyVideoFileRequest(videoPath, TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(3));
 
         CopyVideoFileResponse response = (await useCase.ExecuteAsync(request, TestContext.CancellationToken)).Value!;
 
-        string expectedTrimmedPath = Path.Combine(tempFolder, "trim.mp4");
         Assert.IsTrue(response.Copied);
         trimmer.Verify(service => service.TrimAsync(videoPath, expectedTrimmedPath, TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(3), TestContext.CancellationToken), Times.Once);
         clipboard.Verify(service => service.CopyFileAsync(It.Is<ClipboardFile>(file => file.FilePath == expectedTrimmedPath)), Times.Once);
+        scratchArtifactStore.Verify(service => service.RelinquishArtifact(expectedTrimmedPath), Times.Once);
     }
 
     [TestMethod]
