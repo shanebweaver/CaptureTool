@@ -161,9 +161,9 @@ public sealed class ImageEditPageViewModelDefaultsTests
         viewModel.OnShapeDrawn(new Vector2(10, 20), new Vector2(110, 120));
         var shape = viewModel.Drawables.Should().ContainSingle()
             .Which.Should().BeOfType<RectangleDrawable>().Subject;
-        var originalState = new ModifyShapeOperation.ShapeState(shape);
+        var originalState = new ShapeState(shape);
         shape.Offset = new Vector2(30, 40);
-        var modifiedState = new ModifyShapeOperation.ShapeState(shape);
+        var modifiedState = new ShapeState(shape);
         int redrawRequests = 0;
         int invalidationRequests = 0;
         viewModel.RedrawCanvasRequested += (_, _) => redrawRequests++;
