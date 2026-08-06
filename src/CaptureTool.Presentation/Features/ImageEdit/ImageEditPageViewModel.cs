@@ -11,6 +11,7 @@ using CaptureTool.Application.Abstractions.Edit.Image.Rendering;
 using CaptureTool.Application.Abstractions.Edit.Image.SuperResolution;
 using CaptureTool.Application.Abstractions.Edit.Image.TextExtraction;
 using CaptureTool.Application.Abstractions.EditSessions;
+using CaptureTool.Application.Abstractions.Files;
 using CaptureTool.Application.Abstractions.Localization;
 using CaptureTool.Application.Abstractions.Logging;
 using CaptureTool.Application.Abstractions.Settings;
@@ -67,6 +68,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     private readonly IShareService _shareService;
     private readonly IOpenExternalEditorUseCase _openExternalEditorAction;
     private readonly IStorageService _storageService;
+    private readonly IFileSystem? _fileSystem;
     private readonly IScratchArtifactStore? _scratchArtifactStore;
     private readonly HashSet<string> _scratchArtifactPaths = new(StringComparer.OrdinalIgnoreCase);
     private readonly ISettingsService _settingsService;
@@ -749,7 +751,8 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         IImageObjectEraseFeatureAvailability? imageObjectEraseFeatureAvailability = null,
         IImageObjectExtractionFeatureAvailability? imageObjectExtractionFeatureAvailability = null,
         ITelemetryService? telemetryService = null,
-        IScratchArtifactStore? scratchArtifactStore = null)
+        IScratchArtifactStore? scratchArtifactStore = null,
+        IFileSystem? fileSystem = null)
     {
         _localizationService = localizationService;
         _cancellationService = cancellationService;
@@ -774,6 +777,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         _openExternalEditorAction = openExternalEditorAction;
         _storageService = storageService;
         _scratchArtifactStore = scratchArtifactStore;
+        _fileSystem = fileSystem;
         _imageCanvasExporter = imageCanvasExporter;
         _settingsService = settingsService;
         _openScreenshotsFolderAction = openScreenshotsFolderAction;
@@ -903,6 +907,8 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         StartLoading();
         ClearImageDescriptionResults();
 
+        imageFile = RestoreMissingWorkingCopy(imageFile);
+
         var cts = _cancellationService.GetLinkedCancellationTokenSource(cancellationToken);
         try
         {
@@ -944,6 +950,32 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         UpdateObjectExtractionAvailability();
         UpdateCanToggleObjectExtraction();
         TrackEditorOpened();
+    }
+
+    private ImageFile RestoreMissingWorkingCopy(ImageFile imageFile)
+    {
+        if (_fileSystem is null ||
+            _scratchArtifactStore is null ||
+            _fileSystem.FileExists(imageFile.FilePath) ||
+            string.IsNullOrWhiteSpace(imageFile.PersistentFilePath) ||
+            !_fileSystem.FileExists(imageFile.PersistentFilePath))
+        {
+            return imageFile;
+        }
+
+        string restoredPath = _scratchArtifactStore.CreateLeasedArtifactPath(
+            "recent-capture-working-copy",
+            Path.GetExtension(imageFile.PersistentFilePath));
+        try
+        {
+            _fileSystem.CopyFile(imageFile.PersistentFilePath, restoredPath, true);
+            return new ImageFile(restoredPath, imageFile.PersistentFilePath);
+        }
+        catch
+        {
+            _scratchArtifactStore.DeleteArtifact(restoredPath);
+            throw;
+        }
     }
 
     public override void Dispose()

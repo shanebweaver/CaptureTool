@@ -5,6 +5,7 @@ using CaptureTool.Application.Abstractions.Edit.Image;
 using CaptureTool.Application.Abstractions.Edit.Image.ChromaKey;
 using CaptureTool.Application.Abstractions.Edit.Image.Rendering;
 using CaptureTool.Application.Abstractions.Edit.Image.SuperResolution;
+using CaptureTool.Application.Abstractions.Files;
 using CaptureTool.Application.Abstractions.Localization;
 using CaptureTool.Application.Abstractions.Logging;
 using CaptureTool.Application.Abstractions.Settings;
@@ -27,6 +28,49 @@ namespace CaptureTool.Presentation.Tests.Features;
 [TestClass]
 public sealed class ImageEditPageViewModelDefaultsTests
 {
+    [TestMethod]
+    public async Task LoadAsync_WhenRecentWorkingCopyWasReleased_RecreatesItFromPersistentCapture()
+    {
+        const string missingWorkingPath = "scratch/missing.png";
+        const string persistentPath = "captures/original.png";
+        const string restoredWorkingPath = "scratch/restored.png";
+        var requestedImage = new ImageFile(missingWorkingPath, persistentPath);
+        var fileSystem = new Mock<IFileSystem>();
+        var scratchArtifacts = new Mock<IScratchArtifactStore>();
+        var imageMetadata = new Mock<IImageMetadataService>();
+        var cancellationService = new Mock<ICancellationService>();
+
+        fileSystem.Setup(service => service.FileExists(missingWorkingPath)).Returns(false);
+        fileSystem.Setup(service => service.FileExists(persistentPath)).Returns(true);
+        scratchArtifacts
+            .Setup(service => service.CreateLeasedArtifactPath("recent-capture-working-copy", ".png"))
+            .Returns(restoredWorkingPath);
+        imageMetadata
+            .Setup(service => service.GetImageFileSize(It.Is<ImageFile>(file => file.FilePath == restoredWorkingPath)))
+            .Returns(new Size(320, 180));
+        cancellationService
+            .Setup(service => service.GetLinkedCancellationTokenSource(It.IsAny<CancellationToken>()))
+            .Returns(() => new CancellationTokenSource());
+
+        var viewModel = CreateViewModel(
+            imageMetadata: imageMetadata.Object,
+            cancellationService: cancellationService.Object,
+            fileSystem: fileSystem.Object,
+            scratchArtifactStore: scratchArtifacts.Object);
+
+        await viewModel.LoadAsync(requestedImage, CancellationToken.None);
+
+        viewModel.ImageFile.Should().NotBeNull();
+        viewModel.ImageFile!.FilePath.Should().Be(restoredWorkingPath);
+        viewModel.ImageFile.PersistentFilePath.Should().Be(persistentPath);
+        fileSystem.Verify(
+            service => service.CopyFile(persistentPath, restoredWorkingPath, true),
+            Times.Once);
+
+        viewModel.Dispose();
+        scratchArtifacts.Verify(service => service.DeleteArtifact(restoredWorkingPath), Times.Once);
+    }
+
     [TestMethod]
     public async Task LoadAsync_ShouldScaleInitialShapeAndTextDefaults_ForLargeImages()
     {
@@ -291,7 +335,9 @@ public sealed class ImageEditPageViewModelDefaultsTests
         ICancellationService? cancellationService = null,
         IChromaKeyAccessService? chromaKeyAccess = null,
         IChromaKeyService? chromaKeyService = null,
-        IOpenScreenshotsFolderUseCase? openScreenshotsFolderAction = null)
+        IOpenScreenshotsFolderUseCase? openScreenshotsFolderAction = null,
+        IFileSystem? fileSystem = null,
+        IScratchArtifactStore? scratchArtifactStore = null)
     {
         IAppNotificationService notifications = Mock.Of<IAppNotificationService>();
 
@@ -325,7 +371,9 @@ public sealed class ImageEditPageViewModelDefaultsTests
             new TextExtractionToolViewModel(
                 Mock.Of<IClipboardService>(),
                 Mock.Of<ILocalizationService>(),
-                notifications));
+                notifications),
+            scratchArtifactStore: scratchArtifactStore,
+            fileSystem: fileSystem);
     }
 
     private static ImageChromaKeyEffect GetChromaKeyEffect(ImageEditPageViewModel viewModel)
