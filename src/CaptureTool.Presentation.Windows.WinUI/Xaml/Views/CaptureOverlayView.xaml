@@ -14,12 +14,13 @@
 
     <Grid x:Name="RootPanel" CornerRadius="8">
         <Grid
+            x:Name="ToolbarContainer"
             HorizontalAlignment="Center"
             VerticalAlignment="Top"
             Visibility="{x:Bind utils:VisibilityUtility.InverseBoolToVisibility(ViewModel.HasRecordingError), Mode=OneWay}">
-            <Grid x:Name="ToolbarHost" />
             <controls:CaptureOverlayToolbar
                 x:Name="Toolbar"
+                AutomationProperties.AutomationId="CaptureOverlayToolbar"
                 AudioInputSources="{x:Bind ViewModel.AudioInputSources, Mode=OneWay}"
                 CaptureTime="{x:Bind ViewModel.CaptureTime, Mode=OneWay}"
                 CloseCommand="{x:Bind ViewModel.CloseOverlayCommand}"
@@ -44,7 +45,7 @@
 
         <InfoBar
             x:Name="RecordingErrorInfoBar"
-            HorizontalAlignment="Stretch"
+            HorizontalAlignment="Left"
             VerticalAlignment="Top"
             Canvas.ZIndex="1"
             CloseButtonCommand="{x:Bind ViewModel.DismissRecordingErrorCommand, Mode=OneWay}"

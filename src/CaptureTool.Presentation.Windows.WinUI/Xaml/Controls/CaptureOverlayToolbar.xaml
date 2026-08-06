@@ -90,7 +90,6 @@
                 Height="32"
                 Padding="6,0"
                 Background="Transparent"
-                BorderBrush="Transparent"
                 Click="LocalAudioToggleButton_Click">
                 <SplitButton.Content>
                     <Grid Width="20">
@@ -129,8 +128,8 @@
                                 Minimum="0"
                                 SmallChange="1"
                                 StepFrequency="1"
-                                Value="{x:Bind LocalAudioVolumePercentage, Mode=OneWay}"
-                                ValueChanged="LocalAudioVolumeSlider_ValueChanged" />
+                                ValueChanged="LocalAudioVolumeSlider_ValueChanged"
+                                Value="{x:Bind LocalAudioVolumePercentage, Mode=OneWay}" />
                         </StackPanel>
                     </Flyout>
                 </SplitButton.Flyout>
@@ -148,6 +147,7 @@
 
             <Button
                 x:Uid="SelectionOverlay_CloseButton"
+                AutomationProperties.AutomationId="CaptureOverlay_CloseButton"
                 Command="{x:Bind CloseCommand, Mode=OneWay}"
                 Style="{StaticResource IconButtonStyle}">
                 <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="{StaticResource Cancel}" />
