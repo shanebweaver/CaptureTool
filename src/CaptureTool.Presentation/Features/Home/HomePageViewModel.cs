@@ -36,6 +36,7 @@ public sealed partial class HomePageViewModel : AsyncLoadableViewModelBase
     private readonly IRecentCapturesChangeNotifier _recentCapturesChangeNotifier;
     private readonly IFactoryServiceWithArgs<RecentCaptureViewModel, string> _recentCaptureViewModelFactory;
     private readonly ObservableCollection<RecentCaptureViewModel> _recentCaptures = [];
+    private bool _recentCapturesRefreshPending;
 
     public event EventHandler? StoreReviewPromptRequested;
 
@@ -281,7 +282,17 @@ public sealed partial class HomePageViewModel : AsyncLoadableViewModelBase
 
     private async Task LoadRecentCapturesPageAsync(bool reset, CancellationToken cancellationToken)
     {
-        if (IsLoadingRecentCaptures || (!reset && !HasMoreRecentCaptures))
+        if (IsLoadingRecentCaptures)
+        {
+            if (reset)
+            {
+                _recentCapturesRefreshPending = true;
+            }
+
+            return;
+        }
+
+        if (!reset && !HasMoreRecentCaptures)
         {
             return;
         }
@@ -290,25 +301,32 @@ public sealed partial class HomePageViewModel : AsyncLoadableViewModelBase
 
         try
         {
-            if (reset)
+            bool shouldReset = reset;
+            do
             {
-                _recentCaptures.Clear();
-                HasMoreRecentCaptures = true;
-                RaiseRecentCaptureStateChanged();
+                _recentCapturesRefreshPending = false;
+                if (shouldReset)
+                {
+                    _recentCaptures.Clear();
+                    HasMoreRecentCaptures = true;
+                    RaiseRecentCaptureStateChanged();
+                }
+
+                var response = await _getRecentCapturesQuery.ExecuteAsync(
+                    new GetRecentCapturesRequest(_recentCaptures.Count, RecentCapturesPageSize),
+                    cancellationToken);
+
+                var recentCaptures = response.Value?.Captures ?? [];
+                foreach (var recentCapture in recentCaptures)
+                {
+                    _recentCaptures.Add(_recentCaptureViewModelFactory.Create(recentCapture.FilePath));
+                }
+
+                HasMoreRecentCaptures = response.Value?.HasMore == true;
+                HasLoadedRecentCaptures = true;
+                shouldReset = _recentCapturesRefreshPending;
             }
-
-            var response = await _getRecentCapturesQuery.ExecuteAsync(
-                new GetRecentCapturesRequest(_recentCaptures.Count, RecentCapturesPageSize),
-                cancellationToken);
-
-            var recentCaptures = response.Value?.Captures ?? [];
-            foreach (var recentCapture in recentCaptures)
-            {
-                _recentCaptures.Add(_recentCaptureViewModelFactory.Create(recentCapture.FilePath));
-            }
-
-            HasMoreRecentCaptures = response.Value?.HasMore == true;
-            HasLoadedRecentCaptures = true;
+            while (shouldReset);
         }
         finally
         {
