@@ -5,6 +5,7 @@ using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
 using System.Collections;
 using System.Windows.Input;
+using Windows.Foundation;
 
 namespace CaptureTool.Presentation.Windows.WinUI.Xaml.Controls;
 
@@ -282,6 +283,13 @@ public sealed partial class CaptureOverlayToolbar : UserControlBase
 
     public string FormatVolumePercentage(int volumePercentage)
         => $"{Math.Clamp(volumePercentage, 0, 100)}%";
+
+    internal Size MeasureNaturalSize()
+    {
+        ToolbarPanel.InvalidateMeasure();
+        ToolbarPanel.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
+        return ToolbarPanel.DesiredSize;
+    }
 
     private void LocalAudioToggleButton_Click(SplitButton sender, SplitButtonClickEventArgs args)
     {

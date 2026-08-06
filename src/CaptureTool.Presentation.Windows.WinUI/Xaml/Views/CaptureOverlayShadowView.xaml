@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<controls:UserControlBase
+    x:Class="CaptureTool.Presentation.Windows.WinUI.Xaml.Views.CaptureOverlayShadowView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:CaptureTool.Presentation.Windows.WinUI.Xaml.Controls"
+    IsHitTestVisible="False"
+    IsTabStop="False">
+
+    <Grid
+        x:Name="ShadowHost"
+        Background="Transparent"
+        IsHitTestVisible="False">
+        <Rectangle
+            x:Name="ShadowCaster"
+            HorizontalAlignment="Left"
+            VerticalAlignment="Top"
+            Fill="White"
+            IsHitTestVisible="False" />
+    </Grid>
+</controls:UserControlBase>

@@ -321,6 +321,11 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
 
     public override void Dispose()
     {
+        if (_isDisposed)
+        {
+            return;
+        }
+
         _isDisposed = true;
         IsStarting = false;
         CancelRecordingStartWait();

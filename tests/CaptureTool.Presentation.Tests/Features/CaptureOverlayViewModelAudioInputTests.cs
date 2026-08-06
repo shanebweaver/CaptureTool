@@ -121,6 +121,20 @@ public sealed class CaptureOverlayViewModelAudioInputTests
     }
 
     [TestMethod]
+    public void Dispose_WhenCalledMoreThanOnce_ShouldReleaseResourcesOnce()
+    {
+        TestContext context = CreateViewModel([]);
+        context.ViewModel.Load(CreateOptions());
+
+        context.ViewModel.Dispose();
+        context.ViewModel.Dispose();
+
+        context.AudioInputDetection.Verify(
+            service => service.StopWatching(),
+            Times.Once);
+    }
+
+    [TestMethod]
     public async Task StartVideoCaptureCommand_WhenUseCaseFails_ShouldResetStateAndShowError()
     {
         TestContext context = CreateViewModel([]);
