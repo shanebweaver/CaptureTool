@@ -60,17 +60,28 @@ public partial class WindowsClipboardService : IClipboardService
 
     public async Task CopyFileAsync(ClipboardFile clipboardFile)
     {
-        if (!File.Exists(clipboardFile.FilePath))
+        DataPackage? package = await CreateFileDataPackageAsync(clipboardFile);
+        if (package == null)
         {
             return;
         }
 
-        var package = new DataPackage();
-        var file = await StorageFile.GetFileFromPathAsync(clipboardFile.FilePath);
-        List<IStorageItem> items = [file];
-        package.SetStorageItems(items);
         global::Windows.ApplicationModel.DataTransfer.Clipboard.SetContent(package);
         global::Windows.ApplicationModel.DataTransfer.Clipboard.Flush();
+    }
+
+    internal static async Task<DataPackage?> CreateFileDataPackageAsync(ClipboardFile clipboardFile)
+    {
+        if (!File.Exists(clipboardFile.FilePath))
+        {
+            return null;
+        }
+
+        var package = new DataPackage();
+        var file = await StorageFile.GetFileFromPathAsync(clipboardFile.FilePath);
+        IStorageItem[] items = [file];
+        package.SetStorageItems(items);
+        return package;
     }
 
     private static async Task<InMemoryRandomAccessStream> CreateClipboardBitmapStreamAsync(IRandomAccessStream stream)

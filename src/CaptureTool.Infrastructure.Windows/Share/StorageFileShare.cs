@@ -34,7 +34,7 @@ public sealed partial class StorageFileShare : IDisposable
 
         if (_file != null)
         {
-            request.Data.SetStorageItems(new List<StorageFile> { _file });
+            request.Data.SetStorageItems(new IStorageItem[] { _file });
         }
         else
         {
