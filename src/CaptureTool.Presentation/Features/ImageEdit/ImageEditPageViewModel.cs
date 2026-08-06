@@ -549,6 +549,18 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         }
     } = [];
 
+    public IReadOnlyList<RecognizedQrCodeRegion> TextExtractionQrCodes
+    {
+        get;
+        private set
+        {
+            if (Set(ref field, value))
+            {
+                RaisePropertyChanged(nameof(IsTextExtractionOverlayVisible));
+            }
+        }
+    } = [];
+
     public bool HasTextExtractionRegions
     {
         get;
@@ -562,7 +574,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     }
 
     public bool IsTextExtractionOverlayVisible =>
-        IsTextExtractionModeActive && HasTextExtractionRegions;
+        IsTextExtractionModeActive && (HasTextExtractionRegions || TextExtractionQrCodes.Count > 0);
 
     public bool IsImageDescriptionFeatureEnabled
     {
@@ -966,6 +978,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         IsTextExtractionRunning = false;
         TextExtractionStatusMessage = string.Empty;
         TextExtractionRegions = [];
+        TextExtractionQrCodes = [];
         TextExtractionTool.Reset();
         IsImageDescriptionFeatureEnabled = _imageDescriptionFeatureAvailability.IsImageDescriptionEnabled;
         IsImageDescriptionAvailable = false;
@@ -2289,6 +2302,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
         TextExtractionStatusMessage = string.Empty;
         TextExtractionRegions = [];
+        TextExtractionQrCodes = [];
         TextExtractionTool.Reset();
 
         using ImageEditOperationCoordinator.OperationLease operation =
@@ -2335,6 +2349,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
             }
 
             TextExtractionRegions = NormalizeTextExtractionRegions(result.Document.Regions, result.Document.ImageSize);
+            TextExtractionQrCodes = NormalizeQrCodeRegions(result.Document.QrCodes, result.Document.ImageSize);
             TextExtractionTool.SetText(result.Document.Text);
             _textExtractionProcessedRevision = processedRevision;
             InvalidateCanvasRequested?.Invoke(this, EventArgs.Empty);
@@ -2393,6 +2408,26 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         }
 
         return normalizedRegions;
+    }
+
+    private static IReadOnlyList<RecognizedQrCodeRegion> NormalizeQrCodeRegions(
+        IReadOnlyList<RecognizedQrCodeRegion> qrCodes,
+        Size imageSize)
+    {
+        if (imageSize.Width <= 0 || imageSize.Height <= 0)
+        {
+            return [];
+        }
+
+        RectangleF imageBounds = new(0, 0, imageSize.Width, imageSize.Height);
+        return qrCodes
+            .Where(qrCode => !string.IsNullOrWhiteSpace(qrCode.Value))
+            .Select(qrCode => qrCode with
+            {
+                Bounds = RectangleF.Intersect(imageBounds, qrCode.Bounds)
+            })
+            .Where(qrCode => qrCode.Bounds.Width > 0 && qrCode.Bounds.Height > 0)
+            .ToArray();
     }
 
     private async Task GenerateImageDescriptionAsync(ImageDescriptionMode mode)
@@ -2894,6 +2929,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     {
         _textExtractionProcessedRevision = null;
         TextExtractionRegions = [];
+        TextExtractionQrCodes = [];
         TextExtractionStatusMessage = string.Empty;
         TextExtractionTool.Reset();
     }

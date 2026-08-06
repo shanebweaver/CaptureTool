@@ -7,6 +7,8 @@ using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
 using System.Text;
+using ZXing;
+using ZXing.Common;
 
 namespace CaptureTool.UiTests;
 
@@ -113,6 +115,16 @@ public sealed class ImageEditTextExtractionUiTests
                 "ImageEdit_TextExtractionCopyAllButton",
                 InteractionTimeout);
             Assert.IsTrue(copyAllTextButton.IsEnabled, "Copy all text should be enabled after OCR completes.");
+            WaitForElement(
+                mainWindow,
+                automation,
+                "ImageCanvas_QrCodeCopyButton_0",
+                InteractionTimeout);
+            WaitForElement(
+                mainWindow,
+                automation,
+                "ImageCanvas_QrCodeOpenButton_0",
+                InteractionTimeout);
 
             Thread.Sleep(500);
             File.Delete(screenshotPath);
@@ -461,7 +473,7 @@ public sealed class ImageEditTextExtractionUiTests
 
     private static void CreateOcrFixtureImage(string filePath)
     {
-        using Bitmap bitmap = new(420, 220);
+        using Bitmap bitmap = new(640, 300);
         using Graphics graphics = Graphics.FromImage(bitmap);
         graphics.SmoothingMode = SmoothingMode.AntiAlias;
         graphics.TextRenderingHint = System.Drawing.Text.TextRenderingHint.ClearTypeGridFit;
@@ -473,9 +485,36 @@ public sealed class ImageEditTextExtractionUiTests
         using Font titleFont = new("Segoe UI", 34, FontStyle.Bold, GraphicsUnit.Pixel);
         using Font subtitleFont = new("Segoe UI", 30, FontStyle.Regular, GraphicsUnit.Pixel);
 
-        graphics.DrawRectangle(guidePen, 24, 24, 372, 172);
+        graphics.DrawRectangle(guidePen, 24, 24, 592, 252);
         graphics.DrawString("OCR MODE", titleFont, titleBrush, 50, 40);
         graphics.DrawString("SAMPLE TEXT", subtitleFont, subtitleBrush, 50, 110);
+
+        var qrWriter = new BarcodeWriterPixelData
+        {
+            Format = BarcodeFormat.QR_CODE,
+            Options = new EncodingOptions
+            {
+                Width = 190,
+                Height = 190,
+                Margin = 3
+            }
+        };
+        ZXing.Rendering.PixelData qrPixels = qrWriter.Write("https://example.com/capturetool");
+        using Bitmap qrBitmap = new(qrPixels.Width, qrPixels.Height, PixelFormat.Format32bppArgb);
+        BitmapData qrData = qrBitmap.LockBits(
+            new Rectangle(0, 0, qrBitmap.Width, qrBitmap.Height),
+            ImageLockMode.WriteOnly,
+            PixelFormat.Format32bppArgb);
+        try
+        {
+            Marshal.Copy(qrPixels.Pixels, 0, qrData.Scan0, qrPixels.Pixels.Length);
+        }
+        finally
+        {
+            qrBitmap.UnlockBits(qrData);
+        }
+
+        graphics.DrawImage(qrBitmap, 400, 55, 190, 190);
 
         bitmap.Save(filePath, ImageFormat.Png);
     }
