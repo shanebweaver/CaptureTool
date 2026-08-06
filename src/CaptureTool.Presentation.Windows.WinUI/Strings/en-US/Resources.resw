@@ -933,6 +933,10 @@ Adjust the tolerance to remove the background, then desaturate the key color to 
     <value>Owned</value>
     <comment>The label for the purchase button when an add on is already owned.</comment>
   </data>
+  <data name="AddOns_ChromaKeyPurchaseNotCompletedLabel.Text" xml:space="preserve">
+    <value>The purchase wasn't completed. Try again.</value>
+    <comment>Shown after an add-on purchase fails or is canceled.</comment>
+  </data>
   <data name="ContentDialog_Close" xml:space="preserve">
     <value>Close</value>
     <comment>The text for the close button in a content dialog</comment>

@@ -6,6 +6,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="using:CaptureTool.Presentation.Windows.WinUI.Xaml.Pages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:utils="using:CaptureTool.Presentation.Windows.WinUI.Utils"
     xmlns:viewmodels="using:CaptureTool.Presentation.Features.Store"
     d:DataContext="{d:DesignInstance Type=viewmodels:StorePageViewModel}"
     mc:Ignorable="d">
@@ -74,7 +75,8 @@
                         <Grid RowSpacing="12">
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto" />
-                                <RowDefinition />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
                             </Grid.RowDefinitions>
 
                             <Grid
@@ -99,7 +101,7 @@
                                 Background="{ThemeResource AccentFillColorDefaultBrush}"
                                 Command="{x:Bind ViewModel.PurchaseChromaKeyAddOnCommand}"
                                 Foreground="{ThemeResource SystemAltHighColor}"
-                                IsEnabled="{x:Bind ViewModel.IsChromaKeyAddOnAvailable, Mode=OneWay}">
+                                IsEnabled="{x:Bind ViewModel.CanPurchaseChromaKeyAddOn, Mode=OneWay}">
                                 <Grid>
                                     <ProgressRing
                                         Width="16"
@@ -107,13 +109,25 @@
                                         HorizontalAlignment="Center"
                                         IsActive="True"
                                         Visibility="{x:Bind ViewModel.IsLoading, Mode=OneWay}" />
+                                    <ProgressRing
+                                        Width="16"
+                                        Height="16"
+                                        HorizontalAlignment="Center"
+                                        IsActive="True"
+                                        Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.IsPurchasingChromaKeyAddOn), Mode=OneWay}" />
                                     <TextBlock
                                         HorizontalAlignment="Left"
                                         FontWeight="SemiBold"
-                                        Text="{x:Bind ViewModel.ChromaKeyAddOnPrice, Mode=OneWay}"
+                                        Text="{x:Bind ViewModel.ChromaKeyAddOnPurchaseButtonText, Mode=OneWay}"
                                         Visibility="{x:Bind ViewModel.IsLoaded, Mode=OneWay}" />
                                 </Grid>
                             </Button>
+                            <TextBlock
+                                x:Uid="AddOns_ChromaKeyPurchaseNotCompletedLabel"
+                                Grid.Row="2"
+                                Foreground="{ThemeResource SystemFillColorCriticalBrush}"
+                                TextWrapping="Wrap"
+                                Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.HasChromaKeyAddOnPurchaseFailure), Mode=OneWay}" />
                         </Grid>
                         <Grid
                             Grid.Column="1"
