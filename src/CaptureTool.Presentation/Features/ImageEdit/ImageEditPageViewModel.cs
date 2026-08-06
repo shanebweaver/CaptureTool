@@ -78,18 +78,13 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
     private readonly ImageEditHistory _editHistory;
     private readonly ImageEditModeStateMachine _modeStateMachine;
+    private readonly ImageEditOperationCoordinator _operationCoordinator = new();
     private ImageDrawable? _imageDrawable;
     private ImageEditSession _editSession;
     private ImageFile? _originalImageFile;
     private Size _originalImageSize;
     private ImageFile? _superResolutionImageFile;
     private Size _superResolutionImageSize;
-    private CancellationTokenSource? _superResolutionCancellationTokenSource;
-    private CancellationTokenSource? _textExtractionCancellationTokenSource;
-    private CancellationTokenSource? _imageDescriptionCancellationTokenSource;
-    private CancellationTokenSource? _foregroundExtractionCancellationTokenSource;
-    private CancellationTokenSource? _objectEraseCancellationTokenSource;
-    private CancellationTokenSource? _objectExtractionCancellationTokenSource;
     private ImageDescriptionMode? _runningImageDescriptionMode;
     private readonly Dictionary<ImageDescriptionMode, string> _imageDescriptionResults = [];
     private bool _hasUnsavedChangesBeforeSuperResolution;
@@ -947,6 +942,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         CancelForegroundExtractionWork();
         CancelObjectEraseWork();
         CancelObjectExtractionWork();
+        _operationCoordinator.Dispose();
         _settingsService.SettingsChanged -= SettingsService_SettingsChanged;
         ChromaKeyTool.SettingsChanged -= ChromaKeyTool_SettingsChanged;
         ChromaKeyTool.InteractionCommitted -= ChromaKeyTool_InteractionCommitted;
@@ -1349,7 +1345,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         }
     }
 
-    public void OnShapeModified(int shapeIndex, ModifyShapeOperation.ShapeState oldState, ModifyShapeOperation.ShapeState newState)
+    public void OnShapeModified(int shapeIndex, ShapeState oldState, ShapeState newState)
     {
         if (!IsShapesModeActive && !IsTextModeActive)
         {
@@ -1897,9 +1893,9 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         CancelForegroundExtractionWork();
         ForegroundExtractionStatusMessage = string.Empty;
 
-        var cancellationTokenSource = new CancellationTokenSource();
-        _foregroundExtractionCancellationTokenSource = cancellationTokenSource;
-        CancellationToken cancellationToken = cancellationTokenSource.Token;
+        using ImageEditOperationCoordinator.OperationLease operation =
+            _operationCoordinator.Start(ImageEditOperation.ForegroundExtraction);
+        CancellationToken cancellationToken = operation.Token;
         ImageFile sourceImage = _imageDrawable.File;
         Size sourceSize = _imageDrawable.ImageSize;
         IsForegroundExtractionRunning = true;
@@ -1911,6 +1907,12 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
             {
                 ForegroundExtractionPreparationResult preparationResult =
                     await _imageForegroundExtractionService.EnsureReadyAsync(cancellationToken);
+                cancellationToken.ThrowIfCancellationRequested();
+                if (!operation.IsCurrent)
+                {
+                    return;
+                }
+
                 if (preparationResult.Status != ForegroundExtractionPreparationStatus.Success)
                 {
                     ShowForegroundExtractionFailure(GetForegroundExtractionPreparationFailureMessage(preparationResult));
@@ -1934,6 +1936,12 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
                         (int)Math.Round(foregroundPoint.Y))),
                 cancellationToken);
 
+            cancellationToken.ThrowIfCancellationRequested();
+            if (!operation.IsCurrent)
+            {
+                return;
+            }
+
             if (result.Status != ForegroundExtractionStatus.Success || result.ImageFile is null)
             {
                 ShowForegroundExtractionFailure(GetForegroundExtractionFailureMessage(result));
@@ -1943,7 +1951,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
             TrackScratchArtifact(result.ImageFile.FilePath);
 
             if (cancellationToken.IsCancellationRequested ||
-                !ReferenceEquals(_foregroundExtractionCancellationTokenSource, cancellationTokenSource) ||
+                !operation.IsCurrent ||
                 !IsForegroundExtractionModeActive ||
                 _imageDrawable is null ||
                 !string.Equals(_imageDrawable.File.FilePath, sourceImage.FilePath, StringComparison.OrdinalIgnoreCase))
@@ -1984,13 +1992,11 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         }
         finally
         {
-            if (ReferenceEquals(_foregroundExtractionCancellationTokenSource, cancellationTokenSource))
+            if (operation.IsCurrent)
             {
-                _foregroundExtractionCancellationTokenSource = null;
                 IsForegroundExtractionRunning = false;
             }
 
-            cancellationTokenSource.Dispose();
             UpdateCanToggleForegroundExtraction();
         }
     }
@@ -2012,9 +2018,9 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         CancelObjectEraseWork();
         ObjectEraseStatusMessage = string.Empty;
 
-        var cancellationTokenSource = new CancellationTokenSource();
-        _objectEraseCancellationTokenSource = cancellationTokenSource;
-        CancellationToken cancellationToken = cancellationTokenSource.Token;
+        using ImageEditOperationCoordinator.OperationLease operation =
+            _operationCoordinator.Start(ImageEditOperation.ObjectErase);
+        CancellationToken cancellationToken = operation.Token;
         ImageFile sourceImage = _imageDrawable.File;
         Size sourceSize = _imageDrawable.ImageSize;
         IsObjectEraseRunning = true;
@@ -2026,6 +2032,12 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
             {
                 ObjectErasePreparationResult preparationResult =
                     await _imageObjectEraseService.EnsureReadyAsync(cancellationToken);
+                cancellationToken.ThrowIfCancellationRequested();
+                if (!operation.IsCurrent)
+                {
+                    return;
+                }
+
                 if (preparationResult.Status != ObjectErasePreparationStatus.Success)
                 {
                     ShowObjectEraseFailure(GetObjectErasePreparationFailureMessage(preparationResult));
@@ -2049,6 +2061,12 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
                         (int)Math.Round(objectPoint.Y))),
                 cancellationToken);
 
+            cancellationToken.ThrowIfCancellationRequested();
+            if (!operation.IsCurrent)
+            {
+                return;
+            }
+
             if (result.Status != ObjectEraseStatus.Success || result.ImageFile is null)
             {
                 ShowObjectEraseFailure(GetObjectEraseFailureMessage(result));
@@ -2058,7 +2076,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
             TrackScratchArtifact(result.ImageFile.FilePath);
 
             if (cancellationToken.IsCancellationRequested ||
-                !ReferenceEquals(_objectEraseCancellationTokenSource, cancellationTokenSource) ||
+                !operation.IsCurrent ||
                 !IsObjectEraseModeActive ||
                 _imageDrawable is null ||
                 !string.Equals(_imageDrawable.File.FilePath, sourceImage.FilePath, StringComparison.OrdinalIgnoreCase))
@@ -2099,13 +2117,11 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         }
         finally
         {
-            if (ReferenceEquals(_objectEraseCancellationTokenSource, cancellationTokenSource))
+            if (operation.IsCurrent)
             {
-                _objectEraseCancellationTokenSource = null;
                 IsObjectEraseRunning = false;
             }
 
-            cancellationTokenSource.Dispose();
             UpdateCanToggleObjectErase();
         }
     }
@@ -2127,9 +2143,9 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         CancelObjectExtractionWork();
         ObjectExtractionStatusMessage = string.Empty;
 
-        var cancellationTokenSource = new CancellationTokenSource();
-        _objectExtractionCancellationTokenSource = cancellationTokenSource;
-        CancellationToken cancellationToken = cancellationTokenSource.Token;
+        using ImageEditOperationCoordinator.OperationLease operation =
+            _operationCoordinator.Start(ImageEditOperation.ObjectExtraction);
+        CancellationToken cancellationToken = operation.Token;
         ImageFile sourceImage = _imageDrawable.File;
         Size sourceSize = _imageDrawable.ImageSize;
         IsObjectExtractionRunning = true;
@@ -2141,6 +2157,12 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
             {
                 ForegroundExtractionPreparationResult preparationResult =
                     await _imageForegroundExtractionService.EnsureReadyAsync(cancellationToken);
+                cancellationToken.ThrowIfCancellationRequested();
+                if (!operation.IsCurrent)
+                {
+                    return;
+                }
+
                 if (preparationResult.Status != ForegroundExtractionPreparationStatus.Success)
                 {
                     ShowObjectExtractionFailure(GetObjectExtractionPreparationFailureMessage(preparationResult));
@@ -2164,6 +2186,12 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
                         (int)Math.Round(objectPoint.Y))),
                 cancellationToken);
 
+            cancellationToken.ThrowIfCancellationRequested();
+            if (!operation.IsCurrent)
+            {
+                return;
+            }
+
             if (result.Status != ForegroundExtractionStatus.Success || result.ImageFile is null)
             {
                 ShowObjectExtractionFailure(GetObjectExtractionFailureMessage(result));
@@ -2173,7 +2201,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
             TrackScratchArtifact(result.ImageFile.FilePath);
 
             if (cancellationToken.IsCancellationRequested ||
-                !ReferenceEquals(_objectExtractionCancellationTokenSource, cancellationTokenSource) ||
+                !operation.IsCurrent ||
                 !IsObjectExtractionModeActive ||
                 _imageDrawable is null ||
                 !string.Equals(_imageDrawable.File.FilePath, sourceImage.FilePath, StringComparison.OrdinalIgnoreCase))
@@ -2214,13 +2242,11 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         }
         finally
         {
-            if (ReferenceEquals(_objectExtractionCancellationTokenSource, cancellationTokenSource))
+            if (operation.IsCurrent)
             {
-                _objectExtractionCancellationTokenSource = null;
                 IsObjectExtractionRunning = false;
             }
 
-            cancellationTokenSource.Dispose();
             UpdateCanToggleObjectExtraction();
         }
     }
@@ -2265,8 +2291,9 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         TextExtractionRegions = [];
         TextExtractionTool.Reset();
 
-        _textExtractionCancellationTokenSource = new CancellationTokenSource();
-        CancellationToken cancellationToken = _textExtractionCancellationTokenSource.Token;
+        using ImageEditOperationCoordinator.OperationLease operation =
+            _operationCoordinator.Start(ImageEditOperation.TextExtraction);
+        CancellationToken cancellationToken = operation.Token;
         int processedRevision = _editRevision;
         IsTextExtractionRunning = true;
 
@@ -2325,9 +2352,11 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         }
         finally
         {
-            _textExtractionCancellationTokenSource?.Dispose();
-            _textExtractionCancellationTokenSource = null;
-            IsTextExtractionRunning = false;
+            if (operation.IsCurrent)
+            {
+                IsTextExtractionRunning = false;
+            }
+
             UpdateCanToggleTextExtraction();
         }
     }
@@ -2383,10 +2412,10 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
             return;
         }
 
-        var cancellationTokenSource = new CancellationTokenSource();
-        _imageDescriptionCancellationTokenSource = cancellationTokenSource;
+        using ImageEditOperationCoordinator.OperationLease operation =
+            _operationCoordinator.Start(ImageEditOperation.ImageDescription);
         _runningImageDescriptionMode = mode;
-        CancellationToken cancellationToken = cancellationTokenSource.Token;
+        CancellationToken cancellationToken = operation.Token;
         IsImageDescriptionRunning = true;
         NotifyImageDescriptionCommandsCanExecuteChanged();
         RaiseImageDescriptionSelectionProperties();
@@ -2399,7 +2428,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
                 ImageDescriptionPreparationResult preparationResult =
                     await _imageDescriptionService.EnsureReadyAsync(cancellationToken);
                 cancellationToken.ThrowIfCancellationRequested();
-                if (!ReferenceEquals(_imageDescriptionCancellationTokenSource, cancellationTokenSource))
+                if (!operation.IsCurrent)
                 {
                     return;
                 }
@@ -2426,7 +2455,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
                 new ImageDescriptionRequest(sourceImage, GetRenderedImageSize(options), mode),
                 cancellationToken);
             cancellationToken.ThrowIfCancellationRequested();
-            if (!ReferenceEquals(_imageDescriptionCancellationTokenSource, cancellationTokenSource))
+            if (!operation.IsCurrent)
             {
                 return;
             }
@@ -2447,7 +2476,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         catch (OperationCanceledException)
         {
             TrackEditTool(GetImageDescriptionTelemetryTool(mode), TelemetryOutcomes.Canceled);
-            if (ReferenceEquals(_imageDescriptionCancellationTokenSource, cancellationTokenSource))
+            if (operation.IsCurrent)
             {
                 ImageDescriptionStatusMessage = string.Empty;
             }
@@ -2455,22 +2484,20 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         catch (Exception ex)
         {
             _logService.LogException(ex, "Failed to describe image.");
-            if (ReferenceEquals(_imageDescriptionCancellationTokenSource, cancellationTokenSource))
+            if (operation.IsCurrent)
             {
                 ShowImageDescriptionFailure(GetLocalizedString("ImageDescriptionStatus_Failed"));
             }
         }
         finally
         {
-            if (ReferenceEquals(_imageDescriptionCancellationTokenSource, cancellationTokenSource))
+            if (operation.IsCurrent)
             {
-                _imageDescriptionCancellationTokenSource = null;
                 _runningImageDescriptionMode = null;
                 IsImageDescriptionRunning = false;
                 NotifyImageDescriptionCommandsCanExecuteChanged();
             }
 
-            cancellationTokenSource.Dispose();
             UpdateCanToggleImageDescription();
             UpdateCanGenerateImageDescription();
         }
@@ -2491,8 +2518,9 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
             return;
         }
 
-        _superResolutionCancellationTokenSource = new CancellationTokenSource();
-        CancellationToken cancellationToken = _superResolutionCancellationTokenSource.Token;
+        using ImageEditOperationCoordinator.OperationLease operation =
+            _operationCoordinator.Start(ImageEditOperation.SuperResolution);
+        CancellationToken cancellationToken = operation.Token;
         IsSuperResolutionGenerating = true;
 
         try
@@ -2501,6 +2529,12 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
             if (readyState == ImageSuperResolutionReadyState.PreparationNeeded)
             {
                 bool consented = await _imageSuperResolutionPreparationConsentService.ConfirmPreparationAsync(cancellationToken);
+                cancellationToken.ThrowIfCancellationRequested();
+                if (!operation.IsCurrent)
+                {
+                    return;
+                }
+
                 if (!consented)
                 {
                     return;
@@ -2508,6 +2542,12 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
                 ImageSuperResolutionPreparationResult preparationResult =
                     await _imageSuperResolutionService.EnsureReadyAsync(cancellationToken);
+                cancellationToken.ThrowIfCancellationRequested();
+                if (!operation.IsCurrent)
+                {
+                    return;
+                }
+
                 if (preparationResult.Status != ImageSuperResolutionPreparationStatus.Success)
                 {
                     ShowSuperResolutionFailure(GetPreparationFailureMessage(preparationResult));
@@ -2525,6 +2565,12 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
             ImageSuperResolutionResult result = await _imageSuperResolutionService.GenerateAsync(
                 new ImageSuperResolutionRequest(_originalImageFile, _originalImageSize),
                 cancellationToken);
+
+            cancellationToken.ThrowIfCancellationRequested();
+            if (!operation.IsCurrent)
+            {
+                return;
+            }
 
             if (result.Status != ImageSuperResolutionStatus.Success ||
                 result.ImageFile is null ||
@@ -2551,9 +2597,11 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         }
         finally
         {
-            _superResolutionCancellationTokenSource?.Dispose();
-            _superResolutionCancellationTokenSource = null;
-            IsSuperResolutionGenerating = false;
+            if (operation.IsCurrent)
+            {
+                IsSuperResolutionGenerating = false;
+            }
+
             RefreshSuperResolutionToggleState();
             UpdateCanToggleSuperResolution();
         }
@@ -2852,22 +2900,17 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
     private void CancelSuperResolutionWork()
     {
-        _superResolutionCancellationTokenSource?.Cancel();
-        _superResolutionCancellationTokenSource?.Dispose();
-        _superResolutionCancellationTokenSource = null;
+        _operationCoordinator.Cancel(ImageEditOperation.SuperResolution);
     }
 
     private void CancelTextExtractionWork()
     {
-        _textExtractionCancellationTokenSource?.Cancel();
-        _textExtractionCancellationTokenSource?.Dispose();
-        _textExtractionCancellationTokenSource = null;
+        _operationCoordinator.Cancel(ImageEditOperation.TextExtraction);
     }
 
     private void CancelImageDescriptionWork()
     {
-        _imageDescriptionCancellationTokenSource?.Cancel();
-        _imageDescriptionCancellationTokenSource = null;
+        _operationCoordinator.Cancel(ImageEditOperation.ImageDescription);
         _runningImageDescriptionMode = null;
         IsImageDescriptionRunning = false;
         NotifyImageDescriptionCommandsCanExecuteChanged();
@@ -2876,22 +2919,19 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
     private void CancelForegroundExtractionWork()
     {
-        _foregroundExtractionCancellationTokenSource?.Cancel();
-        _foregroundExtractionCancellationTokenSource = null;
+        _operationCoordinator.Cancel(ImageEditOperation.ForegroundExtraction);
         IsForegroundExtractionRunning = false;
     }
 
     private void CancelObjectEraseWork()
     {
-        _objectEraseCancellationTokenSource?.Cancel();
-        _objectEraseCancellationTokenSource = null;
+        _operationCoordinator.Cancel(ImageEditOperation.ObjectErase);
         IsObjectEraseRunning = false;
     }
 
     private void CancelObjectExtractionWork()
     {
-        _objectExtractionCancellationTokenSource?.Cancel();
-        _objectExtractionCancellationTokenSource = null;
+        _operationCoordinator.Cancel(ImageEditOperation.ObjectExtraction);
         IsObjectExtractionRunning = false;
     }
 

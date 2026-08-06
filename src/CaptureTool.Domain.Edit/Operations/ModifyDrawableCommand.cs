@@ -3,13 +3,13 @@ namespace CaptureTool.Domain.Edit.Operations;
 public sealed class ModifyDrawableCommand : IImageEditCommand, IResolutionAwareImageEditCommand
 {
     private readonly int _index;
-    private ModifyShapeOperation.ShapeState _oldState;
-    private ModifyShapeOperation.ShapeState _newState;
+    private ShapeState _oldState;
+    private ShapeState _newState;
 
     public ModifyDrawableCommand(
         int index,
-        ModifyShapeOperation.ShapeState oldState,
-        ModifyShapeOperation.ShapeState newState)
+        ShapeState oldState,
+        ShapeState newState)
     {
         _index = index;
         _oldState = oldState;

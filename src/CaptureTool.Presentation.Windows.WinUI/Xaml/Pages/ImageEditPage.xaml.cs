@@ -413,7 +413,7 @@ public sealed partial class ImageEditPage : ImageEditPageBase
         ViewModel.ShapeTool.ApplyDrawable(e);
     }
 
-    private void ImageCanvas_ShapeModified(object? _, (int ShapeIndex, ModifyShapeOperation.ShapeState OldState, ModifyShapeOperation.ShapeState NewState) e)
+    private void ImageCanvas_ShapeModified(object? _, (int ShapeIndex, ShapeState OldState, ShapeState NewState) e)
     {
         ViewModel.OnShapeModified(e.ShapeIndex, e.OldState, e.NewState);
     }
