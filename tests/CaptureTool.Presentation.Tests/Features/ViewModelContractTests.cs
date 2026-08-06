@@ -164,6 +164,106 @@ public sealed class ViewModelContractTests
     }
 
     [TestMethod]
+    public async Task HomePageViewModel_RecentCapturesChangedDuringRefresh_ShouldCoalesceAndRerun()
+    {
+        var notifier = new Mock<IRecentCapturesChangeNotifier>();
+        var getRecentCapturesUseCase = new Mock<IGetRecentCapturesUseCase>();
+        var firstQueryStarted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var firstQueryCompletion = new TaskCompletionSource<UseCaseResponse<GetRecentCapturesResponse>>(
+            TaskCreationOptions.RunContinuationsAsynchronously);
+        var staleCapture = new RecentCapture(@"C:\Temp\stale.png", "stale.png", CaptureFileType.Image);
+        var currentCapture = new RecentCapture(@"C:\Temp\current.png", "current.png", CaptureFileType.Image);
+        int queryCount = 0;
+        getRecentCapturesUseCase
+            .Setup(useCase => useCase.ExecuteAsync(
+                It.IsAny<GetRecentCapturesRequest>(),
+                It.IsAny<CancellationToken>()))
+            .Returns(() =>
+            {
+                queryCount++;
+                if (queryCount == 1)
+                {
+                    firstQueryStarted.SetResult();
+                    return firstQueryCompletion.Task;
+                }
+
+                return Task.FromResult(UseCaseResponse<GetRecentCapturesResponse>.Success(
+                    new GetRecentCapturesResponse([currentCapture])));
+            });
+        var viewModel = CreateHomePageViewModel(
+            getRecentCapturesUseCase: getRecentCapturesUseCase.Object,
+            recentCapturesChangeNotifier: notifier.Object);
+
+        Task loadTask = viewModel.LoadAsync(TestContext.CancellationToken);
+        await firstQueryStarted.Task;
+        notifier.Raise(source => source.RecentCapturesChanged += null, EventArgs.Empty);
+        notifier.Raise(source => source.RecentCapturesChanged += null, EventArgs.Empty);
+        firstQueryCompletion.SetResult(UseCaseResponse<GetRecentCapturesResponse>.Success(
+            new GetRecentCapturesResponse([staleCapture])));
+        await loadTask;
+
+        Assert.AreEqual(2, queryCount);
+        Assert.HasCount(1, viewModel.RecentCaptures);
+        Assert.AreEqual(currentCapture.FilePath, viewModel.RecentCaptures[0].FilePath);
+    }
+
+    [TestMethod]
+    public async Task HomePageViewModel_RecentCapturesChangedDuringLoadMore_ShouldRerunFromFirstPage()
+    {
+        var notifier = new Mock<IRecentCapturesChangeNotifier>();
+        var getRecentCapturesUseCase = new Mock<IGetRecentCapturesUseCase>();
+        var loadMoreStarted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var loadMoreCompletion = new TaskCompletionSource<UseCaseResponse<GetRecentCapturesResponse>>(
+            TaskCreationOptions.RunContinuationsAsynchronously);
+        RecentCapture[] firstPage = Enumerable.Range(0, 24)
+            .Select(index => new RecentCapture(
+                $@"C:\Temp\capture-{index}.png",
+                $"capture-{index}.png",
+                CaptureFileType.Image))
+            .ToArray();
+        var pagedCapture = new RecentCapture(@"C:\Temp\paged.png", "paged.png", CaptureFileType.Image);
+        var refreshedCapture = new RecentCapture(@"C:\Temp\refreshed.png", "refreshed.png", CaptureFileType.Image);
+        int queryCount = 0;
+        getRecentCapturesUseCase
+            .Setup(useCase => useCase.ExecuteAsync(
+                It.IsAny<GetRecentCapturesRequest>(),
+                It.IsAny<CancellationToken>()))
+            .Returns(() =>
+            {
+                queryCount++;
+                return queryCount switch
+                {
+                    1 => Task.FromResult(UseCaseResponse<GetRecentCapturesResponse>.Success(
+                        new GetRecentCapturesResponse(firstPage, HasMore: true))),
+                    2 => StartLoadMoreQuery(),
+                    _ => Task.FromResult(UseCaseResponse<GetRecentCapturesResponse>.Success(
+                        new GetRecentCapturesResponse([refreshedCapture]))),
+                };
+            });
+        var viewModel = CreateHomePageViewModel(
+            getRecentCapturesUseCase: getRecentCapturesUseCase.Object,
+            recentCapturesChangeNotifier: notifier.Object);
+        await viewModel.LoadAsync(TestContext.CancellationToken);
+
+        Task loadMoreTask = viewModel.LoadMoreRecentCapturesCommand.ExecuteAsync(null);
+        await loadMoreStarted.Task;
+        notifier.Raise(source => source.RecentCapturesChanged += null, EventArgs.Empty);
+        loadMoreCompletion.SetResult(UseCaseResponse<GetRecentCapturesResponse>.Success(
+            new GetRecentCapturesResponse([pagedCapture])));
+        await loadMoreTask;
+
+        Assert.AreEqual(3, queryCount);
+        Assert.HasCount(1, viewModel.RecentCaptures);
+        Assert.AreEqual(refreshedCapture.FilePath, viewModel.RecentCaptures[0].FilePath);
+
+        Task<UseCaseResponse<GetRecentCapturesResponse>> StartLoadMoreQuery()
+        {
+            loadMoreStarted.SetResult();
+            return loadMoreCompletion.Task;
+        }
+    }
+
+    [TestMethod]
     public async Task HomePageViewModel_ClearRecentCapturesCommand_ShouldClearCatalogAndRefresh()
     {
         var clearRecentCapturesUseCase = new Mock<IClearRecentCapturesUseCase>();
