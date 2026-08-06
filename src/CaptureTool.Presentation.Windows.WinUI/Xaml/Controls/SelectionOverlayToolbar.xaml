@@ -12,6 +12,7 @@
     xmlns:utils="using:CaptureTool.Presentation.Windows.WinUI.Utils"
     xmlns:viewmodels="using:CaptureTool.Presentation.Features.SelectionOverlay"
     d:DataContext="{d:DesignInstance Type=local:SelectionOverlayToolbar}"
+    IsTextScaleFactorEnabled="False"
     mc:Ignorable="d">
     <StackPanel
         x:Name="ToolbarPanel"
