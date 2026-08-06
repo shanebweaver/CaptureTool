@@ -11,6 +11,7 @@
     xmlns:toolkit="using:CommunityToolkit.WinUI.Controls"
     xmlns:utils="using:CaptureTool.Presentation.Windows.WinUI.Utils"
     d:DataContext="{d:DesignInstance Type=local:CaptureOverlayToolbar}"
+    IsTextScaleFactorEnabled="False"
     mc:Ignorable="d">
     <Grid
         x:Name="ToolbarPanel"
