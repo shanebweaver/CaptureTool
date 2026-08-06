@@ -67,7 +67,8 @@ public sealed class AnnotationService : IAnnotationService
             sourceCapture.Metadata.WorkAreaBounds?.ToRectangle(),
             sourceCapture.Metadata.IsPrimary,
             sourceCaptureId: sourceCapture.Metadata.CaptureId,
-            annotationPlacements: annotationDrawables.Placements);
+            annotationPlacements: annotationDrawables.Placements,
+            monitorSegments: sourceCapture.Metadata.MonitorSegments);
 
         var annotatedCapture = new McpCapture(outputStream.ToArray(), metadata);
         _captureStore.Store(annotatedCapture);

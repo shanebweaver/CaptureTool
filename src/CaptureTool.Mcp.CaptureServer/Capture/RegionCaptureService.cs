@@ -42,10 +42,6 @@ public sealed class RegionCaptureService : IRegionCaptureService
             throw new InvalidOperationException("The requested capture region does not intersect any monitor.");
         }
 
-        MonitorCaptureResult referenceMonitor = monitors
-            .OrderByDescending(monitor => Rectangle.Intersect(monitor.MonitorBounds, region).Width * Rectangle.Intersect(monitor.MonitorBounds, region).Height)
-            .First();
-
         MonitorCaptureResult? containingMonitor = monitors
             .Cast<MonitorCaptureResult?>()
             .FirstOrDefault(monitor => monitor!.Value.MonitorBounds.Contains(region));
@@ -71,17 +67,24 @@ public sealed class RegionCaptureService : IRegionCaptureService
         }
 
         using Bitmap regionBitmap = CaptureSpanningRegionBitmap(region, monitors);
-        return StoreRegionCapture(regionBitmap, region, referenceMonitor.Dpi, referenceMonitor.Scale);
+        CaptureDisplayMetadata displayMetadata = CaptureDisplayMetadata.Create(monitors, region);
+        return StoreRegionCapture(
+            regionBitmap,
+            region,
+            displayMetadata.Dpi,
+            displayMetadata.Scale,
+            monitorSegments: displayMetadata.MonitorSegments);
     }
 
     private McpCapture StoreRegionCapture(
         Bitmap regionBitmap,
         Rectangle sourceBounds,
-        uint dpi,
-        float scale,
+        uint? dpi,
+        float? scale,
         Rectangle? monitorBounds = null,
         Rectangle? workAreaBounds = null,
-        bool? isPrimary = null)
+        bool? isPrimary = null,
+        MonitorSegmentDto[]? monitorSegments = null)
     {
         using var stream = new MemoryStream();
         regionBitmap.Save(stream, ImageFormat.Png);
@@ -98,7 +101,8 @@ public sealed class RegionCaptureService : IRegionCaptureService
             "png",
             monitorBounds,
             workAreaBounds,
-            isPrimary);
+            isPrimary,
+            monitorSegments: monitorSegments);
 
         var capture = new McpCapture(stream.ToArray(), metadata);
         _captureStore.Store(capture);

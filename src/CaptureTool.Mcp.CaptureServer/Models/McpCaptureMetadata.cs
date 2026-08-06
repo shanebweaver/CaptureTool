@@ -7,8 +7,8 @@ public sealed record McpCaptureMetadata(
     DateTimeOffset CapturedAtUtc,
     int Width,
     int Height,
-    uint Dpi,
-    float Scale,
+    uint? Dpi,
+    float? Scale,
     RectangleDto SourceBounds,
     RectangleDto ImageBounds,
     string SourceKind,
@@ -19,15 +19,18 @@ public sealed record McpCaptureMetadata(
     string? TargetId = null,
     string? TargetTitle = null,
     string? SourceCaptureId = null,
-    AnnotationPlacementDto[]? AnnotationPlacements = null)
+    AnnotationPlacementDto[]? AnnotationPlacements = null,
+    MonitorSegmentDto[]? MonitorSegments = null)
 {
+    public bool IsDpiScaleUniform => Dpi.HasValue && Scale.HasValue;
+
     public static McpCaptureMetadata Create(
         string captureId,
         DateTimeOffset capturedAtUtc,
         int width,
         int height,
-        uint dpi,
-        float scale,
+        uint? dpi,
+        float? scale,
         Rectangle sourceBounds,
         string sourceKind,
         string format,
@@ -37,7 +40,8 @@ public sealed record McpCaptureMetadata(
         string? targetId = null,
         string? targetTitle = null,
         string? sourceCaptureId = null,
-        AnnotationPlacementDto[]? annotationPlacements = null)
+        AnnotationPlacementDto[]? annotationPlacements = null,
+        MonitorSegmentDto[]? monitorSegments = null)
         => new(
             captureId,
             capturedAtUtc,
@@ -55,5 +59,6 @@ public sealed record McpCaptureMetadata(
             targetId,
             targetTitle,
             sourceCaptureId,
-            annotationPlacements);
+            annotationPlacements,
+            monitorSegments);
 }

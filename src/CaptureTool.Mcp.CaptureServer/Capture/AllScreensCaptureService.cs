@@ -28,27 +28,23 @@ public sealed class AllScreensCaptureService : IAllScreensCaptureService
             throw new InvalidOperationException("No monitors are available to capture.");
         }
 
-        MonitorCaptureResult referenceMonitor = monitors.FirstOrDefault(monitor => monitor.IsPrimary);
-        if (!referenceMonitor.IsPrimary)
-        {
-            referenceMonitor = monitors[0];
-        }
-
         using var bitmap = _screenCapture.CombineMonitors(monitors);
         using var stream = new MemoryStream();
         bitmap.Save(stream, ImageFormat.Png);
 
         Rectangle sourceBounds = CaptureTargetSelection.CombineBounds(monitors.Select(monitor => monitor.MonitorBounds));
+        CaptureDisplayMetadata displayMetadata = CaptureDisplayMetadata.Create(monitors, sourceBounds);
         var metadata = McpCaptureMetadata.Create(
             McpCaptureIds.Create(),
             _timeProvider.GetUtcNow(),
             bitmap.Width,
             bitmap.Height,
-            referenceMonitor.Dpi,
-            referenceMonitor.Scale,
+            displayMetadata.Dpi,
+            displayMetadata.Scale,
             sourceBounds,
             "allScreens",
-            "png");
+            "png",
+            monitorSegments: displayMetadata.MonitorSegments);
 
         var capture = new McpCapture(stream.ToArray(), metadata);
         _captureStore.Store(capture);
