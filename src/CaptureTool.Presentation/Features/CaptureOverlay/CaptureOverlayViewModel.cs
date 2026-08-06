@@ -507,9 +507,20 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
             return;
         }
 
-        IsRecording = false;
         StopTimer();
-        await _stopVideoCaptureCommand.ExecuteAsync(new StopVideoCaptureRequest(), CancellationToken.None);
+        try
+        {
+            await _stopVideoCaptureCommand.ExecuteAsync(new StopVideoCaptureRequest(), CancellationToken.None);
+        }
+        finally
+        {
+            // Keep the recording controls stable while the stop flow navigates away.
+            // If navigation is rejected, switch to the idle layout once stopping is complete.
+            if (!_isDisposed)
+            {
+                IsRecording = false;
+            }
+        }
     }
 
     private async Task TogglePauseResumeAsync()
