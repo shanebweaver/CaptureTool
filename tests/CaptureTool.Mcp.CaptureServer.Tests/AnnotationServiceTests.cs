@@ -43,7 +43,26 @@ public sealed class AnnotationServiceTests
         annotated.PngBytes.Should().StartWith([0x89, 0x50, 0x4E, 0x47]);
     }
 
-    private static McpCapture CreateStoredCapture(string captureId, Size size)
+    [TestMethod]
+    public void AnnotateWithArrow_PreservesMixedDpiMonitorSegments()
+    {
+        var captureStore = new InMemoryMcpCaptureStore();
+        McpCapture sourceCapture = CreateStoredCapture("capture:mixed", new Size(300, 200), mixedDpi: true);
+        captureStore.Store(sourceCapture);
+        var annotationService = new AnnotationService(
+            captureStore,
+            new AnnotationDrawableFactory(),
+            new ManualTimeProvider(AnnotationTime));
+
+        McpCapture annotated = annotationService.AnnotateWithArrow("capture:mixed", 20, 30, 220, 150, null);
+
+        annotated.Metadata.Dpi.Should().BeNull();
+        annotated.Metadata.Scale.Should().BeNull();
+        annotated.Metadata.IsDpiScaleUniform.Should().BeFalse();
+        annotated.Metadata.MonitorSegments.Should().BeEquivalentTo(sourceCapture.Metadata.MonitorSegments);
+    }
+
+    private static McpCapture CreateStoredCapture(string captureId, Size size, bool mixedDpi = false)
     {
         using var bitmap = new Bitmap(size.Width, size.Height);
         using Graphics graphics = Graphics.FromImage(bitmap);
@@ -51,16 +70,23 @@ public sealed class AnnotationServiceTests
         using var stream = new MemoryStream();
         bitmap.Save(stream, ImageFormat.Png);
 
+        MonitorSegmentDto[]? monitorSegments = mixedDpi
+            ? [
+                new("hmonitor:1", new RectangleDto(0, 0, 150, 200), new RectangleDto(0, 0, 150, 200), 96, 1, true),
+                new("hmonitor:2", new RectangleDto(150, 0, 150, 200), new RectangleDto(150, 0, 150, 200), 144, 1.5f, false),
+            ]
+            : null;
         var metadata = McpCaptureMetadata.Create(
             captureId,
             AnnotationTime,
             size.Width,
             size.Height,
-            dpi: 96,
-            scale: 1,
+            dpi: mixedDpi ? null : 96,
+            scale: mixedDpi ? null : 1,
             new Rectangle(Point.Empty, size),
             "region",
-            "png");
+            "png",
+            monitorSegments: monitorSegments);
 
         return new McpCapture(stream.ToArray(), metadata);
     }

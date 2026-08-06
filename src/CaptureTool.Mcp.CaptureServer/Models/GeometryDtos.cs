@@ -11,3 +11,11 @@ public sealed record RectangleDto(int X, int Y, int Width, int Height)
 }
 
 public sealed record PointDto(int X, int Y);
+
+public sealed record MonitorSegmentDto(
+    string MonitorId,
+    RectangleDto SourceBounds,
+    RectangleDto ImageBounds,
+    uint Dpi,
+    float Scale,
+    bool IsPrimary);
