@@ -24,12 +24,17 @@ public sealed partial class StorePageViewModel : AsyncLoadableViewModelBase
 
         ChromaKeyAddOnPrice = localizationService.GetString("AddOns_ItemUnknown");
         GoBackCommand = leaveStorePageCommand.ToRelayCommand(() => new LeaveStorePageRequest());
-        PurchaseChromaKeyAddOnCommand = purchaseChromaKeyAddOnCommand.ToAsyncRelayCommand(() => new PurchaseChromaKeyAddOnRequest());
+        PurchaseChromaKeyAddOnCommand = new AsyncRelayCommand(
+            PurchaseChromaKeyAddOnAsync,
+            () => CanPurchaseChromaKeyAddOn,
+            AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
+        _purchaseChromaKeyAddOnCommand = purchaseChromaKeyAddOnCommand;
         _getChromaKeyAddOnQuery = getChromaKeyAddOnQuery;
     }
 
     private readonly ILocalizationService _localizationService;
     private readonly ICancellationService _cancellationService;
+    private readonly IPurchaseChromaKeyAddOnUseCase _purchaseChromaKeyAddOnCommand;
     private readonly IGetChromaKeyAddOnUseCase _getChromaKeyAddOnQuery;
 
     public IAsyncRelayCommand PurchaseChromaKeyAddOnCommand { get; }
@@ -38,13 +43,26 @@ public sealed partial class StorePageViewModel : AsyncLoadableViewModelBase
     public bool IsChromaKeyAddOnOwned
     {
         get;
-        private set => Set(ref field, value);
+        private set
+        {
+            if (Set(ref field, value))
+            {
+                RaisePropertyChanged(nameof(CanPurchaseChromaKeyAddOn));
+                PurchaseChromaKeyAddOnCommand.NotifyCanExecuteChanged();
+            }
+        }
     }
 
     public string ChromaKeyAddOnPrice
     {
         get;
-        private set => Set(ref field, value);
+        private set
+        {
+            if (Set(ref field, value))
+            {
+                RaisePropertyChanged(nameof(ChromaKeyAddOnPurchaseButtonText));
+            }
+        }
     }
 
     public Uri? ChromaKeyAddOnLogoImage
@@ -56,40 +74,128 @@ public sealed partial class StorePageViewModel : AsyncLoadableViewModelBase
     public bool IsChromaKeyAddOnAvailable
     {
         get;
+        private set
+        {
+            if (Set(ref field, value))
+            {
+                RaisePropertyChanged(nameof(CanPurchaseChromaKeyAddOn));
+                PurchaseChromaKeyAddOnCommand.NotifyCanExecuteChanged();
+            }
+        }
+    }
+
+    public bool IsPurchasingChromaKeyAddOn
+    {
+        get;
+        private set
+        {
+            if (Set(ref field, value))
+            {
+                RaisePropertyChanged(nameof(CanPurchaseChromaKeyAddOn));
+                RaisePropertyChanged(nameof(ChromaKeyAddOnPurchaseButtonText));
+                PurchaseChromaKeyAddOnCommand.NotifyCanExecuteChanged();
+            }
+        }
+    }
+
+    public bool HasChromaKeyAddOnPurchaseFailure
+    {
+        get;
         private set => Set(ref field, value);
     }
+
+    public bool CanPurchaseChromaKeyAddOn =>
+        IsChromaKeyAddOnAvailable &&
+        !IsChromaKeyAddOnOwned &&
+        !IsPurchasingChromaKeyAddOn;
+
+    public string ChromaKeyAddOnPurchaseButtonText =>
+        IsPurchasingChromaKeyAddOn ? string.Empty : ChromaKeyAddOnPrice;
 
     public override async Task LoadAsync(CancellationToken cancellationToken)
     {
         ThrowIfNotReadyToLoad();
         StartLoading();
 
-        var cts = _cancellationService.GetLinkedCancellationTokenSource(cancellationToken);
+        using CancellationTokenSource cts =
+            _cancellationService.GetLinkedCancellationTokenSource(cancellationToken);
+        await RefreshChromaKeyAddOnAsync(false, cts.Token);
+        await base.LoadAsync(cts.Token);
+    }
+
+    private async Task PurchaseChromaKeyAddOnAsync(CancellationToken cancellationToken)
+    {
+        if (!CanPurchaseChromaKeyAddOn)
+        {
+            return;
+        }
+
+        HasChromaKeyAddOnPurchaseFailure = false;
+        IsPurchasingChromaKeyAddOn = true;
+        using CancellationTokenSource cts =
+            _cancellationService.GetLinkedCancellationTokenSource(cancellationToken);
         try
         {
-            IStoreAddOn? addOn = (await _getChromaKeyAddOnQuery.ExecuteAsync(new GetChromaKeyAddOnRequest(), cancellationToken)).Value?.AddOn;
-
-            if (addOn != null)
+            var response = await _purchaseChromaKeyAddOnCommand.ExecuteAsync(
+                new PurchaseChromaKeyAddOnRequest(),
+                cts.Token);
+            if (response.Value?.Purchased != true)
             {
-                bool isOwned = addOn.IsOwned;
-                IsChromaKeyAddOnAvailable = !isOwned;
-                IsChromaKeyAddOnOwned = isOwned;
-                ChromaKeyAddOnPrice = isOwned ? _localizationService.GetString("AddOns_ItemOwned") : addOn.Price;
-                ChromaKeyAddOnLogoImage = addOn.LogoImage;
-            }
-            else
-            {
-                IsChromaKeyAddOnAvailable = false;
-                IsChromaKeyAddOnOwned = false;
-                ChromaKeyAddOnPrice = _localizationService.GetString("AddOns_ItemNotAvailable");
-                ChromaKeyAddOnLogoImage = null;
+                HasChromaKeyAddOnPurchaseFailure = true;
+                return;
             }
 
-            await base.LoadAsync(cancellationToken);
+            await RefreshChromaKeyAddOnAsync(true, cts.Token);
+        }
+        catch (OperationCanceledException)
+        {
+            HasChromaKeyAddOnPurchaseFailure = true;
         }
         finally
         {
-            cts.Dispose();
+            IsPurchasingChromaKeyAddOn = false;
+        }
+    }
+
+    private async Task RefreshChromaKeyAddOnAsync(
+        bool purchaseConfirmed,
+        CancellationToken cancellationToken)
+    {
+        var response = await _getChromaKeyAddOnQuery.ExecuteAsync(
+            new GetChromaKeyAddOnRequest(),
+            cancellationToken);
+        ApplyChromaKeyAddOn(response.Value?.AddOn, purchaseConfirmed);
+    }
+
+    private void ApplyChromaKeyAddOn(IStoreAddOn? addOn, bool purchaseConfirmed)
+    {
+        if (addOn is not null)
+        {
+            bool isOwned = purchaseConfirmed || addOn.IsOwned;
+            IsChromaKeyAddOnAvailable = !isOwned;
+            IsChromaKeyAddOnOwned = isOwned;
+            ChromaKeyAddOnPrice = isOwned
+                ? _localizationService.GetString("AddOns_ItemOwned")
+                : addOn.Price;
+            ChromaKeyAddOnLogoImage = addOn.LogoImage;
+        }
+        else if (purchaseConfirmed)
+        {
+            IsChromaKeyAddOnAvailable = false;
+            IsChromaKeyAddOnOwned = true;
+            ChromaKeyAddOnPrice = _localizationService.GetString("AddOns_ItemOwned");
+        }
+        else
+        {
+            IsChromaKeyAddOnAvailable = false;
+            IsChromaKeyAddOnOwned = false;
+            ChromaKeyAddOnPrice = _localizationService.GetString("AddOns_ItemNotAvailable");
+            ChromaKeyAddOnLogoImage = null;
+        }
+
+        if (IsChromaKeyAddOnOwned)
+        {
+            HasChromaKeyAddOnPurchaseFailure = false;
         }
     }
 }
