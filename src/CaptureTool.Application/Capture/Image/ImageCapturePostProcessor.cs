@@ -1,10 +1,11 @@
 using CaptureTool.Application.Abstractions.Clipboard;
 using CaptureTool.Application.Abstractions.Logging;
-using CaptureTool.Application.Abstractions.Library.RecentCaptures;
 using CaptureTool.Application.Abstractions.Settings;
 using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Application.Abstractions.TaskEnvironment;
 using CaptureTool.Application.Abstractions.Telemetry;
+using CaptureTool.Application.Capture.Assets;
+using CaptureTool.Domain;
 using CaptureTool.Domain.FileSystem;
 using CaptureTool.Domain.Capture;
 
@@ -19,7 +20,7 @@ internal sealed class ImageCapturePostProcessor
     private readonly ITaskEnvironment _taskEnvironment;
     private readonly ILogService _logService;
     private readonly ImageCaptureFileNameGenerator _fileNameGenerator;
-    private readonly IRecentCaptureCatalog _recentCaptureCatalog;
+    private readonly ICaptureAssetLifecycleService _captureAssetLifecycleService;
     private readonly ITelemetryService? _telemetryService;
 
     public ImageCapturePostProcessor(
@@ -30,7 +31,7 @@ internal sealed class ImageCapturePostProcessor
         ITaskEnvironment taskEnvironment,
         ILogService logService,
         ImageCaptureFileNameGenerator fileNameGenerator,
-        IRecentCaptureCatalog recentCaptureCatalog,
+        ICaptureAssetLifecycleService captureAssetLifecycleService,
         ITelemetryService? telemetryService = null)
     {
         _clipboardService = clipboardService;
@@ -40,14 +41,16 @@ internal sealed class ImageCapturePostProcessor
         _taskEnvironment = taskEnvironment;
         _logService = logService;
         _fileNameGenerator = fileNameGenerator;
-        _recentCaptureCatalog = recentCaptureCatalog;
+        _captureAssetLifecycleService = captureAssetLifecycleService;
         _telemetryService = telemetryService;
     }
 
     public void Process(ImageFile imageFile)
     {
-        _recentCaptureCatalog.RecordCaptured(imageFile.FilePath, CaptureFileType.Image);
-        AutoSaveImage(imageFile);
+        CaptureId? captureId = _captureAssetLifecycleService.TryFinalize(
+            imageFile.FilePath,
+            CaptureFileType.Image);
+        AutoSaveImage(imageFile, captureId);
         AutoCopyImage(imageFile);
     }
 
@@ -75,7 +78,7 @@ internal sealed class ImageCapturePostProcessor
         });
     }
 
-    private void AutoSaveImage(ImageFile imageFile)
+    private void AutoSaveImage(ImageFile imageFile, CaptureId? captureId)
     {
         _taskEnvironment.TryExecute(() =>
         {
@@ -98,7 +101,10 @@ internal sealed class ImageCapturePostProcessor
                     screenshotsFolder,
                     _fileNameGenerator.GetNewCaptureFileName);
                 imageFile.PersistentFilePath = newFilePath;
-                _recentCaptureCatalog.ReplacePath(imageFile.FilePath, newFilePath);
+                _captureAssetLifecycleService.TrySetPreferredOpenPath(
+                    captureId,
+                    imageFile.FilePath,
+                    newFilePath);
                 TrackOutput("auto_save", TelemetryOutcomes.Succeeded);
             }
             catch (Exception e)

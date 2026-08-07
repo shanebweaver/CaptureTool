@@ -1,3 +1,4 @@
+using CaptureTool.Application.Abstractions.Capture.Assets;
 using CaptureTool.Application.Abstractions.Library.RecentCaptures;
 using CaptureTool.Application.Abstractions.Library.RecentCaptures.ClearRecentCaptures;
 using CaptureTool.Application.Abstractions.UseCases;
@@ -10,13 +11,16 @@ internal sealed class ClearRecentCapturesUseCase : IClearRecentCapturesUseCase
     private const string ActivityId = "ClearRecentCaptures";
 
     private readonly IRecentCaptureCatalog _recentCaptureCatalog;
+    private readonly ICaptureAssetCatalog _captureAssetCatalog;
     private readonly IUseCaseExecutor _useCaseExecutor;
 
     public ClearRecentCapturesUseCase(
         IRecentCaptureCatalog recentCaptureCatalog,
+        ICaptureAssetCatalog captureAssetCatalog,
         IUseCaseExecutor useCaseExecutor)
     {
         _recentCaptureCatalog = recentCaptureCatalog;
+        _captureAssetCatalog = captureAssetCatalog;
         _useCaseExecutor = useCaseExecutor;
     }
 
@@ -30,7 +34,7 @@ internal sealed class ClearRecentCapturesUseCase : IClearRecentCapturesUseCase
             activityId: ActivityId,
             useCase: () =>
             {
-                _recentCaptureCatalog.Clear();
+                _recentCaptureCatalog.Clear(_captureAssetCatalog.GetLatestChangeSequence());
                 return new ClearRecentCapturesResponse();
             },
             cancellationToken: cancellationToken);

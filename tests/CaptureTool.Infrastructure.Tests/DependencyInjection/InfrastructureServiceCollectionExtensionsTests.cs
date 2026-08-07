@@ -1,5 +1,6 @@
 using CaptureTool.Application.Abstractions.Ai;
 using CaptureTool.Application.Abstractions.Cancellation;
+using CaptureTool.Application.Abstractions.Capture.Assets;
 using CaptureTool.Application.Abstractions.Edit.Image.ChromaKey;
 using CaptureTool.Application.Abstractions.Edit.Image.Description;
 using CaptureTool.Application.Abstractions.Edit.Image.ForegroundExtraction;
@@ -20,6 +21,7 @@ using CaptureTool.Application.Abstractions.TaskEnvironment;
 using CaptureTool.Application.Abstractions.Telemetry;
 using CaptureTool.Application.Abstractions.Time;
 using CaptureTool.Infrastructure.Cancellation;
+using CaptureTool.Infrastructure.CaptureAssets;
 using CaptureTool.Infrastructure.DependencyInjection;
 using CaptureTool.Infrastructure.Features;
 using CaptureTool.Infrastructure.Files;
@@ -48,6 +50,8 @@ public sealed class InfrastructureServiceCollectionExtensionsTests
 
         Assert.AreSame(services, result);
         AssertHasRegistration<ICancellationService, CancellationService>(services);
+        AssertHasRegistration<ICaptureAssetCatalog, LocalCaptureAssetCatalog>(services);
+        AssertHasRegistration<ICaptureAssetChangeSignal, NullCaptureAssetChangeSignal>(services);
         AssertHasRegistration<IAiConsentSettingsFeatureAvailability, AiConsentSettingsFeatureAvailability>(services);
         AssertHasRegistration<IStoreFeatureAvailability, StoreFeatureAvailability>(services);
         AssertHasRegistration<IChromaKeyFeatureAvailability, ChromaKeyFeatureAvailability>(services);

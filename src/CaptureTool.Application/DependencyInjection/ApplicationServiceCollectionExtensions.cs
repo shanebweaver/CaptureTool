@@ -23,6 +23,7 @@ public static class ApplicationServiceCollectionExtensions
             .AddActivationServices()
             .AddAppMenuUseCases()
             .AddAudioCaptureServices()
+            .AddCaptureAssetServices()
             .AddAudioEditUseCases()
             .AddCaptureOverlayUseCases()
             .AddDiagnosticsUseCases()

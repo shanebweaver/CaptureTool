@@ -1,10 +1,11 @@
 using CaptureTool.Application.Abstractions.Clipboard;
 using CaptureTool.Application.Abstractions.Logging;
-using CaptureTool.Application.Abstractions.Library.RecentCaptures;
 using CaptureTool.Application.Abstractions.Settings;
 using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Application.Abstractions.TaskEnvironment;
 using CaptureTool.Application.Abstractions.Telemetry;
+using CaptureTool.Application.Capture.Assets;
+using CaptureTool.Domain;
 using CaptureTool.Domain.FileSystem;
 using CaptureTool.Domain.Capture;
 
@@ -19,7 +20,7 @@ internal sealed class AudioCapturePostProcessor
     private readonly ITaskEnvironment _taskEnvironment;
     private readonly ILogService _logService;
     private readonly AudioCaptureFileNameGenerator _fileNameGenerator;
-    private readonly IRecentCaptureCatalog _recentCaptureCatalog;
+    private readonly ICaptureAssetLifecycleService _captureAssetLifecycleService;
     private readonly ITelemetryService? _telemetryService;
 
     public AudioCapturePostProcessor(
@@ -30,7 +31,7 @@ internal sealed class AudioCapturePostProcessor
         ITaskEnvironment taskEnvironment,
         ILogService logService,
         AudioCaptureFileNameGenerator fileNameGenerator,
-        IRecentCaptureCatalog recentCaptureCatalog,
+        ICaptureAssetLifecycleService captureAssetLifecycleService,
         ITelemetryService? telemetryService = null)
     {
         _clipboardService = clipboardService;
@@ -40,14 +41,16 @@ internal sealed class AudioCapturePostProcessor
         _taskEnvironment = taskEnvironment;
         _logService = logService;
         _fileNameGenerator = fileNameGenerator;
-        _recentCaptureCatalog = recentCaptureCatalog;
+        _captureAssetLifecycleService = captureAssetLifecycleService;
         _telemetryService = telemetryService;
     }
 
     public void Process(AudioFile audioFile)
     {
-        _recentCaptureCatalog.RecordCaptured(audioFile.FilePath, CaptureFileType.Audio);
-        AutoSaveAudio(audioFile);
+        CaptureId? captureId = _captureAssetLifecycleService.TryFinalize(
+            audioFile.FilePath,
+            CaptureFileType.Audio);
+        AutoSaveAudio(audioFile, captureId);
         AutoCopyAudio(audioFile);
     }
 
@@ -75,7 +78,7 @@ internal sealed class AudioCapturePostProcessor
         });
     }
 
-    private void AutoSaveAudio(AudioFile audioFile)
+    private void AutoSaveAudio(AudioFile audioFile, CaptureId? captureId)
     {
         try
         {
@@ -95,7 +98,10 @@ internal sealed class AudioCapturePostProcessor
                 audioFile.FilePath,
                 audioFolder,
                 _fileNameGenerator.GetNewCaptureFileName);
-            _recentCaptureCatalog.ReplacePath(audioFile.FilePath, newFilePath);
+            _captureAssetLifecycleService.TrySetPreferredOpenPath(
+                captureId,
+                audioFile.FilePath,
+                newFilePath);
             TrackOutput("auto_save", TelemetryOutcomes.Succeeded);
         }
         catch (Exception e)

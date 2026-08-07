@@ -12,6 +12,7 @@ using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Application.Abstractions.Telemetry;
 using CaptureTool.Application.Abstractions.UseCases;
 using CaptureTool.Application.Activation;
+using CaptureTool.Application.Capture.Assets;
 using CaptureTool.Application.Capture.Overlay.OpenSelectionOverlay;
 using CaptureTool.Application.EditSessions;
 using CaptureTool.Application.Navigation;
@@ -55,6 +56,7 @@ public sealed class ActivationHandlerTests
         fixture.ScratchArtifactStore.Verify(
             service => service.ScavengeStaleArtifacts(TimeSpan.FromDays(7)),
             Times.Once);
+        Assert.AreEqual(1, fixture.CaptureAssetBootstrapper.InitializeCallCount);
     }
 
     [TestMethod]
@@ -123,6 +125,23 @@ public sealed class ActivationHandlerTests
             Times.Once);
         fixture.LogService.Verify(
             service => service.LogException(exception, "Failed to scavenge stale scratch artifacts."),
+            Times.Once);
+    }
+
+    [TestMethod]
+    public async Task ApplicationStartupInitializer_WhenCaptureAssetBootstrapFails_ShouldContinueInitialization()
+    {
+        StartupInitializerFixture fixture = new();
+        var exception = new IOException("capture catalog unavailable");
+        fixture.CaptureAssetBootstrapper.ExceptionToThrow = exception;
+
+        await fixture.Initializer.InitializeAsync(TestContext.CancellationToken);
+
+        fixture.NavigationService.Verify(
+            service => service.SetNavigationHandler(fixture.NavigationHandler.Object),
+            Times.Once);
+        fixture.LogService.Verify(
+            service => service.LogException(exception, "Failed to initialize capture assets."),
             Times.Once);
     }
 
@@ -455,7 +474,6 @@ public sealed class ActivationHandlerTests
             StorageService
                 .Setup(service => service.GetApplicationDataFolderPath())
                 .Returns(AppDataFolder);
-
             Initializer = new ApplicationStartupInitializer(
                 CancellationService.Object,
                 Settings.Object,
@@ -466,6 +484,7 @@ public sealed class ActivationHandlerTests
                 NavigationService.Object,
                 StorageService.Object,
                 ScratchArtifactStore.Object,
+                CaptureAssetBootstrapper,
                 telemetryConsentService: TelemetryConsent.Object);
         }
 
@@ -480,6 +499,22 @@ public sealed class ActivationHandlerTests
         public Mock<INavigationService> NavigationService { get; } = new();
         public Mock<IStorageService> StorageService { get; } = new();
         public Mock<IScratchArtifactStore> ScratchArtifactStore { get; } = new();
+        public TestCaptureAssetBootstrapper CaptureAssetBootstrapper { get; } = new();
         public Mock<ITelemetryConsentService> TelemetryConsent { get; } = new();
+    }
+
+    private sealed class TestCaptureAssetBootstrapper : ICaptureAssetBootstrapper
+    {
+        public int InitializeCallCount { get; private set; }
+
+        public Exception? ExceptionToThrow { get; set; }
+
+        public Task InitializeAsync(CancellationToken cancellationToken = default)
+        {
+            InitializeCallCount++;
+            return ExceptionToThrow is null
+                ? Task.CompletedTask
+                : Task.FromException(ExceptionToThrow);
+        }
     }
 }

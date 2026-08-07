@@ -17,6 +17,7 @@ using CaptureTool.Application.Activation;
 using CaptureTool.Application.Ai;
 using CaptureTool.Application.Capture.Audio;
 using CaptureTool.Application.Capture.Audio.CancelAudioCapture;
+using CaptureTool.Application.Capture.Assets;
 using CaptureTool.Application.Capture.Image;
 using CaptureTool.Application.Capture.Image.CaptureAllScreensImage;
 using CaptureTool.Application.Capture.Image.CaptureImage;
@@ -50,6 +51,8 @@ public sealed class ApplicationServiceCollectionExtensionsTests
         AssertHasRegistration<IUseCaseExecutor, UseCaseExecutor>(services, ServiceLifetime.Transient);
         AssertHasRegistration<IAiFeatureConsentService, AiFeatureConsentService>(services, ServiceLifetime.Singleton);
         AssertHasRegistration<IApplicationStartupInitializer, ApplicationStartupInitializer>(services, ServiceLifetime.Singleton);
+        AssertHasRegistration<ICaptureAssetBootstrapper, CaptureAssetBootstrapper>(services, ServiceLifetime.Singleton);
+        AssertHasRegistration<ICaptureAssetLifecycleService, CaptureAssetLifecycleService>(services, ServiceLifetime.Singleton);
         AssertHasRegistration<ILaunchNavigationTargetProvider, DefaultLaunchNavigationTargetProvider>(services, ServiceLifetime.Singleton);
         AssertHasRegistration<IActiveEditSessionService, ActiveEditSessionService>(services, ServiceLifetime.Singleton);
         AssertHasRegistration<IEditSessionGuard, EditSessionGuard>(services, ServiceLifetime.Singleton);

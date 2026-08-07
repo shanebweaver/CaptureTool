@@ -6,6 +6,7 @@ using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Application.Abstractions.Settings;
 using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Application.Abstractions.Telemetry;
+using CaptureTool.Application.Capture.Assets;
 
 namespace CaptureTool.Application.Activation;
 
@@ -22,6 +23,7 @@ internal sealed class ApplicationStartupInitializer : IApplicationStartupInitial
     private readonly INavigationService _navigationService;
     private readonly IStorageService _storageService;
     private readonly IScratchArtifactStore _scratchArtifactStore;
+    private readonly ICaptureAssetBootstrapper _captureAssetBootstrapper;
     private readonly ITelemetryService? _telemetryService;
     private readonly ITelemetryConsentService? _telemetryConsentService;
     private readonly SemaphoreSlim _semaphore = new(1, 1);
@@ -38,6 +40,7 @@ internal sealed class ApplicationStartupInitializer : IApplicationStartupInitial
         INavigationService navigationService,
         IStorageService storageService,
         IScratchArtifactStore scratchArtifactStore,
+        ICaptureAssetBootstrapper captureAssetBootstrapper,
         ITelemetryService? telemetryService = null,
         ITelemetryConsentService? telemetryConsentService = null)
     {
@@ -50,6 +53,7 @@ internal sealed class ApplicationStartupInitializer : IApplicationStartupInitial
         _navigationService = navigationService;
         _storageService = storageService;
         _scratchArtifactStore = scratchArtifactStore;
+        _captureAssetBootstrapper = captureAssetBootstrapper;
         _telemetryService = telemetryService;
         _telemetryConsentService = telemetryConsentService;
     }
@@ -78,6 +82,7 @@ internal sealed class ApplicationStartupInitializer : IApplicationStartupInitial
             }
 
             ScavengeScratchArtifacts();
+            await InitializeCaptureAssetsAsync(cancellationTokenSource.Token);
 
             string languageOverride = _settingsService.Get(CaptureToolSettings.Settings_LanguageOverride);
             _localizationService.Initialize(languageOverride);
@@ -102,6 +107,22 @@ internal sealed class ApplicationStartupInitializer : IApplicationStartupInitial
         catch (Exception ex)
         {
             _logService.LogException(ex, "Failed to scavenge stale scratch artifacts.");
+        }
+    }
+
+    private async Task InitializeCaptureAssetsAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            await _captureAssetBootstrapper.InitializeAsync(cancellationToken);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            _logService.LogException(ex, "Failed to initialize capture assets.");
         }
     }
 

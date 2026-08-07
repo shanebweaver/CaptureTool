@@ -2,13 +2,13 @@ using CaptureTool.Application.Abstractions.Capture;
 using CaptureTool.Application.Abstractions.Clipboard;
 using CaptureTool.Application.Abstractions.Files;
 using CaptureTool.Application.Abstractions.Logging;
-using CaptureTool.Application.Abstractions.Library.RecentCaptures;
 using CaptureTool.Application.Abstractions.Settings;
 using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Application.Abstractions.TaskEnvironment;
 using CaptureTool.Application.Abstractions.Telemetry;
 using CaptureTool.Application.Capture;
 using CaptureTool.Application.Capture.Image;
+using CaptureTool.Domain;
 using CaptureTool.Domain.Capture;
 using CaptureTool.Domain.FileSystem;
 using Moq;
@@ -27,13 +27,13 @@ public sealed class ImageCaptureWorkflowTests
         string tempFolder = CreateTestFolder();
         var monitor = CreateMonitor();
         var screenCapture = new Mock<IScreenCapture>();
-        var recentCaptureCatalog = new Mock<IRecentCaptureCatalog>();
+        var lifecycle = new RecordingCaptureAssetLifecycleService();
         screenCapture.Setup(service => service.CaptureAllMonitors()).Returns([monitor]);
         screenCapture.Setup(service => service.CombineMonitors(It.IsAny<IList<MonitorCaptureResult>>())).Returns(new Bitmap(2, 2));
         var workflow = CreateWorkflow(
             tempFolder,
             screenCapture: screenCapture.Object,
-            recentCaptureCatalog: recentCaptureCatalog.Object);
+            lifecycle: lifecycle);
         ImageFile? captured = null;
         workflow.NewImageCaptured += (_, file) => captured = file;
 
@@ -43,9 +43,8 @@ public sealed class ImageCaptureWorkflowTests
         Assert.AreEqual(result.FilePath, captured.FilePath);
         StringAssert.StartsWith(Path.GetFileName(result.FilePath), "Capture_");
         screenCapture.Verify(service => service.SaveImageToFile(It.IsAny<Image>(), result.FilePath), Times.Once);
-        recentCaptureCatalog.Verify(
-            catalog => catalog.RecordCaptured(result.FilePath, CaptureFileType.Image),
-            Times.Once);
+        Assert.HasCount(1, lifecycle.Finalizations);
+        Assert.AreEqual((result.FilePath, CaptureFileType.Image), lifecycle.Finalizations[0]);
     }
 
     [TestMethod]
@@ -147,7 +146,11 @@ public sealed class ImageCaptureWorkflowTests
         settings.Setup(service => service.Get(CaptureToolSettings.Settings_ImageCapture_AutoCopy)).Returns(true);
         settings.Setup(service => service.Get(CaptureToolSettings.Settings_ImageCapture_AutoSaveFolder)).Returns(screenshotsFolder);
         var screenCapture = new Mock<IScreenCapture>();
-        var recentCaptureCatalog = new Mock<IRecentCaptureCatalog>();
+        CaptureId captureId = CaptureId.New();
+        var lifecycle = new RecordingCaptureAssetLifecycleService
+        {
+            FinalizedCaptureId = captureId,
+        };
         screenCapture.Setup(service => service.CombineMonitors(It.IsAny<IList<MonitorCaptureResult>>())).Returns(new Bitmap(2, 2));
         screenCapture
             .Setup(service => service.SaveImageToFile(It.IsAny<Image>(), It.IsAny<string>()))
@@ -157,7 +160,7 @@ public sealed class ImageCaptureWorkflowTests
             clipboard.Object,
             settings.Object,
             screenCapture.Object,
-            recentCaptureCatalog: recentCaptureCatalog.Object);
+            lifecycle: lifecycle);
 
         ImageFile result = workflow.CaptureMonitors([CreateMonitor()]);
 
@@ -165,9 +168,12 @@ public sealed class ImageCaptureWorkflowTests
         string[] savedFiles = Directory.GetFiles(screenshotsFolder, "Capture_*.png");
         Assert.HasCount(1, savedFiles);
         Assert.AreEqual(savedFiles[0], result.PersistentFilePath);
-        recentCaptureCatalog.Verify(
-            catalog => catalog.ReplacePath(result.FilePath, savedFiles[0]),
-            Times.Once);
+        Assert.HasCount(1, lifecycle.Finalizations);
+        Assert.AreEqual((result.FilePath, CaptureFileType.Image), lifecycle.Finalizations[0]);
+        Assert.HasCount(1, lifecycle.PreferredOpenPathChanges);
+        Assert.AreEqual(
+            (captureId, result.FilePath, savedFiles[0]),
+            lifecycle.PreferredOpenPathChanges[0]);
     }
 
     private static ImageCaptureWorkflow CreateWorkflow(
@@ -176,7 +182,7 @@ public sealed class ImageCaptureWorkflowTests
         ISettingsService? settings = null,
         IScreenCapture? screenCapture = null,
         ITelemetryService? telemetry = null,
-        IRecentCaptureCatalog? recentCaptureCatalog = null,
+        RecordingCaptureAssetLifecycleService? lifecycle = null,
         IFileSystem? fileSystem = null)
     {
         var storage = new Mock<IStorageService>();
@@ -204,7 +210,7 @@ public sealed class ImageCaptureWorkflowTests
             taskEnvironment.Object,
             Mock.Of<ILogService>(),
             fileNameGenerator,
-            recentCaptureCatalog ?? Mock.Of<IRecentCaptureCatalog>(),
+            lifecycle ?? new RecordingCaptureAssetLifecycleService(),
             telemetry);
 
         return new ImageCaptureWorkflow(

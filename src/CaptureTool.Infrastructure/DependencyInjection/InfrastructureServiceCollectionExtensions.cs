@@ -1,4 +1,5 @@
 using CaptureTool.Application.Abstractions.Ai;
+using CaptureTool.Application.Abstractions.Capture.Assets;
 using CaptureTool.Application.Abstractions.Cancellation;
 using CaptureTool.Application.Abstractions.Edit.Image.ChromaKey;
 using CaptureTool.Application.Abstractions.Edit.Image.Description;
@@ -20,6 +21,7 @@ using CaptureTool.Application.Abstractions.TaskEnvironment;
 using CaptureTool.Application.Abstractions.Telemetry;
 using CaptureTool.Application.Abstractions.Time;
 using CaptureTool.Infrastructure.Cancellation;
+using CaptureTool.Infrastructure.CaptureAssets;
 using CaptureTool.Infrastructure.Features;
 using CaptureTool.Infrastructure.Files;
 using CaptureTool.Infrastructure.Globalization;
@@ -40,6 +42,8 @@ public static class InfrastructureServiceCollectionExtensions
     public static IServiceCollection AddGenericServices(this IServiceCollection services)
     {
         services.AddSingleton<ICancellationService, CancellationService>();
+        services.AddSingleton<ICaptureAssetCatalog, LocalCaptureAssetCatalog>();
+        services.AddSingleton<ICaptureAssetChangeSignal, NullCaptureAssetChangeSignal>();
         services.AddSingleton<IAiConsentSettingsFeatureAvailability, AiConsentSettingsFeatureAvailability>();
         services.AddSingleton<IStoreFeatureAvailability, StoreFeatureAvailability>();
         services.AddSingleton<IChromaKeyFeatureAvailability, ChromaKeyFeatureAvailability>();

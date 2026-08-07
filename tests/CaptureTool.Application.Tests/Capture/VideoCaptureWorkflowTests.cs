@@ -3,7 +3,6 @@ using CaptureTool.Application.Abstractions.Capture.Video.CancelVideoCapture;
 using CaptureTool.Application.Abstractions.Clipboard;
 using CaptureTool.Application.Abstractions.Files;
 using CaptureTool.Application.Abstractions.Logging;
-using CaptureTool.Application.Abstractions.Library.RecentCaptures;
 using CaptureTool.Application.Abstractions.Settings;
 using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Application.Abstractions.TaskEnvironment;
@@ -288,9 +287,9 @@ public sealed class VideoCaptureWorkflowTests
         context.Workflow.IsRecording.Should().BeFalse();
         context.Workflow.IsFinalizing.Should().BeFalse();
         context.ScreenRecorder.Verify(recorder => recorder.StopRecording(), Times.Once);
-        context.RecentCaptureCatalog.Verify(
-            catalog => catalog.RecordCaptured(pendingVideo.FilePath, CaptureFileType.Video),
-            Times.Once);
+        context.Lifecycle.Finalizations.Should()
+            .ContainSingle()
+            .Which.Should().Be((pendingVideo.FilePath, CaptureFileType.Video));
     }
 
     [TestMethod]
@@ -562,7 +561,7 @@ public sealed class VideoCaptureWorkflowTests
         IVideoCaptureSupportService? supportService = null)
     {
         var screenRecorder = new Mock<IScreenRecorder>();
-        var recentCaptureCatalog = new Mock<IRecentCaptureCatalog>();
+        var lifecycle = new RecordingCaptureAssetLifecycleService();
         var settings = new Mock<ISettingsService>();
         settings
             .Setup(service => service.Get(CaptureToolSettings.Settings_VideoCapture_DefaultLocalAudioEnabled))
@@ -618,7 +617,7 @@ public sealed class VideoCaptureWorkflowTests
             taskEnvironment.Object,
             Mock.Of<ILogService>(),
             fileNameGenerator,
-            recentCaptureCatalog.Object);
+            lifecycle);
 
         var workflow = new VideoCaptureWorkflow(
             screenRecorder.Object,
@@ -637,7 +636,7 @@ public sealed class VideoCaptureWorkflowTests
             screenRecorder,
             fileSystem,
             backgroundTaskRunner,
-            recentCaptureCatalog,
+            lifecycle,
             () => finalizeAction);
     }
 
@@ -662,14 +661,14 @@ public sealed class VideoCaptureWorkflowTests
         Mock<IScreenRecorder> screenRecorder,
         Mock<IFileSystem> fileSystem,
         Mock<IBackgroundTaskRunner> backgroundTaskRunner,
-        Mock<IRecentCaptureCatalog> recentCaptureCatalog,
+        RecordingCaptureAssetLifecycleService lifecycle,
         Func<Action?> getFinalizeAction)
     {
         public VideoCaptureWorkflow Workflow { get; } = workflow;
         public Mock<IScreenRecorder> ScreenRecorder { get; } = screenRecorder;
         public Mock<IFileSystem> FileSystem { get; } = fileSystem;
         public Mock<IBackgroundTaskRunner> BackgroundTaskRunner { get; } = backgroundTaskRunner;
-        public Mock<IRecentCaptureCatalog> RecentCaptureCatalog { get; } = recentCaptureCatalog;
+        public RecordingCaptureAssetLifecycleService Lifecycle { get; } = lifecycle;
         public Action? FinalizeAction => getFinalizeAction();
     }
 }
