@@ -3,6 +3,7 @@ using CaptureTool.Application.Abstractions.Analysis.Policy;
 using CaptureTool.Application.Abstractions.Analysis.Analyzers;
 using CaptureTool.Application.Abstractions.Analysis.Intake;
 using CaptureTool.Application.Abstractions.Analysis.Maintenance;
+using CaptureTool.Application.Abstractions.Analysis.Memory;
 using CaptureTool.Application.Abstractions.Analysis.Orchestration;
 using CaptureTool.Application.Abstractions.Analysis.Preparation;
 using CaptureTool.Application.Abstractions.Analysis.Processing;
@@ -17,6 +18,7 @@ using CaptureTool.Application.Analysis.Policy;
 using CaptureTool.Application.Analysis.Analyzers;
 using CaptureTool.Application.Analysis.Intake;
 using CaptureTool.Application.Analysis.Maintenance;
+using CaptureTool.Application.Analysis.Memory;
 using CaptureTool.Application.Analysis.Orchestration;
 using CaptureTool.Application.Analysis.Preparation;
 using CaptureTool.Application.Analysis.Processing;
@@ -74,8 +76,13 @@ public static class ApplicationServiceCollectionExtensions
         services.AddSingleton<ICaptureAnalysisPolicyCommandService>(provider =>
             provider.GetRequiredService<CaptureAnalysisPolicyService>());
         services.AddSingleton<ICaptureAnalysisScheduler, CaptureAnalysisScheduler>();
-        services.AddSingleton<ICaptureAnalysisProjectionRefresher, NullCaptureAnalysisProjectionRefresher>();
-        services.AddSingleton<ICaptureAnalysisProjectionMaintenance, NullCaptureAnalysisProjectionRefresher>();
+        services.AddSingleton<CaptureMemorySearchProjection>();
+        services.AddSingleton<ICaptureMemorySearchService>(provider =>
+            provider.GetRequiredService<CaptureMemorySearchProjection>());
+        services.AddSingleton<ICaptureAnalysisProjectionRefresher>(provider =>
+            provider.GetRequiredService<CaptureMemorySearchProjection>());
+        services.AddSingleton<ICaptureAnalysisProjectionMaintenance>(provider =>
+            provider.GetRequiredService<CaptureMemorySearchProjection>());
         services.AddSingleton<ICaptureAnalysisCleanupCoordinator, CaptureAnalysisCleanupCoordinator>();
         services.AddSingleton<CaptureAnalysisLifecycleService>();
         services.AddSingleton<ICaptureAnalysisExclusionService>(provider =>

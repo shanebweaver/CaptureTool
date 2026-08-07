@@ -245,7 +245,7 @@ public sealed class CaptureAnalysisLifecycleServiceTests
             Assert.AreEqual(CaptureAnalysisEnrollmentState.Forgotten, tombstone.State);
             Assert.AreEqual(CaptureAnalysisExclusionReason.DeleteRequested, tombstone.ExclusionReason);
             CollectionAssert.AreEqual(
-                new[] { "control", "source-delete-failed" },
+                new[] { "control", "projection", "source-delete-failed" },
                 ordering);
         }
 
@@ -307,12 +307,17 @@ public sealed class CaptureAnalysisLifecycleServiceTests
         var assets = new Mock<ICaptureAssetCatalog>(MockBehavior.Strict);
         assets.Setup(catalog => catalog.Get(tombstone.CaptureId)).Returns(external);
         var fileSystem = new Mock<IFileSystem>(MockBehavior.Strict);
+        var projection = new Mock<ICaptureAnalysisProjectionMaintenance>(MockBehavior.Strict);
+        projection.Setup(index => index.RemoveAsync(
+                tombstone.CaptureId,
+                It.IsAny<CancellationToken>()))
+            .Returns(ValueTask.CompletedTask);
         var coordinator = new CaptureAnalysisCleanupCoordinator(
             store,
             Mock.Of<ICaptureAnalysisJobStore>(MockBehavior.Strict),
             Mock.Of<ICaptureAnalysisStore>(MockBehavior.Strict),
             Mock.Of<ICaptureAnalysisMutationCoordinator>(MockBehavior.Strict),
-            Mock.Of<ICaptureAnalysisProjectionMaintenance>(MockBehavior.Strict),
+            projection.Object,
             assets.Object,
             Mock.Of<IRecentCaptureCatalog>(MockBehavior.Strict),
             fileSystem.Object);
@@ -320,6 +325,7 @@ public sealed class CaptureAnalysisLifecycleServiceTests
         bool result = await coordinator.ReconcileCaptureAsync(tombstone.CaptureId);
 
         Assert.IsFalse(result);
+        projection.VerifyAll();
         assets.VerifyAll();
         fileSystem.Verify(file => file.DeleteFile(It.IsAny<string>()), Times.Never);
     }
@@ -458,7 +464,7 @@ public sealed class CaptureAnalysisLifecycleServiceTests
 
         Assert.IsTrue(result);
         CollectionAssert.AreEqual(
-            new[] { "jobs", "metadata-read", "metadata-delete", "projection" },
+            new[] { "projection", "jobs", "metadata-read", "metadata-delete" },
             ordering);
         Assert.IsNotNull(deletionToken);
         Assert.AreEqual(tombstone.CaptureId, deletionToken.Value.CaptureId);
@@ -525,6 +531,11 @@ public sealed class CaptureAnalysisLifecycleServiceTests
         var metadata = new Mock<ICaptureAnalysisStore>(MockBehavior.Strict);
         var projection = new Mock<ICaptureAnalysisProjectionMaintenance>(MockBehavior.Strict);
         var recent = new Mock<IRecentCaptureCatalog>(MockBehavior.Strict);
+        projection.Setup(index => index.RemoveAsync(
+                AnalysisTestData.CaptureId,
+                It.IsAny<CancellationToken>()))
+            .Callback(() => ordering.Add("projection"))
+            .Returns(ValueTask.CompletedTask);
         if (configureSuccessfulCleanup)
         {
             jobs.Setup(jobStore => jobStore.CancelCaptureAsync(
@@ -536,10 +547,6 @@ public sealed class CaptureAnalysisLifecycleServiceTests
                     AnalysisTestData.CaptureId,
                     It.IsAny<CancellationToken>()))
                 .Returns(ValueTask.FromResult<CaptureAnalysisStoreSnapshot?>(null));
-            projection.Setup(index => index.RemoveAsync(
-                    AnalysisTestData.CaptureId,
-                    It.IsAny<CancellationToken>()))
-                .Returns(ValueTask.CompletedTask);
             recent.Setup(catalog => catalog.GetEntries()).Returns(
             [
                 new RecentCaptureCatalogEntry(

@@ -4,6 +4,7 @@ using CaptureTool.Application.Abstractions.Analysis.Policy;
 using CaptureTool.Application.Abstractions.Analysis.Analyzers;
 using CaptureTool.Application.Abstractions.Analysis.Intake;
 using CaptureTool.Application.Abstractions.Analysis.Maintenance;
+using CaptureTool.Application.Abstractions.Analysis.Memory;
 using CaptureTool.Application.Abstractions.Analysis.Orchestration;
 using CaptureTool.Application.Abstractions.Analysis.Preparation;
 using CaptureTool.Application.Abstractions.Analysis.Processing;
@@ -28,6 +29,7 @@ using CaptureTool.Application.Analysis.Policy;
 using CaptureTool.Application.Analysis.Analyzers;
 using CaptureTool.Application.Analysis.Intake;
 using CaptureTool.Application.Analysis.Maintenance;
+using CaptureTool.Application.Analysis.Memory;
 using CaptureTool.Application.Analysis.Orchestration;
 using CaptureTool.Application.Analysis.Preparation;
 using CaptureTool.Application.Analysis.Processing;
@@ -94,12 +96,12 @@ public sealed class ApplicationServiceCollectionExtensionsTests
         AssertHasFactoryRegistration<ICaptureAnalysisReconciler>(services, ServiceLifetime.Singleton);
         AssertHasFactoryRegistration<ICaptureAnalysisBackfillService>(services, ServiceLifetime.Singleton);
         AssertHasRegistration<ICaptureAnalysisWorker, CaptureAnalysisWorker>(services, ServiceLifetime.Singleton);
-        AssertHasRegistration<ICaptureAnalysisProjectionRefresher, NullCaptureAnalysisProjectionRefresher>(
+        AssertHasRegistration<CaptureMemorySearchProjection, CaptureMemorySearchProjection>(
             services,
             ServiceLifetime.Singleton);
-        AssertHasRegistration<ICaptureAnalysisProjectionMaintenance, NullCaptureAnalysisProjectionRefresher>(
-            services,
-            ServiceLifetime.Singleton);
+        AssertHasFactoryRegistration<ICaptureMemorySearchService>(services, ServiceLifetime.Singleton);
+        AssertHasFactoryRegistration<ICaptureAnalysisProjectionRefresher>(services, ServiceLifetime.Singleton);
+        AssertHasFactoryRegistration<ICaptureAnalysisProjectionMaintenance>(services, ServiceLifetime.Singleton);
         AssertHasRegistration<ICaptureAnalysisCleanupCoordinator, CaptureAnalysisCleanupCoordinator>(
             services,
             ServiceLifetime.Singleton);

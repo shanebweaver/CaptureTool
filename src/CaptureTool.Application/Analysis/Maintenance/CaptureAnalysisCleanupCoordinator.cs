@@ -112,6 +112,12 @@ internal sealed class CaptureAnalysisCleanupCoordinator : ICaptureAnalysisCleanu
     {
         try
         {
+            // The tombstone is already durable. Remove the disposable projection first so a
+            // locked source or temporarily unavailable metadata envelope cannot keep private
+            // content searchable while the remaining cleanup is retried.
+            await _projectionMaintenance.RemoveAsync(tombstone.CaptureId, cancellationToken)
+                .ConfigureAwait(false);
+
             if (tombstone is
                 {
                     State: CaptureAnalysisEnrollmentState.Forgotten,
@@ -144,9 +150,6 @@ internal sealed class CaptureAnalysisCleanupCoordinator : ICaptureAnalysisCleanu
                     return false;
                 }
             }
-
-            await _projectionMaintenance.RemoveAsync(tombstone.CaptureId, cancellationToken)
-                .ConfigureAwait(false);
 
             if (tombstone.State != CaptureAnalysisEnrollmentState.Forgotten)
             {
