@@ -12,6 +12,38 @@ public enum CaptureAnalysisMaintenanceStatus
     Unavailable,
 }
 
+public enum CaptureAnalysisMaintenancePhase
+{
+    Unknown,
+    PreparingModels,
+    SchedulingCaptures,
+}
+
+public sealed record CaptureAnalysisMaintenanceProgress
+{
+    public CaptureAnalysisMaintenanceProgress(
+        CaptureAnalysisMaintenancePhase phase,
+        double fractionComplete)
+    {
+        if (!Enum.IsDefined(phase) || phase == CaptureAnalysisMaintenancePhase.Unknown)
+        {
+            throw new ArgumentOutOfRangeException(nameof(phase));
+        }
+
+        if (!double.IsFinite(fractionComplete) || fractionComplete is < 0 or > 1)
+        {
+            throw new ArgumentOutOfRangeException(nameof(fractionComplete));
+        }
+
+        Phase = phase;
+        FractionComplete = fractionComplete;
+    }
+
+    public CaptureAnalysisMaintenancePhase Phase { get; }
+
+    public double FractionComplete { get; }
+}
+
 public sealed record CaptureAnalysisMaintenanceResult
 {
     public CaptureAnalysisMaintenanceResult(
@@ -104,5 +136,10 @@ public interface ICaptureAnalysisMaintenanceService
 
     ValueTask<CaptureAnalysisMaintenanceResult> ReanalyzeCapturesAsync(
         CaptureAnalysisReanalysisRequest request,
+        CancellationToken cancellationToken = default);
+
+    ValueTask<CaptureAnalysisMaintenanceResult> ReanalyzeCapturesAsync(
+        CaptureAnalysisReanalysisRequest request,
+        IProgress<CaptureAnalysisMaintenanceProgress> progress,
         CancellationToken cancellationToken = default);
 }

@@ -41,9 +41,10 @@ internal sealed class CaptureMemoryResultResolver : ICaptureMemoryResultResolver
 
         string displayFileName = GetDisplayFileName(asset);
         string? currentPath;
+        bool hasRetainedSource;
         try
         {
-            currentPath = GetCurrentPath(asset);
+            currentPath = GetCurrentPath(asset, out hasRetainedSource);
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
         {
@@ -56,23 +57,28 @@ internal sealed class CaptureMemoryResultResolver : ICaptureMemoryResultResolver
         CaptureMemoryResultLocationStatus status = currentPath == null
             ? CaptureMemoryResultLocationStatus.SourceMissing
             : CaptureMemoryResultLocationStatus.Available;
+        bool canDeleteRetainedSource = status == CaptureMemoryResultLocationStatus.Available &&
+            asset.SourceOwnership == CaptureSourceOwnership.AppOwned &&
+            hasRetainedSource;
         return ValueTask.FromResult(new CaptureMemoryResultLocation(
             asset.Id,
             status,
             displayFileName,
-            currentPath));
+            currentPath,
+            canDeleteRetainedSource));
     }
 
-    private string? GetCurrentPath(CaptureAsset asset)
+    private string? GetCurrentPath(CaptureAsset asset, out bool hasRetainedSource)
     {
-        if (asset.PreferredOpenPath is { } preferred && _fileSystem.FileExists(preferred))
-        {
-            return preferred;
-        }
+        string? preferred = asset.PreferredOpenPath;
+        bool hasPreferred = preferred != null && _fileSystem.FileExists(preferred);
+        hasRetainedSource = _fileSystem.FileExists(asset.RetainedSourcePath);
 
-        return _fileSystem.FileExists(asset.RetainedSourcePath)
-            ? asset.RetainedSourcePath
-            : null;
+        return hasPreferred
+            ? preferred
+            : hasRetainedSource
+                ? asset.RetainedSourcePath
+                : null;
     }
 
     private static string GetDisplayFileName(CaptureAsset asset)

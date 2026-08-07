@@ -18,7 +18,8 @@ public sealed record CaptureMemoryResultLocation
         CaptureId captureId,
         CaptureMemoryResultLocationStatus status,
         string displayFileName,
-        string? currentFilePath = null)
+        string? currentFilePath = null,
+        bool canDeleteRetainedSource = false)
     {
         if (captureId.IsEmpty)
         {
@@ -49,10 +50,18 @@ public sealed record CaptureMemoryResultLocation
             throw new ArgumentException("An unavailable Memory result cannot expose a path.", nameof(currentFilePath));
         }
 
+        if (canDeleteRetainedSource && status != CaptureMemoryResultLocationStatus.Available)
+        {
+            throw new ArgumentException(
+                "Only an available Memory result can expose app-owned source deletion.",
+                nameof(canDeleteRetainedSource));
+        }
+
         CaptureId = captureId;
         Status = status;
         DisplayFileName = displayFileName;
         CurrentFilePath = currentFilePath;
+        CanDeleteRetainedSource = canDeleteRetainedSource;
     }
 
     public CaptureId CaptureId { get; }
@@ -62,6 +71,10 @@ public sealed record CaptureMemoryResultLocation
     public string DisplayFileName { get; }
 
     public string? CurrentFilePath { get; }
+
+    // This is a derived capability, not an ownership claim from presentation. The resolver grants
+    // it only while the catalog still identifies an existing app-owned retained source.
+    public bool CanDeleteRetainedSource { get; }
 }
 
 public interface ICaptureMemoryResultResolver

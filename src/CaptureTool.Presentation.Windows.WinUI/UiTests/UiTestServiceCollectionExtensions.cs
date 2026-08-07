@@ -1,5 +1,6 @@
 using CaptureTool.Application.Abstractions.Edit.Image.Rendering;
 using CaptureTool.Application.Abstractions.Analysis.Memory;
+using CaptureTool.Application.Abstractions.Analysis.Maintenance;
 using CaptureTool.Application.Abstractions.Analysis.Policy;
 using CaptureTool.Application.Abstractions.Analysis.Preparation;
 using CaptureTool.Application.Abstractions.Capture.Assets;
@@ -39,6 +40,7 @@ internal static class UiTestServiceCollectionExtensions
             services.AddSingleton<ICaptureMemoryResultResolver>(captureMemory);
             services.AddSingleton<IOpenCaptureMemoryResultUseCase>(captureMemory);
             services.AddSingleton<ICaptureAssetRemovalService>(captureMemory);
+            services.AddSingleton<ICaptureAnalysisMaintenanceService>(captureMemory);
         }
 
         return services;

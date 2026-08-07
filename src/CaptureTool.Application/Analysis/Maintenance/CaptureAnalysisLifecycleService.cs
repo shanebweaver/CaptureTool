@@ -324,9 +324,26 @@ internal sealed class CaptureAnalysisLifecycleService :
         }
     }
 
-    public async ValueTask<CaptureAnalysisMaintenanceResult> ReanalyzeCapturesAsync(
+    public ValueTask<CaptureAnalysisMaintenanceResult> ReanalyzeCapturesAsync(
         CaptureAnalysisReanalysisRequest request,
         CancellationToken cancellationToken = default)
+    {
+        return ReanalyzeCapturesCoreAsync(request, progress: null, cancellationToken);
+    }
+
+    public ValueTask<CaptureAnalysisMaintenanceResult> ReanalyzeCapturesAsync(
+        CaptureAnalysisReanalysisRequest request,
+        IProgress<CaptureAnalysisMaintenanceProgress> progress,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(progress);
+        return ReanalyzeCapturesCoreAsync(request, progress, cancellationToken);
+    }
+
+    private async ValueTask<CaptureAnalysisMaintenanceResult> ReanalyzeCapturesCoreAsync(
+        CaptureAnalysisReanalysisRequest request,
+        IProgress<CaptureAnalysisMaintenanceProgress>? progress,
+        CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
         try
@@ -353,16 +370,41 @@ internal sealed class CaptureAnalysisLifecycleService :
             CaptureAnalysisRecipe recipe = CaptureAnalysisRecipeDefaults
                 .CreateCaptureMemoryImageRecipe();
             ProcessingBoundary? boundary = null;
-            foreach (RecipeCapability capability in recipe.Capabilities)
+            progress?.Report(new CaptureAnalysisMaintenanceProgress(
+                CaptureAnalysisMaintenancePhase.PreparingModels,
+                0));
+            for (int index = 0; index < recipe.Capabilities.Count; index++)
             {
+                RecipeCapability capability = recipe.Capabilities[index];
+                double capabilityStart = (double)index / recipe.Capabilities.Count;
+                double capabilityShare = 1d / recipe.Capabilities.Count;
+                IProgress<AnalysisCapabilityPreparationProgress>? capabilityProgress = progress == null
+                    ? null
+                    : new DelegateProgress<AnalysisCapabilityPreparationProgress>(value =>
+                        progress.Report(new CaptureAnalysisMaintenanceProgress(
+                            CaptureAnalysisMaintenancePhase.PreparingModels,
+                            (capabilityStart + (value.FractionComplete * capabilityShare)) * 0.5)));
                 AnalysisCapabilityPreparationState prepared = await _preparation.PrepareAsync(
                     new AnalysisCapabilityPreparationRequest(
                         capability.Capability,
                         recipe.MediaKind,
                         purpose,
                         processingPolicy),
-                    progress: null,
+                    capabilityProgress,
                     cancellationToken).ConfigureAwait(false);
+                bool optionalUnavailable =
+                    capability.Requirement == RecipeCapabilityRequirement.Optional &&
+                    prepared.Status is (AnalysisCapabilityPreparationStatus.Unsupported or
+                        AnalysisCapabilityPreparationStatus.Disabled or
+                        AnalysisCapabilityPreparationStatus.Failed);
+                if (optionalUnavailable)
+                {
+                    progress?.Report(new CaptureAnalysisMaintenanceProgress(
+                        CaptureAnalysisMaintenancePhase.PreparingModels,
+                        ((double)(index + 1) / recipe.Capabilities.Count) * 0.5));
+                    continue;
+                }
+
                 if (prepared.Status != AnalysisCapabilityPreparationStatus.Ready ||
                     prepared.ProcessingBoundary is not ProcessingBoundary preparedBoundary ||
                     (boundary.HasValue && boundary.Value != preparedBoundary))
@@ -371,15 +413,22 @@ internal sealed class CaptureAnalysisLifecycleService :
                 }
 
                 boundary = preparedBoundary;
+                progress?.Report(new CaptureAnalysisMaintenanceProgress(
+                    CaptureAnalysisMaintenancePhase.PreparingModels,
+                    ((double)(index + 1) / recipe.Capabilities.Count) * 0.5));
             }
 
             int scheduled = 0;
             int requestedCaptureCount = request.Scope ==
                 CaptureAnalysisReanalysisScope.SelectedCaptures
-                    ? request.CaptureIds.Count
-                    : enrollments.Length;
-            foreach (CaptureAnalysisEnrollment enrollment in enrollments)
+                ? request.CaptureIds.Count
+                : enrollments.Length;
+            progress?.Report(new CaptureAnalysisMaintenanceProgress(
+                CaptureAnalysisMaintenancePhase.SchedulingCaptures,
+                0.5));
+            for (int index = 0; index < enrollments.Length; index++)
             {
+                CaptureAnalysisEnrollment enrollment = enrollments[index];
                 CaptureAssetChange? finalization = FindFinalization(enrollment.CaptureId);
                 CaptureAsset? asset = _captureAssets.Get(enrollment.CaptureId);
                 if (finalization == null ||
@@ -387,6 +436,7 @@ internal sealed class CaptureAnalysisLifecycleService :
                     enrollment.RequestedRecipeId != recipe.Id ||
                     enrollment.RequestedRecipeVersion != recipe.Version)
                 {
+                    ReportSchedulingProgress(progress, index, enrollments.Length);
                     continue;
                 }
 
@@ -406,6 +456,8 @@ internal sealed class CaptureAnalysisLifecycleService :
                 {
                     scheduled++;
                 }
+
+                ReportSchedulingProgress(progress, index, enrollments.Length);
             }
 
             return new(
@@ -422,6 +474,16 @@ internal sealed class CaptureAnalysisLifecycleService :
         {
             return new(CaptureAnalysisMaintenanceStatus.Unavailable);
         }
+    }
+
+    private static void ReportSchedulingProgress(
+        IProgress<CaptureAnalysisMaintenanceProgress>? progress,
+        int completedIndex,
+        int captureCount)
+    {
+        progress?.Report(new CaptureAnalysisMaintenanceProgress(
+            CaptureAnalysisMaintenancePhase.SchedulingCaptures,
+            0.5 + (0.5 * (completedIndex + 1) / captureCount)));
     }
 
     private ValueTask<CaptureAnalysisControlWriteResult> WriteEnrollmentAsync(
@@ -494,5 +556,10 @@ internal sealed class CaptureAnalysisLifecycleService :
     public void Dispose()
     {
         _mutationGate.Dispose();
+    }
+
+    private sealed class DelegateProgress<T>(Action<T> report) : IProgress<T>
+    {
+        public void Report(T value) => report(value);
     }
 }

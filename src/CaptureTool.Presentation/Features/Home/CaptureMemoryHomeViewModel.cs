@@ -27,6 +27,7 @@ public sealed class CaptureMemoryHomeViewModel : ViewModelBase
     private readonly IUserInitiatedAnalysisCapabilityPreparationService? _preparationService;
     private readonly ICaptureAnalysisMaintenanceService? _maintenanceService;
     private readonly ICaptureAssetRemovalService? _assetRemovalService;
+    private readonly ICaptureAnalysisSettingsConfirmationDialogService? _confirmationService;
     private readonly ILocalizationService? _localizationService;
     private CancellationTokenSource? _searchCancellation;
     private CancellationTokenSource? _policyRefreshCancellation;
@@ -44,7 +45,8 @@ public sealed class CaptureMemoryHomeViewModel : ViewModelBase
         IUserInitiatedAnalysisCapabilityPreparationService? preparationService = null,
         ICaptureAnalysisMaintenanceService? maintenanceService = null,
         ICaptureAssetRemovalService? assetRemovalService = null,
-        ILocalizationService? localizationService = null)
+        ILocalizationService? localizationService = null,
+        ICaptureAnalysisSettingsConfirmationDialogService? confirmationService = null)
     {
         _featureAvailability = featureAvailability;
         _searchService = searchService;
@@ -55,6 +57,7 @@ public sealed class CaptureMemoryHomeViewModel : ViewModelBase
         _preparationService = preparationService;
         _maintenanceService = maintenanceService;
         _assetRemovalService = assetRemovalService;
+        _confirmationService = confirmationService;
         _localizationService = localizationService;
 
         EnableForFutureCommand = new AsyncRelayCommand(
@@ -72,8 +75,11 @@ public sealed class CaptureMemoryHomeViewModel : ViewModelBase
         OpenResultCommand = new AsyncRelayCommand<CaptureMemorySearchResultViewModel>(
             OpenResultAsync,
             AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
-        ForgetResultCommand = new AsyncRelayCommand<CaptureMemorySearchResultViewModel>(
-            ForgetResultAsync,
+        RemoveResultCommand = new AsyncRelayCommand<CaptureMemorySearchResultViewModel>(
+            RemoveResultAsync,
+            AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
+        DeleteResultCommand = new AsyncRelayCommand<CaptureMemorySearchResultViewModel>(
+            DeleteResultAsync,
             AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
     }
 
@@ -87,7 +93,9 @@ public sealed class CaptureMemoryHomeViewModel : ViewModelBase
 
     public IAsyncRelayCommand<CaptureMemorySearchResultViewModel> OpenResultCommand { get; }
 
-    public IAsyncRelayCommand<CaptureMemorySearchResultViewModel> ForgetResultCommand { get; }
+    public IAsyncRelayCommand<CaptureMemorySearchResultViewModel> RemoveResultCommand { get; }
+
+    public IAsyncRelayCommand<CaptureMemorySearchResultViewModel> DeleteResultCommand { get; }
 
     public ObservableCollection<CaptureMemorySearchResultViewModel> Results => _results;
 
@@ -559,20 +567,59 @@ public sealed class CaptureMemoryHomeViewModel : ViewModelBase
         }
     }
 
-    private async Task ForgetResultAsync(CaptureMemorySearchResultViewModel? model)
+    private Task RemoveResultAsync(CaptureMemorySearchResultViewModel? model)
     {
-        if (model == null || _assetRemovalService == null)
+        return RemoveResultAsync(
+            model,
+            CaptureAssetRemovalKind.ForgetHistory,
+            CaptureAnalysisSettingsAction.RemoveFromMemory);
+    }
+
+    private Task DeleteResultAsync(CaptureMemorySearchResultViewModel? model)
+    {
+        if (model?.CanDeleteCapture != true)
+        {
+            return Task.CompletedTask;
+        }
+
+        return RemoveResultAsync(
+            model,
+            CaptureAssetRemovalKind.DeleteRetainedSource,
+            CaptureAnalysisSettingsAction.DeleteCapture);
+    }
+
+    private async Task RemoveResultAsync(
+        CaptureMemorySearchResultViewModel? model,
+        CaptureAssetRemovalKind kind,
+        CaptureAnalysisSettingsAction confirmationAction)
+    {
+        if (model == null || _assetRemovalService == null || _confirmationService == null)
+        {
+            HasSearchFailure = true;
+            return;
+        }
+
+        CaptureAnalysisConfirmationDecision decision = await _confirmationService.ConfirmAsync(
+            new CaptureAnalysisSettingsConfirmationRequest(confirmationAction),
+            CancellationToken.None);
+        if (decision != CaptureAnalysisConfirmationDecision.Confirmed)
         {
             return;
         }
 
         CaptureAssetRemovalResult removed = await _assetRemovalService.RemoveAsync(
-            new CaptureAssetRemovalRequest(model.CaptureId, CaptureAssetRemovalKind.ForgetHistory),
+            new CaptureAssetRemovalRequest(
+                model.CaptureId,
+                kind,
+                isConfirmed: kind == CaptureAssetRemovalKind.DeleteRetainedSource),
             CancellationToken.None);
-        if (removed.Status is CaptureAssetRemovalStatus.Succeeded or CaptureAssetRemovalStatus.AlreadyRemoved)
+        if (removed.Status is CaptureAssetRemovalStatus.Succeeded or
+            CaptureAssetRemovalStatus.AlreadyRemoved or
+            CaptureAssetRemovalStatus.Incomplete)
         {
             _results.Remove(model);
             RaiseDisplayStateChanged();
+            HasSearchFailure = removed.Status == CaptureAssetRemovalStatus.Incomplete;
         }
         else
         {

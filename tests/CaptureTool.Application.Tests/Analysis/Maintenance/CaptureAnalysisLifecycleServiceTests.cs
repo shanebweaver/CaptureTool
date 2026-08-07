@@ -140,6 +140,66 @@ public sealed class CaptureAnalysisLifecycleServiceTests
     }
 
     [TestMethod]
+    public async Task ReanalyzeCapturesAsync_ShouldReportPreparationAndSchedulingAndAllowOptionalModelToBeUnavailable()
+    {
+        CaptureAnalysisEnrollment enrolled = CreateEnrollment(2);
+        var store = new TestControlStore(CreateControl(enrolled));
+        Mock<ICaptureAssetCatalog> assets = CreateAssetCatalog(enrolled.CaptureId, 2);
+        assets.Setup(catalog => catalog.Get(enrolled.CaptureId)).Returns(
+            CreateAsset(enrolled.CaptureId, CaptureSourceOwnership.AppOwned));
+        var preparation = new Mock<IUserInitiatedAnalysisCapabilityPreparationService>();
+        preparation.Setup(service => service.PrepareAsync(
+                It.Is<AnalysisCapabilityPreparationRequest>(request =>
+                    request.Capability.Id == AnalysisCapabilities.ImageDescriptionV1.Id),
+                It.IsAny<IProgress<AnalysisCapabilityPreparationProgress>>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(AnalysisCapabilityPreparationState.Unsupported(new AnalysisFailure(
+                AnalysisFailureCode.CapabilityUnavailable,
+                AnalysisFailureDisposition.Terminal)));
+        preparation.Setup(service => service.PrepareAsync(
+                It.Is<AnalysisCapabilityPreparationRequest>(request =>
+                    request.Capability.Id != AnalysisCapabilities.ImageDescriptionV1.Id),
+                It.IsAny<IProgress<AnalysisCapabilityPreparationProgress>>(),
+                It.IsAny<CancellationToken>()))
+            .Returns<AnalysisCapabilityPreparationRequest,
+                IProgress<AnalysisCapabilityPreparationProgress>?,
+                CancellationToken>((_, progress, _) =>
+                {
+                    progress?.Report(new AnalysisCapabilityPreparationProgress(1));
+                    return Task.FromResult(AnalysisCapabilityPreparationState.Ready(
+                        AnalysisTestData.CreateAnalyzer(),
+                        ProcessingBoundary.OnDevice));
+                });
+        var scheduler = new Mock<ICaptureAnalysisScheduler>();
+        scheduler.Setup(service => service.ScheduleAsync(
+                It.IsAny<CaptureAnalysisScheduleRequest>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new CaptureAnalysisScheduleResult(
+                CaptureAnalysisScheduleStatus.Scheduled,
+                durableIntentCount: 1));
+        using CaptureAnalysisLifecycleService service = new(
+            store,
+            assets.Object,
+            new TestCleanupCoordinator(),
+            Mock.Of<ICaptureAnalysisProjectionMaintenance>(),
+            preparation.Object,
+            scheduler.Object);
+        var progress = new RecordingMaintenanceProgress();
+
+        CaptureAnalysisMaintenanceResult result = await service.ReanalyzeCapturesAsync(
+            new CaptureAnalysisReanalysisRequest(
+                CaptureAnalysisReanalysisScope.AllEnrolledCaptures),
+            progress);
+
+        Assert.AreEqual(CaptureAnalysisMaintenanceStatus.Succeeded, result.Status);
+        Assert.IsTrue(progress.Values.Any(value =>
+            value.Phase == CaptureAnalysisMaintenancePhase.PreparingModels));
+        Assert.IsTrue(progress.Values.Any(value =>
+            value.Phase == CaptureAnalysisMaintenancePhase.SchedulingCaptures));
+        Assert.AreEqual(1, progress.Values[^1].FractionComplete);
+    }
+
+    [TestMethod]
     public async Task ForgetHistory_ShouldTombstoneBeforeRemovingDerivedState()
     {
         List<string> ordering = [];
@@ -669,5 +729,13 @@ public sealed class CaptureAnalysisLifecycleServiceTests
             ordering?.Add("cleanup");
             return ValueTask.FromResult(Result);
         }
+    }
+
+    private sealed class RecordingMaintenanceProgress :
+        IProgress<CaptureAnalysisMaintenanceProgress>
+    {
+        public List<CaptureAnalysisMaintenanceProgress> Values { get; } = [];
+
+        public void Report(CaptureAnalysisMaintenanceProgress value) => Values.Add(value);
     }
 }

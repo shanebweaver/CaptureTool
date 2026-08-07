@@ -23,6 +23,7 @@ public sealed class CaptureMemoryResultServiceTests
         catalog.Setup(value => value.Get(asset.Id)).Returns(asset);
         var files = new Mock<IFileSystem>();
         files.Setup(value => value.FileExists(asset.PreferredOpenPath!)).Returns(true);
+        files.Setup(value => value.FileExists(asset.RetainedSourcePath)).Returns(true);
         var resolver = new CaptureMemoryResultResolver(catalog.Object, files.Object);
 
         CaptureMemoryResultLocation result = await resolver.ResolveAsync(asset.Id);
@@ -30,6 +31,7 @@ public sealed class CaptureMemoryResultServiceTests
         Assert.AreEqual(CaptureMemoryResultLocationStatus.Available, result.Status);
         Assert.AreEqual(asset.PreferredOpenPath, result.CurrentFilePath);
         Assert.AreEqual("shared.png", result.DisplayFileName);
+        Assert.IsTrue(result.CanDeleteRetainedSource);
     }
 
     [TestMethod]
@@ -65,6 +67,23 @@ public sealed class CaptureMemoryResultServiceTests
 
         Assert.AreEqual(CaptureMemoryResultLocationStatus.Forgotten, result.Status);
         Assert.IsNull(result.CurrentFilePath);
+        Assert.IsFalse(result.CanDeleteRetainedSource);
+    }
+
+    [TestMethod]
+    public async Task ResolveAsync_DoesNotGrantSourceDeletionForExternalCapture()
+    {
+        CaptureAsset asset = CreateAsset(ownership: CaptureSourceOwnership.LegacyExternal);
+        var catalog = new Mock<ICaptureAssetCatalog>();
+        catalog.Setup(value => value.Get(asset.Id)).Returns(asset);
+        var files = new Mock<IFileSystem>();
+        files.Setup(value => value.FileExists(asset.RetainedSourcePath)).Returns(true);
+        var resolver = new CaptureMemoryResultResolver(catalog.Object, files.Object);
+
+        CaptureMemoryResultLocation result = await resolver.ResolveAsync(asset.Id);
+
+        Assert.AreEqual(CaptureMemoryResultLocationStatus.Available, result.Status);
+        Assert.IsFalse(result.CanDeleteRetainedSource);
     }
 
     [TestMethod]
@@ -112,13 +131,15 @@ public sealed class CaptureMemoryResultServiceTests
         opener.VerifyAll();
     }
 
-    private static CaptureAsset CreateAsset(string? preferredPath = null)
+    private static CaptureAsset CreateAsset(
+        string? preferredPath = null,
+        CaptureSourceOwnership ownership = CaptureSourceOwnership.AppOwned)
     {
         return new CaptureAsset(
             CaptureId.New(),
             CaptureFileType.Image,
             @"C:\Users\test\AppData\Local\CaptureTool\capture.png",
-            CaptureSourceOwnership.AppOwned,
+            ownership,
             DateTimeOffset.UtcNow,
             preferredPath);
     }

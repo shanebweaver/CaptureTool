@@ -1838,4 +1838,74 @@ SOFTWARE.
   <data name="CaptureMemory_MediaKind_Image" xml:space="preserve"><value>Imagen</value></data>
   <data name="CaptureMemory_MediaKind_Video" xml:space="preserve"><value>Vídeo</value></data>
   <data name="CaptureMemory_MediaKind_Audio" xml:space="preserve"><value>Audio</value></data>
+  <data name="CaptureMemory_ResultRemove.Content" xml:space="preserve"><value>Quitar de Memoria</value></data>
+  <data name="CaptureMemory_ResultRemove.AutomationProperties.Name" xml:space="preserve"><value>Quitar captura de Memoria</value></data>
+  <data name="CaptureMemory_ResultDelete.Content" xml:space="preserve"><value>Eliminar captura</value></data>
+  <data name="CaptureMemory_ResultDelete.AutomationProperties.Name" xml:space="preserve"><value>Eliminar captura propiedad de la aplicación</value></data>
+  <data name="CaptureMemory_Settings_Header.Text" xml:space="preserve"><value>Memoria de capturas</value></data>
+  <data name="CaptureMemory_Settings_AnalysisTitle.Text" xml:space="preserve"><value>Análisis de capturas</value></data>
+  <data name="CaptureMemory_Settings_AnalysisDescription.Text" xml:space="preserve"><value>Controla si los modelos de IA autorizados del dispositivo analizan capturas. Capture Tool solo guarda metadatos administrados por la aplicación y nunca modifica las capturas originales.</value></data>
+  <data name="CaptureMemory_Settings_StopButton.Content" xml:space="preserve"><value>Dejar de analizar capturas nuevas</value></data>
+  <data name="CaptureMemory_Settings_ResumeButton.Content" xml:space="preserve"><value>Reanudar el análisis de capturas nuevas</value></data>
+  <data name="CaptureMemory_Settings_TurnOffButton.Content" xml:space="preserve"><value>Desactivar y borrar</value></data>
+  <data name="CaptureMemory_Settings_DataTitle.Text" xml:space="preserve"><value>Datos de Memoria</value></data>
+  <data name="CaptureMemory_Settings_DataDescription.Text" xml:space="preserve"><value>Administra los metadatos creados por la aplicación por separado de los archivos originales.</value></data>
+  <data name="CaptureMemory_Settings_ClearTitle.Text" xml:space="preserve"><value>Borrar Memoria</value></data>
+  <data name="CaptureMemory_Settings_ClearDescription.Text" xml:space="preserve"><value>Borra metadatos y datos de búsqueda sin desactivar el análisis de capturas nuevas.</value></data>
+  <data name="CaptureMemory_Settings_ClearButton.Content" xml:space="preserve"><value>Borrar Memoria</value></data>
+  <data name="CaptureMemory_Settings_RebuildTitle.Text" xml:space="preserve"><value>Reconstruir índice de búsqueda</value></data>
+  <data name="CaptureMemory_Settings_RebuildDescription.Text" xml:space="preserve"><value>Vuelve a crear datos de búsqueda desechables a partir de metadatos. No usa modelos de IA ni fuentes de captura.</value></data>
+  <data name="CaptureMemory_Settings_RebuildButton.Content" xml:space="preserve"><value>Reconstruir índice</value></data>
+  <data name="CaptureMemory_Settings_ReanalyzeTitle.Text" xml:space="preserve"><value>Volver a analizar capturas</value></data>
+  <data name="CaptureMemory_Settings_ReanalyzeDescription.Text" xml:space="preserve"><value>Prepara modelos de IA autorizados y vuelve a leer las fuentes inscritas. Los originales no cambian.</value></data>
+  <data name="CaptureMemory_Settings_ReanalyzeButton.Content" xml:space="preserve"><value>Volver a analizar</value></data>
+  <data name="CaptureMemory_Settings_CancelButton.Content" xml:space="preserve"><value>Cancelar</value></data>
+  <data name="CaptureMemory_Settings_Failure.Title" xml:space="preserve"><value>Error en la acción de Memoria</value></data>
+  <data name="CaptureMemory_Settings_Recovery.Title" xml:space="preserve"><value>La limpieza requiere atención</value></data>
+  <data name="CaptureMemory_Settings_StatusUnavailable" xml:space="preserve"><value>El estado de Memoria de capturas no está disponible.</value></data>
+  <data name="CaptureMemory_Settings_StatusReview" xml:space="preserve"><value>Memoria de capturas está en pausa porque debe revisarse el estado del consentimiento.</value></data>
+  <data name="CaptureMemory_Settings_StatusOff" xml:space="preserve"><value>Memoria de capturas está desactivada. No hay análisis de capturas autorizado.</value></data>
+  <data name="CaptureMemory_Settings_StatusOn" xml:space="preserve"><value>Memoria está activada para capturas nuevas. El análisis permanece en este dispositivo y no modifica los originales.</value></data>
+  <data name="CaptureMemory_Settings_StatusStopped" xml:space="preserve"><value>Se detuvo el análisis de capturas nuevas. Los metadatos existentes de la aplicación siguen disponibles para buscar.</value></data>
+  <data name="CaptureMemory_Settings_StopSucceeded" xml:space="preserve"><value>Las capturas nuevas no se analizarán. Los metadatos existentes de Memoria siguen disponibles para buscar.</value></data>
+  <data name="CaptureMemory_Settings_ResumeSucceeded" xml:space="preserve"><value>Memoria analizará capturas nuevas en este dispositivo. Las capturas originales no se modifican.</value></data>
+  <data name="CaptureMemory_Settings_EraseSucceeded" xml:space="preserve"><value>Memoria está desactivada y se borraron sus metadatos administrados por la aplicación. No se eliminaron capturas originales.</value></data>
+  <data name="CaptureMemory_Settings_ClearSucceeded" xml:space="preserve"><value>Se borraron los metadatos y los datos de búsqueda de Memoria. El análisis de capturas nuevas sigue activado.</value></data>
+  <data name="CaptureMemory_Settings_RebuildSucceeded" xml:space="preserve"><value>Se reconstruyó el índice administrado por la aplicación sin ejecutar modelos de IA ni leer fuentes de captura.</value></data>
+  <data name="CaptureMemory_Settings_ReanalyzePreparing" xml:space="preserve"><value>Preparando modelos de IA para volver a analizar…</value></data>
+  <data name="CaptureMemory_Settings_ReanalyzeScheduling" xml:space="preserve"><value>Poniendo capturas autorizadas en cola para volver a analizarlas…</value></data>
+  <data name="CaptureMemory_Settings_ReanalyzeSucceeded" xml:space="preserve"><value>El nuevo análisis quedó en cola. Las capturas originales no se modificaron.</value></data>
+  <data name="CaptureMemory_Settings_Updating" xml:space="preserve"><value>Actualizando Memoria de capturas…</value></data>
+  <data name="CaptureMemory_Settings_RecoveryRequired" xml:space="preserve"><value>El cambio de seguridad está guardado, pero la limpieza de la aplicación está incompleta. Reinicia o vuelve a intentarlo cuando los archivos estén disponibles.</value></data>
+  <data name="CaptureMemory_Settings_Conflict" xml:space="preserve"><value>Memoria de capturas cambió en otro lugar. Se actualizó su estado; vuelve a intentarlo.</value></data>
+  <data name="CaptureMemory_Settings_ReanalyzeIncomplete" xml:space="preserve"><value>Un modelo de IA necesario o una fuente no estaba disponible. No se cambió nada en las capturas originales; vuelve a intentarlo cuando esté disponible.</value></data>
+  <data name="CaptureMemory_Settings_Rejected" xml:space="preserve"><value>Esta acción ya no está disponible para el estado actual de Memoria de capturas.</value></data>
+  <data name="CaptureMemory_Settings_ReanalyzeUnavailable" xml:space="preserve"><value>Memoria de capturas o un modelo de IA necesario no está disponible. Las capturas originales no cambiaron.</value></data>
+  <data name="CaptureMemory_Settings_OperationUnavailable" xml:space="preserve"><value>Memoria de capturas no pudo completar esta acción. Vuelve a intentarlo.</value></data>
+  <data name="CaptureMemory_Settings_Cancelled" xml:space="preserve"><value>Se canceló la operación. Los cambios de seguridad ya completados siguen vigentes.</value></data>
+  <data name="CaptureMemory_Confirmation_CancelButton" xml:space="preserve"><value>Cancelar</value></data>
+  <data name="CaptureMemory_Confirmation_BackfillTitle" xml:space="preserve"><value>¿Analizar capturas existentes?</value></data>
+  <data name="CaptureMemory_Confirmation_BackfillContent" xml:space="preserve"><value>Capture Tool leerá fuentes existentes aptas y usará los modelos de IA autorizados del dispositivo. Las capturas originales no se modifican.</value></data>
+  <data name="CaptureMemory_Confirmation_BackfillButton" xml:space="preserve"><value>Analizar capturas existentes</value></data>
+  <data name="CaptureMemory_Confirmation_StopTitle" xml:space="preserve"><value>¿Dejar de analizar capturas nuevas?</value></data>
+  <data name="CaptureMemory_Confirmation_StopContent" xml:space="preserve"><value>Las capturas nuevas dejarán de analizarse. Permanecen los metadatos y resultados existentes de la aplicación. Las capturas originales no cambian.</value></data>
+  <data name="CaptureMemory_Confirmation_StopButton" xml:space="preserve"><value>Detener análisis</value></data>
+  <data name="CaptureMemory_Confirmation_EraseTitle" xml:space="preserve"><value>¿Desactivar Memoria y borrar sus datos?</value></data>
+  <data name="CaptureMemory_Confirmation_EraseContent" xml:space="preserve"><value>Esto detiene todo análisis de Memoria y borra metadatos, trabajos y datos de búsqueda de la aplicación. No elimina archivos originales ni exportaciones guardadas por separado.</value></data>
+  <data name="CaptureMemory_Confirmation_EraseButton" xml:space="preserve"><value>Desactivar y borrar</value></data>
+  <data name="CaptureMemory_Confirmation_ClearTitle" xml:space="preserve"><value>¿Borrar Memoria de capturas?</value></data>
+  <data name="CaptureMemory_Confirmation_ClearContent" xml:space="preserve"><value>Esto borra metadatos y datos de búsqueda de capturas inscritas. El análisis de capturas nuevas sigue activado. No se eliminan archivos originales.</value></data>
+  <data name="CaptureMemory_Confirmation_ClearButton" xml:space="preserve"><value>Borrar Memoria</value></data>
+  <data name="CaptureMemory_Confirmation_RebuildTitle" xml:space="preserve"><value>¿Reconstruir el índice de búsqueda?</value></data>
+  <data name="CaptureMemory_Confirmation_RebuildContent" xml:space="preserve"><value>Esto vuelve a crear datos de búsqueda desechables desde metadatos existentes. No ejecuta modelos de IA, no lee fuentes ni modifica archivos originales.</value></data>
+  <data name="CaptureMemory_Confirmation_RebuildButton" xml:space="preserve"><value>Reconstruir índice</value></data>
+  <data name="CaptureMemory_Confirmation_ReanalyzeTitle" xml:space="preserve"><value>¿Volver a analizar capturas?</value></data>
+  <data name="CaptureMemory_Confirmation_ReanalyzeContent" xml:space="preserve"><value>Capture Tool puede preparar modelos de IA autorizados del dispositivo y volver a leer fuentes inscritas. Las capturas originales no se modifican.</value></data>
+  <data name="CaptureMemory_Confirmation_ReanalyzeButton" xml:space="preserve"><value>Volver a analizar capturas</value></data>
+  <data name="CaptureMemory_Confirmation_RemoveTitle" xml:space="preserve"><value>¿Quitar esta captura de Memoria?</value></data>
+  <data name="CaptureMemory_Confirmation_RemoveContent" xml:space="preserve"><value>Esto quita los metadatos y el historial de búsqueda administrados por la aplicación. El archivo de captura no se elimina.</value></data>
+  <data name="CaptureMemory_Confirmation_RemoveButton" xml:space="preserve"><value>Quitar de Memoria</value></data>
+  <data name="CaptureMemory_Confirmation_DeleteTitle" xml:space="preserve"><value>¿Eliminar esta captura?</value></data>
+  <data name="CaptureMemory_Confirmation_DeleteContent" xml:space="preserve"><value>Esto elimina permanentemente la fuente retenida propiedad de la aplicación y quita sus datos de Memoria. Las copias guardadas o exportadas por separado permanecen.</value></data>
+  <data name="CaptureMemory_Confirmation_DeleteButton" xml:space="preserve"><value>Eliminar captura</value></data>
 </root>

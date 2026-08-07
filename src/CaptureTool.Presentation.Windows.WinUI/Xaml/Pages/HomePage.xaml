@@ -520,12 +520,20 @@
                                                 Content="Open"
                                                 IsEnabled="{x:Bind CanOpen, Mode=OneWay}" />
                                             <Button
-                                                x:Uid="CaptureMemory_ResultForget"
-                                                AutomationProperties.AutomationId="Home_CaptureMemoryForgetButton"
-                                                AutomationProperties.Name="Forget capture history"
-                                                Click="ForgetCaptureMemoryResultButton_Click"
+                                                x:Uid="CaptureMemory_ResultRemove"
+                                                AutomationProperties.AutomationId="Home_CaptureMemoryRemoveButton"
+                                                AutomationProperties.Name="Remove from Memory"
+                                                Click="RemoveCaptureMemoryResultButton_Click"
                                                 CommandParameter="{x:Bind}"
-                                                Content="Forget" />
+                                                Content="Remove from Memory" />
+                                            <Button
+                                                x:Uid="CaptureMemory_ResultDelete"
+                                                AutomationProperties.AutomationId="Home_CaptureMemoryDeleteButton"
+                                                AutomationProperties.Name="Delete capture"
+                                                Click="DeleteCaptureMemoryResultButton_Click"
+                                                CommandParameter="{x:Bind}"
+                                                Content="Delete capture"
+                                                Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(CanDeleteCapture), Mode=OneWay}" />
                                         </StackPanel>
                                     </Grid>
                                 </Border>

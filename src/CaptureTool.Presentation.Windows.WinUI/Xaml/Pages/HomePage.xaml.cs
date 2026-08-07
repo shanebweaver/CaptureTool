@@ -240,11 +240,19 @@ public sealed partial class HomePage : HomePageBase
         }
     }
 
-    private void ForgetCaptureMemoryResultButton_Click(object sender, RoutedEventArgs e)
+    private void RemoveCaptureMemoryResultButton_Click(object sender, RoutedEventArgs e)
     {
         if (sender is Button { CommandParameter: CaptureMemorySearchResultViewModel result })
         {
-            _ = ViewModel.CaptureMemory.ForgetResultCommand.ExecuteAsync(result);
+            _ = ViewModel.CaptureMemory.RemoveResultCommand.ExecuteAsync(result);
+        }
+    }
+
+    private void DeleteCaptureMemoryResultButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is Button { CommandParameter: CaptureMemorySearchResultViewModel result })
+        {
+            _ = ViewModel.CaptureMemory.DeleteResultCommand.ExecuteAsync(result);
         }
     }
 

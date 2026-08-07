@@ -133,6 +133,8 @@ public sealed class CaptureAnalysisConsentAndMaintenanceContractTests
                 nameof(CaptureAnalysisSettingsAction.ClearMemory),
                 nameof(CaptureAnalysisSettingsAction.RebuildSearchIndex),
                 nameof(CaptureAnalysisSettingsAction.ReanalyzeCaptures),
+                nameof(CaptureAnalysisSettingsAction.RemoveFromMemory),
+                nameof(CaptureAnalysisSettingsAction.DeleteCapture),
             },
             Enum.GetNames<CaptureAnalysisSettingsAction>());
 
@@ -164,10 +166,23 @@ public sealed class CaptureAnalysisConsentAndMaintenanceContractTests
         var incomplete = new CaptureAnalysisMaintenanceResult(
             CaptureAnalysisMaintenanceStatus.Incomplete,
             2);
+        var progress = new CaptureAnalysisMaintenanceProgress(
+            CaptureAnalysisMaintenancePhase.PreparingModels,
+            0.5);
 
         Assert.AreEqual(3, succeeded.AffectedCaptureCount);
         Assert.AreEqual(CaptureAnalysisMaintenanceStatus.Succeeded, succeeded.Status);
         Assert.AreEqual(2, incomplete.AffectedCaptureCount);
+        Assert.AreEqual(CaptureAnalysisMaintenancePhase.PreparingModels, progress.Phase);
+        Assert.AreEqual(0.5, progress.FractionComplete);
+        Assert.ThrowsExactly<ArgumentOutOfRangeException>(() =>
+            new CaptureAnalysisMaintenanceProgress(
+                CaptureAnalysisMaintenancePhase.Unknown,
+                0));
+        Assert.ThrowsExactly<ArgumentOutOfRangeException>(() =>
+            new CaptureAnalysisMaintenanceProgress(
+                CaptureAnalysisMaintenancePhase.SchedulingCaptures,
+                1.1));
         Assert.ThrowsExactly<ArgumentOutOfRangeException>(() =>
             new CaptureAnalysisMaintenanceResult(CaptureAnalysisMaintenanceStatus.Unknown));
         Assert.ThrowsExactly<ArgumentOutOfRangeException>(() =>

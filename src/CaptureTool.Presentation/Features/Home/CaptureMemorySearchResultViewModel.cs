@@ -57,6 +57,7 @@ public sealed class CaptureMemorySearchResultViewModel : ViewModelBase
 
         IsSourceMissing = location.Status == CaptureMemoryResultLocationStatus.SourceMissing;
         IsResolutionFailed = location.Status == CaptureMemoryResultLocationStatus.Unavailable;
+        CanDeleteCapture = location.CanDeleteRetainedSource;
         AutomationName = $"{FileName}, {CapturedAtLabel}, {CaptureTypeLabel}, {ExplanationLabel}. {Snippet}";
     }
 
@@ -115,6 +116,8 @@ public sealed class CaptureMemorySearchResultViewModel : ViewModelBase
     public bool CanOpen => !IsSourceMissing && CurrentFilePath != null;
 
     public bool IsResolutionFailed { get; }
+
+    public bool CanDeleteCapture { get; }
 
     public void MarkSourceMissing()
     {

@@ -2119,4 +2119,74 @@ SOFTWARE.
   <data name="CaptureMemory_MediaKind_Image" xml:space="preserve"><value>Image</value></data>
   <data name="CaptureMemory_MediaKind_Video" xml:space="preserve"><value>Video</value></data>
   <data name="CaptureMemory_MediaKind_Audio" xml:space="preserve"><value>Audio</value></data>
+  <data name="CaptureMemory_ResultRemove.Content" xml:space="preserve"><value>Remove from Memory</value></data>
+  <data name="CaptureMemory_ResultRemove.AutomationProperties.Name" xml:space="preserve"><value>Remove capture from Memory</value></data>
+  <data name="CaptureMemory_ResultDelete.Content" xml:space="preserve"><value>Delete capture</value></data>
+  <data name="CaptureMemory_ResultDelete.AutomationProperties.Name" xml:space="preserve"><value>Delete app-owned capture</value></data>
+  <data name="CaptureMemory_Settings_Header.Text" xml:space="preserve"><value>Capture Memory</value></data>
+  <data name="CaptureMemory_Settings_AnalysisTitle.Text" xml:space="preserve"><value>Capture analysis</value></data>
+  <data name="CaptureMemory_Settings_AnalysisDescription.Text" xml:space="preserve"><value>Controls whether authorized on-device AI models analyze captures. Capture Tool stores only app-managed metadata and never modifies original captures.</value></data>
+  <data name="CaptureMemory_Settings_StopButton.Content" xml:space="preserve"><value>Stop analyzing new captures</value></data>
+  <data name="CaptureMemory_Settings_ResumeButton.Content" xml:space="preserve"><value>Resume analyzing new captures</value></data>
+  <data name="CaptureMemory_Settings_TurnOffButton.Content" xml:space="preserve"><value>Turn off and erase</value></data>
+  <data name="CaptureMemory_Settings_DataTitle.Text" xml:space="preserve"><value>Memory data</value></data>
+  <data name="CaptureMemory_Settings_DataDescription.Text" xml:space="preserve"><value>Manage app-created metadata separately from original capture files.</value></data>
+  <data name="CaptureMemory_Settings_ClearTitle.Text" xml:space="preserve"><value>Clear Memory</value></data>
+  <data name="CaptureMemory_Settings_ClearDescription.Text" xml:space="preserve"><value>Erase metadata and search data while keeping analysis on for new captures.</value></data>
+  <data name="CaptureMemory_Settings_ClearButton.Content" xml:space="preserve"><value>Clear Memory</value></data>
+  <data name="CaptureMemory_Settings_RebuildTitle.Text" xml:space="preserve"><value>Rebuild search index</value></data>
+  <data name="CaptureMemory_Settings_RebuildDescription.Text" xml:space="preserve"><value>Recreate disposable search data from metadata. No AI model or capture source is used.</value></data>
+  <data name="CaptureMemory_Settings_RebuildButton.Content" xml:space="preserve"><value>Rebuild index</value></data>
+  <data name="CaptureMemory_Settings_ReanalyzeTitle.Text" xml:space="preserve"><value>Reanalyze captures</value></data>
+  <data name="CaptureMemory_Settings_ReanalyzeDescription.Text" xml:space="preserve"><value>Prepare authorized AI models and read enrolled capture sources again. Originals remain unchanged.</value></data>
+  <data name="CaptureMemory_Settings_ReanalyzeButton.Content" xml:space="preserve"><value>Reanalyze</value></data>
+  <data name="CaptureMemory_Settings_CancelButton.Content" xml:space="preserve"><value>Cancel</value></data>
+  <data name="CaptureMemory_Settings_Failure.Title" xml:space="preserve"><value>Capture Memory action failed</value></data>
+  <data name="CaptureMemory_Settings_Recovery.Title" xml:space="preserve"><value>Cleanup needs attention</value></data>
+  <data name="CaptureMemory_Settings_StatusUnavailable" xml:space="preserve"><value>Capture Memory status is unavailable.</value></data>
+  <data name="CaptureMemory_Settings_StatusReview" xml:space="preserve"><value>Capture Memory is paused because its consent state needs review.</value></data>
+  <data name="CaptureMemory_Settings_StatusOff" xml:space="preserve"><value>Capture Memory is off. No capture analysis is authorized.</value></data>
+  <data name="CaptureMemory_Settings_StatusOn" xml:space="preserve"><value>Capture Memory is on for new captures. Analysis stays on this device and originals are not modified.</value></data>
+  <data name="CaptureMemory_Settings_StatusStopped" xml:space="preserve"><value>Analysis of new captures is stopped. Existing app-managed metadata remains searchable.</value></data>
+  <data name="CaptureMemory_Settings_StopSucceeded" xml:space="preserve"><value>New captures will not be analyzed. Existing Memory metadata remains searchable.</value></data>
+  <data name="CaptureMemory_Settings_ResumeSucceeded" xml:space="preserve"><value>Capture Memory will analyze new captures on this device. Original captures are not modified.</value></data>
+  <data name="CaptureMemory_Settings_EraseSucceeded" xml:space="preserve"><value>Capture Memory is off and its app-managed metadata was erased. Original captures were not deleted.</value></data>
+  <data name="CaptureMemory_Settings_ClearSucceeded" xml:space="preserve"><value>Capture Memory metadata and search data were cleared. Analysis of new captures remains on.</value></data>
+  <data name="CaptureMemory_Settings_RebuildSucceeded" xml:space="preserve"><value>The app-managed search index was rebuilt without running AI models or reading capture sources.</value></data>
+  <data name="CaptureMemory_Settings_ReanalyzePreparing" xml:space="preserve"><value>Preparing AI models for reanalysis…</value></data>
+  <data name="CaptureMemory_Settings_ReanalyzeScheduling" xml:space="preserve"><value>Queuing authorized captures for reanalysis…</value></data>
+  <data name="CaptureMemory_Settings_ReanalyzeSucceeded" xml:space="preserve"><value>Capture reanalysis was queued. Original captures were not modified.</value></data>
+  <data name="CaptureMemory_Settings_Updating" xml:space="preserve"><value>Updating Capture Memory…</value></data>
+  <data name="CaptureMemory_Settings_RecoveryRequired" xml:space="preserve"><value>The safety change is saved, but app-managed cleanup is incomplete. Restart or retry after files are available.</value></data>
+  <data name="CaptureMemory_Settings_Conflict" xml:space="preserve"><value>Capture Memory changed elsewhere. Its current state has been refreshed; try again.</value></data>
+  <data name="CaptureMemory_Settings_ReanalyzeIncomplete" xml:space="preserve"><value>A required AI model or capture source was unavailable. Nothing was changed in the original captures; retry when it is available.</value></data>
+  <data name="CaptureMemory_Settings_Rejected" xml:space="preserve"><value>This action is no longer available for the current Capture Memory state.</value></data>
+  <data name="CaptureMemory_Settings_ReanalyzeUnavailable" xml:space="preserve"><value>Capture Memory or a required AI model is unavailable. Original captures were not changed.</value></data>
+  <data name="CaptureMemory_Settings_OperationUnavailable" xml:space="preserve"><value>Capture Memory could not complete this action. Try again.</value></data>
+  <data name="CaptureMemory_Settings_Cancelled" xml:space="preserve"><value>The operation was cancelled. Completed safety changes remain in effect.</value></data>
+  <data name="CaptureMemory_Confirmation_CancelButton" xml:space="preserve"><value>Cancel</value></data>
+  <data name="CaptureMemory_Confirmation_BackfillTitle" xml:space="preserve"><value>Analyze existing captures?</value></data>
+  <data name="CaptureMemory_Confirmation_BackfillContent" xml:space="preserve"><value>Capture Tool will read eligible existing capture sources and use the authorized on-device AI models. Original captures are not modified.</value></data>
+  <data name="CaptureMemory_Confirmation_BackfillButton" xml:space="preserve"><value>Analyze existing captures</value></data>
+  <data name="CaptureMemory_Confirmation_StopTitle" xml:space="preserve"><value>Stop analyzing new captures?</value></data>
+  <data name="CaptureMemory_Confirmation_StopContent" xml:space="preserve"><value>New captures will no longer be analyzed. Existing app-managed metadata and search results remain. Original captures are unchanged.</value></data>
+  <data name="CaptureMemory_Confirmation_StopButton" xml:space="preserve"><value>Stop analyzing</value></data>
+  <data name="CaptureMemory_Confirmation_EraseTitle" xml:space="preserve"><value>Turn off Capture Memory and erase its data?</value></data>
+  <data name="CaptureMemory_Confirmation_EraseContent" xml:space="preserve"><value>This stops all Capture Memory analysis and erases app-managed metadata, jobs, and search data. Original capture files and separately saved exports are not deleted.</value></data>
+  <data name="CaptureMemory_Confirmation_EraseButton" xml:space="preserve"><value>Turn off and erase</value></data>
+  <data name="CaptureMemory_Confirmation_ClearTitle" xml:space="preserve"><value>Clear Capture Memory?</value></data>
+  <data name="CaptureMemory_Confirmation_ClearContent" xml:space="preserve"><value>This erases app-managed metadata and search data for enrolled captures. Analysis of new captures remains on. Original capture files are not deleted.</value></data>
+  <data name="CaptureMemory_Confirmation_ClearButton" xml:space="preserve"><value>Clear Memory</value></data>
+  <data name="CaptureMemory_Confirmation_RebuildTitle" xml:space="preserve"><value>Rebuild the search index?</value></data>
+  <data name="CaptureMemory_Confirmation_RebuildContent" xml:space="preserve"><value>This recreates disposable search data from existing app-managed metadata. It does not run AI models, read capture sources, or modify original files.</value></data>
+  <data name="CaptureMemory_Confirmation_RebuildButton" xml:space="preserve"><value>Rebuild index</value></data>
+  <data name="CaptureMemory_Confirmation_ReanalyzeTitle" xml:space="preserve"><value>Reanalyze captures?</value></data>
+  <data name="CaptureMemory_Confirmation_ReanalyzeContent" xml:space="preserve"><value>Capture Tool may prepare authorized on-device AI models and read enrolled capture sources again. Original captures are not modified.</value></data>
+  <data name="CaptureMemory_Confirmation_ReanalyzeButton" xml:space="preserve"><value>Reanalyze captures</value></data>
+  <data name="CaptureMemory_Confirmation_RemoveTitle" xml:space="preserve"><value>Remove this capture from Memory?</value></data>
+  <data name="CaptureMemory_Confirmation_RemoveContent" xml:space="preserve"><value>This removes the capture's app-managed metadata and search history. The capture file is not deleted.</value></data>
+  <data name="CaptureMemory_Confirmation_RemoveButton" xml:space="preserve"><value>Remove from Memory</value></data>
+  <data name="CaptureMemory_Confirmation_DeleteTitle" xml:space="preserve"><value>Delete this capture?</value></data>
+  <data name="CaptureMemory_Confirmation_DeleteContent" xml:space="preserve"><value>This permanently deletes the app-owned retained source and removes its app-managed Memory data. Any separately saved or exported copy remains.</value></data>
+  <data name="CaptureMemory_Confirmation_DeleteButton" xml:space="preserve"><value>Delete capture</value></data>
 </root>

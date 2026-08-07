@@ -1,4 +1,6 @@
 using CaptureTool.Application.Abstractions.Analysis.Memory;
+using CaptureTool.Application.Abstractions.Analysis.Consent;
+using CaptureTool.Application.Abstractions.Capture.Assets;
 using CaptureTool.Application.Abstractions.Analysis.Persistence;
 using CaptureTool.Application.Abstractions.Analysis.Policy;
 using CaptureTool.Application.Abstractions.Analysis.Preparation;
@@ -190,12 +192,102 @@ public sealed class CaptureMemoryHomeViewModelTests
         Assert.IsFalse(viewModel.HasSetupFailure);
     }
 
+    [TestMethod]
+    public async Task RemoveFromMemory_ShouldConfirmForgetHistoryWithoutDeletingSource()
+    {
+        CaptureId captureId = CaptureId.New();
+        var search = new Mock<ICaptureMemorySearchService>();
+        search.Setup(value => value.SearchAsync(
+                It.IsAny<CaptureMemorySearchRequest>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync([CreateResult(captureId, 1, CaptureMemoryMatchKind.OcrText, "text")]);
+        var resolver = new Mock<ICaptureMemoryResultResolver>();
+        resolver.Setup(value => value.ResolveAsync(captureId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new CaptureMemoryResultLocation(
+                captureId,
+                CaptureMemoryResultLocationStatus.Available,
+                "capture.png",
+                @"C:\Captures\capture.png",
+                canDeleteRetainedSource: false));
+        var removal = new Mock<ICaptureAssetRemovalService>(MockBehavior.Strict);
+        removal.Setup(value => value.RemoveAsync(
+                It.Is<CaptureAssetRemovalRequest>(request =>
+                    request.CaptureId == captureId &&
+                    request.Kind == CaptureAssetRemovalKind.ForgetHistory &&
+                    !request.IsConfirmed),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync((CaptureAssetRemovalRequest request, CancellationToken _) =>
+                new CaptureAssetRemovalResult(CaptureAssetRemovalStatus.Succeeded, request));
+        var confirmation = CreateConfirmation(CaptureAnalysisSettingsAction.RemoveFromMemory);
+        CaptureMemoryHomeViewModel viewModel = CreateViewModel(
+            search.Object,
+            resolver.Object,
+            assetRemovalService: removal.Object,
+            confirmationService: confirmation.Object);
+        await viewModel.LoadAsync(CancellationToken.None);
+        viewModel.SearchQuery = "text";
+        await viewModel.SearchCompletion;
+
+        await viewModel.RemoveResultCommand.ExecuteAsync(viewModel.Results.Single());
+
+        Assert.IsEmpty(viewModel.Results);
+        removal.VerifyAll();
+        confirmation.VerifyAll();
+    }
+
+    [TestMethod]
+    public async Task DeleteCapture_ShouldBeExposedOnlyForAppOwnedRetainedSourceAndPassConfirmation()
+    {
+        CaptureId captureId = CaptureId.New();
+        var search = new Mock<ICaptureMemorySearchService>();
+        search.Setup(value => value.SearchAsync(
+                It.IsAny<CaptureMemorySearchRequest>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync([CreateResult(captureId, 1, CaptureMemoryMatchKind.Filename, "capture.png")]);
+        var resolver = new Mock<ICaptureMemoryResultResolver>();
+        resolver.Setup(value => value.ResolveAsync(captureId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new CaptureMemoryResultLocation(
+                captureId,
+                CaptureMemoryResultLocationStatus.Available,
+                "capture.png",
+                @"C:\Captures\capture.png",
+                canDeleteRetainedSource: true));
+        var removal = new Mock<ICaptureAssetRemovalService>(MockBehavior.Strict);
+        removal.Setup(value => value.RemoveAsync(
+                It.Is<CaptureAssetRemovalRequest>(request =>
+                    request.CaptureId == captureId &&
+                    request.Kind == CaptureAssetRemovalKind.DeleteRetainedSource &&
+                    request.IsConfirmed),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync((CaptureAssetRemovalRequest request, CancellationToken _) =>
+                new CaptureAssetRemovalResult(CaptureAssetRemovalStatus.Succeeded, request));
+        var confirmation = CreateConfirmation(CaptureAnalysisSettingsAction.DeleteCapture);
+        CaptureMemoryHomeViewModel viewModel = CreateViewModel(
+            search.Object,
+            resolver.Object,
+            assetRemovalService: removal.Object,
+            confirmationService: confirmation.Object);
+        await viewModel.LoadAsync(CancellationToken.None);
+        viewModel.SearchQuery = "capture";
+        await viewModel.SearchCompletion;
+
+        CaptureMemorySearchResultViewModel result = viewModel.Results.Single();
+        Assert.IsTrue(result.CanDeleteCapture);
+        await viewModel.DeleteResultCommand.ExecuteAsync(result);
+
+        Assert.IsEmpty(viewModel.Results);
+        removal.VerifyAll();
+        confirmation.VerifyAll();
+    }
+
     private static CaptureMemoryHomeViewModel CreateViewModel(
         ICaptureMemorySearchService searchService,
         ICaptureMemoryResultResolver? resolver = null,
         ICaptureAnalysisPolicyService? policyService = null,
         ICaptureAnalysisPolicyCommandService? policyCommandService = null,
-        IUserInitiatedAnalysisCapabilityPreparationService? preparationService = null)
+        IUserInitiatedAnalysisCapabilityPreparationService? preparationService = null,
+        ICaptureAssetRemovalService? assetRemovalService = null,
+        ICaptureAnalysisSettingsConfirmationDialogService? confirmationService = null)
     {
         policyService ??= CreateAuthorizedPolicyService();
         resolver ??= CreateAvailableResolver();
@@ -206,7 +298,22 @@ public sealed class CaptureMemoryHomeViewModelTests
             resultResolver: resolver,
             policyService: policyService,
             policyCommandService: policyCommandService,
-            preparationService: preparationService);
+            preparationService: preparationService,
+            assetRemovalService: assetRemovalService,
+            confirmationService: confirmationService);
+    }
+
+    private static Mock<ICaptureAnalysisSettingsConfirmationDialogService> CreateConfirmation(
+        CaptureAnalysisSettingsAction expectedAction)
+    {
+        var confirmation = new Mock<ICaptureAnalysisSettingsConfirmationDialogService>(
+            MockBehavior.Strict);
+        confirmation.Setup(value => value.ConfirmAsync(
+                It.Is<CaptureAnalysisSettingsConfirmationRequest>(request =>
+                    request.Action == expectedAction),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(CaptureAnalysisConfirmationDecision.Confirmed);
+        return confirmation;
     }
 
     private static ICaptureAnalysisPolicyService CreateAuthorizedPolicyService()

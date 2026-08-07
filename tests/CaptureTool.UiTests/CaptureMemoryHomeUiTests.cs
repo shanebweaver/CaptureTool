@@ -18,7 +18,7 @@ public sealed class CaptureMemoryHomeUiTests
 
     [TestMethod]
     [TestCategory("UI")]
-    public void CaptureMemory_EnableSearchOpenAndForget_ShouldCompleteFromHome()
+    public void CaptureMemory_EnableSearchOpenAndRemove_ShouldCompleteFromHome()
     {
         if (!string.Equals(
             Environment.GetEnvironmentVariable("CAPTURETOOL_RUN_UI_TESTS"),
@@ -81,6 +81,9 @@ public sealed class CaptureMemoryHomeUiTests
                     element.Name.Contains("Text match", StringComparison.OrdinalIgnoreCase) ||
                     element.Name.Contains("PURPLE COMET", StringComparison.OrdinalIgnoreCase)),
                 "The result should explain that recognized text matched the query.");
+            Assert.IsNotNull(
+                FindElement(app.ProcessId, automation, "Home_CaptureMemoryDeleteButton"),
+                "An app-owned retained source should expose the Delete capture action.");
 
             openButton.Click();
             WaitFor(
@@ -90,21 +93,155 @@ public sealed class CaptureMemoryHomeUiTests
                 InteractionTimeout,
                 "the selected Memory result to open");
 
-            WaitForElement(app.ProcessId, automation, "Home_CaptureMemoryForgetButton").Click();
+            WaitForElement(app.ProcessId, automation, "Home_CaptureMemoryRemoveButton").Click();
+            WaitForElement(app.ProcessId, automation, "CaptureMemoryConfirmationDialog");
+            WaitForElementByName(app.ProcessId, automation, "Remove from Memory").Click();
             WaitFor(
                 () => FindElement(app.ProcessId, automation, "Home_CaptureMemoryOpenButton") == null
                     ? new object()
                     : null,
                 InteractionTimeout,
-                "the forgotten Memory result to leave search results");
+                "the removed Memory result to leave search results");
             Assert.IsTrue(
-                File.Exists(Path.Combine(temporaryDirectory, "capture-memory-forgotten.marker")),
-                "Forgetting a result should invoke the app-owned metadata cleanup boundary.");
+                File.Exists(Path.Combine(temporaryDirectory, "capture-memory-removed.marker")),
+                "Removing a result should invoke the app-owned metadata cleanup boundary.");
         }
         finally
         {
             app.Close();
         }
+    }
+
+    [TestMethod]
+    [TestCategory("UI")]
+    public void CaptureMemory_SettingsLifecycle_ShouldKeepIndexAndSourceWorkDistinct()
+    {
+        if (!string.Equals(
+            Environment.GetEnvironmentVariable("CAPTURETOOL_RUN_UI_TESTS"),
+            "1",
+            StringComparison.OrdinalIgnoreCase))
+        {
+            Assert.Inconclusive("Set CAPTURETOOL_RUN_UI_TESTS=1 to run desktop UI automation tests.");
+        }
+
+        string repoRoot = FindRepositoryRoot();
+        string executable = ResolveAppExecutablePath(repoRoot);
+        Assert.IsTrue(File.Exists(executable), $"The WinUI app should be built at {executable}.");
+
+        string artifacts = Path.Combine(
+            TestContext.TestRunResultsDirectory ?? TestContext.TestRunDirectory ?? Path.GetTempPath(),
+            "CaptureTool.UiTests",
+            Guid.NewGuid().ToString("N"));
+        string dataDirectory = Path.Combine(artifacts, "app-data");
+        string temporaryDirectory = Path.Combine(artifacts, "app-temp");
+        Directory.CreateDirectory(dataDirectory);
+        Directory.CreateDirectory(temporaryDirectory);
+        string capturePath = Path.Combine(artifacts, "purple-comet.png");
+        CreateSyntheticCapture(capturePath);
+
+        using LaunchedApp app = Launch(
+            executable,
+            dataDirectory,
+            temporaryDirectory,
+            capturePath);
+        try
+        {
+            using var automation = new UIA3Automation();
+            Window window = WaitFor(
+                () => GetTopLevelElements(app.ProcessId, automation)
+                    .Select(element => element.AsWindow())
+                    .FirstOrDefault(candidate => candidate.BoundingRectangle.Width > 0),
+                AppLaunchTimeout,
+                "Capture Tool main window");
+            window.Focus();
+
+            WaitForElement(app.ProcessId, automation, "Home_CaptureMemoryEnableExistingButton").Click();
+            WaitForElement(app.ProcessId, automation, "Home_CaptureMemorySearchBox");
+
+            WaitForElement(app.ProcessId, automation, "AppMenu_FileMenuItem").Click();
+            WaitForElement(app.ProcessId, automation, "AppMenu_SettingsItem").Click();
+
+            AutomationElement reanalyze = WaitForElement(
+                app.ProcessId,
+                automation,
+                "Settings_CaptureMemoryReanalyzeButton");
+            FocusAndClick(reanalyze);
+            WaitForElement(app.ProcessId, automation, "CaptureMemoryConfirmationDialog");
+            WaitForElementByName(app.ProcessId, automation, "Reanalyze captures").Click();
+            WaitForMarker(temporaryDirectory, "capture-memory-reanalyzed.marker");
+            WaitForElement(app.ProcessId, automation, "Settings_CaptureMemoryOperationStatus");
+
+            AutomationElement rebuild = WaitForElement(
+                app.ProcessId,
+                automation,
+                "Settings_CaptureMemoryRebuildButton");
+            FocusAndClick(rebuild);
+            WaitForElement(app.ProcessId, automation, "CaptureMemoryConfirmationDialog");
+            WaitForElementByName(app.ProcessId, automation, "Rebuild index").Click();
+            WaitForMarker(temporaryDirectory, "capture-memory-rebuilt.marker");
+
+            AutomationElement stop = WaitForElement(
+                app.ProcessId,
+                automation,
+                "Settings_CaptureMemoryStopButton");
+            FocusAndClick(stop);
+            WaitForElement(app.ProcessId, automation, "CaptureMemoryConfirmationDialog");
+            WaitForElementByName(app.ProcessId, automation, "Stop analyzing").Click();
+            WaitForMarker(temporaryDirectory, "capture-memory-stopped.marker");
+
+            AutomationElement resume = WaitForElement(
+                app.ProcessId,
+                automation,
+                "Settings_CaptureMemoryResumeButton");
+            FocusAndClick(resume);
+            WaitForMarker(temporaryDirectory, "capture-memory-resumed.marker");
+
+            AutomationElement clear = WaitForElement(
+                app.ProcessId,
+                automation,
+                "Settings_CaptureMemoryClearButton");
+            FocusAndClick(clear);
+            WaitForElement(app.ProcessId, automation, "CaptureMemoryConfirmationDialog");
+            WaitForElementByName(app.ProcessId, automation, "Clear Memory").Click();
+            WaitForMarker(temporaryDirectory, "capture-memory-cleared.marker");
+
+            AutomationElement turnOff = WaitForElement(
+                app.ProcessId,
+                automation,
+                "Settings_CaptureMemoryTurnOffButton");
+            FocusAndClick(turnOff);
+            WaitForElement(app.ProcessId, automation, "CaptureMemoryConfirmationDialog");
+            WaitForElementByName(app.ProcessId, automation, "Turn off and erase").Click();
+            WaitForMarker(temporaryDirectory, "capture-memory-erased.marker");
+
+            AutomationElement policyStatus = WaitForElement(
+                app.ProcessId,
+                automation,
+                "Settings_CaptureMemoryPolicyStatus");
+            WaitFor(
+                () => policyStatus.Name.Contains("off", StringComparison.OrdinalIgnoreCase)
+                    ? new object()
+                    : null,
+                InteractionTimeout,
+                "Capture Memory to report that analysis is off");
+        }
+        finally
+        {
+            app.Close();
+        }
+    }
+
+    private static void FocusAndClick(AutomationElement element)
+    {
+        element.AsButton().Invoke();
+    }
+
+    private static void WaitForMarker(string directory, string filename)
+    {
+        WaitFor(
+            () => File.Exists(Path.Combine(directory, filename)) ? new object() : null,
+            InteractionTimeout,
+            $"marker '{filename}'");
     }
 
     private static void CreateSyntheticCapture(string path)
@@ -177,6 +314,30 @@ public sealed class CaptureMemoryHomeUiTests
         }
 
         return null;
+    }
+
+    private static AutomationElement WaitForElementByName(
+        int processId,
+        UIA3Automation automation,
+        string name)
+    {
+        return WaitFor(
+            () =>
+            {
+                foreach (AutomationElement topLevel in GetTopLevelElements(processId, automation))
+                {
+                    AutomationElement? result = topLevel.FindFirstDescendant(
+                        automation.ConditionFactory.ByName(name));
+                    if (result != null)
+                    {
+                        return result;
+                    }
+                }
+
+                return null;
+            },
+            InteractionTimeout,
+            $"element named '{name}'");
     }
 
     private static AutomationElement[] GetTopLevelElements(int processId, UIA3Automation automation)

@@ -79,6 +79,8 @@ public enum CaptureAnalysisSettingsAction
     ClearMemory,
     RebuildSearchIndex,
     ReanalyzeCaptures,
+    RemoveFromMemory,
+    DeleteCapture,
 }
 
 public enum CaptureAnalysisConfirmationDecision
