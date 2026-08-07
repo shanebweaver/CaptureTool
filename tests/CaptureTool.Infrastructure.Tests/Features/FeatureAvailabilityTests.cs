@@ -59,17 +59,32 @@ public sealed class FeatureAvailabilityTests
     }
 
     [TestMethod]
-    public void CaptureAnalysisFeatureAvailability_UsesPlatformFlagForEveryProviderAndAnalyzer()
+    public void CaptureAnalysisFeatureAvailability_FailsClosedForUnknownProvidersAndAnalyzers()
     {
         var enabled = new CaptureAnalysisFeatureAvailability(new ConstantFeatureManager(true));
         var disabled = new CaptureAnalysisFeatureAvailability(new ConstantFeatureManager(false));
         AnalyzerIdentity analyzer = CreateAnalyzerIdentity();
 
-        Assert.IsTrue(enabled.IsProviderEnabled("microsoft.windows-ai"));
-        Assert.IsTrue(enabled.IsProviderEnabled("another-provider"));
+        Assert.IsTrue(enabled.IsProviderEnabled("microsoft-windows"));
+        Assert.IsFalse(enabled.IsProviderEnabled("another-provider"));
         Assert.IsTrue(enabled.IsAnalyzerEnabled(analyzer));
-        Assert.IsFalse(disabled.IsProviderEnabled("microsoft.windows-ai"));
+        Assert.IsFalse(disabled.IsProviderEnabled("microsoft-windows"));
         Assert.IsFalse(disabled.IsAnalyzerEnabled(analyzer));
+    }
+
+    [TestMethod]
+    public void CaptureAnalysisFeatureAvailability_HasIndependentProviderAndAnalyzerKillSwitches()
+    {
+        var providerDisabled = new CaptureAnalysisFeatureAvailability(
+            new SelectiveFeatureManager(AppFeatures.Feature_CaptureAnalysis_Provider_MicrosoftWindows));
+        var analyzerDisabled = new CaptureAnalysisFeatureAvailability(
+            new SelectiveFeatureManager(AppFeatures.Feature_CaptureAnalysis_Analyzer_WindowsOcrDocument));
+        AnalyzerIdentity analyzer = CreateAnalyzerIdentity();
+
+        Assert.IsFalse(providerDisabled.IsProviderEnabled("microsoft-windows"));
+        Assert.IsFalse(providerDisabled.IsAnalyzerEnabled(analyzer));
+        Assert.IsTrue(analyzerDisabled.IsProviderEnabled("microsoft-windows"));
+        Assert.IsFalse(analyzerDisabled.IsAnalyzerEnabled(analyzer));
     }
 
     [TestMethod]
@@ -278,8 +293,8 @@ public sealed class FeatureAvailabilityTests
     private static AnalyzerIdentity CreateAnalyzerIdentity()
     {
         return new(
-            "ocr",
-            "microsoft.windows-ai",
+            "windows-ocr-document",
+            "microsoft-windows",
             "ocr-model",
             "1",
             "1",
@@ -304,6 +319,14 @@ public sealed class FeatureAvailabilityTests
         {
             LastFeatureFlag = featureFlag;
             return _isEnabled;
+        }
+    }
+
+    private sealed class SelectiveFeatureManager(params FeatureFlag[] disabled) : IFeatureManager
+    {
+        public bool IsEnabled(FeatureFlag featureFlag)
+        {
+            return !disabled.Contains(featureFlag);
         }
     }
 

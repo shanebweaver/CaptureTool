@@ -8,15 +8,19 @@ public sealed class CaptureAnalyzerResolver : ICaptureAnalyzerResolver
 {
     private readonly CaptureAnalyzerCatalog _catalog;
     private readonly ICaptureAnalysisFeatureAvailability _featureAvailability;
+    private readonly ICaptureAnalyzerResolutionPreference _preference;
 
     public CaptureAnalyzerResolver(
         CaptureAnalyzerCatalog catalog,
-        ICaptureAnalysisFeatureAvailability featureAvailability)
+        ICaptureAnalysisFeatureAvailability featureAvailability,
+        ICaptureAnalyzerResolutionPreference preference)
     {
         ArgumentNullException.ThrowIfNull(catalog);
         ArgumentNullException.ThrowIfNull(featureAvailability);
+        ArgumentNullException.ThrowIfNull(preference);
         _catalog = catalog;
         _featureAvailability = featureAvailability;
+        _preference = preference;
     }
 
     public async ValueTask<CaptureAnalyzerResolution> ResolveAsync(
@@ -28,7 +32,8 @@ public sealed class CaptureAnalyzerResolver : ICaptureAnalyzerResolver
         ICaptureAnalyzer[] candidates =
         [
             .. _catalog.Analyzers
-                .OrderByDescending(analyzer => analyzer.Descriptor.QualityTier)
+                .OrderByDescending(analyzer => _preference.GetPreference(analyzer.Descriptor))
+                .ThenByDescending(analyzer => analyzer.Descriptor.QualityTier)
                 .ThenBy(analyzer => analyzer.Descriptor.ProcessingBoundary == ProcessingBoundary.OnDevice ? 0 : 1)
                 .ThenBy(analyzer => analyzer.Descriptor.WorkloadClass)
                 .ThenBy(analyzer => analyzer.Descriptor.Identity.AnalyzerId, StringComparer.Ordinal)

@@ -26,7 +26,8 @@ public sealed class CaptureAnalyzerResolverTests
             boundary: ProcessingBoundary.Remote);
         var resolver = new CaptureAnalyzerResolver(
             new CaptureAnalyzerCatalog([remote]),
-            new TestFeatureAvailability());
+            new TestFeatureAvailability(),
+            CreatePreference());
         AnalysisPurpose purpose = new("capture-memory-search", 1);
 
         CaptureAnalyzerResolution resolution = await resolver.ResolveAsync(
@@ -58,7 +59,8 @@ public sealed class CaptureAnalyzerResolverTests
             workload: CaptureAnalyzerWorkloadClass.Lightweight);
         var resolver = new CaptureAnalyzerResolver(
             new CaptureAnalyzerCatalog([low, highHeavy, highLight]),
-            new TestFeatureAvailability());
+            new TestFeatureAvailability(),
+            CreatePreference());
         AnalysisPurpose purpose = new("capture-memory-search", 1);
 
         CaptureAnalyzerResolution resolution = await resolver.ResolveAsync(
@@ -78,12 +80,39 @@ public sealed class CaptureAnalyzerResolverTests
     }
 
     [TestMethod]
+    public async Task Resolve_ShouldApplyInternalPreferenceBeforeDescriptorQuality()
+    {
+        FakeAnalyzer preferred = CreateAnalyzer("preferred", qualityTier: 1);
+        FakeAnalyzer higherQuality = CreateAnalyzer("higher-quality", qualityTier: 100);
+        var resolver = new CaptureAnalyzerResolver(
+            new CaptureAnalyzerCatalog([higherQuality, preferred]),
+            new TestFeatureAvailability(),
+            CreatePreference(new CaptureAnalyzerPreferenceRule("windows", "preferred", 10)));
+        AnalysisPurpose purpose = new("capture-memory-search", 1);
+
+        CaptureAnalyzerResolution resolution = await resolver.ResolveAsync(
+            new CaptureAnalyzerResolutionRequest(
+                AnalysisCapabilities.MediaPropertiesV1,
+                CaptureMediaKind.Image,
+                sourceLength: 500,
+                purpose,
+                AnalysisProcessingPolicy.LocalOnly(purpose),
+                resolutionPolicyRevision: 1));
+
+        Assert.AreEqual(CaptureAnalyzerResolutionStatus.Resolved, resolution.Status);
+        Assert.AreSame(preferred, resolution.Analyzer);
+        Assert.AreEqual(1, preferred.AvailabilityProbeCount);
+        Assert.AreEqual(0, higherQuality.AvailabilityProbeCount);
+    }
+
+    [TestMethod]
     public async Task Resolve_WhenFeatureDisabled_ShouldNotProbeAnyAnalyzer()
     {
         FakeAnalyzer analyzer = CreateAnalyzer("disabled", qualityTier: 1);
         var resolver = new CaptureAnalyzerResolver(
             new CaptureAnalyzerCatalog([analyzer]),
-            new TestFeatureAvailability { IsCaptureAnalysisEnabled = false });
+            new TestFeatureAvailability { IsCaptureAnalysisEnabled = false },
+            CreatePreference());
         AnalysisPurpose purpose = new("capture-memory-search", 1);
 
         CaptureAnalyzerResolution resolution = await resolver.ResolveAsync(
@@ -107,7 +136,8 @@ public sealed class CaptureAnalyzerResolverTests
         FakeAnalyzer fallback = CreateAnalyzer("fallback", qualityTier: 5);
         var resolver = new CaptureAnalyzerResolver(
             new CaptureAnalyzerCatalog([failing, fallback]),
-            new TestFeatureAvailability());
+            new TestFeatureAvailability(),
+            CreatePreference());
         AnalysisPurpose purpose = new("capture-memory-search", 1);
 
         CaptureAnalyzerResolution resolution = await resolver.ResolveAsync(
@@ -156,6 +186,12 @@ public sealed class CaptureAnalyzerResolverTests
             maximumSourceBytes: null,
             qualityTier);
         return new(descriptor);
+    }
+
+    private static CaptureAnalyzerResolutionPreference CreatePreference(
+        params CaptureAnalyzerPreferenceRule[] rules)
+    {
+        return new(rules);
     }
 
     private sealed class FakeAnalyzer(CaptureAnalyzerDescriptor descriptor) : ICaptureAnalyzer

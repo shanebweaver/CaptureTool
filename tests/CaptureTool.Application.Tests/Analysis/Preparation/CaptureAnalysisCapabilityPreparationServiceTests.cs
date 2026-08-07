@@ -176,7 +176,10 @@ public sealed class CaptureAnalysisCapabilityPreparationServiceTests
     {
         var featureAvailability = new StubFeatureAvailability(featureEnabled);
         var catalog = new CaptureAnalyzerCatalog([analyzer]);
-        var resolver = new CaptureAnalyzerResolver(catalog, featureAvailability);
+        var resolver = new CaptureAnalyzerResolver(
+            catalog,
+            featureAvailability,
+            new CaptureAnalyzerResolutionPreference([]));
         var wakeSignal = new RecordingWakeSignal();
         var jobStore = new Mock<ICaptureAnalysisJobStore>(MockBehavior.Strict);
         jobStore

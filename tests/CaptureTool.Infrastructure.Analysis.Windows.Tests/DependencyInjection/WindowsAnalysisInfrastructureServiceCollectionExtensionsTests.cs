@@ -4,6 +4,7 @@ using CaptureTool.Domain.Analysis;
 using CaptureTool.Infrastructure.Analysis.Windows.Analyzers;
 using CaptureTool.Infrastructure.Analysis.Windows.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection;
+using System.Text.Json;
 
 namespace CaptureTool.Infrastructure.Analysis.Windows.Tests.DependencyInjection;
 
@@ -72,6 +73,47 @@ public sealed class WindowsAnalysisInfrastructureServiceCollectionExtensionsTest
                 purpose,
                 AnalysisProcessingPolicy.LocalOnly(purpose)));
         Assert.AreEqual(CaptureAnalyzerAvailabilityStatus.Available, availability.Status);
+    }
+
+    [TestMethod]
+    public void PackagedProviderManifest_ShouldMatchRegisteredAnalyzerContracts()
+    {
+        var services = new ServiceCollection();
+        services.AddSingleton<ITextExtractionAnalysisService, StubTextExtractionAnalysisService>();
+        services.AddWindowsAnalysisDomains();
+        using ServiceProvider provider = services.BuildServiceProvider();
+        ICaptureAnalyzer[] analyzers = [.. provider.GetServices<ICaptureAnalyzer>()];
+        using JsonDocument document = JsonDocument.Parse(File.ReadAllBytes(
+            Path.Combine(AppContext.BaseDirectory, "CaptureAnalysisProviders.json")));
+        JsonElement root = document.RootElement;
+        JsonElement providerElement = root.GetProperty("providers").EnumerateArray().Single();
+
+        Assert.AreEqual(1, root.GetProperty("schemaVersion").GetInt32());
+        Assert.AreEqual("on-device", root.GetProperty("processingBoundary").GetString());
+        Assert.AreEqual("microsoft-windows", providerElement.GetProperty("providerId").GetString());
+        Assert.AreEqual(
+            "CaptureAnalysis_Provider_MicrosoftWindows",
+            providerElement.GetProperty("featureFlag").GetString());
+
+        Dictionary<string, string> manifestCapabilities = providerElement
+            .GetProperty("analyzers")
+            .EnumerateArray()
+            .ToDictionary(
+                element => element.GetProperty("analyzerId").GetString()!,
+                element => element.GetProperty("capability").GetString()!,
+                StringComparer.Ordinal);
+        Dictionary<string, string> registeredCapabilities = analyzers.ToDictionary(
+            analyzer => analyzer.Descriptor.Identity.AnalyzerId,
+            analyzer => $"{analyzer.Descriptor.Capability.Id.Value}/v{analyzer.Descriptor.Capability.SchemaVersion.Value}",
+            StringComparer.Ordinal);
+
+        CollectionAssert.AreEquivalent(
+            registeredCapabilities.Keys.ToArray(),
+            manifestCapabilities.Keys.ToArray());
+        foreach ((string analyzerId, string capability) in registeredCapabilities)
+        {
+            Assert.AreEqual(capability, manifestCapabilities[analyzerId]);
+        }
     }
 
     private sealed class StubTextExtractionAnalysisService : ITextExtractionAnalysisService

@@ -8,6 +8,9 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Include="..\..\src\CaptureTool.Infrastructure.Analysis.Windows\CaptureAnalysisProviders.json"
+          Link="CaptureAnalysisProviders.json"
+          CopyToOutputDirectory="PreserveNewest" />
     <ProjectReference Include="..\..\src\CaptureTool.Application.Abstractions\CaptureTool.Application.Abstractions.csproj" />
     <ProjectReference Include="..\..\src\CaptureTool.Domain\CaptureTool.Domain.csproj" />
     <ProjectReference Include="..\..\src\CaptureTool.Domain.Analysis\CaptureTool.Domain.Analysis.csproj" />

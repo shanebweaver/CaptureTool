@@ -77,6 +77,9 @@ public sealed class ApplicationServiceCollectionExtensionsTests
         AssertHasFactoryRegistration<ICaptureAnalysisPolicyCommandService>(services, ServiceLifetime.Singleton);
         AssertHasRegistration<CaptureAnalyzerCatalog, CaptureAnalyzerCatalog>(services, ServiceLifetime.Singleton);
         AssertHasFactoryRegistration<ICaptureAnalyzerCatalog>(services, ServiceLifetime.Singleton);
+        AssertHasRegistration<ICaptureAnalyzerResolutionPreference, CaptureAnalyzerResolutionPreference>(
+            services,
+            ServiceLifetime.Singleton);
         AssertHasRegistration<ICaptureAnalyzerResolver, CaptureAnalyzerResolver>(services, ServiceLifetime.Singleton);
         AssertHasRegistration<CaptureAnalysisCapabilityPreparationService, CaptureAnalysisCapabilityPreparationService>(
             services,

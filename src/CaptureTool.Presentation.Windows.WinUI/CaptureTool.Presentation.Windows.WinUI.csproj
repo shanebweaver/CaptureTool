@@ -23,6 +23,10 @@
 
   <!-- App manifest -->
   <ItemGroup>
+    <Content Include="..\CaptureTool.Infrastructure.Analysis.Windows\CaptureAnalysisProviders.json"
+             Link="CaptureAnalysisProviders.json"
+             CopyToOutputDirectory="PreserveNewest"
+             CopyToPublishDirectory="PreserveNewest" />
     <Manifest Include="$(ApplicationManifest)" />
   </ItemGroup>
 

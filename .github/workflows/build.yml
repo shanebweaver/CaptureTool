@@ -50,6 +50,14 @@ jobs:
           /p:GenerateTemporaryStoreCertificate=false
       shell: pwsh
 
+    - name: Verify packaged Capture Analysis providers
+      run: |
+        .\.github\scripts\verify-capture-analysis-provider-smoke.ps1 `
+          -PackageRoot "${{ github.workspace }}\output" `
+          -AppBinRoot "${{ github.workspace }}\src\CaptureTool.Presentation.Windows.WinUI\bin" `
+          -RunManifest "tools\CaptureTool.Analysis.Evaluation\Corpus\v1\microsoft-windows-baseline.json"
+      shell: pwsh
+
     - name: Install coverage tools
       run: |
         dotnet tool install --global dotnet-coverage
@@ -58,6 +66,20 @@ jobs:
     - name: Run .NET tests with coverage
       run: |
         dotnet-coverage collect "powershell -NoProfile -ExecutionPolicy Bypass -File .github\scripts\run-managed-tests.ps1" -s .github\coverage.runsettings -f cobertura -o coverage.cobertura.xml
+
+    - name: Run Capture Analysis model release gates
+      run: |
+        $evaluationOutput = Join-Path "${{ runner.temp }}" "capture-analysis-evaluation"
+        dotnet run `
+          --project tools\CaptureTool.Analysis.Evaluation\CaptureTool.Analysis.Evaluation.csproj `
+          --configuration Release `
+          -p:Platform=x64 `
+          -- evaluate `
+          --corpus tools\CaptureTool.Analysis.Evaluation\Corpus\v1\corpus.json `
+          --run tools\CaptureTool.Analysis.Evaluation\Corpus\v1\microsoft-windows-baseline.json `
+          --output $evaluationOutput `
+          --retention-days 7
+      shell: pwsh
 
     - name: Generate coverage report
       run: |

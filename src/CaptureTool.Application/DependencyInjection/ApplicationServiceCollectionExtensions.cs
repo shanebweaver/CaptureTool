@@ -64,6 +64,7 @@ public static class ApplicationServiceCollectionExtensions
         services.AddSingleton<CaptureAnalyzerCatalog>();
         services.AddSingleton<ICaptureAnalyzerCatalog>(provider =>
             provider.GetRequiredService<CaptureAnalyzerCatalog>());
+        services.AddSingleton<ICaptureAnalyzerResolutionPreference, CaptureAnalyzerResolutionPreference>();
         services.AddSingleton<ICaptureAnalyzerResolver, CaptureAnalyzerResolver>();
         services.AddSingleton<CaptureAnalysisCapabilityPreparationService>();
         services.AddSingleton<IAnalysisCapabilityPreparationQueryService>(provider =>

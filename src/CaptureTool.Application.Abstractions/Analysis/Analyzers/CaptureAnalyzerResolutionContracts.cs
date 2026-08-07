@@ -246,6 +246,37 @@ public interface ICaptureAnalyzerResolver
         CancellationToken cancellationToken = default);
 }
 
+public interface ICaptureAnalyzerResolutionPreference
+{
+    int GetPreference(CaptureAnalyzerDescriptor descriptor);
+}
+
+public sealed record CaptureAnalyzerPreferenceRule
+{
+    public CaptureAnalyzerPreferenceRule(
+        string providerId,
+        string analyzerId,
+        int preference)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(providerId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(analyzerId);
+        if (preference is < -10_000 or > 10_000)
+        {
+            throw new ArgumentOutOfRangeException(nameof(preference));
+        }
+
+        ProviderId = providerId;
+        AnalyzerId = analyzerId;
+        Preference = preference;
+    }
+
+    public string ProviderId { get; }
+
+    public string AnalyzerId { get; }
+
+    public int Preference { get; }
+}
+
 public interface ICaptureAnalyzerCatalog
 {
     IReadOnlyList<ICaptureAnalyzer> Analyzers { get; }
