@@ -303,6 +303,11 @@ public sealed class CaptureAnalysisContractInvariantTests
     {
         Assert.ThrowsExactly<ArgumentException>(() => CaptureAnalyzerOutput.Failed(default));
         Assert.ThrowsExactly<ArgumentException>(() => AnalysisCapabilityPreparationState.Failed(default));
+        Assert.ThrowsExactly<ArgumentException>(() => CaptureAnalyzerPreparationResult.Failed(default));
+        Assert.ThrowsExactly<ArgumentException>(() => CaptureAnalyzerPreparationResult.Unsupported(
+            new AnalysisFailure(
+                AnalysisFailureCode.ProviderUnavailable,
+                AnalysisFailureDisposition.Transient)));
         Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => new CaptureAnalysisStoreWriteResult(
             CaptureAnalysisStoreWriteStatus.Unknown));
         Assert.ThrowsExactly<ArgumentException>(() => new CaptureAnalysisStoreWriteResult(

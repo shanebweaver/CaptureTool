@@ -37,7 +37,18 @@ public sealed class WindowsEditInfrastructureServiceCollectionExtensionsTests
             descriptor.ServiceType == typeof(ITextExtractionAnalysisService)
             && descriptor.ImplementationFactory != null
             && descriptor.Lifetime == ServiceLifetime.Singleton);
-        services.ShouldContainSingleton<IImageDescriptionService, WindowsImageDescriptionService>();
+        services.Should().ContainSingle(descriptor =>
+            descriptor.ServiceType == typeof(WindowsImageDescriptionService)
+            && descriptor.ImplementationType == typeof(WindowsImageDescriptionService)
+            && descriptor.Lifetime == ServiceLifetime.Singleton);
+        services.Should().ContainSingle(descriptor =>
+            descriptor.ServiceType == typeof(IImageDescriptionService)
+            && descriptor.ImplementationFactory != null
+            && descriptor.Lifetime == ServiceLifetime.Singleton);
+        services.Should().ContainSingle(descriptor =>
+            descriptor.ServiceType == typeof(IImageDescriptionAnalysisService)
+            && descriptor.ImplementationFactory != null
+            && descriptor.Lifetime == ServiceLifetime.Singleton);
         services.ShouldContainSingleton<IImageForegroundExtractionService, WindowsImageForegroundExtractionService>();
         services.ShouldContainSingleton<IImageObjectEraseService, WindowsImageObjectEraseService>();
         services.ShouldContainSingleton<IVideoSuperResolutionService, WindowsVideoSuperResolutionService>();
@@ -47,6 +58,8 @@ public sealed class WindowsEditInfrastructureServiceCollectionExtensionsTests
         using ServiceProvider provider = services.BuildServiceProvider();
         provider.GetRequiredService<ITextExtractionService>().Should().BeSameAs(
             provider.GetRequiredService<ITextExtractionAnalysisService>());
+        provider.GetRequiredService<IImageDescriptionService>().Should().BeSameAs(
+            provider.GetRequiredService<IImageDescriptionAnalysisService>());
     }
 }
 

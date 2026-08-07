@@ -1,3 +1,4 @@
+using CaptureTool.Application.Abstractions.Analysis.Analyzers;
 using CaptureTool.Domain.Analysis;
 
 namespace CaptureTool.Application.Abstractions.Analysis.Preparation;
@@ -153,6 +154,74 @@ public sealed record AnalysisCapabilityPreparationProgress
     }
 
     public double FractionComplete { get; }
+}
+
+public enum CaptureAnalyzerPreparationStatus
+{
+    Unknown,
+    Succeeded,
+    Unsupported,
+    Disabled,
+    Failed,
+    Cancelled,
+}
+
+public sealed record CaptureAnalyzerPreparationResult
+{
+    private CaptureAnalyzerPreparationResult(
+        CaptureAnalyzerPreparationStatus status,
+        AnalysisFailure? failure)
+    {
+        Status = status;
+        Failure = failure;
+    }
+
+    public CaptureAnalyzerPreparationStatus Status { get; }
+
+    public AnalysisFailure? Failure { get; }
+
+    public static CaptureAnalyzerPreparationResult Succeeded { get; } = new(
+        CaptureAnalyzerPreparationStatus.Succeeded,
+        null);
+
+    public static CaptureAnalyzerPreparationResult Disabled { get; } = new(
+        CaptureAnalyzerPreparationStatus.Disabled,
+        null);
+
+    public static CaptureAnalyzerPreparationResult Cancelled { get; } = new(
+        CaptureAnalyzerPreparationStatus.Cancelled,
+        null);
+
+    public static CaptureAnalyzerPreparationResult Unsupported(AnalysisFailure failure)
+    {
+        if (failure.Disposition != AnalysisFailureDisposition.Terminal)
+        {
+            throw new ArgumentException(
+                "Unsupported analyzer preparation requires a terminal failure.",
+                nameof(failure));
+        }
+
+        return new(CaptureAnalyzerPreparationStatus.Unsupported, failure);
+    }
+
+    public static CaptureAnalyzerPreparationResult Failed(AnalysisFailure failure)
+    {
+        if (failure.IsEmpty)
+        {
+            throw new ArgumentException(
+                "Failed analyzer preparation requires a bounded failure.",
+                nameof(failure));
+        }
+
+        return new(CaptureAnalyzerPreparationStatus.Failed, failure);
+    }
+}
+
+public interface IPreparableCaptureAnalyzer : ICaptureAnalyzer
+{
+    Task<CaptureAnalyzerPreparationResult> PrepareAsync(
+        IProgress<AnalysisCapabilityPreparationProgress>? progress = null,
+        CancellationToken cancellationToken = default);
 }
 
 public interface IAnalysisCapabilityPreparationQueryService

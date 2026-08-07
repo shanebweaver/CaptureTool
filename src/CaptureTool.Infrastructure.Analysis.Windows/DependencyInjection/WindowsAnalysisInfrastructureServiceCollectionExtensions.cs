@@ -10,6 +10,7 @@ public static class WindowsAnalysisInfrastructureServiceCollectionExtensions
     {
         services.AddSingleton<ICaptureAnalyzer, WindowsImageMediaPropertiesAnalyzer>();
         services.AddSingleton<ICaptureAnalyzer, WindowsOcrDocumentAnalyzer>();
+        services.AddSingleton<ICaptureAnalyzer, WindowsImageDescriptionAnalyzer>();
         return services;
     }
 }

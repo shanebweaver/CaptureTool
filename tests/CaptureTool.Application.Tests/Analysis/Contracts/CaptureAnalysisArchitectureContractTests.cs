@@ -142,6 +142,7 @@ public sealed class CaptureAnalysisArchitectureContractTests
             typeof(ICaptureAnalysisWakeSignal),
             typeof(ICaptureAnalysisWakeWaiter),
             typeof(ICaptureAnalyzer),
+            typeof(IPreparableCaptureAnalyzer),
             typeof(ICaptureAnalyzerCatalog),
             typeof(ICaptureAnalyzerResolver),
             typeof(ICaptureAnalysisSourceVerifier),

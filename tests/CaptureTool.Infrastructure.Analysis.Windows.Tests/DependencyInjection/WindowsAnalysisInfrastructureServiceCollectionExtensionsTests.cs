@@ -1,5 +1,6 @@
 using CaptureTool.Application.Abstractions.Analysis.Analyzers;
 using CaptureTool.Application.Abstractions.Edit.Image.TextExtraction;
+using CaptureTool.Domain.Analysis;
 using CaptureTool.Infrastructure.Analysis.Windows.Analyzers;
 using CaptureTool.Infrastructure.Analysis.Windows.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection;
@@ -24,6 +25,10 @@ public sealed class WindowsAnalysisInfrastructureServiceCollectionExtensionsTest
             descriptor.ServiceType == typeof(ICaptureAnalyzer) &&
             descriptor.ImplementationType == typeof(WindowsOcrDocumentAnalyzer) &&
             descriptor.Lifetime == ServiceLifetime.Singleton));
+        Assert.IsTrue(services.Any(descriptor =>
+            descriptor.ServiceType == typeof(ICaptureAnalyzer) &&
+            descriptor.ImplementationType == typeof(WindowsImageDescriptionAnalyzer) &&
+            descriptor.Lifetime == ServiceLifetime.Singleton));
     }
 
     [TestMethod]
@@ -42,7 +47,7 @@ public sealed class WindowsAnalysisInfrastructureServiceCollectionExtensionsTest
     }
 
     [TestMethod]
-    public void AddWindowsAnalysisDomains_ShouldResolveOcrWithoutImageDescriptionSupport()
+    public async Task AddWindowsAnalysisDomains_ShouldResolveOcrWithoutImageDescriptionSupport()
     {
         var services = new ServiceCollection();
         services.AddSingleton<ITextExtractionAnalysisService, StubTextExtractionAnalysisService>();
@@ -52,7 +57,21 @@ public sealed class WindowsAnalysisInfrastructureServiceCollectionExtensionsTest
         ICaptureAnalyzer[] analyzers = [.. provider.GetServices<ICaptureAnalyzer>()];
 
         Assert.IsTrue(analyzers.Any(analyzer => analyzer is WindowsOcrDocumentAnalyzer));
-        Assert.HasCount(2, analyzers);
+        Assert.IsTrue(analyzers.Any(analyzer => analyzer is WindowsImageMediaPropertiesAnalyzer));
+        Assert.IsTrue(analyzers.Any(analyzer => analyzer is WindowsImageDescriptionAnalyzer));
+        Assert.HasCount(3, analyzers);
+
+        var ocr = (WindowsOcrDocumentAnalyzer)analyzers.Single(analyzer =>
+            analyzer is WindowsOcrDocumentAnalyzer);
+        AnalysisPurpose purpose = new("capture-memory-search", 1);
+        CaptureAnalyzerAvailability availability = await ocr.GetAvailabilityAsync(
+            new CaptureAnalyzerAvailabilityRequest(
+                ocr.Descriptor,
+                CaptureMediaKind.Image,
+                sourceLength: 1,
+                purpose,
+                AnalysisProcessingPolicy.LocalOnly(purpose)));
+        Assert.AreEqual(CaptureAnalyzerAvailabilityStatus.Available, availability.Status);
     }
 
     private sealed class StubTextExtractionAnalysisService : ITextExtractionAnalysisService
@@ -66,7 +85,7 @@ public sealed class WindowsAnalysisInfrastructureServiceCollectionExtensionsTest
 
         public TextExtractionReadyState GetReadyState()
         {
-            return TextExtractionReadyState.NotSupported;
+            return TextExtractionReadyState.Ready;
         }
 
         public Task<TextExtractionAnalysisResult> ExtractAnalysisAsync(

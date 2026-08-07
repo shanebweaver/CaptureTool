@@ -22,7 +22,11 @@ public static class WindowsEditInfrastructureServiceCollectionExtensions
             provider.GetRequiredService<WindowsTextExtractionService>());
         services.AddSingleton<ITextExtractionAnalysisService>(provider =>
             provider.GetRequiredService<WindowsTextExtractionService>());
-        services.AddSingleton<IImageDescriptionService, WindowsImageDescriptionService>();
+        services.AddSingleton<WindowsImageDescriptionService>();
+        services.AddSingleton<IImageDescriptionService>(provider =>
+            provider.GetRequiredService<WindowsImageDescriptionService>());
+        services.AddSingleton<IImageDescriptionAnalysisService>(provider =>
+            provider.GetRequiredService<WindowsImageDescriptionService>());
         services.AddSingleton<IImageForegroundExtractionService, WindowsImageForegroundExtractionService>();
         services.AddSingleton<IImageObjectEraseService, WindowsImageObjectEraseService>();
         services.AddSingleton<IVideoSuperResolutionService, WindowsVideoSuperResolutionService>();
