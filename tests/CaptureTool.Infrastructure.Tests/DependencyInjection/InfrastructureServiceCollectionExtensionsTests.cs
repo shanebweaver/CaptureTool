@@ -4,6 +4,7 @@ using CaptureTool.Application.Abstractions.Analysis.Policy;
 using CaptureTool.Application.Abstractions.Analysis.Intake;
 using CaptureTool.Application.Abstractions.Analysis.Jobs;
 using CaptureTool.Application.Abstractions.Analysis.Sources;
+using CaptureTool.Application.Abstractions.Analysis.Memory;
 using CaptureTool.Application.Abstractions.Cancellation;
 using CaptureTool.Application.Abstractions.Capture.Assets;
 using CaptureTool.Application.Abstractions.Edit.Image.ChromaKey;
@@ -71,6 +72,7 @@ public sealed class InfrastructureServiceCollectionExtensionsTests
         AssertHasFactoryRegistration<ICaptureAnalysisWakeSignal>(services);
         AssertHasFactoryRegistration<ICaptureAnalysisWakeWaiter>(services);
         AssertHasRegistration<ICaptureAnalysisFeatureAvailability, CaptureAnalysisFeatureAvailability>(services);
+        AssertHasRegistration<ICaptureMemoryFeatureAvailability, CaptureMemoryFeatureAvailability>(services);
         AssertHasRegistration<IAiConsentSettingsFeatureAvailability, AiConsentSettingsFeatureAvailability>(services);
         AssertHasRegistration<IStoreFeatureAvailability, StoreFeatureAvailability>(services);
         AssertHasRegistration<IChromaKeyFeatureAvailability, ChromaKeyFeatureAvailability>(services);

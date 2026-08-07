@@ -1806,4 +1806,36 @@ SOFTWARE.
   <data name="CaptureOverlay_RecordingUnsupportedMessage" xml:space="preserve">
     <value>La grabación de pantalla no es compatible con este dispositivo.</value>
   </data>
+  <data name="CaptureMemory_Setup_Title.Text" xml:space="preserve"><value>Encuentra capturas por su contenido</value></data>
+  <data name="CaptureMemory_Setup_Body.Text" xml:space="preserve"><value>Capture Tool puede usar los modelos de IA ya disponibles en la aplicación para crear metadatos privados administrados por la aplicación para la búsqueda. El análisis permanece en este dispositivo y solo comienza cuando aceptas.</value></data>
+  <data name="CaptureMemory_Setup_Disclosure.Text" xml:space="preserve"><value>Crea propiedades multimedia, reconocimiento de texto y, cuando sea compatible, descripciones visuales. Puedes detener el análisis o borrar estos metadatos en Configuración.</value></data>
+  <data name="CaptureMemory_Setup_FutureButton.Content" xml:space="preserve"><value>Analizar capturas nuevas</value></data>
+  <data name="CaptureMemory_Setup_ExistingButton.Content" xml:space="preserve"><value>Incluir capturas existentes</value></data>
+  <data name="CaptureMemory_Setup_Preparing.Text" xml:space="preserve"><value>Preparando modelos de IA…</value></data>
+  <data name="CaptureMemory_Setup_Failed.Text" xml:space="preserve"><value>No se pudo preparar Capture Memory. Inténtalo de nuevo.</value></data>
+  <data name="CaptureMemory_SearchBox.PlaceholderText" xml:space="preserve"><value>Buscar en tus capturas</value></data>
+  <data name="CaptureMemory_SearchBox.AutomationProperties.Name" xml:space="preserve"><value>Buscar capturas por contenido</value></data>
+  <data name="CaptureMemory_Searching.Text" xml:space="preserve"><value>Buscando…</value></data>
+  <data name="CaptureMemory_Indexing.Text" xml:space="preserve"><value>Preparando capturas existentes para la búsqueda…</value></data>
+  <data name="CaptureMemory_PartialResults.Message" xml:space="preserve"><value>Estos son resultados parciales mientras se preparan las capturas existentes.</value></data>
+  <data name="CaptureMemory_DescriptionUnsupported.Message" xml:space="preserve"><value>Las descripciones visuales no son compatibles con este dispositivo. La búsqueda por nombre de archivo y texto reconocido sigue disponible.</value></data>
+  <data name="CaptureMemory_SourceMissing.Message" xml:space="preserve"><value>Un archivo de origen coincidente se movió o no está disponible. Puedes olvidar su historial administrado por la aplicación.</value></data>
+  <data name="CaptureMemory_SearchFailed.Message" xml:space="preserve"><value>La búsqueda de Capture Memory falló.</value></data>
+  <data name="CaptureMemory_CorruptProjection.Message" xml:space="preserve"><value>Los datos de búsqueda están dañados. Vuelve a crear los datos administrados por la aplicación.</value></data>
+  <data name="CaptureMemory_Retry.Content" xml:space="preserve"><value>Reintentar</value></data>
+  <data name="CaptureMemory_Rebuild.Content" xml:space="preserve"><value>Volver a crear y reintentar</value></data>
+  <data name="CaptureMemory_NoMatches.Text" xml:space="preserve"><value>No hay capturas coincidentes</value></data>
+  <data name="CaptureMemory_ResultSourceMissing.Text" xml:space="preserve"><value>Archivo de origen no disponible</value></data>
+  <data name="CaptureMemory_ResultFailed.Message" xml:space="preserve"><value>No se pudo cargar un resultado. Reintenta la búsqueda.</value></data>
+  <data name="CaptureMemory_ResultFailedLabel.Text" xml:space="preserve"><value>Resultado no disponible</value></data>
+  <data name="CaptureMemory_ResultOpen.Content" xml:space="preserve"><value>Abrir</value></data>
+  <data name="CaptureMemory_ResultOpen.AutomationProperties.Name" xml:space="preserve"><value>Abrir captura</value></data>
+  <data name="CaptureMemory_ResultForget.Content" xml:space="preserve"><value>Olvidar</value></data>
+  <data name="CaptureMemory_ResultForget.AutomationProperties.Name" xml:space="preserve"><value>Olvidar historial de la captura</value></data>
+  <data name="CaptureMemory_Match_Text" xml:space="preserve"><value>Coincidencia de texto</value></data>
+  <data name="CaptureMemory_Match_Visual" xml:space="preserve"><value>Coincidencia visual</value></data>
+  <data name="CaptureMemory_Match_Filename" xml:space="preserve"><value>Coincidencia de nombre</value></data>
+  <data name="CaptureMemory_MediaKind_Image" xml:space="preserve"><value>Imagen</value></data>
+  <data name="CaptureMemory_MediaKind_Video" xml:space="preserve"><value>Vídeo</value></data>
+  <data name="CaptureMemory_MediaKind_Audio" xml:space="preserve"><value>Audio</value></data>
 </root>

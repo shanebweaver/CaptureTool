@@ -53,6 +53,8 @@ public sealed partial class HomePageViewModel : AsyncLoadableViewModelBase
 
     public ObservableCollection<RecentCaptureViewModel> RecentCaptures => _recentCaptures;
 
+    public CaptureMemoryHomeViewModel CaptureMemory { get; }
+
     public bool HasRecentCaptures => _recentCaptures.Count > 0;
 
     public bool IsRecentCapturesEmpty => HasLoadedRecentCaptures && !IsLoadingRecentCaptures && !HasRecentCaptures;
@@ -112,7 +114,8 @@ public sealed partial class HomePageViewModel : AsyncLoadableViewModelBase
         IVideoCaptureState videoCaptureState,
         IAudioCaptureState audioCaptureState,
         IFactoryServiceWithArgs<RecentCaptureViewModel, string> recentCaptureViewModelFactory,
-        ITelemetryService? telemetryService = null)
+        ITelemetryService? telemetryService = null,
+        CaptureMemoryHomeViewModel? captureMemory = null)
     {
         _imageCaptureState = imageCaptureState;
         _videoCaptureState = videoCaptureState;
@@ -125,6 +128,7 @@ public sealed partial class HomePageViewModel : AsyncLoadableViewModelBase
         _openRecentCaptureCommand = openRecentCaptureCommand;
         _recentCapturesChangeNotifier = recentCapturesChangeNotifier;
         _recentCaptureViewModelFactory = recentCaptureViewModelFactory;
+        CaptureMemory = captureMemory ?? new CaptureMemoryHomeViewModel();
 
         NewImageCaptureCommand = TelemetryCommandFactory.Async(
             "new_image_capture",
@@ -185,6 +189,7 @@ public sealed partial class HomePageViewModel : AsyncLoadableViewModelBase
         }
 
         await RefreshRecentCapturesAsync(cancellationToken);
+        await CaptureMemory.LoadAsync(cancellationToken);
         await base.LoadAsync(cancellationToken);
     }
 
@@ -194,6 +199,7 @@ public sealed partial class HomePageViewModel : AsyncLoadableViewModelBase
         _videoCaptureState.NewVideoCaptured -= OnNewVideoCaptured;
         _audioCaptureState.NewAudioCaptured -= OnNewAudioCaptured;
         _recentCapturesChangeNotifier.RecentCapturesChanged -= OnRecentCapturesChanged;
+        CaptureMemory.Dispose();
         base.Dispose();
     }
 

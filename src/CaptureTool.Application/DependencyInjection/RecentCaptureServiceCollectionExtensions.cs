@@ -3,6 +3,8 @@ using CaptureTool.Application.Abstractions.Library.RecentCaptures.ClearRecentCap
 using CaptureTool.Application.Abstractions.Library.RecentCaptures.GetRecentCaptures;
 using CaptureTool.Application.Abstractions.Library.RecentCaptures.OpenRecentCapture;
 using CaptureTool.Application.Abstractions.Library.RecentCaptures.RemoveRecentCapture;
+using CaptureTool.Application.Abstractions.Library.CaptureMemory;
+using CaptureTool.Application.Library.CaptureMemory;
 using CaptureTool.Application.Library.RecentCaptures;
 using CaptureTool.Application.Library.RecentCaptures.ClearRecentCaptures;
 using CaptureTool.Application.Library.RecentCaptures.GetRecentCaptures;
@@ -21,6 +23,8 @@ internal static class RecentCaptureServiceCollectionExtensions
         services.AddTransient<IGetRecentCapturesUseCase, GetRecentCapturesUseCase>();
         services.AddTransient<IOpenRecentCaptureUseCase, OpenRecentCaptureUseCase>();
         services.AddTransient<IRemoveRecentCaptureUseCase, RemoveRecentCaptureUseCase>();
+        services.AddSingleton<ICaptureMemoryResultResolver, CaptureMemoryResultResolver>();
+        services.AddTransient<IOpenCaptureMemoryResultUseCase, OpenCaptureMemoryResultUseCase>();
 
         return services;
     }

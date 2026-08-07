@@ -1,4 +1,5 @@
 using CaptureTool.Application.Abstractions.Analysis.Policy;
+using CaptureTool.Application.Abstractions.Analysis.Memory;
 using CaptureTool.Application.Abstractions.Edit.Image.Description;
 using CaptureTool.Application.Abstractions.Edit.Image.ForegroundExtraction;
 using CaptureTool.Application.Abstractions.Edit.Image.ObjectErase;
@@ -15,6 +16,24 @@ namespace CaptureTool.Infrastructure.Tests.Features;
 [TestClass]
 public sealed class FeatureAvailabilityTests
 {
+    [TestMethod]
+    public void CaptureMemoryFeatureAvailability_RequiresBothPlatformAndMemoryFlags()
+    {
+        var enabled = new CaptureMemoryFeatureAvailability(
+            new ConstantFeatureManager(true),
+            new StubCaptureAnalysisFeatureAvailability(true));
+        var platformDisabled = new CaptureMemoryFeatureAvailability(
+            new ConstantFeatureManager(true),
+            new StubCaptureAnalysisFeatureAvailability(false));
+        var memoryDisabled = new CaptureMemoryFeatureAvailability(
+            new ConstantFeatureManager(false),
+            new StubCaptureAnalysisFeatureAvailability(true));
+
+        Assert.IsTrue(enabled.IsCaptureMemorySearchEnabled);
+        Assert.IsFalse(platformDisabled.IsCaptureMemorySearchEnabled);
+        Assert.IsFalse(memoryDisabled.IsCaptureMemorySearchEnabled);
+    }
+
     [TestMethod]
     public void CaptureAnalysisFeatureAvailability_ReturnsPlatformFeatureManagerValue()
     {
@@ -286,6 +305,18 @@ public sealed class FeatureAvailabilityTests
             LastFeatureFlag = featureFlag;
             return _isEnabled;
         }
+    }
+
+    private sealed class StubCaptureAnalysisFeatureAvailability(bool enabled)
+        : ICaptureAnalysisFeatureAvailability
+    {
+        public bool IsCaptureAnalysisEnabled => enabled;
+
+        public long ResolutionPolicyRevision => 1;
+
+        public bool IsProviderEnabled(string providerId) => enabled;
+
+        public bool IsAnalyzerEnabled(AnalyzerIdentity analyzer) => enabled;
     }
 
     private sealed class StubImageSuperResolutionService(ImageSuperResolutionReadyState readyState)

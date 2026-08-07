@@ -195,3 +195,8 @@ public interface ICaptureMemorySearchService
         CaptureMemorySearchRequest request,
         CancellationToken cancellationToken = default);
 }
+
+public interface ICaptureMemoryFeatureAvailability
+{
+    bool IsCaptureMemorySearchEnabled { get; }
+}

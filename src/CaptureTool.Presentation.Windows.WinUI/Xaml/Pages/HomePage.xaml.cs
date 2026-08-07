@@ -1,4 +1,5 @@
 using CaptureTool.Application.Abstractions.Logging;
+using CaptureTool.Presentation.Features.Home;
 using CaptureTool.Presentation.Features.RecentCaptures;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -181,6 +182,120 @@ public sealed partial class HomePage : HomePageBase
         }
 
         DispatcherQueue.TryEnqueue(() => _ = LoadRecentCaptureThumbnailAsync(itemContainer, recentCapture));
+    }
+
+    private void CaptureMemorySearchKeyboardAccelerator_Invoked(
+        KeyboardAccelerator sender,
+        KeyboardAcceleratorInvokedEventArgs args)
+    {
+        CaptureMemorySearchBox.Focus(FocusState.Keyboard);
+        CaptureMemorySearchBox.SelectAll();
+        args.Handled = true;
+    }
+
+    private void CaptureMemorySearchBox_KeyDown(object sender, KeyRoutedEventArgs e)
+    {
+        if (e.Key == VirtualKey.Escape)
+        {
+            ViewModel.CaptureMemory.ClearSearchCommand.Execute(null);
+            e.Handled = true;
+        }
+        else if (e.Key == VirtualKey.Down && ViewModel.CaptureMemory.Results.Count > 0)
+        {
+            CaptureMemoryResultsList.SelectedIndex = 0;
+            CaptureMemoryResultsList.Focus(FocusState.Keyboard);
+            e.Handled = true;
+        }
+    }
+
+    private void CaptureMemoryResultsList_KeyDown(object sender, KeyRoutedEventArgs e)
+    {
+        if (e.Key == VirtualKey.Enter &&
+            CaptureMemoryResultsList.SelectedItem is CaptureMemorySearchResultViewModel result)
+        {
+            _ = ViewModel.CaptureMemory.OpenResultCommand.ExecuteAsync(result);
+            e.Handled = true;
+        }
+        else if (e.Key == VirtualKey.Escape)
+        {
+            ViewModel.CaptureMemory.ClearSearchCommand.Execute(null);
+            CaptureMemorySearchBox.Focus(FocusState.Keyboard);
+            e.Handled = true;
+        }
+    }
+
+    private void CaptureMemoryResultsList_ItemClick(object sender, ItemClickEventArgs e)
+    {
+        if (e.ClickedItem is CaptureMemorySearchResultViewModel result)
+        {
+            _ = ViewModel.CaptureMemory.OpenResultCommand.ExecuteAsync(result);
+        }
+    }
+
+    private void OpenCaptureMemoryResultButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is Button { CommandParameter: CaptureMemorySearchResultViewModel result })
+        {
+            _ = ViewModel.CaptureMemory.OpenResultCommand.ExecuteAsync(result);
+        }
+    }
+
+    private void ForgetCaptureMemoryResultButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is Button { CommandParameter: CaptureMemorySearchResultViewModel result })
+        {
+            _ = ViewModel.CaptureMemory.ForgetResultCommand.ExecuteAsync(result);
+        }
+    }
+
+    private void CaptureMemoryResultsList_ContainerContentChanging(
+        ListViewBase sender,
+        ContainerContentChangingEventArgs args)
+    {
+        if (args.Item is not CaptureMemorySearchResultViewModel result ||
+            args.ItemContainer is not SelectorItem itemContainer)
+        {
+            return;
+        }
+
+        DispatcherQueue.TryEnqueue(() => _ = LoadCaptureMemoryThumbnailAsync(itemContainer, result));
+    }
+
+    private async Task LoadCaptureMemoryThumbnailAsync(
+        SelectorItem itemContainer,
+        CaptureMemorySearchResultViewModel result)
+    {
+        Image? previewImage = FindDescendant<Image>(itemContainer, "CaptureMemoryPreviewImage");
+        SymbolIcon? fallback = FindDescendant<SymbolIcon>(itemContainer, "CaptureMemoryPreviewFallback");
+        if (previewImage == null || fallback == null)
+        {
+            return;
+        }
+
+        previewImage.Source = null;
+        previewImage.Opacity = 0;
+        fallback.Visibility = Visibility.Visible;
+        if (!result.CanOpen || result.CurrentFilePath == null)
+        {
+            return;
+        }
+
+        try
+        {
+            BitmapImage? thumbnail = await GetThumbnailImageAsync(result.CurrentFilePath);
+            if (thumbnail == null || CaptureMemoryResultsList.ItemFromContainer(itemContainer) != result)
+            {
+                return;
+            }
+
+            previewImage.Source = thumbnail;
+            previewImage.Opacity = 1;
+            fallback.Visibility = Visibility.Collapsed;
+        }
+        catch
+        {
+            // The result remains usable even when Windows cannot create a thumbnail.
+        }
     }
 
     private async Task LoadRecentCaptureThumbnailAsync(SelectorItem itemContainer, RecentCaptureViewModel recentCapture)

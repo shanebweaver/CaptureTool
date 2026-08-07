@@ -2087,4 +2087,36 @@ SOFTWARE.
     <value>Opening audio...</value>
     <comment>Shown while the audio playback pipeline opens a source.</comment>
   </data>
+  <data name="CaptureMemory_Setup_Title.Text" xml:space="preserve"><value>Find captures by what is in them</value></data>
+  <data name="CaptureMemory_Setup_Body.Text" xml:space="preserve"><value>Capture Tool can use the AI models already available in the app to create private, app-managed metadata for search. Analysis stays on this device and starts only after you opt in.</value></data>
+  <data name="CaptureMemory_Setup_Disclosure.Text" xml:space="preserve"><value>Creates media properties, text recognition, and—when supported—visual descriptions. You can stop analysis or erase this metadata at any time in Settings.</value></data>
+  <data name="CaptureMemory_Setup_FutureButton.Content" xml:space="preserve"><value>Analyze new captures</value></data>
+  <data name="CaptureMemory_Setup_ExistingButton.Content" xml:space="preserve"><value>Include existing captures</value></data>
+  <data name="CaptureMemory_Setup_Preparing.Text" xml:space="preserve"><value>Preparing AI models…</value></data>
+  <data name="CaptureMemory_Setup_Failed.Text" xml:space="preserve"><value>Capture Memory could not be prepared. Try again.</value></data>
+  <data name="CaptureMemory_SearchBox.PlaceholderText" xml:space="preserve"><value>Search your captures</value></data>
+  <data name="CaptureMemory_SearchBox.AutomationProperties.Name" xml:space="preserve"><value>Search your captures by content</value></data>
+  <data name="CaptureMemory_Searching.Text" xml:space="preserve"><value>Searching…</value></data>
+  <data name="CaptureMemory_Indexing.Text" xml:space="preserve"><value>Preparing existing captures for search…</value></data>
+  <data name="CaptureMemory_PartialResults.Message" xml:space="preserve"><value>These are partial results while existing captures are prepared.</value></data>
+  <data name="CaptureMemory_DescriptionUnsupported.Message" xml:space="preserve"><value>Visual descriptions are not supported on this device. Filename and recognized-text search are still available.</value></data>
+  <data name="CaptureMemory_SourceMissing.Message" xml:space="preserve"><value>A matching source file has moved or is unavailable. You can forget its app-managed history.</value></data>
+  <data name="CaptureMemory_SearchFailed.Message" xml:space="preserve"><value>Capture Memory search failed.</value></data>
+  <data name="CaptureMemory_CorruptProjection.Message" xml:space="preserve"><value>The search data is damaged. Rebuild the app-managed search data to continue.</value></data>
+  <data name="CaptureMemory_Retry.Content" xml:space="preserve"><value>Retry</value></data>
+  <data name="CaptureMemory_Rebuild.Content" xml:space="preserve"><value>Rebuild and retry</value></data>
+  <data name="CaptureMemory_NoMatches.Text" xml:space="preserve"><value>No matching captures</value></data>
+  <data name="CaptureMemory_ResultSourceMissing.Text" xml:space="preserve"><value>Source file unavailable</value></data>
+  <data name="CaptureMemory_ResultFailed.Message" xml:space="preserve"><value>A result could not be loaded. Retry the search.</value></data>
+  <data name="CaptureMemory_ResultFailedLabel.Text" xml:space="preserve"><value>Result unavailable</value></data>
+  <data name="CaptureMemory_ResultOpen.Content" xml:space="preserve"><value>Open</value></data>
+  <data name="CaptureMemory_ResultOpen.AutomationProperties.Name" xml:space="preserve"><value>Open capture</value></data>
+  <data name="CaptureMemory_ResultForget.Content" xml:space="preserve"><value>Forget</value></data>
+  <data name="CaptureMemory_ResultForget.AutomationProperties.Name" xml:space="preserve"><value>Forget capture history</value></data>
+  <data name="CaptureMemory_Match_Text" xml:space="preserve"><value>Text match</value></data>
+  <data name="CaptureMemory_Match_Visual" xml:space="preserve"><value>Visual match</value></data>
+  <data name="CaptureMemory_Match_Filename" xml:space="preserve"><value>Filename match</value></data>
+  <data name="CaptureMemory_MediaKind_Image" xml:space="preserve"><value>Image</value></data>
+  <data name="CaptureMemory_MediaKind_Video" xml:space="preserve"><value>Video</value></data>
+  <data name="CaptureMemory_MediaKind_Audio" xml:space="preserve"><value>Audio</value></data>
 </root>

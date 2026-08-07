@@ -38,6 +38,7 @@ public static class PresentationServiceCollectionExtensions
         services.AddTransient<AboutPageViewModel>();
         services.AddTransient<StorePageViewModel>();
         services.AddTransient<HomePageViewModel>();
+        services.AddTransient<CaptureMemoryHomeViewModel>();
         services.AddTransient<SettingsPageViewModel>();
         services.AddTransient<LoadingPageViewModel>();
         services.AddTransient<ChromaKeyToolViewModel>();

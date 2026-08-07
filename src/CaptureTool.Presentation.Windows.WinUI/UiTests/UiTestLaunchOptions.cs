@@ -7,16 +7,22 @@ internal sealed class UiTestLaunchOptions
     private UiTestLaunchOptions(
         bool isEnabled,
         string? imageFilePath,
+        bool isCaptureMemoryEnabled,
+        string? captureMemoryImageFilePath,
         string? dataFolderPath,
         string? temporaryFolderPath)
     {
         IsEnabled = isEnabled;
         ImageFilePath = imageFilePath;
+        IsCaptureMemoryEnabled = isCaptureMemoryEnabled;
+        CaptureMemoryImageFilePath = captureMemoryImageFilePath;
         DataFolderPath = dataFolderPath;
         TemporaryFolderPath = temporaryFolderPath;
     }
 
     public static UiTestLaunchOptions Current { get; private set; } = new(
+        false,
+        null,
         false,
         null,
         null,
@@ -25,6 +31,10 @@ internal sealed class UiTestLaunchOptions
     public bool IsEnabled { get; }
 
     public string? ImageFilePath { get; }
+
+    public bool IsCaptureMemoryEnabled { get; }
+
+    public string? CaptureMemoryImageFilePath { get; }
 
     public string? DataFolderPath { get; }
 
@@ -37,6 +47,8 @@ internal sealed class UiTestLaunchOptions
         Current = new(
             isEnabled,
             GetOptionValue(args, "--ui-test-image"),
+            args.Contains("--ui-test-capture-memory", StringComparer.OrdinalIgnoreCase),
+            GetOptionValue(args, "--ui-test-capture-memory-image"),
             GetOptionValue(args, "--ui-test-data-dir"),
             GetOptionValue(args, "--ui-test-temp-dir"));
     }
