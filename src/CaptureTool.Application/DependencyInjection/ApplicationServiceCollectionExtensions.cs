@@ -1,11 +1,17 @@
 using CaptureTool.Application.Abstractions.Ai;
 using CaptureTool.Application.Abstractions.Analysis.Policy;
+using CaptureTool.Application.Abstractions.Analysis.Analyzers;
+using CaptureTool.Application.Abstractions.Analysis.Orchestration;
+using CaptureTool.Application.Abstractions.Analysis.Processing;
 using CaptureTool.Application.Abstractions.Edit.External;
 using CaptureTool.Application.Abstractions.EditSessions;
 using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Application.Ai;
 using CaptureTool.Application.Analysis.Policy;
+using CaptureTool.Application.Analysis.Analyzers;
+using CaptureTool.Application.Analysis.Orchestration;
+using CaptureTool.Application.Analysis.Processing;
 using CaptureTool.Application.Capture;
 using CaptureTool.Application.Edit.External;
 using CaptureTool.Application.EditSessions;
@@ -45,11 +51,19 @@ public static class ApplicationServiceCollectionExtensions
 
     private static IServiceCollection AddCaptureAnalysisServices(this IServiceCollection services)
     {
+        services.AddSingleton<CaptureAnalyzerCatalog>();
+        services.AddSingleton<ICaptureAnalyzerCatalog>(provider =>
+            provider.GetRequiredService<CaptureAnalyzerCatalog>());
+        services.AddSingleton<ICaptureAnalyzerResolver, CaptureAnalyzerResolver>();
         services.AddSingleton<CaptureAnalysisPolicyService>();
         services.AddSingleton<ICaptureAnalysisPolicyService>(provider =>
             provider.GetRequiredService<CaptureAnalysisPolicyService>());
         services.AddSingleton<ICaptureAnalysisPolicyCommandService>(provider =>
             provider.GetRequiredService<CaptureAnalysisPolicyService>());
+        services.AddSingleton<ICaptureAnalysisScheduler, CaptureAnalysisScheduler>();
+        services.AddSingleton<ICaptureAnalysisProjectionRefresher, NullCaptureAnalysisProjectionRefresher>();
+        services.AddSingleton<ICaptureAnalysisWorker, CaptureAnalysisWorker>();
+        services.AddSingleton<CaptureAnalysisWorkerHost>();
         return services;
     }
 

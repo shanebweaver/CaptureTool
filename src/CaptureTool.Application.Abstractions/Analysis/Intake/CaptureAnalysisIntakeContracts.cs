@@ -76,3 +76,10 @@ public interface ICaptureAnalysisWakeSignal
 {
     bool TrySignal();
 }
+
+public interface ICaptureAnalysisWakeWaiter
+{
+    ValueTask WaitAsync(
+        TimeSpan maximumDelay,
+        CancellationToken cancellationToken = default);
+}

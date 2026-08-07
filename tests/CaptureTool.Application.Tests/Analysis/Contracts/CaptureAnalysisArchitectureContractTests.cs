@@ -8,7 +8,10 @@ using CaptureTool.Application.Abstractions.Analysis.Policy;
 using CaptureTool.Application.Abstractions.Analysis.Preparation;
 using CaptureTool.Application.Abstractions.Analysis.Processing;
 using CaptureTool.Application.Abstractions.Analysis.Queries;
+using CaptureTool.Application.Abstractions.Analysis.Orchestration;
+using CaptureTool.Application.Abstractions.Analysis.Sources;
 using CaptureTool.Application.Abstractions.Security;
+using CaptureTool.Application.Analysis.Processing;
 using CaptureTool.Domain.Analysis;
 
 #pragma warning disable IL2026 // Architecture tests intentionally inspect untrimmed test assemblies.
@@ -137,8 +140,12 @@ public sealed class CaptureAnalysisArchitectureContractTests
         [
             typeof(ICaptureAssetChangeReader),
             typeof(ICaptureAnalysisWakeSignal),
+            typeof(ICaptureAnalysisWakeWaiter),
             typeof(ICaptureAnalyzer),
+            typeof(ICaptureAnalyzerCatalog),
             typeof(ICaptureAnalyzerResolver),
+            typeof(ICaptureAnalysisSourceVerifier),
+            typeof(ICaptureAnalysisScheduler),
             typeof(ICaptureAnalysisStore),
             typeof(ICaptureAnalysisMutationCoordinator),
             typeof(ICaptureAnalysisControlStore),
@@ -196,6 +203,20 @@ public sealed class CaptureAnalysisArchitectureContractTests
         Assert.IsFalse(mutationMethods
             .SelectMany(method => method.GetParameters())
             .Any(parameter => parameter.Name == "currentPreconditions"));
+    }
+
+    [TestMethod]
+    public void BackgroundWorker_ShouldNeverDependOnUserInitiatedPreparationCommands()
+    {
+        Type[] constructorDependencies = typeof(CaptureAnalysisWorker)
+            .GetConstructors(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
+            .SelectMany(constructor => constructor.GetParameters())
+            .Select(parameter => parameter.ParameterType)
+            .ToArray();
+
+        CollectionAssert.DoesNotContain(
+            constructorDependencies,
+            typeof(IUserInitiatedAnalysisCapabilityPreparationService));
     }
 
     private static Type[] GetAnalysisContractTypes()

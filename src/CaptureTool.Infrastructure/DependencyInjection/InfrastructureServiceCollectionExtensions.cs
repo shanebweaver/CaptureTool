@@ -1,6 +1,9 @@
 using CaptureTool.Application.Abstractions.Ai;
 using CaptureTool.Application.Abstractions.Analysis.Persistence;
 using CaptureTool.Application.Abstractions.Analysis.Policy;
+using CaptureTool.Application.Abstractions.Analysis.Intake;
+using CaptureTool.Application.Abstractions.Analysis.Jobs;
+using CaptureTool.Application.Abstractions.Analysis.Sources;
 using CaptureTool.Application.Abstractions.Capture.Assets;
 using CaptureTool.Application.Abstractions.Cancellation;
 using CaptureTool.Application.Abstractions.Edit.Image.ChromaKey;
@@ -24,6 +27,8 @@ using CaptureTool.Application.Abstractions.Telemetry;
 using CaptureTool.Application.Abstractions.Time;
 using CaptureTool.Infrastructure.Cancellation;
 using CaptureTool.Infrastructure.Analysis.Persistence;
+using CaptureTool.Infrastructure.Analysis.Jobs;
+using CaptureTool.Infrastructure.Analysis.Sources;
 using CaptureTool.Infrastructure.CaptureAssets;
 using CaptureTool.Infrastructure.Features;
 using CaptureTool.Infrastructure.Files;
@@ -47,9 +52,20 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddSingleton<ICancellationService, CancellationService>();
         services.AddSingleton<IAtomicFileWriter, AtomicFileWriter>();
         services.AddSingleton<ICaptureAnalysisControlStore, LocalCaptureAnalysisControlStore>();
-        services.AddSingleton<ICaptureAnalysisStore, LocalCaptureAnalysisStore>();
+        services.AddSingleton<LocalCaptureAnalysisStore>();
+        services.AddSingleton<ICaptureAnalysisStore>(provider =>
+            provider.GetRequiredService<LocalCaptureAnalysisStore>());
+        services.AddSingleton<ICaptureAnalysisJobStore, LocalCaptureAnalysisJobStore>();
+        services.AddSingleton<ICaptureAnalysisSourceVerifier, LocalCaptureAnalysisSourceVerifier>();
+        services.AddSingleton<ICaptureAnalysisMutationCoordinator, CaptureAnalysisMutationCoordinator>();
         services.AddSingleton<ICaptureAssetCatalog, LocalCaptureAssetCatalog>();
-        services.AddSingleton<ICaptureAssetChangeSignal, NullCaptureAssetChangeSignal>();
+        services.AddSingleton<CaptureAnalysisWakeChannel>();
+        services.AddSingleton<ICaptureAssetChangeSignal>(provider =>
+            provider.GetRequiredService<CaptureAnalysisWakeChannel>());
+        services.AddSingleton<ICaptureAnalysisWakeSignal>(provider =>
+            provider.GetRequiredService<CaptureAnalysisWakeChannel>());
+        services.AddSingleton<ICaptureAnalysisWakeWaiter>(provider =>
+            provider.GetRequiredService<CaptureAnalysisWakeChannel>());
         services.AddSingleton<ICaptureAnalysisFeatureAvailability, CaptureAnalysisFeatureAvailability>();
         services.AddSingleton<IAiConsentSettingsFeatureAvailability, AiConsentSettingsFeatureAvailability>();
         services.AddSingleton<IStoreFeatureAvailability, StoreFeatureAvailability>();

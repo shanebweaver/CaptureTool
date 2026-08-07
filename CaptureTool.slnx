@@ -26,6 +26,10 @@
       <Platform Solution="*|ARM64" Project="ARM64" />
       <Platform Solution="*|x64" Project="x64" />
     </Project>
+    <Project Path="src/CaptureTool.Infrastructure.Analysis.Windows/CaptureTool.Infrastructure.Analysis.Windows.csproj">
+      <Platform Solution="*|ARM64" Project="ARM64" />
+      <Platform Solution="*|x64" Project="x64" />
+    </Project>
     <Project Path="src/CaptureTool.Infrastructure.Edit.Windows/CaptureTool.Infrastructure.Edit.Windows.csproj">
       <Platform Solution="*|ARM64" Project="ARM64" />
       <Platform Solution="*|x64" Project="x64" />
@@ -47,6 +51,10 @@
     <Project Path="src/CaptureTool.Presentation/CaptureTool.Presentation.csproj" Id="6ec44793-8177-4c4c-8ce8-0ec7aeb93335" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="tests/CaptureTool.Infrastructure.Analysis.Windows.Tests/CaptureTool.Infrastructure.Analysis.Windows.Tests.csproj">
+      <Platform Solution="*|ARM64" Project="ARM64" />
+      <Platform Solution="*|x64" Project="x64" />
+    </Project>
     <Project Path="tests/CaptureTool.Application.Tests/CaptureTool.Application.Tests.csproj" />
     <Project Path="tests/CaptureTool.Infrastructure.Capture.Windows.Tests/CaptureTool.Infrastructure.Capture.Windows.Tests.csproj">
       <Platform Solution="*|ARM64" Project="ARM64" />

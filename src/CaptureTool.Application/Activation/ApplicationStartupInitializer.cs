@@ -7,6 +7,7 @@ using CaptureTool.Application.Abstractions.Settings;
 using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Application.Abstractions.Telemetry;
 using CaptureTool.Application.Capture.Assets;
+using CaptureTool.Application.Analysis.Processing;
 
 namespace CaptureTool.Application.Activation;
 
@@ -26,6 +27,7 @@ internal sealed class ApplicationStartupInitializer : IApplicationStartupInitial
     private readonly ICaptureAssetBootstrapper _captureAssetBootstrapper;
     private readonly ITelemetryService? _telemetryService;
     private readonly ITelemetryConsentService? _telemetryConsentService;
+    private readonly CaptureAnalysisWorkerHost? _captureAnalysisWorkerHost;
     private readonly SemaphoreSlim _semaphore = new(1, 1);
 
     private bool _isInitialized;
@@ -42,7 +44,8 @@ internal sealed class ApplicationStartupInitializer : IApplicationStartupInitial
         IScratchArtifactStore scratchArtifactStore,
         ICaptureAssetBootstrapper captureAssetBootstrapper,
         ITelemetryService? telemetryService = null,
-        ITelemetryConsentService? telemetryConsentService = null)
+        ITelemetryConsentService? telemetryConsentService = null,
+        CaptureAnalysisWorkerHost? captureAnalysisWorkerHost = null)
     {
         _cancellationService = cancellationService;
         _settingsService = settingsService;
@@ -56,6 +59,7 @@ internal sealed class ApplicationStartupInitializer : IApplicationStartupInitial
         _captureAssetBootstrapper = captureAssetBootstrapper;
         _telemetryService = telemetryService;
         _telemetryConsentService = telemetryConsentService;
+        _captureAnalysisWorkerHost = captureAnalysisWorkerHost;
     }
 
     public async Task InitializeAsync(CancellationToken cancellationToken = default)
@@ -83,6 +87,7 @@ internal sealed class ApplicationStartupInitializer : IApplicationStartupInitial
 
             ScavengeScratchArtifacts();
             await InitializeCaptureAssetsAsync(cancellationTokenSource.Token);
+            _captureAnalysisWorkerHost?.Start();
 
             string languageOverride = _settingsService.Get(CaptureToolSettings.Settings_LanguageOverride);
             _localizationService.Initialize(languageOverride);

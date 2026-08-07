@@ -245,3 +245,12 @@ public interface ICaptureAnalyzerResolver
         CaptureAnalyzerResolutionRequest request,
         CancellationToken cancellationToken = default);
 }
+
+public interface ICaptureAnalyzerCatalog
+{
+    IReadOnlyList<ICaptureAnalyzer> Analyzers { get; }
+
+    ICaptureAnalyzer? Find(
+        AnalyzerRevision revision,
+        CapabilityDefinition capability);
+}
