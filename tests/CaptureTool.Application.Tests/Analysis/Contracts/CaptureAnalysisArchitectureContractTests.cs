@@ -145,7 +145,7 @@ public sealed class CaptureAnalysisArchitectureContractTests
             typeof(ICaptureAnalysisJobStore),
             typeof(ICaptureAnalysisPolicyService),
             typeof(ICaptureAnalysisFeatureAvailability),
-            typeof(IAnalysisCapabilityPreparationService),
+            typeof(IAnalysisCapabilityPreparationQueryService),
             typeof(ICaptureAnalysisWorker),
             typeof(ICaptureAnalysisQueryService),
             typeof(ICaptureMemorySearchService),

@@ -255,6 +255,7 @@ public sealed class CaptureAnalysisContractInvariantTests
         var request = new CaptureAnalysisAuthorizationRequest(
             AnalysisTestData.CaptureId,
             AnalysisTestData.Purpose,
+            AnalysisCapabilities.OcrDocumentV1,
             ProcessingBoundary.OnDevice,
             analyzer,
             CaptureAnalysisAuthorizationStage.CapabilityCommit);
@@ -264,20 +265,28 @@ public sealed class CaptureAnalysisContractInvariantTests
             0,
             1,
             0,
-            policy);
+            new CaptureAnalysisAuthorizationScope(
+                AnalysisTestData.Purpose,
+                policy,
+                [AnalysisCapabilities.OcrDocumentV1]));
 
         Assert.AreSame(request, decision.Request);
-        Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => new CaptureAnalysisControlState(
-            CaptureAnalysisProcessingState.Enabled,
-            true,
-            0,
-            0,
-            AnalysisTestData.Purpose,
-            policy,
-            0,
-            0,
-            CaptureAnalysisBackfillState.NotAuthorized,
-            []));
+        var unknownControl = new CaptureAnalysisControlState(CaptureAnalysisPolicy.Unknown, []);
+        Assert.IsFalse(unknownControl.Policy.IsProcessingAuthorized);
+        Assert.ThrowsExactly<ArgumentNullException>(() => new CaptureAnalysisControlState(null!, []));
+        Assert.ThrowsExactly<ArgumentException>(() => new CaptureAnalysisControlState(
+            CaptureAnalysisPolicy.Unknown,
+            [
+                new CaptureAnalysisEnrollment(
+                    AnalysisTestData.CaptureId,
+                    CaptureAnalysisEnrollmentState.Enrolled,
+                    CaptureAnalysisExclusionReason.None,
+                    1,
+                    0,
+                    1,
+                    AnalysisTestData.RecipeId,
+                    new AnalysisRecipeVersion(1)),
+            ]));
         Assert.ThrowsExactly<ArgumentException>(() => new CaptureAnalysisEnrollment(
             AnalysisTestData.CaptureId,
             CaptureAnalysisEnrollmentState.Enrolled,
@@ -300,6 +309,10 @@ public sealed class CaptureAnalysisContractInvariantTests
             CaptureAnalysisStoreWriteStatus.Succeeded));
         Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => new CaptureAnalysisControlWriteResult(
             CaptureAnalysisControlWriteStatus.Unknown));
+        Assert.ThrowsExactly<ArgumentException>(() => new CaptureAnalysisControlWriteResult(
+            CaptureAnalysisControlWriteStatus.Succeeded));
+        Assert.ThrowsExactly<ArgumentException>(() => new CaptureAnalysisControlWriteResult(
+            CaptureAnalysisControlWriteStatus.Conflict));
     }
 
     private static CaptureAnalyzerDescriptor CreateDescriptor(

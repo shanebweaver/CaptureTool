@@ -1,3 +1,4 @@
+using CaptureTool.Application.Abstractions.Analysis.Policy;
 using CaptureTool.Application.Abstractions.Edit.Image.Description;
 using CaptureTool.Application.Abstractions.Edit.Image.ForegroundExtraction;
 using CaptureTool.Application.Abstractions.Edit.Image.ObjectErase;
@@ -5,6 +6,7 @@ using CaptureTool.Application.Abstractions.Edit.Image.ObjectExtraction;
 using CaptureTool.Application.Abstractions.Edit.Image.SuperResolution;
 using CaptureTool.Application.Abstractions.Edit.Image.TextExtraction;
 using CaptureTool.Application.Abstractions.Edit.Video.SuperResolution;
+using CaptureTool.Domain.Analysis;
 using CaptureTool.FeatureManagement;
 using CaptureTool.Infrastructure.Features;
 
@@ -13,6 +15,56 @@ namespace CaptureTool.Infrastructure.Tests.Features;
 [TestClass]
 public sealed class FeatureAvailabilityTests
 {
+    [TestMethod]
+    public void CaptureAnalysisFeatureAvailability_ReturnsPlatformFeatureManagerValue()
+    {
+        var enabledFeatureManager = new ConstantFeatureManager(true);
+
+        Assert.IsTrue(new CaptureAnalysisFeatureAvailability(
+            enabledFeatureManager).IsCaptureAnalysisEnabled);
+        Assert.IsFalse(new CaptureAnalysisFeatureAvailability(
+            new ConstantFeatureManager(false)).IsCaptureAnalysisEnabled);
+        Assert.AreSame(
+            AppFeatures.Feature_CaptureAnalysis_Platform,
+            enabledFeatureManager.LastFeatureFlag);
+    }
+
+    [TestMethod]
+    public void CaptureAnalysisFeatureAvailability_HasDeterministicPositiveResolutionRevision()
+    {
+        var enabled = new CaptureAnalysisFeatureAvailability(new ConstantFeatureManager(true));
+        var disabled = new CaptureAnalysisFeatureAvailability(new ConstantFeatureManager(false));
+
+        Assert.IsGreaterThan(0L, enabled.ResolutionPolicyRevision);
+        Assert.AreEqual(enabled.ResolutionPolicyRevision, disabled.ResolutionPolicyRevision);
+    }
+
+    [TestMethod]
+    public void CaptureAnalysisFeatureAvailability_UsesPlatformFlagForEveryProviderAndAnalyzer()
+    {
+        var enabled = new CaptureAnalysisFeatureAvailability(new ConstantFeatureManager(true));
+        var disabled = new CaptureAnalysisFeatureAvailability(new ConstantFeatureManager(false));
+        AnalyzerIdentity analyzer = CreateAnalyzerIdentity();
+
+        Assert.IsTrue(enabled.IsProviderEnabled("microsoft.windows-ai"));
+        Assert.IsTrue(enabled.IsProviderEnabled("another-provider"));
+        Assert.IsTrue(enabled.IsAnalyzerEnabled(analyzer));
+        Assert.IsFalse(disabled.IsProviderEnabled("microsoft.windows-ai"));
+        Assert.IsFalse(disabled.IsAnalyzerEnabled(analyzer));
+    }
+
+    [TestMethod]
+    public void CaptureAnalysisFeatureAvailability_RejectsInvalidProviderAndAnalyzerInputs()
+    {
+        var availability = new CaptureAnalysisFeatureAvailability(new ConstantFeatureManager(true));
+
+        Assert.ThrowsExactly<ArgumentNullException>(() => new CaptureAnalysisFeatureAvailability(null!));
+        Assert.ThrowsExactly<ArgumentNullException>(() => availability.IsProviderEnabled(null!));
+        Assert.ThrowsExactly<ArgumentException>(() => availability.IsProviderEnabled(string.Empty));
+        Assert.ThrowsExactly<ArgumentException>(() => availability.IsProviderEnabled("   "));
+        Assert.ThrowsExactly<ArgumentNullException>(() => availability.IsAnalyzerEnabled(null!));
+    }
+
     [TestMethod]
     public void ChromaKeyFeatureAvailability_ReturnsFeatureManagerValue()
     {
@@ -204,6 +256,20 @@ public sealed class FeatureAvailabilityTests
         Assert.AreEqual(expected, availability.IsVideoSuperResolutionEnabled);
     }
 
+    private static AnalyzerIdentity CreateAnalyzerIdentity()
+    {
+        return new(
+            "ocr",
+            "microsoft.windows-ai",
+            "ocr-model",
+            "1",
+            "1",
+            "windows-ai",
+            "1",
+            "1",
+            null);
+    }
+
     private sealed class ConstantFeatureManager : IFeatureManager
     {
         private readonly bool _isEnabled;
@@ -213,7 +279,13 @@ public sealed class FeatureAvailabilityTests
             _isEnabled = isEnabled;
         }
 
-        public bool IsEnabled(FeatureFlag featureFlag) => _isEnabled;
+        public FeatureFlag? LastFeatureFlag { get; private set; }
+
+        public bool IsEnabled(FeatureFlag featureFlag)
+        {
+            LastFeatureFlag = featureFlag;
+            return _isEnabled;
+        }
     }
 
     private sealed class StubImageSuperResolutionService(ImageSuperResolutionReadyState readyState)

@@ -21,22 +21,6 @@ public enum CaptureAnalysisExclusionReason
     SourceDeleted,
 }
 
-public enum CaptureAnalysisProcessingState
-{
-    Unknown,
-    Disabled,
-    Enabled,
-}
-
-public enum CaptureAnalysisBackfillState
-{
-    Unknown,
-    NotAuthorized,
-    Authorized,
-    InProgress,
-    Completed,
-}
-
 public sealed record CaptureAnalysisEnrollment
 {
     public CaptureAnalysisEnrollment(
@@ -45,7 +29,7 @@ public sealed record CaptureAnalysisEnrollment
         CaptureAnalysisExclusionReason exclusionReason,
         long enrollmentGeneration,
         long tombstoneGeneration,
-        long assetChangeSequence,
+        long assetFinalizationSequence,
         AnalysisRecipeId? requestedRecipeId,
         AnalysisRecipeVersion? requestedRecipeVersion)
     {
@@ -64,7 +48,7 @@ public sealed record CaptureAnalysisEnrollment
             throw new ArgumentOutOfRangeException(nameof(exclusionReason));
         }
 
-        if (enrollmentGeneration <= 0 || tombstoneGeneration < 0 || assetChangeSequence < 0)
+        if (enrollmentGeneration <= 0 || tombstoneGeneration < 0 || assetFinalizationSequence <= 0)
         {
             throw new ArgumentOutOfRangeException(
                 nameof(enrollmentGeneration),
@@ -112,7 +96,7 @@ public sealed record CaptureAnalysisEnrollment
         ExclusionReason = exclusionReason;
         EnrollmentGeneration = enrollmentGeneration;
         TombstoneGeneration = tombstoneGeneration;
-        AssetChangeSequence = assetChangeSequence;
+        AssetFinalizationSequence = assetFinalizationSequence;
         RequestedRecipeId = requestedRecipeId;
         RequestedRecipeVersion = requestedRecipeVersion;
     }
@@ -127,7 +111,9 @@ public sealed record CaptureAnalysisEnrollment
 
     public long TombstoneGeneration { get; }
 
-    public long AssetChangeSequence { get; }
+    // The immutable sequence of the asset's original Finalized fact. Later location/source changes
+    // cannot turn a pre-watermark asset into a future capture.
+    public long AssetFinalizationSequence { get; }
 
     public AnalysisRecipeId? RequestedRecipeId { get; }
 
@@ -139,77 +125,10 @@ public sealed record CaptureAnalysisControlState
     private readonly IReadOnlyList<CaptureAnalysisEnrollment> _enrollments;
 
     public CaptureAnalysisControlState(
-        CaptureAnalysisProcessingState processingState,
-        bool isFutureCaptureAdmissionEnabled,
-        long controlGeneration,
-        long policyRevision,
-        AnalysisPurpose? authorizedPurpose,
-        AnalysisProcessingPolicy? processingPolicy,
-        long futureCaptureSequenceWatermark,
-        long backfillCheckpoint,
-        CaptureAnalysisBackfillState backfillState,
+        CaptureAnalysisPolicy policy,
         IEnumerable<CaptureAnalysisEnrollment> enrollments)
     {
-        if (!Enum.IsDefined(processingState) || processingState == CaptureAnalysisProcessingState.Unknown)
-        {
-            throw new ArgumentOutOfRangeException(nameof(processingState));
-        }
-
-        if (controlGeneration < 0 || policyRevision < 0 ||
-            futureCaptureSequenceWatermark < 0 || backfillCheckpoint < 0)
-        {
-            throw new ArgumentOutOfRangeException(
-                nameof(controlGeneration),
-                "Control revisions and checkpoints cannot be negative.");
-        }
-
-        if (!Enum.IsDefined(backfillState) || backfillState == CaptureAnalysisBackfillState.Unknown)
-        {
-            throw new ArgumentOutOfRangeException(nameof(backfillState));
-        }
-
-        bool hasPurpose = authorizedPurpose is { IsEmpty: false };
-        bool hasPolicy = processingPolicy != null;
-        if (authorizedPurpose.HasValue && !hasPurpose)
-        {
-            throw new ArgumentException("An authorized purpose cannot be empty.", nameof(authorizedPurpose));
-        }
-
-        if (hasPurpose != hasPolicy)
-        {
-            throw new ArgumentException("Purpose and processing policy authorization must be present together.");
-        }
-
-        bool hasAuthorization = hasPurpose && hasPolicy;
-        if (processingState == CaptureAnalysisProcessingState.Enabled &&
-            (!hasAuthorization || processingPolicy!.AuthorizedPurpose != authorizedPurpose))
-        {
-            throw new ArgumentException(
-                "Enabled admission requires one consistent authorized purpose and processing policy.");
-        }
-
-        if (processingState == CaptureAnalysisProcessingState.Enabled && policyRevision == 0)
-        {
-            throw new ArgumentOutOfRangeException(
-                nameof(policyRevision),
-                "Enabled processing requires a positive policy revision.");
-        }
-
-        if (processingState == CaptureAnalysisProcessingState.Disabled && hasAuthorization)
-        {
-            throw new ArgumentException("Disabled admission cannot retain processing authorization.");
-        }
-
-        if (processingState == CaptureAnalysisProcessingState.Disabled &&
-            backfillState != CaptureAnalysisBackfillState.NotAuthorized)
-        {
-            throw new ArgumentException("Disabled admission cannot authorize backfill.");
-        }
-
-        if (processingState == CaptureAnalysisProcessingState.Disabled && isFutureCaptureAdmissionEnabled)
-        {
-            throw new ArgumentException("Disabled processing cannot admit future captures.");
-        }
+        ArgumentNullException.ThrowIfNull(policy);
 
         ArgumentNullException.ThrowIfNull(enrollments);
         CaptureAnalysisEnrollment[] copiedEnrollments = [.. enrollments];
@@ -224,35 +143,41 @@ public sealed record CaptureAnalysisControlState
             throw new ArgumentException("Control state cannot contain duplicate capture enrollments.", nameof(enrollments));
         }
 
-        ProcessingState = processingState;
-        IsFutureCaptureAdmissionEnabled = isFutureCaptureAdmissionEnabled;
-        ControlGeneration = controlGeneration;
-        PolicyRevision = policyRevision;
-        AuthorizedPurpose = authorizedPurpose;
-        ProcessingPolicy = processingPolicy;
-        FutureCaptureSequenceWatermark = futureCaptureSequenceWatermark;
-        BackfillCheckpoint = backfillCheckpoint;
-        BackfillState = backfillState;
+        if (!policy.IsProcessingAuthorized && copiedEnrollments.Any(
+            enrollment => enrollment.State == CaptureAnalysisEnrollmentState.Enrolled))
+        {
+            throw new ArgumentException(
+                "A non-authorizing policy cannot retain active capture enrollments.",
+                nameof(enrollments));
+        }
+
+        Policy = policy;
         _enrollments = Array.AsReadOnly(copiedEnrollments);
     }
 
-    public CaptureAnalysisProcessingState ProcessingState { get; }
+    public CaptureAnalysisPolicy Policy { get; }
 
-    public bool IsFutureCaptureAdmissionEnabled { get; }
+    public CaptureAnalysisConsentState ConsentState => Policy.ConsentState;
 
-    public long ControlGeneration { get; }
+    public bool IsFutureCaptureAdmissionEnabled => Policy.IsFutureCaptureAdmissionEnabled;
 
-    public long PolicyRevision { get; }
+    public long ControlGeneration => Policy.ControlGeneration;
 
-    public AnalysisPurpose? AuthorizedPurpose { get; }
+    public long PolicyRevision => Policy.PolicyRevision;
 
-    public AnalysisProcessingPolicy? ProcessingPolicy { get; }
+    public CaptureAnalysisAuthorizationScope? AuthorizationScope => Policy.AuthorizationScope;
 
-    public long FutureCaptureSequenceWatermark { get; }
+    public AnalysisPurpose? AuthorizedPurpose => Policy.AuthorizedPurpose;
 
-    public long BackfillCheckpoint { get; }
+    public AnalysisProcessingPolicy? ProcessingPolicy => Policy.ProcessingPolicy;
 
-    public CaptureAnalysisBackfillState BackfillState { get; }
+    public long FutureCaptureSequenceWatermark => Policy.FutureCaptureSequenceWatermark;
+
+    public long BackfillCheckpoint => Policy.BackfillCheckpoint;
+
+    public CaptureAnalysisBackfillState BackfillState => Policy.BackfillState;
+
+    public long BackfillUpperSequence => Policy.BackfillUpperSequence;
 
     public IReadOnlyList<CaptureAnalysisEnrollment> Enrollments => _enrollments;
 }
@@ -296,9 +221,12 @@ public sealed record CaptureAnalysisControlWriteResult
             throw new ArgumentOutOfRangeException(nameof(status));
         }
 
-        if (status == CaptureAnalysisControlWriteStatus.Succeeded && snapshot == null)
+        if ((status is CaptureAnalysisControlWriteStatus.Succeeded or
+            CaptureAnalysisControlWriteStatus.Conflict) && snapshot == null)
         {
-            throw new ArgumentException("A successful control write requires a snapshot.", nameof(snapshot));
+            throw new ArgumentException(
+                "A successful or conflicting control write requires the current snapshot.",
+                nameof(snapshot));
         }
 
         Status = status;
@@ -315,6 +243,8 @@ public interface ICaptureAnalysisControlStore
     ValueTask<CaptureAnalysisControlSnapshot> GetAsync(
         CancellationToken cancellationToken = default);
 
+    // Conflict must return the winning current snapshot. Once a write is durably committed,
+    // implementations return its result even if cancellation is requested concurrently.
     ValueTask<CaptureAnalysisControlWriteResult> TryWriteAsync(
         CaptureAnalysisControlState state,
         long expectedDocumentRevision,

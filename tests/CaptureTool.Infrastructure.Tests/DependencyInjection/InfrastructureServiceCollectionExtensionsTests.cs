@@ -1,4 +1,5 @@
 using CaptureTool.Application.Abstractions.Ai;
+using CaptureTool.Application.Abstractions.Analysis.Policy;
 using CaptureTool.Application.Abstractions.Cancellation;
 using CaptureTool.Application.Abstractions.Capture.Assets;
 using CaptureTool.Application.Abstractions.Edit.Image.ChromaKey;
@@ -52,6 +53,7 @@ public sealed class InfrastructureServiceCollectionExtensionsTests
         AssertHasRegistration<ICancellationService, CancellationService>(services);
         AssertHasRegistration<ICaptureAssetCatalog, LocalCaptureAssetCatalog>(services);
         AssertHasRegistration<ICaptureAssetChangeSignal, NullCaptureAssetChangeSignal>(services);
+        AssertHasRegistration<ICaptureAnalysisFeatureAvailability, CaptureAnalysisFeatureAvailability>(services);
         AssertHasRegistration<IAiConsentSettingsFeatureAvailability, AiConsentSettingsFeatureAvailability>(services);
         AssertHasRegistration<IStoreFeatureAvailability, StoreFeatureAvailability>(services);
         AssertHasRegistration<IChromaKeyFeatureAvailability, ChromaKeyFeatureAvailability>(services);

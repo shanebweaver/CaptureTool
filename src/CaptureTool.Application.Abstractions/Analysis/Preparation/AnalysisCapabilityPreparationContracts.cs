@@ -155,12 +155,15 @@ public sealed record AnalysisCapabilityPreparationProgress
     public double FractionComplete { get; }
 }
 
-public interface IAnalysisCapabilityPreparationService
+public interface IAnalysisCapabilityPreparationQueryService
 {
     ValueTask<AnalysisCapabilityPreparationState> GetStateAsync(
         AnalysisCapabilityPreparationRequest request,
         CancellationToken cancellationToken = default);
+}
 
+public interface IUserInitiatedAnalysisCapabilityPreparationService
+{
     Task<AnalysisCapabilityPreparationState> PrepareAsync(
         AnalysisCapabilityPreparationRequest request,
         IProgress<AnalysisCapabilityPreparationProgress>? progress = null,

@@ -1,4 +1,5 @@
 using CaptureTool.Application.Abstractions.Ai;
+using CaptureTool.Application.Abstractions.Analysis.Policy;
 using CaptureTool.Application.Abstractions.Capture.Assets;
 using CaptureTool.Application.Abstractions.Cancellation;
 using CaptureTool.Application.Abstractions.Edit.Image.ChromaKey;
@@ -44,6 +45,7 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddSingleton<ICancellationService, CancellationService>();
         services.AddSingleton<ICaptureAssetCatalog, LocalCaptureAssetCatalog>();
         services.AddSingleton<ICaptureAssetChangeSignal, NullCaptureAssetChangeSignal>();
+        services.AddSingleton<ICaptureAnalysisFeatureAvailability, CaptureAnalysisFeatureAvailability>();
         services.AddSingleton<IAiConsentSettingsFeatureAvailability, AiConsentSettingsFeatureAvailability>();
         services.AddSingleton<IStoreFeatureAvailability, StoreFeatureAvailability>();
         services.AddSingleton<IChromaKeyFeatureAvailability, ChromaKeyFeatureAvailability>();
