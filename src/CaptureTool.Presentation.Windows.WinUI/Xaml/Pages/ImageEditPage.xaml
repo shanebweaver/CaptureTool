@@ -295,6 +295,7 @@
                 TextBackgroundColor="{x:Bind ViewModel.TextTool.TextBackgroundColor, Mode=OneWay}"
                 TextBoxDrawn="ImageCanvas_TextBoxDrawn"
                 TextExtractionRegions="{x:Bind ViewModel.TextExtractionRegions, Mode=OneWay}"
+                TextExtractionQrCodes="{x:Bind ViewModel.TextExtractionQrCodes, Mode=OneWay}"
                 TextDrawableSelected="ImageCanvas_TextDrawableSelected"
                 TextFontFamily="{x:Bind ViewModel.TextTool.TextFontFamily, Mode=OneWay}"
                 TextFontSize="{x:Bind ViewModel.TextTool.TextFontSize, Mode=OneWay}"
