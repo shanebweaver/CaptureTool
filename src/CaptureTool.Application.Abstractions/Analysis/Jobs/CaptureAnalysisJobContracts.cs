@@ -413,6 +413,11 @@ public interface ICaptureAnalysisJobStore
         DateTimeOffset enqueuedAtUtc,
         CancellationToken cancellationToken = default);
 
+    ValueTask<CaptureAnalysisJobEnqueueResult> TryRequeueAsync(
+        CaptureAnalysisJobKey key,
+        DateTimeOffset enqueuedAtUtc,
+        CancellationToken cancellationToken = default);
+
     ValueTask<CaptureAnalysisJobLease?> TryLeaseNextDueAsync(
         DateTimeOffset nowUtc,
         TimeSpan leaseDuration,

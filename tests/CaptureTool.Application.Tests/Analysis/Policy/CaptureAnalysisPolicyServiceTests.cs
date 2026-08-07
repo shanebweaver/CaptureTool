@@ -342,7 +342,12 @@ public sealed class CaptureAnalysisPolicyServiceTests
     public async Task Backfill_ShouldRequireItsOwnBoundedAuthorization()
     {
         CaptureAnalysisPolicy policy = CreateGrantedPolicy(watermark: 10);
-        var store = new TestControlStore(CreateSnapshot(policy));
+        var store = new TestControlStore(new CaptureAnalysisControlSnapshot(
+            1,
+            new CaptureAnalysisControlState(
+                policy,
+                [],
+                captureChangeCheckpoint: 17)));
         var settings = new ConsentSettingsHarness(CaptureAnalysisConsentState.Granted);
         CaptureAnalysisPolicyService service = CreateService(
             store,
@@ -365,6 +370,7 @@ public sealed class CaptureAnalysisPolicyServiceTests
         Assert.AreEqual(25, store.Snapshot.State.BackfillUpperSequence);
         Assert.AreEqual(policy.PolicyRevision, store.Snapshot.State.PolicyRevision);
         Assert.AreEqual(policy.ControlGeneration, store.Snapshot.State.ControlGeneration);
+        Assert.AreEqual(17, store.Snapshot.State.CaptureChangeCheckpoint);
         Assert.IsTrue(after.IsAuthorized);
         Assert.AreEqual(0, after.EnrollmentGeneration);
     }

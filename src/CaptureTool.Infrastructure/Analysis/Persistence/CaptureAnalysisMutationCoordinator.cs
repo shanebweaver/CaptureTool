@@ -83,7 +83,13 @@ internal sealed class CaptureAnalysisMutationCoordinator : ICaptureAnalysisMutat
                     bool sourceUnchanged = record.SourceRevision == registration.Preconditions.SourceRevision;
                     bool recipeUnchanged = record.Recipe.Version == registration.Recipe.Version &&
                         record.Recipe.HasSameSemanticsAs(registration.Recipe);
-                    if (sourceUnchanged && recipeUnchanged)
+                    _ = record.RegisterSourceRevision(registration.Preconditions.SourceRevision);
+                    _ = record.ApplyRecipe(registration.Recipe);
+                    bool producersUnchanged = ReconcileProducerRevisions(
+                        record,
+                        registration.Recipe,
+                        verified.Boundary);
+                    if (sourceUnchanged && recipeUnchanged && producersUnchanged)
                     {
                         return await IsStillAuthorizedAsync(
                             registration.Preconditions,
@@ -96,8 +102,6 @@ internal sealed class CaptureAnalysisMutationCoordinator : ICaptureAnalysisMutat
                                 : new(CaptureAnalysisStoreWriteStatus.StaleCommit);
                     }
 
-                    _ = record.RegisterSourceRevision(registration.Preconditions.SourceRevision);
-                    _ = record.ApplyRecipe(registration.Recipe);
                 }
 
                 if (!await IsStillAuthorizedAsync(
@@ -363,6 +367,30 @@ internal sealed class CaptureAnalysisMutationCoordinator : ICaptureAnalysisMutat
             capability.Capability,
             boundary,
             analyzer);
+    }
+
+    private bool ReconcileProducerRevisions(
+        CaptureAnalysisRecord record,
+        CaptureAnalysisRecipe recipe,
+        ProcessingBoundary boundary)
+    {
+        bool unchanged = true;
+        foreach (RecipeCapability requested in recipe.Capabilities)
+        {
+            AnalyzerRevision[] currentRevisions = _analyzers.Analyzers
+                .Where(analyzer =>
+                    analyzer.Descriptor.Capability == requested.Capability &&
+                    analyzer.Descriptor.ProcessingBoundary == boundary &&
+                    _featureAvailability.IsAnalyzerEnabled(analyzer.Descriptor.Identity))
+                .Select(analyzer => analyzer.Descriptor.Revision)
+                .Distinct()
+                .ToArray();
+            unchanged &= !record.InvalidateCapability(
+                requested.Capability,
+                currentRevisions);
+        }
+
+        return unchanged;
     }
 
     private async ValueTask<VerifiedState?> TryAuthorizeAndVerifyAsync(

@@ -11,7 +11,9 @@ using CaptureTool.Application.Analysis.Analyzers;
 using CaptureTool.Application.Analysis.Orchestration;
 using CaptureTool.Domain;
 using CaptureTool.Domain.Analysis;
+using CaptureTool.Domain.Analysis.Payloads;
 using CaptureTool.Domain.Capture;
+using Moq;
 
 namespace CaptureTool.Application.Tests.Analysis.Orchestration;
 
@@ -101,6 +103,116 @@ public sealed class CaptureAnalysisSchedulerTests
         Assert.IsTrue(wake.WasCalledAfterAllIntents);
         Assert.AreEqual(1, sourceVerifier.OpenCount);
     }
+
+    [TestMethod]
+    public async Task Schedule_ShouldRequeueCompletedIntentWhenProducerRevisionIsStale()
+    {
+        CaptureId captureId = CaptureId.New();
+        string path = Path.GetFullPath(Path.Combine(Path.GetTempPath(), $"{captureId}.png"));
+        var asset = new CaptureAsset(
+            captureId,
+            CaptureFileType.Image,
+            path,
+            CaptureSourceOwnership.AppOwned,
+            CapturedAtUtc);
+        var finalization = new CaptureAssetChange(
+            sequence: 11,
+            captureId,
+            lifecycleRevision: 1,
+            CaptureAssetChangeType.Finalized,
+            CapturedAtUtc.AddSeconds(1));
+        CaptureAnalysisAuthorizationScope scope = CaptureAnalysisPolicyDefaults.CreateAuthorizationScope();
+        CaptureAnalysisPolicy policy = CaptureAnalysisPolicy.Unknown.GrantFutureCaptures(scope, 10);
+        var recipe = new CaptureAnalysisRecipe(
+            new AnalysisRecipeId("capture-memory-image"),
+            new AnalysisRecipeVersion(1),
+            CaptureMediaKind.Image,
+            [new RecipeCapability(
+                AnalysisCapabilities.MediaPropertiesV1,
+                RecipeCapabilityRequirement.Required)]);
+        var enrollment = new CaptureAnalysisEnrollment(
+            captureId,
+            CaptureAnalysisEnrollmentState.Enrolled,
+            CaptureAnalysisExclusionReason.None,
+            1,
+            0,
+            finalization.Sequence,
+            recipe.Id,
+            recipe.Version);
+        var control = new CaptureAnalysisControlSnapshot(
+            1,
+            new CaptureAnalysisControlState(policy, [enrollment]));
+        var assets = new StubCaptureAssetCatalog(asset, finalization);
+        var source = new StubVerifiedSource(captureId);
+        var metadata = new StubMetadataStore();
+        AnalyzerIdentity oldProducer = CreateAnalyzerIdentity("1");
+        var oldResult = new CanonicalCapabilityResult(
+            captureId,
+            source.SourceRevision,
+            new MediaPropertiesV1(CaptureMediaKind.Image, new PixelSize(100, 100)),
+            oldProducer,
+            ProcessingBoundary.OnDevice,
+            CapturedAtUtc.AddSeconds(3));
+        metadata.Snapshot = new(
+            1,
+            new CaptureAnalysisRecord(
+                captureId,
+                CaptureMediaKind.Image,
+                CapturedAtUtc,
+                source.SourceRevision,
+                recipe,
+                [new CapabilityAnalysis(AnalysisCapabilities.MediaPropertiesV1, oldResult, null)]));
+        AnalyzerIdentity currentProducer = CreateAnalyzerIdentity("2");
+        var analyzer = new Mock<ICaptureAnalyzer>();
+        analyzer.SetupGet(candidate => candidate.Descriptor).Returns(new CaptureAnalyzerDescriptor(
+            AnalysisCapabilities.MediaPropertiesV1,
+            currentProducer,
+            [CaptureMediaKind.Image],
+            ProcessingBoundary.OnDevice,
+            CaptureAnalyzerDataKind.None,
+            CaptureAnalyzerRequirement.None,
+            CaptureAnalyzerWorkloadClass.Lightweight,
+            maximumSourceBytes: null,
+            qualityTier: 1));
+        var jobs = new RecordingJobStore
+        {
+            EnqueueStatus = CaptureAnalysisJobEnqueueStatus.AlreadyExists,
+        };
+        var scheduler = new CaptureAnalysisScheduler(
+            new StubPolicyService(control, scope),
+            new StubControlStore(control),
+            new StubSourceVerifier(source),
+            new StubMutationCoordinator(metadata, asset, recipe),
+            metadata,
+            jobs,
+            new RecordingWakeSignal(jobs, 1),
+            new StubFeatureAvailability(),
+            new CaptureAnalyzerCatalog([analyzer.Object]),
+            assets,
+            new StubClock(CapturedAtUtc.AddMinutes(1)));
+
+        CaptureAnalysisScheduleResult result = await scheduler.ScheduleAsync(new(
+            new CaptureAnalysisAdmissionRequest(
+                finalization,
+                CaptureAnalysisPolicyDefaults.CaptureMemorySearchPurpose,
+                CaptureAnalysisAdmissionKind.FutureCapture),
+            recipe,
+            ProcessingBoundary.OnDevice));
+
+        Assert.AreEqual(CaptureAnalysisScheduleStatus.Scheduled, result.Status);
+        Assert.AreEqual(1, jobs.RequeueCount);
+    }
+
+    private static AnalyzerIdentity CreateAnalyzerIdentity(string adapterVersion) => new(
+        "windows-media-properties",
+        "windows",
+        modelId: null,
+        modelVersion: null,
+        adapterVersion,
+        runtimeId: null,
+        runtimeVersion: null,
+        packageVersion: null,
+        configurationFingerprint: null);
 
     private sealed class StubPolicyService(
         CaptureAnalysisControlSnapshot control,
@@ -254,12 +366,37 @@ public sealed class CaptureAnalysisSchedulerTests
     {
         public List<CaptureAnalysisJobKey> Keys { get; } = [];
 
+        public CaptureAnalysisJobEnqueueStatus EnqueueStatus { get; set; } =
+            CaptureAnalysisJobEnqueueStatus.Enqueued;
+
+        public int RequeueCount { get; private set; }
+
         public ValueTask<CaptureAnalysisJobEnqueueResult> TryEnqueueAsync(
             CaptureAnalysisJobKey key,
             DateTimeOffset enqueuedAtUtc,
             CancellationToken cancellationToken = default)
         {
             Keys.Add(key);
+            return ValueTask.FromResult(new CaptureAnalysisJobEnqueueResult(
+                EnqueueStatus,
+                new CaptureAnalysisJobIntent(
+                    key,
+                    EnqueueStatus == CaptureAnalysisJobEnqueueStatus.Enqueued
+                        ? CaptureAnalysisJobState.Pending
+                        : CaptureAnalysisJobState.Completed,
+                    0,
+                    enqueuedAtUtc,
+                    null,
+                    null,
+                    [])));
+        }
+
+        public ValueTask<CaptureAnalysisJobEnqueueResult> TryRequeueAsync(
+            CaptureAnalysisJobKey key,
+            DateTimeOffset enqueuedAtUtc,
+            CancellationToken cancellationToken = default)
+        {
+            RequeueCount++;
             return ValueTask.FromResult(new CaptureAnalysisJobEnqueueResult(
                 CaptureAnalysisJobEnqueueStatus.Enqueued,
                 new CaptureAnalysisJobIntent(

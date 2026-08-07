@@ -145,6 +145,7 @@ public sealed class CaptureAnalysisArchitectureContractTests
         Type[] requiredPorts =
         [
             typeof(ICaptureAssetChangeReader),
+            typeof(ICaptureAnalysisBackfillService),
             typeof(ICaptureAnalysisWakeSignal),
             typeof(ICaptureAnalysisWakeWaiter),
             typeof(ICaptureAnalyzer),

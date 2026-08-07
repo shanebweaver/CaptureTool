@@ -1,6 +1,7 @@
 using CaptureTool.Application.Abstractions.Ai;
 using CaptureTool.Application.Abstractions.Analysis.Policy;
 using CaptureTool.Application.Abstractions.Analysis.Analyzers;
+using CaptureTool.Application.Abstractions.Analysis.Intake;
 using CaptureTool.Application.Abstractions.Analysis.Orchestration;
 using CaptureTool.Application.Abstractions.Analysis.Preparation;
 using CaptureTool.Application.Abstractions.Analysis.Processing;
@@ -11,6 +12,7 @@ using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Application.Ai;
 using CaptureTool.Application.Analysis.Policy;
 using CaptureTool.Application.Analysis.Analyzers;
+using CaptureTool.Application.Analysis.Intake;
 using CaptureTool.Application.Analysis.Orchestration;
 using CaptureTool.Application.Analysis.Preparation;
 using CaptureTool.Application.Analysis.Processing;
@@ -69,6 +71,14 @@ public static class ApplicationServiceCollectionExtensions
             provider.GetRequiredService<CaptureAnalysisPolicyService>());
         services.AddSingleton<ICaptureAnalysisScheduler, CaptureAnalysisScheduler>();
         services.AddSingleton<ICaptureAnalysisProjectionRefresher, NullCaptureAnalysisProjectionRefresher>();
+        services.AddSingleton<CaptureAssetChangeReader>();
+        services.AddSingleton<ICaptureAssetChangeReader>(provider =>
+            provider.GetRequiredService<CaptureAssetChangeReader>());
+        services.AddSingleton<CaptureAnalysisIntakeService>();
+        services.AddSingleton<ICaptureAnalysisReconciler>(provider =>
+            provider.GetRequiredService<CaptureAnalysisIntakeService>());
+        services.AddSingleton<ICaptureAnalysisBackfillService>(provider =>
+            provider.GetRequiredService<CaptureAnalysisIntakeService>());
         services.AddSingleton<ICaptureAnalysisWorker, CaptureAnalysisWorker>();
         services.AddSingleton<CaptureAnalysisWorkerHost>();
         return services;

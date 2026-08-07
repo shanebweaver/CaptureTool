@@ -12,6 +12,7 @@ using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Application.Abstractions.Telemetry;
 using CaptureTool.Application.Abstractions.UseCases;
 using CaptureTool.Application.Activation;
+using CaptureTool.Application.Analysis.Intake;
 using CaptureTool.Application.Capture.Assets;
 using CaptureTool.Application.Capture.Overlay.OpenSelectionOverlay;
 using CaptureTool.Application.EditSessions;
@@ -142,6 +143,38 @@ public sealed class ActivationHandlerTests
             Times.Once);
         fixture.LogService.Verify(
             service => service.LogException(exception, "Failed to initialize capture assets."),
+            Times.Once);
+    }
+
+    [TestMethod]
+    public async Task ApplicationStartupInitializer_ShouldReconcileAfterCaptureAssetsAreAvailable()
+    {
+        StartupInitializerFixture fixture = new();
+        fixture.CaptureAnalysisReconciler.OnReconcile = () => Assert.AreEqual(
+            1,
+            fixture.CaptureAssetBootstrapper.InitializeCallCount);
+
+        await fixture.Initializer.InitializeAsync(TestContext.CancellationToken);
+
+        Assert.AreEqual(1, fixture.CaptureAnalysisReconciler.ReconcileCallCount);
+    }
+
+    [TestMethod]
+    public async Task ApplicationStartupInitializer_WhenReconciliationFails_ShouldContinueInitialization()
+    {
+        StartupInitializerFixture fixture = new();
+        var exception = new IOException("analysis control unavailable");
+        fixture.CaptureAnalysisReconciler.ExceptionToThrow = exception;
+
+        await fixture.Initializer.InitializeAsync(TestContext.CancellationToken);
+
+        fixture.NavigationService.Verify(
+            service => service.SetNavigationHandler(fixture.NavigationHandler.Object),
+            Times.Once);
+        fixture.LogService.Verify(
+            service => service.LogException(
+                exception,
+                "Failed to reconcile Capture Analysis intake."),
             Times.Once);
     }
 
@@ -485,7 +518,8 @@ public sealed class ActivationHandlerTests
                 StorageService.Object,
                 ScratchArtifactStore.Object,
                 CaptureAssetBootstrapper,
-                telemetryConsentService: TelemetryConsent.Object);
+                telemetryConsentService: TelemetryConsent.Object,
+                captureAnalysisReconciler: CaptureAnalysisReconciler);
         }
 
         public ApplicationStartupInitializer Initializer { get; }
@@ -501,6 +535,7 @@ public sealed class ActivationHandlerTests
         public Mock<IScratchArtifactStore> ScratchArtifactStore { get; } = new();
         public TestCaptureAssetBootstrapper CaptureAssetBootstrapper { get; } = new();
         public Mock<ITelemetryConsentService> TelemetryConsent { get; } = new();
+        public TestCaptureAnalysisReconciler CaptureAnalysisReconciler { get; } = new();
     }
 
     private sealed class TestCaptureAssetBootstrapper : ICaptureAssetBootstrapper
@@ -516,5 +551,26 @@ public sealed class ActivationHandlerTests
                 ? Task.CompletedTask
                 : Task.FromException(ExceptionToThrow);
         }
+    }
+
+    private sealed class TestCaptureAnalysisReconciler : ICaptureAnalysisReconciler
+    {
+        public int ReconcileCallCount { get; private set; }
+
+        public Exception? ExceptionToThrow { get; set; }
+
+        public Action? OnReconcile { get; set; }
+
+        public Task ReconcileStartupAsync(CancellationToken cancellationToken = default)
+        {
+            ReconcileCallCount++;
+            OnReconcile?.Invoke();
+            return ExceptionToThrow == null
+                ? Task.CompletedTask
+                : Task.FromException(ExceptionToThrow);
+        }
+
+        public Task ConsumePendingChangesAsync(CancellationToken cancellationToken = default) =>
+            Task.CompletedTask;
     }
 }

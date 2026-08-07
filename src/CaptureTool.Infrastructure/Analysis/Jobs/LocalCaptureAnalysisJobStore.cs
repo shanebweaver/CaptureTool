@@ -131,6 +131,59 @@ internal sealed class LocalCaptureAnalysisJobStore : ICaptureAnalysisJobStore, I
         }
     }
 
+    public async ValueTask<CaptureAnalysisJobEnqueueResult> TryRequeueAsync(
+        CaptureAnalysisJobKey key,
+        DateTimeOffset enqueuedAtUtc,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(key);
+        EnsureUtc(enqueuedAtUtc, nameof(enqueuedAtUtc));
+        await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            string filePath = GetJobFilePath(key);
+            JobLoadResult loaded = Load(filePath);
+            if (loaded.Status == JobLoadStatus.Known)
+            {
+                if (loaded.Job!.Intent.Key != key)
+                {
+                    return new(CaptureAnalysisJobEnqueueStatus.Rejected);
+                }
+
+                if (loaded.Job.Intent.State is not (
+                    CaptureAnalysisJobState.Completed or
+                    CaptureAnalysisJobState.Cancelled or
+                    CaptureAnalysisJobState.TerminalFailure))
+                {
+                    return new(
+                        CaptureAnalysisJobEnqueueStatus.AlreadyExists,
+                        loaded.Job.Intent);
+                }
+
+                CaptureAnalysisJobIntent pending = CreatePendingIntent(key, enqueuedAtUtc);
+                return TryWrite(filePath, new(pending, null, null))
+                    ? new(CaptureAnalysisJobEnqueueStatus.Enqueued, pending)
+                    : new(CaptureAnalysisJobEnqueueStatus.Unavailable);
+            }
+
+            if (loaded.Status != JobLoadStatus.Missing)
+            {
+                return new(loaded.Status == JobLoadStatus.ReadOnly
+                    ? CaptureAnalysisJobEnqueueStatus.Rejected
+                    : CaptureAnalysisJobEnqueueStatus.Unavailable);
+            }
+
+            CaptureAnalysisJobIntent intent = CreatePendingIntent(key, enqueuedAtUtc);
+            return TryWrite(filePath, new(intent, null, null))
+                ? new(CaptureAnalysisJobEnqueueStatus.Enqueued, intent)
+                : new(CaptureAnalysisJobEnqueueStatus.Unavailable);
+        }
+        finally
+        {
+            _gate.Release();
+        }
+    }
+
     public async ValueTask<CaptureAnalysisJobLease?> TryLeaseNextDueAsync(
         DateTimeOffset nowUtc,
         TimeSpan leaseDuration,
@@ -575,6 +628,20 @@ internal sealed class LocalCaptureAnalysisJobStore : ICaptureAnalysisJobStore, I
         return TryWrite(path, new(cancelled, null, null))
             ? new(CaptureAnalysisJobMutationStatus.Succeeded, cancelled)
             : new(CaptureAnalysisJobMutationStatus.Unavailable);
+    }
+
+    private static CaptureAnalysisJobIntent CreatePendingIntent(
+        CaptureAnalysisJobKey key,
+        DateTimeOffset enqueuedAtUtc)
+    {
+        return new(
+            key,
+            CaptureAnalysisJobState.Pending,
+            0,
+            enqueuedAtUtc,
+            null,
+            null,
+            []);
     }
 
     private List<(string Path, StoredJob Job)> LoadAll(CancellationToken cancellationToken)

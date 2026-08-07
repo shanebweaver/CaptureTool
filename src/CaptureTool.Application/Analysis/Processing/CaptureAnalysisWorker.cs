@@ -9,6 +9,7 @@ using CaptureTool.Application.Abstractions.Analysis.Sources;
 using CaptureTool.Application.Abstractions.Cancellation;
 using CaptureTool.Application.Abstractions.Logging;
 using CaptureTool.Application.Abstractions.Time;
+using CaptureTool.Application.Analysis.Intake;
 using CaptureTool.Domain.Analysis;
 
 namespace CaptureTool.Application.Analysis.Processing;
@@ -31,6 +32,7 @@ internal sealed class CaptureAnalysisWorker : ICaptureAnalysisWorker
     private readonly ICaptureAnalysisStore _metadataStore;
     private readonly ICaptureAnalysisFeatureAvailability _featureAvailability;
     private readonly ICaptureAnalysisProjectionRefresher _projectionRefresher;
+    private readonly ICaptureAnalysisReconciler _reconciler;
     private readonly IClock _clock;
     private readonly ILogService _logService;
 
@@ -45,6 +47,7 @@ internal sealed class CaptureAnalysisWorker : ICaptureAnalysisWorker
         ICaptureAnalysisStore metadataStore,
         ICaptureAnalysisFeatureAvailability featureAvailability,
         ICaptureAnalysisProjectionRefresher projectionRefresher,
+        ICaptureAnalysisReconciler reconciler,
         IClock clock,
         ILogService logService)
     {
@@ -58,6 +61,7 @@ internal sealed class CaptureAnalysisWorker : ICaptureAnalysisWorker
         _metadataStore = metadataStore;
         _featureAvailability = featureAvailability;
         _projectionRefresher = projectionRefresher;
+        _reconciler = reconciler;
         _clock = clock;
         _logService = logService;
     }
@@ -79,10 +83,23 @@ internal sealed class CaptureAnalysisWorker : ICaptureAnalysisWorker
                 "Failed to recover completed Capture Analysis projections.");
         }
 
+        bool startupReconciliationPending = true;
         while (!cancellationToken.IsCancellationRequested)
         {
             try
             {
+                if (startupReconciliationPending)
+                {
+                    await _reconciler.ReconcileStartupAsync(cancellationToken)
+                        .ConfigureAwait(false);
+                    startupReconciliationPending = false;
+                }
+                else
+                {
+                    await _reconciler.ConsumePendingChangesAsync(cancellationToken)
+                        .ConfigureAwait(false);
+                }
+
                 DateTimeOffset now = GetUtcNow();
                 _ = await _jobStore.RecoverExpiredLeasesAsync(now, cancellationToken)
                     .ConfigureAwait(false);

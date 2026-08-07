@@ -23,6 +23,7 @@ internal static class CaptureAnalysisDocumentMapper
             SchemaVersion = schemaVersion,
             DocumentRevision = documentRevision,
             Policy = ToDocument(state.Policy),
+            CaptureChangeCheckpoint = state.CaptureChangeCheckpoint,
             Enrollments = state.Enrollments.Select(ToDocument).ToList(),
         };
     }
@@ -33,7 +34,8 @@ internal static class CaptureAnalysisDocumentMapper
         CaptureAnalysisPolicy policy = ToDomain(Require(document.Policy, "control policy"));
         var state = new CaptureAnalysisControlState(
             policy,
-            Require(document.Enrollments, "control enrollments").Select(ToDomain));
+            Require(document.Enrollments, "control enrollments").Select(ToDomain),
+            document.CaptureChangeCheckpoint);
         return new(document.DocumentRevision, state);
     }
 

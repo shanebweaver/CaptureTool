@@ -29,7 +29,10 @@ public sealed class LocalCaptureAnalysisControlStoreTests
             CaptureAnalysisBackfillState.InProgress,
             backfillUpperSequence: 39,
             backfillCheckpoint: 12);
-        var state = new CaptureAnalysisControlState(persistedPolicy, defaultState.Enrollments);
+        var state = new CaptureAnalysisControlState(
+            persistedPolicy,
+            defaultState.Enrollments,
+            captureChangeCheckpoint: 31);
 
         CaptureAnalysisControlWriteResult result = await store.TryWriteAsync(
             state,
@@ -54,6 +57,7 @@ public sealed class LocalCaptureAnalysisControlStoreTests
         Assert.AreEqual(CaptureAnalysisBackfillState.InProgress, persisted.State.BackfillState);
         Assert.AreEqual(39, persisted.State.BackfillUpperSequence);
         Assert.AreEqual(12, persisted.State.BackfillCheckpoint);
+        Assert.AreEqual(31, persisted.State.CaptureChangeCheckpoint);
         Assert.IsTrue(persisted.State.AuthorizationScope!.IsEquivalentTo(
             state.AuthorizationScope));
         Assert.HasCount(1, persisted.State.Enrollments);

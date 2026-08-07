@@ -13,6 +13,8 @@ internal sealed class CaptureAnalysisControlDocument
 
     public CaptureAnalysisPolicyDocument Policy { get; set; } = new();
 
+    public long CaptureChangeCheckpoint { get; set; }
+
     public List<CaptureAnalysisEnrollmentDocument> Enrollments { get; set; } = [];
 }
 

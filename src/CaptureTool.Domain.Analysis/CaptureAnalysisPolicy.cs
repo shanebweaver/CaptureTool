@@ -231,6 +231,66 @@ public sealed class CaptureAnalysisPolicy
             0);
     }
 
+    public CaptureAnalysisPolicy StartExistingCaptureBackfill()
+    {
+        if (BackfillState == CaptureAnalysisBackfillState.InProgress)
+        {
+            return this;
+        }
+
+        if (BackfillState != CaptureAnalysisBackfillState.Authorized)
+        {
+            throw new InvalidOperationException(
+                "Existing-capture backfill must be explicitly authorized before it starts.");
+        }
+
+        CaptureAnalysisBackfillState nextState = BackfillUpperSequence == 0
+            ? CaptureAnalysisBackfillState.Completed
+            : CaptureAnalysisBackfillState.InProgress;
+        return new(
+            ConsentState,
+            PolicyRevision,
+            ControlGeneration,
+            AuthorizationScope,
+            IsFutureCaptureAdmissionEnabled,
+            FutureCaptureSequenceWatermark,
+            nextState,
+            BackfillUpperSequence,
+            0);
+    }
+
+    public CaptureAnalysisPolicy AdvanceExistingCaptureBackfill(long checkpoint)
+    {
+        EnsureNonNegative(checkpoint, nameof(checkpoint));
+        if (BackfillState is not (
+            CaptureAnalysisBackfillState.Authorized or CaptureAnalysisBackfillState.InProgress))
+        {
+            throw new InvalidOperationException(
+                "Only an authorized or in-progress existing-capture backfill can advance.");
+        }
+
+        if (checkpoint < BackfillCheckpoint || checkpoint > BackfillUpperSequence)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(checkpoint),
+                "The backfill checkpoint must advance monotonically within its authorized bound.");
+        }
+
+        CaptureAnalysisBackfillState nextState = checkpoint == BackfillUpperSequence
+            ? CaptureAnalysisBackfillState.Completed
+            : CaptureAnalysisBackfillState.InProgress;
+        return new(
+            ConsentState,
+            PolicyRevision,
+            ControlGeneration,
+            AuthorizationScope,
+            IsFutureCaptureAdmissionEnabled,
+            FutureCaptureSequenceWatermark,
+            nextState,
+            BackfillUpperSequence,
+            checkpoint);
+    }
+
     public CaptureAnalysisPolicy Revoke()
     {
         return new(

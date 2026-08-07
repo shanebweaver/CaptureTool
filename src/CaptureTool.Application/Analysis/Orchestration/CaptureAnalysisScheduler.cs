@@ -175,6 +175,13 @@ internal sealed class CaptureAnalysisScheduler : ICaptureAnalysisScheduler
             DateTimeOffset enqueuedAtUtc = GetUtcNow();
             foreach (RecipeCapability capability in request.Recipe.Capabilities)
             {
+                bool hasStaleProducer = HasStaleProducer(
+                    existing,
+                    capability.Capability,
+                    request.ProcessingBoundary);
+                bool hasMissingAnalysis = !registrationResult.Snapshot!.Record.TryGetAnalysis(
+                    capability.Capability.Id,
+                    out _);
                 var key = new CaptureAnalysisJobKey(
                     preconditions,
                     capability.Capability,
@@ -182,6 +189,14 @@ internal sealed class CaptureAnalysisScheduler : ICaptureAnalysisScheduler
                 CaptureAnalysisJobEnqueueResult enqueue = await _jobStore
                     .TryEnqueueAsync(key, enqueuedAtUtc, cancellationToken)
                     .ConfigureAwait(false);
+                if (enqueue.Status == CaptureAnalysisJobEnqueueStatus.AlreadyExists &&
+                    (hasStaleProducer || hasMissingAnalysis))
+                {
+                    enqueue = await _jobStore
+                        .TryRequeueAsync(key, enqueuedAtUtc, cancellationToken)
+                        .ConfigureAwait(false);
+                }
+
                 if (enqueue.Status == CaptureAnalysisJobEnqueueStatus.Enqueued)
                 {
                     enqueued++;
@@ -265,7 +280,8 @@ internal sealed class CaptureAnalysisScheduler : ICaptureAnalysisScheduler
                 request.Recipe.Version);
             var nextState = new CaptureAnalysisControlState(
                 current.State.Policy,
-                [.. current.State.Enrollments, enrollment]);
+                [.. current.State.Enrollments, enrollment],
+                current.State.CaptureChangeCheckpoint);
             CaptureAnalysisControlWriteResult write = await _controlStore.TryWriteAsync(
                 nextState,
                 current.DocumentRevision,
@@ -297,6 +313,48 @@ internal sealed class CaptureAnalysisScheduler : ICaptureAnalysisScheduler
             : _analyzers.Analyzers.FirstOrDefault(analyzer =>
                 analyzer.Descriptor.Capability == capability &&
                 analyzer.Descriptor.ProcessingBoundary == boundary)?.Descriptor.Identity;
+    }
+
+    private bool HasStaleProducer(
+        CaptureAnalysisStoreSnapshot? existing,
+        CapabilityDefinition capability,
+        ProcessingBoundary processingBoundary)
+    {
+        if (existing == null ||
+            !existing.Record.TryGetAnalysis(capability.Id, out CapabilityAnalysis? analysis) ||
+            analysis == null)
+        {
+            return false;
+        }
+
+        AnalyzerRevision[] retainedRevisions =
+        [
+            .. new AnalyzerRevision?[]
+            {
+                analysis.CanonicalResult is { ProcessingBoundary: var resultBoundary } result &&
+                    resultBoundary == processingBoundary
+                        ? result.Analyzer.Revision
+                        : null,
+                analysis.LatestOutcome is { ProcessingBoundary: var outcomeBoundary } outcome &&
+                    outcomeBoundary == processingBoundary
+                        ? outcome.Analyzer.Revision
+                        : null,
+            }.Where(revision => revision.HasValue).Select(revision => revision!.Value),
+        ];
+        if (retainedRevisions.Length == 0)
+        {
+            return false;
+        }
+
+        AnalyzerRevision[] currentRevisions = _analyzers.Analyzers
+            .Where(analyzer =>
+                analyzer.Descriptor.Capability == capability &&
+                analyzer.Descriptor.ProcessingBoundary == processingBoundary &&
+                _featureAvailability.IsAnalyzerEnabled(analyzer.Descriptor.Identity))
+            .Select(analyzer => analyzer.Descriptor.Revision)
+            .Distinct()
+            .ToArray();
+        return retainedRevisions.Any(revision => !currentRevisions.Contains(revision));
     }
 
     private static bool MatchesAdmission(

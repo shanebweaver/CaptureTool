@@ -274,6 +274,10 @@ public sealed class CaptureAnalysisContractInvariantTests
         var unknownControl = new CaptureAnalysisControlState(CaptureAnalysisPolicy.Unknown, []);
         Assert.IsFalse(unknownControl.Policy.IsProcessingAuthorized);
         Assert.ThrowsExactly<ArgumentNullException>(() => new CaptureAnalysisControlState(null!, []));
+        Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => new CaptureAnalysisControlState(
+            CaptureAnalysisPolicy.Unknown,
+            [],
+            captureChangeCheckpoint: -1));
         Assert.ThrowsExactly<ArgumentException>(() => new CaptureAnalysisControlState(
             CaptureAnalysisPolicy.Unknown,
             [

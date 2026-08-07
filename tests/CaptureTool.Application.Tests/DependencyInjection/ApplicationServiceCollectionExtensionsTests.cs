@@ -2,6 +2,7 @@ using CaptureTool.Application.Abstractions.Activation;
 using CaptureTool.Application.Abstractions.Ai;
 using CaptureTool.Application.Abstractions.Analysis.Policy;
 using CaptureTool.Application.Abstractions.Analysis.Analyzers;
+using CaptureTool.Application.Abstractions.Analysis.Intake;
 using CaptureTool.Application.Abstractions.Analysis.Orchestration;
 using CaptureTool.Application.Abstractions.Analysis.Preparation;
 using CaptureTool.Application.Abstractions.Analysis.Processing;
@@ -22,6 +23,7 @@ using CaptureTool.Application.Activation;
 using CaptureTool.Application.Ai;
 using CaptureTool.Application.Analysis.Policy;
 using CaptureTool.Application.Analysis.Analyzers;
+using CaptureTool.Application.Analysis.Intake;
 using CaptureTool.Application.Analysis.Orchestration;
 using CaptureTool.Application.Analysis.Preparation;
 using CaptureTool.Application.Analysis.Processing;
@@ -78,6 +80,15 @@ public sealed class ApplicationServiceCollectionExtensionsTests
             services,
             ServiceLifetime.Singleton);
         AssertHasRegistration<ICaptureAnalysisScheduler, CaptureAnalysisScheduler>(services, ServiceLifetime.Singleton);
+        AssertHasRegistration<CaptureAssetChangeReader, CaptureAssetChangeReader>(
+            services,
+            ServiceLifetime.Singleton);
+        AssertHasFactoryRegistration<ICaptureAssetChangeReader>(services, ServiceLifetime.Singleton);
+        AssertHasRegistration<CaptureAnalysisIntakeService, CaptureAnalysisIntakeService>(
+            services,
+            ServiceLifetime.Singleton);
+        AssertHasFactoryRegistration<ICaptureAnalysisReconciler>(services, ServiceLifetime.Singleton);
+        AssertHasFactoryRegistration<ICaptureAnalysisBackfillService>(services, ServiceLifetime.Singleton);
         AssertHasRegistration<ICaptureAnalysisWorker, CaptureAnalysisWorker>(services, ServiceLifetime.Singleton);
         AssertHasRegistration<ICaptureAnalysisProjectionRefresher, NullCaptureAnalysisProjectionRefresher>(
             services,

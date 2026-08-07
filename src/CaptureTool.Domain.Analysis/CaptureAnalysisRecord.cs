@@ -159,14 +159,30 @@ public sealed class CaptureAnalysisRecord
         CapabilityDefinition currentCapability,
         AnalyzerRevision currentAnalyzerRevision)
     {
+        if (currentAnalyzerRevision.IsEmpty)
+        {
+            throw new ArgumentException("Capability invalidation requires an analyzer revision.", nameof(currentAnalyzerRevision));
+        }
+
+        return InvalidateCapability(currentCapability, [currentAnalyzerRevision]);
+    }
+
+    public bool InvalidateCapability(
+        CapabilityDefinition currentCapability,
+        IEnumerable<AnalyzerRevision> currentAnalyzerRevisions)
+    {
         if (currentCapability.Id.IsEmpty)
         {
             throw new ArgumentException("Capability invalidation requires a definition.", nameof(currentCapability));
         }
 
-        if (currentAnalyzerRevision.IsEmpty)
+        ArgumentNullException.ThrowIfNull(currentAnalyzerRevisions);
+        HashSet<AnalyzerRevision> revisions = [.. currentAnalyzerRevisions];
+        if (revisions.Any(revision => revision.IsEmpty))
         {
-            throw new ArgumentException("Capability invalidation requires an analyzer revision.", nameof(currentAnalyzerRevision));
+            throw new ArgumentException(
+                "Capability invalidation cannot use an empty analyzer revision.",
+                nameof(currentAnalyzerRevisions));
         }
 
         if (!_analyses.TryGetValue(currentCapability.Id, out CapabilityAnalysis? analysis))
@@ -175,11 +191,13 @@ public sealed class CaptureAnalysisRecord
         }
 
         CanonicalCapabilityResult? retainedResult = analysis.Capability == currentCapability &&
-            analysis.CanonicalResult?.Analyzer.Revision == currentAnalyzerRevision
+            analysis.CanonicalResult is { } result &&
+            revisions.Contains(result.Analyzer.Revision)
                 ? analysis.CanonicalResult
                 : null;
         CapabilityOutcome? retainedOutcome = analysis.Capability == currentCapability &&
-            analysis.LatestOutcome?.Analyzer.Revision == currentAnalyzerRevision
+            analysis.LatestOutcome is { } outcome &&
+            revisions.Contains(outcome.Analyzer.Revision)
                 ? analysis.LatestOutcome
                 : null;
 

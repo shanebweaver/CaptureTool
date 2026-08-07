@@ -126,9 +126,15 @@ public sealed record CaptureAnalysisControlState
 
     public CaptureAnalysisControlState(
         CaptureAnalysisPolicy policy,
-        IEnumerable<CaptureAnalysisEnrollment> enrollments)
+        IEnumerable<CaptureAnalysisEnrollment> enrollments,
+        long captureChangeCheckpoint = 0)
     {
         ArgumentNullException.ThrowIfNull(policy);
+
+        if (captureChangeCheckpoint < 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(captureChangeCheckpoint));
+        }
 
         ArgumentNullException.ThrowIfNull(enrollments);
         CaptureAnalysisEnrollment[] copiedEnrollments = [.. enrollments];
@@ -153,6 +159,7 @@ public sealed record CaptureAnalysisControlState
 
         Policy = policy;
         _enrollments = Array.AsReadOnly(copiedEnrollments);
+        CaptureChangeCheckpoint = captureChangeCheckpoint;
     }
 
     public CaptureAnalysisPolicy Policy { get; }
@@ -178,6 +185,10 @@ public sealed record CaptureAnalysisControlState
     public CaptureAnalysisBackfillState BackfillState => Policy.BackfillState;
 
     public long BackfillUpperSequence => Policy.BackfillUpperSequence;
+
+    // Independent from the explicit existing-capture backfill checkpoint. This cursor drains the
+    // durable Capture change feed used for new-capture handoff and location/source reconciliation.
+    public long CaptureChangeCheckpoint { get; }
 
     public IReadOnlyList<CaptureAnalysisEnrollment> Enrollments => _enrollments;
 }

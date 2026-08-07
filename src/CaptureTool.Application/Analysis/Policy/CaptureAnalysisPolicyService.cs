@@ -377,7 +377,8 @@ internal sealed class CaptureAnalysisPolicyService :
                 consentResponse);
             var nextState = new CaptureAnalysisControlState(
                 nextPolicy,
-                RetainEnrollmentsForPolicyTransition(current.State, nextPolicy));
+                RetainEnrollmentsForPolicyTransition(current.State, nextPolicy),
+                current.State.CaptureChangeCheckpoint);
 
             CaptureAnalysisControlWriteResult writeResult;
             try

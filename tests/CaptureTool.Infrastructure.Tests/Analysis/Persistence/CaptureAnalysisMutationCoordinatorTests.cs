@@ -6,6 +6,7 @@ using CaptureTool.Application.Abstractions.Capture.Assets;
 using CaptureTool.Application.Analysis.Analyzers;
 using CaptureTool.Domain;
 using CaptureTool.Domain.Analysis;
+using CaptureTool.Domain.Analysis.Payloads;
 using CaptureTool.Domain.Capture;
 using CaptureTool.Infrastructure.Analysis.Persistence;
 
@@ -51,7 +52,58 @@ public sealed class CaptureAnalysisMutationCoordinatorTests
         context.MetadataStore.Dispose();
     }
 
-    private static TestContext CreateContext(int authorizedCalls, long sourceGeneration)
+    [TestMethod]
+    public async Task Register_ShouldInvalidateResultFromUnregisteredProducerRevision()
+    {
+        AnalyzerIdentity currentProducer = CreateAnalyzerIdentity("2");
+        var descriptor = new CaptureAnalyzerDescriptor(
+            AnalysisCapabilities.MediaPropertiesV1,
+            currentProducer,
+            [CaptureMediaKind.Image],
+            ProcessingBoundary.OnDevice,
+            CaptureAnalyzerDataKind.None,
+            CaptureAnalyzerRequirement.None,
+            CaptureAnalyzerWorkloadClass.Lightweight,
+            maximumSourceBytes: null,
+            qualityTier: 1);
+        TestContext context = CreateContext(
+            authorizedCalls: int.MaxValue,
+            sourceGeneration: 7,
+            [new StubAnalyzer(descriptor)]);
+        AnalyzerIdentity oldProducer = CreateAnalyzerIdentity("1");
+        var canonical = new CanonicalCapabilityResult(
+            context.Registration.Preconditions.CaptureId,
+            context.Registration.Preconditions.SourceRevision,
+            new MediaPropertiesV1(CaptureMediaKind.Image, new PixelSize(100, 100)),
+            oldProducer,
+            ProcessingBoundary.OnDevice,
+            CapturedAtUtc.AddMinutes(1));
+        var record = new CaptureAnalysisRecord(
+            context.Registration.Preconditions.CaptureId,
+            CaptureMediaKind.Image,
+            CapturedAtUtc,
+            context.Registration.Preconditions.SourceRevision,
+            context.Registration.Recipe,
+            [new CapabilityAnalysis(AnalysisCapabilities.MediaPropertiesV1, canonical, null)]);
+        CaptureAnalysisStoreWriteResult initial = await context.MetadataStore.TryWriteAsync(
+            record,
+            expectedDocumentRevision: null);
+
+        CaptureAnalysisStoreWriteResult result = await context.Coordinator.TryRegisterSourceAsync(
+            context.Registration,
+            initial.Snapshot!.DocumentRevision);
+
+        Assert.AreEqual(CaptureAnalysisStoreWriteStatus.Succeeded, result.Status);
+        Assert.IsFalse(result.Snapshot!.Record.TryGetAnalysis(
+            AnalysisCapabilities.MediaPropertiesV1.Id,
+            out _));
+        context.MetadataStore.Dispose();
+    }
+
+    private static TestContext CreateContext(
+        int authorizedCalls,
+        long sourceGeneration,
+        IEnumerable<ICaptureAnalyzer>? analyzers = null)
     {
         CaptureId captureId = CaptureId.New();
         string path = Path.GetFullPath(Path.Combine(Path.GetTempPath(), $"{captureId}.png"));
@@ -119,7 +171,7 @@ public sealed class CaptureAnalysisMutationCoordinatorTests
             policyService,
             new StubFeatureAvailability(),
             sourceVerifier,
-            new CaptureAnalyzerCatalog([]),
+            new CaptureAnalyzerCatalog(analyzers ?? []),
             metadata);
         return new(coordinator, registration, sourceVerifier, metadata);
     }
@@ -129,6 +181,31 @@ public sealed class CaptureAnalysisMutationCoordinatorTests
         CaptureAnalysisSourceRegistration Registration,
         RecordingSourceVerifier SourceVerifier,
         LocalCaptureAnalysisStore MetadataStore);
+
+    private static AnalyzerIdentity CreateAnalyzerIdentity(string adapterVersion) => new(
+        "windows-media-properties",
+        "windows",
+        modelId: null,
+        modelVersion: null,
+        adapterVersion,
+        runtimeId: null,
+        runtimeVersion: null,
+        packageVersion: null,
+        configurationFingerprint: null);
+
+    private sealed class StubAnalyzer(CaptureAnalyzerDescriptor descriptor) : ICaptureAnalyzer
+    {
+        public CaptureAnalyzerDescriptor Descriptor => descriptor;
+
+        public ValueTask<CaptureAnalyzerAvailability> GetAvailabilityAsync(
+            CaptureAnalyzerAvailabilityRequest request,
+            CancellationToken cancellationToken = default) =>
+            ValueTask.FromResult(CaptureAnalyzerAvailability.Available);
+
+        public Task<CaptureAnalyzerOutput> AnalyzeAsync(
+            CaptureAnalysisRequest request,
+            CancellationToken cancellationToken = default) => throw new NotSupportedException();
+    }
 
     private sealed class StubPolicyService(
         CaptureAnalysisControlSnapshot control,
@@ -203,8 +280,15 @@ public sealed class CaptureAnalysisMutationCoordinatorTests
         public IReadOnlyList<CaptureAsset> GetAssets() => [asset];
         public CaptureAsset? Get(CaptureId captureId) => captureId == asset.Id ? asset : null;
         public CaptureAsset? FindByPath(string filePath) => asset;
-        public IReadOnlyList<CaptureAssetChange> GetChangesAfter(long sequence) => [];
-        public long GetLatestChangeSequence() => 1;
+        public IReadOnlyList<CaptureAssetChange> GetChangesAfter(long sequence) => sequence < 7
+            ? [new CaptureAssetChange(
+                7,
+                asset.Id,
+                lifecycleRevision: 1,
+                CaptureAssetChangeType.Finalized,
+                CapturedAtUtc)]
+            : [];
+        public long GetLatestChangeSequence() => 7;
         public CaptureAssetCatalogWriteResult TryAdd(CaptureAsset added) => throw new NotSupportedException();
         public IReadOnlyList<CaptureAssetCatalogWriteResult> TryAddRange(IReadOnlyList<CaptureAsset> assets) => throw new NotSupportedException();
         public CaptureAssetCatalogWriteResult TryUpdate(CaptureAsset updated, long expectedLifecycleRevision, CaptureAssetChangeType changeType) => throw new NotSupportedException();

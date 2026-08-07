@@ -100,6 +100,48 @@ public sealed class LocalCaptureAnalysisJobStoreTests
     }
 
     [TestMethod]
+    public async Task Requeue_ShouldRestartCompletedIntentWithCleanAttemptHistory()
+    {
+        using LocalCaptureAnalysisJobStore store = CreateStore(
+            AnalysisPersistenceTestData.CreateTestFolder());
+        CaptureAnalysisJobKey key = CreateKey();
+        _ = await store.TryEnqueueAsync(key, EnqueuedAtUtc);
+        CaptureAnalysisJobLease lease = (await store.TryLeaseNextDueAsync(
+            EnqueuedAtUtc,
+            TimeSpan.FromMinutes(1)))!;
+        _ = await store.TryRecordAttemptAsync(
+            lease.LeaseToken,
+            CreateAttempt(1, CaptureAnalyzerAttemptStatus.Succeeded, failure: null));
+        _ = await store.TryCompleteAsync(lease.LeaseToken);
+
+        CaptureAnalysisJobEnqueueResult requeued = await store.TryRequeueAsync(
+            key,
+            EnqueuedAtUtc.AddMinutes(2));
+
+        Assert.AreEqual(CaptureAnalysisJobEnqueueStatus.Enqueued, requeued.Status);
+        Assert.AreEqual(CaptureAnalysisJobState.Pending, requeued.Intent!.State);
+        Assert.AreEqual(0, requeued.Intent.AttemptCount);
+        Assert.IsEmpty(requeued.Intent.Attempts);
+        Assert.AreEqual(EnqueuedAtUtc.AddMinutes(2), requeued.Intent.EnqueuedAtUtc);
+    }
+
+    [TestMethod]
+    public async Task Requeue_ShouldNotRestartAnActiveIntent()
+    {
+        using LocalCaptureAnalysisJobStore store = CreateStore(
+            AnalysisPersistenceTestData.CreateTestFolder());
+        CaptureAnalysisJobKey key = CreateKey();
+        _ = await store.TryEnqueueAsync(key, EnqueuedAtUtc);
+
+        CaptureAnalysisJobEnqueueResult result = await store.TryRequeueAsync(
+            key,
+            EnqueuedAtUtc.AddMinutes(1));
+
+        Assert.AreEqual(CaptureAnalysisJobEnqueueStatus.AlreadyExists, result.Status);
+        Assert.AreEqual(CaptureAnalysisJobState.Pending, result.Intent!.State);
+    }
+
+    [TestMethod]
     public async Task UnknownVersion_ShouldRemainRetainedAndNeverBeOverwritten()
     {
         string root = AnalysisPersistenceTestData.CreateTestFolder();

@@ -1,8 +1,10 @@
+using CaptureTool.Application.Abstractions.Analysis.Persistence;
 using CaptureTool.Domain.Analysis;
 using CaptureTool.Domain.Analysis.Payloads;
 using CaptureTool.Infrastructure.Analysis.Persistence;
 using CaptureTool.Infrastructure.Analysis.Persistence.Serialization;
 using System.Text.Json.Nodes;
+using System.Text;
 
 namespace CaptureTool.Infrastructure.Tests.Analysis.Persistence;
 
@@ -69,6 +71,22 @@ public sealed class CaptureAnalysisSerializationGoldenTests
         Assert.IsNotNull(CaptureAnalysisJsonContext.Default.MediaPropertiesPayloadDocument);
         Assert.IsNotNull(CaptureAnalysisJsonContext.Default.OcrDocumentPayloadDocument);
         Assert.IsNotNull(CaptureAnalysisJsonContext.Default.ImageDescriptionPayloadDocument);
+    }
+
+    [TestMethod]
+    public void LegacyControlDocumentWithoutChangeCheckpoint_ShouldDefaultToBeginningOfFeed()
+    {
+        byte[] current = CaptureAnalysisDocumentSerializer.SerializeControl(
+            new CaptureAnalysisControlState(CaptureAnalysisPolicy.Unknown, []),
+            documentRevision: 1,
+            LocalCaptureAnalysisControlStore.CurrentSchemaVersion);
+        JsonObject document = JsonNode.Parse(current)!.AsObject();
+        Assert.IsTrue(document.Remove("captureChangeCheckpoint"));
+
+        CaptureAnalysisControlSnapshot restored = CaptureAnalysisDocumentSerializer
+            .DeserializeControl(Encoding.UTF8.GetBytes(document.ToJsonString()));
+
+        Assert.AreEqual(0, restored.State.CaptureChangeCheckpoint);
     }
 
     private static TPayload GetPayload<TPayload>(

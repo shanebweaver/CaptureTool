@@ -146,6 +146,25 @@ public sealed class CaptureAnalysisPolicyTests
     }
 
     [TestMethod]
+    public void BackfillProgress_ShouldStartAdvanceAndCompleteMonotonically()
+    {
+        CaptureAnalysisPolicy authorized = CaptureAnalysisPolicy.Unknown
+            .GrantFutureCaptures(CreateScope(AnalysisTestData.Purpose), currentSequence: 10)
+            .AuthorizeExistingCaptureBackfill(currentSequence: 20);
+
+        CaptureAnalysisPolicy started = authorized.StartExistingCaptureBackfill();
+        CaptureAnalysisPolicy advanced = started.AdvanceExistingCaptureBackfill(7);
+        CaptureAnalysisPolicy completed = advanced.AdvanceExistingCaptureBackfill(20);
+
+        Assert.AreEqual(CaptureAnalysisBackfillState.InProgress, started.BackfillState);
+        Assert.AreEqual(7, advanced.BackfillCheckpoint);
+        Assert.AreEqual(CaptureAnalysisBackfillState.Completed, completed.BackfillState);
+        Assert.AreEqual(20, completed.BackfillCheckpoint);
+        Assert.ThrowsExactly<ArgumentOutOfRangeException>(() =>
+            advanced.AdvanceExistingCaptureBackfill(6));
+    }
+
+    [TestMethod]
     public void Revoke_ShouldAdvanceBothFencesAndRemoveAuthorization()
     {
         CaptureAnalysisPolicy granted = CaptureAnalysisPolicy.Unknown.GrantFutureCaptures(
