@@ -293,6 +293,34 @@ public sealed class VideoCaptureWorkflowTests
     }
 
     [TestMethod]
+    public async Task Finalization_WhenCaptureAssetFinalizationFails_ShouldKeepPendingVideoSuccessful()
+    {
+        var lifecycle = new RecordingCaptureAssetLifecycleService
+        {
+            FinalizationException = new InvalidOperationException("Capture asset lifecycle failed."),
+        };
+        TestWorkflowContext context = CreateContext(
+            runBackgroundTasksImmediately: false,
+            lifecycle: lifecycle);
+        VideoFile? raisedVideo = null;
+        context.Workflow.NewVideoCaptured += (_, video) => raisedVideo = video;
+
+        context.Workflow.StartVideoCapture(CreateCaptureArgs());
+        PendingVideoFile pendingVideo = context.Workflow.StopVideoCapture();
+
+        raisedVideo.Should().BeSameAs(pendingVideo);
+        context.Lifecycle.Finalizations.Should().BeEmpty();
+
+        context.FinalizeAction!();
+        await pendingVideo.WhenReadyAsync();
+
+        pendingVideo.IsReady.Should().BeTrue();
+        context.Workflow.IsFinalizing.Should().BeFalse();
+        context.Lifecycle.Finalizations.Should().ContainSingle()
+            .Which.Should().Be((pendingVideo.FilePath, CaptureFileType.Video));
+    }
+
+    [TestMethod]
     public async Task Finalization_ShouldFailPendingVideoAndClearSession_WhenRecorderStopFails()
     {
         TestWorkflowContext context = CreateContext(runBackgroundTasksImmediately: false);
@@ -558,10 +586,11 @@ public sealed class VideoCaptureWorkflowTests
         bool defaultDesktopAudioEnabled = true,
         bool runBackgroundTasksImmediately = true,
         ITelemetryService? telemetryService = null,
-        IVideoCaptureSupportService? supportService = null)
+        IVideoCaptureSupportService? supportService = null,
+        RecordingCaptureAssetLifecycleService? lifecycle = null)
     {
         var screenRecorder = new Mock<IScreenRecorder>();
-        var lifecycle = new RecordingCaptureAssetLifecycleService();
+        lifecycle ??= new RecordingCaptureAssetLifecycleService();
         var settings = new Mock<ISettingsService>();
         settings
             .Setup(service => service.Get(CaptureToolSettings.Settings_VideoCapture_DefaultLocalAudioEnabled))

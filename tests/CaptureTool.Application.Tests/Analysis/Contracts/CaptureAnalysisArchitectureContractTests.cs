@@ -12,6 +12,12 @@ using CaptureTool.Application.Abstractions.Analysis.Orchestration;
 using CaptureTool.Application.Abstractions.Analysis.Sources;
 using CaptureTool.Application.Abstractions.Security;
 using CaptureTool.Application.Analysis.Processing;
+using CaptureTool.Application.Capture.Assets;
+using CaptureTool.Application.Capture.Audio;
+using CaptureTool.Application.Capture.Image;
+using CaptureTool.Application.Capture.Video;
+using CaptureTool.Application.EditSessions;
+using CaptureTool.Application.Storage;
 using CaptureTool.Domain.Analysis;
 
 #pragma warning disable IL2026 // Architecture tests intentionally inspect untrimmed test assemblies.
@@ -218,6 +224,61 @@ public sealed class CaptureAnalysisArchitectureContractTests
         CollectionAssert.DoesNotContain(
             constructorDependencies,
             typeof(IUserInitiatedAnalysisCapabilityPreparationService));
+    }
+
+    [TestMethod]
+    public void CapturePostFinalizationBoundary_ShouldNotDependOnAnalysisIntakeJobsOrWorkers()
+    {
+        Type[] captureBoundaryTypes =
+        [
+            typeof(CaptureAssetLifecycleService),
+            typeof(ImageCapturePostProcessor),
+            typeof(AudioCapturePostProcessor),
+            typeof(VideoCapturePostProcessor),
+        ];
+
+        string[] forbiddenDependencies = captureBoundaryTypes
+            .SelectMany(type => type.GetConstructors(
+                BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
+            .SelectMany(constructor => constructor.GetParameters())
+            .Select(parameter => parameter.ParameterType)
+            .Where(type =>
+                type.Namespace?.StartsWith(
+                    "CaptureTool.Application.Abstractions.Analysis",
+                    StringComparison.Ordinal) == true ||
+                type.Namespace?.StartsWith(
+                    "CaptureTool.Application.Analysis",
+                    StringComparison.Ordinal) == true)
+            .Select(type => type.FullName!)
+            .Distinct(StringComparer.Ordinal)
+            .Order(StringComparer.Ordinal)
+            .ToArray();
+
+        Assert.IsEmpty(
+            forbiddenDependencies,
+            "Finalized Capture Assets may wake Analysis, but capture completion must not call its intake, jobs, or worker services.");
+    }
+
+    [TestMethod]
+    public void ScratchAndEditSessionServices_ShouldNotDependOnCaptureAssetLifecycle()
+    {
+        Type[] nonCaptureArtifactServices =
+        [
+            typeof(ScratchArtifactStore),
+            typeof(ActiveEditSessionService),
+        ];
+
+        Type[] lifecycleDependencies = nonCaptureArtifactServices
+            .SelectMany(type => type.GetConstructors(
+                BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
+            .SelectMany(constructor => constructor.GetParameters())
+            .Select(parameter => parameter.ParameterType)
+            .Where(type => type == typeof(ICaptureAssetLifecycleService))
+            .ToArray();
+
+        Assert.IsEmpty(
+            lifecycleDependencies,
+            "Scratch files and edit-session artifacts must never enter the Capture Asset lifecycle.");
     }
 
     private static Type[] GetAnalysisContractTypes()

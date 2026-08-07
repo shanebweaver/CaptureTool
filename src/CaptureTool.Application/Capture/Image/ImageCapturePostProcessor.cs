@@ -47,11 +47,26 @@ internal sealed class ImageCapturePostProcessor
 
     public void Process(ImageFile imageFile)
     {
-        CaptureId? captureId = _captureAssetLifecycleService.TryFinalize(
-            imageFile.FilePath,
-            CaptureFileType.Image);
+        CaptureId? captureId = TryFinalizeCapture(imageFile.FilePath);
         AutoSaveImage(imageFile, captureId);
         AutoCopyImage(imageFile);
+    }
+
+    private CaptureId? TryFinalizeCapture(string retainedSourcePath)
+    {
+        try
+        {
+            return _captureAssetLifecycleService.TryFinalize(
+                retainedSourcePath,
+                CaptureFileType.Image);
+        }
+        catch (Exception exception)
+        {
+            _logService.LogException(
+                exception,
+                "Failed to record the finalized image Capture Asset.");
+            return null;
+        }
     }
 
     private void AutoCopyImage(ImageFile imageFile)

@@ -10,6 +10,8 @@ internal sealed class RecordingCaptureAssetLifecycleService : ICaptureAssetLifec
 
     public Exception? FinalizationException { get; set; }
 
+    public Action? Finalizing { get; set; }
+
     public List<(string RetainedSourcePath, CaptureFileType MediaType)> Finalizations { get; } = [];
 
     public List<(CaptureId? CaptureId, string RetainedSourcePath, string PreferredOpenPath)>
@@ -18,6 +20,7 @@ internal sealed class RecordingCaptureAssetLifecycleService : ICaptureAssetLifec
     public CaptureId? TryFinalize(string retainedSourcePath, CaptureFileType mediaType)
     {
         Finalizations.Add((retainedSourcePath, mediaType));
+        Finalizing?.Invoke();
 
         if (FinalizationException is not null)
         {

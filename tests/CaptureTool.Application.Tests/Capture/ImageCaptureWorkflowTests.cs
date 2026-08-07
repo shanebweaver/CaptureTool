@@ -136,6 +136,34 @@ public sealed class ImageCaptureWorkflowTests
     }
 
     [TestMethod]
+    public void CaptureMonitors_WhenCaptureAssetFinalizationFails_RemainsSuccessful()
+    {
+        string tempFolder = CreateTestFolder();
+        var screenCapture = new Mock<IScreenCapture>();
+        screenCapture
+            .Setup(service => service.CombineMonitors(It.IsAny<IList<MonitorCaptureResult>>()))
+            .Returns(new Bitmap(2, 2));
+        var lifecycle = new RecordingCaptureAssetLifecycleService
+        {
+            FinalizationException = new InvalidOperationException("Capture asset lifecycle failed."),
+        };
+        ImageCaptureWorkflow workflow = CreateWorkflow(
+            tempFolder,
+            screenCapture: screenCapture.Object,
+            lifecycle: lifecycle);
+        ImageFile? raisedFile = null;
+        workflow.NewImageCaptured += (_, file) => raisedFile = file;
+
+        ImageFile captured = workflow.CaptureMonitors([CreateMonitor()]);
+
+        Assert.AreSame(captured, raisedFile);
+        Assert.HasCount(1, lifecycle.Finalizations);
+        Assert.AreEqual(
+            (captured.FilePath, CaptureFileType.Image),
+            lifecycle.Finalizations[0]);
+    }
+
+    [TestMethod]
     public void CaptureMonitors_WhenAutoSaveAndCopyEnabled_CopiesToClipboardAndSavesToConfiguredFolder()
     {
         string tempFolder = CreateTestFolder();

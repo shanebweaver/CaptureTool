@@ -69,6 +69,24 @@ public sealed class CaptureAssetLifecycleServiceTests
     }
 
     [TestMethod]
+    public void TryFinalize_WhenAssetStoreThrows_ShouldKeepCaptureReachableWithoutIdentity()
+    {
+        LifecycleFixture fixture = new();
+        string retainedPath = @"C:\CaptureTool\Captures\capture.png";
+        fixture.AssetCatalog
+            .Setup(catalog => catalog.TryAdd(It.IsAny<CaptureAsset>()))
+            .Throws(new IOException("asset store unavailable"));
+
+        CaptureId? captureId = fixture.Service.TryFinalize(retainedPath, CaptureFileType.Image);
+
+        Assert.IsNull(captureId);
+        fixture.RecentCatalog.Verify(
+            catalog => catalog.RecordCaptured(retainedPath, CaptureFileType.Image),
+            Times.Once);
+        fixture.ChangeSignal.Verify(signal => signal.TrySignal(), Times.Never);
+    }
+
+    [TestMethod]
     public void TryFinalize_WhenRecentStoreAndWakeThrow_ShouldNotFailSuccessfulCapture()
     {
         LifecycleFixture fixture = new();
@@ -92,6 +110,31 @@ public sealed class CaptureAssetLifecycleServiceTests
             CaptureFileType.Image);
 
         Assert.IsNotNull(captureId);
+    }
+
+    [TestMethod]
+    public void TryFinalize_WhenWakeChannelIsFull_ShouldNotDelayOrFailSuccessfulCapture()
+    {
+        LifecycleFixture fixture = new();
+        fixture.AssetCatalog
+            .Setup(catalog => catalog.TryAdd(It.IsAny<CaptureAsset>()))
+            .Returns<CaptureAsset>(asset => CaptureAssetCatalogWriteResult.Committed(asset, 1));
+        fixture.RecentCatalog
+            .Setup(catalog => catalog.TryProjectCaptured(
+                It.IsAny<string>(),
+                It.IsAny<CaptureFileType>(),
+                It.IsAny<CaptureId>(),
+                It.IsAny<long>(),
+                It.IsAny<DateTime>()))
+            .Returns(true);
+        fixture.ChangeSignal.Setup(signal => signal.TrySignal()).Returns(false);
+
+        CaptureId? captureId = fixture.Service.TryFinalize(
+            @"C:\CaptureTool\Captures\capture.png",
+            CaptureFileType.Image);
+
+        Assert.IsNotNull(captureId);
+        fixture.ChangeSignal.Verify(signal => signal.TrySignal(), Times.Once);
     }
 
     [TestMethod]

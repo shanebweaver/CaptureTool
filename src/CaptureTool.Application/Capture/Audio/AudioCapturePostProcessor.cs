@@ -47,11 +47,26 @@ internal sealed class AudioCapturePostProcessor
 
     public void Process(AudioFile audioFile)
     {
-        CaptureId? captureId = _captureAssetLifecycleService.TryFinalize(
-            audioFile.FilePath,
-            CaptureFileType.Audio);
+        CaptureId? captureId = TryFinalizeCapture(audioFile.FilePath);
         AutoSaveAudio(audioFile, captureId);
         AutoCopyAudio(audioFile);
+    }
+
+    private CaptureId? TryFinalizeCapture(string retainedSourcePath)
+    {
+        try
+        {
+            return _captureAssetLifecycleService.TryFinalize(
+                retainedSourcePath,
+                CaptureFileType.Audio);
+        }
+        catch (Exception exception)
+        {
+            _logService.LogException(
+                exception,
+                "Failed to record the finalized audio Capture Asset.");
+            return null;
+        }
     }
 
     private void AutoCopyAudio(AudioFile audioFile)

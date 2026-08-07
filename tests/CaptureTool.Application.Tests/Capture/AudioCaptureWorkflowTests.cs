@@ -201,7 +201,7 @@ public sealed class AudioCaptureWorkflowTests
     }
 
     [TestMethod]
-    public void StopCapture_WhenPostProcessingFails_PublishesTerminalPostProcessingFailure()
+    public void StopCapture_WhenCaptureAssetFinalizationFails_RemainsSuccessful()
     {
         var postProcessingException = new InvalidOperationException("Capture asset lifecycle failed.");
         var recorder = new Mock<IAudioRecorder>();
@@ -216,8 +216,11 @@ public sealed class AudioCaptureWorkflowTests
             lifecycle: lifecycle);
         AudioCaptureStateChange? terminalState = null;
         AudioFile? raisedFile = null;
+        bool? captureEventWasRaisedBeforeFinalization = null;
         int terminalStateCount = 0;
         workflow.NewAudioCaptured += (_, file) => raisedFile = file;
+        lifecycle.Finalizing = () =>
+            captureEventWasRaisedBeforeFinalization = ReferenceEquals(raisedFile, audioFile);
         workflow.StartCapture();
         workflow.CaptureStateChanged += (_, change) =>
         {
@@ -225,18 +228,19 @@ public sealed class AudioCaptureWorkflowTests
             terminalState = change;
         };
 
-        workflow.Invoking(service => service.StopCapture()).Should().Throw<InvalidOperationException>()
-            .Which.Should().BeSameAs(postProcessingException);
+        AudioFile stoppedFile = workflow.StopCapture();
 
         workflow.CaptureState.Should().Be(AudioCaptureState.Stopped);
         workflow.IsRecording.Should().BeFalse();
+        stoppedFile.Should().BeSameAs(audioFile);
         raisedFile.Should().BeSameAs(audioFile);
         terminalState.Should().NotBeNull();
         terminalState!.State.Should().Be(AudioCaptureState.Stopped);
         terminalStateCount.Should().Be(1);
-        terminalState.Failure.Should().Be(new AudioCaptureFailure(
-            AudioCaptureFailureStage.PostProcessing,
-            postProcessingException.Message));
+        terminalState.Failure.Should().BeNull();
+        captureEventWasRaisedBeforeFinalization.Should().BeTrue();
+        lifecycle.Finalizations.Should().ContainSingle()
+            .Which.Should().Be((audioFile.FilePath, CaptureFileType.Audio));
     }
 
     [TestMethod]

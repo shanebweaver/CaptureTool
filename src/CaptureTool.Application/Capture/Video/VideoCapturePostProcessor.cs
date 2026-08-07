@@ -47,11 +47,26 @@ internal sealed class VideoCapturePostProcessor
 
     public void Process(VideoFile videoFile)
     {
-        CaptureId? captureId = _captureAssetLifecycleService.TryFinalize(
-            videoFile.FilePath,
-            CaptureFileType.Video);
+        CaptureId? captureId = TryFinalizeCapture(videoFile.FilePath);
         AutoSaveVideo(videoFile, captureId);
         AutoCopyVideo(videoFile);
+    }
+
+    private CaptureId? TryFinalizeCapture(string retainedSourcePath)
+    {
+        try
+        {
+            return _captureAssetLifecycleService.TryFinalize(
+                retainedSourcePath,
+                CaptureFileType.Video);
+        }
+        catch (Exception exception)
+        {
+            _logService.LogException(
+                exception,
+                "Failed to record the finalized video Capture Asset.");
+            return null;
+        }
     }
 
     private void AutoCopyVideo(VideoFile videoFile)
