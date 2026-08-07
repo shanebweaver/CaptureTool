@@ -11,6 +11,15 @@ namespace CaptureTool.UiTests;
 [TestClass]
 public sealed class VideoCaptureStartupUiTests
 {
+    private const int GwlExStyle = -20;
+    private const long ShadowWindowExtendedStyles =
+        0x00000008L | // WS_EX_TOPMOST
+        0x00000020L | // WS_EX_TRANSPARENT
+        0x00000080L | // WS_EX_TOOLWINDOW
+        0x00080000L | // WS_EX_LAYERED
+        0x08000000L;  // WS_EX_NOACTIVATE
+    private const uint WdaExcludeFromCapture = 0x00000011;
+
     private static readonly TimeSpan AppLaunchTimeout = TimeSpan.FromSeconds(30);
     private static readonly TimeSpan InteractionTimeout = TimeSpan.FromSeconds(15);
     private static readonly TimeSpan RecordingStartTimeout = TimeSpan.FromSeconds(20);
@@ -72,6 +81,50 @@ public sealed class VideoCaptureStartupUiTests
                 automation,
                 "StartVideoCaptureButton",
                 InteractionTimeout);
+            AutomationElement captureToolbar = startRecordingButton.Parent ??
+                throw new InvalidOperationException("The recording button should have a toolbar parent.");
+            AutomationElement closeOverlayButton = WaitForElement(
+                app,
+                automation,
+                "CaptureOverlay_CloseButton",
+                InteractionTimeout);
+
+            Assert.IsTrue(
+                captureToolbar.BoundingRectangle.Contains(startRecordingButton.BoundingRectangle),
+                "The start button should fit inside the capture toolbar window.");
+            Assert.IsTrue(
+                captureToolbar.BoundingRectangle.Contains(closeOverlayButton.BoundingRectangle),
+                "The rightmost toolbar button should not overflow the capture toolbar window.");
+
+            nint shadowWindow = FindWindow("CaptureOverlayWindowShadow", null);
+            Assert.AreNotEqual(nint.Zero, shadowWindow, "The toolbar shadow window should exist.");
+            Assert.IsTrue(IsWindowVisible(shadowWindow), "The toolbar shadow window should be visible.");
+
+            nint toolbarWindow = FindWindow("CaptureOverlayWindow", null);
+            Assert.AreNotEqual(nint.Zero, toolbarWindow, "The capture toolbar window should exist.");
+            Assert.IsTrue(
+                GetWindowRect(toolbarWindow, out NativeRect toolbarBounds),
+                "The capture toolbar bounds should be available.");
+            Assert.IsTrue(
+                GetWindowRect(shadowWindow, out NativeRect shadowBounds),
+                "The toolbar shadow bounds should be available.");
+            Assert.IsTrue(
+                shadowBounds.Left < toolbarBounds.Left &&
+                shadowBounds.Top < toolbarBounds.Top &&
+                shadowBounds.Right > toolbarBounds.Right &&
+                shadowBounds.Bottom > toolbarBounds.Bottom,
+                "The shadow window should provide visible padding around every toolbar edge.");
+
+            long shadowExtendedStyles = GetWindowLongPtr(shadowWindow, GwlExStyle);
+            Assert.AreEqual(
+                ShadowWindowExtendedStyles,
+                shadowExtendedStyles & ShadowWindowExtendedStyles,
+                "The shadow window should be layered, click-through, topmost, tool-only, and non-activating.");
+            Assert.IsTrue(
+                GetWindowDisplayAffinity(shadowWindow, out uint shadowDisplayAffinity) &&
+                shadowDisplayAffinity == WdaExcludeFromCapture,
+                "The toolbar shadow should be excluded from screen capture.");
+
             startRecordingButton.Click();
 
             AutomationElement stopRecordingButton = WaitForRecordingState(
@@ -112,6 +165,33 @@ public sealed class VideoCaptureStartupUiTests
             Environment.GetEnvironmentVariable("CAPTURETOOL_RUN_UI_TESTS"),
             "1",
             StringComparison.OrdinalIgnoreCase);
+    }
+
+    [DllImport("user32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    private static extern nint FindWindow(string? className, string? windowName);
+
+    [DllImport("user32.dll", EntryPoint = "GetWindowLongPtrW", SetLastError = true)]
+    private static extern nint GetWindowLongPtr(nint windowHandle, int index);
+
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool IsWindowVisible(nint windowHandle);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool GetWindowRect(nint windowHandle, out NativeRect rectangle);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool GetWindowDisplayAffinity(nint windowHandle, out uint affinity);
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct NativeRect
+    {
+        public int Left;
+        public int Top;
+        public int Right;
+        public int Bottom;
     }
 
     private static LaunchedCaptureToolApp LaunchApp(

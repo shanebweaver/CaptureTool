@@ -12,6 +12,7 @@
     xmlns:utils="using:CaptureTool.Presentation.Windows.WinUI.Utils"
     xmlns:viewmodels="using:CaptureTool.Presentation.Features.SelectionOverlay"
     d:DataContext="{d:DesignInstance Type=local:SelectionOverlayToolbar}"
+    IsTextScaleFactorEnabled="False"
     mc:Ignorable="d">
     <StackPanel
         x:Name="ToolbarPanel"
@@ -22,7 +23,12 @@
         Background="{ThemeResource AcrylicBackgroundFillColorDefaultBrush}"
         CornerRadius="4"
         Orientation="Horizontal"
-        Spacing="8">
+        Spacing="8"
+        Translation="0,0,16">
+        <StackPanel.Shadow>
+            <ThemeShadow />
+        </StackPanel.Shadow>
+
         <!--  Capture mode  -->
         <toolkit:Segmented
             x:Name="CaptureModeSegmentedControl"

@@ -2,101 +2,262 @@ using CaptureTool.Application.Abstractions.Themes;
 using CaptureTool.Domain.Capture;
 using CaptureTool.Presentation.Features.CaptureOverlay;
 using CaptureTool.Presentation.Windows.WinUI.Capture;
-using Microsoft.UI;
-using Microsoft.UI.Composition;
 using Microsoft.UI.Xaml;
-using Microsoft.UI.Xaml.Hosting;
-using System.Numerics;
+using System.ComponentModel;
+using Windows.Foundation;
 
 namespace CaptureTool.Presentation.Windows.WinUI.Xaml.Views;
+
+internal readonly record struct CaptureOverlaySurfaceMetrics(
+    double Width,
+    double Height,
+    double RasterizationScale,
+    bool ShowsToolbar);
 
 public sealed partial class CaptureOverlayView : CaptureOverlayViewBase
 {
     private readonly NewCaptureArgs _captureArgs;
     private readonly WinUICaptureDiscardConfirmationService _captureDiscardConfirmationService;
-    private SpriteVisual? _shadowVisual;
-    private DropShadow? _shadow;
+    private CaptureOverlaySurfaceMetrics _lastPublishedMetrics;
+    private XamlRoot? _observedXamlRoot;
+    private double _lastToolbarWidth;
+    private bool _surfaceUpdateQueued;
+    private bool _isLoaded;
+    private bool _lastPublishedMetricsWereValid;
+    private bool _unloaded;
+
+    internal event EventHandler<CaptureOverlaySurfaceMetrics>? SurfaceMetricsChanged;
+    internal event EventHandler? SurfaceMetricsInvalidated;
 
     public CaptureOverlayView(NewCaptureArgs captureArgs)
     {
         _captureArgs = captureArgs;
         _captureDiscardConfirmationService = App.Current.ServiceProvider.GetService<WinUICaptureDiscardConfirmationService>();
 
+        InitializeComponent();
+
         Loaded += OnLoaded;
         Unloaded += OnUnloaded;
-
-        InitializeComponent();
+        Toolbar.SizeChanged += OnSurfaceElementSizeChanged;
+        Toolbar.LayoutUpdated += OnSurfaceElementLayoutUpdated;
+        RecordingErrorInfoBar.SizeChanged += OnSurfaceElementSizeChanged;
+        RecordingErrorInfoBar.LayoutUpdated += OnSurfaceElementLayoutUpdated;
 
         DispatcherQueue.TryEnqueue(() =>
         {
-            AddToolbarShadow();
             UpdateRequestedAppTheme();
         });
     }
 
     private void OnLoaded(object sender, RoutedEventArgs e)
     {
+        _unloaded = false;
         _captureDiscardConfirmationService.XamlRoot = RootPanel.XamlRoot;
         _captureDiscardConfirmationService.DialogHostBounds = _captureArgs.Monitor.MonitorBounds;
+        ViewModel.PropertyChanged += ViewModel_PropertyChanged;
+        AttachXamlRoot();
         ViewModel.Load(new CaptureOverlayViewModelOptions(_captureArgs));
+        _isLoaded = true;
+        QueueSurfaceMetricsUpdate();
     }
 
     private void OnUnloaded(object sender, RoutedEventArgs e)
     {
+        _unloaded = true;
+        _isLoaded = false;
         Loaded -= OnLoaded;
         Unloaded -= OnUnloaded;
+        Toolbar.SizeChanged -= OnSurfaceElementSizeChanged;
+        Toolbar.LayoutUpdated -= OnSurfaceElementLayoutUpdated;
+        RecordingErrorInfoBar.SizeChanged -= OnSurfaceElementSizeChanged;
+        RecordingErrorInfoBar.LayoutUpdated -= OnSurfaceElementLayoutUpdated;
+        ViewModel.PropertyChanged -= ViewModel_PropertyChanged;
+        DetachXamlRoot();
 
+        _captureDiscardConfirmationService.XamlRoot = null;
         _captureDiscardConfirmationService.DialogHostBounds = null;
 
         ViewModel.Dispose();
-
-        CleanupCompositionResources();
     }
 
-    private void CleanupCompositionResources()
+    internal bool TryGetCurrentSurfaceMetrics(out CaptureOverlaySurfaceMetrics metrics)
     {
         try
         {
-            if (_shadowVisual != null)
+            return TryCalculateCurrentSurfaceMetrics(out metrics);
+        }
+        catch
+        {
+            // The XAML island can be between layout passes while it is hidden or
+            // shutting down. The host keeps its last valid bounds in that case.
+            metrics = default;
+            return false;
+        }
+    }
+
+    private bool TryCalculateCurrentSurfaceMetrics(out CaptureOverlaySurfaceMetrics metrics)
+    {
+        if (!_isLoaded)
+        {
+            metrics = default;
+            return false;
+        }
+
+        double fallbackScale = _captureArgs.Monitor.Scale;
+        double scale = RootPanel.XamlRoot?.RasterizationScale ?? fallbackScale;
+        if (!double.IsFinite(scale) || scale <= 0)
+        {
+            metrics = default;
+            return false;
+        }
+
+        bool showsToolbar = !ViewModel.HasRecordingError;
+        Size toolbarSize = GetToolbarSize(scale);
+        if (showsToolbar && IsPositive(toolbarSize.Width) && IsPositive(toolbarSize.Height))
+        {
+            _lastToolbarWidth = toolbarSize.Width;
+        }
+
+        double width = toolbarSize.Width;
+        double height = toolbarSize.Height;
+
+        if (!showsToolbar && IsPositive(_lastToolbarWidth))
+        {
+            width = _lastToolbarWidth;
+            RecordingErrorInfoBar.Width = width;
+            RecordingErrorInfoBar.Measure(new Size(width, double.PositiveInfinity));
+            height = Math.Max(RecordingErrorInfoBar.ActualHeight, RecordingErrorInfoBar.DesiredSize.Height);
+
+            // The binding and InfoBar template can complete on the next layout pass.
+            // Hide the shadow immediately by retaining a usable foreground height.
+            if (!IsPositive(height))
             {
-                _shadowVisual.Shadow = null;
-                _shadowVisual.Dispose();
-                _shadowVisual = null;
+                height = toolbarSize.Height;
             }
-
-            _shadow?.Dispose();
-            _shadow = null;
         }
-        catch { }
-    }
 
-    private void AddToolbarShadow()
-    {
-        try
+        if (!IsPositive(width) || !IsPositive(height))
         {
-            Compositor? compositor = ElementCompositionPreview.GetElementVisual(this).Compositor;
-
-            _shadow = compositor.CreateDropShadow();
-            _shadow.Color = Colors.Black;
-            _shadow.BlurRadius = 12;
-            _shadow.Opacity = 0.3f;
-            _shadow.Offset = new Vector3(0, 4, 0);
-
-            _shadowVisual = compositor.CreateSpriteVisual();
-            _shadowVisual.Shadow = _shadow;
-            _shadowVisual.Size = new Vector2((float)Toolbar.ActualWidth, (float)Toolbar.ActualHeight);
-
-            ElementCompositionPreview.SetElementChildVisual(ToolbarHost, _shadowVisual);
-
-            Toolbar.SizeChanged += Toolbar_SizeChanged;
+            metrics = default;
+            return false;
         }
-        catch { }
+
+        metrics = new(width, height, scale, showsToolbar);
+        return true;
     }
 
-    private void Toolbar_SizeChanged(object s, SizeChangedEventArgs e)
+    private Size GetToolbarSize(double scale)
     {
-        _shadowVisual?.Size = new Vector2((float)e.NewSize.Width, (float)e.NewSize.Height);
+        double availableWidth = _captureArgs.Monitor.MonitorBounds.Width / scale;
+        Size desiredSize = Toolbar.MeasureNaturalSize();
+        double width = Math.Min(desiredSize.Width, availableWidth);
+        double height = desiredSize.Height;
+
+        if (IsPositive(width) && IsPositive(height))
+        {
+            return new Size(width, height);
+        }
+
+        return new Size(Toolbar.ActualWidth, Toolbar.ActualHeight);
     }
+
+    private void OnSurfaceElementSizeChanged(object sender, SizeChangedEventArgs e)
+    {
+        QueueSurfaceMetricsUpdate();
+    }
+
+    private void OnSurfaceElementLayoutUpdated(object? sender, object e)
+    {
+        QueueSurfaceMetricsUpdate();
+    }
+
+    private void ViewModel_PropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(CaptureOverlayViewModel.HasRecordingError) &&
+            ViewModel.HasRecordingError)
+        {
+            PublishSurfaceMetrics();
+        }
+
+        QueueSurfaceMetricsUpdate();
+    }
+
+    private void AttachXamlRoot()
+    {
+        XamlRoot? xamlRoot = RootPanel.XamlRoot;
+        if (ReferenceEquals(_observedXamlRoot, xamlRoot))
+        {
+            return;
+        }
+
+        DetachXamlRoot();
+        _observedXamlRoot = xamlRoot;
+        if (_observedXamlRoot != null)
+        {
+            _observedXamlRoot.Changed += XamlRoot_Changed;
+        }
+    }
+
+    private void DetachXamlRoot()
+    {
+        if (_observedXamlRoot != null)
+        {
+            _observedXamlRoot.Changed -= XamlRoot_Changed;
+            _observedXamlRoot = null;
+        }
+    }
+
+    private void XamlRoot_Changed(XamlRoot sender, XamlRootChangedEventArgs args)
+    {
+        QueueSurfaceMetricsUpdate();
+    }
+
+    private void QueueSurfaceMetricsUpdate()
+    {
+        if (_unloaded || _surfaceUpdateQueued)
+        {
+            return;
+        }
+
+        _surfaceUpdateQueued = true;
+        if (!DispatcherQueue.TryEnqueue(() =>
+        {
+            _surfaceUpdateQueued = false;
+            PublishSurfaceMetrics();
+        }))
+        {
+            _surfaceUpdateQueued = false;
+        }
+    }
+
+    private void PublishSurfaceMetrics()
+    {
+        if (_unloaded)
+        {
+            return;
+        }
+
+        if (!TryGetCurrentSurfaceMetrics(out CaptureOverlaySurfaceMetrics metrics))
+        {
+            if (_lastPublishedMetricsWereValid)
+            {
+                _lastPublishedMetricsWereValid = false;
+                SurfaceMetricsInvalidated?.Invoke(this, EventArgs.Empty);
+            }
+            return;
+        }
+
+        if (_lastPublishedMetricsWereValid && metrics == _lastPublishedMetrics)
+        {
+            return;
+        }
+
+        _lastPublishedMetricsWereValid = true;
+        _lastPublishedMetrics = metrics;
+        SurfaceMetricsChanged?.Invoke(this, metrics);
+    }
+
+    private static bool IsPositive(double value) => double.IsFinite(value) && value > 0;
 
     private void UpdateRequestedAppTheme()
     {

@@ -121,6 +121,20 @@ public sealed class CaptureOverlayViewModelAudioInputTests
     }
 
     [TestMethod]
+    public void Dispose_WhenCalledMoreThanOnce_ShouldReleaseResourcesOnce()
+    {
+        TestContext context = CreateViewModel([]);
+        context.ViewModel.Load(CreateOptions());
+
+        context.ViewModel.Dispose();
+        context.ViewModel.Dispose();
+
+        context.AudioInputDetection.Verify(
+            service => service.StopWatching(),
+            Times.Once);
+    }
+
+    [TestMethod]
     public async Task StartVideoCaptureCommand_WhenUseCaseFails_ShouldResetStateAndShowError()
     {
         TestContext context = CreateViewModel([]);
@@ -163,6 +177,61 @@ public sealed class CaptureOverlayViewModelAudioInputTests
             It.IsAny<StartVideoCaptureRequest>(),
             It.IsAny<CancellationToken>()), Times.Once);
         context.ViewModel.Dispose();
+    }
+
+    [TestMethod]
+    public async Task StopVideoCaptureCommand_ShouldKeepRecordingLayoutUntilStopCompletes()
+    {
+        TestContext context = CreateViewModel([]);
+        TaskCompletionSource<UseCaseResponse<StopVideoCaptureResponse>> stopCompletionSource =
+            new(TaskCreationOptions.RunContinuationsAsynchronously);
+        context.StopVideoCapture
+            .Setup(useCase => useCase.ExecuteAsync(
+                It.IsAny<StopVideoCaptureRequest>(),
+                It.IsAny<CancellationToken>()))
+            .Returns(stopCompletionSource.Task);
+        context.ViewModel.Load(CreateOptions());
+
+        Task startTask = context.ViewModel.StartVideoCaptureCommand.ExecuteAsync(null);
+        context.VideoCaptureState.Raise(state => state.RecordingStarted += null!, EventArgs.Empty);
+        await startTask;
+
+        Task stopTask = context.ViewModel.StopVideoCaptureCommand.ExecuteAsync(null);
+
+        Assert.IsTrue(context.ViewModel.IsRecording);
+
+        stopCompletionSource.SetResult(
+            UseCaseResponse<StopVideoCaptureResponse>.Success(new StopVideoCaptureResponse()));
+        await stopTask;
+
+        Assert.IsFalse(context.ViewModel.IsRecording);
+        context.ViewModel.Dispose();
+    }
+
+    [TestMethod]
+    public async Task StopVideoCaptureCommand_WhenNavigationDisposesOverlay_ShouldNotSwitchLayouts()
+    {
+        TestContext context = CreateViewModel([]);
+        TaskCompletionSource<UseCaseResponse<StopVideoCaptureResponse>> stopCompletionSource =
+            new(TaskCreationOptions.RunContinuationsAsynchronously);
+        context.StopVideoCapture
+            .Setup(useCase => useCase.ExecuteAsync(
+                It.IsAny<StopVideoCaptureRequest>(),
+                It.IsAny<CancellationToken>()))
+            .Returns(stopCompletionSource.Task);
+        context.ViewModel.Load(CreateOptions());
+
+        Task startTask = context.ViewModel.StartVideoCaptureCommand.ExecuteAsync(null);
+        context.VideoCaptureState.Raise(state => state.RecordingStarted += null!, EventArgs.Empty);
+        await startTask;
+
+        Task stopTask = context.ViewModel.StopVideoCaptureCommand.ExecuteAsync(null);
+        context.ViewModel.Dispose();
+        stopCompletionSource.SetResult(
+            UseCaseResponse<StopVideoCaptureResponse>.Success(new StopVideoCaptureResponse()));
+        await stopTask;
+
+        Assert.IsTrue(context.ViewModel.IsRecording);
     }
 
     [TestMethod]
@@ -405,6 +474,11 @@ public sealed class CaptureOverlayViewModelAudioInputTests
             .Setup(useCase => useCase.ExecuteAsync(It.IsAny<CancelVideoCaptureRequest>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(UseCaseResponse<CancelVideoCaptureResponse>.Success(new CancelVideoCaptureResponse()));
 
+        Mock<IStopVideoCaptureUseCase> stopVideoCapture = new();
+        stopVideoCapture
+            .Setup(useCase => useCase.ExecuteAsync(It.IsAny<StopVideoCaptureRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(UseCaseResponse<StopVideoCaptureResponse>.Success(new StopVideoCaptureResponse()));
+
         Mock<IPrepareVideoCaptureUseCase> prepareVideoCapture = new();
         prepareVideoCapture
             .Setup(useCase => useCase.ExecuteAsync(It.IsAny<PrepareVideoCaptureRequest>(), It.IsAny<CancellationToken>()))
@@ -494,7 +568,7 @@ public sealed class CaptureOverlayViewModelAudioInputTests
             Mock.Of<IGoBackFromCaptureOverlayUseCase>(),
             startVideoCapture.Object,
             cancelVideoCapture.Object,
-            Mock.Of<IStopVideoCaptureUseCase>(),
+            stopVideoCapture.Object,
             toggleDesktopAudio.Object,
             setDesktopAudioVolume.Object,
             Mock.Of<IToggleVideoCapturePauseResumeUseCase>(),
@@ -515,6 +589,7 @@ public sealed class CaptureOverlayViewModelAudioInputTests
             videoCaptureState,
             startVideoCapture,
             cancelVideoCapture,
+            stopVideoCapture,
             toggleDesktopAudio,
             setDesktopAudioVolume,
             selectAudioInputSource,
@@ -548,6 +623,7 @@ public sealed class CaptureOverlayViewModelAudioInputTests
         Mock<IVideoCaptureState> VideoCaptureState,
         Mock<IStartVideoCaptureUseCase> StartVideoCapture,
         Mock<ICancelVideoCaptureUseCase> CancelVideoCapture,
+        Mock<IStopVideoCaptureUseCase> StopVideoCapture,
         Mock<IToggleVideoCaptureDesktopAudioUseCase> ToggleDesktopAudio,
         Mock<ISetVideoCaptureDesktopAudioVolumeUseCase> SetDesktopAudioVolume,
         Mock<ISelectAudioInputSourceUseCase> SelectAudioInputSource,
