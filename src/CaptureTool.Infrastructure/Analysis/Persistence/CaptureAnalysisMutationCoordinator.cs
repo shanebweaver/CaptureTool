@@ -179,7 +179,9 @@ internal sealed class CaptureAnalysisMutationCoordinator : ICaptureAnalysisMutat
             CaptureAnalysisEnrollment? enrollment = control.State.Enrollments.FirstOrDefault(
                 candidate => candidate.CaptureId == deletionToken.CaptureId);
             if (control.State.ControlGeneration != deletionToken.ControlGeneration ||
-                enrollment is not { State: CaptureAnalysisEnrollmentState.Forgotten } ||
+                enrollment == null ||
+                enrollment.State is not (CaptureAnalysisEnrollmentState.Excluded or
+                    CaptureAnalysisEnrollmentState.Forgotten) ||
                 enrollment.TombstoneGeneration != deletionToken.TombstoneGeneration)
             {
                 return new(CaptureAnalysisStoreWriteStatus.StaleCommit);
@@ -204,7 +206,9 @@ internal sealed class CaptureAnalysisMutationCoordinator : ICaptureAnalysisMutat
             CaptureAnalysisEnrollment? finalEnrollment = finalControl.State.Enrollments.FirstOrDefault(
                 candidate => candidate.CaptureId == deletionToken.CaptureId);
             if (finalControl.State.ControlGeneration != deletionToken.ControlGeneration ||
-                finalEnrollment is not { State: CaptureAnalysisEnrollmentState.Forgotten } ||
+                finalEnrollment == null ||
+                finalEnrollment.State is not (CaptureAnalysisEnrollmentState.Excluded or
+                    CaptureAnalysisEnrollmentState.Forgotten) ||
                 finalEnrollment.TombstoneGeneration != deletionToken.TombstoneGeneration)
             {
                 return new(CaptureAnalysisStoreWriteStatus.StaleCommit);

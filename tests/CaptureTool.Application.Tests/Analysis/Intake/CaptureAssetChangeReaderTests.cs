@@ -46,5 +46,6 @@ public sealed class CaptureAssetChangeReaderTests
         public CaptureAssetCatalogWriteResult TryAdd(CaptureAsset asset) => throw new NotSupportedException();
         public IReadOnlyList<CaptureAssetCatalogWriteResult> TryAddRange(IReadOnlyList<CaptureAsset> assets) => throw new NotSupportedException();
         public CaptureAssetCatalogWriteResult TryUpdate(CaptureAsset asset, long expectedLifecycleRevision, CaptureAssetChangeType changeType) => throw new NotSupportedException();
+        public CaptureAssetCatalogWriteResult TryForget(CaptureId captureId, long expectedLifecycleRevision) => throw new NotSupportedException();
     }
 }

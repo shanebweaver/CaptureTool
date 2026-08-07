@@ -65,6 +65,46 @@ public sealed class LocalCaptureAssetCatalogTests
     }
 
     [TestMethod]
+    public void TryForget_ShouldRemoveAllActivePathsAndPersistOnlyContentFreeFacts()
+    {
+        string dataFolder = CreateTestFolder();
+        var protector = new TestDataProtectionService();
+        LocalCaptureAssetCatalog catalog = CreateCatalog(dataFolder, protector);
+        CaptureAsset asset = CreateAsset(Path.Combine(dataFolder, "Captures", "retained.png"));
+        Assert.IsTrue(catalog.TryAdd(asset).Succeeded);
+
+        CaptureAssetCatalogWriteResult forgotten = catalog.TryForget(
+            asset.Id,
+            asset.LifecycleRevision);
+
+        Assert.IsTrue(forgotten.Succeeded);
+        Assert.IsTrue(forgotten.Changed);
+        Assert.AreEqual(2L, forgotten.ChangeSequence);
+        Assert.IsNull(forgotten.Asset);
+        Assert.IsNull(catalog.Get(asset.Id));
+        Assert.IsNull(catalog.FindByPath(asset.RetainedSourcePath));
+        Assert.IsEmpty(catalog.GetAssets());
+        Assert.AreEqual(
+            CaptureAssetChangeType.Forgotten,
+            catalog.GetChangesAfter(0)[^1].ChangeType);
+
+        LocalCaptureAssetCatalog reloaded = CreateCatalog(dataFolder, protector);
+        Assert.IsNull(reloaded.Get(asset.Id));
+        Assert.IsEmpty(reloaded.GetAssets());
+        Assert.HasCount(2, reloaded.GetChangesAfter(0));
+        Assert.AreEqual(
+            CaptureAssetChangeType.Forgotten,
+            reloaded.GetChangesAfter(0)[^1].ChangeType);
+
+        CaptureAssetCatalogWriteResult retry = reloaded.TryForget(
+            asset.Id,
+            asset.LifecycleRevision);
+        Assert.IsTrue(retry.Succeeded);
+        Assert.IsFalse(retry.Changed);
+        Assert.AreEqual(2L, retry.ChangeSequence);
+    }
+
+    [TestMethod]
     public void TryAddRange_ShouldCoalescePathsAndRemainIdempotent()
     {
         string dataFolder = CreateTestFolder();

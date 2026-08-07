@@ -2,9 +2,12 @@ using CaptureTool.Application.Abstractions.Ai;
 using CaptureTool.Application.Abstractions.Analysis.Policy;
 using CaptureTool.Application.Abstractions.Analysis.Analyzers;
 using CaptureTool.Application.Abstractions.Analysis.Intake;
+using CaptureTool.Application.Abstractions.Analysis.Maintenance;
 using CaptureTool.Application.Abstractions.Analysis.Orchestration;
 using CaptureTool.Application.Abstractions.Analysis.Preparation;
 using CaptureTool.Application.Abstractions.Analysis.Processing;
+using CaptureTool.Application.Abstractions.Analysis.Privacy;
+using CaptureTool.Application.Abstractions.Capture.Assets;
 using CaptureTool.Application.Abstractions.Edit.External;
 using CaptureTool.Application.Abstractions.EditSessions;
 using CaptureTool.Application.Abstractions.Navigation;
@@ -13,6 +16,7 @@ using CaptureTool.Application.Ai;
 using CaptureTool.Application.Analysis.Policy;
 using CaptureTool.Application.Analysis.Analyzers;
 using CaptureTool.Application.Analysis.Intake;
+using CaptureTool.Application.Analysis.Maintenance;
 using CaptureTool.Application.Analysis.Orchestration;
 using CaptureTool.Application.Analysis.Preparation;
 using CaptureTool.Application.Analysis.Processing;
@@ -71,6 +75,15 @@ public static class ApplicationServiceCollectionExtensions
             provider.GetRequiredService<CaptureAnalysisPolicyService>());
         services.AddSingleton<ICaptureAnalysisScheduler, CaptureAnalysisScheduler>();
         services.AddSingleton<ICaptureAnalysisProjectionRefresher, NullCaptureAnalysisProjectionRefresher>();
+        services.AddSingleton<ICaptureAnalysisProjectionMaintenance, NullCaptureAnalysisProjectionRefresher>();
+        services.AddSingleton<ICaptureAnalysisCleanupCoordinator, CaptureAnalysisCleanupCoordinator>();
+        services.AddSingleton<CaptureAnalysisLifecycleService>();
+        services.AddSingleton<ICaptureAnalysisExclusionService>(provider =>
+            provider.GetRequiredService<CaptureAnalysisLifecycleService>());
+        services.AddSingleton<ICaptureAnalysisMaintenanceService>(provider =>
+            provider.GetRequiredService<CaptureAnalysisLifecycleService>());
+        services.AddSingleton<ICaptureAssetRemovalService>(provider =>
+            provider.GetRequiredService<CaptureAnalysisLifecycleService>());
         services.AddSingleton<CaptureAssetChangeReader>();
         services.AddSingleton<ICaptureAssetChangeReader>(provider =>
             provider.GetRequiredService<CaptureAssetChangeReader>());

@@ -5,6 +5,7 @@ using CaptureTool.Application.Abstractions.Analysis.Persistence;
 using CaptureTool.Application.Abstractions.Analysis.Policy;
 using CaptureTool.Application.Abstractions.Capture.Assets;
 using CaptureTool.Application.Abstractions.Files;
+using CaptureTool.Application.Analysis.Maintenance;
 using CaptureTool.Domain;
 using CaptureTool.Domain.Analysis;
 using CaptureTool.Domain.Capture;
@@ -27,6 +28,7 @@ internal sealed class CaptureAnalysisIntakeService :
     private readonly ICaptureAnalysisProjectionRefresher _projectionRefresher;
     private readonly ICaptureAnalysisFeatureAvailability _featureAvailability;
     private readonly IFileSystem _fileSystem;
+    private readonly ICaptureAnalysisCleanupCoordinator? _cleanup;
     private readonly SemaphoreSlim _gate = new(1, 1);
     private bool _startupAuditCompleted;
 
@@ -39,7 +41,8 @@ internal sealed class CaptureAnalysisIntakeService :
         ICaptureAnalysisJobStore jobStore,
         ICaptureAnalysisProjectionRefresher projectionRefresher,
         ICaptureAnalysisFeatureAvailability featureAvailability,
-        IFileSystem fileSystem)
+        IFileSystem fileSystem,
+        ICaptureAnalysisCleanupCoordinator? cleanup = null)
     {
         ArgumentNullException.ThrowIfNull(changeReader);
         ArgumentNullException.ThrowIfNull(captureAssets);
@@ -59,6 +62,7 @@ internal sealed class CaptureAnalysisIntakeService :
         _projectionRefresher = projectionRefresher;
         _featureAvailability = featureAvailability;
         _fileSystem = fileSystem;
+        _cleanup = cleanup;
     }
 
     public async Task ReconcileStartupAsync(CancellationToken cancellationToken = default)
@@ -66,6 +70,11 @@ internal sealed class CaptureAnalysisIntakeService :
         await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
+            if (_cleanup != null)
+            {
+                _ = await _cleanup.ReconcileAsync(cancellationToken).ConfigureAwait(false);
+            }
+
             await ConsumePendingChangesCoreAsync(cancellationToken).ConfigureAwait(false);
             await TryCompleteStartupAuditAsync(cancellationToken).ConfigureAwait(false);
         }
@@ -80,6 +89,11 @@ internal sealed class CaptureAnalysisIntakeService :
         await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
+            if (_cleanup != null)
+            {
+                _ = await _cleanup.ReconcileAsync(cancellationToken).ConfigureAwait(false);
+            }
+
             await ConsumePendingChangesCoreAsync(cancellationToken).ConfigureAwait(false);
             await TryCompleteStartupAuditAsync(cancellationToken).ConfigureAwait(false);
         }

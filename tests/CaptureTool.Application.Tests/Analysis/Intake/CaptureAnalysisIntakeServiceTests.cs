@@ -6,6 +6,7 @@ using CaptureTool.Application.Abstractions.Analysis.Policy;
 using CaptureTool.Application.Abstractions.Capture.Assets;
 using CaptureTool.Application.Abstractions.Files;
 using CaptureTool.Application.Analysis.Intake;
+using CaptureTool.Application.Analysis.Maintenance;
 using CaptureTool.Domain;
 using CaptureTool.Domain.Analysis;
 using CaptureTool.Domain.Capture;
@@ -48,6 +49,24 @@ public sealed class CaptureAnalysisIntakeServiceTests
         context.FileSystem.Verify(
             fileSystem => fileSystem.FileExists(It.IsAny<string>()),
             Times.Never);
+    }
+
+    [TestMethod]
+    public async Task DisabledFeature_ShouldStillRetryDurableLifecycleCleanupOnStartup()
+    {
+        var cleanup = new RecordingCleanupCoordinator();
+        var context = new TestContext(
+            featureEnabled: false,
+            CaptureAnalysisPolicy.Unknown,
+            assets: [],
+            changes: [],
+            cleanup: cleanup);
+
+        await context.Service.ReconcileStartupAsync();
+        await context.Service.ConsumePendingChangesAsync();
+
+        Assert.AreEqual(2, cleanup.ReconcileCalls);
+        Assert.IsEmpty(context.Scheduler.Requests);
     }
 
     [TestMethod]
@@ -343,7 +362,8 @@ public sealed class CaptureAnalysisIntakeServiceTests
             IReadOnlyList<CaptureAssetChange> changes,
             IReadOnlyList<CaptureAnalysisEnrollment>? enrollments = null,
             long captureChangeCheckpoint = 0,
-            List<string>? events = null)
+            List<string>? events = null,
+            ICaptureAnalysisCleanupCoordinator? cleanup = null)
         {
             Events = events ?? [];
             Control = new InMemoryControlStore(
@@ -366,7 +386,8 @@ public sealed class CaptureAnalysisIntakeServiceTests
                 Jobs.Object,
                 Projection,
                 Feature,
-                FileSystem.Object);
+                FileSystem.Object,
+                cleanup);
         }
 
         public List<string> Events { get; }
@@ -468,6 +489,10 @@ public sealed class CaptureAnalysisIntakeServiceTests
                 CapturedAtUtc.AddMinutes(1)));
             return CaptureAssetCatalogWriteResult.Committed(asset, sequence);
         }
+
+        public CaptureAssetCatalogWriteResult TryForget(
+            CaptureId captureId,
+            long expectedLifecycleRevision) => throw new NotSupportedException();
     }
 
     private sealed class TestFeatureAvailability(bool enabled) : ICaptureAnalysisFeatureAvailability
@@ -527,6 +552,21 @@ public sealed class CaptureAnalysisIntakeServiceTests
             CaptureIds.Add(captureId);
             return ValueTask.CompletedTask;
         }
+    }
+
+    private sealed class RecordingCleanupCoordinator : ICaptureAnalysisCleanupCoordinator
+    {
+        public int ReconcileCalls { get; private set; }
+
+        public ValueTask<bool> ReconcileAsync(CancellationToken cancellationToken = default)
+        {
+            ReconcileCalls++;
+            return ValueTask.FromResult(true);
+        }
+
+        public ValueTask<bool> ReconcileCaptureAsync(
+            CaptureId captureId,
+            CancellationToken cancellationToken = default) => ValueTask.FromResult(true);
     }
 
     private sealed class InlineProgress<T>(Action<T> report) : IProgress<T>

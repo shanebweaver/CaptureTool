@@ -3,6 +3,7 @@ using CaptureTool.Application.Abstractions.Analysis.Persistence;
 using CaptureTool.Application.Abstractions.Analysis.Policy;
 using CaptureTool.Application.Abstractions.Capture.Assets;
 using CaptureTool.Application.Abstractions.Settings;
+using CaptureTool.Application.Analysis.Maintenance;
 using CaptureTool.Domain.Analysis;
 
 namespace CaptureTool.Application.Analysis.Policy;
@@ -16,18 +17,21 @@ internal sealed class CaptureAnalysisPolicyService :
     private readonly ICaptureAnalysisControlStore _controlStore;
     private readonly ICaptureAnalysisFeatureAvailability _featureAvailability;
     private readonly ISettingsService _settingsService;
+    private readonly ICaptureAnalysisCleanupCoordinator? _cleanup;
     private readonly SemaphoreSlim _mutationGate = new(1, 1);
 
     public CaptureAnalysisPolicyService(
         ICaptureAssetCatalog captureAssetCatalog,
         ICaptureAnalysisControlStore controlStore,
         ICaptureAnalysisFeatureAvailability featureAvailability,
-        ISettingsService settingsService)
+        ISettingsService settingsService,
+        ICaptureAnalysisCleanupCoordinator? cleanup = null)
     {
         _captureAssetCatalog = captureAssetCatalog;
         _controlStore = controlStore;
         _featureAvailability = featureAvailability;
         _settingsService = settingsService;
+        _cleanup = cleanup;
     }
 
     public async ValueTask<CaptureAnalysisPolicySnapshot> GetCurrentAsync(
@@ -449,6 +453,13 @@ internal sealed class CaptureAnalysisPolicyService :
                 settingsConsent = CaptureAnalysisConsentSettingValues.Parse(consentSettingValue);
             }
 
+            if (IsAuthorizationRemovingMutation(mutation) && _cleanup != null)
+            {
+                // The revocation is already durable. Cleanup is idempotent and also retried by
+                // startup reconciliation, so cancellation cannot re-authorize or strand content.
+                _ = await _cleanup.ReconcileAsync(CancellationToken.None).ConfigureAwait(false);
+            }
+
             return new(
                 CaptureAnalysisPolicyChangeStatus.Succeeded,
                 CreateSnapshot(settingsConsent, committed));
@@ -510,11 +521,21 @@ internal sealed class CaptureAnalysisPolicyService :
             return current.Enrollments;
         }
 
-        // An enrolled row is evidence for one authorization epoch only. Revocation or an
-        // explicit renewal must retire it so a later grant cannot resurrect old captures.
-        // Exclusions and forgotten-capture tombstones remain durable negative controls.
-        return current.Enrollments.Where(
-            enrollment => enrollment.State != CaptureAnalysisEnrollmentState.Enrolled);
+        // An enrolled row is evidence for one authorization epoch only. Retire it to a path-free
+        // tombstone before asynchronous cleanup so late jobs cannot resurrect derived content and
+        // a restart can finish the purge.
+        return current.Enrollments.Select(enrollment =>
+            enrollment.State == CaptureAnalysisEnrollmentState.Enrolled
+                ? new CaptureAnalysisEnrollment(
+                    enrollment.CaptureId,
+                    CaptureAnalysisEnrollmentState.Excluded,
+                    CaptureAnalysisExclusionReason.UserExcluded,
+                    checked(enrollment.EnrollmentGeneration + 1),
+                    checked(enrollment.TombstoneGeneration + 1),
+                    enrollment.AssetFinalizationSequence,
+                    requestedRecipeId: null,
+                    requestedRecipeVersion: null)
+                : enrollment);
     }
 
     private CaptureAnalysisPolicySnapshot CreateSnapshot(

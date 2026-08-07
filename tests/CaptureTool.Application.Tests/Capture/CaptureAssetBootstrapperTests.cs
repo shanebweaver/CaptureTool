@@ -391,6 +391,10 @@ public sealed class CaptureAssetBootstrapperTests
             return CaptureAssetCatalogWriteResult.Committed(asset, sequence);
         }
 
+        public CaptureAssetCatalogWriteResult TryForget(
+            CaptureId captureId,
+            long expectedLifecycleRevision) => throw new NotSupportedException();
+
         private static bool PathsEqual(string? left, string? right) =>
             string.Equals(
                 left is null ? null : Path.GetFullPath(left),

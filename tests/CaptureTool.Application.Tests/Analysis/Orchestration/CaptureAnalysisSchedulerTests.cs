@@ -450,6 +450,7 @@ public sealed class CaptureAnalysisSchedulerTests
         public CaptureAssetCatalogWriteResult TryAdd(CaptureAsset added) => throw new NotSupportedException();
         public IReadOnlyList<CaptureAssetCatalogWriteResult> TryAddRange(IReadOnlyList<CaptureAsset> assets) => throw new NotSupportedException();
         public CaptureAssetCatalogWriteResult TryUpdate(CaptureAsset updated, long expectedLifecycleRevision, CaptureAssetChangeType changeType) => throw new NotSupportedException();
+        public CaptureAssetCatalogWriteResult TryForget(CaptureId captureId, long expectedLifecycleRevision) => throw new NotSupportedException();
     }
 
     private sealed class StubFeatureAvailability : ICaptureAnalysisFeatureAvailability

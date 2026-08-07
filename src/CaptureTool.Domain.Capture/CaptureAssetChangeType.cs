@@ -5,5 +5,6 @@ public enum CaptureAssetChangeType
     Finalized,
     SourceChanged,
     PreferredLocationChanged,
-    Deleted
+    Deleted,
+    Forgotten
 }

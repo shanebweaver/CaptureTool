@@ -273,6 +273,75 @@ internal sealed class LocalCaptureAssetCatalog : ICaptureAssetCatalog
         }
     }
 
+    public CaptureAssetCatalogWriteResult TryForget(
+        CaptureId captureId,
+        long expectedLifecycleRevision)
+    {
+        if (captureId.IsEmpty)
+        {
+            throw new ArgumentException("A forgotten asset requires a capture ID.", nameof(captureId));
+        }
+
+        if (expectedLifecycleRevision <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(expectedLifecycleRevision));
+        }
+
+        lock (_sync)
+        {
+            EnsureLoaded();
+            if (_loadFailed)
+            {
+                return CaptureAssetCatalogWriteResult.Failed;
+            }
+
+            int index = _assets.FindIndex(existing => existing.Id == captureId);
+            if (index < 0)
+            {
+                CaptureAssetChange priorForget = _changes.LastOrDefault(change =>
+                    change.CaptureId == captureId &&
+                    change.ChangeType == CaptureAssetChangeType.Forgotten);
+                return priorForget.Sequence > 0
+                    ? new CaptureAssetCatalogWriteResult(true, false, null, priorForget.Sequence)
+                    : CaptureAssetCatalogWriteResult.Failed;
+            }
+
+            CaptureAsset existing = _assets[index];
+            if (existing.LifecycleRevision != expectedLifecycleRevision)
+            {
+                return CaptureAssetCatalogWriteResult.Failed;
+            }
+
+            try
+            {
+                long sequence = checked(_lastSequence + 1);
+                var change = new CaptureAssetChange(
+                    sequence,
+                    captureId,
+                    checked(existing.LifecycleRevision + 1),
+                    CaptureAssetChangeType.Forgotten,
+                    GetUtcNow());
+                List<CaptureAsset> assets = [.. _assets];
+                assets.RemoveAt(index);
+                List<CaptureAssetChange> changes = [.. _changes, change];
+                if (!TrySave(assets, changes, sequence))
+                {
+                    return CaptureAssetCatalogWriteResult.Failed;
+                }
+
+                _assets = assets;
+                _changes = changes;
+                _lastSequence = sequence;
+                return new CaptureAssetCatalogWriteResult(true, true, null, sequence);
+            }
+            catch (Exception ex)
+            {
+                _logService.LogException(ex, "Failed to forget a capture asset.");
+                return CaptureAssetCatalogWriteResult.Failed;
+            }
+        }
+    }
+
     private void EnsureLoaded()
     {
         if (_isLoaded)
@@ -552,7 +621,15 @@ internal sealed class LocalCaptureAssetCatalog : ICaptureAssetCatalog
         IReadOnlyList<CaptureAssetChange> changes)
     {
         HashSet<CaptureId> assetIds = assets.Select(asset => asset.Id).ToHashSet();
-        if (changes.Any(change => !assetIds.Contains(change.CaptureId)))
+        CaptureAssetChange[] orphanChanges = changes
+            .Where(change => !assetIds.Contains(change.CaptureId))
+            .ToArray();
+        if (orphanChanges
+            .GroupBy(change => change.CaptureId)
+            .Any(group =>
+                group.Count(change => change.ChangeType == CaptureAssetChangeType.Finalized) != 1 ||
+                group.Last().ChangeType != CaptureAssetChangeType.Forgotten ||
+                group.Count(change => change.ChangeType == CaptureAssetChangeType.Forgotten) != 1))
         {
             return false;
         }
@@ -566,6 +643,8 @@ internal sealed class LocalCaptureAssetCatalog : ICaptureAssetCatalog
                 change.ChangeType == CaptureAssetChangeType.Finalized);
             int deletedChangeCount = assetChanges.Count(change =>
                 change.ChangeType == CaptureAssetChangeType.Deleted);
+            int forgottenChangeCount = assetChanges.Count(change =>
+                change.ChangeType == CaptureAssetChangeType.Forgotten);
             if (assetChanges.Length == 0 ||
                 finalizedChangeCount != 1 ||
                 assetChanges[0].ChangeType != CaptureAssetChangeType.Finalized ||
@@ -575,7 +654,7 @@ internal sealed class LocalCaptureAssetCatalog : ICaptureAssetCatalog
                  (deletedChangeCount != 1 ||
                   assetChanges[^1].ChangeType != CaptureAssetChangeType.Deleted)) ||
                 (asset.LifecycleState == CaptureAssetLifecycleState.Active &&
-                 deletedChangeCount != 0))
+                 (deletedChangeCount != 0 || forgottenChangeCount != 0)))
             {
                 return false;
             }
@@ -584,6 +663,20 @@ internal sealed class LocalCaptureAssetCatalog : ICaptureAssetCatalog
             {
                 if (assetChanges[index].LifecycleRevision !=
                     assetChanges[index - 1].LifecycleRevision + 1)
+                {
+                    return false;
+                }
+            }
+        }
+
+        foreach (IGrouping<CaptureId, CaptureAssetChange> forgotten in orphanChanges
+            .GroupBy(change => change.CaptureId))
+        {
+            CaptureAssetChange[] captureChanges = forgotten.ToArray();
+            for (int index = 1; index < captureChanges.Length; index++)
+            {
+                if (captureChanges[index].LifecycleRevision !=
+                    captureChanges[index - 1].LifecycleRevision + 1)
                 {
                     return false;
                 }

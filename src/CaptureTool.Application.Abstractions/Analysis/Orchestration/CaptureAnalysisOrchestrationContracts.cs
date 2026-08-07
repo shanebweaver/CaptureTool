@@ -9,7 +9,8 @@ public sealed record CaptureAnalysisScheduleRequest
     public CaptureAnalysisScheduleRequest(
         CaptureAnalysisAdmissionRequest admission,
         CaptureAnalysisRecipe recipe,
-        ProcessingBoundary processingBoundary)
+        ProcessingBoundary processingBoundary,
+        bool forceReanalysis = false)
     {
         ArgumentNullException.ThrowIfNull(admission);
         ArgumentNullException.ThrowIfNull(recipe);
@@ -21,6 +22,7 @@ public sealed record CaptureAnalysisScheduleRequest
         Admission = admission;
         Recipe = recipe;
         ProcessingBoundary = processingBoundary;
+        ForceReanalysis = forceReanalysis;
     }
 
     public CaptureAnalysisAdmissionRequest Admission { get; }
@@ -28,6 +30,8 @@ public sealed record CaptureAnalysisScheduleRequest
     public CaptureAnalysisRecipe Recipe { get; }
 
     public ProcessingBoundary ProcessingBoundary { get; }
+
+    public bool ForceReanalysis { get; }
 }
 
 public enum CaptureAnalysisScheduleStatus
@@ -92,4 +96,17 @@ public interface ICaptureAnalysisProjectionRefresher
     ValueTask RefreshAsync(
         CaptureId captureId,
         CancellationToken cancellationToken = default);
+}
+
+// The concrete search projection is supplied by the indexing feature. Lifecycle commands depend
+// only on this metadata-only boundary and never read a capture source or invoke an analyzer.
+public interface ICaptureAnalysisProjectionMaintenance
+{
+    ValueTask RemoveAsync(
+        CaptureId captureId,
+        CancellationToken cancellationToken = default);
+
+    ValueTask ClearAsync(CancellationToken cancellationToken = default);
+
+    ValueTask<int> RebuildAsync(CancellationToken cancellationToken = default);
 }

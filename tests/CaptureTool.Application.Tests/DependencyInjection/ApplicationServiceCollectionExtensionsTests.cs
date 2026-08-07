@@ -3,10 +3,13 @@ using CaptureTool.Application.Abstractions.Ai;
 using CaptureTool.Application.Abstractions.Analysis.Policy;
 using CaptureTool.Application.Abstractions.Analysis.Analyzers;
 using CaptureTool.Application.Abstractions.Analysis.Intake;
+using CaptureTool.Application.Abstractions.Analysis.Maintenance;
 using CaptureTool.Application.Abstractions.Analysis.Orchestration;
 using CaptureTool.Application.Abstractions.Analysis.Preparation;
 using CaptureTool.Application.Abstractions.Analysis.Processing;
+using CaptureTool.Application.Abstractions.Analysis.Privacy;
 using CaptureTool.Application.Abstractions.Capture;
+using CaptureTool.Application.Abstractions.Capture.Assets;
 using CaptureTool.Application.Abstractions.Capture.Audio.CancelAudioCapture;
 using CaptureTool.Application.Abstractions.Capture.Image.CaptureAllScreensImage;
 using CaptureTool.Application.Abstractions.Capture.Image.CaptureImage;
@@ -24,6 +27,7 @@ using CaptureTool.Application.Ai;
 using CaptureTool.Application.Analysis.Policy;
 using CaptureTool.Application.Analysis.Analyzers;
 using CaptureTool.Application.Analysis.Intake;
+using CaptureTool.Application.Analysis.Maintenance;
 using CaptureTool.Application.Analysis.Orchestration;
 using CaptureTool.Application.Analysis.Preparation;
 using CaptureTool.Application.Analysis.Processing;
@@ -93,6 +97,18 @@ public sealed class ApplicationServiceCollectionExtensionsTests
         AssertHasRegistration<ICaptureAnalysisProjectionRefresher, NullCaptureAnalysisProjectionRefresher>(
             services,
             ServiceLifetime.Singleton);
+        AssertHasRegistration<ICaptureAnalysisProjectionMaintenance, NullCaptureAnalysisProjectionRefresher>(
+            services,
+            ServiceLifetime.Singleton);
+        AssertHasRegistration<ICaptureAnalysisCleanupCoordinator, CaptureAnalysisCleanupCoordinator>(
+            services,
+            ServiceLifetime.Singleton);
+        AssertHasRegistration<CaptureAnalysisLifecycleService, CaptureAnalysisLifecycleService>(
+            services,
+            ServiceLifetime.Singleton);
+        AssertHasFactoryRegistration<ICaptureAnalysisExclusionService>(services, ServiceLifetime.Singleton);
+        AssertHasFactoryRegistration<ICaptureAnalysisMaintenanceService>(services, ServiceLifetime.Singleton);
+        AssertHasFactoryRegistration<ICaptureAssetRemovalService>(services, ServiceLifetime.Singleton);
         AssertHasRegistration<CaptureAnalysisWorkerHost, CaptureAnalysisWorkerHost>(
             services,
             ServiceLifetime.Singleton);

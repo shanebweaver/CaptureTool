@@ -190,7 +190,7 @@ internal sealed class CaptureAnalysisScheduler : ICaptureAnalysisScheduler
                     .TryEnqueueAsync(key, enqueuedAtUtc, cancellationToken)
                     .ConfigureAwait(false);
                 if (enqueue.Status == CaptureAnalysisJobEnqueueStatus.AlreadyExists &&
-                    (hasStaleProducer || hasMissingAnalysis))
+                    (request.ForceReanalysis || hasStaleProducer || hasMissingAnalysis))
                 {
                     enqueue = await _jobStore
                         .TryRequeueAsync(key, enqueuedAtUtc, cancellationToken)

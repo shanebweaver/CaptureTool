@@ -19,6 +19,8 @@ public enum CaptureAnalysisExclusionReason
     IneligibleOrigin,
     MissingSource,
     SourceDeleted,
+    HistoryForgotten,
+    DeleteRequested,
 }
 
 public sealed record CaptureAnalysisEnrollment

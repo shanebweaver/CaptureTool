@@ -1,7 +1,9 @@
 using CaptureTool.Application.Abstractions.Analysis.Consent;
 using CaptureTool.Application.Abstractions.Analysis.Maintenance;
+using CaptureTool.Application.Abstractions.Analysis.Orchestration;
 using CaptureTool.Application.Abstractions.Analysis.Preparation;
 using CaptureTool.Application.Abstractions.Analysis.Privacy;
+using CaptureTool.Application.Abstractions.Capture.Assets;
 using CaptureTool.Application.Tests.Analysis.Domain;
 using CaptureTool.Domain;
 using CaptureTool.Domain.Analysis;
@@ -172,6 +174,45 @@ public sealed class CaptureAnalysisConsentAndMaintenanceContractTests
             new CaptureAnalysisMaintenanceResult(CaptureAnalysisMaintenanceStatus.Succeeded, -1));
         Assert.ThrowsExactly<ArgumentException>(() =>
             new CaptureAnalysisMaintenanceResult(CaptureAnalysisMaintenanceStatus.Rejected, 1));
+    }
+
+    [TestMethod]
+    public void ProjectionMaintenancePort_ShouldRemainMetadataOnly()
+    {
+        CollectionAssert.AreEqual(
+            new[] { "ClearAsync", "RebuildAsync", "RemoveAsync" },
+            GetMethodNames(typeof(ICaptureAnalysisProjectionMaintenance)));
+        Assert.IsFalse(typeof(ICaptureAnalysisProjectionMaintenance)
+            .GetMethods()
+            .SelectMany(method => method.GetParameters())
+            .Any(parameter => parameter.ParameterType == typeof(string)));
+    }
+
+    [TestMethod]
+    public void CaptureRemovalPort_ShouldRequireIdentityConfirmationAndNeverAcceptAPath()
+    {
+        var forget = new CaptureAssetRemovalRequest(
+            AnalysisTestData.CaptureId,
+            CaptureAssetRemovalKind.ForgetHistory);
+        var delete = new CaptureAssetRemovalRequest(
+            AnalysisTestData.CaptureId,
+            CaptureAssetRemovalKind.DeleteRetainedSource,
+            isConfirmed: true);
+
+        Assert.IsFalse(forget.IsConfirmed);
+        Assert.IsTrue(delete.IsConfirmed);
+        Assert.AreEqual(CaptureAssetRemovalKind.DeleteRetainedSource, delete.Kind);
+        Assert.IsFalse(typeof(CaptureAssetRemovalRequest).GetProperties().Any(property =>
+            property.PropertyType == typeof(string)));
+        CollectionAssert.AreEqual(
+            new[] { "RemoveAsync" },
+            GetMethodNames(typeof(ICaptureAssetRemovalService)));
+        Assert.ThrowsExactly<ArgumentException>(() => new CaptureAssetRemovalRequest(
+            default,
+            CaptureAssetRemovalKind.ForgetHistory));
+        Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => new CaptureAssetRemovalRequest(
+            AnalysisTestData.CaptureId,
+            CaptureAssetRemovalKind.Unknown));
     }
 
     [TestMethod]

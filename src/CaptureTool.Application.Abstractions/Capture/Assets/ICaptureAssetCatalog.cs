@@ -23,4 +23,8 @@ public interface ICaptureAssetCatalog
         CaptureAsset asset,
         long expectedLifecycleRevision,
         CaptureAssetChangeType changeType);
+
+    CaptureAssetCatalogWriteResult TryForget(
+        CaptureId captureId,
+        long expectedLifecycleRevision);
 }

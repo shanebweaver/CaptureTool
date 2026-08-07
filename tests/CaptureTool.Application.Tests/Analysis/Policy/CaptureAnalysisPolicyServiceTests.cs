@@ -5,6 +5,7 @@ using CaptureTool.Application.Abstractions.Ai;
 using CaptureTool.Application.Abstractions.Capture.Assets;
 using CaptureTool.Application.Abstractions.Settings;
 using CaptureTool.Application.Analysis.Policy;
+using CaptureTool.Application.Analysis.Maintenance;
 using CaptureTool.Application.Tests.Analysis.Domain;
 using CaptureTool.Domain;
 using CaptureTool.Domain.Analysis;
@@ -237,7 +238,11 @@ public sealed class CaptureAnalysisPolicyServiceTests
             CaptureAnalysisPolicyDefaults.CaptureMemorySearchPurpose,
             store.Snapshot.State.AuthorizedPurpose);
         Assert.AreEqual(previousPolicy.PolicyRevision + 1, store.Snapshot.State.PolicyRevision);
-        Assert.IsEmpty(store.Snapshot.State.Enrollments);
+        Assert.HasCount(1, store.Snapshot.State.Enrollments);
+        Assert.AreEqual(
+            CaptureAnalysisEnrollmentState.Excluded,
+            store.Snapshot.State.Enrollments[0].State);
+        Assert.AreEqual(1, store.Snapshot.State.Enrollments[0].TombstoneGeneration);
     }
 
     [TestMethod]
@@ -456,22 +461,29 @@ public sealed class CaptureAnalysisPolicyServiceTests
     {
         var ordering = new List<string>();
         CaptureAnalysisPolicy policy = CreateGrantedPolicy(watermark: 3);
-        var store = new TestControlStore(CreateSnapshot(policy), ordering);
+        var store = new TestControlStore(CreateSnapshot(policy, CreateEnrollment(4)), ordering);
         var settings = new ConsentSettingsHarness(CaptureAnalysisConsentState.Granted, ordering);
+        var cleanup = new OrderingCleanupCoordinator(ordering);
         CaptureAnalysisPolicyService service = CreateService(
             store,
             settings,
             new TestFeatureAvailability(true),
-            30);
+            30,
+            cleanup);
 
         CaptureAnalysisPolicyChangeResult result =
             await service.RevokeAsync(1);
 
         Assert.AreEqual(CaptureAnalysisPolicyChangeStatus.Succeeded, result.Status);
-        CollectionAssert.AreEqual(new[] { "control:write", "settings:denied" }, ordering);
+        CollectionAssert.AreEqual(
+            new[] { "control:write", "settings:denied", "cleanup" },
+            ordering);
         Assert.AreEqual(CaptureAnalysisConsentState.Denied, store.Snapshot.State.ConsentState);
         Assert.AreEqual(policy.PolicyRevision + 1, store.Snapshot.State.PolicyRevision);
         Assert.AreEqual(policy.ControlGeneration + 1, store.Snapshot.State.ControlGeneration);
+        CaptureAnalysisEnrollment tombstone = store.Snapshot.State.Enrollments.Single();
+        Assert.AreEqual(CaptureAnalysisEnrollmentState.Excluded, tombstone.State);
+        Assert.AreEqual(1, tombstone.TombstoneGeneration);
         Assert.IsFalse(result.Policy.IsProcessingAuthorized);
     }
 
@@ -555,7 +567,11 @@ public sealed class CaptureAnalysisPolicyServiceTests
         Assert.AreEqual(CaptureAnalysisPolicyChangeStatus.Succeeded, revoked.Status);
         Assert.AreEqual(CaptureAnalysisPolicySnapshotStatus.FeatureDisabled, revoked.Policy.Status);
         Assert.AreEqual(CaptureAnalysisConsentState.Denied, store.Snapshot.State.ConsentState);
-        Assert.IsEmpty(store.Snapshot.State.Enrollments);
+        Assert.HasCount(1, store.Snapshot.State.Enrollments);
+        Assert.AreEqual(
+            CaptureAnalysisEnrollmentState.Excluded,
+            store.Snapshot.State.Enrollments[0].State);
+        Assert.AreEqual(1, store.Snapshot.State.Enrollments[0].TombstoneGeneration);
         catalog.VerifyNoOtherCalls();
     }
 
@@ -606,14 +622,19 @@ public sealed class CaptureAnalysisPolicyServiceTests
 
         Assert.AreEqual(CaptureAnalysisPolicyChangeStatus.Succeeded, revoked.Status);
         Assert.AreEqual(CaptureAnalysisPolicyChangeStatus.Succeeded, renewed.Status);
-        Assert.HasCount(2, store.Snapshot.State.Enrollments);
+        Assert.HasCount(3, store.Snapshot.State.Enrollments);
         Assert.IsTrue(store.Snapshot.State.Enrollments.Contains(excluded));
         Assert.IsTrue(store.Snapshot.State.Enrollments.Contains(forgotten));
+        CaptureAnalysisEnrollment retired = store.Snapshot.State.Enrollments.Single(candidate =>
+            candidate.CaptureId == enrolled.CaptureId);
+        Assert.AreEqual(CaptureAnalysisEnrollmentState.Excluded, retired.State);
+        Assert.AreEqual(CaptureAnalysisExclusionReason.UserExcluded, retired.ExclusionReason);
+        Assert.AreEqual(1, retired.TombstoneGeneration);
         Assert.AreEqual(
-            CaptureAnalysisPolicyDenialReason.CaptureNotEnrolled,
+            CaptureAnalysisPolicyDenialReason.CaptureExcluded,
             authorization.DenialReason);
         Assert.AreEqual(
-            CaptureAnalysisPolicyDenialReason.CaptureBeforeFutureWatermark,
+            CaptureAnalysisPolicyDenialReason.CaptureExcluded,
             admission.DenialReason);
     }
 
@@ -783,13 +804,14 @@ public sealed class CaptureAnalysisPolicyServiceTests
         TestControlStore store,
         ConsentSettingsHarness settings,
         TestFeatureAvailability features,
-        long currentAssetSequence)
+        long currentAssetSequence,
+        ICaptureAnalysisCleanupCoordinator? cleanup = null)
     {
         var catalog = new Mock<ICaptureAssetCatalog>();
         catalog
             .Setup(value => value.GetLatestChangeSequence())
             .Returns(currentAssetSequence);
-        return new(catalog.Object, store, features, settings.Service);
+        return new(catalog.Object, store, features, settings.Service, cleanup);
     }
 
     private static CaptureAnalysisControlSnapshot CreateSnapshot(
@@ -956,5 +978,19 @@ public sealed class CaptureAnalysisPolicyServiceTests
             AnalyzerChecks++;
             return IsCaptureAnalysisEnabled;
         }
+    }
+
+    private sealed class OrderingCleanupCoordinator(List<string> ordering) :
+        ICaptureAnalysisCleanupCoordinator
+    {
+        public ValueTask<bool> ReconcileAsync(CancellationToken cancellationToken = default)
+        {
+            ordering.Add("cleanup");
+            return ValueTask.FromResult(true);
+        }
+
+        public ValueTask<bool> ReconcileCaptureAsync(
+            CaptureId captureId,
+            CancellationToken cancellationToken = default) => ValueTask.FromResult(true);
     }
 }
