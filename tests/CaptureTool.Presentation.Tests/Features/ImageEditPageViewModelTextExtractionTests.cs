@@ -207,6 +207,45 @@ public sealed class ImageEditPageViewModelTextExtractionTests
     }
 
     [TestMethod]
+    public async Task ToggleTextExtractionMode_WhenQrCodeIsDetected_ShowsNormalizedQrOverlayAndIncludesItsValue()
+    {
+        var exporter = new Mock<IImageCanvasExporter>();
+        var textExtraction = new Mock<ITextExtractionService>();
+        exporter
+            .Setup(service => service.RenderToStreamAsync(
+                It.IsAny<IDrawable[]>(),
+                It.IsAny<ImageCanvasRenderOptions>()))
+            .ReturnsAsync(new MemoryStream([1, 2, 3]));
+        textExtraction
+            .Setup(service => service.GetReadyState())
+            .Returns(TextExtractionReadyState.Ready);
+        textExtraction
+            .Setup(service => service.ExtractAsync(
+                It.IsAny<TextExtractionRequest>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(TextExtractionResult.Success(new RecognizedTextDocument(
+                "https://example.com/qr",
+                new Size(100, 50),
+                [],
+                [new RecognizedQrCodeRegion(
+                    "https://example.com/qr",
+                    new RectangleF(-5, 10, 40, 30))])));
+
+        ImageEditPageViewModel viewModel = CreateViewModel(
+            imageCanvasExporter: exporter.Object,
+            textExtractionService: textExtraction.Object);
+
+        await viewModel.LoadAsync(new ImageFile("original.png"), CancellationToken.None);
+        await viewModel.ToggleTextExtractionModeCommand.ExecuteAsync(null);
+
+        viewModel.TextExtractionRegions.Should().BeEmpty();
+        viewModel.TextExtractionQrCodes.Should().ContainSingle();
+        viewModel.TextExtractionQrCodes[0].Bounds.Should().Be(new RectangleF(0, 10, 35, 30));
+        viewModel.TextExtractionTool.Text.Should().Be("https://example.com/qr");
+        viewModel.IsTextExtractionOverlayVisible.Should().BeTrue();
+    }
+
+    [TestMethod]
     public async Task ToggleTextExtractionMode_WhenEditRevisionChanged_ShouldRunAgainWhenReopened()
     {
         var exporter = new Mock<IImageCanvasExporter>();

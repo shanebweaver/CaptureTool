@@ -11,6 +11,7 @@ using CaptureTool.Application.Abstractions.Edit.Image.Rendering;
 using CaptureTool.Application.Abstractions.Edit.Image.SuperResolution;
 using CaptureTool.Application.Abstractions.Edit.Image.TextExtraction;
 using CaptureTool.Application.Abstractions.EditSessions;
+using CaptureTool.Application.Abstractions.Files;
 using CaptureTool.Application.Abstractions.Localization;
 using CaptureTool.Application.Abstractions.Logging;
 using CaptureTool.Application.Abstractions.Settings;
@@ -67,6 +68,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     private readonly IShareService _shareService;
     private readonly IOpenExternalEditorUseCase _openExternalEditorAction;
     private readonly IStorageService _storageService;
+    private readonly IFileSystem? _fileSystem;
     private readonly IScratchArtifactStore? _scratchArtifactStore;
     private readonly HashSet<string> _scratchArtifactPaths = new(StringComparer.OrdinalIgnoreCase);
     private readonly ISettingsService _settingsService;
@@ -549,6 +551,18 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         }
     } = [];
 
+    public IReadOnlyList<RecognizedQrCodeRegion> TextExtractionQrCodes
+    {
+        get;
+        private set
+        {
+            if (Set(ref field, value))
+            {
+                RaisePropertyChanged(nameof(IsTextExtractionOverlayVisible));
+            }
+        }
+    } = [];
+
     public bool HasTextExtractionRegions
     {
         get;
@@ -562,7 +576,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     }
 
     public bool IsTextExtractionOverlayVisible =>
-        IsTextExtractionModeActive && HasTextExtractionRegions;
+        IsTextExtractionModeActive && (HasTextExtractionRegions || TextExtractionQrCodes.Count > 0);
 
     public bool IsImageDescriptionFeatureEnabled
     {
@@ -737,7 +751,8 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         IImageObjectEraseFeatureAvailability? imageObjectEraseFeatureAvailability = null,
         IImageObjectExtractionFeatureAvailability? imageObjectExtractionFeatureAvailability = null,
         ITelemetryService? telemetryService = null,
-        IScratchArtifactStore? scratchArtifactStore = null)
+        IScratchArtifactStore? scratchArtifactStore = null,
+        IFileSystem? fileSystem = null)
     {
         _localizationService = localizationService;
         _cancellationService = cancellationService;
@@ -762,6 +777,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         _openExternalEditorAction = openExternalEditorAction;
         _storageService = storageService;
         _scratchArtifactStore = scratchArtifactStore;
+        _fileSystem = fileSystem;
         _imageCanvasExporter = imageCanvasExporter;
         _settingsService = settingsService;
         _openScreenshotsFolderAction = openScreenshotsFolderAction;
@@ -891,6 +907,8 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         StartLoading();
         ClearImageDescriptionResults();
 
+        imageFile = RestoreMissingWorkingCopy(imageFile);
+
         var cts = _cancellationService.GetLinkedCancellationTokenSource(cancellationToken);
         try
         {
@@ -934,6 +952,32 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         TrackEditorOpened();
     }
 
+    private ImageFile RestoreMissingWorkingCopy(ImageFile imageFile)
+    {
+        if (_fileSystem is null ||
+            _scratchArtifactStore is null ||
+            _fileSystem.FileExists(imageFile.FilePath) ||
+            string.IsNullOrWhiteSpace(imageFile.PersistentFilePath) ||
+            !_fileSystem.FileExists(imageFile.PersistentFilePath))
+        {
+            return imageFile;
+        }
+
+        string restoredPath = _scratchArtifactStore.CreateLeasedArtifactPath(
+            "recent-capture-working-copy",
+            Path.GetExtension(imageFile.PersistentFilePath));
+        try
+        {
+            _fileSystem.CopyFile(imageFile.PersistentFilePath, restoredPath, true);
+            return new ImageFile(restoredPath, imageFile.PersistentFilePath);
+        }
+        catch
+        {
+            _scratchArtifactStore.DeleteArtifact(restoredPath);
+            throw;
+        }
+    }
+
     public override void Dispose()
     {
         CancelSuperResolutionWork();
@@ -966,6 +1010,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         IsTextExtractionRunning = false;
         TextExtractionStatusMessage = string.Empty;
         TextExtractionRegions = [];
+        TextExtractionQrCodes = [];
         TextExtractionTool.Reset();
         IsImageDescriptionFeatureEnabled = _imageDescriptionFeatureAvailability.IsImageDescriptionEnabled;
         IsImageDescriptionAvailable = false;
@@ -2289,6 +2334,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
         TextExtractionStatusMessage = string.Empty;
         TextExtractionRegions = [];
+        TextExtractionQrCodes = [];
         TextExtractionTool.Reset();
 
         using ImageEditOperationCoordinator.OperationLease operation =
@@ -2335,6 +2381,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
             }
 
             TextExtractionRegions = NormalizeTextExtractionRegions(result.Document.Regions, result.Document.ImageSize);
+            TextExtractionQrCodes = NormalizeQrCodeRegions(result.Document.QrCodes, result.Document.ImageSize);
             TextExtractionTool.SetText(result.Document.Text);
             _textExtractionProcessedRevision = processedRevision;
             InvalidateCanvasRequested?.Invoke(this, EventArgs.Empty);
@@ -2393,6 +2440,26 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         }
 
         return normalizedRegions;
+    }
+
+    private static IReadOnlyList<RecognizedQrCodeRegion> NormalizeQrCodeRegions(
+        IReadOnlyList<RecognizedQrCodeRegion> qrCodes,
+        Size imageSize)
+    {
+        if (imageSize.Width <= 0 || imageSize.Height <= 0)
+        {
+            return [];
+        }
+
+        RectangleF imageBounds = new(0, 0, imageSize.Width, imageSize.Height);
+        return qrCodes
+            .Where(qrCode => !string.IsNullOrWhiteSpace(qrCode.Value))
+            .Select(qrCode => qrCode with
+            {
+                Bounds = RectangleF.Intersect(imageBounds, qrCode.Bounds)
+            })
+            .Where(qrCode => qrCode.Bounds.Width > 0 && qrCode.Bounds.Height > 0)
+            .ToArray();
     }
 
     private async Task GenerateImageDescriptionAsync(ImageDescriptionMode mode)
@@ -2894,6 +2961,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     {
         _textExtractionProcessedRevision = null;
         TextExtractionRegions = [];
+        TextExtractionQrCodes = [];
         TextExtractionStatusMessage = string.Empty;
         TextExtractionTool.Reset();
     }

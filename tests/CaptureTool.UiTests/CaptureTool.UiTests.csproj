@@ -21,6 +21,7 @@
     <PackageReference Include="FlaUI.UIA3" />
     <PackageReference Include="Microsoft.CodeCoverage" />
     <PackageReference Include="System.Drawing.Common" />
+    <PackageReference Include="ZXing.Net" />
     <PackageReference Update="MSTest.Analyzers">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

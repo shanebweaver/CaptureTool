@@ -142,6 +142,7 @@ public sealed partial class ImageCanvas : UserControlBase
         if (d is ImageCanvas control)
         {
             control.UpdateTextExtractionOverlayPath();
+            control.UpdateQrCodeOverlay();
             control.UpdateTouchInputLock();
         }
     }
@@ -207,6 +208,22 @@ public sealed partial class ImageCanvas : UserControlBase
             control.RebuildTextExtractionLayout();
             control.UpdateTextExtractionOverlayPath();
             control.UpdateTouchInputLock();
+        }
+    }
+
+    public static readonly DependencyProperty TextExtractionQrCodesProperty = DependencyProperty.Register(
+        nameof(TextExtractionQrCodes),
+        typeof(IReadOnlyList<RecognizedQrCodeRegion>),
+        typeof(ImageCanvas),
+        new PropertyMetadata(Array.Empty<RecognizedQrCodeRegion>(), OnTextExtractionQrCodesPropertyChanged));
+
+    private static void OnTextExtractionQrCodesPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        if (d is ImageCanvas control)
+        {
+            control.InvalidateTextExtractionOverlayGeometry();
+            control.UpdateTextExtractionOverlayPath();
+            control.UpdateQrCodeOverlay();
         }
     }
 
@@ -447,6 +464,12 @@ public sealed partial class ImageCanvas : UserControlBase
     {
         get => Get<IReadOnlyList<RecognizedTextRegion>>(TextExtractionRegionsProperty) ?? [];
         set => Set(TextExtractionRegionsProperty, value);
+    }
+
+    public IReadOnlyList<RecognizedQrCodeRegion> TextExtractionQrCodes
+    {
+        get => Get<IReadOnlyList<RecognizedQrCodeRegion>>(TextExtractionQrCodesProperty) ?? [];
+        set => Set(TextExtractionQrCodesProperty, value);
     }
 
     public string SelectedExtractedText => _textExtractionSelection.Text;
@@ -962,6 +985,7 @@ public sealed partial class ImageCanvas : UserControlBase
             RenderCanvas.Width = width;
             RenderCanvas.Height = height;
             UpdateTextExtractionOverlayPath();
+            UpdateQrCodeOverlay();
             RenderCanvas.Invalidate();
         }
     }
@@ -1106,7 +1130,7 @@ public sealed partial class ImageCanvas : UserControlBase
             return;
         }
 
-        if (_textExtractionLayout.CutoutContours.Count == 0 ||
+        if ((_textExtractionLayout.CutoutContours.Count == 0 && TextExtractionQrCodes.Count == 0) ||
             CanvasContainer.Width <= 0 ||
             CanvasContainer.Height <= 0)
         {
@@ -1274,7 +1298,7 @@ public sealed partial class ImageCanvas : UserControlBase
             _textExtractionOverlayGeometryHeight != height)
         {
             _textExtractionOverlayGeometry = CreateTextPathGeometry(
-                _textExtractionLayout.CutoutContours,
+                GetTextExtractionCutoutContours(),
                 width,
                 height,
                 includeOuterBounds: true);
@@ -1283,6 +1307,178 @@ public sealed partial class ImageCanvas : UserControlBase
         }
 
         return _textExtractionOverlayGeometry;
+    }
+
+    private IReadOnlyList<IReadOnlyList<PointF>> GetTextExtractionCutoutContours()
+    {
+        List<IReadOnlyList<PointF>> contours = [.. _textExtractionLayout.CutoutContours];
+        foreach (RecognizedQrCodeRegion qrCode in TextExtractionQrCodes)
+        {
+            RectangleF bounds = qrCode.Bounds;
+            float padding = Math.Clamp(Math.Min(bounds.Width, bounds.Height) * 0.03f, 3, 12);
+            bounds.Inflate(padding, padding);
+            contours.Add([
+                new PointF(bounds.Left, bounds.Top),
+                new PointF(bounds.Right, bounds.Top),
+                new PointF(bounds.Right, bounds.Bottom),
+                new PointF(bounds.Left, bounds.Bottom)
+            ]);
+        }
+
+        return contours;
+    }
+
+    private void InvalidateTextExtractionOverlayGeometry()
+    {
+        _textExtractionOverlayGeometry = null;
+        _textExtractionOverlayGeometryWidth = 0;
+        _textExtractionOverlayGeometryHeight = 0;
+    }
+
+    private void UpdateQrCodeOverlay()
+    {
+        QrCodeOverlayCanvas.Children.Clear();
+        if (!IsTextExtractionOverlayEnabled ||
+            TextExtractionQrCodes.Count == 0 ||
+            CanvasContainer.Width <= 0 ||
+            CanvasContainer.Height <= 0)
+        {
+            QrCodeOverlayCanvas.Visibility = Visibility.Collapsed;
+            return;
+        }
+
+        for (int index = 0; index < TextExtractionQrCodes.Count; index++)
+        {
+            AddQrCodeVisual(TextExtractionQrCodes[index], index);
+        }
+
+        QrCodeOverlayCanvas.Visibility = QrCodeOverlayCanvas.Children.Count > 0
+            ? Visibility.Visible
+            : Visibility.Collapsed;
+    }
+
+    private void AddQrCodeVisual(RecognizedQrCodeRegion qrCode, int index)
+    {
+        RectangleF bounds = RectangleF.Intersect(
+            new RectangleF(0, 0, (float)CanvasContainer.Width, (float)CanvasContainer.Height),
+            qrCode.Bounds);
+        if (bounds.Width <= 0 || bounds.Height <= 0)
+        {
+            return;
+        }
+
+        var actions = new StackPanel
+        {
+            Orientation = Microsoft.UI.Xaml.Controls.Orientation.Horizontal,
+            HorizontalAlignment = HorizontalAlignment.Center,
+            VerticalAlignment = VerticalAlignment.Center,
+            Spacing = 6
+        };
+        actions.Children.Add(CreateQrCodeActionButton(
+            "\uE8C8",
+            "Copy QR code value",
+            $"ImageCanvas_QrCodeCopyButton_{index}",
+            () => CopyQrCodeValueAsync(qrCode.Value)));
+
+        if (TryGetWebUri(qrCode.Value, out Uri? uri))
+        {
+            actions.Children.Add(CreateQrCodeActionButton(
+                "\uE8A7",
+                "Open QR code link",
+                $"ImageCanvas_QrCodeOpenButton_{index}",
+                async () =>
+                {
+                    _ = await Launcher.LaunchUriAsync(uri);
+                }));
+        }
+
+        var actionSurface = new Border
+        {
+            Padding = new Thickness(7),
+            Background = new SolidColorBrush(WinUIColor.FromArgb(220, 24, 24, 27)),
+            BorderBrush = new SolidColorBrush(WinUIColor.FromArgb(180, 255, 255, 255)),
+            BorderThickness = new Thickness(1),
+            CornerRadius = new CornerRadius(10),
+            Child = actions
+        };
+
+        var visual = new Border
+        {
+            Width = bounds.Width,
+            Height = bounds.Height,
+            BorderBrush = (Microsoft.UI.Xaml.Media.Brush)global::Microsoft.UI.Xaml.Application.Current.Resources["AccentFillColorDefaultBrush"],
+            BorderThickness = new Thickness(3),
+            CornerRadius = new CornerRadius(6),
+            Child = actionSurface
+        };
+        AutomationProperties.SetName(visual, $"QR code: {qrCode.Value}");
+        AutomationProperties.SetAutomationId(visual, $"ImageCanvas_QrCodeOverlay_{index}");
+        Canvas.SetLeft(visual, bounds.Left);
+        Canvas.SetTop(visual, bounds.Top);
+        QrCodeOverlayCanvas.Children.Add(visual);
+    }
+
+    private static Button CreateQrCodeActionButton(
+        string glyph,
+        string accessibleName,
+        string automationId,
+        Func<Task> action)
+    {
+        var button = new Button
+        {
+            Width = 42,
+            Height = 42,
+            Padding = new Thickness(0),
+            CornerRadius = new CornerRadius(7),
+            Style = (Style)global::Microsoft.UI.Xaml.Application.Current.Resources["AccentButtonStyle"],
+            Content = new FontIcon { Glyph = glyph, FontSize = 18 },
+            RenderTransform = new ScaleTransform(),
+            RenderTransformOrigin = new Point(0.5, 0.5)
+        };
+        AutomationProperties.SetName(button, accessibleName);
+        AutomationProperties.SetAutomationId(button, automationId);
+        ToolTipService.SetToolTip(button, accessibleName);
+        button.PointerEntered += (_, _) => button.Opacity = 0.9;
+        button.PointerExited += (_, _) =>
+        {
+            button.Opacity = 1;
+            SetButtonScale(button, 1);
+        };
+        button.PointerPressed += (_, _) => SetButtonScale(button, 0.9);
+        button.PointerReleased += (_, _) => SetButtonScale(button, 1);
+        button.Click += async (_, _) => await action();
+        return button;
+    }
+
+    private static void SetButtonScale(Button button, double scale)
+    {
+        if (button.RenderTransform is ScaleTransform transform)
+        {
+            transform.ScaleX = scale;
+            transform.ScaleY = scale;
+        }
+    }
+
+    private static Task CopyQrCodeValueAsync(string value)
+    {
+        var package = new DataPackage();
+        package.SetText(value);
+        global::Windows.ApplicationModel.DataTransfer.Clipboard.SetContent(package);
+        global::Windows.ApplicationModel.DataTransfer.Clipboard.Flush();
+        return Task.CompletedTask;
+    }
+
+    private static bool TryGetWebUri(string value, out Uri? uri)
+    {
+        if (Uri.TryCreate(value, UriKind.Absolute, out Uri? parsed) &&
+            (parsed.Scheme == Uri.UriSchemeHttp || parsed.Scheme == Uri.UriSchemeHttps))
+        {
+            uri = parsed;
+            return true;
+        }
+
+        uri = null;
+        return false;
     }
 
     private void UpdateTextExtractionSelectionPath()

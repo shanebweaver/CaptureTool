@@ -94,6 +94,12 @@
                         Visibility="Collapsed" />
                 </Grid>
 
+                <Canvas
+                    x:Name="QrCodeOverlayCanvas"
+                    HorizontalAlignment="Stretch"
+                    VerticalAlignment="Stretch"
+                    Visibility="Collapsed" />
+
                 <!--  Preview Shape Overlay  -->
                 <Canvas
                     x:Name="PreviewShapeCanvas"

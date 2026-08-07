@@ -13,6 +13,7 @@
     <PackageReference Include="Microsoft.WindowsAppSDK" />
     <PackageReference Include="Microsoft.WindowsAppSDK.AI" />
     <PackageReference Include="System.Drawing.Common" />
+    <PackageReference Include="ZXing.Net" />
   </ItemGroup>
 
   <!-- Project references -->

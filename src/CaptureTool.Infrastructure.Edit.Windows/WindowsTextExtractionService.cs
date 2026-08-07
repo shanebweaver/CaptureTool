@@ -53,25 +53,43 @@ public sealed class WindowsTextExtractionService : ITextExtractionService
             OcrResult ocrResult = await engine.RecognizeAsync(sourceBitmap);
             cancellationToken.ThrowIfCancellationRequested();
 
+            IReadOnlyList<RecognizedQrCodeRegion> qrCodes = QrCodeDetector.Detect(sourceBitmap);
+            cancellationToken.ThrowIfCancellationRequested();
+
             List<RecognizedTextRegion> regions = [];
+            List<string> recognizedLines = [];
             for (int lineIndex = 0; lineIndex < ocrResult.Lines.Count; lineIndex++)
             {
                 OcrLine line = ocrResult.Lines[lineIndex];
+                List<string> recognizedWords = [];
                 for (int wordIndex = 0; wordIndex < line.Words.Count; wordIndex++)
                 {
                     OcrWord word = line.Words[wordIndex];
                     RectangleF bounds = ToRectangleF(word.BoundingRect);
-                    if (!string.IsNullOrWhiteSpace(word.Text) && bounds.Width > 0 && bounds.Height > 0)
+                    if (!string.IsNullOrWhiteSpace(word.Text) &&
+                        bounds.Width > 0 &&
+                        bounds.Height > 0 &&
+                        !QrCodeDetector.ShouldExcludeText(bounds, qrCodes))
                     {
                         regions.Add(new RecognizedTextRegion(word.Text, bounds, lineIndex, wordIndex));
+                        recognizedWords.Add(word.Text);
                     }
+                }
+
+                if (recognizedWords.Count > 0)
+                {
+                    recognizedLines.Add(string.Join(' ', recognizedWords));
                 }
             }
 
+            string documentText = CombineRecognizedValues(
+                string.Join(Environment.NewLine, recognizedLines),
+                qrCodes);
             return TextExtractionResult.Success(new RecognizedTextDocument(
-                ocrResult.Text ?? string.Empty,
+                documentText,
                 request.SourceSize,
-                regions));
+                regions,
+                qrCodes));
         }
         catch (OperationCanceledException)
         {
@@ -102,6 +120,19 @@ public sealed class WindowsTextExtractionService : ITextExtractionService
             (float)rect.Y,
             (float)rect.Width,
             (float)rect.Height);
+    }
+
+    private static string CombineRecognizedValues(
+        string? recognizedText,
+        IReadOnlyList<RecognizedQrCodeRegion> qrCodes)
+    {
+        IEnumerable<string> values = qrCodes.Select(qrCode => qrCode.Value);
+        if (!string.IsNullOrWhiteSpace(recognizedText))
+        {
+            values = values.Prepend(recognizedText.TrimEnd());
+        }
+
+        return string.Join(Environment.NewLine, values);
     }
 }
 
