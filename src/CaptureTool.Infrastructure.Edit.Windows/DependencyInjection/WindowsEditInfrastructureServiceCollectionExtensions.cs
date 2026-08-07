@@ -17,7 +17,11 @@ public static class WindowsEditInfrastructureServiceCollectionExtensions
     {
         services.AddSingleton<IChromaKeyService, Win2DChromaKeyService>();
         services.AddSingleton<IImageSuperResolutionService, WindowsImageSuperResolutionService>();
-        services.AddSingleton<ITextExtractionService, WindowsTextExtractionService>();
+        services.AddSingleton<WindowsTextExtractionService>();
+        services.AddSingleton<ITextExtractionService>(provider =>
+            provider.GetRequiredService<WindowsTextExtractionService>());
+        services.AddSingleton<ITextExtractionAnalysisService>(provider =>
+            provider.GetRequiredService<WindowsTextExtractionService>());
         services.AddSingleton<IImageDescriptionService, WindowsImageDescriptionService>();
         services.AddSingleton<IImageForegroundExtractionService, WindowsImageForegroundExtractionService>();
         services.AddSingleton<IImageObjectEraseService, WindowsImageObjectEraseService>();

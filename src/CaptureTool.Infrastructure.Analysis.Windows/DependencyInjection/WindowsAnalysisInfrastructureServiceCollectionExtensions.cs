@@ -9,6 +9,7 @@ public static class WindowsAnalysisInfrastructureServiceCollectionExtensions
     public static IServiceCollection AddWindowsAnalysisDomains(this IServiceCollection services)
     {
         services.AddSingleton<ICaptureAnalyzer, WindowsImageMediaPropertiesAnalyzer>();
+        services.AddSingleton<ICaptureAnalyzer, WindowsOcrDocumentAnalyzer>();
         return services;
     }
 }

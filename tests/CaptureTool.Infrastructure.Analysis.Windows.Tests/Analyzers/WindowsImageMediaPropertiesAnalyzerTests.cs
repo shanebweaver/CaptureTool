@@ -17,6 +17,9 @@ public sealed class WindowsImageMediaPropertiesAnalyzerTests
     {
         var analyzer = new WindowsImageMediaPropertiesAnalyzer();
 
+        CaptureAnalyzerContractAssertions.AssertOnDeviceImageAnalyzer(
+            analyzer,
+            AnalysisCapabilities.MediaPropertiesV1);
         Assert.AreEqual(AnalysisCapabilities.MediaPropertiesV1, analyzer.Descriptor.Capability);
         Assert.AreEqual(ProcessingBoundary.OnDevice, analyzer.Descriptor.ProcessingBoundary);
         Assert.AreEqual(CaptureAnalyzerDataKind.None, analyzer.Descriptor.DataSent);
@@ -42,7 +45,7 @@ public sealed class WindowsImageMediaPropertiesAnalyzerTests
 
         CaptureAnalyzerOutput output = await analyzer.AnalyzeAsync(request);
 
-        Assert.AreEqual(CaptureAnalyzerOutputStatus.Succeeded, output.Status);
+        CaptureAnalyzerContractAssertions.AssertCompatibleSuccess(analyzer, output);
         var payload = (MediaPropertiesV1)output.Payload!;
         Assert.AreEqual(new PixelSize(1, 1), payload.PixelSize);
     }
