@@ -208,6 +208,126 @@ public sealed class LocalCaptureAnalysisJobStoreTests
         Assert.IsLessThan(TimeSpan.FromMilliseconds(100), stopwatch.Elapsed);
     }
 
+    [TestMethod]
+    public async Task WaitingIntent_ShouldResumeRenewLeaseAndPersistTerminalFailure()
+    {
+        using LocalCaptureAnalysisJobStore store = CreateStore(
+            AnalysisPersistenceTestData.CreateTestFolder());
+        CaptureAnalysisJobKey key = CreateKey();
+        _ = await store.TryEnqueueAsync(key, EnqueuedAtUtc);
+        CaptureAnalysisJobLease firstLease = (await store.TryLeaseNextDueAsync(
+            EnqueuedAtUtc,
+            TimeSpan.FromMinutes(2)))!;
+
+        CaptureAnalysisJobMutationResult renewed = await store.TryRenewLeaseAsync(
+            firstLease.LeaseToken,
+            EnqueuedAtUtc.AddSeconds(30),
+            TimeSpan.FromMinutes(2));
+        var waitingReason = new AnalysisFailure(
+            AnalysisFailureCode.ModelNotReady,
+            AnalysisFailureDisposition.Transient);
+        CaptureAnalysisJobMutationResult waiting = await store.TryWaitForCapabilityAsync(
+            firstLease.LeaseToken,
+            waitingReason);
+        DateTimeOffset due = EnqueuedAtUtc.AddMinutes(5);
+        int resumed = await store.ResumeWaitingForCapabilityAsync(
+            key.Capability,
+            key.AuthorizedProcessingBoundary,
+            due);
+        CaptureAnalysisJobLease resumedLease = (await store.TryLeaseNextDueAsync(
+            due,
+            TimeSpan.FromMinutes(2)))!;
+        var terminalFailure = new AnalysisFailure(
+            AnalysisFailureCode.UnsupportedMedia,
+            AnalysisFailureDisposition.Terminal);
+        CaptureAnalysisJobMutationResult recorded = await store.TryRecordAttemptAsync(
+            resumedLease.LeaseToken,
+            CreateAttempt(1, CaptureAnalyzerAttemptStatus.TerminalFailure, terminalFailure));
+        CaptureAnalysisJobMutationResult failed = await store.TryFailTerminalAsync(
+            resumedLease.LeaseToken,
+            terminalFailure);
+
+        Assert.AreEqual(CaptureAnalysisJobMutationStatus.Succeeded, renewed.Status);
+        Assert.AreEqual(CaptureAnalysisJobMutationStatus.Succeeded, waiting.Status);
+        Assert.AreEqual(CaptureAnalysisJobState.WaitingForCapability, waiting.Intent!.State);
+        Assert.AreEqual(1, resumed);
+        Assert.AreEqual(CaptureAnalysisJobMutationStatus.Succeeded, recorded.Status);
+        Assert.AreEqual(CaptureAnalysisJobMutationStatus.Succeeded, failed.Status);
+        Assert.AreEqual(CaptureAnalysisJobState.TerminalFailure, failed.Intent!.State);
+    }
+
+    [TestMethod]
+    public async Task LeaseMutation_ShouldRejectLostLeaseAndInvalidTransitions()
+    {
+        using LocalCaptureAnalysisJobStore store = CreateStore(
+            AnalysisPersistenceTestData.CreateTestFolder());
+        CaptureAnalysisJobKey key = CreateKey();
+        _ = await store.TryEnqueueAsync(key, EnqueuedAtUtc);
+        CaptureAnalysisJobLease lease = (await store.TryLeaseNextDueAsync(
+            EnqueuedAtUtc,
+            TimeSpan.FromMinutes(2)))!;
+        var transientFailure = new AnalysisFailure(
+            AnalysisFailureCode.Timeout,
+            AnalysisFailureDisposition.Transient);
+
+        CaptureAnalysisJobMutationResult lost = await store.TryRenewLeaseAsync(
+            CaptureAnalysisJobLeaseToken.New(),
+            EnqueuedAtUtc,
+            TimeSpan.FromMinutes(1));
+        CaptureAnalysisJobMutationResult incomplete = await store.TryCompleteAsync(
+            lease.LeaseToken);
+        CaptureAnalysisJobMutationResult retryWithoutAttempt = await store.TryScheduleRetryAsync(
+            lease.LeaseToken,
+            transientFailure,
+            EnqueuedAtUtc.AddMinutes(1));
+        _ = await store.TryWaitForCapabilityAsync(lease.LeaseToken, transientFailure);
+        CaptureAnalysisJobMutationResult noLongerRunning = await store.TryRenewLeaseAsync(
+            lease.LeaseToken,
+            EnqueuedAtUtc.AddSeconds(1),
+            TimeSpan.FromMinutes(1));
+
+        Assert.AreEqual(CaptureAnalysisJobMutationStatus.LeaseLost, lost.Status);
+        Assert.AreEqual(CaptureAnalysisJobMutationStatus.InvalidTransition, incomplete.Status);
+        Assert.AreEqual(CaptureAnalysisJobMutationStatus.InvalidTransition, retryWithoutAttempt.Status);
+        Assert.AreEqual(CaptureAnalysisJobMutationStatus.LeaseLost, noLongerRunning.Status);
+    }
+
+    [TestMethod]
+    public async Task Cancellation_ShouldSupportSingleCaptureAndControlGenerationFences()
+    {
+        string root = AnalysisPersistenceTestData.CreateTestFolder();
+        using LocalCaptureAnalysisJobStore store = CreateStore(root);
+        CaptureTool.Domain.CaptureId captureId = CaptureTool.Domain.CaptureId.New();
+        CaptureAnalysisJobKey first = CreateKey(captureId, resolutionPolicyRevision: 1);
+        CaptureAnalysisJobKey second = CreateKey(captureId, resolutionPolicyRevision: 2);
+        _ = await store.TryEnqueueAsync(first, EnqueuedAtUtc);
+        _ = await store.TryEnqueueAsync(second, EnqueuedAtUtc.AddSeconds(1));
+
+        int captureCancelled = await store.CancelCaptureAsync(
+            captureId,
+            minimumTombstoneGeneration: 1);
+        CaptureAnalysisJobMutationResult alreadyCancelled = await store.TryCancelAsync(first);
+        CaptureAnalysisJobMutationResult missing = await store.TryCancelAsync(CreateKey());
+
+        Assert.AreEqual(2, captureCancelled);
+        Assert.AreEqual(CaptureAnalysisJobMutationStatus.Succeeded, alreadyCancelled.Status);
+        Assert.AreEqual(CaptureAnalysisJobState.Cancelled, alreadyCancelled.Intent!.State);
+        Assert.AreEqual(CaptureAnalysisJobMutationStatus.NotFound, missing.Status);
+
+        using LocalCaptureAnalysisJobStore controlStore = CreateStore(
+            AnalysisPersistenceTestData.CreateTestFolder());
+        CaptureAnalysisJobKey oldControl = CreateKey(controlGeneration: 2);
+        CaptureAnalysisJobKey currentControl = CreateKey(controlGeneration: 4);
+        _ = await controlStore.TryEnqueueAsync(oldControl, EnqueuedAtUtc);
+        _ = await controlStore.TryEnqueueAsync(currentControl, EnqueuedAtUtc.AddSeconds(1));
+
+        int controlCancelled = await controlStore.CancelBeforeControlGenerationAsync(4);
+
+        Assert.AreEqual(1, controlCancelled);
+        Assert.AreEqual(CaptureAnalysisJobState.Cancelled, (await controlStore.GetAsync(oldControl))!.State);
+        Assert.AreEqual(CaptureAnalysisJobState.Pending, (await controlStore.GetAsync(currentControl))!.State);
+    }
+
     private static LocalCaptureAnalysisJobStore CreateStore(
         string root,
         TestDataProtectionService? protector = null)
@@ -220,7 +340,10 @@ public sealed class LocalCaptureAnalysisJobStoreTests
     }
 
     private static CaptureAnalysisJobKey CreateKey(
-        CaptureTool.Domain.CaptureId? captureId = null)
+        CaptureTool.Domain.CaptureId? captureId = null,
+        long controlGeneration = 3,
+        long tombstoneGeneration = 0,
+        long resolutionPolicyRevision = 1)
     {
         SourceRevision source = AnalysisPersistenceTestData.SourceRevision;
         var preconditions = new AnalysisCommitPreconditions(
@@ -230,12 +353,12 @@ public sealed class LocalCaptureAnalysisJobStoreTests
             source,
             new AnalysisPurpose("capture-memory-search", 1),
             policyRevision: 2,
-            controlGeneration: 3,
+            controlGeneration,
             enrollmentGeneration: 1,
-            tombstoneGeneration: 0,
+            tombstoneGeneration,
             new AnalysisRecipeId("capture-memory-image"),
             new AnalysisRecipeVersion(1),
-            resolutionPolicyRevision: 1);
+            resolutionPolicyRevision);
         return new(preconditions, AnalysisCapabilities.MediaPropertiesV1, ProcessingBoundary.OnDevice);
     }
 

@@ -376,6 +376,216 @@ public sealed class CaptureAnalysisRecordTests
         Assert.ThrowsExactly<InvalidOperationException>(() => record.ApplyRecipe(changedSameVersion));
     }
 
+    [TestMethod]
+    public void CapabilityState_ShouldRejectMalformedIdentityBoundaryAndPairing()
+    {
+        AnalyzerIdentity analyzer = AnalysisTestData.CreateAnalyzer();
+        SourceRevision source = AnalysisTestData.CreateSource();
+        OcrDocumentV1 payload = CreateOcrPayload("text");
+        var terminalFailure = new AnalysisFailure(
+            AnalysisFailureCode.InvalidResponse,
+            AnalysisFailureDisposition.Terminal);
+
+        Assert.ThrowsExactly<ArgumentException>(() => new CanonicalCapabilityResult(
+            default,
+            source,
+            payload,
+            analyzer,
+            ProcessingBoundary.OnDevice,
+            AnalysisTestData.GeneratedAtUtc));
+        Assert.ThrowsExactly<ArgumentException>(() => new CanonicalCapabilityResult(
+            AnalysisTestData.CaptureId,
+            default,
+            payload,
+            analyzer,
+            ProcessingBoundary.OnDevice,
+            AnalysisTestData.GeneratedAtUtc));
+        Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => new CanonicalCapabilityResult(
+            AnalysisTestData.CaptureId,
+            source,
+            payload,
+            analyzer,
+            ProcessingBoundary.Unknown,
+            AnalysisTestData.GeneratedAtUtc));
+        Assert.ThrowsExactly<ArgumentException>(() => new CanonicalCapabilityResult(
+            AnalysisTestData.CaptureId,
+            source,
+            payload,
+            analyzer,
+            ProcessingBoundary.OnDevice,
+            AnalysisTestData.GeneratedAtUtc.ToOffset(TimeSpan.FromHours(1))));
+
+        Assert.ThrowsExactly<ArgumentException>(() => new CapabilityOutcome(
+            default,
+            source,
+            AnalysisCapabilities.OcrDocumentV1,
+            analyzer,
+            ProcessingBoundary.OnDevice,
+            CapabilityOutcomeState.TerminalFailure,
+            terminalFailure,
+            AnalysisTestData.GeneratedAtUtc));
+        Assert.ThrowsExactly<ArgumentException>(() => new CapabilityOutcome(
+            AnalysisTestData.CaptureId,
+            default,
+            AnalysisCapabilities.OcrDocumentV1,
+            analyzer,
+            ProcessingBoundary.OnDevice,
+            CapabilityOutcomeState.TerminalFailure,
+            terminalFailure,
+            AnalysisTestData.GeneratedAtUtc));
+        Assert.ThrowsExactly<ArgumentException>(() => new CapabilityOutcome(
+            AnalysisTestData.CaptureId,
+            source,
+            default,
+            analyzer,
+            ProcessingBoundary.OnDevice,
+            CapabilityOutcomeState.TerminalFailure,
+            terminalFailure,
+            AnalysisTestData.GeneratedAtUtc));
+        Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => new CapabilityOutcome(
+            AnalysisTestData.CaptureId,
+            source,
+            AnalysisCapabilities.OcrDocumentV1,
+            analyzer,
+            ProcessingBoundary.Unknown,
+            CapabilityOutcomeState.TerminalFailure,
+            terminalFailure,
+            AnalysisTestData.GeneratedAtUtc));
+        Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => new CapabilityOutcome(
+            AnalysisTestData.CaptureId,
+            source,
+            AnalysisCapabilities.OcrDocumentV1,
+            analyzer,
+            ProcessingBoundary.OnDevice,
+            CapabilityOutcomeState.Unknown,
+            terminalFailure,
+            AnalysisTestData.GeneratedAtUtc));
+        Assert.ThrowsExactly<ArgumentException>(() => new CapabilityOutcome(
+            AnalysisTestData.CaptureId,
+            source,
+            AnalysisCapabilities.OcrDocumentV1,
+            analyzer,
+            ProcessingBoundary.OnDevice,
+            CapabilityOutcomeState.TerminalFailure,
+            terminalFailure,
+            AnalysisTestData.GeneratedAtUtc.ToOffset(TimeSpan.FromHours(1))));
+
+        CanonicalCapabilityResult result = AnalysisTestData.CreateResult(payload, analyzer);
+        var outcome = new CapabilityOutcome(
+            AnalysisTestData.CaptureId,
+            source,
+            AnalysisCapabilities.OcrDocumentV1,
+            analyzer,
+            ProcessingBoundary.OnDevice,
+            CapabilityOutcomeState.TerminalFailure,
+            terminalFailure,
+            AnalysisTestData.GeneratedAtUtc.AddSeconds(1));
+        Assert.IsTrue(outcome.IsEquivalentTo(new CapabilityOutcome(
+            AnalysisTestData.CaptureId,
+            source,
+            AnalysisCapabilities.OcrDocumentV1,
+            analyzer,
+            ProcessingBoundary.OnDevice,
+            CapabilityOutcomeState.TerminalFailure,
+            terminalFailure,
+            AnalysisTestData.GeneratedAtUtc.AddSeconds(1))));
+        Assert.ThrowsExactly<ArgumentException>(() => new CapabilityAnalysis(default, result, null));
+        Assert.ThrowsExactly<ArgumentException>(() => new CapabilityAnalysis(
+            AnalysisCapabilities.OcrDocumentV1,
+            null,
+            null));
+        Assert.ThrowsExactly<ArgumentException>(() => new CapabilityAnalysis(
+            AnalysisCapabilities.MediaPropertiesV1,
+            result,
+            null));
+        Assert.ThrowsExactly<ArgumentException>(() => new CapabilityAnalysis(
+            AnalysisCapabilities.MediaPropertiesV1,
+            null,
+            outcome));
+        var otherCaptureOutcome = new CapabilityOutcome(
+            CaptureTool.Domain.CaptureId.New(),
+            source,
+            AnalysisCapabilities.OcrDocumentV1,
+            analyzer,
+            ProcessingBoundary.OnDevice,
+            CapabilityOutcomeState.TerminalFailure,
+            terminalFailure,
+            AnalysisTestData.GeneratedAtUtc.AddSeconds(1));
+        Assert.ThrowsExactly<ArgumentException>(() => new CapabilityAnalysis(
+            AnalysisCapabilities.OcrDocumentV1,
+            result,
+            otherCaptureOutcome));
+    }
+
+    [TestMethod]
+    public void CaptureRecord_ShouldRejectMalformedIdentityRecipeAndInvalidationKeys()
+    {
+        SourceRevision source = AnalysisTestData.CreateSource();
+        CaptureAnalysisRecipe imageRecipe = AnalysisTestData.CreateRecipe();
+
+        Assert.ThrowsExactly<ArgumentException>(() => new CaptureAnalysisRecord(
+            default,
+            CaptureMediaKind.Image,
+            AnalysisTestData.CapturedAtUtc,
+            source,
+            imageRecipe));
+        Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => new CaptureAnalysisRecord(
+            AnalysisTestData.CaptureId,
+            CaptureMediaKind.Unknown,
+            AnalysisTestData.CapturedAtUtc,
+            source,
+            imageRecipe));
+        Assert.ThrowsExactly<ArgumentException>(() => new CaptureAnalysisRecord(
+            AnalysisTestData.CaptureId,
+            CaptureMediaKind.Image,
+            AnalysisTestData.CapturedAtUtc.ToOffset(TimeSpan.FromHours(1)),
+            source,
+            imageRecipe));
+        Assert.ThrowsExactly<ArgumentException>(() => new CaptureAnalysisRecord(
+            AnalysisTestData.CaptureId,
+            CaptureMediaKind.Image,
+            AnalysisTestData.CapturedAtUtc,
+            default,
+            imageRecipe));
+        var audioRecipe = new CaptureAnalysisRecipe(
+            new AnalysisRecipeId("capture-memory-audio"),
+            new AnalysisRecipeVersion(1),
+            CaptureMediaKind.Audio,
+            [new RecipeCapability(
+                AnalysisCapabilities.MediaPropertiesV1,
+                RecipeCapabilityRequirement.Required)]);
+        Assert.ThrowsExactly<ArgumentException>(() => new CaptureAnalysisRecord(
+            AnalysisTestData.CaptureId,
+            CaptureMediaKind.Image,
+            AnalysisTestData.CapturedAtUtc,
+            source,
+            audioRecipe));
+
+        CaptureAnalysisRecord record = AnalysisTestData.CreateRecord();
+        Assert.AreEqual(SourceRevisionUpdateResult.Unchanged,
+            record.RegisterSourceRevision(record.SourceRevision));
+        Assert.ThrowsExactly<ArgumentException>(() => record.RegisterSourceRevision(default));
+        Assert.ThrowsExactly<ArgumentException>(() => record.ApplyRecipe(new CaptureAnalysisRecipe(
+            new AnalysisRecipeId("different-recipe"),
+            new AnalysisRecipeVersion(2),
+            CaptureMediaKind.Image,
+            [new RecipeCapability(
+                AnalysisCapabilities.MediaPropertiesV1,
+                RecipeCapabilityRequirement.Required)])));
+        Assert.ThrowsExactly<ArgumentException>(() => record.ApplyRecipe(audioRecipe));
+        Assert.ThrowsExactly<ArgumentException>(() => record.InvalidateCapability(
+            AnalysisCapabilities.OcrDocumentV1,
+            default(AnalyzerRevision)));
+        Assert.ThrowsExactly<ArgumentException>(() => record.InvalidateCapability(
+            default(CapabilityDefinition),
+            [AnalysisTestData.CreateAnalyzer().Revision]));
+        Assert.ThrowsExactly<ArgumentException>(() => record.InvalidateCapability(
+            AnalysisCapabilities.OcrDocumentV1,
+            [default(AnalyzerRevision)]));
+        Assert.ThrowsExactly<ArgumentException>(() => record.InvalidateCapability(
+            default(AnalysisCapabilityId)));
+    }
+
     private static CapabilityCommitResult Commit(
         CaptureAnalysisRecord record,
         CapabilityPayload payload,

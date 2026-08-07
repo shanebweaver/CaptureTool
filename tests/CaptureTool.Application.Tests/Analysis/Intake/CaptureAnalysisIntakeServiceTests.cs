@@ -308,6 +308,123 @@ public sealed class CaptureAnalysisIntakeServiceTests
         Assert.AreEqual(CaptureAnalysisBackfillState.Completed, context.Control.Snapshot.State.BackfillState);
     }
 
+    [TestMethod]
+    public async Task SourceChange_ShouldReuseOriginalFinalizationAndRescheduleEnrolledImage()
+    {
+        CaptureAsset original = CreateAsset(CaptureFileType.Image);
+        CaptureAsset updated = original.ChangeSource(
+            Path.GetFullPath(Path.Combine(Path.GetTempPath(), $"{original.Id}-updated.png")),
+            CaptureSourceOwnership.AppOwned);
+        CaptureAssetChange finalized = CreateChange(1, original, CaptureAssetChangeType.Finalized);
+        CaptureAssetChange sourceChanged = CreateChange(2, updated, CaptureAssetChangeType.SourceChanged);
+        var context = new TestContext(
+            featureEnabled: true,
+            GrantFutureCaptures(currentSequence: 0),
+            [updated],
+            [finalized, sourceChanged],
+            [CreateEnrollment(original.Id, 1)],
+            captureChangeCheckpoint: 1);
+
+        await context.Service.ConsumePendingChangesAsync();
+
+        Assert.HasCount(2, context.Scheduler.Requests);
+        Assert.IsTrue(context.Scheduler.Requests.All(request =>
+            request.Admission.CaptureId == original.Id &&
+            request.Admission.Finalization == finalized));
+        Assert.AreEqual(2, context.Control.Snapshot.State.CaptureChangeCheckpoint);
+    }
+
+    [TestMethod]
+    public async Task DeletedChange_ShouldTombstoneEnrollmentAndCancelOutstandingJobs()
+    {
+        CaptureAsset active = CreateAsset(CaptureFileType.Image);
+        CaptureAsset deleted = active.MarkDeleted();
+        CaptureAssetChange finalized = CreateChange(1, active, CaptureAssetChangeType.Finalized);
+        CaptureAssetChange deletion = CreateChange(2, deleted, CaptureAssetChangeType.Deleted);
+        var context = new TestContext(
+            featureEnabled: true,
+            GrantFutureCaptures(currentSequence: 0),
+            [deleted],
+            [finalized, deletion],
+            [CreateEnrollment(active.Id, 1)],
+            captureChangeCheckpoint: 1);
+
+        await context.Service.ConsumePendingChangesAsync();
+
+        CaptureAnalysisEnrollment tombstone = context.Control.Snapshot.State.Enrollments.Single();
+        Assert.AreEqual(CaptureAnalysisEnrollmentState.Excluded, tombstone.State);
+        Assert.AreEqual(CaptureAnalysisExclusionReason.SourceDeleted, tombstone.ExclusionReason);
+        Assert.AreEqual(1, tombstone.TombstoneGeneration);
+        context.Jobs.Verify(store => store.CancelCaptureAsync(
+            active.Id,
+            tombstone.TombstoneGeneration,
+            It.IsAny<CancellationToken>()), Times.Exactly(2));
+        Assert.AreEqual(2, context.Control.Snapshot.State.CaptureChangeCheckpoint);
+    }
+
+    [TestMethod]
+    public async Task SourceUnavailableFinalization_ShouldTombstoneMissingCaptureAndAdvance()
+    {
+        CaptureAsset asset = CreateAsset(CaptureFileType.Image);
+        CaptureAssetChange finalized = CreateChange(1, asset, CaptureAssetChangeType.Finalized);
+        var context = new TestContext(
+            featureEnabled: true,
+            GrantFutureCaptures(currentSequence: 0),
+            [asset],
+            [finalized]);
+        context.Scheduler.Results.Enqueue(new(
+            CaptureAnalysisScheduleStatus.SourceUnavailable));
+        context.FileSystem.Setup(fileSystem => fileSystem.FileExists(asset.RetainedSourcePath))
+            .Returns(false);
+
+        await context.Service.ConsumePendingChangesAsync();
+
+        CaptureAnalysisEnrollment tombstone = context.Control.Snapshot.State.Enrollments.Single();
+        Assert.AreEqual(CaptureAnalysisEnrollmentState.Excluded, tombstone.State);
+        Assert.AreEqual(CaptureAnalysisExclusionReason.MissingSource, tombstone.ExclusionReason);
+        Assert.AreEqual(1, context.Control.Snapshot.State.CaptureChangeCheckpoint);
+    }
+
+    [TestMethod]
+    public async Task DeniedExcludedCapture_ShouldBeDurablySkipped()
+    {
+        CaptureAsset asset = CreateAsset(CaptureFileType.Image);
+        var context = new TestContext(
+            featureEnabled: true,
+            GrantFutureCaptures(currentSequence: 0),
+            [asset],
+            [CreateChange(1, asset, CaptureAssetChangeType.Finalized)]);
+        context.Scheduler.Results.Enqueue(new(
+            CaptureAnalysisScheduleStatus.Denied,
+            denialReason: CaptureAnalysisPolicyDenialReason.CaptureExcluded));
+
+        await context.Service.ConsumePendingChangesAsync();
+
+        Assert.AreEqual(1, context.Control.Snapshot.State.CaptureChangeCheckpoint);
+        Assert.HasCount(1, context.Scheduler.Requests);
+    }
+
+    [TestMethod]
+    public async Task DisabledFeature_ShouldRejectBackfillWithoutReadingCaptureContent()
+    {
+        CaptureAsset asset = CreateAsset(CaptureFileType.Image);
+        CaptureAnalysisPolicy policy = GrantFutureCaptures(currentSequence: 1)
+            .AuthorizeExistingCaptureBackfill(currentSequence: 1);
+        var context = new TestContext(
+            featureEnabled: false,
+            policy,
+            [asset],
+            [CreateChange(1, asset, CaptureAssetChangeType.Finalized)]);
+
+        CaptureAnalysisBackfillRunResult result = await context.Service.RunAsync();
+
+        Assert.AreEqual(CaptureAnalysisBackfillRunStatus.FeatureDisabled, result.Status);
+        Assert.IsEmpty(context.Scheduler.Requests);
+        context.FileSystem.Verify(
+            fileSystem => fileSystem.FileExists(It.IsAny<string>()),
+            Times.Never);
+    }
+
     private static CaptureAnalysisPolicy GrantFutureCaptures(long currentSequence) =>
         CaptureAnalysisPolicy.Unknown.GrantFutureCaptures(
             CaptureAnalysisPolicyDefaults.CreateAuthorizationScope(),

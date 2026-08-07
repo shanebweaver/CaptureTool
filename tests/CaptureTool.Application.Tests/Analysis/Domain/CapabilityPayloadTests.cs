@@ -136,6 +136,84 @@ public sealed class CapabilityPayloadTests
     }
 
     [TestMethod]
+    public void OcrContracts_ShouldEnforceEveryBoundedStructuralLimit()
+    {
+        var validBounds = new PixelRect(0, 0, 1, 1);
+        var validWord = new OcrWordV1("word", validBounds);
+        var validLine = new OcrLineV1("line", validBounds, [validWord]);
+        var validRegion = new OcrRegionV1(validBounds, [validLine]);
+
+        Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => new PixelRect(-1, 0, 1, 1));
+        Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => new PixelRect(0, 0, 0, 1));
+        Assert.ThrowsExactly<ArgumentException>(() => new OcrLanguageCandidateV1(
+            new string('a', 65)));
+        Assert.ThrowsExactly<ArgumentException>(() => new OcrWordV1(" ", validBounds));
+        Assert.ThrowsExactly<ArgumentException>(() => new OcrWordV1("word", default));
+        Assert.ThrowsExactly<ArgumentNullException>(() => new OcrLineV1(
+            null!,
+            validBounds,
+            []));
+        Assert.ThrowsExactly<ArgumentException>(() => new OcrLineV1(
+            new string('x', OcrLineV1.MaximumTextLength + 1),
+            validBounds,
+            []));
+        Assert.ThrowsExactly<ArgumentException>(() => new OcrLineV1(
+            "line",
+            default,
+            []));
+        Assert.ThrowsExactly<ArgumentException>(() => new OcrLineV1(
+            "line",
+            validBounds,
+            Enumerable.Repeat(validWord, OcrLineV1.MaximumWordCount + 1)));
+        Assert.ThrowsExactly<ArgumentException>(() => new OcrRegionV1(
+            default,
+            []));
+        Assert.ThrowsExactly<ArgumentException>(() => new OcrRegionV1(
+            validBounds,
+            Enumerable.Repeat(validLine, OcrRegionV1.MaximumLineCount + 1)));
+        Assert.ThrowsExactly<ArgumentException>(() => new OcrDocumentV1(
+            default,
+            string.Empty,
+            [],
+            []));
+        Assert.ThrowsExactly<ArgumentNullException>(() => new OcrDocumentV1(
+            new PixelSize(10, 10),
+            null!,
+            [],
+            []));
+        Assert.ThrowsExactly<ArgumentException>(() => new OcrDocumentV1(
+            new PixelSize(10, 10),
+            string.Empty,
+            Enumerable.Repeat(new OcrLanguageCandidateV1("en"),
+                OcrDocumentV1.MaximumLanguageCount + 1),
+            []));
+        Assert.ThrowsExactly<ArgumentException>(() => new OcrDocumentV1(
+            new PixelSize(10, 10),
+            string.Empty,
+            [],
+            Enumerable.Repeat(validRegion, OcrDocumentV1.MaximumRegionCount + 1)));
+        var invalidLineRegion = new OcrRegionV1(
+            new PixelRect(0, 0, 10, 10),
+            [new OcrLineV1("outside", new PixelRect(9, 9, 2, 2), [])]);
+        Assert.ThrowsExactly<ArgumentException>(() => new OcrDocumentV1(
+            new PixelSize(10, 10),
+            string.Empty,
+            [],
+            [invalidLineRegion]));
+        var invalidWordRegion = new OcrRegionV1(
+            new PixelRect(0, 0, 10, 10),
+            [new OcrLineV1(
+                "outside",
+                new PixelRect(0, 0, 10, 10),
+                [new OcrWordV1("outside", new PixelRect(9, 9, 2, 2))])]);
+        Assert.ThrowsExactly<ArgumentException>(() => new OcrDocumentV1(
+            new PixelSize(10, 10),
+            string.Empty,
+            [],
+            [invalidWordRegion]));
+    }
+
+    [TestMethod]
     public void ImageDescriptionV1_ShouldRemainExplicitlyClassifiedAsInference()
     {
         var payload = new ImageDescriptionV1(

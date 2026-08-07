@@ -100,6 +100,150 @@ public sealed class CaptureAnalysisMutationCoordinatorTests
         context.MetadataStore.Dispose();
     }
 
+    [TestMethod]
+    public async Task CommitResult_ShouldPersistThenRecognizeAlreadyCurrentPayload()
+    {
+        AnalyzerIdentity producer = CreateAnalyzerIdentity("2");
+        var descriptor = CreateDescriptor(producer);
+        TestContext context = CreateContext(
+            authorizedCalls: int.MaxValue,
+            sourceGeneration: 7,
+            [new StubAnalyzer(descriptor)]);
+        CaptureAnalysisStoreWriteResult registered = await context.Coordinator.TryRegisterSourceAsync(
+            context.Registration,
+            expectedDocumentRevision: null);
+        var token = new AnalysisCommitToken(
+            context.Registration.Preconditions,
+            AnalysisCapabilities.MediaPropertiesV1,
+            producer.Revision);
+        var result = new CanonicalCapabilityResult(
+            context.Registration.Preconditions.CaptureId,
+            context.Registration.Preconditions.SourceRevision,
+            new MediaPropertiesV1(CaptureMediaKind.Image, new PixelSize(100, 100)),
+            producer,
+            ProcessingBoundary.OnDevice,
+            CapturedAtUtc.AddMinutes(1));
+
+        CaptureAnalysisStoreWriteResult committed = await context.Coordinator.TryCommitCapabilityAsync(
+            token,
+            result,
+            registered.Snapshot!.DocumentRevision);
+        CaptureAnalysisStoreWriteResult alreadyCurrent = await context.Coordinator
+            .TryCommitCapabilityAsync(
+                token,
+                result,
+                committed.Snapshot!.DocumentRevision);
+
+        Assert.AreEqual(CaptureAnalysisStoreWriteStatus.Succeeded, committed.Status);
+        Assert.AreEqual(CaptureAnalysisStoreWriteStatus.Succeeded, alreadyCurrent.Status);
+        Assert.AreEqual(committed.Snapshot.DocumentRevision, alreadyCurrent.Snapshot!.DocumentRevision);
+        Assert.IsTrue(alreadyCurrent.Snapshot.Record.TryGetAnalysis(
+            AnalysisCapabilities.MediaPropertiesV1.Id,
+            out CapabilityAnalysis? analysis));
+        Assert.IsTrue(analysis!.CanonicalResult!.IsEquivalentTo(result));
+        context.MetadataStore.Dispose();
+    }
+
+    [TestMethod]
+    public async Task CommitOutcome_ShouldPersistBoundedTerminalFailure()
+    {
+        AnalyzerIdentity producer = CreateAnalyzerIdentity("2");
+        TestContext context = CreateContext(
+            authorizedCalls: int.MaxValue,
+            sourceGeneration: 7,
+            [new StubAnalyzer(CreateDescriptor(producer))]);
+        CaptureAnalysisStoreWriteResult registered = await context.Coordinator.TryRegisterSourceAsync(
+            context.Registration,
+            expectedDocumentRevision: null);
+        var token = new AnalysisCommitToken(
+            context.Registration.Preconditions,
+            AnalysisCapabilities.MediaPropertiesV1,
+            producer.Revision);
+        var failure = new AnalysisFailure(
+            AnalysisFailureCode.UnsupportedMedia,
+            AnalysisFailureDisposition.Terminal);
+        var outcome = new CapabilityOutcome(
+            context.Registration.Preconditions.CaptureId,
+            context.Registration.Preconditions.SourceRevision,
+            AnalysisCapabilities.MediaPropertiesV1,
+            producer,
+            ProcessingBoundary.OnDevice,
+            CapabilityOutcomeState.Unsupported,
+            failure,
+            CapturedAtUtc.AddMinutes(1));
+
+        CaptureAnalysisStoreWriteResult committed = await context.Coordinator.TryCommitCapabilityAsync(
+            token,
+            outcome,
+            registered.Snapshot!.DocumentRevision);
+
+        Assert.AreEqual(CaptureAnalysisStoreWriteStatus.Succeeded, committed.Status);
+        Assert.IsTrue(committed.Snapshot!.Record.TryGetAnalysis(
+            AnalysisCapabilities.MediaPropertiesV1.Id,
+            out CapabilityAnalysis? analysis));
+        Assert.AreEqual(outcome, analysis!.LatestOutcome);
+        context.MetadataStore.Dispose();
+    }
+
+    [TestMethod]
+    public async Task Commit_ShouldRejectUnknownProducerAndMissingMetadata()
+    {
+        AnalyzerIdentity producer = CreateAnalyzerIdentity("2");
+        TestContext noProducer = CreateContext(
+            authorizedCalls: int.MaxValue,
+            sourceGeneration: 7);
+        var token = new AnalysisCommitToken(
+            noProducer.Registration.Preconditions,
+            AnalysisCapabilities.MediaPropertiesV1,
+            producer.Revision);
+        var result = new CanonicalCapabilityResult(
+            noProducer.Registration.Preconditions.CaptureId,
+            noProducer.Registration.Preconditions.SourceRevision,
+            new MediaPropertiesV1(CaptureMediaKind.Image, new PixelSize(100, 100)),
+            producer,
+            ProcessingBoundary.OnDevice,
+            CapturedAtUtc.AddMinutes(1));
+
+        CaptureAnalysisStoreWriteResult unknownProducer = await noProducer.Coordinator
+            .TryCommitCapabilityAsync(token, result, expectedDocumentRevision: 1);
+
+        Assert.AreEqual(CaptureAnalysisStoreWriteStatus.StaleCommit, unknownProducer.Status);
+        noProducer.MetadataStore.Dispose();
+
+        TestContext missingMetadata = CreateContext(
+            authorizedCalls: int.MaxValue,
+            sourceGeneration: 7,
+            [new StubAnalyzer(CreateDescriptor(producer))]);
+        var missingToken = new AnalysisCommitToken(
+            missingMetadata.Registration.Preconditions,
+            AnalysisCapabilities.MediaPropertiesV1,
+            producer.Revision);
+        var missingResult = new CanonicalCapabilityResult(
+            missingMetadata.Registration.Preconditions.CaptureId,
+            missingMetadata.Registration.Preconditions.SourceRevision,
+            new MediaPropertiesV1(CaptureMediaKind.Image, new PixelSize(100, 100)),
+            producer,
+            ProcessingBoundary.OnDevice,
+            CapturedAtUtc.AddMinutes(1));
+
+        CaptureAnalysisStoreWriteResult notFound = await missingMetadata.Coordinator
+            .TryCommitCapabilityAsync(missingToken, missingResult, expectedDocumentRevision: 1);
+
+        Assert.AreEqual(CaptureAnalysisStoreWriteStatus.NotFound, notFound.Status);
+        missingMetadata.MetadataStore.Dispose();
+    }
+
+    private static CaptureAnalyzerDescriptor CreateDescriptor(AnalyzerIdentity producer) => new(
+        AnalysisCapabilities.MediaPropertiesV1,
+        producer,
+        [CaptureMediaKind.Image],
+        ProcessingBoundary.OnDevice,
+        CaptureAnalyzerDataKind.None,
+        CaptureAnalyzerRequirement.None,
+        CaptureAnalyzerWorkloadClass.Lightweight,
+        maximumSourceBytes: null,
+        qualityTier: 1);
+
     private static TestContext CreateContext(
         int authorizedCalls,
         long sourceGeneration,
