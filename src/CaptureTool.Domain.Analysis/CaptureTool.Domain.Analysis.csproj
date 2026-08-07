@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Project references -->
+  <ItemGroup>
+    <ProjectReference Include="..\CaptureTool.Domain\CaptureTool.Domain.csproj" />
+  </ItemGroup>
+
+</Project>

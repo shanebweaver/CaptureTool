@@ -16,6 +16,7 @@
   <Folder Name="/src/">
     <Project Path="src/CaptureTool.Application.Abstractions/CaptureTool.Application.Abstractions.csproj" />
     <Project Path="src/CaptureTool.Application/CaptureTool.Application.csproj" />
+    <Project Path="src/CaptureTool.Domain.Analysis/CaptureTool.Domain.Analysis.csproj" />
     <Project Path="src/CaptureTool.Domain.Capture/CaptureTool.Domain.Capture.csproj" />
     <Project Path="src/CaptureTool.Domain.Edit/CaptureTool.Domain.Edit.csproj" />
     <Project Path="src/CaptureTool.Domain/CaptureTool.Domain.csproj" />
