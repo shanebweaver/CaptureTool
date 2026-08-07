@@ -5,6 +5,7 @@ using CaptureTool.Domain.Edit;
 using CaptureTool.Domain.Edit.Drawable;
 using CaptureTool.Domain.Edit.Operations;
 using CaptureTool.Infrastructure.Edit.Windows;
+using CaptureTool.Presentation.Features.ImageEdit;
 using Microsoft.Graphics.Canvas;
 using Microsoft.Graphics.Canvas.UI;
 using Microsoft.Graphics.Canvas.UI.Xaml;
@@ -157,8 +158,7 @@ public sealed partial class ImageCanvas : UserControlBase
     {
         if (d is ImageCanvas control)
         {
-            control.UpdatePointSelectionCursor();
-            control.UpdateTouchInputLock();
+            control.UpdatePointSelectionInteraction();
         }
     }
 
@@ -174,8 +174,7 @@ public sealed partial class ImageCanvas : UserControlBase
     {
         if (d is ImageCanvas control)
         {
-            control.UpdatePointSelectionCursor();
-            control.UpdateTouchInputLock();
+            control.UpdatePointSelectionInteraction();
         }
     }
 
@@ -191,8 +190,7 @@ public sealed partial class ImageCanvas : UserControlBase
     {
         if (d is ImageCanvas control)
         {
-            control.UpdatePointSelectionCursor();
-            control.UpdateTouchInputLock();
+            control.UpdatePointSelectionInteraction();
         }
     }
 
@@ -520,7 +518,7 @@ public sealed partial class ImageCanvas : UserControlBase
     public event EventHandler<(double ZoomFactor, ZoomUpdateSource Source)>? ZoomFactorChanged;
     public event EventHandler<int>? ShapeDeleted;
     public event EventHandler<IDrawable>? ShapeDrawableSelected;
-    public event EventHandler<(int ShapeIndex, ModifyShapeOperation.ShapeState OldState, ModifyShapeOperation.ShapeState NewState)>? ShapeModified;
+    public event EventHandler<(int ShapeIndex, ShapeState OldState, ShapeState NewState)>? ShapeModified;
     public event EventHandler<TextDrawable>? TextDrawableSelected;
     public event EventHandler<Color>? ColorPickerColorHovered;
     public event EventHandler<Color>? ColorPickerColorPicked;
@@ -532,6 +530,7 @@ public sealed partial class ImageCanvas : UserControlBase
     public event EventHandler<Point>? ShapeContextMenuRequested;
 
     private readonly Lock _zoomUpdateLock = new Lock();
+    private readonly ImagePointSelectionInteractionController _pointSelectionController = new();
 
     private const int LineHandleRadius = 6; // Half of handle diameter (12px total)
     private const double MinimumHandleScale = 0.1;
@@ -548,8 +547,8 @@ public sealed partial class ImageCanvas : UserControlBase
     // Shape selection state
     private IDrawable? _selectedShape;
     private int _selectedShapeIndex = -1;
-    private ModifyShapeOperation.ShapeState? _shapeStateBeforeModification;
-    private ModifyShapeOperation.ShapeState? _styleInteractionStateBeforeModification;
+    private ShapeState? _shapeStateBeforeModification;
+    private ShapeState? _styleInteractionStateBeforeModification;
     private int _styleInteractionShapeIndex = -1;
     private int _styleInteractionDepth;
     private INotifyCollectionChanged? _observableDrawables;
@@ -710,9 +709,7 @@ public sealed partial class ImageCanvas : UserControlBase
             IsTextModeEnabled ||
             IsColorPickerModeEnabled ||
             IsTextExtractionOverlayEnabled ||
-            IsForegroundExtractionModeEnabled ||
-            IsObjectEraseModeEnabled ||
-            IsObjectExtractionModeEnabled;
+            _pointSelectionController.IsActive;
 
         if (shouldIgnoreTouchInput == _isIgnoringTouchInputForEditing)
         {
@@ -1718,7 +1715,7 @@ public sealed partial class ImageCanvas : UserControlBase
 
     private void RenderCanvas_PointerEntered(object sender, PointerRoutedEventArgs e)
     {
-        if (IsForegroundExtractionModeEnabled || IsObjectEraseModeEnabled || IsObjectExtractionModeEnabled)
+        if (_pointSelectionController.IsActive)
         {
             ProtectedCursor = InputSystemCursor.Create(InputSystemCursorShape.Cross);
             return;
@@ -1734,7 +1731,7 @@ public sealed partial class ImageCanvas : UserControlBase
 
     private void RenderCanvas_PointerExited(object sender, PointerRoutedEventArgs e)
     {
-        if (IsForegroundExtractionModeEnabled || IsObjectEraseModeEnabled || IsObjectExtractionModeEnabled)
+        if (_pointSelectionController.IsActive)
         {
             ProtectedCursor = null;
             return;
@@ -1767,17 +1764,7 @@ public sealed partial class ImageCanvas : UserControlBase
     #region Panning
     private void RootContainer_PointerPressed(object sender, PointerRoutedEventArgs e)
     {
-        if (IsObjectExtractionModeEnabled && TryHandleObjectExtractionPointerPressed(e))
-        {
-            return;
-        }
-
-        if (IsObjectEraseModeEnabled && TryHandleObjectErasePointerPressed(e))
-        {
-            return;
-        }
-
-        if (IsForegroundExtractionModeEnabled && TryHandleForegroundExtractionPointerPressed(e))
+        if (TryHandlePointSelectionPointerPressed(e))
         {
             return;
         }
@@ -1869,67 +1856,45 @@ public sealed partial class ImageCanvas : UserControlBase
         RootContainer.CapturePointer(e.Pointer);
     }
 
-    private bool TryHandleForegroundExtractionPointerPressed(PointerRoutedEventArgs e)
+    private bool TryHandlePointSelectionPointerPressed(PointerRoutedEventArgs e)
     {
-        if (!IsPrimaryPointerPressed(e, RenderCanvas))
-        {
-            return false;
-        }
-
         Point position = e.GetCurrentPoint(RenderCanvas).Position;
-        if (!IsPointInsideRenderCanvas(position))
+        if (!_pointSelectionController.TrySelect(
+            IsPrimaryPointerPressed(e, RenderCanvas),
+            IsPointInsideRenderCanvas(position),
+            DisplayPointToCanvasPoint(position),
+            out ImagePointSelectionRequest request))
         {
             return false;
         }
 
-        ForegroundExtractionRequested?.Invoke(this, DisplayPointToCanvasPoint(position));
+        switch (request.Mode)
+        {
+            case ImagePointSelectionMode.ForegroundExtraction:
+                ForegroundExtractionRequested?.Invoke(this, request.Position);
+                break;
+            case ImagePointSelectionMode.ObjectErase:
+                ObjectEraseRequested?.Invoke(this, request.Position);
+                break;
+            case ImagePointSelectionMode.ObjectExtraction:
+                ObjectExtractionRequested?.Invoke(this, request.Position);
+                break;
+        }
+
         e.Handled = true;
         return true;
     }
 
-    private bool TryHandleObjectErasePointerPressed(PointerRoutedEventArgs e)
+    private void UpdatePointSelectionInteraction()
     {
-        if (!IsPrimaryPointerPressed(e, RenderCanvas))
-        {
-            return false;
-        }
-
-        Point position = e.GetCurrentPoint(RenderCanvas).Position;
-        if (!IsPointInsideRenderCanvas(position))
-        {
-            return false;
-        }
-
-        ObjectEraseRequested?.Invoke(this, DisplayPointToCanvasPoint(position));
-        e.Handled = true;
-        return true;
-    }
-
-    private bool TryHandleObjectExtractionPointerPressed(PointerRoutedEventArgs e)
-    {
-        if (!IsPrimaryPointerPressed(e, RenderCanvas))
-        {
-            return false;
-        }
-
-        Point position = e.GetCurrentPoint(RenderCanvas).Position;
-        if (!IsPointInsideRenderCanvas(position))
-        {
-            return false;
-        }
-
-        ObjectExtractionRequested?.Invoke(this, DisplayPointToCanvasPoint(position));
-        e.Handled = true;
-        return true;
-    }
-
-    private void UpdatePointSelectionCursor()
-    {
-        ProtectedCursor = IsForegroundExtractionModeEnabled ||
-            IsObjectEraseModeEnabled ||
-            IsObjectExtractionModeEnabled
+        _pointSelectionController.ResolveMode(
+            IsForegroundExtractionModeEnabled,
+            IsObjectEraseModeEnabled,
+            IsObjectExtractionModeEnabled);
+        ProtectedCursor = _pointSelectionController.IsActive
             ? InputSystemCursor.Create(InputSystemCursorShape.Cross)
             : null;
+        UpdateTouchInputLock();
     }
 
     private bool TryHandleContextMenuRequest(PointerRoutedEventArgs e)
@@ -2592,7 +2557,7 @@ public sealed partial class ImageCanvas : UserControlBase
             return;
         }
 
-        _shapeStateBeforeModification = new ModifyShapeOperation.ShapeState(_selectedShape);
+        _shapeStateBeforeModification = new ShapeState(_selectedShape);
         RenderCanvas.Invalidate();
     }
 
@@ -2615,7 +2580,7 @@ public sealed partial class ImageCanvas : UserControlBase
         // Resize/move complete - redraw canvas with updated shape
         if (_selectedShape != null && _shapeStateBeforeModification.HasValue)
         {
-            var newState = new ModifyShapeOperation.ShapeState(_selectedShape);
+            var newState = new ShapeState(_selectedShape);
 
             // Only fire event if the shape actually changed
             if (!StatesAreEqual(_shapeStateBeforeModification.Value, newState))
@@ -2628,7 +2593,7 @@ public sealed partial class ImageCanvas : UserControlBase
         }
     }
 
-    private static bool StatesAreEqual(ModifyShapeOperation.ShapeState state1, ModifyShapeOperation.ShapeState state2)
+    private static bool StatesAreEqual(ShapeState state1, ShapeState state2)
     {
         return state1.Offset == state2.Offset &&
                state1.Size == state2.Size &&
@@ -2728,7 +2693,7 @@ public sealed partial class ImageCanvas : UserControlBase
                 _selectedShapeIndex = i;
 
                 // Capture state before modification
-                _shapeStateBeforeModification = new ModifyShapeOperation.ShapeState(drawable);
+                _shapeStateBeforeModification = new ShapeState(drawable);
 
                 ShowResizeHandles(drawable);
                 UpdatePreviewShapeFromDrawable(drawable);
@@ -2766,7 +2731,7 @@ public sealed partial class ImageCanvas : UserControlBase
             _selectedShapeIndex = index;
 
             // Capture state before modification
-            _shapeStateBeforeModification = new ModifyShapeOperation.ShapeState(shape);
+            _shapeStateBeforeModification = new ShapeState(shape);
 
             ShowResizeHandles(shape);
             UpdatePreviewShapeFromDrawable(shape);
@@ -2835,7 +2800,7 @@ public sealed partial class ImageCanvas : UserControlBase
         }
 
         CommitSelectedTextEditor();
-        _styleInteractionStateBeforeModification = new ModifyShapeOperation.ShapeState(_selectedShape);
+        _styleInteractionStateBeforeModification = new ShapeState(_selectedShape);
         _styleInteractionShapeIndex = _selectedShapeIndex;
     }
 
@@ -2856,7 +2821,7 @@ public sealed partial class ImageCanvas : UserControlBase
             _styleInteractionStateBeforeModification.HasValue &&
             _styleInteractionShapeIndex == _selectedShapeIndex)
         {
-            var newState = new ModifyShapeOperation.ShapeState(_selectedShape);
+            var newState = new ShapeState(_selectedShape);
             if (!StatesAreEqual(_styleInteractionStateBeforeModification.Value, newState))
             {
                 ShapeModified?.Invoke(this, (_selectedShapeIndex, _styleInteractionStateBeforeModification.Value, newState));
@@ -3070,7 +3035,7 @@ public sealed partial class ImageCanvas : UserControlBase
         // Capture state for undo
         if (_selectedShape != null)
         {
-            _shapeStateBeforeModification = new ModifyShapeOperation.ShapeState(_selectedShape);
+            _shapeStateBeforeModification = new ShapeState(_selectedShape);
         }
 
         RenderCanvas.Invalidate(); // Trigger filtering
@@ -3112,7 +3077,7 @@ public sealed partial class ImageCanvas : UserControlBase
         // Capture state for undo
         if (_selectedShape != null)
         {
-            _shapeStateBeforeModification = new ModifyShapeOperation.ShapeState(_selectedShape);
+            _shapeStateBeforeModification = new ShapeState(_selectedShape);
         }
 
         RenderCanvas.Invalidate(); // Trigger filtering
@@ -3213,7 +3178,7 @@ public sealed partial class ImageCanvas : UserControlBase
         // Fire modification event
         if (_selectedShape != null && _shapeStateBeforeModification.HasValue)
         {
-            var newState = new ModifyShapeOperation.ShapeState(_selectedShape);
+            var newState = new ShapeState(_selectedShape);
             if (!StatesAreEqual(_shapeStateBeforeModification.Value, newState))
             {
                 ShapeModified?.Invoke(this, (_selectedShapeIndex, _shapeStateBeforeModification.Value, newState));
@@ -3263,7 +3228,7 @@ public sealed partial class ImageCanvas : UserControlBase
         // Capture state for undo
         if (_selectedShape != null)
         {
-            _shapeStateBeforeModification = new ModifyShapeOperation.ShapeState(_selectedShape);
+            _shapeStateBeforeModification = new ShapeState(_selectedShape);
         }
 
         RenderCanvas.Invalidate(); // Trigger filtering
@@ -3491,9 +3456,9 @@ public sealed partial class ImageCanvas : UserControlBase
             return;
         }
 
-        var oldState = new ModifyShapeOperation.ShapeState(_selectedShape);
+        var oldState = new ShapeState(_selectedShape);
         updateStyle();
-        var newState = new ModifyShapeOperation.ShapeState(_selectedShape);
+        var newState = new ShapeState(_selectedShape);
 
         if (_styleInteractionDepth == 0 && !StatesAreEqual(oldState, newState))
         {
@@ -3713,9 +3678,9 @@ public sealed partial class ImageCanvas : UserControlBase
             CommitSelectedTextEditor();
         }
 
-        var oldState = new ModifyShapeOperation.ShapeState(text);
+        var oldState = new ShapeState(text);
         updateStyle(text);
-        var newState = new ModifyShapeOperation.ShapeState(text);
+        var newState = new ShapeState(text);
 
         if (_styleInteractionDepth == 0 && !StatesAreEqual(oldState, newState))
         {
@@ -3826,7 +3791,7 @@ public sealed partial class ImageCanvas : UserControlBase
             return;
         }
 
-        _shapeStateBeforeModification ??= new ModifyShapeOperation.ShapeState(text);
+        _shapeStateBeforeModification ??= new ShapeState(text);
         text.Text = textBox.Text;
     }
 
@@ -3854,7 +3819,7 @@ public sealed partial class ImageCanvas : UserControlBase
             return;
         }
 
-        var newState = new ModifyShapeOperation.ShapeState(text);
+        var newState = new ShapeState(text);
         if (!StatesAreEqual(_shapeStateBeforeModification.Value, newState))
         {
             ShapeModified?.Invoke(this, (_selectedShapeIndex, _shapeStateBeforeModification.Value, newState));

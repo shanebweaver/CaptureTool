@@ -147,7 +147,7 @@ public sealed class ImageEditSession
         return _drawables[index];
     }
 
-    public void ApplyShapeState(int index, ModifyShapeOperation.ShapeState state)
+    public void ApplyShapeState(int index, ShapeState state)
     {
         ApplyShapeState(GetDrawableAt(index), state);
     }
@@ -174,7 +174,7 @@ public sealed class ImageEditSession
         chromaKeyEffect.IsEnabled = !settings.Color.IsEmpty;
     }
 
-    private static void ApplyShapeState(IDrawable drawable, ModifyShapeOperation.ShapeState state)
+    private static void ApplyShapeState(IDrawable drawable, ShapeState state)
     {
         switch (drawable)
         {
@@ -271,13 +271,13 @@ public sealed class ImageEditSession
             ScaleInt(rectangle.Height, scaleY));
     }
 
-    internal static ModifyShapeOperation.ShapeState ScaleShapeState(
-        ModifyShapeOperation.ShapeState state,
+    internal static ShapeState ScaleShapeState(
+        ShapeState state,
         double scaleX,
         double scaleY)
     {
         double averageScale = (scaleX + scaleY) / 2;
-        return new ModifyShapeOperation.ShapeState
+        return new ShapeState
         {
             Offset = ScaleVector(state.Offset, scaleX, scaleY),
             Size = ScaleSize(state.Size, scaleX, scaleY),

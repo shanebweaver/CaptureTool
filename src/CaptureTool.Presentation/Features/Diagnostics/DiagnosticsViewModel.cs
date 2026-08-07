@@ -4,6 +4,7 @@ using CaptureTool.Application.Abstractions.Diagnostics.GetCurrentLogs;
 using CaptureTool.Application.Abstractions.Diagnostics.GetIsLoggingEnabled;
 using CaptureTool.Application.Abstractions.Diagnostics.UpdateLoggingState;
 using CaptureTool.Application.Abstractions.Logging;
+using CaptureTool.Application.Abstractions.TaskEnvironment;
 using CaptureTool.Application.Abstractions.Telemetry;
 using CaptureTool.Application.Abstractions.UseCases;
 using CaptureTool.Presentation.ViewModels;
@@ -13,13 +14,18 @@ namespace CaptureTool.Presentation.Features.Diagnostics;
 
 public sealed partial class DiagnosticsViewModel : ViewModelBase
 {
+    private const int MaxRenderedLogEntries = 1000;
+
     private readonly IClearLogsUseCase _clearLogsCommand;
     private readonly IExportLogsUseCase _exportLogsCommand;
     private readonly IUpdateLoggingStateUseCase _updateLoggingStateCommand;
     private readonly IGetIsLoggingEnabledUseCase _getIsLoggingEnabledQuery;
     private readonly IGetCurrentLogsUseCase _getCurrentLogsQuery;
     private readonly ILogService _logService;
+    private readonly ITaskEnvironment _taskEnvironment;
     private readonly ITelemetryService? _telemetryService;
+    private readonly Queue<string> _renderedLogs = [];
+    private int _isDisposed;
 
     public IAsyncRelayCommand ClearLogsCommand { get; }
     public IAsyncRelayCommand ExportLogsCommand { get; }
@@ -44,6 +50,7 @@ public sealed partial class DiagnosticsViewModel : ViewModelBase
         IGetIsLoggingEnabledUseCase getIsLoggingEnabledQuery,
         IGetCurrentLogsUseCase getCurrentLogsQuery,
         ILogService logService,
+        ITaskEnvironment taskEnvironment,
         ITelemetryService? telemetryService = null)
     {
         _clearLogsCommand = clearLogsCommand;
@@ -52,6 +59,7 @@ public sealed partial class DiagnosticsViewModel : ViewModelBase
         _getIsLoggingEnabledQuery = getIsLoggingEnabledQuery;
         _getCurrentLogsQuery = getCurrentLogsQuery;
         _telemetryService = telemetryService;
+        _taskEnvironment = taskEnvironment;
 
         _logService = logService;
         _logService.LogAdded += OnLogAdded;
@@ -68,17 +76,67 @@ public sealed partial class DiagnosticsViewModel : ViewModelBase
     private async Task InitializeAsync()
     {
         IsLoggingEnabled = (await _getIsLoggingEnabledQuery.ExecuteAsync(new GetIsLoggingEnabledRequest(), CancellationToken.None)).Value?.IsEnabled == true;
-        Logs = string.Join(Environment.NewLine, ((await _getCurrentLogsQuery.ExecuteAsync(new GetCurrentLogsRequest(), CancellationToken.None)).Value?.Logs ?? []).Select(log => log.ToString()));
+        SetRenderedLogs((await _getCurrentLogsQuery.ExecuteAsync(new GetCurrentLogsRequest(), CancellationToken.None)).Value?.Logs ?? []);
     }
 
-    ~DiagnosticsViewModel()
+    public override void Dispose()
     {
+        if (Interlocked.Exchange(ref _isDisposed, 1) != 0)
+        {
+            return;
+        }
+
         _logService.LogAdded -= OnLogAdded;
+        base.Dispose();
     }
 
     private void OnLogAdded(object? sender, ILogEntry e)
     {
-        Logs += e.ToString() + Environment.NewLine;
+        if (Volatile.Read(ref _isDisposed) != 0)
+        {
+            return;
+        }
+
+        string renderedLog = e.ToString() ?? string.Empty;
+        _taskEnvironment.TryExecute(() =>
+        {
+            if (Volatile.Read(ref _isDisposed) == 0)
+            {
+                AppendRenderedLog(renderedLog);
+            }
+        });
+    }
+
+    private void SetRenderedLogs(IEnumerable<ILogEntry> logs)
+    {
+        _renderedLogs.Clear();
+        foreach (ILogEntry log in logs)
+        {
+            _renderedLogs.Enqueue(log.ToString() ?? string.Empty);
+            TrimRenderedLogs();
+        }
+
+        UpdateRenderedLogText();
+    }
+
+    private void AppendRenderedLog(string renderedLog)
+    {
+        _renderedLogs.Enqueue(renderedLog);
+        TrimRenderedLogs();
+        UpdateRenderedLogText();
+    }
+
+    private void TrimRenderedLogs()
+    {
+        while (_renderedLogs.Count > MaxRenderedLogEntries)
+        {
+            _renderedLogs.Dequeue();
+        }
+    }
+
+    private void UpdateRenderedLogText()
+    {
+        Logs = string.Join(Environment.NewLine, _renderedLogs);
     }
 
     private async Task UpdateLoggingEnablementAsync(bool newValue)
@@ -95,7 +153,8 @@ public sealed partial class DiagnosticsViewModel : ViewModelBase
 
     private async Task ClearLogsAsync()
     {
-        Logs = string.Empty;
+        _renderedLogs.Clear();
+        UpdateRenderedLogText();
         var response = await _clearLogsCommand.ExecuteAsync(new ClearLogsRequest(), CancellationToken.None);
         TrackDiagnosticsAction("clear_logs", response?.Result ?? UseCaseResult.Failed);
     }

@@ -193,7 +193,7 @@ public sealed class ImageEditSessionTests
             ImageOrientation.RotateNoneFlipNone,
             new Rectangle(0, 0, 100, 100),
             [ellipse, line, arrow, text]);
-        var state = new ModifyShapeOperation.ShapeState
+        var state = new ShapeState
         {
             Offset = new Vector2(10, 20),
             Size = new Size(30, 40),
@@ -376,8 +376,8 @@ public sealed class ImageEditSessionTests
                 session,
                 new ModifyDrawableCommand(
                     i,
-                    new ModifyShapeOperation.ShapeState(session.Drawables[i]),
-                    new ModifyShapeOperation.ShapeState(replacements[i])));
+                    new ShapeState(session.Drawables[i]),
+                    new ShapeState(replacements[i])));
         }
 
         session.ResizeImage(new Size(200, 100));
@@ -486,8 +486,8 @@ public sealed class ImageEditSessionTests
             new Rectangle(0, 0, 100, 100),
             [rectangle]);
         var history = new ImageEditHistory();
-        var oldState = new ModifyShapeOperation.ShapeState(rectangle);
-        var newState = new ModifyShapeOperation.ShapeState
+        var oldState = new ShapeState(rectangle);
+        var newState = new ShapeState
         {
             Offset = new Vector2(20, 30),
             Size = new Size(40, 50),
