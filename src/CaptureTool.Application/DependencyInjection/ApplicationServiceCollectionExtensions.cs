@@ -1,9 +1,11 @@
 using CaptureTool.Application.Abstractions.Ai;
+using CaptureTool.Application.Abstractions.Analysis.Policy;
 using CaptureTool.Application.Abstractions.Edit.External;
 using CaptureTool.Application.Abstractions.EditSessions;
 using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Application.Ai;
+using CaptureTool.Application.Analysis.Policy;
 using CaptureTool.Application.Capture;
 using CaptureTool.Application.Edit.External;
 using CaptureTool.Application.EditSessions;
@@ -23,6 +25,7 @@ public static class ApplicationServiceCollectionExtensions
             .AddActivationServices()
             .AddAppMenuUseCases()
             .AddAudioCaptureServices()
+            .AddCaptureAnalysisServices()
             .AddCaptureAssetServices()
             .AddAudioEditUseCases()
             .AddCaptureOverlayUseCases()
@@ -37,6 +40,16 @@ public static class ApplicationServiceCollectionExtensions
             .AddVideoEditUseCases()
             .AddWindowingUseCases();
 
+        return services;
+    }
+
+    private static IServiceCollection AddCaptureAnalysisServices(this IServiceCollection services)
+    {
+        services.AddSingleton<CaptureAnalysisPolicyService>();
+        services.AddSingleton<ICaptureAnalysisPolicyService>(provider =>
+            provider.GetRequiredService<CaptureAnalysisPolicyService>());
+        services.AddSingleton<ICaptureAnalysisPolicyCommandService>(provider =>
+            provider.GetRequiredService<CaptureAnalysisPolicyService>());
         return services;
     }
 

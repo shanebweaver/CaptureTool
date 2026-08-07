@@ -41,6 +41,7 @@ public static class WindowsInfrastructureServiceCollectionExtensions
         services.AddSingleton<IStoreService, WindowsStoreService>();
         services.AddSingleton<IThemeService, WindowsThemeService>();
         services.AddSingleton<IStorageService, WindowsStorageService>();
+        services.AddSingleton<IApplicationLocalCachePathProvider, WindowsApplicationLocalCachePathProvider>();
         services.AddSingleton<IFolderLauncher, WindowsFolderLauncher>();
         services.AddSingleton<IJsonStorageService, WindowsJsonStorageService>();
         services.AddSingleton<ILocalizationService, WindowsLocalizationService>();
