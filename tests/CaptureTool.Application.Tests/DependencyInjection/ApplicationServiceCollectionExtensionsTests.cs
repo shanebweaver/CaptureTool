@@ -2,10 +2,12 @@ using CaptureTool.Application.Abstractions.Activation;
 using CaptureTool.Application.Abstractions.Ai;
 using CaptureTool.Application.Abstractions.Analysis.Policy;
 using CaptureTool.Application.Abstractions.Analysis.Analyzers;
+using CaptureTool.Application.Abstractions.Analysis.Jobs;
 using CaptureTool.Application.Abstractions.Analysis.Intake;
 using CaptureTool.Application.Abstractions.Analysis.Maintenance;
 using CaptureTool.Application.Abstractions.Analysis.Memory;
 using CaptureTool.Application.Abstractions.Analysis.Orchestration;
+using CaptureTool.Application.Abstractions.Analysis.Persistence;
 using CaptureTool.Application.Abstractions.Analysis.Preparation;
 using CaptureTool.Application.Abstractions.Analysis.Processing;
 using CaptureTool.Application.Abstractions.Analysis.Privacy;
@@ -17,12 +19,14 @@ using CaptureTool.Application.Abstractions.Capture.Image.CaptureImage;
 using CaptureTool.Application.Abstractions.Capture.Overlay.OpenSelectionOverlay;
 using CaptureTool.Application.Abstractions.Capture.Video.StartVideoCapture;
 using CaptureTool.Application.Abstractions.EditSessions;
+using CaptureTool.Application.Abstractions.Files;
 using CaptureTool.Application.Abstractions.Library.RecentCaptures;
 using CaptureTool.Application.Abstractions.Library.RecentCaptures.ClearRecentCaptures;
 using CaptureTool.Application.Abstractions.Library.RecentCaptures.RemoveRecentCapture;
 using CaptureTool.Application.Abstractions.Library.CaptureMemory;
 using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Application.Abstractions.Settings.OpenSettingsPage;
+using CaptureTool.Application.Abstractions.Settings;
 using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Application.Activation;
 using CaptureTool.Application.Ai;
@@ -54,6 +58,7 @@ using CaptureTool.Application.Settings.OpenSettingsPage;
 using CaptureTool.Application.Storage;
 using CaptureTool.Application.UseCases;
 using Microsoft.Extensions.DependencyInjection;
+using Moq;
 
 namespace CaptureTool.Application.Tests.DependencyInjection;
 
@@ -74,7 +79,9 @@ public sealed class ApplicationServiceCollectionExtensionsTests
             services,
             ServiceLifetime.Singleton);
         AssertHasFactoryRegistration<ICaptureAnalysisPolicyService>(services, ServiceLifetime.Singleton);
-        AssertHasFactoryRegistration<ICaptureAnalysisPolicyCommandService>(services, ServiceLifetime.Singleton);
+        AssertHasRegistration<ICaptureAnalysisPolicyCommandService, CaptureAnalysisPolicyCommandService>(
+            services,
+            ServiceLifetime.Singleton);
         AssertHasRegistration<CaptureAnalyzerCatalog, CaptureAnalyzerCatalog>(services, ServiceLifetime.Singleton);
         AssertHasFactoryRegistration<ICaptureAnalyzerCatalog>(services, ServiceLifetime.Singleton);
         AssertHasRegistration<ICaptureAnalyzerResolutionPreference, CaptureAnalyzerResolutionPreference>(
@@ -147,6 +154,29 @@ public sealed class ApplicationServiceCollectionExtensionsTests
         AssertHasRegistration<ICaptureImageUseCase, CaptureImageUseCase>(services, ServiceLifetime.Transient);
         AssertHasRegistration<IOpenSelectionOverlayUseCase, OpenSelectionOverlayUseCase>(services, ServiceLifetime.Transient);
         AssertHasRegistration<IOpenSettingsPageUseCase, OpenSettingsPageUseCase>(services, ServiceLifetime.Transient);
+    }
+
+    [TestMethod]
+    public void AddApplicationServices_ShouldResolvePolicyCommandsWithoutCircularDependency()
+    {
+        var services = new ServiceCollection();
+        services.AddApplicationServices();
+        services.AddSingleton(Mock.Of<ICaptureAssetCatalog>());
+        services.AddSingleton(Mock.Of<ICaptureAnalysisControlStore>());
+        services.AddSingleton(Mock.Of<ICaptureAnalysisFeatureAvailability>());
+        services.AddSingleton(Mock.Of<ISettingsService>());
+        services.AddSingleton(Mock.Of<ICaptureAnalysisJobStore>());
+        services.AddSingleton(Mock.Of<ICaptureAnalysisStore>());
+        services.AddSingleton(Mock.Of<ICaptureAnalysisMutationCoordinator>());
+        services.AddSingleton(Mock.Of<ICaptureAnalysisProjectionMaintenance>());
+        services.AddSingleton(Mock.Of<IRecentCaptureCatalog>());
+        services.AddSingleton(Mock.Of<IFileSystem>());
+        using ServiceProvider provider = services.BuildServiceProvider();
+
+        ICaptureAnalysisPolicyCommandService commands =
+            provider.GetRequiredService<ICaptureAnalysisPolicyCommandService>();
+
+        Assert.IsInstanceOfType<CaptureAnalysisPolicyCommandService>(commands);
     }
 
     private static void AssertHasRegistration<TService, TImplementation>(

@@ -74,8 +74,6 @@ public static class ApplicationServiceCollectionExtensions
         services.AddSingleton<CaptureAnalysisPolicyService>();
         services.AddSingleton<ICaptureAnalysisPolicyService>(provider =>
             provider.GetRequiredService<CaptureAnalysisPolicyService>());
-        services.AddSingleton<ICaptureAnalysisPolicyCommandService>(provider =>
-            provider.GetRequiredService<CaptureAnalysisPolicyService>());
         services.AddSingleton<ICaptureAnalysisScheduler, CaptureAnalysisScheduler>();
         services.AddSingleton<CaptureMemorySearchProjection>();
         services.AddSingleton<ICaptureMemorySearchService>(provider =>
@@ -85,6 +83,7 @@ public static class ApplicationServiceCollectionExtensions
         services.AddSingleton<ICaptureAnalysisProjectionMaintenance>(provider =>
             provider.GetRequiredService<CaptureMemorySearchProjection>());
         services.AddSingleton<ICaptureAnalysisCleanupCoordinator, CaptureAnalysisCleanupCoordinator>();
+        services.AddSingleton<ICaptureAnalysisPolicyCommandService, CaptureAnalysisPolicyCommandService>();
         services.AddSingleton<CaptureAnalysisLifecycleService>();
         services.AddSingleton<ICaptureAnalysisExclusionService>(provider =>
             provider.GetRequiredService<CaptureAnalysisLifecycleService>());

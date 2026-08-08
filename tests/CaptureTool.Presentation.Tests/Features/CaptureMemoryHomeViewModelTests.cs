@@ -1,5 +1,6 @@
 using CaptureTool.Application.Abstractions.Analysis.Memory;
 using CaptureTool.Application.Abstractions.Analysis.Consent;
+using CaptureTool.Application.Abstractions.Analysis.Intake;
 using CaptureTool.Application.Abstractions.Capture.Assets;
 using CaptureTool.Application.Abstractions.Analysis.Persistence;
 using CaptureTool.Application.Abstractions.Analysis.Policy;
@@ -193,6 +194,110 @@ public sealed class CaptureMemoryHomeViewModelTests
     }
 
     [TestMethod]
+    public async Task EnableExistingCaptureMemory_ShouldStartAuthorizedBackfill()
+    {
+        CaptureAnalysisPolicySnapshot initial = CreatePolicySnapshot(authorized: false);
+        CaptureAnalysisPolicySnapshot authorized = CreatePolicySnapshot(authorized: true);
+        CaptureAnalysisPolicy backfillPolicy = authorized.Policy!
+            .AuthorizeExistingCaptureBackfill(currentSequence: 12);
+        CaptureAnalysisPolicy completedPolicy = backfillPolicy
+            .StartExistingCaptureBackfill()
+            .AdvanceExistingCaptureBackfill(checkpoint: 12);
+        CaptureAnalysisPolicySnapshot backfillAuthorized = CreatePolicySnapshot(backfillPolicy);
+        CaptureAnalysisPolicySnapshot completed = CreatePolicySnapshot(completedPolicy);
+        var policy = new Mock<ICaptureAnalysisPolicyService>();
+        policy.SetupSequence(value => value.GetCurrentAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(initial)
+            .ReturnsAsync(initial)
+            .ReturnsAsync(completed);
+        var commands = new Mock<ICaptureAnalysisPolicyCommandService>();
+        commands.Setup(value => value.ApplyConsentDecisionAsync(
+                It.IsAny<CaptureTool.Application.Abstractions.Analysis.Consent.CaptureAnalysisConsentResponse>(),
+                initial.ControlDocumentRevision,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new CaptureAnalysisPolicyChangeResult(
+                CaptureAnalysisPolicyChangeStatus.Succeeded,
+                authorized));
+        commands.Setup(value => value.AuthorizeExistingCaptureBackfillAsync(
+                authorized.ControlDocumentRevision,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new CaptureAnalysisPolicyChangeResult(
+                CaptureAnalysisPolicyChangeStatus.Succeeded,
+                backfillAuthorized));
+        var preparation = new Mock<IUserInitiatedAnalysisCapabilityPreparationService>();
+        preparation.Setup(value => value.PrepareAsync(
+                It.IsAny<AnalysisCapabilityPreparationRequest>(),
+                It.IsAny<IProgress<AnalysisCapabilityPreparationProgress>>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(AnalysisCapabilityPreparationState.Ready(
+                CreateAnalyzerIdentity(),
+                ProcessingBoundary.OnDevice));
+        var backfill = new Mock<ICaptureAnalysisBackfillService>();
+        backfill.Setup(value => value.RunAsync(
+                It.IsAny<IProgress<CaptureAnalysisBackfillProgress>>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new CaptureAnalysisBackfillRunResult(
+                CaptureAnalysisBackfillRunStatus.Completed,
+                new CaptureAnalysisBackfillProgress(12, 12, 2)));
+        CaptureMemoryHomeViewModel viewModel = CreateViewModel(
+            Mock.Of<ICaptureMemorySearchService>(),
+            policyService: policy.Object,
+            policyCommandService: commands.Object,
+            preparationService: preparation.Object,
+            backfillService: backfill.Object);
+        await viewModel.LoadAsync(CancellationToken.None);
+
+        await viewModel.EnableForExistingCommand.ExecuteAsync(null);
+        await viewModel.BackfillCompletion;
+
+        Assert.IsTrue(viewModel.IsAuthorized);
+        Assert.IsFalse(viewModel.IsIndexing);
+        Assert.AreEqual(1, viewModel.IndexProgress);
+        Assert.IsFalse(viewModel.HasSetupFailure);
+        backfill.Verify(value => value.RunAsync(
+            It.IsAny<IProgress<CaptureAnalysisBackfillProgress>>(),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [TestMethod]
+    public async Task Load_ShouldResumeAnAuthorizedBackfill()
+    {
+        CaptureAnalysisPolicy backfillPolicy = CaptureAnalysisPolicy.Unknown
+            .GrantFutureCaptures(
+                CaptureAnalysisPolicyDefaults.CreateAuthorizationScope(),
+                currentSequence: 4)
+            .AuthorizeExistingCaptureBackfill(currentSequence: 8);
+        CaptureAnalysisPolicy completedPolicy = backfillPolicy
+            .StartExistingCaptureBackfill()
+            .AdvanceExistingCaptureBackfill(checkpoint: 8);
+        var policy = new Mock<ICaptureAnalysisPolicyService>();
+        policy.SetupSequence(value => value.GetCurrentAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(CreatePolicySnapshot(backfillPolicy))
+            .ReturnsAsync(CreatePolicySnapshot(completedPolicy));
+        var backfill = new Mock<ICaptureAnalysisBackfillService>();
+        backfill.Setup(value => value.RunAsync(
+                It.IsAny<IProgress<CaptureAnalysisBackfillProgress>>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new CaptureAnalysisBackfillRunResult(
+                CaptureAnalysisBackfillRunStatus.Completed,
+                new CaptureAnalysisBackfillProgress(8, 8, 1)));
+        CaptureMemoryHomeViewModel viewModel = CreateViewModel(
+            Mock.Of<ICaptureMemorySearchService>(),
+            policyService: policy.Object,
+            backfillService: backfill.Object);
+
+        await viewModel.LoadAsync(CancellationToken.None);
+        await viewModel.BackfillCompletion;
+
+        Assert.IsFalse(viewModel.IsIndexing);
+        Assert.AreEqual(1, viewModel.IndexProgress);
+        Assert.IsFalse(viewModel.HasSetupFailure);
+        backfill.Verify(value => value.RunAsync(
+            It.IsAny<IProgress<CaptureAnalysisBackfillProgress>>(),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [TestMethod]
     public async Task RemoveFromMemory_ShouldConfirmForgetHistoryWithoutDeletingSource()
     {
         CaptureId captureId = CaptureId.New();
@@ -287,7 +392,8 @@ public sealed class CaptureMemoryHomeViewModelTests
         ICaptureAnalysisPolicyCommandService? policyCommandService = null,
         IUserInitiatedAnalysisCapabilityPreparationService? preparationService = null,
         ICaptureAssetRemovalService? assetRemovalService = null,
-        ICaptureAnalysisSettingsConfirmationDialogService? confirmationService = null)
+        ICaptureAnalysisSettingsConfirmationDialogService? confirmationService = null,
+        ICaptureAnalysisBackfillService? backfillService = null)
     {
         policyService ??= CreateAuthorizedPolicyService();
         resolver ??= CreateAvailableResolver();
@@ -300,7 +406,8 @@ public sealed class CaptureMemoryHomeViewModelTests
             policyCommandService: policyCommandService,
             preparationService: preparationService,
             assetRemovalService: assetRemovalService,
-            confirmationService: confirmationService);
+            confirmationService: confirmationService,
+            backfillService: backfillService);
     }
 
     private static Mock<ICaptureAnalysisSettingsConfirmationDialogService> CreateConfirmation(
@@ -344,12 +451,19 @@ public sealed class CaptureMemoryHomeViewModelTests
                 CaptureAnalysisPolicyDefaults.CreateAuthorizationScope(),
                 0)
             : CaptureAnalysisPolicy.Unknown;
+        return CreatePolicySnapshot(policy);
+    }
+
+    private static CaptureAnalysisPolicySnapshot CreatePolicySnapshot(CaptureAnalysisPolicy policy)
+    {
         var control = new CaptureAnalysisControlSnapshot(
             1,
             new CaptureAnalysisControlState(policy, []));
         return new CaptureAnalysisPolicySnapshot(
             CaptureAnalysisPolicySnapshotStatus.Available,
-            authorized ? CaptureAnalysisConsentState.Granted : CaptureAnalysisConsentState.Unknown,
+            policy.IsProcessingAuthorized
+                ? CaptureAnalysisConsentState.Granted
+                : CaptureAnalysisConsentState.Unknown,
             control);
     }
 

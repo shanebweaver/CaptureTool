@@ -3,7 +3,6 @@ using CaptureTool.Application.Abstractions.Analysis.Persistence;
 using CaptureTool.Application.Abstractions.Analysis.Policy;
 using CaptureTool.Application.Abstractions.Capture.Assets;
 using CaptureTool.Application.Abstractions.Settings;
-using CaptureTool.Application.Analysis.Maintenance;
 using CaptureTool.Domain.Analysis;
 
 namespace CaptureTool.Application.Analysis.Policy;
@@ -17,21 +16,18 @@ internal sealed class CaptureAnalysisPolicyService :
     private readonly ICaptureAnalysisControlStore _controlStore;
     private readonly ICaptureAnalysisFeatureAvailability _featureAvailability;
     private readonly ISettingsService _settingsService;
-    private readonly ICaptureAnalysisCleanupCoordinator? _cleanup;
     private readonly SemaphoreSlim _mutationGate = new(1, 1);
 
     public CaptureAnalysisPolicyService(
         ICaptureAssetCatalog captureAssetCatalog,
         ICaptureAnalysisControlStore controlStore,
         ICaptureAnalysisFeatureAvailability featureAvailability,
-        ISettingsService settingsService,
-        ICaptureAnalysisCleanupCoordinator? cleanup = null)
+        ISettingsService settingsService)
     {
         _captureAssetCatalog = captureAssetCatalog;
         _controlStore = controlStore;
         _featureAvailability = featureAvailability;
         _settingsService = settingsService;
-        _cleanup = cleanup;
     }
 
     public async ValueTask<CaptureAnalysisPolicySnapshot> GetCurrentAsync(
@@ -451,13 +447,6 @@ internal sealed class CaptureAnalysisPolicyService :
                 }
 
                 settingsConsent = CaptureAnalysisConsentSettingValues.Parse(consentSettingValue);
-            }
-
-            if (IsAuthorizationRemovingMutation(mutation) && _cleanup != null)
-            {
-                // The revocation is already durable. Cleanup is idempotent and also retried by
-                // startup reconciliation, so cancellation cannot re-authorize or strand content.
-                _ = await _cleanup.ReconcileAsync(CancellationToken.None).ConfigureAwait(false);
             }
 
             return new(

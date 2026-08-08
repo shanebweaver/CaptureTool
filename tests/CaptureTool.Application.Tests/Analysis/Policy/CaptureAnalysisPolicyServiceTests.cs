@@ -27,6 +27,7 @@ public sealed class CaptureAnalysisPolicyServiceTests
             .ToArray();
 
         CollectionAssert.DoesNotContain(dependencies, typeof(IAiFeatureConsentService));
+        CollectionAssert.DoesNotContain(dependencies, typeof(ICaptureAnalysisCleanupCoordinator));
         Assert.AreNotEqual(
             CaptureToolSettings.Settings_CaptureAnalysisConsent.Key,
             CaptureToolSettings.Settings_AiConsent_TextExtraction.Key);
@@ -326,21 +327,78 @@ public sealed class CaptureAnalysisPolicyServiceTests
         var declinedStore = new TestControlStore(CreateSnapshot(CaptureAnalysisPolicy.Unknown));
         var declinedSettings = new ConsentSettingsHarness(CaptureAnalysisConsentState.Unknown);
         var catalog = new Mock<ICaptureAssetCatalog>(MockBehavior.Strict);
+        var cleanupOrdering = new List<string>();
         var declinedService = new CaptureAnalysisPolicyService(
             catalog.Object,
             declinedStore,
             new TestFeatureAvailability(true),
             declinedSettings.Service);
+        var declinedCommands = new CaptureAnalysisPolicyCommandService(
+            declinedService,
+            new OrderingCleanupCoordinator(cleanupOrdering));
 
         CaptureAnalysisPolicyChangeResult declined =
-            await declinedService.ApplyConsentDecisionAsync(
+            await declinedCommands.ApplyConsentDecisionAsync(
                 CreateConsentResponse(CaptureAnalysisConsentDecision.Declined),
                 1);
 
         Assert.AreEqual(CaptureAnalysisPolicyChangeStatus.Succeeded, declined.Status);
         Assert.AreEqual(CaptureAnalysisConsentState.Denied, declinedStore.Snapshot.State.ConsentState);
         Assert.AreEqual(CaptureAnalysisConsentState.Denied, declinedSettings.State);
+        CollectionAssert.AreEqual(new[] { "cleanup" }, cleanupOrdering);
         catalog.VerifyNoOtherCalls();
+    }
+
+    [TestMethod]
+    public async Task CommandCoordinator_ShouldDelegateNonDestructivePolicyChangesWithoutCleanup()
+    {
+        var ordering = new List<string>();
+        var store = new TestControlStore(CreateSnapshot(CaptureAnalysisPolicy.Unknown));
+        var settings = new ConsentSettingsHarness(CaptureAnalysisConsentState.Unknown);
+        CaptureAnalysisPolicyService service = CreateService(
+            store,
+            settings,
+            new TestFeatureAvailability(true),
+            currentAssetSequence: 10);
+        var commands = new CaptureAnalysisPolicyCommandService(
+            service,
+            new OrderingCleanupCoordinator(ordering));
+
+        CaptureAnalysisPolicyChangeResult granted = await commands.ApplyConsentDecisionAsync(
+            CreateConsentResponse(CaptureAnalysisConsentDecision.GrantedForFutureCaptures),
+            1);
+        CaptureAnalysisPolicyChangeResult stopped = await commands.StopFutureCapturesAsync(2);
+        CaptureAnalysisPolicyChangeResult resumed = await commands.ResumeFutureCaptureAdmissionAsync(3);
+        CaptureAnalysisPolicyChangeResult backfill =
+            await commands.AuthorizeExistingCaptureBackfillAsync(4);
+
+        Assert.AreEqual(CaptureAnalysisPolicyChangeStatus.Succeeded, granted.Status);
+        Assert.AreEqual(CaptureAnalysisPolicyChangeStatus.Succeeded, stopped.Status);
+        Assert.AreEqual(CaptureAnalysisPolicyChangeStatus.Succeeded, resumed.Status);
+        Assert.AreEqual(CaptureAnalysisPolicyChangeStatus.Succeeded, backfill.Status);
+        Assert.IsEmpty(ordering);
+    }
+
+    [TestMethod]
+    public async Task CommandCoordinator_ShouldNotCleanUpARejectedAuthorizationRemoval()
+    {
+        var ordering = new List<string>();
+        var store = new TestControlStore(CreateSnapshot(CaptureAnalysisPolicy.Unknown));
+        var settings = new ConsentSettingsHarness(CaptureAnalysisConsentState.Unknown);
+        CaptureAnalysisPolicyService service = CreateService(
+            store,
+            settings,
+            new TestFeatureAvailability(true),
+            currentAssetSequence: 10);
+        var commands = new CaptureAnalysisPolicyCommandService(
+            service,
+            new OrderingCleanupCoordinator(ordering));
+
+        CaptureAnalysisPolicyChangeResult result = await commands.RevokeAsync(
+            expectedControlDocumentRevision: 99);
+
+        Assert.AreEqual(CaptureAnalysisPolicyChangeStatus.Conflict, result.Status);
+        Assert.IsEmpty(ordering);
     }
 
     [TestMethod]
@@ -468,11 +526,11 @@ public sealed class CaptureAnalysisPolicyServiceTests
             store,
             settings,
             new TestFeatureAvailability(true),
-            30,
-            cleanup);
+            30);
+        var commands = new CaptureAnalysisPolicyCommandService(service, cleanup);
 
         CaptureAnalysisPolicyChangeResult result =
-            await service.RevokeAsync(1);
+            await commands.RevokeAsync(1);
 
         Assert.AreEqual(CaptureAnalysisPolicyChangeStatus.Succeeded, result.Status);
         CollectionAssert.AreEqual(
@@ -804,14 +862,13 @@ public sealed class CaptureAnalysisPolicyServiceTests
         TestControlStore store,
         ConsentSettingsHarness settings,
         TestFeatureAvailability features,
-        long currentAssetSequence,
-        ICaptureAnalysisCleanupCoordinator? cleanup = null)
+        long currentAssetSequence)
     {
         var catalog = new Mock<ICaptureAssetCatalog>();
         catalog
             .Setup(value => value.GetLatestChangeSequence())
             .Returns(currentAssetSequence);
-        return new(catalog.Object, store, features, settings.Service, cleanup);
+        return new(catalog.Object, store, features, settings.Service);
     }
 
     private static CaptureAnalysisControlSnapshot CreateSnapshot(

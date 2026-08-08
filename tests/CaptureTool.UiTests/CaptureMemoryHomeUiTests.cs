@@ -13,6 +13,7 @@ public sealed class CaptureMemoryHomeUiTests
 {
     private static readonly TimeSpan AppLaunchTimeout = TimeSpan.FromSeconds(30);
     private static readonly TimeSpan InteractionTimeout = TimeSpan.FromSeconds(15);
+    private static readonly TimeSpan RealAnalysisTimeout = TimeSpan.FromMinutes(2);
 
     public TestContext TestContext { get; set; } = null!;
 
@@ -231,6 +232,89 @@ public sealed class CaptureMemoryHomeUiTests
         }
     }
 
+    [TestMethod]
+    [TestCategory("UI")]
+    public void CaptureMemory_RealAnalysisBackfill_ShouldFindExistingCaptureText()
+    {
+        if (!string.Equals(
+            Environment.GetEnvironmentVariable("CAPTURETOOL_RUN_UI_TESTS"),
+            "1",
+            StringComparison.OrdinalIgnoreCase))
+        {
+            Assert.Inconclusive("Set CAPTURETOOL_RUN_UI_TESTS=1 to run desktop UI automation tests.");
+        }
+
+        string repoRoot = FindRepositoryRoot();
+        string executable = ResolveAppExecutablePath(repoRoot);
+        Assert.IsTrue(File.Exists(executable), $"The WinUI app should be built at {executable}.");
+
+        string artifacts = Path.Combine(
+            TestContext.TestRunResultsDirectory ?? TestContext.TestRunDirectory ?? Path.GetTempPath(),
+            "CaptureTool.RealAnalysisUiTests",
+            Guid.NewGuid().ToString("N"));
+        string dataDirectory = Path.Combine(artifacts, "app-data");
+        string temporaryDirectory = Path.Combine(artifacts, "app-temp");
+        string retainedCaptureDirectory = Path.Combine(dataDirectory, "Captures");
+        Directory.CreateDirectory(retainedCaptureDirectory);
+        Directory.CreateDirectory(temporaryDirectory);
+        CreateSyntheticCapture(Path.Combine(retainedCaptureDirectory, "retained-a.png"));
+
+        using LaunchedApp app = LaunchRealCaptureAnalysis(
+            executable,
+            dataDirectory,
+            temporaryDirectory);
+        try
+        {
+            using var automation = new UIA3Automation();
+            Window window = WaitFor(
+                () => GetTopLevelElements(app.ProcessId, automation)
+                    .Select(element => element.AsWindow())
+                    .FirstOrDefault(candidate => candidate.BoundingRectangle.Width > 0),
+                AppLaunchTimeout,
+                "Capture Tool main window");
+            window.Focus();
+
+            WaitForElement(app.ProcessId, automation, "Home_CaptureMemoryEnableExistingButton").Click();
+            AutomationElement searchBox = WaitFor(
+                () => FindElement(app.ProcessId, automation, "Home_CaptureMemorySearchBox"),
+                RealAnalysisTimeout,
+                "Capture Memory search after real model preparation");
+            AutomationElement openButton = WaitForRealAnalysisResult(
+                app.ProcessId,
+                automation,
+                searchBox,
+                "purple comet");
+            AutomationElement results = WaitForElement(
+                app.ProcessId,
+                automation,
+                "Home_CaptureMemoryResults");
+
+            Assert.IsTrue(
+                results.FindAllDescendants().Any(element =>
+                    TryGetElementName(element).Contains("Text match", StringComparison.OrdinalIgnoreCase)),
+                "The real Windows OCR result should explain the recognized-text match.");
+            Assert.IsTrue(openButton.IsEnabled, "The analyzed existing capture should be openable.");
+            Assert.IsGreaterThanOrEqualTo(
+                2,
+                Directory.EnumerateFiles(
+                        Path.Combine(temporaryDirectory, "LocalCache", "CaptureAnalysis", "jobs-v1"),
+                        "*.job",
+                        SearchOption.AllDirectories)
+                    .Count(),
+                "The real pipeline should persist jobs for the required image capabilities.");
+            Assert.IsTrue(
+                Directory.EnumerateFiles(
+                    Path.Combine(temporaryDirectory, "LocalCache", "CaptureAnalysis", "metadata-v1"),
+                    "*.analysis",
+                    SearchOption.AllDirectories).Any(),
+                "The real pipeline should persist a protected metadata envelope.");
+        }
+        finally
+        {
+            app.Close();
+        }
+    }
+
     private static void FocusAndClick(AutomationElement element)
     {
         element.AsButton().Invoke();
@@ -287,6 +371,61 @@ public sealed class CaptureMemoryHomeUiTests
         return new LaunchedApp(process);
     }
 
+    private static LaunchedApp LaunchRealCaptureAnalysis(
+        string executable,
+        string dataDirectory,
+        string temporaryDirectory)
+    {
+        ProcessStartInfo startInfo = new(executable)
+        {
+            UseShellExecute = false,
+            WorkingDirectory = Path.GetDirectoryName(executable),
+        };
+        foreach (string argument in new[]
+        {
+            "--capturetool-ui-test",
+            "--ui-test-enable-capture-analysis",
+            "--ui-test-data-dir",
+            dataDirectory,
+            "--ui-test-temp-dir",
+            temporaryDirectory,
+        })
+        {
+            startInfo.ArgumentList.Add(argument);
+        }
+
+        Process process = Process.Start(startInfo) ??
+            throw new InvalidOperationException("Failed to launch Capture Tool.");
+        return new LaunchedApp(process);
+    }
+
+    private static AutomationElement WaitForRealAnalysisResult(
+        int processId,
+        UIA3Automation automation,
+        AutomationElement searchBox,
+        string query)
+    {
+        Stopwatch stopwatch = Stopwatch.StartNew();
+        TextBox textBox = searchBox.AsTextBox();
+        while (stopwatch.Elapsed < RealAnalysisTimeout)
+        {
+            textBox.Text = string.Empty;
+            textBox.Text = query;
+            Thread.Sleep(750);
+            AutomationElement? result = FindElement(
+                processId,
+                automation,
+                "Home_CaptureMemoryOpenButton");
+            if (result != null)
+            {
+                return result;
+            }
+        }
+
+        Assert.Fail("Timed out waiting for a real Capture Memory analysis result.");
+        throw new UnreachableException();
+    }
+
     private static AutomationElement WaitForElement(
         int processId,
         UIA3Automation automation,
@@ -314,6 +453,18 @@ public sealed class CaptureMemoryHomeUiTests
         }
 
         return null;
+    }
+
+    private static string TryGetElementName(AutomationElement element)
+    {
+        try
+        {
+            return element.Name;
+        }
+        catch
+        {
+            return string.Empty;
+        }
     }
 
     private static AutomationElement WaitForElementByName(

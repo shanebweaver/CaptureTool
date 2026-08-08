@@ -1,4 +1,5 @@
 using CaptureTool.Application.Abstractions.Analysis.Consent;
+using CaptureTool.Application.Abstractions.Analysis.Intake;
 using CaptureTool.Application.Abstractions.Analysis.Maintenance;
 using CaptureTool.Application.Abstractions.Analysis.Memory;
 using CaptureTool.Application.Abstractions.Analysis.Orchestration;
@@ -25,12 +26,14 @@ public sealed class CaptureMemoryHomeViewModel : ViewModelBase
     private readonly ICaptureAnalysisPolicyService? _policyService;
     private readonly ICaptureAnalysisPolicyCommandService? _policyCommandService;
     private readonly IUserInitiatedAnalysisCapabilityPreparationService? _preparationService;
+    private readonly ICaptureAnalysisBackfillService? _backfillService;
     private readonly ICaptureAnalysisMaintenanceService? _maintenanceService;
     private readonly ICaptureAssetRemovalService? _assetRemovalService;
     private readonly ICaptureAnalysisSettingsConfirmationDialogService? _confirmationService;
     private readonly ILocalizationService? _localizationService;
     private CancellationTokenSource? _searchCancellation;
     private CancellationTokenSource? _policyRefreshCancellation;
+    private Task _backfillCompletion = Task.CompletedTask;
     private Task _searchCompletion = Task.CompletedTask;
     private int _searchGeneration;
     private string _searchQuery = string.Empty;
@@ -46,7 +49,8 @@ public sealed class CaptureMemoryHomeViewModel : ViewModelBase
         ICaptureAnalysisMaintenanceService? maintenanceService = null,
         ICaptureAssetRemovalService? assetRemovalService = null,
         ILocalizationService? localizationService = null,
-        ICaptureAnalysisSettingsConfirmationDialogService? confirmationService = null)
+        ICaptureAnalysisSettingsConfirmationDialogService? confirmationService = null,
+        ICaptureAnalysisBackfillService? backfillService = null)
     {
         _featureAvailability = featureAvailability;
         _searchService = searchService;
@@ -55,6 +59,7 @@ public sealed class CaptureMemoryHomeViewModel : ViewModelBase
         _policyService = policyService;
         _policyCommandService = policyCommandService;
         _preparationService = preparationService;
+        _backfillService = backfillService;
         _maintenanceService = maintenanceService;
         _assetRemovalService = assetRemovalService;
         _confirmationService = confirmationService;
@@ -98,6 +103,8 @@ public sealed class CaptureMemoryHomeViewModel : ViewModelBase
     public IAsyncRelayCommand<CaptureMemorySearchResultViewModel> DeleteResultCommand { get; }
 
     public ObservableCollection<CaptureMemorySearchResultViewModel> Results => _results;
+
+    public Task BackfillCompletion => _backfillCompletion;
 
     public Task SearchCompletion => _searchCompletion;
 
@@ -232,9 +239,13 @@ public sealed class CaptureMemoryHomeViewModel : ViewModelBase
 
     public bool HasFailedResults { get; private set => Set(ref field, value); }
 
-    public Task LoadAsync(CancellationToken cancellationToken)
+    public async Task LoadAsync(CancellationToken cancellationToken)
     {
-        return RefreshPolicyAsync(cancellationToken);
+        await RefreshPolicyAsync(cancellationToken);
+        if (IsIndexing && _backfillService != null && _backfillCompletion.IsCompleted)
+        {
+            _backfillCompletion = RunBackfillAsync();
+        }
     }
 
     public override void Dispose()
@@ -249,7 +260,10 @@ public sealed class CaptureMemoryHomeViewModel : ViewModelBase
 
     private async Task EnableAsync(bool includeExistingCaptures)
     {
-        if (_policyService == null || _policyCommandService == null || _preparationService == null)
+        if (_policyService == null ||
+            _policyCommandService == null ||
+            _preparationService == null ||
+            includeExistingCaptures && _backfillService == null)
         {
             HasSetupFailure = true;
             return;
@@ -333,6 +347,10 @@ public sealed class CaptureMemoryHomeViewModel : ViewModelBase
             }
 
             ApplyPolicy(resultingPolicy);
+            if (includeExistingCaptures)
+            {
+                _backfillCompletion = RunBackfillAsync();
+            }
         }
         catch (OperationCanceledException)
         {
@@ -345,6 +363,39 @@ public sealed class CaptureMemoryHomeViewModel : ViewModelBase
         finally
         {
             IsPreparing = false;
+        }
+    }
+
+    private async Task RunBackfillAsync()
+    {
+        try
+        {
+            var progress = new Progress<CaptureAnalysisBackfillProgress>(value =>
+            {
+                IndexProgress = value.Fraction;
+                IsIndexing = value.Checkpoint < value.UpperSequence;
+            });
+            CaptureAnalysisBackfillRunResult result = await _backfillService!.RunAsync(
+                progress,
+                CancellationToken.None);
+            if (result.Status is not (
+                CaptureAnalysisBackfillRunStatus.Completed or
+                CaptureAnalysisBackfillRunStatus.AlreadyCompleted))
+            {
+                HasSetupFailure = true;
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            HasSetupFailure = true;
+        }
+        catch
+        {
+            HasSetupFailure = true;
+        }
+        finally
+        {
+            await RefreshPolicyAsync(CancellationToken.None);
         }
     }
 
