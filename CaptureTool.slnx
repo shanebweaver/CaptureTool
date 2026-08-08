@@ -16,12 +16,17 @@
   <Folder Name="/src/">
     <Project Path="src/CaptureTool.Application.Abstractions/CaptureTool.Application.Abstractions.csproj" />
     <Project Path="src/CaptureTool.Application/CaptureTool.Application.csproj" />
+    <Project Path="src/CaptureTool.Domain.Analysis/CaptureTool.Domain.Analysis.csproj" />
     <Project Path="src/CaptureTool.Domain.Capture/CaptureTool.Domain.Capture.csproj" />
     <Project Path="src/CaptureTool.Domain.Edit/CaptureTool.Domain.Edit.csproj" />
     <Project Path="src/CaptureTool.Domain/CaptureTool.Domain.csproj" />
     <Project Path="src/CaptureTool.FeatureManagement.Generators/CaptureTool.FeatureManagement.Generators.csproj" />
     <Project Path="src/CaptureTool.FeatureManagement/CaptureTool.FeatureManagement.csproj" />
     <Project Path="src/CaptureTool.Infrastructure.Capture.Windows/CaptureTool.Infrastructure.Capture.Windows.csproj">
+      <Platform Solution="*|ARM64" Project="ARM64" />
+      <Platform Solution="*|x64" Project="x64" />
+    </Project>
+    <Project Path="src/CaptureTool.Infrastructure.Analysis.Windows/CaptureTool.Infrastructure.Analysis.Windows.csproj">
       <Platform Solution="*|ARM64" Project="ARM64" />
       <Platform Solution="*|x64" Project="x64" />
     </Project>
@@ -45,7 +50,15 @@
     </Project>
     <Project Path="src/CaptureTool.Presentation/CaptureTool.Presentation.csproj" Id="6ec44793-8177-4c4c-8ce8-0ec7aeb93335" />
   </Folder>
+  <Folder Name="/tools/">
+    <Project Path="tools/CaptureTool.Analysis.Evaluation/CaptureTool.Analysis.Evaluation.csproj" />
+  </Folder>
   <Folder Name="/tests/">
+    <Project Path="tests/CaptureTool.Analysis.Evaluation.Tests/CaptureTool.Analysis.Evaluation.Tests.csproj" />
+    <Project Path="tests/CaptureTool.Infrastructure.Analysis.Windows.Tests/CaptureTool.Infrastructure.Analysis.Windows.Tests.csproj">
+      <Platform Solution="*|ARM64" Project="ARM64" />
+      <Platform Solution="*|x64" Project="x64" />
+    </Project>
     <Project Path="tests/CaptureTool.Application.Tests/CaptureTool.Application.Tests.csproj" />
     <Project Path="tests/CaptureTool.Infrastructure.Capture.Windows.Tests/CaptureTool.Infrastructure.Capture.Windows.Tests.csproj">
       <Platform Solution="*|ARM64" Project="ARM64" />

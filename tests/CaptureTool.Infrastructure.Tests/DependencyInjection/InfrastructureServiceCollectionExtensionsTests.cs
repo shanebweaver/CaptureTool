@@ -1,5 +1,12 @@
 using CaptureTool.Application.Abstractions.Ai;
+using CaptureTool.Application.Abstractions.Analysis.Persistence;
+using CaptureTool.Application.Abstractions.Analysis.Policy;
+using CaptureTool.Application.Abstractions.Analysis.Intake;
+using CaptureTool.Application.Abstractions.Analysis.Jobs;
+using CaptureTool.Application.Abstractions.Analysis.Sources;
+using CaptureTool.Application.Abstractions.Analysis.Memory;
 using CaptureTool.Application.Abstractions.Cancellation;
+using CaptureTool.Application.Abstractions.Capture.Assets;
 using CaptureTool.Application.Abstractions.Edit.Image.ChromaKey;
 using CaptureTool.Application.Abstractions.Edit.Image.Description;
 using CaptureTool.Application.Abstractions.Edit.Image.ForegroundExtraction;
@@ -20,6 +27,10 @@ using CaptureTool.Application.Abstractions.TaskEnvironment;
 using CaptureTool.Application.Abstractions.Telemetry;
 using CaptureTool.Application.Abstractions.Time;
 using CaptureTool.Infrastructure.Cancellation;
+using CaptureTool.Infrastructure.Analysis.Persistence;
+using CaptureTool.Infrastructure.Analysis.Jobs;
+using CaptureTool.Infrastructure.Analysis.Sources;
+using CaptureTool.Infrastructure.CaptureAssets;
 using CaptureTool.Infrastructure.DependencyInjection;
 using CaptureTool.Infrastructure.Features;
 using CaptureTool.Infrastructure.Files;
@@ -48,6 +59,20 @@ public sealed class InfrastructureServiceCollectionExtensionsTests
 
         Assert.AreSame(services, result);
         AssertHasRegistration<ICancellationService, CancellationService>(services);
+        AssertHasRegistration<IAtomicFileWriter, AtomicFileWriter>(services);
+        AssertHasRegistration<ICaptureAnalysisControlStore, LocalCaptureAnalysisControlStore>(services);
+        AssertHasRegistration<LocalCaptureAnalysisStore, LocalCaptureAnalysisStore>(services);
+        AssertHasFactoryRegistration<ICaptureAnalysisStore>(services);
+        AssertHasRegistration<ICaptureAnalysisJobStore, LocalCaptureAnalysisJobStore>(services);
+        AssertHasRegistration<ICaptureAnalysisSourceVerifier, LocalCaptureAnalysisSourceVerifier>(services);
+        AssertHasRegistration<ICaptureAnalysisMutationCoordinator, CaptureAnalysisMutationCoordinator>(services);
+        AssertHasRegistration<ICaptureAssetCatalog, LocalCaptureAssetCatalog>(services);
+        AssertHasRegistration<CaptureAnalysisWakeChannel, CaptureAnalysisWakeChannel>(services);
+        AssertHasFactoryRegistration<ICaptureAssetChangeSignal>(services);
+        AssertHasFactoryRegistration<ICaptureAnalysisWakeSignal>(services);
+        AssertHasFactoryRegistration<ICaptureAnalysisWakeWaiter>(services);
+        AssertHasRegistration<ICaptureAnalysisFeatureAvailability, CaptureAnalysisFeatureAvailability>(services);
+        AssertHasRegistration<ICaptureMemoryFeatureAvailability, CaptureMemoryFeatureAvailability>(services);
         AssertHasRegistration<IAiConsentSettingsFeatureAvailability, AiConsentSettingsFeatureAvailability>(services);
         AssertHasRegistration<IStoreFeatureAvailability, StoreFeatureAvailability>(services);
         AssertHasRegistration<IChromaKeyFeatureAvailability, ChromaKeyFeatureAvailability>(services);
@@ -81,6 +106,14 @@ public sealed class InfrastructureServiceCollectionExtensionsTests
         Assert.IsTrue(services.Any(descriptor =>
             descriptor.ServiceType == typeof(TService) &&
             descriptor.ImplementationType == typeof(TImplementation) &&
+            descriptor.Lifetime == ServiceLifetime.Singleton));
+    }
+
+    private static void AssertHasFactoryRegistration<TService>(IServiceCollection services)
+    {
+        Assert.IsTrue(services.Any(descriptor =>
+            descriptor.ServiceType == typeof(TService) &&
+            descriptor.ImplementationFactory is not null &&
             descriptor.Lifetime == ServiceLifetime.Singleton));
     }
 }

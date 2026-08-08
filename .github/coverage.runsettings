@@ -5,6 +5,7 @@
       <Include>
         <ModulePath>.*CaptureTool\.Application\.dll$</ModulePath>
         <ModulePath>.*CaptureTool\.Application\.Abstractions\.dll$</ModulePath>
+        <ModulePath>.*CaptureTool\.Domain\.Analysis\.dll$</ModulePath>
         <ModulePath>.*CaptureTool\.Domain\.Capture\.dll$</ModulePath>
         <ModulePath>.*CaptureTool\.Domain\.Edit\.dll$</ModulePath>
         <ModulePath>.*CaptureTool\.FeatureManagement\.dll$</ModulePath>

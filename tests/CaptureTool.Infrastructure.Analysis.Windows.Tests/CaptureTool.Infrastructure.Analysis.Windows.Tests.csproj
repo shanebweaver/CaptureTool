@@ -1,0 +1,28 @@
+<Project Sdk="MSTest.Sdk/4.0.2">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows10.0.26100.0</TargetFramework>
+    <Platforms>x64;ARM64</Platforms>
+    <UseVSTest>true</UseVSTest>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\..\src\CaptureTool.Infrastructure.Analysis.Windows\CaptureAnalysisProviders.json"
+          Link="CaptureAnalysisProviders.json"
+          CopyToOutputDirectory="PreserveNewest" />
+    <ProjectReference Include="..\..\src\CaptureTool.Application.Abstractions\CaptureTool.Application.Abstractions.csproj" />
+    <ProjectReference Include="..\..\src\CaptureTool.Domain\CaptureTool.Domain.csproj" />
+    <ProjectReference Include="..\..\src\CaptureTool.Domain.Analysis\CaptureTool.Domain.Analysis.csproj" />
+    <ProjectReference Include="..\..\src\CaptureTool.Infrastructure.Analysis.Windows\CaptureTool.Infrastructure.Analysis.Windows.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.CodeCoverage" />
+    <PackageReference Update="MSTest.Analyzers">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+</Project>

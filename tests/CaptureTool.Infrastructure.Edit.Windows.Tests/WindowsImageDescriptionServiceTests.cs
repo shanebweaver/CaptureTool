@@ -8,6 +8,35 @@ namespace CaptureTool.Infrastructure.Edit.Windows.Tests;
 public sealed class WindowsImageDescriptionServiceTests
 {
     [TestMethod]
+    public void ModelDescriptor_ShouldExposeBoundedWindowsAiProvenance()
+    {
+        var service = new WindowsImageDescriptionService();
+
+        Assert.IsInstanceOfType<IImageDescriptionService>(service);
+        Assert.IsInstanceOfType<IImageDescriptionAnalysisService>(service);
+        Assert.AreEqual("microsoft-windows", service.ModelDescriptor.ProducerId);
+        Assert.AreEqual("windows-app-sdk-image-description", service.ModelDescriptor.ModelId);
+        Assert.IsNull(service.ModelDescriptor.ModelVersion);
+        Assert.AreEqual("windows-app-sdk-ai", service.ModelDescriptor.RuntimeId);
+        Assert.IsFalse(string.IsNullOrWhiteSpace(service.ModelDescriptor.RuntimeVersion));
+        Assert.AreEqual(
+            service.ModelDescriptor.RuntimeVersion,
+            service.ModelDescriptor.PackageVersion);
+    }
+
+    [TestMethod]
+    public async Task DescribeAnalysisAsync_WhenAlreadyCancelled_ShouldNotInvokeWindowsAi()
+    {
+        var service = new WindowsImageDescriptionService();
+        using var source = new MemoryStream([1, 2, 3]);
+        using var cancellation = new CancellationTokenSource();
+        cancellation.Cancel();
+
+        await Assert.ThrowsExactlyAsync<OperationCanceledException>(() =>
+            service.DescribeAnalysisAsync(source, cancellation.Token));
+    }
+
+    [TestMethod]
     [DataRow(AIFeatureReadyState.Ready, ImageDescriptionReadyState.Ready)]
     [DataRow(AIFeatureReadyState.NotReady, ImageDescriptionReadyState.PreparationNeeded)]
     [DataRow(AIFeatureReadyState.NotSupportedOnCurrentSystem, ImageDescriptionReadyState.NotSupported)]

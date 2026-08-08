@@ -1,0 +1,78 @@
+{
+  "schemaVersion": 1,
+  "corpusId": "capture-memory-synthetic",
+  "corpusVersion": "1.0.0",
+  "querySetVersion": "1.0.0",
+  "fixtures": [
+    {
+      "captureId": "settings-panel",
+      "isSyntheticOrSeparatelyApproved": true,
+      "expectedOcrText": "Advanced settings Privacy and security",
+      "expectedDescription": "A settings panel with privacy and security options."
+    },
+    {
+      "captureId": "project-atlas",
+      "isSyntheticOrSeparatelyApproved": true,
+      "expectedOcrText": "Project Atlas launch checklist",
+      "expectedDescription": "A project checklist titled Project Atlas."
+    },
+    {
+      "captureId": "mountain-lake",
+      "isSyntheticOrSeparatelyApproved": true,
+      "expectedOcrText": "",
+      "expectedDescription": "A calm mountain lake beneath snow-covered peaks."
+    },
+    {
+      "captureId": "red-bicycle",
+      "isSyntheticOrSeparatelyApproved": true,
+      "expectedOcrText": "",
+      "expectedDescription": "A red bicycle leaning against a brick wall."
+    },
+    {
+      "captureId": "invoice-total",
+      "isSyntheticOrSeparatelyApproved": true,
+      "expectedOcrText": "Invoice 1042 Total $86.40",
+      "expectedDescription": "An invoice showing a total of 86 dollars and 40 cents."
+    }
+  ],
+  "queries": [
+    {
+      "queryId": "exact-settings",
+      "kind": "exact-text",
+      "text": "Advanced settings",
+      "relevance": [
+        { "captureId": "settings-panel", "gain": 3 }
+      ]
+    },
+    {
+      "queryId": "exact-atlas",
+      "kind": "exact-text",
+      "text": "Project Atlas",
+      "relevance": [
+        { "captureId": "project-atlas", "gain": 3 }
+      ]
+    },
+    {
+      "queryId": "descriptive-lake",
+      "kind": "descriptive",
+      "text": "snowy mountains reflected in water",
+      "relevance": [
+        { "captureId": "mountain-lake", "gain": 3 }
+      ]
+    },
+    {
+      "queryId": "descriptive-bicycle",
+      "kind": "descriptive",
+      "text": "bike next to a brick wall",
+      "relevance": [
+        { "captureId": "red-bicycle", "gain": 3 }
+      ]
+    },
+    {
+      "queryId": "no-match-spacecraft",
+      "kind": "no-match",
+      "text": "orbital spacecraft docking plan",
+      "relevance": []
+    }
+  ]
+}

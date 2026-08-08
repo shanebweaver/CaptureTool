@@ -268,7 +268,281 @@
                     </StackPanel>
                 </Grid>
 
-                <Grid RowSpacing="16">
+                <Border
+                    x:Name="CaptureMemorySetupCard"
+                    Padding="20"
+                    Background="{ThemeResource HomeGlassBrush}"
+                    BorderBrush="{ThemeResource HomeGlassStrokeBrush}"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.CaptureMemory.ShowSetup), Mode=OneWay}">
+                    <StackPanel Spacing="12">
+                        <StackPanel Spacing="4">
+                            <TextBlock
+                                x:Uid="CaptureMemory_Setup_Title"
+                                FontSize="20"
+                                FontWeight="SemiBold"
+                                Text="Find captures by what is in them" />
+                            <TextBlock
+                                x:Uid="CaptureMemory_Setup_Body"
+                                MaxWidth="780"
+                                HorizontalAlignment="Left"
+                                Opacity=".78"
+                                Text="Capture Tool can use the AI models already available in the app to create private, app-managed metadata for search. Analysis stays on this device and starts only after you opt in."
+                                TextWrapping="WrapWholeWords" />
+                            <TextBlock
+                                x:Uid="CaptureMemory_Setup_Disclosure"
+                                MaxWidth="780"
+                                HorizontalAlignment="Left"
+                                FontSize="12"
+                                Opacity=".68"
+                                Text="Creates media properties, text recognition, and—when supported—visual descriptions. You can stop analysis or erase this metadata at any time in Settings."
+                                TextWrapping="WrapWholeWords" />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <Button
+                                x:Uid="CaptureMemory_Setup_FutureButton"
+                                AutomationProperties.AutomationId="Home_CaptureMemoryEnableFutureButton"
+                                Command="{x:Bind ViewModel.CaptureMemory.EnableForFutureCommand}"
+                                Content="Analyze new captures" />
+                            <Button
+                                x:Uid="CaptureMemory_Setup_ExistingButton"
+                                AutomationProperties.AutomationId="Home_CaptureMemoryEnableExistingButton"
+                                Command="{x:Bind ViewModel.CaptureMemory.EnableForExistingCommand}"
+                                Content="Include existing captures" />
+                        </StackPanel>
+                        <StackPanel
+                            Spacing="6"
+                            Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.CaptureMemory.IsPreparing), Mode=OneWay}">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <ProgressRing Width="18" Height="18" IsActive="{x:Bind ViewModel.CaptureMemory.IsPreparing, Mode=OneWay}" />
+                                <TextBlock
+                                    x:Uid="CaptureMemory_Setup_Preparing"
+                                    VerticalAlignment="Center"
+                                    Text="Preparing AI models…" />
+                            </StackPanel>
+                            <ProgressBar
+                                Maximum="1"
+                                Value="{x:Bind ViewModel.CaptureMemory.PreparationProgress, Mode=OneWay}" />
+                        </StackPanel>
+                        <StackPanel
+                            Orientation="Horizontal"
+                            Spacing="8"
+                            Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.CaptureMemory.HasSetupFailure), Mode=OneWay}">
+                            <FontIcon Glyph="&#xE783;" />
+                            <TextBlock
+                                x:Uid="CaptureMemory_Setup_Failed"
+                                VerticalAlignment="Center"
+                                Text="Capture Memory could not be prepared. Try again."
+                                TextWrapping="WrapWholeWords" />
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <StackPanel
+                    x:Name="CaptureMemoryPanel"
+                    Spacing="14"
+                    Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.CaptureMemory.ShowSearch), Mode=OneWay}">
+                    <TextBox
+                        x:Name="CaptureMemorySearchBox"
+                        x:Uid="CaptureMemory_SearchBox"
+                        AutomationProperties.AutomationId="Home_CaptureMemorySearchBox"
+                        KeyDown="CaptureMemorySearchBox_KeyDown"
+                        PlaceholderText="Search your captures"
+                        Text="{x:Bind ViewModel.CaptureMemory.SearchQuery, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                        <TextBox.KeyboardAccelerators>
+                            <KeyboardAccelerator
+                                Invoked="CaptureMemorySearchKeyboardAccelerator_Invoked"
+                                Key="F"
+                                Modifiers="Control" />
+                        </TextBox.KeyboardAccelerators>
+                    </TextBox>
+
+                    <StackPanel
+                        Orientation="Horizontal"
+                        Spacing="8"
+                        Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.CaptureMemory.IsSearching), Mode=OneWay}">
+                        <ProgressRing Width="18" Height="18" IsActive="{x:Bind ViewModel.CaptureMemory.IsSearching, Mode=OneWay}" />
+                        <TextBlock x:Uid="CaptureMemory_Searching" VerticalAlignment="Center" Text="Searching…" />
+                    </StackPanel>
+
+                    <StackPanel
+                        Spacing="5"
+                        Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.CaptureMemory.IsIndexing), Mode=OneWay}">
+                        <TextBlock x:Uid="CaptureMemory_Indexing" Text="Preparing existing captures for search…" />
+                        <ProgressBar Maximum="1" Value="{x:Bind ViewModel.CaptureMemory.IndexProgress, Mode=OneWay}" />
+                    </StackPanel>
+
+                    <InfoBar
+                        x:Uid="CaptureMemory_PartialResults"
+                        IsClosable="False"
+                        IsOpen="{x:Bind ViewModel.CaptureMemory.ShowPartialResults, Mode=OneWay}"
+                        Message="These are partial results while existing captures are prepared."
+                        Severity="Informational" />
+                    <InfoBar
+                        x:Uid="CaptureMemory_DescriptionUnsupported"
+                        IsClosable="False"
+                        IsOpen="{x:Bind ViewModel.CaptureMemory.IsDescriptionUnsupported, Mode=OneWay}"
+                        Message="Visual descriptions are not supported on this device. Filename and recognized-text search are still available."
+                        Severity="Informational" />
+                    <InfoBar
+                        x:Uid="CaptureMemory_SourceMissing"
+                        IsClosable="False"
+                        IsOpen="{x:Bind ViewModel.CaptureMemory.HasSourceMissingResults, Mode=OneWay}"
+                        Message="A matching source file has moved or is unavailable. You can forget its app-managed history."
+                        Severity="Warning" />
+                    <InfoBar
+                        x:Uid="CaptureMemory_ResultFailed"
+                        IsClosable="False"
+                        IsOpen="{x:Bind ViewModel.CaptureMemory.HasFailedResults, Mode=OneWay}"
+                        Message="A result could not be loaded. Retry the search."
+                        Severity="Warning">
+                        <InfoBar.ActionButton>
+                            <Button
+                                x:Uid="CaptureMemory_Retry"
+                                Command="{x:Bind ViewModel.CaptureMemory.RetryCommand}"
+                                Content="Retry" />
+                        </InfoBar.ActionButton>
+                    </InfoBar>
+                    <InfoBar
+                        x:Uid="CaptureMemory_SearchFailed"
+                        IsClosable="False"
+                        IsOpen="{x:Bind ViewModel.CaptureMemory.HasSearchFailure, Mode=OneWay}"
+                        Message="Capture Memory search failed."
+                        Severity="Error">
+                        <InfoBar.ActionButton>
+                            <Button
+                                x:Uid="CaptureMemory_Retry"
+                                Command="{x:Bind ViewModel.CaptureMemory.RetryCommand}"
+                                Content="Retry" />
+                        </InfoBar.ActionButton>
+                    </InfoBar>
+                    <InfoBar
+                        x:Uid="CaptureMemory_CorruptProjection"
+                        IsClosable="False"
+                        IsOpen="{x:Bind ViewModel.CaptureMemory.HasCorruptProjection, Mode=OneWay}"
+                        Message="The search data is damaged. Rebuild the app-managed search data to continue."
+                        Severity="Error">
+                        <InfoBar.ActionButton>
+                            <Button
+                                x:Uid="CaptureMemory_Rebuild"
+                                Command="{x:Bind ViewModel.CaptureMemory.RetryCommand}"
+                                Content="Rebuild and retry" />
+                        </InfoBar.ActionButton>
+                    </InfoBar>
+
+                    <StackPanel
+                        MinHeight="160"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Spacing="8"
+                        Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.CaptureMemory.ShowNoMatches), Mode=OneWay}">
+                        <SymbolIcon Symbol="Find" />
+                        <TextBlock x:Uid="CaptureMemory_NoMatches" Text="No matching captures" />
+                    </StackPanel>
+
+                    <ListView
+                        x:Name="CaptureMemoryResultsList"
+                        AutomationProperties.AutomationId="Home_CaptureMemoryResults"
+                        ContainerContentChanging="CaptureMemoryResultsList_ContainerContentChanging"
+                        IsItemClickEnabled="True"
+                        ItemClick="CaptureMemoryResultsList_ItemClick"
+                        ItemsSource="{x:Bind ViewModel.CaptureMemory.Results, Mode=OneWay}"
+                        KeyDown="CaptureMemoryResultsList_KeyDown"
+                        SelectionMode="Single"
+                        Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.CaptureMemory.ShowResults), Mode=OneWay}">
+                        <ListView.ItemTemplate>
+                            <DataTemplate x:DataType="home:CaptureMemorySearchResultViewModel">
+                                <Border
+                                    Margin="0,0,0,8"
+                                    Padding="12"
+                                    AutomationProperties.Name="{x:Bind AutomationName}"
+                                    Background="{ThemeResource HomeTileBackgroundBrush}"
+                                    BorderBrush="{ThemeResource HomeGlassStrokeBrush}"
+                                    BorderThickness="1"
+                                    CornerRadius="8">
+                                    <Grid ColumnSpacing="14">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="160" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <Border
+                                            Width="160"
+                                            Height="96"
+                                            Background="{ThemeResource HomePreviewBackgroundBrush}"
+                                            CornerRadius="6">
+                                            <Grid>
+                                                <Image
+                                                    x:Name="CaptureMemoryPreviewImage"
+                                                    Opacity="0"
+                                                    Stretch="UniformToFill" />
+                                                <SymbolIcon x:Name="CaptureMemoryPreviewFallback" Symbol="Pictures" />
+                                                <Viewbox Stretch="UniformToFill">
+                                                    <Canvas Width="{x:Bind RasterWidth}" Height="{x:Bind RasterHeight}">
+                                                        <Border
+                                                            Width="{x:Bind OcrWidth}"
+                                                            Height="{x:Bind OcrHeight}"
+                                                            Canvas.Left="{x:Bind OcrX}"
+                                                            Canvas.Top="{x:Bind OcrY}"
+                                                            BorderBrush="{ThemeResource SystemAccentColor}"
+                                                            BorderThickness="3"
+                                                            CornerRadius="2"
+                                                            Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(HasOcrBounds)}" />
+                                                    </Canvas>
+                                                </Viewbox>
+                                            </Grid>
+                                        </Border>
+                                        <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="4">
+                                            <TextBlock FontWeight="SemiBold" Text="{x:Bind FileName}" TextTrimming="CharacterEllipsis" />
+                                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                                <TextBlock Opacity=".68" Text="{x:Bind CapturedAtLabel}" />
+                                                <TextBlock Opacity=".68" Text="{x:Bind CaptureTypeLabel}" />
+                                                <TextBlock FontWeight="SemiBold" Text="{x:Bind ExplanationLabel}" />
+                                            </StackPanel>
+                                            <TextBlock MaxLines="2" Text="{x:Bind Snippet}" TextTrimming="CharacterEllipsis" TextWrapping="Wrap" />
+                                            <TextBlock
+                                                x:Uid="CaptureMemory_ResultSourceMissing"
+                                                Text="Source file unavailable"
+                                                Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(IsSourceMissing), Mode=OneWay}" />
+                                            <TextBlock
+                                                x:Uid="CaptureMemory_ResultFailedLabel"
+                                                Text="Result unavailable"
+                                                Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(IsResolutionFailed), Mode=OneWay}" />
+                                        </StackPanel>
+                                        <StackPanel Grid.Column="2" VerticalAlignment="Center" Spacing="6">
+                                            <Button
+                                                x:Uid="CaptureMemory_ResultOpen"
+                                                AutomationProperties.AutomationId="Home_CaptureMemoryOpenButton"
+                                                AutomationProperties.Name="Open capture"
+                                                Click="OpenCaptureMemoryResultButton_Click"
+                                                CommandParameter="{x:Bind}"
+                                                Content="Open"
+                                                IsEnabled="{x:Bind CanOpen, Mode=OneWay}" />
+                                            <Button
+                                                x:Uid="CaptureMemory_ResultRemove"
+                                                AutomationProperties.AutomationId="Home_CaptureMemoryRemoveButton"
+                                                AutomationProperties.Name="Remove from Memory"
+                                                Click="RemoveCaptureMemoryResultButton_Click"
+                                                CommandParameter="{x:Bind}"
+                                                Content="Remove from Memory" />
+                                            <Button
+                                                x:Uid="CaptureMemory_ResultDelete"
+                                                AutomationProperties.AutomationId="Home_CaptureMemoryDeleteButton"
+                                                AutomationProperties.Name="Delete capture"
+                                                Click="DeleteCaptureMemoryResultButton_Click"
+                                                CommandParameter="{x:Bind}"
+                                                Content="Delete capture"
+                                                Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(CanDeleteCapture), Mode=OneWay}" />
+                                        </StackPanel>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+                </StackPanel>
+
+                <Grid RowSpacing="16" Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.CaptureMemory.ShowRecentGallery), Mode=OneWay}">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />

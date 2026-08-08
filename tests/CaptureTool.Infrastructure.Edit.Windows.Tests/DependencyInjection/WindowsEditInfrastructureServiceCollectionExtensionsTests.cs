@@ -25,13 +25,41 @@ public sealed class WindowsEditInfrastructureServiceCollectionExtensionsTests
 
         services.ShouldContainSingleton<IChromaKeyService, Win2DChromaKeyService>();
         services.ShouldContainSingleton<IImageSuperResolutionService, WindowsImageSuperResolutionService>();
-        services.ShouldContainSingleton<ITextExtractionService, WindowsTextExtractionService>();
-        services.ShouldContainSingleton<IImageDescriptionService, WindowsImageDescriptionService>();
+        services.Should().ContainSingle(descriptor =>
+            descriptor.ServiceType == typeof(WindowsTextExtractionService)
+            && descriptor.ImplementationType == typeof(WindowsTextExtractionService)
+            && descriptor.Lifetime == ServiceLifetime.Singleton);
+        services.Should().ContainSingle(descriptor =>
+            descriptor.ServiceType == typeof(ITextExtractionService)
+            && descriptor.ImplementationFactory != null
+            && descriptor.Lifetime == ServiceLifetime.Singleton);
+        services.Should().ContainSingle(descriptor =>
+            descriptor.ServiceType == typeof(ITextExtractionAnalysisService)
+            && descriptor.ImplementationFactory != null
+            && descriptor.Lifetime == ServiceLifetime.Singleton);
+        services.Should().ContainSingle(descriptor =>
+            descriptor.ServiceType == typeof(WindowsImageDescriptionService)
+            && descriptor.ImplementationType == typeof(WindowsImageDescriptionService)
+            && descriptor.Lifetime == ServiceLifetime.Singleton);
+        services.Should().ContainSingle(descriptor =>
+            descriptor.ServiceType == typeof(IImageDescriptionService)
+            && descriptor.ImplementationFactory != null
+            && descriptor.Lifetime == ServiceLifetime.Singleton);
+        services.Should().ContainSingle(descriptor =>
+            descriptor.ServiceType == typeof(IImageDescriptionAnalysisService)
+            && descriptor.ImplementationFactory != null
+            && descriptor.Lifetime == ServiceLifetime.Singleton);
         services.ShouldContainSingleton<IImageForegroundExtractionService, WindowsImageForegroundExtractionService>();
         services.ShouldContainSingleton<IImageObjectEraseService, WindowsImageObjectEraseService>();
         services.ShouldContainSingleton<IVideoSuperResolutionService, WindowsVideoSuperResolutionService>();
         services.ShouldContainSingleton<IImageCanvasExporter, Win2DImageCanvasExporter>();
         services.ShouldContainSingleton<IImageCanvasPrinter, Win2DImageCanvasPrinter>();
+
+        using ServiceProvider provider = services.BuildServiceProvider();
+        provider.GetRequiredService<ITextExtractionService>().Should().BeSameAs(
+            provider.GetRequiredService<ITextExtractionAnalysisService>());
+        provider.GetRequiredService<IImageDescriptionService>().Should().BeSameAs(
+            provider.GetRequiredService<IImageDescriptionAnalysisService>());
     }
 }
 

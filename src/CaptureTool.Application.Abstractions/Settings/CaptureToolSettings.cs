@@ -27,4 +27,7 @@ public static partial class CaptureToolSettings
     public static readonly IBoolSettingDefinition Settings_AiConsent_ImageObjectErase = new BoolSettingDefinition("Settings_AiConsent_ImageObjectErase", false);
     public static readonly IBoolSettingDefinition Settings_AiConsent_ImageObjectExtraction = new BoolSettingDefinition("Settings_AiConsent_ImageObjectExtraction", false);
     public static readonly IBoolSettingDefinition Settings_AiConsent_VideoSuperResolution = new BoolSettingDefinition("Settings_AiConsent_VideoSuperResolution", false);
+    // Fail-closed consent latch and presentation value. The protected Analysis control ledger is
+    // also required, so this setting can never grant background processing by itself.
+    public static readonly IStringSettingDefinition Settings_CaptureAnalysisConsent = new StringSettingDefinition("Settings_CaptureAnalysisConsent", "unknown");
 }

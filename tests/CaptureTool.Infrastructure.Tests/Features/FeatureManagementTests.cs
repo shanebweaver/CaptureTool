@@ -18,6 +18,15 @@ public sealed class FeatureManagementTests
     }
 
     [TestMethod]
+    public void CaptureAnalysisReleaseFlags_ShouldBeDisabledByDefault()
+    {
+        var manager = new MicrosoftFeatureManager();
+
+        Assert.IsFalse(manager.IsEnabled(AppFeatures.Feature_CaptureAnalysis_Platform));
+        Assert.IsFalse(manager.IsEnabled(AppFeatures.Feature_CaptureMemory_Search));
+    }
+
+    [TestMethod]
     public void AddFeatureManagementServices_ShouldRegisterFeatureManager()
     {
         var services = new ServiceCollection();

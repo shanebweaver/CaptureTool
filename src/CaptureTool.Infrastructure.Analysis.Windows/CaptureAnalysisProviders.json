@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "processingBoundary": "on-device",
+  "providers": [
+    {
+      "providerId": "microsoft-windows",
+      "featureFlag": "CaptureAnalysis_Provider_MicrosoftWindows",
+      "analyzers": [
+        {
+          "analyzerId": "windows-image-media-properties",
+          "capability": "media-properties/v1",
+          "featureFlag": "CaptureAnalysis_Analyzer_WindowsImageMediaProperties"
+        },
+        {
+          "analyzerId": "windows-ocr-document",
+          "capability": "ocr-document/v1",
+          "featureFlag": "CaptureAnalysis_Analyzer_WindowsOcrDocument"
+        },
+        {
+          "analyzerId": "windows-image-description",
+          "capability": "image-description/v1",
+          "featureFlag": "CaptureAnalysis_Analyzer_WindowsImageDescription"
+        }
+      ]
+    }
+  ]
+}

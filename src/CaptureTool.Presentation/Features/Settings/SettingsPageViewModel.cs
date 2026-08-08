@@ -265,6 +265,8 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
         private set => Set(ref field, value);
     }
 
+    public CaptureMemorySettingsViewModel CaptureMemory { get; }
+
     public SettingsPageViewModel(
         ILeaveSettingsPageUseCase goBackAction,
         IRestartSettingsApplicationUseCase restartAppAction,
@@ -306,7 +308,8 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
         IImageObjectEraseFeatureAvailability? imageObjectEraseFeatureAvailability = null,
         IImageObjectExtractionFeatureAvailability? imageObjectExtractionFeatureAvailability = null,
         IVideoSuperResolutionFeatureAvailability? videoSuperResolutionFeatureAvailability = null,
-        ITelemetryConsentService? telemetryConsentService = null)
+        ITelemetryConsentService? telemetryConsentService = null,
+        CaptureMemorySettingsViewModel? captureMemory = null)
     {
         _goBackAction = goBackAction;
         _restartAppAction = restartAppAction;
@@ -350,6 +353,7 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
         _storageService = storageService;
         _appLanguageViewModelFactory = appLanguageViewModelFactory;
         _appThemeViewModelFactory = appThemeViewModelFactory;
+        CaptureMemory = captureMemory ?? new CaptureMemorySettingsViewModel();
 
         AppThemes = [];
         AppLanguages = [];
@@ -485,7 +489,15 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
         AudioFolderPath = audioFolder;
         TemporaryFilesFolderPath = _storageService.GetApplicationScratchFolderPath();
 
+        await CaptureMemory.LoadAsync(cancellationToken);
+
         await base.LoadAsync(cancellationToken);
+    }
+
+    public override void Dispose()
+    {
+        CaptureMemory.Dispose();
+        base.Dispose();
     }
 
     public async Task UpdateAiFeatureConsentAsync(AiFeatureId featureId, bool isConsented)

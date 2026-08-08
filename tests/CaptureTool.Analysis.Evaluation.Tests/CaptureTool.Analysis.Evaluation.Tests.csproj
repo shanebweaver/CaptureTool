@@ -1,0 +1,12 @@
+<Project Sdk="MSTest.Sdk/4.0.2">
+
+  <PropertyGroup>
+    <UseVSTest>true</UseVSTest>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\tools\CaptureTool.Analysis.Evaluation\CaptureTool.Analysis.Evaluation.csproj" />
+  </ItemGroup>
+
+</Project>

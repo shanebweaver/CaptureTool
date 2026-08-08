@@ -1,3 +1,5 @@
+using CaptureTool.Application.Abstractions.Analysis.Policy;
+using CaptureTool.Application.Abstractions.Analysis.Memory;
 using CaptureTool.Application.Abstractions.Edit.Image.Description;
 using CaptureTool.Application.Abstractions.Edit.Image.ForegroundExtraction;
 using CaptureTool.Application.Abstractions.Edit.Image.ObjectErase;
@@ -5,6 +7,7 @@ using CaptureTool.Application.Abstractions.Edit.Image.ObjectExtraction;
 using CaptureTool.Application.Abstractions.Edit.Image.SuperResolution;
 using CaptureTool.Application.Abstractions.Edit.Image.TextExtraction;
 using CaptureTool.Application.Abstractions.Edit.Video.SuperResolution;
+using CaptureTool.Domain.Analysis;
 using CaptureTool.FeatureManagement;
 using CaptureTool.Infrastructure.Features;
 
@@ -13,6 +16,89 @@ namespace CaptureTool.Infrastructure.Tests.Features;
 [TestClass]
 public sealed class FeatureAvailabilityTests
 {
+    [TestMethod]
+    public void CaptureMemoryFeatureAvailability_RequiresBothPlatformAndMemoryFlags()
+    {
+        var enabled = new CaptureMemoryFeatureAvailability(
+            new ConstantFeatureManager(true),
+            new StubCaptureAnalysisFeatureAvailability(true));
+        var platformDisabled = new CaptureMemoryFeatureAvailability(
+            new ConstantFeatureManager(true),
+            new StubCaptureAnalysisFeatureAvailability(false));
+        var memoryDisabled = new CaptureMemoryFeatureAvailability(
+            new ConstantFeatureManager(false),
+            new StubCaptureAnalysisFeatureAvailability(true));
+
+        Assert.IsTrue(enabled.IsCaptureMemorySearchEnabled);
+        Assert.IsFalse(platformDisabled.IsCaptureMemorySearchEnabled);
+        Assert.IsFalse(memoryDisabled.IsCaptureMemorySearchEnabled);
+    }
+
+    [TestMethod]
+    public void CaptureAnalysisFeatureAvailability_ReturnsPlatformFeatureManagerValue()
+    {
+        var enabledFeatureManager = new ConstantFeatureManager(true);
+
+        Assert.IsTrue(new CaptureAnalysisFeatureAvailability(
+            enabledFeatureManager).IsCaptureAnalysisEnabled);
+        Assert.IsFalse(new CaptureAnalysisFeatureAvailability(
+            new ConstantFeatureManager(false)).IsCaptureAnalysisEnabled);
+        Assert.AreSame(
+            AppFeatures.Feature_CaptureAnalysis_Platform,
+            enabledFeatureManager.LastFeatureFlag);
+    }
+
+    [TestMethod]
+    public void CaptureAnalysisFeatureAvailability_HasDeterministicPositiveResolutionRevision()
+    {
+        var enabled = new CaptureAnalysisFeatureAvailability(new ConstantFeatureManager(true));
+        var disabled = new CaptureAnalysisFeatureAvailability(new ConstantFeatureManager(false));
+
+        Assert.IsGreaterThan(0L, enabled.ResolutionPolicyRevision);
+        Assert.AreEqual(enabled.ResolutionPolicyRevision, disabled.ResolutionPolicyRevision);
+    }
+
+    [TestMethod]
+    public void CaptureAnalysisFeatureAvailability_FailsClosedForUnknownProvidersAndAnalyzers()
+    {
+        var enabled = new CaptureAnalysisFeatureAvailability(new ConstantFeatureManager(true));
+        var disabled = new CaptureAnalysisFeatureAvailability(new ConstantFeatureManager(false));
+        AnalyzerIdentity analyzer = CreateAnalyzerIdentity();
+
+        Assert.IsTrue(enabled.IsProviderEnabled("microsoft-windows"));
+        Assert.IsFalse(enabled.IsProviderEnabled("another-provider"));
+        Assert.IsTrue(enabled.IsAnalyzerEnabled(analyzer));
+        Assert.IsFalse(disabled.IsProviderEnabled("microsoft-windows"));
+        Assert.IsFalse(disabled.IsAnalyzerEnabled(analyzer));
+    }
+
+    [TestMethod]
+    public void CaptureAnalysisFeatureAvailability_HasIndependentProviderAndAnalyzerKillSwitches()
+    {
+        var providerDisabled = new CaptureAnalysisFeatureAvailability(
+            new SelectiveFeatureManager(AppFeatures.Feature_CaptureAnalysis_Provider_MicrosoftWindows));
+        var analyzerDisabled = new CaptureAnalysisFeatureAvailability(
+            new SelectiveFeatureManager(AppFeatures.Feature_CaptureAnalysis_Analyzer_WindowsOcrDocument));
+        AnalyzerIdentity analyzer = CreateAnalyzerIdentity();
+
+        Assert.IsFalse(providerDisabled.IsProviderEnabled("microsoft-windows"));
+        Assert.IsFalse(providerDisabled.IsAnalyzerEnabled(analyzer));
+        Assert.IsTrue(analyzerDisabled.IsProviderEnabled("microsoft-windows"));
+        Assert.IsFalse(analyzerDisabled.IsAnalyzerEnabled(analyzer));
+    }
+
+    [TestMethod]
+    public void CaptureAnalysisFeatureAvailability_RejectsInvalidProviderAndAnalyzerInputs()
+    {
+        var availability = new CaptureAnalysisFeatureAvailability(new ConstantFeatureManager(true));
+
+        Assert.ThrowsExactly<ArgumentNullException>(() => new CaptureAnalysisFeatureAvailability(null!));
+        Assert.ThrowsExactly<ArgumentNullException>(() => availability.IsProviderEnabled(null!));
+        Assert.ThrowsExactly<ArgumentException>(() => availability.IsProviderEnabled(string.Empty));
+        Assert.ThrowsExactly<ArgumentException>(() => availability.IsProviderEnabled("   "));
+        Assert.ThrowsExactly<ArgumentNullException>(() => availability.IsAnalyzerEnabled(null!));
+    }
+
     [TestMethod]
     public void ChromaKeyFeatureAvailability_ReturnsFeatureManagerValue()
     {
@@ -204,6 +290,20 @@ public sealed class FeatureAvailabilityTests
         Assert.AreEqual(expected, availability.IsVideoSuperResolutionEnabled);
     }
 
+    private static AnalyzerIdentity CreateAnalyzerIdentity()
+    {
+        return new(
+            "windows-ocr-document",
+            "microsoft-windows",
+            "ocr-model",
+            "1",
+            "1",
+            "windows-ai",
+            "1",
+            "1",
+            null);
+    }
+
     private sealed class ConstantFeatureManager : IFeatureManager
     {
         private readonly bool _isEnabled;
@@ -213,7 +313,33 @@ public sealed class FeatureAvailabilityTests
             _isEnabled = isEnabled;
         }
 
-        public bool IsEnabled(FeatureFlag featureFlag) => _isEnabled;
+        public FeatureFlag? LastFeatureFlag { get; private set; }
+
+        public bool IsEnabled(FeatureFlag featureFlag)
+        {
+            LastFeatureFlag = featureFlag;
+            return _isEnabled;
+        }
+    }
+
+    private sealed class SelectiveFeatureManager(params FeatureFlag[] disabled) : IFeatureManager
+    {
+        public bool IsEnabled(FeatureFlag featureFlag)
+        {
+            return !disabled.Contains(featureFlag);
+        }
+    }
+
+    private sealed class StubCaptureAnalysisFeatureAvailability(bool enabled)
+        : ICaptureAnalysisFeatureAvailability
+    {
+        public bool IsCaptureAnalysisEnabled => enabled;
+
+        public long ResolutionPolicyRevision => 1;
+
+        public bool IsProviderEnabled(string providerId) => enabled;
+
+        public bool IsAnalyzerEnabled(AnalyzerIdentity analyzer) => enabled;
     }
 
     private sealed class StubImageSuperResolutionService(ImageSuperResolutionReadyState readyState)

@@ -1806,4 +1806,106 @@ SOFTWARE.
   <data name="CaptureOverlay_RecordingUnsupportedMessage" xml:space="preserve">
     <value>此设备不支持屏幕录制。</value>
   </data>
+  <data name="CaptureMemory_Setup_Title.Text" xml:space="preserve"><value>按内容查找捕获</value></data>
+  <data name="CaptureMemory_Setup_Body.Text" xml:space="preserve"><value>Capture Tool 可以使用应用中已有的 AI 模型创建由应用管理的私密搜索元数据。分析仅在此设备上进行，并且只有在你选择加入后才会开始。</value></data>
+  <data name="CaptureMemory_Setup_Disclosure.Text" xml:space="preserve"><value>将创建媒体属性、文本识别，以及在支持时创建视觉描述。你可以随时在“设置”中停止分析或清除此元数据。</value></data>
+  <data name="CaptureMemory_Setup_FutureButton.Content" xml:space="preserve"><value>分析新的捕获</value></data>
+  <data name="CaptureMemory_Setup_ExistingButton.Content" xml:space="preserve"><value>包括现有捕获</value></data>
+  <data name="CaptureMemory_Setup_Preparing.Text" xml:space="preserve"><value>正在准备 AI 模型…</value></data>
+  <data name="CaptureMemory_Setup_Failed.Text" xml:space="preserve"><value>无法准备 Capture Memory。请重试。</value></data>
+  <data name="CaptureMemory_SearchBox.PlaceholderText" xml:space="preserve"><value>搜索你的捕获</value></data>
+  <data name="CaptureMemory_SearchBox.AutomationProperties.Name" xml:space="preserve"><value>按内容搜索捕获</value></data>
+  <data name="CaptureMemory_Searching.Text" xml:space="preserve"><value>正在搜索…</value></data>
+  <data name="CaptureMemory_Indexing.Text" xml:space="preserve"><value>正在准备现有捕获以供搜索…</value></data>
+  <data name="CaptureMemory_PartialResults.Message" xml:space="preserve"><value>在准备现有捕获期间，这些是部分结果。</value></data>
+  <data name="CaptureMemory_DescriptionUnsupported.Message" xml:space="preserve"><value>此设备不支持视觉描述。仍可按文件名和已识别文本搜索。</value></data>
+  <data name="CaptureMemory_SourceMissing.Message" xml:space="preserve"><value>匹配的源文件已移动或不可用。你可以忘记由应用管理的相关历史记录。</value></data>
+  <data name="CaptureMemory_SearchFailed.Message" xml:space="preserve"><value>Capture Memory 搜索失败。</value></data>
+  <data name="CaptureMemory_CorruptProjection.Message" xml:space="preserve"><value>搜索数据已损坏。请重新生成由应用管理的搜索数据。</value></data>
+  <data name="CaptureMemory_Retry.Content" xml:space="preserve"><value>重试</value></data>
+  <data name="CaptureMemory_Rebuild.Content" xml:space="preserve"><value>重新生成并重试</value></data>
+  <data name="CaptureMemory_NoMatches.Text" xml:space="preserve"><value>没有匹配的捕获</value></data>
+  <data name="CaptureMemory_ResultSourceMissing.Text" xml:space="preserve"><value>源文件不可用</value></data>
+  <data name="CaptureMemory_ResultFailed.Message" xml:space="preserve"><value>无法加载某个结果。请重试搜索。</value></data>
+  <data name="CaptureMemory_ResultFailedLabel.Text" xml:space="preserve"><value>结果不可用</value></data>
+  <data name="CaptureMemory_ResultOpen.Content" xml:space="preserve"><value>打开</value></data>
+  <data name="CaptureMemory_ResultOpen.AutomationProperties.Name" xml:space="preserve"><value>打开捕获</value></data>
+  <data name="CaptureMemory_ResultForget.Content" xml:space="preserve"><value>忘记</value></data>
+  <data name="CaptureMemory_ResultForget.AutomationProperties.Name" xml:space="preserve"><value>忘记捕获历史记录</value></data>
+  <data name="CaptureMemory_Match_Text" xml:space="preserve"><value>文本匹配</value></data>
+  <data name="CaptureMemory_Match_Visual" xml:space="preserve"><value>视觉匹配</value></data>
+  <data name="CaptureMemory_Match_Filename" xml:space="preserve"><value>文件名匹配</value></data>
+  <data name="CaptureMemory_MediaKind_Image" xml:space="preserve"><value>图像</value></data>
+  <data name="CaptureMemory_MediaKind_Video" xml:space="preserve"><value>视频</value></data>
+  <data name="CaptureMemory_MediaKind_Audio" xml:space="preserve"><value>音频</value></data>
+  <data name="CaptureMemory_ResultRemove.Content" xml:space="preserve"><value>从记忆中移除</value></data>
+  <data name="CaptureMemory_ResultRemove.AutomationProperties.Name" xml:space="preserve"><value>从记忆中移除捕获</value></data>
+  <data name="CaptureMemory_ResultDelete.Content" xml:space="preserve"><value>删除捕获</value></data>
+  <data name="CaptureMemory_ResultDelete.AutomationProperties.Name" xml:space="preserve"><value>删除应用拥有的捕获</value></data>
+  <data name="CaptureMemory_Settings_Header.Text" xml:space="preserve"><value>捕获记忆</value></data>
+  <data name="CaptureMemory_Settings_AnalysisTitle.Text" xml:space="preserve"><value>捕获分析</value></data>
+  <data name="CaptureMemory_Settings_AnalysisDescription.Text" xml:space="preserve"><value>控制已授权的设备端 AI 模型是否分析捕获。Capture Tool 仅存储应用管理的元数据，绝不会修改原始捕获。</value></data>
+  <data name="CaptureMemory_Settings_StopButton.Content" xml:space="preserve"><value>停止分析新捕获</value></data>
+  <data name="CaptureMemory_Settings_ResumeButton.Content" xml:space="preserve"><value>恢复分析新捕获</value></data>
+  <data name="CaptureMemory_Settings_TurnOffButton.Content" xml:space="preserve"><value>关闭并擦除</value></data>
+  <data name="CaptureMemory_Settings_DataTitle.Text" xml:space="preserve"><value>记忆数据</value></data>
+  <data name="CaptureMemory_Settings_DataDescription.Text" xml:space="preserve"><value>将应用创建的元数据与原始捕获文件分开管理。</value></data>
+  <data name="CaptureMemory_Settings_ClearTitle.Text" xml:space="preserve"><value>清除记忆</value></data>
+  <data name="CaptureMemory_Settings_ClearDescription.Text" xml:space="preserve"><value>擦除元数据和搜索数据，同时继续分析新捕获。</value></data>
+  <data name="CaptureMemory_Settings_ClearButton.Content" xml:space="preserve"><value>清除记忆</value></data>
+  <data name="CaptureMemory_Settings_RebuildTitle.Text" xml:space="preserve"><value>重建搜索索引</value></data>
+  <data name="CaptureMemory_Settings_RebuildDescription.Text" xml:space="preserve"><value>从元数据重新创建可丢弃的搜索数据。不会使用 AI 模型或读取捕获源。</value></data>
+  <data name="CaptureMemory_Settings_RebuildButton.Content" xml:space="preserve"><value>重建索引</value></data>
+  <data name="CaptureMemory_Settings_ReanalyzeTitle.Text" xml:space="preserve"><value>重新分析捕获</value></data>
+  <data name="CaptureMemory_Settings_ReanalyzeDescription.Text" xml:space="preserve"><value>准备已授权的 AI 模型并再次读取已登记的捕获源。原始文件保持不变。</value></data>
+  <data name="CaptureMemory_Settings_ReanalyzeButton.Content" xml:space="preserve"><value>重新分析</value></data>
+  <data name="CaptureMemory_Settings_CancelButton.Content" xml:space="preserve"><value>取消</value></data>
+  <data name="CaptureMemory_Settings_Failure.Title" xml:space="preserve"><value>捕获记忆操作失败</value></data>
+  <data name="CaptureMemory_Settings_Recovery.Title" xml:space="preserve"><value>清理需要处理</value></data>
+  <data name="CaptureMemory_Settings_StatusUnavailable" xml:space="preserve"><value>捕获记忆状态不可用。</value></data>
+  <data name="CaptureMemory_Settings_StatusReview" xml:space="preserve"><value>捕获记忆已暂停，因为需要检查同意状态。</value></data>
+  <data name="CaptureMemory_Settings_StatusOff" xml:space="preserve"><value>捕获记忆已关闭。未授权任何捕获分析。</value></data>
+  <data name="CaptureMemory_Settings_StatusOn" xml:space="preserve"><value>捕获记忆已为新捕获开启。分析仅在此设备上进行，且不会修改原始文件。</value></data>
+  <data name="CaptureMemory_Settings_StatusStopped" xml:space="preserve"><value>已停止分析新捕获。现有的应用管理元数据仍可搜索。</value></data>
+  <data name="CaptureMemory_Settings_StopSucceeded" xml:space="preserve"><value>不会再分析新捕获。现有记忆元数据仍可搜索。</value></data>
+  <data name="CaptureMemory_Settings_ResumeSucceeded" xml:space="preserve"><value>捕获记忆将在此设备上分析新捕获。不会修改原始捕获。</value></data>
+  <data name="CaptureMemory_Settings_EraseSucceeded" xml:space="preserve"><value>捕获记忆已关闭，其应用管理元数据已擦除。未删除原始捕获。</value></data>
+  <data name="CaptureMemory_Settings_ClearSucceeded" xml:space="preserve"><value>捕获记忆元数据和搜索数据已清除。仍会分析新捕获。</value></data>
+  <data name="CaptureMemory_Settings_RebuildSucceeded" xml:space="preserve"><value>已重建应用管理的搜索索引，未运行 AI 模型或读取捕获源。</value></data>
+  <data name="CaptureMemory_Settings_ReanalyzePreparing" xml:space="preserve"><value>正在为重新分析准备 AI 模型…</value></data>
+  <data name="CaptureMemory_Settings_ReanalyzeScheduling" xml:space="preserve"><value>正在将已授权的捕获加入重新分析队列…</value></data>
+  <data name="CaptureMemory_Settings_ReanalyzeSucceeded" xml:space="preserve"><value>重新分析已加入队列。未修改原始捕获。</value></data>
+  <data name="CaptureMemory_Settings_Updating" xml:space="preserve"><value>正在更新捕获记忆…</value></data>
+  <data name="CaptureMemory_Settings_RecoveryRequired" xml:space="preserve"><value>安全更改已保存，但应用管理的清理尚未完成。请在文件可用后重启或重试。</value></data>
+  <data name="CaptureMemory_Settings_Conflict" xml:space="preserve"><value>捕获记忆已在其他位置更改。当前状态已刷新，请重试。</value></data>
+  <data name="CaptureMemory_Settings_ReanalyzeIncomplete" xml:space="preserve"><value>所需的 AI 模型或捕获源不可用。原始捕获未发生更改；请在其可用后重试。</value></data>
+  <data name="CaptureMemory_Settings_Rejected" xml:space="preserve"><value>此操作不再适用于捕获记忆的当前状态。</value></data>
+  <data name="CaptureMemory_Settings_ReanalyzeUnavailable" xml:space="preserve"><value>捕获记忆或所需的 AI 模型不可用。原始捕获未发生更改。</value></data>
+  <data name="CaptureMemory_Settings_OperationUnavailable" xml:space="preserve"><value>捕获记忆无法完成此操作。请重试。</value></data>
+  <data name="CaptureMemory_Settings_Cancelled" xml:space="preserve"><value>操作已取消。已完成的安全更改仍然生效。</value></data>
+  <data name="CaptureMemory_Confirmation_CancelButton" xml:space="preserve"><value>取消</value></data>
+  <data name="CaptureMemory_Confirmation_BackfillTitle" xml:space="preserve"><value>分析现有捕获？</value></data>
+  <data name="CaptureMemory_Confirmation_BackfillContent" xml:space="preserve"><value>Capture Tool 将读取符合条件的现有捕获源，并使用已授权的设备端 AI 模型。不会修改原始捕获。</value></data>
+  <data name="CaptureMemory_Confirmation_BackfillButton" xml:space="preserve"><value>分析现有捕获</value></data>
+  <data name="CaptureMemory_Confirmation_StopTitle" xml:space="preserve"><value>停止分析新捕获？</value></data>
+  <data name="CaptureMemory_Confirmation_StopContent" xml:space="preserve"><value>将不再分析新捕获。现有的应用管理元数据和搜索结果会保留。原始捕获保持不变。</value></data>
+  <data name="CaptureMemory_Confirmation_StopButton" xml:space="preserve"><value>停止分析</value></data>
+  <data name="CaptureMemory_Confirmation_EraseTitle" xml:space="preserve"><value>关闭捕获记忆并擦除其数据？</value></data>
+  <data name="CaptureMemory_Confirmation_EraseContent" xml:space="preserve"><value>这将停止所有捕获记忆分析，并擦除应用管理的元数据、任务和搜索数据。不会删除原始文件或单独保存的导出文件。</value></data>
+  <data name="CaptureMemory_Confirmation_EraseButton" xml:space="preserve"><value>关闭并擦除</value></data>
+  <data name="CaptureMemory_Confirmation_ClearTitle" xml:space="preserve"><value>清除捕获记忆？</value></data>
+  <data name="CaptureMemory_Confirmation_ClearContent" xml:space="preserve"><value>这将擦除已登记捕获的应用管理元数据和搜索数据。仍会分析新捕获。不会删除原始文件。</value></data>
+  <data name="CaptureMemory_Confirmation_ClearButton" xml:space="preserve"><value>清除记忆</value></data>
+  <data name="CaptureMemory_Confirmation_RebuildTitle" xml:space="preserve"><value>重建搜索索引？</value></data>
+  <data name="CaptureMemory_Confirmation_RebuildContent" xml:space="preserve"><value>这将从现有的应用管理元数据重新创建可丢弃的搜索数据。不会运行 AI 模型、读取捕获源或修改原始文件。</value></data>
+  <data name="CaptureMemory_Confirmation_RebuildButton" xml:space="preserve"><value>重建索引</value></data>
+  <data name="CaptureMemory_Confirmation_ReanalyzeTitle" xml:space="preserve"><value>重新分析捕获？</value></data>
+  <data name="CaptureMemory_Confirmation_ReanalyzeContent" xml:space="preserve"><value>Capture Tool 可能会准备已授权的设备端 AI 模型并再次读取已登记的捕获源。不会修改原始捕获。</value></data>
+  <data name="CaptureMemory_Confirmation_ReanalyzeButton" xml:space="preserve"><value>重新分析捕获</value></data>
+  <data name="CaptureMemory_Confirmation_RemoveTitle" xml:space="preserve"><value>从记忆中移除此捕获？</value></data>
+  <data name="CaptureMemory_Confirmation_RemoveContent" xml:space="preserve"><value>这将移除该捕获的应用管理元数据和搜索历史记录。不会删除捕获文件。</value></data>
+  <data name="CaptureMemory_Confirmation_RemoveButton" xml:space="preserve"><value>从记忆中移除</value></data>
+  <data name="CaptureMemory_Confirmation_DeleteTitle" xml:space="preserve"><value>删除此捕获？</value></data>
+  <data name="CaptureMemory_Confirmation_DeleteContent" xml:space="preserve"><value>这将永久删除应用拥有的保留源，并移除其应用管理的记忆数据。单独保存或导出的副本会保留。</value></data>
+  <data name="CaptureMemory_Confirmation_DeleteButton" xml:space="preserve"><value>删除捕获</value></data>
 </root>
