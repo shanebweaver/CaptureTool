@@ -5,6 +5,9 @@ namespace CaptureTool.Application.Analysis.Memory;
 
 internal static class CaptureMemoryTextNormalizer
 {
+    private const int MinimumPrefixRuneCount = 3;
+    private const int MinimumSubstringRuneCount = 4;
+
     public static CaptureMemoryNormalizedText Normalize(string text)
     {
         ArgumentNullException.ThrowIfNull(text);
@@ -91,6 +94,7 @@ internal static class CaptureMemoryTextNormalizer
         }
 
         int fuzzyMatches = 0;
+        CaptureMemoryTokenMatch weakestMatch = CaptureMemoryTokenMatch.Exact;
         foreach (string queryToken in queryTokens.Distinct(StringComparer.Ordinal))
         {
             if (fieldTokens.Contains(queryToken))
@@ -98,21 +102,39 @@ internal static class CaptureMemoryTextNormalizer
                 continue;
             }
 
+            int queryRuneCount = CountRunes(queryToken);
+            if (queryRuneCount >= MinimumPrefixRuneCount &&
+                orderedFieldTokens.Any(candidate => candidate.StartsWith(
+                    queryToken,
+                    StringComparison.Ordinal)))
+            {
+                weakestMatch = Max(weakestMatch, CaptureMemoryTokenMatch.Prefix);
+                continue;
+            }
+
+            if (queryRuneCount >= MinimumSubstringRuneCount &&
+                orderedFieldTokens.Any(candidate => candidate.Contains(
+                    queryToken,
+                    StringComparison.Ordinal)))
+            {
+                weakestMatch = Max(weakestMatch, CaptureMemoryTokenMatch.Substring);
+                continue;
+            }
+
             // Typo matching is deliberately conservative: only one query term may use a
             // single insertion, deletion, substitution, or adjacent transposition, and short
             // terms never use fuzzy matching. This keeps ranking explainable and deterministic.
-            if (fuzzyMatches > 0 || CountRunes(queryToken) < 5 ||
+            if (fuzzyMatches > 0 || queryRuneCount < 5 ||
                 !orderedFieldTokens.Any(candidate => IsOneEditAway(queryToken, candidate)))
             {
                 return CaptureMemoryTokenMatch.None;
             }
 
             fuzzyMatches++;
+            weakestMatch = Max(weakestMatch, CaptureMemoryTokenMatch.SingleTypo);
         }
 
-        return fuzzyMatches == 0
-            ? CaptureMemoryTokenMatch.Exact
-            : CaptureMemoryTokenMatch.SingleTypo;
+        return weakestMatch;
     }
 
     public static string CreateSafeSnippet(string source, string query)
@@ -216,6 +238,13 @@ internal static class CaptureMemoryTextNormalizer
         return count;
     }
 
+    private static CaptureMemoryTokenMatch Max(
+        CaptureMemoryTokenMatch left,
+        CaptureMemoryTokenMatch right)
+    {
+        return (CaptureMemoryTokenMatch)Math.Max((int)left, (int)right);
+    }
+
     private static bool IsOneEditAway(string left, string right)
     {
         Rune[] leftRunes = left.EnumerateRunes().ToArray();
@@ -293,4 +322,6 @@ internal enum CaptureMemoryTokenMatch
     None,
     Exact,
     SingleTypo,
+    Prefix,
+    Substring,
 }

@@ -57,7 +57,7 @@ public sealed class CaptureMemorySettingsViewModel : ViewModelBase
             AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
         ReanalyzeCapturesCommand = new AsyncRelayCommand(
             ReanalyzeCapturesAsync,
-            () => CanRunAuthorizedMaintenance && ActiveCaptureCount > 0,
+            () => CanRunAuthorizedMaintenance && ReanalyzableCaptureCount > 0,
             AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
         CancelOperationCommand = new RelayCommand(
             CancelOperation,
@@ -125,6 +125,18 @@ public sealed class CaptureMemorySettingsViewModel : ViewModelBase
     public bool ShowResumeAction => IsAuthorized && !IsAnalyzingNewCaptures;
 
     public int ActiveCaptureCount
+    {
+        get;
+        private set
+        {
+            if (Set(ref field, value))
+            {
+                RaiseCommandStates();
+            }
+        }
+    }
+
+    public int ReanalyzableCaptureCount
     {
         get;
         private set
@@ -444,6 +456,13 @@ public sealed class CaptureMemorySettingsViewModel : ViewModelBase
             snapshot.Policy?.IsFutureCaptureAdmissionEnabled == true;
         ActiveCaptureCount = snapshot.ControlSnapshot?.State.Enrollments.Count(enrollment =>
             enrollment.State == CaptureAnalysisEnrollmentState.Enrolled) ?? 0;
+        ReanalyzableCaptureCount = snapshot.ControlSnapshot?.State.Enrollments.Count(enrollment =>
+            enrollment.State == CaptureAnalysisEnrollmentState.Enrolled ||
+            enrollment is
+            {
+                State: CaptureAnalysisEnrollmentState.Excluded,
+                ExclusionReason: CaptureAnalysisExclusionReason.MemoryCleared,
+            }) ?? 0;
 
         PolicyStatusText = snapshot.Status switch
         {
@@ -471,6 +490,7 @@ public sealed class CaptureMemorySettingsViewModel : ViewModelBase
         IsAuthorized = false;
         IsAnalyzingNewCaptures = false;
         ActiveCaptureCount = 0;
+        ReanalyzableCaptureCount = 0;
         PolicyStatusText = GetString(
             "CaptureMemory_Settings_StatusUnavailable",
             "Capture Memory status is unavailable.");

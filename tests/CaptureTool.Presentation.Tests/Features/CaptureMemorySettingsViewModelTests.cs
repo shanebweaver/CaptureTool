@@ -141,6 +141,41 @@ public sealed class CaptureMemorySettingsViewModelTests
     }
 
     [TestMethod]
+    public async Task ReanalyzeCaptures_AfterClear_ShouldRemainAvailableForClearedEnrollments()
+    {
+        CaptureAnalysisPolicySnapshot cleared = CreateClearedSnapshot();
+        var policy = new Mock<ICaptureAnalysisPolicyService>();
+        policy.Setup(value => value.GetCurrentAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(cleared);
+        var maintenance = new Mock<ICaptureAnalysisMaintenanceService>(MockBehavior.Strict);
+        maintenance.Setup(value => value.ReanalyzeCapturesAsync(
+                It.Is<CaptureAnalysisReanalysisRequest>(request =>
+                    request.Scope == CaptureAnalysisReanalysisScope.AllEnrolledCaptures),
+                It.IsAny<IProgress<CaptureAnalysisMaintenanceProgress>>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new CaptureAnalysisMaintenanceResult(
+                CaptureAnalysisMaintenanceStatus.Succeeded,
+                1));
+        var confirmation = CreateConfirmation(CaptureAnalysisSettingsAction.ReanalyzeCaptures);
+        var viewModel = CreateViewModel(
+            policy.Object,
+            maintenanceService: maintenance.Object,
+            confirmationService: confirmation.Object);
+        await viewModel.LoadAsync(CancellationToken.None);
+
+        Assert.AreEqual(0, viewModel.ActiveCaptureCount);
+        Assert.AreEqual(1, viewModel.ReanalyzableCaptureCount);
+        Assert.IsTrue(viewModel.ReanalyzeCapturesCommand.CanExecute(null));
+
+        await viewModel.ReanalyzeCapturesCommand.ExecuteAsync(null);
+
+        Assert.IsFalse(viewModel.HasOperationFailure);
+        StringAssert.Contains(viewModel.OperationStatusText, "queued");
+        maintenance.VerifyAll();
+        confirmation.VerifyAll();
+    }
+
+    [TestMethod]
     public async Task ReanalyzeCaptures_Cancel_ShouldCancelApplicationOperationAndRefreshState()
     {
         var policy = CreatePolicyService();
@@ -312,6 +347,29 @@ public sealed class CaptureMemorySettingsViewModelTests
         return new CaptureAnalysisPolicySnapshot(
             CaptureAnalysisPolicySnapshotStatus.Available,
             CaptureAnalysisConsentState.Denied,
+            control);
+    }
+
+    private static CaptureAnalysisPolicySnapshot CreateClearedSnapshot()
+    {
+        CaptureAnalysisPolicy policy = CaptureAnalysisPolicy.Unknown.GrantFutureCaptures(
+            CaptureAnalysisPolicyDefaults.CreateAuthorizationScope(),
+            currentSequence: 1);
+        var enrollment = new CaptureAnalysisEnrollment(
+            CaptureId.New(),
+            CaptureAnalysisEnrollmentState.Excluded,
+            CaptureAnalysisExclusionReason.MemoryCleared,
+            enrollmentGeneration: 2,
+            tombstoneGeneration: 1,
+            assetFinalizationSequence: 1,
+            requestedRecipeId: null,
+            requestedRecipeVersion: null);
+        var control = new CaptureAnalysisControlSnapshot(
+            2,
+            new CaptureAnalysisControlState(policy.ClearMemory(currentSequence: 1), [enrollment]));
+        return new CaptureAnalysisPolicySnapshot(
+            CaptureAnalysisPolicySnapshotStatus.Available,
+            CaptureAnalysisConsentState.Granted,
             control);
     }
 

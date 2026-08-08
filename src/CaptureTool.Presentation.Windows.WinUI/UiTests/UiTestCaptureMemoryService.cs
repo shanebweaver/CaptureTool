@@ -30,6 +30,7 @@ internal sealed class UiTestCaptureMemoryService :
     private CaptureAnalysisPolicy _policy = CaptureAnalysisPolicy.Unknown;
     private long _documentRevision = 1;
     private bool _forgotten;
+    private bool _memoryCleared;
 
     public UiTestCaptureMemoryService(UiTestLaunchOptions options)
     {
@@ -122,7 +123,7 @@ internal sealed class UiTestCaptureMemoryService :
         cancellationToken.ThrowIfCancellationRequested();
         bool matches = request.Query.Contains("purple", StringComparison.OrdinalIgnoreCase) ||
             request.Query.Contains("comet", StringComparison.OrdinalIgnoreCase);
-        if (_forgotten || !matches)
+        if (_forgotten || _memoryCleared || !matches)
         {
             return ValueTask.FromResult<IReadOnlyList<CaptureMemorySearchResult>>([]);
         }
@@ -198,6 +199,9 @@ internal sealed class UiTestCaptureMemoryService :
         CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
+        _policy = _policy.ClearMemory(currentSequence: 1);
+        _memoryCleared = true;
+        _documentRevision++;
         WriteMarker("capture-memory-cleared.marker");
         return ValueTask.FromResult(new CaptureAnalysisMaintenanceResult(
             CaptureAnalysisMaintenanceStatus.Succeeded,
@@ -235,6 +239,12 @@ internal sealed class UiTestCaptureMemoryService :
         CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
+        if (!_forgotten)
+        {
+            _memoryCleared = false;
+            _documentRevision++;
+        }
+
         progress?.Report(new CaptureAnalysisMaintenanceProgress(
             CaptureAnalysisMaintenancePhase.PreparingModels,
             0.5));
@@ -321,6 +331,19 @@ internal sealed class UiTestCaptureMemoryService :
 
     private CaptureAnalysisEnrollment CreateEnrollment()
     {
+        if (_memoryCleared)
+        {
+            return new CaptureAnalysisEnrollment(
+                _captureId,
+                CaptureAnalysisEnrollmentState.Excluded,
+                CaptureAnalysisExclusionReason.MemoryCleared,
+                enrollmentGeneration: 2,
+                tombstoneGeneration: 1,
+                assetFinalizationSequence: 1,
+                requestedRecipeId: null,
+                requestedRecipeVersion: null);
+        }
+
         CaptureAnalysisRecipe recipe = CaptureAnalysisRecipeDefaults
             .CreateCaptureMemoryImageRecipe();
         return new CaptureAnalysisEnrollment(
