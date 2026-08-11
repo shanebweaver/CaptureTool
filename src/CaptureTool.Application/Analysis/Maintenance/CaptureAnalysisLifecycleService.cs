@@ -358,7 +358,7 @@ internal sealed class CaptureAnalysisLifecycleService :
             }
 
             CaptureAnalysisEnrollment[] enrollments = control.State.Enrollments
-                .Where(enrollment => enrollment.State == CaptureAnalysisEnrollmentState.Enrolled &&
+                .Where(enrollment => IsReanalyzable(enrollment) &&
                     (request.Scope == CaptureAnalysisReanalysisScope.AllEnrolledCaptures ||
                      request.CaptureIds.Contains(enrollment.CaptureId)))
                 .ToArray();
@@ -418,6 +418,34 @@ internal sealed class CaptureAnalysisLifecycleService :
                     ((double)(index + 1) / recipe.Capabilities.Count) * 0.5));
             }
 
+            if (enrollments.Any(IsClearedEnrollment))
+            {
+                ReanalysisEnrollmentRestoreResult restored = await RestoreClearedEnrollmentsAsync(
+                    request,
+                    recipe,
+                    cancellationToken).ConfigureAwait(false);
+                if (restored.Status != CaptureAnalysisMaintenanceStatus.Succeeded)
+                {
+                    return new(restored.Status);
+                }
+
+                if (restored.Control == null)
+                {
+                    return new(CaptureAnalysisMaintenanceStatus.Unavailable);
+                }
+
+                enrollments = restored.Control.State.Enrollments
+                    .Where(enrollment =>
+                        enrollment.State == CaptureAnalysisEnrollmentState.Enrolled &&
+                        (request.Scope == CaptureAnalysisReanalysisScope.AllEnrolledCaptures ||
+                         request.CaptureIds.Contains(enrollment.CaptureId)))
+                    .ToArray();
+                if (enrollments.Length == 0)
+                {
+                    return new(CaptureAnalysisMaintenanceStatus.Rejected);
+                }
+            }
+
             int scheduled = 0;
             int requestedCaptureCount = request.Scope ==
                 CaptureAnalysisReanalysisScope.SelectedCaptures
@@ -473,6 +501,76 @@ internal sealed class CaptureAnalysisLifecycleService :
         catch
         {
             return new(CaptureAnalysisMaintenanceStatus.Unavailable);
+        }
+    }
+
+    private async ValueTask<ReanalysisEnrollmentRestoreResult> RestoreClearedEnrollmentsAsync(
+        CaptureAnalysisReanalysisRequest request,
+        CaptureAnalysisRecipe recipe,
+        CancellationToken cancellationToken)
+    {
+        await _mutationGate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            for (int attempt = 0; attempt < MaximumControlWriteAttempts; attempt++)
+            {
+                CaptureAnalysisControlSnapshot current = await _controlStore
+                    .GetAsync(cancellationToken).ConfigureAwait(false);
+                if (!current.State.Policy.IsProcessingAuthorized)
+                {
+                    return new(CaptureAnalysisMaintenanceStatus.Rejected);
+                }
+
+                CaptureAnalysisEnrollment[] cleared = current.State.Enrollments
+                    .Where(enrollment => IsClearedEnrollment(enrollment) &&
+                        (request.Scope == CaptureAnalysisReanalysisScope.AllEnrolledCaptures ||
+                         request.CaptureIds.Contains(enrollment.CaptureId)))
+                    .ToArray();
+                if (cleared.Length == 0)
+                {
+                    return new(CaptureAnalysisMaintenanceStatus.Succeeded, current);
+                }
+
+                // Keep the privacy fence and tombstones in place until every app-owned derived
+                // artifact has been removed. Only the user's confirmed reanalysis action may
+                // convert a cleared enrollment back into active work.
+                if (!await _cleanup.ReconcileAsync(cancellationToken).ConfigureAwait(false))
+                {
+                    return new(CaptureAnalysisMaintenanceStatus.Incomplete);
+                }
+
+                HashSet<CaptureId> clearedIds = cleared
+                    .Select(enrollment => enrollment.CaptureId)
+                    .ToHashSet();
+                CaptureAnalysisEnrollment[] restored = current.State.Enrollments
+                    .Select(enrollment => clearedIds.Contains(enrollment.CaptureId)
+                        ? RestoreEnrollment(enrollment, recipe)
+                        : enrollment)
+                    .ToArray();
+                var next = new CaptureAnalysisControlState(
+                    current.State.Policy,
+                    restored,
+                    current.State.CaptureChangeCheckpoint);
+                CaptureAnalysisControlWriteResult write = await _controlStore.TryWriteAsync(
+                    next,
+                    current.DocumentRevision,
+                    cancellationToken).ConfigureAwait(false);
+                if (write.Status == CaptureAnalysisControlWriteStatus.Succeeded)
+                {
+                    return new(CaptureAnalysisMaintenanceStatus.Succeeded, write.Snapshot);
+                }
+
+                if (write.Status != CaptureAnalysisControlWriteStatus.Conflict)
+                {
+                    return new(CaptureAnalysisMaintenanceStatus.Unavailable);
+                }
+            }
+
+            return new(CaptureAnalysisMaintenanceStatus.Conflict);
+        }
+        finally
+        {
+            _mutationGate.Release();
         }
     }
 
@@ -547,10 +645,40 @@ internal sealed class CaptureAnalysisLifecycleService :
             ? CreateTombstone(
                 enrollment.CaptureId,
                 CaptureAnalysisEnrollmentState.Excluded,
-                CaptureAnalysisExclusionReason.UserExcluded,
+                CaptureAnalysisExclusionReason.MemoryCleared,
                 enrollment.AssetFinalizationSequence,
                 enrollment)
             : enrollment;
+    }
+
+    private static bool IsReanalyzable(CaptureAnalysisEnrollment enrollment)
+    {
+        return enrollment.State == CaptureAnalysisEnrollmentState.Enrolled ||
+            IsClearedEnrollment(enrollment);
+    }
+
+    private static bool IsClearedEnrollment(CaptureAnalysisEnrollment enrollment)
+    {
+        return enrollment is
+        {
+            State: CaptureAnalysisEnrollmentState.Excluded,
+            ExclusionReason: CaptureAnalysisExclusionReason.MemoryCleared,
+        };
+    }
+
+    private static CaptureAnalysisEnrollment RestoreEnrollment(
+        CaptureAnalysisEnrollment enrollment,
+        CaptureAnalysisRecipe recipe)
+    {
+        return new(
+            enrollment.CaptureId,
+            CaptureAnalysisEnrollmentState.Enrolled,
+            CaptureAnalysisExclusionReason.None,
+            checked(enrollment.EnrollmentGeneration + 1),
+            enrollment.TombstoneGeneration,
+            enrollment.AssetFinalizationSequence,
+            recipe.Id,
+            recipe.Version);
     }
 
     public void Dispose()
@@ -562,4 +690,8 @@ internal sealed class CaptureAnalysisLifecycleService :
     {
         public void Report(T value) => report(value);
     }
+
+    private sealed record ReanalysisEnrollmentRestoreResult(
+        CaptureAnalysisMaintenanceStatus Status,
+        CaptureAnalysisControlSnapshot? Control = null);
 }

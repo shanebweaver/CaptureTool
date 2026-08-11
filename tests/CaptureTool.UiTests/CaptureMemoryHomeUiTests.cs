@@ -162,6 +162,15 @@ public sealed class CaptureMemoryHomeUiTests
             WaitForElement(app.ProcessId, automation, "AppMenu_FileMenuItem").Click();
             WaitForElement(app.ProcessId, automation, "AppMenu_SettingsItem").Click();
 
+            AutomationElement clear = WaitForElement(
+                app.ProcessId,
+                automation,
+                "Settings_CaptureMemoryClearButton");
+            FocusAndClick(clear);
+            WaitForElement(app.ProcessId, automation, "CaptureMemoryConfirmationDialog");
+            WaitForElementByName(app.ProcessId, automation, "Clear Memory").Click();
+            WaitForMarker(temporaryDirectory, "capture-memory-cleared.marker");
+
             AutomationElement reanalyze = WaitForElement(
                 app.ProcessId,
                 automation,
@@ -197,15 +206,6 @@ public sealed class CaptureMemoryHomeUiTests
             FocusAndClick(resume);
             WaitForMarker(temporaryDirectory, "capture-memory-resumed.marker");
 
-            AutomationElement clear = WaitForElement(
-                app.ProcessId,
-                automation,
-                "Settings_CaptureMemoryClearButton");
-            FocusAndClick(clear);
-            WaitForElement(app.ProcessId, automation, "CaptureMemoryConfirmationDialog");
-            WaitForElementByName(app.ProcessId, automation, "Clear Memory").Click();
-            WaitForMarker(temporaryDirectory, "capture-memory-cleared.marker");
-
             AutomationElement turnOff = WaitForElement(
                 app.ProcessId,
                 automation,
@@ -234,7 +234,7 @@ public sealed class CaptureMemoryHomeUiTests
 
     [TestMethod]
     [TestCategory("UI")]
-    public void CaptureMemory_RealAnalysisBackfill_ShouldFindExistingCaptureText()
+    public void CaptureMemory_RealAnalysisBackfill_ShouldFindExistingCaptureTextFragments()
     {
         if (!string.Equals(
             Environment.GetEnvironmentVariable("CAPTURETOOL_RUN_UI_TESTS"),
@@ -283,7 +283,7 @@ public sealed class CaptureMemoryHomeUiTests
                 app.ProcessId,
                 automation,
                 searchBox,
-                "purple comet");
+                "urple come");
             AutomationElement results = WaitForElement(
                 app.ProcessId,
                 automation,

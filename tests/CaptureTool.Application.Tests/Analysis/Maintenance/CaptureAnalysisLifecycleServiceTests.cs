@@ -66,6 +66,9 @@ public sealed class CaptureAnalysisLifecycleServiceTests
         Assert.AreEqual(
             CaptureAnalysisEnrollmentState.Excluded,
             store.Snapshot.State.Enrollments.Single().State);
+        Assert.AreEqual(
+            CaptureAnalysisExclusionReason.MemoryCleared,
+            store.Snapshot.State.Enrollments.Single().ExclusionReason);
     }
 
     [TestMethod]
@@ -137,6 +140,115 @@ public sealed class CaptureAnalysisLifecycleServiceTests
             null,
             It.IsAny<CancellationToken>()), Times.Exactly(3));
         scheduler.VerifyAll();
+    }
+
+    [TestMethod]
+    public async Task ClearThenReanalyze_ShouldRestoreOnlyClearedEnrollmentsAfterCleanup()
+    {
+        CaptureAnalysisEnrollment enrolled = CreateEnrollment(2);
+        CaptureId excludedId = CaptureId.New();
+        var userExcluded = new CaptureAnalysisEnrollment(
+            excludedId,
+            CaptureAnalysisEnrollmentState.Excluded,
+            CaptureAnalysisExclusionReason.UserExcluded,
+            enrollmentGeneration: 2,
+            tombstoneGeneration: 1,
+            assetFinalizationSequence: 3,
+            requestedRecipeId: null,
+            requestedRecipeVersion: null);
+        var store = new TestControlStore(CreateControl(enrolled, userExcluded));
+        Mock<ICaptureAssetCatalog> assets = CreateAssetCatalog(enrolled.CaptureId, 8);
+        assets.Setup(catalog => catalog.Get(enrolled.CaptureId)).Returns(
+            CreateAsset(enrolled.CaptureId, CaptureSourceOwnership.AppOwned));
+        var cleanup = new TestCleanupCoordinator();
+        var preparation = new Mock<IUserInitiatedAnalysisCapabilityPreparationService>();
+        preparation.Setup(service => service.PrepareAsync(
+                It.IsAny<AnalysisCapabilityPreparationRequest>(),
+                null,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(AnalysisCapabilityPreparationState.Ready(
+                AnalysisTestData.CreateAnalyzer(),
+                ProcessingBoundary.OnDevice));
+        CaptureAnalysisScheduleRequest? scheduledRequest = null;
+        var scheduler = new Mock<ICaptureAnalysisScheduler>();
+        scheduler.Setup(service => service.ScheduleAsync(
+                It.IsAny<CaptureAnalysisScheduleRequest>(),
+                It.IsAny<CancellationToken>()))
+            .Callback<CaptureAnalysisScheduleRequest, CancellationToken>((request, _) =>
+                scheduledRequest = request)
+            .ReturnsAsync(new CaptureAnalysisScheduleResult(
+                CaptureAnalysisScheduleStatus.Scheduled,
+                durableIntentCount: 3));
+        using var service = new CaptureAnalysisLifecycleService(
+            store,
+            assets.Object,
+            cleanup,
+            Mock.Of<ICaptureAnalysisProjectionMaintenance>(),
+            preparation.Object,
+            scheduler.Object);
+
+        CaptureAnalysisMaintenanceResult cleared = await service.ClearMemoryAsync();
+        CaptureAnalysisEnrollment tombstone = store.Snapshot.State.Enrollments.Single(value =>
+            value.CaptureId == enrolled.CaptureId);
+        CaptureAnalysisMaintenanceResult reanalyzed = await service.ReanalyzeCapturesAsync(
+            new CaptureAnalysisReanalysisRequest(
+                CaptureAnalysisReanalysisScope.AllEnrolledCaptures));
+
+        Assert.AreEqual(CaptureAnalysisMaintenanceStatus.Succeeded, cleared.Status);
+        Assert.AreEqual(CaptureAnalysisEnrollmentState.Excluded, tombstone.State);
+        Assert.AreEqual(CaptureAnalysisExclusionReason.MemoryCleared, tombstone.ExclusionReason);
+        Assert.AreEqual(CaptureAnalysisMaintenanceStatus.Succeeded, reanalyzed.Status);
+        Assert.AreEqual(1, reanalyzed.AffectedCaptureCount);
+        CaptureAnalysisEnrollment restored = store.Snapshot.State.Enrollments.Single(value =>
+            value.CaptureId == enrolled.CaptureId);
+        CaptureAnalysisEnrollment stillExcluded = store.Snapshot.State.Enrollments.Single(value =>
+            value.CaptureId == excludedId);
+        Assert.AreEqual(CaptureAnalysisEnrollmentState.Enrolled, restored.State);
+        Assert.AreEqual(CaptureAnalysisExclusionReason.None, restored.ExclusionReason);
+        Assert.AreEqual(tombstone.EnrollmentGeneration + 1, restored.EnrollmentGeneration);
+        Assert.AreEqual(tombstone.TombstoneGeneration, restored.TombstoneGeneration);
+        Assert.AreEqual(CaptureAnalysisEnrollmentState.Excluded, stillExcluded.State);
+        Assert.AreEqual(CaptureAnalysisExclusionReason.UserExcluded, stillExcluded.ExclusionReason);
+        Assert.IsNotNull(scheduledRequest);
+        Assert.IsTrue(scheduledRequest.ForceReanalysis);
+        Assert.AreEqual(2, cleanup.ReconcileCount);
+    }
+
+    [TestMethod]
+    public async Task ReanalyzeAfterIncompleteClear_ShouldKeepTheCleanupTombstoneAndNotSchedule()
+    {
+        CaptureAnalysisEnrollment enrolled = CreateEnrollment(2);
+        var store = new TestControlStore(CreateControl(enrolled));
+        Mock<ICaptureAssetCatalog> assets = CreateAssetCatalog(enrolled.CaptureId, 8);
+        var cleanup = new TestCleanupCoordinator { Result = false };
+        var scheduler = new Mock<ICaptureAnalysisScheduler>(MockBehavior.Strict);
+        var preparation = new Mock<IUserInitiatedAnalysisCapabilityPreparationService>();
+        preparation.Setup(service => service.PrepareAsync(
+                It.IsAny<AnalysisCapabilityPreparationRequest>(),
+                null,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(AnalysisCapabilityPreparationState.Ready(
+                AnalysisTestData.CreateAnalyzer(),
+                ProcessingBoundary.OnDevice));
+        using var service = new CaptureAnalysisLifecycleService(
+            store,
+            assets.Object,
+            cleanup,
+            Mock.Of<ICaptureAnalysisProjectionMaintenance>(),
+            preparation.Object,
+            scheduler.Object);
+
+        CaptureAnalysisMaintenanceResult cleared = await service.ClearMemoryAsync();
+        CaptureAnalysisMaintenanceResult reanalyzed = await service.ReanalyzeCapturesAsync(
+            new CaptureAnalysisReanalysisRequest(
+                CaptureAnalysisReanalysisScope.AllEnrolledCaptures));
+
+        Assert.AreEqual(CaptureAnalysisMaintenanceStatus.Incomplete, cleared.Status);
+        Assert.AreEqual(CaptureAnalysisMaintenanceStatus.Incomplete, reanalyzed.Status);
+        CaptureAnalysisEnrollment tombstone = store.Snapshot.State.Enrollments.Single();
+        Assert.AreEqual(CaptureAnalysisEnrollmentState.Excluded, tombstone.State);
+        Assert.AreEqual(CaptureAnalysisExclusionReason.MemoryCleared, tombstone.ExclusionReason);
+        scheduler.VerifyNoOtherCalls();
     }
 
     [TestMethod]
@@ -716,8 +828,11 @@ public sealed class CaptureAnalysisLifecycleServiceTests
     {
         public bool Result { get; set; } = true;
 
+        public int ReconcileCount { get; private set; }
+
         public ValueTask<bool> ReconcileAsync(CancellationToken cancellationToken = default)
         {
+            ReconcileCount++;
             ordering?.Add("cleanup");
             return ValueTask.FromResult(Result);
         }

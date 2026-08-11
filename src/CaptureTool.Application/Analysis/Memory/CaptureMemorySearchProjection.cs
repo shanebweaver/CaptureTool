@@ -23,6 +23,8 @@ internal sealed class CaptureMemorySearchProjection :
     private const double DescriptionTokenScore = 500;
     private const double FilenameTokenScore = 400;
     private const double TypoPenalty = 25;
+    private const double PrefixPenalty = 50;
+    private const double SubstringPenalty = 75;
     private const double MaximumRecencyTieBreaker = 0.01;
 
     private readonly ICaptureAnalysisStore _metadataStore;
@@ -445,7 +447,7 @@ internal sealed class CaptureMemorySearchProjection :
             ? null
             : CreateMatch(
                 entry,
-                FilenameTokenScore - GetTypoPenalty(filenameTokens),
+                FilenameTokenScore - GetTokenMatchPenalty(filenameTokens),
                 CaptureMemoryMatchKind.Filename,
                 entry.Filename,
                 rawQuery);
@@ -486,7 +488,7 @@ internal sealed class CaptureMemorySearchProjection :
                 candidate.Normalized.Tokens) != CaptureMemoryTokenMatch.None);
         return CreateOcrMatch(
             entry,
-            OcrTokenScore - GetTypoPenalty(tokens),
+            OcrTokenScore - GetTokenMatchPenalty(tokens),
             evidenceLine,
             rawQuery);
     }
@@ -521,7 +523,7 @@ internal sealed class CaptureMemorySearchProjection :
             ? null
             : CreateMatch(
                 entry,
-                DescriptionTokenScore - GetTypoPenalty(tokens),
+                DescriptionTokenScore - GetTokenMatchPenalty(tokens),
                 CaptureMemoryMatchKind.ImageDescription,
                 entry.Description,
                 rawQuery);
@@ -562,9 +564,15 @@ internal sealed class CaptureMemorySearchProjection :
                 bounds));
     }
 
-    private static double GetTypoPenalty(CaptureMemoryTokenMatch match)
+    private static double GetTokenMatchPenalty(CaptureMemoryTokenMatch match)
     {
-        return match == CaptureMemoryTokenMatch.SingleTypo ? TypoPenalty : 0;
+        return match switch
+        {
+            CaptureMemoryTokenMatch.SingleTypo => TypoPenalty,
+            CaptureMemoryTokenMatch.Prefix => PrefixPenalty,
+            CaptureMemoryTokenMatch.Substring => SubstringPenalty,
+            _ => 0,
+        };
     }
 
     private sealed record ProjectionEntry(

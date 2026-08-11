@@ -104,6 +104,55 @@ public sealed class CaptureMemorySearchProjectionTests
     }
 
     [TestMethod]
+    public async Task PartialTokens_ShouldMatchPrefixesAndInternalUrlFragmentsWithoutShortInfixNoise()
+    {
+        var fixture = new SearchFixture();
+        CaptureId url = fixture.AddCapture(
+            13,
+            "reference.png",
+            "Open https://portal.contoso.com/accounts/settings now",
+            description: null);
+        using CaptureMemorySearchProjection service = fixture.CreateService();
+
+        IReadOnlyList<CaptureMemorySearchResult> prefix = await service.SearchAsync(
+            new CaptureMemorySearchRequest("porta setti", 10));
+        IReadOnlyList<CaptureMemorySearchResult> substring = await service.SearchAsync(
+            new CaptureMemorySearchRequest("toso count", 10));
+        IReadOnlyList<CaptureMemorySearchResult> shortInfix = await service.SearchAsync(
+            new CaptureMemorySearchRequest("oso", 10));
+
+        Assert.AreEqual(url, prefix[0].CaptureId);
+        Assert.AreEqual(CaptureMemoryMatchKind.OcrText, prefix[0].Evidence.MatchKind);
+        Assert.AreEqual(url, substring[0].CaptureId);
+        Assert.AreEqual(CaptureMemoryMatchKind.OcrText, substring[0].Evidence.MatchKind);
+        Assert.IsGreaterThan(substring[0].Score, prefix[0].Score);
+        Assert.IsEmpty(shortInfix);
+    }
+
+    [TestMethod]
+    public async Task PartialTokenRanking_ShouldPreferExactThenTypoThenPrefixThenSubstring()
+    {
+        var fixture = new SearchFixture();
+        CaptureId exact = fixture.AddCapture(14, "exact.png", "micro", description: null);
+        CaptureId typo = fixture.AddCapture(15, "typo.png", "micrp", description: null);
+        CaptureId prefix = fixture.AddCapture(16, "prefix.png", "microsoft", description: null);
+        CaptureId substring = fixture.AddCapture(
+            17,
+            "substring.png",
+            "supermicroservice",
+            description: null);
+        using CaptureMemorySearchProjection service = fixture.CreateService();
+
+        IReadOnlyList<CaptureMemorySearchResult> results = await service.SearchAsync(
+            new CaptureMemorySearchRequest("micro", 10));
+
+        CollectionAssert.AreEqual(
+            new[] { exact, typo, prefix, substring },
+            results.Select(result => result.CaptureId).ToArray());
+        Assert.IsTrue(results.Zip(results.Skip(1)).All(pair => pair.First.Score > pair.Second.Score));
+    }
+
+    [TestMethod]
     public async Task Rebuild_ShouldExcludeDuplicateStaleMissingDeletedAndTombstonedItems()
     {
         var fixture = new SearchFixture();
@@ -236,7 +285,7 @@ public sealed class CaptureMemorySearchProjectionTests
 
     [TestMethod]
     [TestCategory("Performance")]
-    public async Task WarmSearchP95_ShouldRemainUnder150MillisecondsForOneThousandImages()
+    public async Task WarmExactAndPartialSearchP95_ShouldRemainUnder150MillisecondsForOneThousandImages()
     {
         var fixture = new SearchFixture();
         for (int index = 1; index <= 1000; index++)
@@ -250,23 +299,38 @@ public sealed class CaptureMemorySearchProjectionTests
         }
 
         using CaptureMemorySearchProjection service = fixture.CreateService();
-        var request = new CaptureMemorySearchRequest("common benchmark phrase", 50);
-        _ = await service.SearchAsync(request);
+        var exactRequest = new CaptureMemorySearchRequest("common benchmark phrase", 50);
+        var partialRequest = new CaptureMemorySearchRequest("comm bench phra", 50);
+        _ = await service.SearchAsync(exactRequest);
+        _ = await service.SearchAsync(partialRequest);
 
-        var elapsed = new List<double>();
+        var exactElapsed = new List<double>();
+        var partialElapsed = new List<double>();
         for (int iteration = 0; iteration < 30; iteration++)
         {
-            Stopwatch stopwatch = Stopwatch.StartNew();
-            IReadOnlyList<CaptureMemorySearchResult> results = await service.SearchAsync(request);
-            stopwatch.Stop();
-            Assert.HasCount(50, results);
-            elapsed.Add(stopwatch.Elapsed.TotalMilliseconds);
+            Stopwatch exactStopwatch = Stopwatch.StartNew();
+            IReadOnlyList<CaptureMemorySearchResult> exactResults =
+                await service.SearchAsync(exactRequest);
+            exactStopwatch.Stop();
+            Assert.HasCount(50, exactResults);
+            exactElapsed.Add(exactStopwatch.Elapsed.TotalMilliseconds);
+
+            Stopwatch partialStopwatch = Stopwatch.StartNew();
+            IReadOnlyList<CaptureMemorySearchResult> partialResults =
+                await service.SearchAsync(partialRequest);
+            partialStopwatch.Stop();
+            Assert.HasCount(50, partialResults);
+            partialElapsed.Add(partialStopwatch.Elapsed.TotalMilliseconds);
         }
 
-        elapsed.Sort();
-        double p95 = elapsed[(int)Math.Ceiling(elapsed.Count * 0.95) - 1];
-        TestContext.WriteLine($"Capture Memory warm p95 for 1,000 images: {p95:F3} ms");
-        Assert.IsLessThan(150, p95);
+        exactElapsed.Sort();
+        partialElapsed.Sort();
+        double exactP95 = exactElapsed[(int)Math.Ceiling(exactElapsed.Count * 0.95) - 1];
+        double partialP95 = partialElapsed[(int)Math.Ceiling(partialElapsed.Count * 0.95) - 1];
+        TestContext.WriteLine(
+            $"Capture Memory warm p95 for 1,000 images: exact={exactP95:F3} ms, partial={partialP95:F3} ms");
+        Assert.IsLessThan(150, exactP95);
+        Assert.IsLessThan(150, partialP95);
     }
 
     private static string ResultIdentity(CaptureMemorySearchResult result)

@@ -21,6 +21,7 @@ public enum CaptureAnalysisExclusionReason
     SourceDeleted,
     HistoryForgotten,
     DeleteRequested,
+    MemoryCleared,
 }
 
 public sealed record CaptureAnalysisEnrollment

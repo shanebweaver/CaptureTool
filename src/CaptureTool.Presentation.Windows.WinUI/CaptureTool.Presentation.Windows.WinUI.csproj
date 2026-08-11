@@ -52,6 +52,7 @@
     <ProjectReference Include="..\CaptureTool.Infrastructure.Edit.Windows\CaptureTool.Infrastructure.Edit.Windows.csproj" GlobalPropertiesToRemove="WindowsAppSDKSelfContained;WindowsPackageType;EnableMsixTooling" />
     <ProjectReference Include="..\CaptureTool.Infrastructure.Analysis.Windows\CaptureTool.Infrastructure.Analysis.Windows.csproj" GlobalPropertiesToRemove="WindowsAppSDKSelfContained;WindowsPackageType;EnableMsixTooling" />
     <ProjectReference Include="..\CaptureTool.Domain\CaptureTool.Domain.csproj" GlobalPropertiesToRemove="WindowsAppSDKSelfContained;WindowsPackageType;EnableMsixTooling" />
+    <ProjectReference Include="..\CaptureTool.Domain.Analysis\CaptureTool.Domain.Analysis.csproj" GlobalPropertiesToRemove="WindowsAppSDKSelfContained;WindowsPackageType;EnableMsixTooling" />
     <ProjectReference Include="..\CaptureTool.Domain.Edit\CaptureTool.Domain.Edit.csproj" GlobalPropertiesToRemove="WindowsAppSDKSelfContained;WindowsPackageType;EnableMsixTooling" />
     <ProjectReference Include="..\CaptureTool.Infrastructure.Capture.Windows\CaptureTool.Infrastructure.Capture.Windows.csproj" GlobalPropertiesToRemove="WindowsAppSDKSelfContained;WindowsPackageType;EnableMsixTooling" />
     <ProjectReference Include="..\CaptureTool.Domain.Capture\CaptureTool.Domain.Capture.csproj" GlobalPropertiesToRemove="WindowsAppSDKSelfContained;WindowsPackageType;EnableMsixTooling" />
