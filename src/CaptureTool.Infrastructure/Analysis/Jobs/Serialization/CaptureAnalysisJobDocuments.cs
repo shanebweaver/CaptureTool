@@ -1,5 +1,6 @@
 using CaptureTool.Application.Abstractions.Analysis.Jobs;
 using CaptureTool.Domain.Analysis;
+using System.Text.Json.Serialization;
 
 namespace CaptureTool.Infrastructure.Analysis.Jobs.Serialization;
 
@@ -38,6 +39,9 @@ internal sealed class CaptureAnalysisJobKeyDocument
     public required AnalysisCommitPreconditionsDocument Preconditions { get; set; }
 
     public required CapabilityDefinitionDocument Capability { get; set; }
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public List<CapabilityDefinitionDocument>? Dependencies { get; set; }
 
     public ProcessingBoundary AuthorizedProcessingBoundary { get; set; }
 }

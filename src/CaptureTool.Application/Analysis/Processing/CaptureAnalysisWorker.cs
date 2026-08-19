@@ -1,4 +1,5 @@
 using CaptureTool.Application.Abstractions.Analysis.Analyzers;
+using CaptureTool.Application.Abstractions.Analysis.Checkpoints;
 using CaptureTool.Application.Abstractions.Analysis.Intake;
 using CaptureTool.Application.Abstractions.Analysis.Jobs;
 using CaptureTool.Application.Abstractions.Analysis.Orchestration;
@@ -10,6 +11,7 @@ using CaptureTool.Application.Abstractions.Cancellation;
 using CaptureTool.Application.Abstractions.Logging;
 using CaptureTool.Application.Abstractions.Time;
 using CaptureTool.Application.Analysis.Intake;
+using CaptureTool.Domain;
 using CaptureTool.Domain.Analysis;
 
 namespace CaptureTool.Application.Analysis.Processing;
@@ -20,9 +22,11 @@ internal sealed class CaptureAnalysisWorker : ICaptureAnalysisWorker
     private static readonly TimeSpan FailureDelay = TimeSpan.FromSeconds(5);
     private static readonly TimeSpan InitialRetryDelay = TimeSpan.FromSeconds(15);
     private static readonly TimeSpan MaximumRetryDelay = TimeSpan.FromMinutes(15);
+    private static readonly TimeSpan CheckpointRetention = TimeSpan.FromDays(7);
     private const int MaximumAttempts = 8;
 
     private readonly ICaptureAnalysisJobStore _jobStore;
+    private readonly ICaptureAnalysisCheckpointStore _checkpointStore;
     private readonly ICaptureAnalysisWakeWaiter _wakeWaiter;
     private readonly ICaptureAnalyzerResolver _resolver;
     private readonly ICaptureAnalyzerCatalog _analyzers;
@@ -38,6 +42,7 @@ internal sealed class CaptureAnalysisWorker : ICaptureAnalysisWorker
 
     public CaptureAnalysisWorker(
         ICaptureAnalysisJobStore jobStore,
+        ICaptureAnalysisCheckpointStore checkpointStore,
         ICaptureAnalysisWakeWaiter wakeWaiter,
         ICaptureAnalyzerResolver resolver,
         ICaptureAnalyzerCatalog analyzers,
@@ -52,6 +57,7 @@ internal sealed class CaptureAnalysisWorker : ICaptureAnalysisWorker
         ILogService logService)
     {
         _jobStore = jobStore;
+        _checkpointStore = checkpointStore;
         _wakeWaiter = wakeWaiter;
         _resolver = resolver;
         _analyzers = analyzers;
@@ -68,6 +74,23 @@ internal sealed class CaptureAnalysisWorker : ICaptureAnalysisWorker
 
     public async Task RunAsync(CancellationToken cancellationToken)
     {
+        try
+        {
+            _ = await _checkpointStore.PruneAsync(
+                GetUtcNow() - CheckpointRetention,
+                cancellationToken).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            return;
+        }
+        catch (Exception exception)
+        {
+            _logService.LogException(
+                exception,
+                "Failed to prune expired Capture Analysis checkpoints.");
+        }
+
         try
         {
             await RefreshCompletedProjectionsAsync(cancellationToken).ConfigureAwait(false);
@@ -92,6 +115,7 @@ internal sealed class CaptureAnalysisWorker : ICaptureAnalysisWorker
                 {
                     await _reconciler.ReconcileStartupAsync(cancellationToken)
                         .ConfigureAwait(false);
+                    await ResumeWaitingCapabilitiesAsync(cancellationToken).ConfigureAwait(false);
                     startupReconciliationPending = false;
                 }
                 else
@@ -132,6 +156,37 @@ internal sealed class CaptureAnalysisWorker : ICaptureAnalysisWorker
         }
     }
 
+    private async Task ResumeWaitingCapabilitiesAsync(CancellationToken cancellationToken)
+    {
+        DateTimeOffset dueAtUtc = GetUtcNow();
+        var capabilities = _analyzers.Analyzers
+            .Select(analyzer => (
+                analyzer.Descriptor.Capability,
+                analyzer.Descriptor.ProcessingBoundary))
+            .Distinct();
+        foreach ((CapabilityDefinition capability, ProcessingBoundary boundary) in capabilities)
+        {
+            try
+            {
+                _ = await _jobStore.ResumeWaitingForCapabilityAsync(
+                    capability,
+                    boundary,
+                    dueAtUtc,
+                    cancellationToken).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                throw;
+            }
+            catch (Exception exception)
+            {
+                _logService.LogException(
+                    exception,
+                    "Failed to resume waiting Capture Analysis jobs.");
+            }
+        }
+    }
+
     private async Task ProcessAsync(
         CaptureAnalysisJobLease lease,
         CancellationToken cancellationToken)
@@ -140,6 +195,7 @@ internal sealed class CaptureAnalysisWorker : ICaptureAnalysisWorker
         AnalysisCommitPreconditions expected = intent.Key.Preconditions;
         if (expected.ResolutionPolicyRevision != _featureAvailability.ResolutionPolicyRevision)
         {
+            await TryDeleteCaptureCheckpointsAsync(intent.Key.CaptureId).ConfigureAwait(false);
             _ = await _jobStore.TryCancelAsync(intent.Key, cancellationToken).ConfigureAwait(false);
             return;
         }
@@ -152,11 +208,45 @@ internal sealed class CaptureAnalysisWorker : ICaptureAnalysisWorker
             registeredSource.Record.Recipe.Id != expected.RecipeId ||
             registeredSource.Record.Recipe.Version != expected.RecipeVersion)
         {
+            await TryDeleteCaptureCheckpointsAsync(intent.Key.CaptureId).ConfigureAwait(false);
             _ = await _jobStore.TryCancelAsync(intent.Key, cancellationToken).ConfigureAwait(false);
             return;
         }
 
         CaptureMediaKind mediaKind = registeredSource.Record.MediaKind;
+        if (!registeredSource.Record.Recipe.TryGetCapability(
+                intent.Key.Capability.Id,
+                out RecipeCapability requestedCapability) ||
+            requestedCapability.Capability != intent.Key.Capability ||
+            !requestedCapability.Dependencies
+                .OrderBy(dependency => dependency.Id.Value, StringComparer.Ordinal)
+                .SequenceEqual(intent.Key.Dependencies))
+        {
+            await TryDeleteCaptureCheckpointsAsync(intent.Key.CaptureId).ConfigureAwait(false);
+            _ = await _jobStore.TryCancelAsync(intent.Key, cancellationToken).ConfigureAwait(false);
+            return;
+        }
+
+        CanonicalCapabilityResult[] dependencyInputs = intent.Key.Dependencies
+            .Select(dependency => registeredSource.Record.TryGetAnalysis(
+                    dependency.Id,
+                    out CapabilityAnalysis? analysis) &&
+                analysis?.Capability == dependency
+                    ? analysis.CanonicalResult
+                    : null)
+            .Where(result => result != null)
+            .Cast<CanonicalCapabilityResult>()
+            .ToArray();
+        if (dependencyInputs.Length != intent.Key.Dependencies.Count)
+        {
+            _ = await _jobStore.TryWaitForCapabilityAsync(
+                lease.LeaseToken,
+                new AnalysisFailure(
+                    AnalysisFailureCode.CapabilityUnavailable,
+                    AnalysisFailureDisposition.Transient),
+                cancellationToken).ConfigureAwait(false);
+            return;
+        }
 
         AnalysisProcessingPolicy? processingPolicy = await TryGetAuthorizedPolicyAsync(
             intent.Key,
@@ -164,6 +254,7 @@ internal sealed class CaptureAnalysisWorker : ICaptureAnalysisWorker
             cancellationToken).ConfigureAwait(false);
         if (processingPolicy == null)
         {
+            await TryDeleteCaptureCheckpointsAsync(intent.Key.CaptureId).ConfigureAwait(false);
             _ = await _jobStore.TryCancelAsync(intent.Key, cancellationToken).ConfigureAwait(false);
             return;
         }
@@ -185,7 +276,8 @@ internal sealed class CaptureAnalysisWorker : ICaptureAnalysisWorker
                     expected.Purpose,
                     RestrictToBoundary(processingPolicy, intent.Key.AuthorizedProcessingBoundary),
                     expected.ResolutionPolicyRevision,
-                    attempted),
+                    attempted,
+                    allowReadyFallbackWhenPreparationRequired: true),
                 cancellationToken).ConfigureAwait(false);
             if (resolution.Status == CaptureAnalyzerResolutionStatus.WaitingForPreparation)
             {
@@ -246,9 +338,21 @@ internal sealed class CaptureAnalysisWorker : ICaptureAnalysisWorker
                 continue;
             }
 
-            if (await IsAlreadyCommittedAsync(intent.Key, analyzer, cancellationToken)
+            var checkpointKey = new CaptureAnalysisCheckpointKey(
+                intent.Key.CaptureId,
+                intent.Key.SourceRevision,
+                intent.Key.Capability,
+                analyzer.Descriptor.Revision);
+            ICaptureAnalyzerCheckpoint checkpoint = _checkpointStore.Open(checkpointKey);
+
+            if (await IsAlreadyCommittedAsync(
+                    intent.Key,
+                    analyzer,
+                    dependencyInputs,
+                    cancellationToken)
                 .ConfigureAwait(false))
             {
+                await TryClearCheckpointAsync(checkpoint).ConfigureAwait(false);
                 if (intent.Attempts.LastOrDefault()?.Status != CaptureAnalyzerAttemptStatus.Succeeded)
                 {
                     DateTimeOffset recoveredAtUtc = GetUtcNow();
@@ -277,6 +381,11 @@ internal sealed class CaptureAnalysisWorker : ICaptureAnalysisWorker
                     cancellationToken).ConfigureAwait(false);
                 if (completed.Status == CaptureAnalysisJobMutationStatus.Succeeded)
                 {
+                    _ = await _jobStore.ResumeWaitingForDependencyAsync(
+                        expected.CaptureId,
+                        intent.Key.Capability,
+                        GetUtcNow(),
+                        cancellationToken).ConfigureAwait(false);
                     await TryRefreshProjectionAsync(intent.Key.CaptureId, cancellationToken)
                         .ConfigureAwait(false);
                 }
@@ -291,6 +400,7 @@ internal sealed class CaptureAnalysisWorker : ICaptureAnalysisWorker
                 cancellationToken).ConfigureAwait(false);
             if (sourceAuthorization == null)
             {
+                await TryClearCheckpointAsync(checkpoint).ConfigureAwait(false);
                 _ = await _jobStore.TryCancelAsync(intent.Key, cancellationToken).ConfigureAwait(false);
                 return;
             }
@@ -305,6 +415,7 @@ internal sealed class CaptureAnalysisWorker : ICaptureAnalysisWorker
                     await source.DisposeAsync().ConfigureAwait(false);
                 }
 
+                await TryClearCheckpointAsync(checkpoint).ConfigureAwait(false);
                 _ = await _jobStore.TryCancelAsync(intent.Key, cancellationToken).ConfigureAwait(false);
                 return;
             }
@@ -320,7 +431,9 @@ internal sealed class CaptureAnalysisWorker : ICaptureAnalysisWorker
                             analyzer.Descriptor,
                             expected.Purpose,
                             invocation.ProcessingPolicy!,
-                            source),
+                            source,
+                            dependencyInputs,
+                            checkpoint),
                         cancellationToken).ConfigureAwait(false);
                 }
                 catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
@@ -358,6 +471,7 @@ internal sealed class CaptureAnalysisWorker : ICaptureAnalysisWorker
             {
                 if (!output.IsCompatibleWith(analyzer.Descriptor))
                 {
+                    await TryClearCheckpointAsync(checkpoint).ConfigureAwait(false);
                     AnalysisFailure invalidResponse = new(
                         AnalysisFailureCode.InvalidResponse,
                         AnalysisFailureDisposition.Terminal);
@@ -395,7 +509,8 @@ internal sealed class CaptureAnalysisWorker : ICaptureAnalysisWorker
                     output.Payload!,
                     analyzer.Descriptor.Identity,
                     intent.Key.AuthorizedProcessingBoundary,
-                    completedAtUtc);
+                    completedAtUtc,
+                    dependencyInputs.Select(input => input.Reference));
                 CaptureAnalysisStoreWriteStatus commit = await CommitResultAsync(
                     new AnalysisCommitToken(
                         expected,
@@ -405,17 +520,24 @@ internal sealed class CaptureAnalysisWorker : ICaptureAnalysisWorker
                     cancellationToken).ConfigureAwait(false);
                 if (commit == CaptureAnalysisStoreWriteStatus.Succeeded)
                 {
+                    await TryClearCheckpointAsync(checkpoint).ConfigureAwait(false);
                     CaptureAnalysisJobMutationResult completed = await _jobStore.TryCompleteAsync(
                         lease.LeaseToken,
                         cancellationToken).ConfigureAwait(false);
                     if (completed.Status == CaptureAnalysisJobMutationStatus.Succeeded)
                     {
+                        _ = await _jobStore.ResumeWaitingForDependencyAsync(
+                            expected.CaptureId,
+                            intent.Key.Capability,
+                            GetUtcNow(),
+                            cancellationToken).ConfigureAwait(false);
                         await TryRefreshProjectionAsync(expected.CaptureId, cancellationToken)
                             .ConfigureAwait(false);
                     }
                 }
                 else if (commit == CaptureAnalysisStoreWriteStatus.StaleCommit)
                 {
+                    await TryClearCheckpointAsync(checkpoint).ConfigureAwait(false);
                     _ = await _jobStore.TryCancelAsync(intent.Key, cancellationToken)
                         .ConfigureAwait(false);
                 }
@@ -434,17 +556,28 @@ internal sealed class CaptureAnalysisWorker : ICaptureAnalysisWorker
 
             if (output.Status == CaptureAnalyzerOutputStatus.Cancelled)
             {
+                if (!cancellationToken.IsCancellationRequested)
+                {
+                    await TryClearCheckpointAsync(checkpoint).ConfigureAwait(false);
+                }
+
                 _ = await _jobStore.TryCancelAsync(intent.Key, cancellationToken).ConfigureAwait(false);
                 return;
             }
 
             AnalysisFailure failure = output.Failure!.Value;
+            if (failure.Disposition == AnalysisFailureDisposition.Terminal)
+            {
+                await TryClearCheckpointAsync(checkpoint).ConfigureAwait(false);
+            }
+
             attempted.Add(analyzer.Descriptor.Revision);
             if (failure.Disposition == AnalysisFailureDisposition.Transient)
             {
                 latestTransientFailure = failure;
                 if (intent.AttemptCount >= MaximumAttempts)
                 {
+                    await TryClearCheckpointAsync(checkpoint).ConfigureAwait(false);
                     var exhausted = new AnalysisFailure(
                         AnalysisFailureCode.ProviderUnavailable,
                         AnalysisFailureDisposition.Terminal);
@@ -530,6 +663,7 @@ internal sealed class CaptureAnalysisWorker : ICaptureAnalysisWorker
     private async ValueTask<bool> IsAlreadyCommittedAsync(
         CaptureAnalysisJobKey key,
         ICaptureAnalyzer analyzer,
+        IReadOnlyList<CanonicalCapabilityResult> dependencyInputs,
         CancellationToken cancellationToken)
     {
         if (key.Preconditions.CaptureId.IsEmpty)
@@ -547,7 +681,39 @@ internal sealed class CaptureAnalysisWorker : ICaptureAnalysisWorker
             analysis?.CanonicalResult is { } result &&
             result.Capability == key.Capability &&
             result.Analyzer.Revision == analyzer.Descriptor.Revision &&
-            result.ProcessingBoundary == key.AuthorizedProcessingBoundary;
+            result.ProcessingBoundary == key.AuthorizedProcessingBoundary &&
+            result.Inputs.SequenceEqual(dependencyInputs
+                .Select(input => input.Reference)
+                .OrderBy(input => input.Capability.Id.Value, StringComparer.Ordinal));
+    }
+
+    private async Task TryClearCheckpointAsync(ICaptureAnalyzerCheckpoint checkpoint)
+    {
+        try
+        {
+            await checkpoint.ClearAsync(CancellationToken.None).ConfigureAwait(false);
+        }
+        catch (Exception exception)
+        {
+            _logService.LogException(
+                exception,
+                "Failed to clear a disposable Capture Analysis checkpoint.");
+        }
+    }
+
+    private async Task TryDeleteCaptureCheckpointsAsync(CaptureId captureId)
+    {
+        try
+        {
+            await _checkpointStore.DeleteCaptureAsync(captureId, CancellationToken.None)
+                .ConfigureAwait(false);
+        }
+        catch (Exception exception)
+        {
+            _logService.LogException(
+                exception,
+                "Failed to clear stale Capture Analysis checkpoints.");
+        }
     }
 
     private async ValueTask<CaptureAnalysisStoreWriteStatus> CommitResultAsync(

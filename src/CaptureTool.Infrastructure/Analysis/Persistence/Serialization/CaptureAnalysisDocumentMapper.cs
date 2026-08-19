@@ -2,6 +2,9 @@ using CaptureTool.Application.Abstractions.Analysis.Persistence;
 using CaptureTool.Domain;
 using CaptureTool.Domain.Analysis;
 using CaptureTool.Domain.Analysis.Payloads;
+using System.Globalization;
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
 
 namespace CaptureTool.Infrastructure.Analysis.Persistence.Serialization;
@@ -268,6 +271,9 @@ internal static class CaptureAnalysisDocumentMapper
             {
                 Capability = ToDocument(capability.Capability),
                 Requirement = capability.Requirement,
+                Dependencies = capability.Dependencies.Count == 0
+                    ? null
+                    : capability.Dependencies.Select(ToDocument).ToList(),
             }).ToList(),
         };
     }
@@ -281,7 +287,8 @@ internal static class CaptureAnalysisDocumentMapper
             Require(document.Capabilities, "recipe capabilities").Select(capability =>
                 new RecipeCapability(
                     ToDomain(Require(capability.Capability, "recipe capability")),
-                    capability.Requirement)));
+                    capability.Requirement,
+                    (capability.Dependencies ?? []).Select(ToDomain))));
     }
 
     private static CapabilityDefinitionDocument ToDocument(CapabilityDefinition definition)
@@ -323,9 +330,19 @@ internal static class CaptureAnalysisDocumentMapper
     {
         return new()
         {
+            ResultId = result.ResultId.Value,
             Analyzer = ToDocument(result.Analyzer),
             ProcessingBoundary = result.ProcessingBoundary,
             GeneratedAtUtc = result.GeneratedAtUtc,
+            Inputs = result.Inputs.Count == 0
+                ? null
+                : result.Inputs.Select(input => new CapabilityResultReferenceDocument
+                {
+                    ResultId = input.ResultId.Value,
+                    Capability = ToDocument(input.Capability),
+                    AnalyzerRevision = input.AnalyzerRevision.Value,
+                    GeneratedAtUtc = input.GeneratedAtUtc,
+                }).ToList(),
             Payload = ToJsonElement(result.Payload),
         };
     }
@@ -342,7 +359,42 @@ internal static class CaptureAnalysisDocumentMapper
             ToPayload(capability, document.Payload),
             ToDomain(Require(document.Analyzer, "result analyzer")),
             document.ProcessingBoundary,
-            document.GeneratedAtUtc);
+            document.GeneratedAtUtc,
+            (document.Inputs ?? []).Select(input => new CapabilityResultReference(
+                new CapabilityResultId(input.ResultId),
+                ToDomain(Require(input.Capability, "result input capability")),
+                new AnalyzerRevision(input.AnalyzerRevision),
+                input.GeneratedAtUtc)),
+            document.ResultId.HasValue
+                ? new CapabilityResultId(document.ResultId.Value)
+                : CreateLegacyResultId(
+                    captureId,
+                    sourceRevision,
+                    capability,
+                    document));
+    }
+
+    private static CapabilityResultId CreateLegacyResultId(
+        CaptureId captureId,
+        SourceRevision sourceRevision,
+        CapabilityDefinition capability,
+        CanonicalCapabilityResultDocument document)
+    {
+        AnalyzerIdentity analyzer = ToDomain(Require(document.Analyzer, "result analyzer"));
+        var canonical = new StringBuilder("capture-analysis-legacy-result/v1|")
+            .Append(captureId.Value.ToString("N", CultureInfo.InvariantCulture)).Append('|')
+            .Append(sourceRevision.Length.ToString(CultureInfo.InvariantCulture)).Append('|')
+            .Append(sourceRevision.LastWriteTimeUtc.UtcTicks.ToString(CultureInfo.InvariantCulture)).Append('|')
+            .Append(sourceRevision.Fingerprint).Append('|')
+            .Append(capability.Id.Value).Append('|')
+            .Append(capability.SchemaVersion.Value.ToString(CultureInfo.InvariantCulture)).Append('|')
+            .Append(((int)capability.Classification).ToString(CultureInfo.InvariantCulture)).Append('|')
+            .Append(analyzer.Revision.Value).Append('|')
+            .Append(((int)document.ProcessingBoundary).ToString(CultureInfo.InvariantCulture)).Append('|')
+            .Append(document.GeneratedAtUtc.UtcTicks.ToString(CultureInfo.InvariantCulture));
+        byte[] hash = SHA256.HashData(Encoding.UTF8.GetBytes(canonical.ToString()));
+        hash[0] |= 1;
+        return new CapabilityResultId(new Guid(hash.AsSpan(0, 16)));
     }
 
     private static CapabilityOutcomeDocument ToDocument(CapabilityOutcome outcome)
@@ -422,6 +474,15 @@ internal static class CaptureAnalysisDocumentMapper
             ImageDescriptionV1 imageDescription => JsonSerializer.SerializeToElement(
                 ToDocument(imageDescription),
                 CaptureAnalysisJsonContext.Default.ImageDescriptionPayloadDocument),
+            SpeechTranscriptV1 speechTranscript => JsonSerializer.SerializeToElement(
+                ToDocument(speechTranscript),
+                CaptureAnalysisJsonContext.Default.SpeechTranscriptPayloadDocument),
+            VideoOcrTrackV1 videoOcrTrack => JsonSerializer.SerializeToElement(
+                ToDocument(videoOcrTrack),
+                CaptureAnalysisJsonContext.Default.VideoOcrTrackPayloadDocument),
+            VideoDescriptionTrackV1 videoDescriptionTrack => JsonSerializer.SerializeToElement(
+                ToDocument(videoDescriptionTrack),
+                CaptureAnalysisJsonContext.Default.VideoDescriptionTrackPayloadDocument),
             _ => throw new InvalidDataException(
                 $"Unsupported compiled capability payload '{payload.GetType().FullName}'."),
         };
@@ -460,6 +521,33 @@ internal static class CaptureAnalysisDocumentMapper
                 payload,
                 CaptureAnalysisJsonContext.Default.ImageDescriptionPayloadDocument)
                 ?? throw new InvalidDataException("Image-description payload cannot be null.");
+            return ToDomain(document);
+        }
+
+        if (capability == AnalysisCapabilities.SpeechTranscriptV1)
+        {
+            SpeechTranscriptPayloadDocument document = JsonSerializer.Deserialize(
+                payload,
+                CaptureAnalysisJsonContext.Default.SpeechTranscriptPayloadDocument)
+                ?? throw new InvalidDataException("Speech transcript payload cannot be null.");
+            return ToDomain(document);
+        }
+
+        if (capability == AnalysisCapabilities.VideoOcrTrackV1)
+        {
+            VideoOcrTrackPayloadDocument document = JsonSerializer.Deserialize(
+                payload,
+                CaptureAnalysisJsonContext.Default.VideoOcrTrackPayloadDocument)
+                ?? throw new InvalidDataException("Video OCR track payload cannot be null.");
+            return ToDomain(document);
+        }
+
+        if (capability == AnalysisCapabilities.VideoDescriptionTrackV1)
+        {
+            VideoDescriptionTrackPayloadDocument document = JsonSerializer.Deserialize(
+                payload,
+                CaptureAnalysisJsonContext.Default.VideoDescriptionTrackPayloadDocument)
+                ?? throw new InvalidDataException("Video description track payload cannot be null.");
             return ToDomain(document);
         }
 
@@ -572,6 +660,91 @@ internal static class CaptureAnalysisDocumentMapper
         return new(document.Description, document.Purpose, document.Style, document.Confidence);
     }
 
+    private static SpeechTranscriptPayloadDocument ToDocument(SpeechTranscriptV1 payload)
+    {
+        return new()
+        {
+            FullText = payload.FullText,
+            LanguageTag = payload.LanguageTag,
+            Segments = payload.Segments.Select(segment => new SpeechTranscriptSegmentDocument
+            {
+                Text = segment.Text,
+                StartTicks = segment.StartTime?.Ticks,
+                EndTicks = segment.EndTime?.Ticks,
+                SpeakerLabel = segment.SpeakerLabel,
+                Confidence = segment.Confidence,
+            }).ToList(),
+        };
+    }
+
+    private static SpeechTranscriptV1 ToDomain(SpeechTranscriptPayloadDocument document)
+    {
+        return new(
+            document.FullText,
+            Require(document.Segments, "Speech transcript segments").Select(segment =>
+                new SpeechTranscriptSegmentV1(
+                    segment.Text,
+                    segment.StartTicks.HasValue ? TimeSpan.FromTicks(segment.StartTicks.Value) : null,
+                    segment.EndTicks.HasValue ? TimeSpan.FromTicks(segment.EndTicks.Value) : null,
+                    segment.SpeakerLabel,
+                    segment.Confidence)),
+            document.LanguageTag);
+    }
+
+    private static VideoOcrTrackPayloadDocument ToDocument(VideoOcrTrackV1 payload)
+    {
+        return new()
+        {
+            FullText = payload.FullText,
+            Observations = payload.Observations.Select(observation =>
+                new VideoOcrObservationDocument
+                {
+                    Text = observation.Text,
+                    StartTicks = observation.StartTime.Ticks,
+                    EndTicks = observation.EndTime.Ticks,
+                }).ToList(),
+        };
+    }
+
+    private static VideoOcrTrackV1 ToDomain(VideoOcrTrackPayloadDocument document)
+    {
+        return new(
+            document.FullText,
+            Require(document.Observations, "Video OCR observations").Select(observation =>
+                new VideoOcrObservationV1(
+                    observation.Text,
+                    TimeSpan.FromTicks(observation.StartTicks),
+                    TimeSpan.FromTicks(observation.EndTicks))));
+    }
+
+    private static VideoDescriptionTrackPayloadDocument ToDocument(
+        VideoDescriptionTrackV1 payload)
+    {
+        return new()
+        {
+            FullText = payload.FullText,
+            Observations = payload.Observations.Select(observation =>
+                new VideoDescriptionObservationDocument
+                {
+                    Description = observation.Description,
+                    StartTicks = observation.StartTime.Ticks,
+                    EndTicks = observation.EndTime.Ticks,
+                }).ToList(),
+        };
+    }
+
+    private static VideoDescriptionTrackV1 ToDomain(
+        VideoDescriptionTrackPayloadDocument document)
+    {
+        return new(
+            document.FullText,
+            Require(document.Observations, "Video description observations").Select(observation =>
+                new VideoDescriptionObservationV1(
+                    observation.Description,
+                    TimeSpan.FromTicks(observation.StartTicks),
+                    TimeSpan.FromTicks(observation.EndTicks))));
+    }
+
     private static PixelSizeDocument ToDocument(PixelSize size)
     {
         return new() { Width = size.Width, Height = size.Height };
@@ -617,7 +790,10 @@ internal static class CaptureAnalysisDocumentMapper
     {
         return capability == AnalysisCapabilities.MediaPropertiesV1 ||
             capability == AnalysisCapabilities.OcrDocumentV1 ||
-            capability == AnalysisCapabilities.ImageDescriptionV1;
+            capability == AnalysisCapabilities.ImageDescriptionV1 ||
+            capability == AnalysisCapabilities.SpeechTranscriptV1 ||
+            capability == AnalysisCapabilities.VideoOcrTrackV1 ||
+            capability == AnalysisCapabilities.VideoDescriptionTrackV1;
     }
 
     private static T Require<T>(T? value, string name)

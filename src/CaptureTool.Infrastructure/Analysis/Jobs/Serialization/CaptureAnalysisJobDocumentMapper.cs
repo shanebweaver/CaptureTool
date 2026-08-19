@@ -81,6 +81,9 @@ internal static class CaptureAnalysisJobDocumentMapper
                 ResolutionPolicyRevision = preconditions.ResolutionPolicyRevision,
             },
             Capability = ToDocument(key.Capability),
+            Dependencies = key.Dependencies.Count == 0
+                ? null
+                : key.Dependencies.Select(ToDocument).ToList(),
             AuthorizedProcessingBoundary = key.AuthorizedProcessingBoundary,
         };
     }
@@ -109,7 +112,8 @@ internal static class CaptureAnalysisJobDocumentMapper
         return new(
             preconditions,
             ToDomain(document.Capability),
-            document.AuthorizedProcessingBoundary);
+            document.AuthorizedProcessingBoundary,
+            (document.Dependencies ?? []).Select(ToDomain));
     }
 
     private static CapabilityDefinitionDocument ToDocument(CapabilityDefinition capability)

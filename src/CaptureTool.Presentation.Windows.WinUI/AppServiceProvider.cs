@@ -4,10 +4,18 @@ using CaptureTool.Infrastructure.Capture.Windows.DependencyInjection;
 using CaptureTool.Infrastructure.DependencyInjection;
 using CaptureTool.Infrastructure.Edit.Windows.DependencyInjection;
 using CaptureTool.Infrastructure.Analysis.Windows.DependencyInjection;
+#if CAPTURETOOL_EXPERIMENTAL_WINDOWS_AI
+using CaptureTool.Infrastructure.Analysis.Windows.Experimental.DependencyInjection;
+#endif
+using CaptureTool.Infrastructure.Analysis.FoundryLocal.DependencyInjection;
 using CaptureTool.Infrastructure.Windows.DependencyInjection;
 using CaptureTool.Presentation.DependencyInjection;
 using CaptureTool.Presentation.Windows.WinUI.DependencyInjection;
 using CaptureTool.Presentation.Windows.WinUI.UiTests;
+using CaptureTool.FeatureManagement;
+#if DEBUG
+using CaptureTool.Presentation.Windows.WinUI.Debugging;
+#endif
 using Microsoft.Extensions.DependencyInjection;
 
 namespace CaptureTool.Presentation.Windows.WinUI;
@@ -22,6 +30,9 @@ public partial class AppServiceProvider : IServiceProvider, IDisposable
 
         // Feature management
         collection.AddFeatureManagementServices();
+#if DEBUG
+        collection.AddSingleton<IFeatureManager, DeveloperCaptureAnalysisFeatureManager>();
+#endif
 
         // Generic services
         collection.AddGenericServices();
@@ -32,10 +43,17 @@ public partial class AppServiceProvider : IServiceProvider, IDisposable
         // Windows domains
         collection.AddWindowsCaptureDomains();
         collection.AddWindowsAnalysisDomains();
+#if CAPTURETOOL_EXPERIMENTAL_WINDOWS_AI
+        collection.AddExperimentalWindowsAiAnalysis();
+#endif
+        collection.AddFoundryLocalAnalysisProvider();
         collection.AddWindowsEditDomains();
 
         // Application layer
         collection.AddApplicationServices();
+#if DEBUG
+        collection.AddDeveloperCaptureAnalyzerSelection();
+#endif
 
         // ViewModels
         collection.AddViewModels();

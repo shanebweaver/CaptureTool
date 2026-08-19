@@ -1,4 +1,6 @@
 using CaptureTool.Application.Abstractions.Analysis.Persistence;
+using CaptureTool.Application.Abstractions.Analysis.Orchestration;
+using CaptureTool.Domain;
 using CaptureTool.Domain.Analysis;
 using CaptureTool.Domain.Analysis.Payloads;
 using CaptureTool.Infrastructure.Analysis.Persistence;
@@ -71,6 +73,163 @@ public sealed class CaptureAnalysisSerializationGoldenTests
         Assert.IsNotNull(CaptureAnalysisJsonContext.Default.MediaPropertiesPayloadDocument);
         Assert.IsNotNull(CaptureAnalysisJsonContext.Default.OcrDocumentPayloadDocument);
         Assert.IsNotNull(CaptureAnalysisJsonContext.Default.ImageDescriptionPayloadDocument);
+        Assert.IsNotNull(CaptureAnalysisJsonContext.Default.SpeechTranscriptPayloadDocument);
+        Assert.IsNotNull(CaptureAnalysisJsonContext.Default.VideoOcrTrackPayloadDocument);
+        Assert.IsNotNull(CaptureAnalysisJsonContext.Default.VideoDescriptionTrackPayloadDocument);
+    }
+
+    [TestMethod]
+    public void SpeechTranscriptEnvelope_ShouldRoundTripTimedSegmentsAndProvenance()
+    {
+        CaptureId captureId = CaptureId.New();
+        var recipe = new CaptureAnalysisRecipe(
+            new AnalysisRecipeId("capture-memory-audio"),
+            new AnalysisRecipeVersion(1),
+            CaptureMediaKind.Audio,
+            [new RecipeCapability(
+                AnalysisCapabilities.SpeechTranscriptV1,
+                RecipeCapabilityRequirement.Required)]);
+        var transcript = new SpeechTranscriptV1(
+            "Deploy the audio pipeline tomorrow.",
+            [new SpeechTranscriptSegmentV1(
+                "Deploy the audio pipeline",
+                TimeSpan.FromSeconds(12.25),
+                TimeSpan.FromSeconds(14.75),
+                "speaker-1",
+                0.875)],
+            "en-US");
+        var result = new CanonicalCapabilityResult(
+            captureId,
+            AnalysisPersistenceTestData.SourceRevision,
+            transcript,
+            AnalysisPersistenceTestData.Analyzer,
+            ProcessingBoundary.OnDevice,
+            AnalysisPersistenceTestData.CapturedAtUtc.AddSeconds(1));
+        var record = new CaptureAnalysisRecord(
+            captureId,
+            CaptureMediaKind.Audio,
+            AnalysisPersistenceTestData.CapturedAtUtc,
+            AnalysisPersistenceTestData.SourceRevision,
+            recipe,
+            [new CapabilityAnalysis(AnalysisCapabilities.SpeechTranscriptV1, result, null)]);
+
+        byte[] bytes = CaptureAnalysisDocumentSerializer.SerializeEnvelope(
+            record,
+            documentRevision: 3,
+            LocalCaptureAnalysisStore.CurrentSchemaVersion);
+        CaptureAnalysisEnvelopeReadResult restored =
+            CaptureAnalysisDocumentSerializer.DeserializeEnvelope(bytes);
+
+        AnalysisPersistenceTestData.AssertRecordsEquivalent(record, restored.Snapshot.Record);
+        SpeechTranscriptV1 payload = GetPayload<SpeechTranscriptV1>(
+            restored.Snapshot.Record,
+            AnalysisCapabilities.SpeechTranscriptV1);
+        Assert.AreEqual("en-US", payload.LanguageTag);
+        Assert.AreEqual(TimeSpan.FromSeconds(12.25), payload.Segments[0].StartTime);
+        Assert.AreEqual(TimeSpan.FromSeconds(14.75), payload.Segments[0].EndTime);
+        Assert.AreEqual("speaker-1", payload.Segments[0].SpeakerLabel);
+        Assert.AreEqual(0.875, payload.Segments[0].Confidence);
+    }
+
+    [TestMethod]
+    public void VideoOcrEnvelope_ShouldRoundTripTimedObservationsAndProvenance()
+    {
+        CaptureId captureId = CaptureId.New();
+        CaptureAnalysisRecipe recipe =
+            CaptureAnalysisRecipeDefaults.CreateCaptureMemoryVideoRecipe();
+        var track = new VideoOcrTrackV1(
+            "Build status\nReady to deploy",
+            [
+                new VideoOcrObservationV1(
+                    "Build status",
+                    TimeSpan.FromSeconds(2),
+                    TimeSpan.FromSeconds(4.5)),
+                new VideoOcrObservationV1(
+                    "Ready to deploy",
+                    TimeSpan.FromSeconds(8.25),
+                    TimeSpan.FromSeconds(9)),
+            ]);
+        var result = new CanonicalCapabilityResult(
+            captureId,
+            AnalysisPersistenceTestData.SourceRevision,
+            track,
+            AnalysisPersistenceTestData.Analyzer,
+            ProcessingBoundary.OnDevice,
+            AnalysisPersistenceTestData.CapturedAtUtc.AddSeconds(1));
+        var record = new CaptureAnalysisRecord(
+            captureId,
+            CaptureMediaKind.Video,
+            AnalysisPersistenceTestData.CapturedAtUtc,
+            AnalysisPersistenceTestData.SourceRevision,
+            recipe,
+            [new CapabilityAnalysis(AnalysisCapabilities.VideoOcrTrackV1, result, null)]);
+
+        byte[] bytes = CaptureAnalysisDocumentSerializer.SerializeEnvelope(
+            record,
+            documentRevision: 4,
+            LocalCaptureAnalysisStore.CurrentSchemaVersion);
+        CaptureAnalysisEnvelopeReadResult restored =
+            CaptureAnalysisDocumentSerializer.DeserializeEnvelope(bytes);
+
+        AnalysisPersistenceTestData.AssertRecordsEquivalent(record, restored.Snapshot.Record);
+        VideoOcrTrackV1 payload = GetPayload<VideoOcrTrackV1>(
+            restored.Snapshot.Record,
+            AnalysisCapabilities.VideoOcrTrackV1);
+        Assert.AreEqual(TimeSpan.FromSeconds(2), payload.Observations[0].StartTime);
+        Assert.AreEqual(TimeSpan.FromSeconds(4.5), payload.Observations[0].EndTime);
+        Assert.AreEqual("Ready to deploy", payload.Observations[1].Text);
+    }
+
+    [TestMethod]
+    public void VideoDescriptionEnvelope_ShouldRoundTripTimedInferenceAndProvenance()
+    {
+        CaptureId captureId = CaptureId.New();
+        CaptureAnalysisRecipe recipe =
+            CaptureAnalysisRecipeDefaults.CreateCaptureMemoryVideoRecipe();
+        var track = new VideoDescriptionTrackV1(
+            "A dashboard is visible.\nThe deployment completes.",
+            [
+                new VideoDescriptionObservationV1(
+                    "A dashboard is visible.",
+                    TimeSpan.Zero,
+                    TimeSpan.FromSeconds(15)),
+                new VideoDescriptionObservationV1(
+                    "The deployment completes.",
+                    TimeSpan.FromSeconds(15),
+                    TimeSpan.FromSeconds(30)),
+            ]);
+        var result = new CanonicalCapabilityResult(
+            captureId,
+            AnalysisPersistenceTestData.SourceRevision,
+            track,
+            AnalysisPersistenceTestData.Analyzer,
+            ProcessingBoundary.OnDevice,
+            AnalysisPersistenceTestData.CapturedAtUtc.AddSeconds(1));
+        var record = new CaptureAnalysisRecord(
+            captureId,
+            CaptureMediaKind.Video,
+            AnalysisPersistenceTestData.CapturedAtUtc,
+            AnalysisPersistenceTestData.SourceRevision,
+            recipe,
+            [new CapabilityAnalysis(
+                AnalysisCapabilities.VideoDescriptionTrackV1,
+                result,
+                null)]);
+
+        byte[] bytes = CaptureAnalysisDocumentSerializer.SerializeEnvelope(
+            record,
+            documentRevision: 5,
+            LocalCaptureAnalysisStore.CurrentSchemaVersion);
+        CaptureAnalysisEnvelopeReadResult restored =
+            CaptureAnalysisDocumentSerializer.DeserializeEnvelope(bytes);
+
+        AnalysisPersistenceTestData.AssertRecordsEquivalent(record, restored.Snapshot.Record);
+        VideoDescriptionTrackV1 payload = GetPayload<VideoDescriptionTrackV1>(
+            restored.Snapshot.Record,
+            AnalysisCapabilities.VideoDescriptionTrackV1);
+        Assert.AreEqual(TimeSpan.Zero, payload.Observations[0].StartTime);
+        Assert.AreEqual(TimeSpan.FromSeconds(30), payload.Observations[1].EndTime);
+        Assert.AreEqual("The deployment completes.", payload.Observations[1].Description);
     }
 
     [TestMethod]
@@ -87,6 +246,47 @@ public sealed class CaptureAnalysisSerializationGoldenTests
             .DeserializeControl(Encoding.UTF8.GetBytes(document.ToJsonString()));
 
         Assert.AreEqual(0, restored.State.CaptureChangeCheckpoint);
+    }
+
+    [TestMethod]
+    public void LegacyEnvelopeWithoutResultIds_ShouldDeriveStableIdsAndPersistThemOnRewrite()
+    {
+        CaptureAnalysisRecord record = AnalysisPersistenceTestData.CreateRecord();
+        byte[] current = CaptureAnalysisDocumentSerializer.SerializeEnvelope(
+            record,
+            documentRevision: 7,
+            LocalCaptureAnalysisStore.CurrentSchemaVersion);
+        JsonObject legacy = JsonNode.Parse(current)!.AsObject();
+        foreach (JsonNode? entry in legacy["capabilityEntries"]!.AsArray())
+        {
+            Assert.IsTrue(entry!["canonicalResult"]!.AsObject().Remove("resultId"));
+        }
+
+        byte[] legacyBytes = Encoding.UTF8.GetBytes(legacy.ToJsonString());
+        CaptureAnalysisEnvelopeReadResult first =
+            CaptureAnalysisDocumentSerializer.DeserializeEnvelope(legacyBytes);
+        CaptureAnalysisEnvelopeReadResult second =
+            CaptureAnalysisDocumentSerializer.DeserializeEnvelope(legacyBytes);
+        CapabilityResultId[] firstIds = first.Snapshot.Record.Analyses
+            .OrderBy(analysis => analysis.Capability.Id.Value, StringComparer.Ordinal)
+            .Select(analysis => analysis.CanonicalResult!.ResultId)
+            .ToArray();
+        CapabilityResultId[] secondIds = second.Snapshot.Record.Analyses
+            .OrderBy(analysis => analysis.Capability.Id.Value, StringComparer.Ordinal)
+            .Select(analysis => analysis.CanonicalResult!.ResultId)
+            .ToArray();
+
+        CollectionAssert.AreEqual(firstIds, secondIds);
+        Assert.IsTrue(firstIds.All(id => !id.IsEmpty));
+
+        byte[] rewritten = CaptureAnalysisDocumentSerializer.SerializeEnvelope(
+            first.Snapshot.Record,
+            first.Snapshot.DocumentRevision,
+            LocalCaptureAnalysisStore.CurrentSchemaVersion,
+            first.OpaqueCapabilityEntries);
+        JsonArray rewrittenEntries = JsonNode.Parse(rewritten)!["capabilityEntries"]!.AsArray();
+        Assert.IsTrue(rewrittenEntries.All(entry =>
+            entry!["canonicalResult"]!["resultId"] != null));
     }
 
     private static TPayload GetPayload<TPayload>(

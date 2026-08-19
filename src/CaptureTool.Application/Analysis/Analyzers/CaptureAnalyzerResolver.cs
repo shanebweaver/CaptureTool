@@ -9,11 +9,13 @@ public sealed class CaptureAnalyzerResolver : ICaptureAnalyzerResolver
     private readonly CaptureAnalyzerCatalog _catalog;
     private readonly ICaptureAnalysisFeatureAvailability _featureAvailability;
     private readonly ICaptureAnalyzerResolutionPreference _preference;
+    private readonly ICaptureAnalyzerSelectionService _selection;
 
     public CaptureAnalyzerResolver(
         CaptureAnalyzerCatalog catalog,
         ICaptureAnalysisFeatureAvailability featureAvailability,
-        ICaptureAnalyzerResolutionPreference preference)
+        ICaptureAnalyzerResolutionPreference preference,
+        ICaptureAnalyzerSelectionService? selection = null)
     {
         ArgumentNullException.ThrowIfNull(catalog);
         ArgumentNullException.ThrowIfNull(featureAvailability);
@@ -21,6 +23,7 @@ public sealed class CaptureAnalyzerResolver : ICaptureAnalyzerResolver
         _catalog = catalog;
         _featureAvailability = featureAvailability;
         _preference = preference;
+        _selection = selection ?? new AutomaticCaptureAnalyzerSelectionService();
     }
 
     public async ValueTask<CaptureAnalyzerResolution> ResolveAsync(
@@ -32,7 +35,8 @@ public sealed class CaptureAnalyzerResolver : ICaptureAnalyzerResolver
         ICaptureAnalyzer[] candidates =
         [
             .. _catalog.Analyzers
-                .OrderByDescending(analyzer => _preference.GetPreference(analyzer.Descriptor))
+                .OrderByDescending(analyzer => _selection.GetPreference(analyzer.Descriptor))
+                .ThenByDescending(analyzer => _preference.GetPreference(analyzer.Descriptor))
                 .ThenByDescending(analyzer => analyzer.Descriptor.QualityTier)
                 .ThenBy(analyzer => analyzer.Descriptor.ProcessingBoundary == ProcessingBoundary.OnDevice ? 0 : 1)
                 .ThenBy(analyzer => analyzer.Descriptor.WorkloadClass)
@@ -92,6 +96,16 @@ public sealed class CaptureAnalyzerResolver : ICaptureAnalyzerResolver
                 _ => CaptureAnalyzerEligibilityStatus.Unavailable,
             };
             evaluations.Add(new(descriptor, eligibility, availability));
+            if (eligibility == CaptureAnalyzerEligibilityStatus.PreparationRequired)
+            {
+                if (!request.AllowReadyFallbackWhenPreparationRequired)
+                {
+                    return CaptureAnalyzerResolution.WaitingForPreparation(evaluations);
+                }
+
+                continue;
+            }
+
             if (eligibility == CaptureAnalyzerEligibilityStatus.Eligible)
             {
                 return CaptureAnalyzerResolution.Resolved(analyzer, evaluations);
@@ -111,6 +125,11 @@ public sealed class CaptureAnalyzerResolver : ICaptureAnalyzerResolver
         if (!_featureAvailability.IsProviderEnabled(descriptor.Identity.ProviderId))
         {
             return CaptureAnalyzerEligibilityStatus.ProviderNotAuthorized;
+        }
+
+        if (!_selection.IsAllowed(descriptor))
+        {
+            return CaptureAnalyzerEligibilityStatus.AnalyzerFeatureDisabled;
         }
 
         if (!_featureAvailability.IsAnalyzerEnabled(descriptor.Identity))

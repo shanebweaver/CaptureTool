@@ -26,25 +26,39 @@ public sealed class CaptureAnalysisIntakeServiceTests
         CaptureAsset beforeWatermark = CreateAsset(CaptureFileType.Image);
         CaptureAsset eligible = CreateAsset(CaptureFileType.Image);
         CaptureAsset audio = CreateAsset(CaptureFileType.Audio);
+        CaptureAsset video = CreateAsset(CaptureFileType.Video);
         var context = new TestContext(
             featureEnabled: false,
             GrantFutureCaptures(currentSequence: 1),
-            [beforeWatermark, eligible, audio],
+            [beforeWatermark, eligible, audio, video],
             [
                 CreateChange(1, beforeWatermark, CaptureAssetChangeType.Finalized),
                 CreateChange(2, eligible, CaptureAssetChangeType.Finalized),
                 CreateChange(3, audio, CaptureAssetChangeType.Finalized),
+                CreateChange(4, video, CaptureAssetChangeType.Finalized),
             ]);
 
         await context.Service.ConsumePendingChangesAsync();
 
-        Assert.AreEqual(3, context.Control.Snapshot.State.CaptureChangeCheckpoint);
-        CaptureAnalysisEnrollment enrollment = context.Control.Snapshot.State.Enrollments.Single();
-        Assert.AreEqual(eligible.Id, enrollment.CaptureId);
-        Assert.AreEqual(CaptureAnalysisEnrollmentState.Enrolled, enrollment.State);
+        Assert.AreEqual(4, context.Control.Snapshot.State.CaptureChangeCheckpoint);
+        CaptureAnalysisEnrollment[] enrollments =
+            [.. context.Control.Snapshot.State.Enrollments.OrderBy(item => item.AssetFinalizationSequence)];
+        Assert.HasCount(3, enrollments);
+        Assert.AreEqual(eligible.Id, enrollments[0].CaptureId);
+        Assert.AreEqual(CaptureAnalysisEnrollmentState.Enrolled, enrollments[0].State);
         Assert.AreEqual(
             CaptureAnalysisRecipeDefaults.CaptureMemoryImageRecipeId,
-            enrollment.RequestedRecipeId!.Value.Value);
+            enrollments[0].RequestedRecipeId!.Value.Value);
+        Assert.AreEqual(audio.Id, enrollments[1].CaptureId);
+        Assert.AreEqual(CaptureAnalysisEnrollmentState.Enrolled, enrollments[1].State);
+        Assert.AreEqual(
+            CaptureAnalysisRecipeDefaults.CaptureMemoryAudioRecipeId,
+            enrollments[1].RequestedRecipeId!.Value.Value);
+        Assert.AreEqual(video.Id, enrollments[2].CaptureId);
+        Assert.AreEqual(CaptureAnalysisEnrollmentState.Enrolled, enrollments[2].State);
+        Assert.AreEqual(
+            CaptureAnalysisRecipeDefaults.CaptureMemoryVideoRecipeId,
+            enrollments[2].RequestedRecipeId!.Value.Value);
         Assert.IsEmpty(context.Scheduler.Requests);
         context.FileSystem.Verify(
             fileSystem => fileSystem.FileExists(It.IsAny<string>()),
@@ -435,7 +449,13 @@ public sealed class CaptureAnalysisIntakeServiceTests
         CaptureSourceOwnership sourceOwnership = CaptureSourceOwnership.AppOwned)
     {
         CaptureId id = CaptureId.New();
-        string extension = mediaType == CaptureFileType.Image ? ".png" : ".bin";
+        string extension = mediaType switch
+        {
+            CaptureFileType.Image => ".png",
+            CaptureFileType.Audio => ".wav",
+            CaptureFileType.Video => ".mp4",
+            _ => ".bin",
+        };
         return new(
             id,
             mediaType,

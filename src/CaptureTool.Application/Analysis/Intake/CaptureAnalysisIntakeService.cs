@@ -364,19 +364,15 @@ internal sealed class CaptureAnalysisIntakeService :
         CaptureAnalysisAdmissionKind admissionKind,
         CancellationToken cancellationToken)
     {
-        if (asset is not
-            {
-                LifecycleState: CaptureAssetLifecycleState.Active,
-                MediaType: CaptureFileType.Image,
-                SourceOwnership: CaptureSourceOwnership.AppOwned,
-            })
+        if (!TryGetCaptureMemoryRecipe(asset, out CaptureAnalysisRecipe recipe))
         {
             return ChangeProcessingResult.Processed;
         }
 
-        return await ScheduleImageAsync(
-            asset,
+        return await ScheduleCaptureAsync(
+            asset!,
             finalization,
+            recipe,
             admissionKind,
             cancellationToken).ConfigureAwait(false);
     }
@@ -386,12 +382,7 @@ internal sealed class CaptureAnalysisIntakeService :
         CaptureAsset? asset,
         CancellationToken cancellationToken)
     {
-        if (asset is not
-            {
-                LifecycleState: CaptureAssetLifecycleState.Active,
-                MediaType: CaptureFileType.Image,
-                SourceOwnership: CaptureSourceOwnership.AppOwned,
-            })
+        if (!TryGetCaptureMemoryRecipe(asset, out CaptureAnalysisRecipe recipe))
         {
             return ChangeProcessingResult.Processed;
         }
@@ -406,12 +397,13 @@ internal sealed class CaptureAnalysisIntakeService :
         }
 
         CaptureAssetChange? finalization = FindFinalization(change.CaptureId);
-        _ = await EnsureCurrentImageRecipeAsync(change.CaptureId, cancellationToken)
+        _ = await EnsureCurrentRecipeAsync(change.CaptureId, recipe, cancellationToken)
             .ConfigureAwait(false);
         return finalization.HasValue
-            ? await ScheduleImageAsync(
-                asset,
+            ? await ScheduleCaptureAsync(
+                asset!,
                 finalization.Value,
+                recipe,
                 CaptureAnalysisAdmissionKind.FutureCapture,
                 cancellationToken).ConfigureAwait(false)
             : ChangeProcessingResult.Unavailable;
@@ -457,14 +449,13 @@ internal sealed class CaptureAnalysisIntakeService :
         return ChangeProcessingResult.Processed;
     }
 
-    private async Task<ChangeProcessingResult> ScheduleImageAsync(
+    private async Task<ChangeProcessingResult> ScheduleCaptureAsync(
         CaptureAsset asset,
         CaptureAssetChange finalization,
+        CaptureAnalysisRecipe recipe,
         CaptureAnalysisAdmissionKind admissionKind,
         CancellationToken cancellationToken)
     {
-        CaptureAnalysisRecipe recipe = CaptureAnalysisRecipeDefaults
-            .CreateCaptureMemoryImageRecipe();
         var request = new CaptureAnalysisScheduleRequest(
             new CaptureAnalysisAdmissionRequest(
                 finalization,
@@ -569,14 +560,14 @@ internal sealed class CaptureAnalysisIntakeService :
                 continue;
             }
 
-            if (asset.MediaType != CaptureFileType.Image ||
-                asset.SourceOwnership != CaptureSourceOwnership.AppOwned)
+            if (!TryGetCaptureMemoryRecipe(asset, out CaptureAnalysisRecipe recipe))
             {
                 continue;
             }
 
-            CaptureAnalysisEnrollment? currentEnrollment = await EnsureCurrentImageRecipeAsync(
+            CaptureAnalysisEnrollment? currentEnrollment = await EnsureCurrentRecipeAsync(
                 enrollment.CaptureId,
+                recipe,
                 cancellationToken).ConfigureAwait(false);
             if (currentEnrollment?.State != CaptureAnalysisEnrollmentState.Enrolled)
             {
@@ -614,9 +605,10 @@ internal sealed class CaptureAnalysisIntakeService :
                 continue;
             }
 
-            ChangeProcessingResult scheduled = await ScheduleImageAsync(
+            ChangeProcessingResult scheduled = await ScheduleCaptureAsync(
                 asset,
                 finalization.Value,
+                recipe,
                 CaptureAnalysisAdmissionKind.FutureCapture,
                 cancellationToken).ConfigureAwait(false);
             if (scheduled.Status != ChangeProcessingStatus.Processed)
@@ -652,15 +644,10 @@ internal sealed class CaptureAnalysisIntakeService :
                 change.ChangeType == CaptureAssetChangeType.Finalized &&
                 policy.IsFutureCaptureEligible(change.Sequence) &&
                 !enrollments.Any(enrollment => enrollment.CaptureId == change.CaptureId) &&
-                _captureAssets.Get(change.CaptureId) is
-                {
-                    LifecycleState: CaptureAssetLifecycleState.Active,
-                    MediaType: CaptureFileType.Image,
-                    SourceOwnership: CaptureSourceOwnership.AppOwned,
-                })
+                TryGetCaptureMemoryRecipe(
+                    _captureAssets.Get(change.CaptureId),
+                    out CaptureAnalysisRecipe recipe))
             {
-                CaptureAnalysisRecipe recipe = CaptureAnalysisRecipeDefaults
-                    .CreateCaptureMemoryImageRecipe();
                 enrollments.Add(new CaptureAnalysisEnrollment(
                     change.CaptureId,
                     CaptureAnalysisEnrollmentState.Enrolled,
@@ -729,11 +716,12 @@ internal sealed class CaptureAnalysisIntakeService :
         return false;
     }
 
-    private async Task<CaptureAnalysisEnrollment?> EnsureCurrentImageRecipeAsync(
+    private async Task<CaptureAnalysisEnrollment?> EnsureCurrentRecipeAsync(
         CaptureId captureId,
+        CaptureAnalysisRecipe recipe,
         CancellationToken cancellationToken)
     {
-        CaptureAnalysisRecipe recipe = CaptureAnalysisRecipeDefaults.CreateCaptureMemoryImageRecipe();
+        ArgumentNullException.ThrowIfNull(recipe);
         for (int attempt = 0; attempt < MaximumControlWriteAttempts; attempt++)
         {
             CaptureAnalysisControlSnapshot current = await _controlStore
@@ -782,6 +770,34 @@ internal sealed class CaptureAnalysisIntakeService :
 
         throw new InvalidOperationException(
             "Capture Analysis could not update an enrolled capture recipe after repeated conflicts.");
+    }
+
+    private static bool TryGetCaptureMemoryRecipe(
+        CaptureAsset? asset,
+        out CaptureAnalysisRecipe recipe)
+    {
+        if (asset is not
+            {
+                LifecycleState: CaptureAssetLifecycleState.Active,
+                SourceOwnership: CaptureSourceOwnership.AppOwned,
+            })
+        {
+            recipe = null!;
+            return false;
+        }
+
+        CaptureMediaKind mediaKind = asset.MediaType switch
+        {
+            CaptureFileType.Image => CaptureMediaKind.Image,
+            CaptureFileType.Audio => CaptureMediaKind.Audio,
+            CaptureFileType.Video => CaptureMediaKind.Video,
+            _ => CaptureMediaKind.Unknown,
+        };
+        bool found = CaptureAnalysisRecipeDefaults.TryCreateCaptureMemoryRecipe(
+            mediaKind,
+            out CaptureAnalysisRecipe? selected);
+        recipe = selected!;
+        return found;
     }
 
     private async Task<bool> TombstoneMissingSourceAsync(

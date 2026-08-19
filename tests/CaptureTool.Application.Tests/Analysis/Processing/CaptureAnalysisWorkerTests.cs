@@ -1,4 +1,5 @@
 using CaptureTool.Application.Abstractions.Analysis.Analyzers;
+using CaptureTool.Application.Abstractions.Analysis.Checkpoints;
 using CaptureTool.Application.Abstractions.Analysis.Intake;
 using CaptureTool.Application.Abstractions.Analysis.Jobs;
 using CaptureTool.Application.Abstractions.Analysis.Orchestration;
@@ -46,6 +47,58 @@ public sealed class CaptureAnalysisWorkerTests
             fixture.Intent.Key.CaptureId,
             It.IsAny<CancellationToken>()), Times.Once);
         fixture.Source.Verify(source => source.DisposeAsync(), Times.Once);
+        Assert.IsTrue(fixture.ResolutionRequests.Single()
+            .AllowReadyFallbackWhenPreparationRequired);
+        fixture.VerifyCheckpointCleared();
+    }
+
+    [TestMethod]
+    public async Task Run_ShouldPassNormalizedDependenciesAndCommitExactInputProvenance()
+    {
+        using var fixture = new WorkerFixture();
+        fixture.ConfigureDependencyInput();
+
+        await fixture.RunAsync();
+
+        fixture.Analyzer.Verify(analyzer => analyzer.AnalyzeAsync(
+            It.Is<CaptureAnalysisRequest>(request =>
+                request.Inputs.Count == 1 &&
+                request.Inputs[0].ResultId == fixture.DependencyResult!.ResultId),
+            It.IsAny<CancellationToken>()), Times.Once);
+        fixture.Mutation.Verify(coordinator => coordinator.TryCommitCapabilityAsync(
+            It.IsAny<AnalysisCommitToken>(),
+            It.Is<CanonicalCapabilityResult>(result =>
+                result.Inputs.Count == 1 &&
+                result.Inputs[0] == fixture.DependencyResult!.Reference),
+            It.IsAny<long>(),
+            It.IsAny<CancellationToken>()), Times.Once);
+        fixture.JobStore.Verify(store => store.ResumeWaitingForDependencyAsync(
+            fixture.Intent.Key.CaptureId,
+            fixture.Intent.Key.Capability,
+            It.IsAny<DateTimeOffset>(),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [TestMethod]
+    public async Task Run_ShouldWaitForMissingDependencyWithoutSelectingOrInvokingAnalyzer()
+    {
+        using var fixture = new WorkerFixture();
+        fixture.ConfigureMissingDependency();
+
+        await fixture.RunAsync();
+
+        fixture.JobStore.Verify(store => store.TryWaitForCapabilityAsync(
+            fixture.Lease.LeaseToken,
+            It.Is<AnalysisFailure?>(failure =>
+                failure.HasValue &&
+                failure.Value.Code == AnalysisFailureCode.CapabilityUnavailable),
+            It.IsAny<CancellationToken>()), Times.Once);
+        fixture.Resolver.Verify(resolver => resolver.ResolveAsync(
+            It.IsAny<CaptureAnalyzerResolutionRequest>(),
+            It.IsAny<CancellationToken>()), Times.Never);
+        fixture.Analyzer.Verify(analyzer => analyzer.AnalyzeAsync(
+            It.IsAny<CaptureAnalysisRequest>(),
+            It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [TestMethod]
@@ -95,6 +148,7 @@ public sealed class CaptureAnalysisWorkerTests
         fixture.Metadata.Verify(store => store.GetAsync(
             It.IsAny<CaptureId>(),
             It.IsAny<CancellationToken>()), Times.Never);
+        fixture.VerifyCaptureCheckpointsDeleted();
     }
 
     [TestMethod]
@@ -111,6 +165,7 @@ public sealed class CaptureAnalysisWorkerTests
         fixture.Resolver.Verify(resolver => resolver.ResolveAsync(
             It.IsAny<CaptureAnalyzerResolutionRequest>(),
             It.IsAny<CancellationToken>()), Times.Never);
+        fixture.VerifyCaptureCheckpointsDeleted();
     }
 
     [TestMethod]
@@ -125,6 +180,7 @@ public sealed class CaptureAnalysisWorkerTests
         fixture.Resolver.Verify(resolver => resolver.ResolveAsync(
             It.IsAny<CaptureAnalyzerResolutionRequest>(),
             It.IsAny<CancellationToken>()), Times.Never);
+        fixture.VerifyCaptureCheckpointsDeleted();
     }
 
     [TestMethod]
@@ -157,6 +213,7 @@ public sealed class CaptureAnalysisWorkerTests
         fixture.SourceVerifier.Verify(verifier => verifier.TryOpenVerifiedAsync(
             It.IsAny<CaptureAnalysisSourceVerificationRequest>(),
             It.IsAny<CancellationToken>()), Times.Never);
+        fixture.VerifyCheckpointCleared();
     }
 
     [TestMethod]
@@ -172,6 +229,7 @@ public sealed class CaptureAnalysisWorkerTests
         fixture.Analyzer.Verify(analyzer => analyzer.AnalyzeAsync(
             It.IsAny<CaptureAnalysisRequest>(),
             It.IsAny<CancellationToken>()), Times.Never);
+        fixture.VerifyCheckpointCleared();
     }
 
     [TestMethod]
@@ -203,6 +261,26 @@ public sealed class CaptureAnalysisWorkerTests
 
         Assert.AreEqual(CaptureAnalyzerAttemptStatus.Cancelled, fixture.RecordedAttempts.Single().Status);
         fixture.VerifyCancelled();
+        fixture.VerifyCheckpointCleared();
+    }
+
+    [TestMethod]
+    public async Task Run_ShouldPreserveCheckpointWhenProcessCancellationInterruptsAnalyzer()
+    {
+        using var fixture = new WorkerFixture();
+        fixture.Analyzer.Setup(analyzer => analyzer.AnalyzeAsync(
+                It.IsAny<CaptureAnalysisRequest>(),
+                It.IsAny<CancellationToken>()))
+            .Returns(() =>
+            {
+                fixture.Cancellation.Cancel();
+                return Task.FromResult(CaptureAnalyzerOutput.Cancelled);
+            });
+
+        await fixture.RunAsync();
+
+        fixture.Checkpoint.Verify(checkpoint => checkpoint.ClearAsync(
+            It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [TestMethod]
@@ -225,6 +303,8 @@ public sealed class CaptureAnalysisWorkerTests
         fixture.Log.Verify(log => log.LogException(
             It.IsAny<InvalidOperationException>(),
             "A Capture Analysis provider failed."), Times.Once);
+        fixture.Checkpoint.Verify(checkpoint => checkpoint.ClearAsync(
+            It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [TestMethod]
@@ -249,6 +329,7 @@ public sealed class CaptureAnalysisWorkerTests
             fixture.Lease.LeaseToken,
             It.Is<AnalysisFailure>(failure => failure.Code == AnalysisFailureCode.UnsupportedMedia),
             It.IsAny<CancellationToken>()), Times.Once);
+        fixture.VerifyCheckpointCleared();
     }
 
     [TestMethod]
@@ -283,6 +364,7 @@ public sealed class CaptureAnalysisWorkerTests
         fixture.JobStore.Verify(store => store.TryCompleteAsync(
             It.IsAny<CaptureAnalysisJobLeaseToken>(),
             It.IsAny<CancellationToken>()), Times.Never);
+        fixture.VerifyCheckpointCleared();
     }
 
     [TestMethod]
@@ -397,6 +479,49 @@ public sealed class CaptureAnalysisWorkerTests
             fixture.Intent.Key.CaptureId,
             It.IsAny<CancellationToken>()), Times.Once);
         Assert.AreEqual(1, fixture.Reconciler.StartupCount);
+    }
+
+    [TestMethod]
+    public async Task Run_ShouldRetryWaitingCapabilitiesDuringStartupRecovery()
+    {
+        using var fixture = new WorkerFixture
+        {
+            LeaseOnFirstPoll = false,
+        };
+
+        await fixture.RunAsync();
+
+        fixture.JobStore.Verify(store => store.ResumeWaitingForCapabilityAsync(
+            fixture.Descriptor.Capability,
+            fixture.Descriptor.ProcessingBoundary,
+            fixture.UtcNow,
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [TestMethod]
+    public async Task Run_ShouldContinueWhenOneWaitingCapabilityCannotResume()
+    {
+        using var fixture = new WorkerFixture();
+        var failure = new ArgumentException("invalid durable transition");
+        fixture.JobStore.Setup(store => store.ResumeWaitingForCapabilityAsync(
+                fixture.Descriptor.Capability,
+                fixture.Descriptor.ProcessingBoundary,
+                fixture.UtcNow,
+                It.IsAny<CancellationToken>()))
+            .Returns(ValueTask.FromException<int>(failure));
+
+        await fixture.RunAsync();
+
+        fixture.JobStore.Verify(store => store.TryLeaseNextDueAsync(
+            fixture.UtcNow,
+            It.IsAny<TimeSpan>(),
+            It.IsAny<CancellationToken>()), Times.AtLeastOnce);
+        fixture.JobStore.Verify(store => store.TryCompleteAsync(
+            fixture.Lease.LeaseToken,
+            It.IsAny<CancellationToken>()), Times.Once);
+        fixture.Log.Verify(log => log.LogException(
+            failure,
+            "Failed to resume waiting Capture Analysis jobs."), Times.Once);
     }
 
     [TestMethod]
@@ -560,6 +685,7 @@ public sealed class CaptureAnalysisWorkerTests
         public CaptureAnalyzerResolution WaitingForPreparationResolution { get; }
         public IReadOnlyList<CaptureAnalyzerResolution> Resolutions { get; set; }
         public CaptureAnalyzerOutput AnalyzerOutput { get; set; }
+        public CanonicalCapabilityResult? DependencyResult { get; private set; }
         public CaptureAnalysisStoreSnapshot? Snapshot { get; set; }
         public long ResolutionPolicyRevision { get; set; } = 2;
         public CaptureAnalysisJobMutationStatus RecordAttemptStatus { get; set; } =
@@ -572,6 +698,8 @@ public sealed class CaptureAnalysisWorkerTests
         public List<CaptureAnalyzerAttempt> RecordedAttempts { get; } = [];
         public CancellationTokenSource Cancellation { get; } = new();
         public Mock<ICaptureAnalysisJobStore> JobStore { get; } = new();
+        public Mock<ICaptureAnalysisCheckpointStore> Checkpoints { get; } = new();
+        public Mock<ICaptureAnalyzerCheckpoint> Checkpoint { get; } = new();
         public Mock<ICaptureAnalysisWakeWaiter> WakeWaiter { get; } = new();
         public Mock<ICaptureAnalyzerResolver> Resolver { get; } = new();
         public Mock<ICaptureAnalyzer> Analyzer { get; } = new();
@@ -591,6 +719,7 @@ public sealed class CaptureAnalysisWorkerTests
         {
             var worker = new CaptureAnalysisWorker(
                 JobStore.Object,
+                Checkpoints.Object,
                 WakeWaiter.Object,
                 Resolver.Object,
                 AnalyzerCatalog.Object,
@@ -624,6 +753,81 @@ public sealed class CaptureAnalysisWorkerTests
                     Intent.Key.SourceRevision,
                     AnalysisTestData.CreateRecipe(),
                     [new CapabilityAnalysis(Intent.Key.Capability, result, null)]));
+        }
+
+        public void ConfigureDependencyInput()
+        {
+            CaptureAnalysisRecipe recipe = AnalysisTestData.CreateRecipe(
+                capabilities:
+                [
+                    new RecipeCapability(
+                        AnalysisCapabilities.OcrDocumentV1,
+                        RecipeCapabilityRequirement.Required),
+                    new RecipeCapability(
+                        AnalysisCapabilities.MediaPropertiesV1,
+                        RecipeCapabilityRequirement.Required,
+                        [AnalysisCapabilities.OcrDocumentV1]),
+                ]);
+            DependencyResult = AnalysisTestData.CreateResult(
+                new OcrDocumentV1(new PixelSize(100, 50), "dependency", [], []),
+                AnalyzerIdentity,
+                Preconditions.SourceRevision,
+                UtcNow.AddSeconds(-1));
+            Snapshot = new CaptureAnalysisStoreSnapshot(
+                2,
+                new CaptureAnalysisRecord(
+                    Preconditions.CaptureId,
+                    CaptureMediaKind.Image,
+                    AnalysisTestData.CapturedAtUtc,
+                    Preconditions.SourceRevision,
+                    recipe,
+                    [new CapabilityAnalysis(
+                        AnalysisCapabilities.OcrDocumentV1,
+                        DependencyResult,
+                        latestOutcome: null)]));
+            var key = new CaptureAnalysisJobKey(
+                Preconditions,
+                AnalysisCapabilities.MediaPropertiesV1,
+                ProcessingBoundary.OnDevice,
+                [AnalysisCapabilities.OcrDocumentV1]);
+            Intent = CreateIntent(key, []);
+            Lease = new CaptureAnalysisJobLease(
+                Lease.LeaseToken,
+                Intent,
+                UtcNow.AddMinutes(2));
+        }
+
+        public void ConfigureMissingDependency()
+        {
+            CaptureAnalysisRecipe recipe = AnalysisTestData.CreateRecipe(
+                capabilities:
+                [
+                    new RecipeCapability(
+                        AnalysisCapabilities.OcrDocumentV1,
+                        RecipeCapabilityRequirement.Required),
+                    new RecipeCapability(
+                        AnalysisCapabilities.MediaPropertiesV1,
+                        RecipeCapabilityRequirement.Required,
+                        [AnalysisCapabilities.OcrDocumentV1]),
+                ]);
+            Snapshot = new CaptureAnalysisStoreSnapshot(
+                2,
+                new CaptureAnalysisRecord(
+                    Preconditions.CaptureId,
+                    CaptureMediaKind.Image,
+                    AnalysisTestData.CapturedAtUtc,
+                    Preconditions.SourceRevision,
+                    recipe));
+            var key = new CaptureAnalysisJobKey(
+                Preconditions,
+                AnalysisCapabilities.MediaPropertiesV1,
+                ProcessingBoundary.OnDevice,
+                [AnalysisCapabilities.OcrDocumentV1]);
+            Intent = CreateIntent(key, []);
+            Lease = new CaptureAnalysisJobLease(
+                Lease.LeaseToken,
+                Intent,
+                UtcNow.AddMinutes(2));
         }
 
         public void SetInitialAttempts(params CaptureAnalyzerAttempt[] attempts)
@@ -669,6 +873,19 @@ public sealed class CaptureAnalysisWorkerTests
                 It.IsAny<CancellationToken>()), Times.Once);
         }
 
+        public void VerifyCheckpointCleared()
+        {
+            Checkpoint.Verify(checkpoint => checkpoint.ClearAsync(
+                CancellationToken.None), Times.Once);
+        }
+
+        public void VerifyCaptureCheckpointsDeleted()
+        {
+            Checkpoints.Verify(store => store.DeleteCaptureAsync(
+                Intent.Key.CaptureId,
+                CancellationToken.None), Times.Once);
+        }
+
         public void Dispose()
         {
             Cancellation.Dispose();
@@ -676,6 +893,8 @@ public sealed class CaptureAnalysisWorkerTests
 
         private void ConfigureMocks()
         {
+            Checkpoints.Setup(store => store.Open(It.IsAny<CaptureAnalysisCheckpointKey>()))
+                .Returns(Checkpoint.Object);
             Analyzer.SetupGet(value => value.Descriptor).Returns(Descriptor);
             Analyzer.Setup(value => value.AnalyzeAsync(
                     It.IsAny<CaptureAnalysisRequest>(),
@@ -754,6 +973,12 @@ public sealed class CaptureAnalysisWorkerTests
             JobStore.Setup(value => value.ReadAllAsync(It.IsAny<CancellationToken>()))
                 .Returns(() => ToAsyncEnumerable(StartupIntents));
             JobStore.Setup(value => value.RecoverExpiredLeasesAsync(
+                    It.IsAny<DateTimeOffset>(),
+                    It.IsAny<CancellationToken>()))
+                .Returns(ValueTask.FromResult(0));
+            JobStore.Setup(value => value.ResumeWaitingForCapabilityAsync(
+                    It.IsAny<CapabilityDefinition>(),
+                    It.IsAny<ProcessingBoundary>(),
                     It.IsAny<DateTimeOffset>(),
                     It.IsAny<CancellationToken>()))
                 .Returns(ValueTask.FromResult(0));

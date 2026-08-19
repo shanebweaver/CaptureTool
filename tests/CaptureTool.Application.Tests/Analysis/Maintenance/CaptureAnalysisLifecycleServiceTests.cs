@@ -1,4 +1,5 @@
 using CaptureTool.Application.Abstractions.Analysis.Jobs;
+using CaptureTool.Application.Abstractions.Analysis.Checkpoints;
 using CaptureTool.Application.Abstractions.Analysis.Maintenance;
 using CaptureTool.Application.Abstractions.Analysis.Orchestration;
 using CaptureTool.Application.Abstractions.Analysis.Persistence;
@@ -487,6 +488,7 @@ public sealed class CaptureAnalysisLifecycleServiceTests
         var coordinator = new CaptureAnalysisCleanupCoordinator(
             store,
             Mock.Of<ICaptureAnalysisJobStore>(MockBehavior.Strict),
+            Mock.Of<ICaptureAnalysisCheckpointStore>(),
             Mock.Of<ICaptureAnalysisStore>(MockBehavior.Strict),
             Mock.Of<ICaptureAnalysisMutationCoordinator>(MockBehavior.Strict),
             projection.Object,
@@ -552,6 +554,7 @@ public sealed class CaptureAnalysisLifecycleServiceTests
         var coordinator = new CaptureAnalysisCleanupCoordinator(
             store,
             jobs.Object,
+            Mock.Of<ICaptureAnalysisCheckpointStore>(),
             metadata.Object,
             Mock.Of<ICaptureAnalysisMutationCoordinator>(),
             projection.Object,
@@ -593,6 +596,12 @@ public sealed class CaptureAnalysisLifecycleServiceTests
                 It.IsAny<CancellationToken>()))
             .Callback(() => ordering.Add("jobs"))
             .Returns(ValueTask.FromResult(1));
+        var checkpoints = new Mock<ICaptureAnalysisCheckpointStore>(MockBehavior.Strict);
+        checkpoints.Setup(store => store.DeleteCaptureAsync(
+                tombstone.CaptureId,
+                It.IsAny<CancellationToken>()))
+            .Callback(() => ordering.Add("checkpoints"))
+            .Returns(ValueTask.CompletedTask);
         var metadataSnapshot = new CaptureAnalysisStoreSnapshot(
             4,
             AnalysisTestData.CreateRecord());
@@ -625,6 +634,7 @@ public sealed class CaptureAnalysisLifecycleServiceTests
         var coordinator = new CaptureAnalysisCleanupCoordinator(
             store,
             jobs.Object,
+            checkpoints.Object,
             metadata.Object,
             mutation.Object,
             projection.Object,
@@ -636,13 +646,14 @@ public sealed class CaptureAnalysisLifecycleServiceTests
 
         Assert.IsTrue(result);
         CollectionAssert.AreEqual(
-            new[] { "projection", "jobs", "metadata-read", "metadata-delete" },
+            new[] { "projection", "jobs", "checkpoints", "metadata-read", "metadata-delete" },
             ordering);
         Assert.IsNotNull(deletionToken);
         Assert.AreEqual(tombstone.CaptureId, deletionToken.Value.CaptureId);
         Assert.AreEqual(tombstone.TombstoneGeneration, deletionToken.Value.TombstoneGeneration);
         Assert.AreEqual(store.Snapshot.State.ControlGeneration, deletionToken.Value.ControlGeneration);
         jobs.VerifyAll();
+        checkpoints.VerifyAll();
         metadata.VerifyAll();
         mutation.VerifyAll();
         projection.VerifyAll();
@@ -739,6 +750,7 @@ public sealed class CaptureAnalysisLifecycleServiceTests
         return new(
             store,
             jobs.Object,
+            Mock.Of<ICaptureAnalysisCheckpointStore>(),
             metadata.Object,
             Mock.Of<ICaptureAnalysisMutationCoordinator>(MockBehavior.Strict),
             projection.Object,

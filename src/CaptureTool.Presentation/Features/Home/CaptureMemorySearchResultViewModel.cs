@@ -36,15 +36,29 @@ public sealed class CaptureMemorySearchResultViewModel : ViewModelBase
             result.Evidence.MatchKind switch
             {
                 CaptureMemoryMatchKind.OcrText => "CaptureMemory_Match_Text",
+                CaptureMemoryMatchKind.VideoOcrText => "CaptureMemory_Match_Text",
                 CaptureMemoryMatchKind.ImageDescription => "CaptureMemory_Match_Visual",
+                CaptureMemoryMatchKind.VideoDescription => "CaptureMemory_Match_Visual",
+                CaptureMemoryMatchKind.SpeechTranscript => "CaptureMemory_Match_Transcript",
                 _ => "CaptureMemory_Match_Filename",
             },
             result.Evidence.MatchKind switch
             {
                 CaptureMemoryMatchKind.OcrText => "Text match",
+                CaptureMemoryMatchKind.VideoOcrText => "Text match",
                 CaptureMemoryMatchKind.ImageDescription => "Visual match",
+                CaptureMemoryMatchKind.VideoDescription => "Visual match",
+                CaptureMemoryMatchKind.SpeechTranscript => "Transcript match",
                 _ => "Filename match",
             });
+
+        TimeSpan? timecode = result.Evidence.Timecode;
+        HasTimecode = timecode.HasValue;
+        TimecodeLabel = timecode.HasValue ? FormatTimecode(timecode.Value) : string.Empty;
+        IsImage = MediaKind == CaptureMediaKind.Image;
+        IsAudio = MediaKind == CaptureMediaKind.Audio;
+        IsVideo = MediaKind == CaptureMediaKind.Video;
+        CanLoadThumbnail = MediaKind is CaptureMediaKind.Image or CaptureMediaKind.Video;
 
         CaptureMemoryPixelBounds? bounds = result.Evidence.PixelBounds;
         HasOcrBounds = result.Evidence.MatchKind == CaptureMemoryMatchKind.OcrText && bounds != null;
@@ -58,7 +72,8 @@ public sealed class CaptureMemorySearchResultViewModel : ViewModelBase
         IsSourceMissing = location.Status == CaptureMemoryResultLocationStatus.SourceMissing;
         IsResolutionFailed = location.Status == CaptureMemoryResultLocationStatus.Unavailable;
         CanDeleteCapture = location.CanDeleteRetainedSource;
-        AutomationName = $"{FileName}, {CapturedAtLabel}, {CaptureTypeLabel}, {ExplanationLabel}. {Snippet}";
+        string timecodeAutomation = HasTimecode ? $", {TimecodeLabel}" : string.Empty;
+        AutomationName = $"{FileName}, {CapturedAtLabel}, {CaptureTypeLabel}, {ExplanationLabel}{timecodeAutomation}. {Snippet}";
     }
 
     public CaptureId CaptureId { get; }
@@ -78,6 +93,18 @@ public sealed class CaptureMemorySearchResultViewModel : ViewModelBase
     public string ExplanationLabel { get; }
 
     public string Snippet { get; }
+
+    public bool HasTimecode { get; }
+
+    public string TimecodeLabel { get; }
+
+    public bool IsImage { get; }
+
+    public bool IsAudio { get; }
+
+    public bool IsVideo { get; }
+
+    public bool CanLoadThumbnail { get; }
 
     public string AutomationName { get; }
 
@@ -134,5 +161,12 @@ public sealed class CaptureMemorySearchResultViewModel : ViewModelBase
         return string.IsNullOrWhiteSpace(localized) || localized == resourceKey
             ? fallback
             : localized;
+    }
+
+    private static string FormatTimecode(TimeSpan timecode)
+    {
+        return timecode.TotalHours >= 1
+            ? timecode.ToString(@"h\:mm\:ss", CultureInfo.InvariantCulture)
+            : timecode.ToString(@"m\:ss", CultureInfo.InvariantCulture);
     }
 }

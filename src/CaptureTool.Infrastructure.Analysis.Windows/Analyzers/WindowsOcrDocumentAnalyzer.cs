@@ -1,25 +1,41 @@
 using CaptureTool.Application.Abstractions.Analysis.Analyzers;
 using CaptureTool.Application.Abstractions.Edit.Image.TextExtraction;
+using CaptureTool.Application.Abstractions.Analysis.Preparation;
 using CaptureTool.Domain.Analysis;
 using CaptureTool.Domain.Analysis.Payloads;
 using System.Text;
 
 namespace CaptureTool.Infrastructure.Analysis.Windows.Analyzers;
 
-public sealed class WindowsOcrDocumentAnalyzer : ICaptureAnalyzer
+public sealed class WindowsOcrDocumentAnalyzer : IPreparableCaptureAnalyzer
 {
-    public const string AdapterVersion = "1.0.0";
+    public const string AdapterVersion = "1.1.0";
+    public const string LegacyAnalyzerId = "windows-ocr-document";
+    public const string WindowsAiAnalyzerId = "windows-ai-ocr-document";
 
     private readonly ITextExtractionAnalysisService _textExtraction;
 
     public WindowsOcrDocumentAnalyzer(ITextExtractionAnalysisService textExtraction)
+        : this(
+            textExtraction,
+            LegacyAnalyzerId,
+            CaptureAnalyzerRequirement.OperatingSystemCapability,
+            qualityTier: 60)
+    {
+    }
+
+    internal WindowsOcrDocumentAnalyzer(
+        ITextExtractionAnalysisService textExtraction,
+        string analyzerId,
+        CaptureAnalyzerRequirement requirements,
+        int qualityTier)
     {
         ArgumentNullException.ThrowIfNull(textExtraction);
         _textExtraction = textExtraction;
 
         TextExtractionModelDescriptor model = textExtraction.ModelDescriptor;
         var identity = new AnalyzerIdentity(
-            analyzerId: "windows-ocr-document",
+            analyzerId,
             providerId: model.ProducerId,
             modelId: model.ModelId,
             modelVersion: model.ModelVersion,
@@ -34,10 +50,10 @@ public sealed class WindowsOcrDocumentAnalyzer : ICaptureAnalyzer
             [CaptureMediaKind.Image],
             ProcessingBoundary.OnDevice,
             CaptureAnalyzerDataKind.None,
-            CaptureAnalyzerRequirement.OperatingSystemCapability,
+            requirements,
             CaptureAnalyzerWorkloadClass.Lightweight,
             maximumSourceBytes: null,
-            qualityTier: 100);
+            qualityTier);
     }
 
     public CaptureAnalyzerDescriptor Descriptor { get; }
@@ -83,6 +99,33 @@ public sealed class WindowsOcrDocumentAnalyzer : ICaptureAnalyzer
                     AnalysisFailureCode.ProviderUnavailable,
                     AnalysisFailureDisposition.Transient)));
         }
+    }
+
+    public async Task<CaptureAnalyzerPreparationResult> PrepareAsync(
+        IProgress<AnalysisCapabilityPreparationProgress>? progress = null,
+        CancellationToken cancellationToken = default)
+    {
+        TextExtractionPreparationResult result = await _textExtraction
+            .EnsureReadyAsync(cancellationToken)
+            .ConfigureAwait(false);
+        if (result.Status == TextExtractionPreparationStatus.Success)
+        {
+            progress?.Report(new AnalysisCapabilityPreparationProgress(1));
+            return CaptureAnalyzerPreparationResult.Succeeded;
+        }
+
+        return result.Status switch
+        {
+            TextExtractionPreparationStatus.NotSupported =>
+                CaptureAnalyzerPreparationResult.Unsupported(new AnalysisFailure(
+                    AnalysisFailureCode.CapabilityUnavailable,
+                    AnalysisFailureDisposition.Terminal)),
+            TextExtractionPreparationStatus.Cancelled =>
+                CaptureAnalyzerPreparationResult.Cancelled,
+            _ => CaptureAnalyzerPreparationResult.Failed(new AnalysisFailure(
+                AnalysisFailureCode.ProviderUnavailable,
+                AnalysisFailureDisposition.Transient)),
+        };
     }
 
     public async Task<CaptureAnalyzerOutput> AnalyzeAsync(

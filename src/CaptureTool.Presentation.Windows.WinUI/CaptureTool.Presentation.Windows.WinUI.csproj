@@ -27,6 +27,11 @@
              Link="CaptureAnalysisProviders.json"
              CopyToOutputDirectory="PreserveNewest"
              CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="..\CaptureTool.Infrastructure.Analysis.Windows.Experimental\ExperimentalWindowsAiCaptureAnalysisProviders.json"
+             Link="ExperimentalWindowsAiCaptureAnalysisProviders.json"
+             CopyToOutputDirectory="PreserveNewest"
+             CopyToPublishDirectory="PreserveNewest"
+             Condition="'$(EnableExperimentalWindowsAi)' == 'true'" />
     <Manifest Include="$(ApplicationManifest)" />
   </ItemGroup>
 
@@ -51,6 +56,10 @@
     <ProjectReference Include="..\CaptureTool.Application\CaptureTool.Application.csproj" GlobalPropertiesToRemove="WindowsAppSDKSelfContained;WindowsPackageType;EnableMsixTooling" />
     <ProjectReference Include="..\CaptureTool.Infrastructure.Edit.Windows\CaptureTool.Infrastructure.Edit.Windows.csproj" GlobalPropertiesToRemove="WindowsAppSDKSelfContained;WindowsPackageType;EnableMsixTooling" />
     <ProjectReference Include="..\CaptureTool.Infrastructure.Analysis.Windows\CaptureTool.Infrastructure.Analysis.Windows.csproj" GlobalPropertiesToRemove="WindowsAppSDKSelfContained;WindowsPackageType;EnableMsixTooling" />
+    <ProjectReference Include="..\CaptureTool.Infrastructure.Analysis.Windows.Experimental\CaptureTool.Infrastructure.Analysis.Windows.Experimental.csproj"
+                      GlobalPropertiesToRemove="WindowsAppSDKSelfContained;WindowsPackageType;EnableMsixTooling"
+                      Condition="'$(EnableExperimentalWindowsAi)' == 'true'" />
+    <ProjectReference Include="..\CaptureTool.Infrastructure.Analysis.FoundryLocal\CaptureTool.Infrastructure.Analysis.FoundryLocal.csproj" GlobalPropertiesToRemove="WindowsAppSDKSelfContained;WindowsPackageType;EnableMsixTooling" />
     <ProjectReference Include="..\CaptureTool.Domain\CaptureTool.Domain.csproj" GlobalPropertiesToRemove="WindowsAppSDKSelfContained;WindowsPackageType;EnableMsixTooling" />
     <ProjectReference Include="..\CaptureTool.Domain.Analysis\CaptureTool.Domain.Analysis.csproj" GlobalPropertiesToRemove="WindowsAppSDKSelfContained;WindowsPackageType;EnableMsixTooling" />
     <ProjectReference Include="..\CaptureTool.Domain.Edit\CaptureTool.Domain.Edit.csproj" GlobalPropertiesToRemove="WindowsAppSDKSelfContained;WindowsPackageType;EnableMsixTooling" />
@@ -106,7 +115,7 @@
     https://learn.microsoft.com/en-us/windows/apps/windows-app-sdk/applifecycle/applifecycle-single-instance
   -->
   <PropertyGroup>
-    <DefineConstants>DISABLE_XAML_GENERATED_MAIN</DefineConstants>
+    <DefineConstants>$(DefineConstants);DISABLE_XAML_GENERATED_MAIN</DefineConstants>
   </PropertyGroup>
 
   <!--

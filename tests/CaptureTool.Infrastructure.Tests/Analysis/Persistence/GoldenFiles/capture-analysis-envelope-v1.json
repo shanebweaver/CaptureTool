@@ -33,6 +33,7 @@
     {
       "capability": { "id": "image-description", "schemaVersion": 1, "classification": 3 },
       "canonicalResult": {
+        "resultId": "11111111-1111-4111-8111-111111111111",
         "analyzer": {
           "analyzerId": "windows-ai-analysis",
           "providerId": "windows-ai",
@@ -58,6 +59,7 @@
     {
       "capability": { "id": "media-properties", "schemaVersion": 1, "classification": 1 },
       "canonicalResult": {
+        "resultId": "22222222-2222-4222-8222-222222222222",
         "analyzer": {
           "analyzerId": "windows-ai-analysis",
           "providerId": "windows-ai",
@@ -90,6 +92,7 @@
     {
       "capability": { "id": "ocr-document", "schemaVersion": 1, "classification": 2 },
       "canonicalResult": {
+        "resultId": "33333333-3333-4333-8333-333333333333",
         "analyzer": {
           "analyzerId": "windows-ai-analysis",
           "providerId": "windows-ai",

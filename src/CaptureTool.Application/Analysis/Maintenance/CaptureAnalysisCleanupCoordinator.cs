@@ -1,4 +1,5 @@
 using CaptureTool.Application.Abstractions.Analysis.Jobs;
+using CaptureTool.Application.Abstractions.Analysis.Checkpoints;
 using CaptureTool.Application.Abstractions.Analysis.Orchestration;
 using CaptureTool.Application.Abstractions.Analysis.Persistence;
 using CaptureTool.Application.Abstractions.Capture.Assets;
@@ -13,6 +14,7 @@ internal sealed class CaptureAnalysisCleanupCoordinator : ICaptureAnalysisCleanu
 {
     private readonly ICaptureAnalysisControlStore _controlStore;
     private readonly ICaptureAnalysisJobStore _jobStore;
+    private readonly ICaptureAnalysisCheckpointStore _checkpointStore;
     private readonly ICaptureAnalysisStore _metadataStore;
     private readonly ICaptureAnalysisMutationCoordinator _mutationCoordinator;
     private readonly ICaptureAnalysisProjectionMaintenance _projectionMaintenance;
@@ -23,6 +25,7 @@ internal sealed class CaptureAnalysisCleanupCoordinator : ICaptureAnalysisCleanu
     public CaptureAnalysisCleanupCoordinator(
         ICaptureAnalysisControlStore controlStore,
         ICaptureAnalysisJobStore jobStore,
+        ICaptureAnalysisCheckpointStore checkpointStore,
         ICaptureAnalysisStore metadataStore,
         ICaptureAnalysisMutationCoordinator mutationCoordinator,
         ICaptureAnalysisProjectionMaintenance projectionMaintenance,
@@ -32,6 +35,7 @@ internal sealed class CaptureAnalysisCleanupCoordinator : ICaptureAnalysisCleanu
     {
         _controlStore = controlStore;
         _jobStore = jobStore;
+        _checkpointStore = checkpointStore;
         _metadataStore = metadataStore;
         _mutationCoordinator = mutationCoordinator;
         _projectionMaintenance = projectionMaintenance;
@@ -130,6 +134,9 @@ internal sealed class CaptureAnalysisCleanupCoordinator : ICaptureAnalysisCleanu
             _ = await _jobStore.CancelCaptureAsync(
                 tombstone.CaptureId,
                 tombstone.TombstoneGeneration,
+                cancellationToken).ConfigureAwait(false);
+            await _checkpointStore.DeleteCaptureAsync(
+                tombstone.CaptureId,
                 cancellationToken).ConfigureAwait(false);
 
             CaptureAnalysisStoreSnapshot? metadata = await _metadataStore

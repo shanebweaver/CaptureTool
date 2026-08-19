@@ -15,6 +15,13 @@
     <ProjectReference Include="..\..\src\CaptureTool.Domain\CaptureTool.Domain.csproj" />
     <ProjectReference Include="..\..\src\CaptureTool.Domain.Analysis\CaptureTool.Domain.Analysis.csproj" />
     <ProjectReference Include="..\..\src\CaptureTool.Infrastructure.Analysis.Windows\CaptureTool.Infrastructure.Analysis.Windows.csproj" />
+    <ProjectReference Include="..\..\src\CaptureTool.Infrastructure.Analysis.Windows.Experimental\CaptureTool.Infrastructure.Analysis.Windows.Experimental.csproj"
+                      Condition="'$(EnableExperimentalWindowsAi)' == 'true'" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(EnableExperimentalWindowsAi)' != 'true'">
+    <Compile Remove="Analyzers\WindowsAiSpeechTranscriptAnalyzerTests.cs" />
+    <Compile Remove="DependencyInjection\ExperimentalWindowsAnalysisServiceCollectionExtensionsTests.cs" />
   </ItemGroup>
 
   <ItemGroup>

@@ -22,7 +22,7 @@ This keeps the dependency direction toward contracts. A future provider supplies
 
 ## Provider controls
 
-Capture Analysis is off by default through `CaptureAnalysis_Platform`. The built-in provider then has its own `CaptureAnalysis_Provider_MicrosoftWindows` kill switch, and each packaged adapter has an independent analyzer switch. All built-in provider switches default on so enabling the hidden platform flag produces the current behavior; any provider or adapter can still be disabled independently. Adding an adapter requires all of the following:
+Capture Analysis is off by default through `CaptureAnalysis_Platform`. Debug composition enables that flag and `CaptureMemory_Search` locally for model development; Release retains the generated off defaults. The built-in provider then has its own `CaptureAnalysis_Provider_MicrosoftWindows` kill switch, and each packaged adapter has an independent analyzer switch. All built-in provider switches default on so enabling the hidden platform flag produces the current behavior; any provider or adapter can still be disabled independently. Adding an adapter requires all of the following:
 
 1. A unique analyzer identity and versioned capability result contract.
 2. An explicit provider flag and analyzer flag. Unknown identities are not authorized.

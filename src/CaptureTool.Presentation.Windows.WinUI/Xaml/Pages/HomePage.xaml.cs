@@ -274,7 +274,7 @@ public sealed partial class HomePage : HomePageBase
         CaptureMemorySearchResultViewModel result)
     {
         Image? previewImage = FindDescendant<Image>(itemContainer, "CaptureMemoryPreviewImage");
-        SymbolIcon? fallback = FindDescendant<SymbolIcon>(itemContainer, "CaptureMemoryPreviewFallback");
+        Grid? fallback = FindDescendant<Grid>(itemContainer, "CaptureMemoryPreviewFallback");
         if (previewImage == null || fallback == null)
         {
             return;
@@ -283,7 +283,7 @@ public sealed partial class HomePage : HomePageBase
         previewImage.Source = null;
         previewImage.Opacity = 0;
         fallback.Visibility = Visibility.Visible;
-        if (!result.CanOpen || result.CurrentFilePath == null)
+        if (!result.CanOpen || result.CurrentFilePath == null || !result.CanLoadThumbnail)
         {
             return;
         }

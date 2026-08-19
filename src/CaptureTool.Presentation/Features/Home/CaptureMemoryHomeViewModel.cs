@@ -197,7 +197,7 @@ public sealed class CaptureMemoryHomeViewModel : ViewModelBase
 
     public double IndexProgress { get; private set => Set(ref field, value); }
 
-    public bool IsDescriptionUnsupported { get; private set => Set(ref field, value); }
+    public bool HasLimitedModelCoverage { get; private set => Set(ref field, value); }
 
     public bool HasSetupFailure
     {
@@ -272,7 +272,7 @@ public sealed class CaptureMemoryHomeViewModel : ViewModelBase
         IsPreparing = true;
         PreparationProgress = 0;
         HasSetupFailure = false;
-        IsDescriptionUnsupported = false;
+        HasLimitedModelCoverage = false;
 
         try
         {
@@ -292,17 +292,30 @@ public sealed class CaptureMemoryHomeViewModel : ViewModelBase
             }
 
             IsAuthorized = consentChange.Policy.IsProcessingAuthorized;
-            CaptureAnalysisRecipe recipe = CaptureAnalysisRecipeDefaults.CreateCaptureMemoryImageRecipe();
-            for (int index = 0; index < recipe.Capabilities.Count; index++)
+            CaptureAnalysisRecipe[] recipes =
+            [
+                CaptureAnalysisRecipeDefaults.CreateCaptureMemoryImageRecipe(),
+                CaptureAnalysisRecipeDefaults.CreateCaptureMemoryAudioRecipe(),
+                CaptureAnalysisRecipeDefaults.CreateCaptureMemoryVideoRecipe(),
+            ];
+            var preparations = recipes
+                .SelectMany(recipe => recipe.Capabilities.Select(capability => new
+                {
+                    recipe.MediaKind,
+                    RecipeCapability = capability,
+                }))
+                .ToArray();
+            for (int index = 0; index < preparations.Length; index++)
             {
-                RecipeCapability recipeCapability = recipe.Capabilities[index];
-                double capabilityStart = (double)index / recipe.Capabilities.Count;
-                double capabilityShare = 1d / recipe.Capabilities.Count;
+                RecipeCapability recipeCapability = preparations[index].RecipeCapability;
+                CaptureMediaKind mediaKind = preparations[index].MediaKind;
+                double capabilityStart = (double)index / preparations.Length;
+                double capabilityShare = 1d / preparations.Length;
                 var progress = new Progress<AnalysisCapabilityPreparationProgress>(value =>
                     PreparationProgress = capabilityStart + (value.FractionComplete * capabilityShare));
                 var request = new AnalysisCapabilityPreparationRequest(
                     recipeCapability.Capability,
-                    CaptureMediaKind.Image,
+                    mediaKind,
                     CaptureAnalysisPolicyDefaults.CaptureMemorySearchPurpose,
                     processingPolicy);
                 AnalysisCapabilityPreparationState prepared = await _preparationService.PrepareAsync(
@@ -310,23 +323,12 @@ public sealed class CaptureMemoryHomeViewModel : ViewModelBase
                     progress,
                     CancellationToken.None);
 
-                bool isOptionalDescription =
-                    recipeCapability.Requirement == RecipeCapabilityRequirement.Optional &&
-                    recipeCapability.Capability.Id == AnalysisCapabilities.ImageDescriptionV1.Id;
-                if (isOptionalDescription && prepared.Status is
-                    AnalysisCapabilityPreparationStatus.Unsupported or
-                    AnalysisCapabilityPreparationStatus.Disabled or
-                    AnalysisCapabilityPreparationStatus.Failed)
+                if (prepared.Status != AnalysisCapabilityPreparationStatus.Ready)
                 {
-                    IsDescriptionUnsupported = true;
-                    continue;
-                }
-
-                if (recipeCapability.Requirement == RecipeCapabilityRequirement.Required &&
-                    prepared.Status != AnalysisCapabilityPreparationStatus.Ready)
-                {
-                    HasSetupFailure = true;
-                    return;
+                    // Analyzer inventory is media-specific. An unavailable audio, video, or
+                    // optional description model must not prevent supported captures (notably
+                    // images with legacy OCR fallback) from being enrolled and searched.
+                    HasLimitedModelCoverage = true;
                 }
             }
 

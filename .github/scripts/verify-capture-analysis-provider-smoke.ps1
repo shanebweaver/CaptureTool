@@ -14,6 +14,8 @@ $ErrorActionPreference = 'Stop'
 $resolvedPackageRoot = (Resolve-Path -LiteralPath $PackageRoot).Path
 $resolvedAppBinRoot = (Resolve-Path -LiteralPath $AppBinRoot).Path
 $resolvedRunManifest = (Resolve-Path -LiteralPath $RunManifest).Path
+$repoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path
+$projectAssetsPath = Join-Path $repoRoot 'src\CaptureTool.Presentation.Windows.WinUI\obj\project.assets.json'
 $temporaryParent = [System.IO.Path]::GetFullPath([System.IO.Path]::GetTempPath())
 $temporaryRoot = Join-Path $temporaryParent ("CaptureTool-Analysis-Smoke-" + [Guid]::NewGuid().ToString('N'))
 $uploadRoot = Join-Path $temporaryRoot 'upload'
@@ -22,6 +24,20 @@ $bundleRoot = Join-Path $temporaryRoot 'bundle'
 try {
     New-Item -ItemType Directory -Path $uploadRoot, $bundleRoot -Force | Out-Null
     Add-Type -AssemblyName System.IO.Compression.FileSystem
+
+    if (-not (Test-Path -LiteralPath $projectAssetsPath -PathType Leaf)) {
+        throw "The Store application project assets file was not found at $projectAssetsPath."
+    }
+
+    $projectAssets = Get-Content -Raw -LiteralPath $projectAssetsPath | ConvertFrom-Json
+    $prereleaseWindowsAppSdkPackages = @($projectAssets.libraries.PSObject.Properties.Name |
+        Where-Object {
+            $_ -match '^Microsoft\.WindowsAppSDK(?:\.|/)' -and
+            ($_ -split '/', 2)[1] -match '-'
+        })
+    if ($prereleaseWindowsAppSdkPackages.Count -gt 0) {
+        throw "The Store build resolved prerelease Windows App SDK packages: $($prereleaseWindowsAppSdkPackages -join ', ')."
+    }
 
     $upload = Get-ChildItem -LiteralPath $resolvedPackageRoot -Recurse -File -Filter '*_bundle.msixupload' |
         Sort-Object Length -Descending |
@@ -75,6 +91,15 @@ try {
         New-Item -ItemType Directory -Path $appRoot -Force | Out-Null
         [System.IO.Compression.ZipFile]::ExtractToDirectory($appPackage.FullName, $appRoot)
 
+        $experimentalPayload = @(Get-ChildItem -LiteralPath $appRoot -Recurse -File |
+            Where-Object {
+                $_.Name -eq 'CaptureTool.Infrastructure.Analysis.Windows.Experimental.dll' -or
+                $_.Name -eq 'ExperimentalWindowsAiCaptureAnalysisProviders.json'
+            })
+        if ($experimentalPayload.Count -gt 0) {
+            throw "$($appPackage.Name) contains experimental Windows AI payload: $($experimentalPayload.Name -join ', ')."
+        }
+
         $appExecutable = Get-ChildItem -LiteralPath $appRoot -Recurse -File -Filter 'CaptureTool.Presentation.Windows.WinUI.exe' |
             Select-Object -First 1
         if (-not $appExecutable) {
@@ -100,8 +125,9 @@ try {
         }
 
         $actualAnalyzerIds = @($provider.analyzers | ForEach-Object { $_.analyzerId } | Sort-Object)
-        if (($actualAnalyzerIds -join '|') -ne ($expectedAnalyzerIds -join '|')) {
-            throw "$($appPackage.Name) does not contain the expected provider adapter set."
+        $missingAnalyzerIds = @($expectedAnalyzerIds | Where-Object { $_ -notin $actualAnalyzerIds })
+        if ($missingAnalyzerIds.Count -gt 0) {
+            throw "$($appPackage.Name) is missing evaluated provider adapters: $($missingAnalyzerIds -join ', ')."
         }
 
         $platformDirectory = if ($architecture -eq 'arm64') { 'ARM64' } else { 'x64' }

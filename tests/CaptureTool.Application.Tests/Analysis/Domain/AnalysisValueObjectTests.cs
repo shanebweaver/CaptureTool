@@ -146,7 +146,9 @@ public sealed class AnalysisValueObjectTests
             AnalysisTestData.CreatePreconditions(captureSourceGeneration: 2),
             AnalysisTestData.CreatePreconditions(sourceRevision: restampedSource),
             AnalysisTestData.CreatePreconditions(purpose: new AnalysisPurpose("another-purpose", 1)),
-            AnalysisTestData.CreatePreconditions(purpose: new AnalysisPurpose(AnalysisTestData.Purpose.Id, 2)),
+            AnalysisTestData.CreatePreconditions(purpose: new AnalysisPurpose(
+                AnalysisTestData.Purpose.Id,
+                AnalysisTestData.Purpose.Version + 1)),
             AnalysisTestData.CreatePreconditions(policyRevision: 2),
             AnalysisTestData.CreatePreconditions(controlGeneration: 2),
             AnalysisTestData.CreatePreconditions(enrollmentGeneration: 2),

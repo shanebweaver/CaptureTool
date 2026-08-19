@@ -2,15 +2,85 @@ using CaptureTool.Domain;
 
 namespace CaptureTool.Domain.Analysis;
 
+public readonly record struct CapabilityResultId
+{
+    public CapabilityResultId(Guid value)
+    {
+        if (value == Guid.Empty)
+        {
+            throw new ArgumentException("A capability result ID cannot be empty.", nameof(value));
+        }
+
+        Value = value;
+    }
+
+    public Guid Value { get; }
+
+    public bool IsEmpty => Value == Guid.Empty;
+
+    public static CapabilityResultId New() => new(Guid.NewGuid());
+}
+
+public readonly record struct CapabilityResultReference
+{
+    public CapabilityResultReference(
+        CapabilityResultId resultId,
+        CapabilityDefinition capability,
+        AnalyzerRevision analyzerRevision,
+        DateTimeOffset generatedAtUtc)
+    {
+        if (resultId.IsEmpty)
+        {
+            throw new ArgumentException("A result reference requires a result ID.", nameof(resultId));
+        }
+
+        if (capability.Id.IsEmpty)
+        {
+            throw new ArgumentException("A result reference requires a capability.", nameof(capability));
+        }
+
+        if (analyzerRevision.IsEmpty)
+        {
+            throw new ArgumentException(
+                "A result reference requires an analyzer revision.",
+                nameof(analyzerRevision));
+        }
+
+        if (generatedAtUtc.Offset != TimeSpan.Zero)
+        {
+            throw new ArgumentException(
+                "A result reference timestamp must be expressed in UTC.",
+                nameof(generatedAtUtc));
+        }
+
+        ResultId = resultId;
+        Capability = capability;
+        AnalyzerRevision = analyzerRevision;
+        GeneratedAtUtc = generatedAtUtc;
+    }
+
+    public CapabilityResultId ResultId { get; }
+
+    public CapabilityDefinition Capability { get; }
+
+    public AnalyzerRevision AnalyzerRevision { get; }
+
+    public DateTimeOffset GeneratedAtUtc { get; }
+}
+
 public sealed class CanonicalCapabilityResult
 {
+    private readonly IReadOnlyList<CapabilityResultReference> _inputs;
+
     public CanonicalCapabilityResult(
         CaptureId captureId,
         SourceRevision sourceRevision,
         CapabilityPayload payload,
         AnalyzerIdentity analyzer,
         ProcessingBoundary processingBoundary,
-        DateTimeOffset generatedAtUtc)
+        DateTimeOffset generatedAtUtc,
+        IEnumerable<CapabilityResultReference>? inputs = null,
+        CapabilityResultId? resultId = null)
     {
         if (captureId.IsEmpty)
         {
@@ -27,15 +97,40 @@ public sealed class CanonicalCapabilityResult
         EnsureBoundary(processingBoundary);
         EnsureUtc(generatedAtUtc, nameof(generatedAtUtc));
 
+        CapabilityResultReference[] copiedInputs = [.. inputs ?? []];
+        if (copiedInputs.Any(input =>
+                input.ResultId.IsEmpty ||
+                input.Capability.Id.IsEmpty ||
+                input.AnalyzerRevision.IsEmpty ||
+                input.GeneratedAtUtc.Offset != TimeSpan.Zero ||
+                input.Capability.Id == payload.Definition.Id) ||
+            copiedInputs.GroupBy(input => input.Capability.Id).Any(group => group.Count() > 1))
+        {
+            throw new ArgumentException(
+                "A result cannot reference itself or duplicate an input capability.",
+                nameof(inputs));
+        }
+
+        ResultId = resultId ?? CapabilityResultId.New();
+        if (ResultId.IsEmpty)
+        {
+            throw new ArgumentException("A capability result ID cannot be empty.", nameof(resultId));
+        }
+
         CaptureId = captureId;
         SourceRevision = sourceRevision;
         Payload = payload;
         Analyzer = analyzer;
         ProcessingBoundary = processingBoundary;
         GeneratedAtUtc = generatedAtUtc;
+        _inputs = Array.AsReadOnly(copiedInputs
+            .OrderBy(input => input.Capability.Id.Value, StringComparer.Ordinal)
+            .ToArray());
     }
 
     public CaptureId CaptureId { get; }
+
+    public CapabilityResultId ResultId { get; }
 
     public SourceRevision SourceRevision { get; }
 
@@ -49,6 +144,14 @@ public sealed class CanonicalCapabilityResult
 
     public DateTimeOffset GeneratedAtUtc { get; }
 
+    public IReadOnlyList<CapabilityResultReference> Inputs => _inputs;
+
+    public CapabilityResultReference Reference => new(
+        ResultId,
+        Capability,
+        Analyzer.Revision,
+        GeneratedAtUtc);
+
     public bool IsEquivalentTo(CanonicalCapabilityResult other)
     {
         ArgumentNullException.ThrowIfNull(other);
@@ -58,6 +161,7 @@ public sealed class CanonicalCapabilityResult
             Analyzer == other.Analyzer &&
             ProcessingBoundary == other.ProcessingBoundary &&
             GeneratedAtUtc == other.GeneratedAtUtc &&
+            Inputs.SequenceEqual(other.Inputs) &&
             Payload.IsEquivalentTo(other.Payload);
     }
 
@@ -79,7 +183,9 @@ public sealed class CanonicalCapabilityResult
             Payload,
             Analyzer,
             ProcessingBoundary,
-            GeneratedAtUtc);
+            GeneratedAtUtc,
+            Inputs,
+            ResultId);
     }
 
     private static void EnsureBoundary(ProcessingBoundary boundary)

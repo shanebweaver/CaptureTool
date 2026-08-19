@@ -459,6 +459,54 @@ internal sealed class LocalCaptureAnalysisJobStore : ICaptureAnalysisJobStore, I
         }
     }
 
+    public async ValueTask<int> ResumeWaitingForDependencyAsync(
+        CaptureId captureId,
+        CapabilityDefinition dependency,
+        DateTimeOffset dueAtUtc,
+        CancellationToken cancellationToken = default)
+    {
+        if (captureId.IsEmpty)
+        {
+            throw new ArgumentException("A capture ID is required.", nameof(captureId));
+        }
+
+        if (dependency.Id.IsEmpty)
+        {
+            throw new ArgumentException("A dependency capability is required.", nameof(dependency));
+        }
+
+        EnsureUtc(dueAtUtc, nameof(dueAtUtc));
+        var resumedFailure = new AnalysisFailure(
+            AnalysisFailureCode.CapabilityUnavailable,
+            AnalysisFailureDisposition.Transient);
+        await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            int resumed = 0;
+            foreach ((string path, StoredJob job) in LoadAll(cancellationToken).Where(item =>
+                item.Job.Intent.State == CaptureAnalysisJobState.WaitingForCapability &&
+                item.Job.Intent.Key.CaptureId == captureId &&
+                item.Job.Intent.Key.Dependencies.Contains(dependency)))
+            {
+                CaptureAnalysisJobIntent retry = CopyIntent(
+                    job.Intent,
+                    CaptureAnalysisJobState.RetryScheduled,
+                    dueAtUtc,
+                    resumedFailure);
+                if (TryWrite(path, new(retry, null, null)))
+                {
+                    resumed++;
+                }
+            }
+
+            return resumed;
+        }
+        finally
+        {
+            _gate.Release();
+        }
+    }
+
     public async ValueTask<CaptureAnalysisJobMutationResult> TryCancelAsync(
         CaptureAnalysisJobKey key,
         CancellationToken cancellationToken = default)
@@ -536,6 +584,18 @@ internal sealed class LocalCaptureAnalysisJobStore : ICaptureAnalysisJobStore, I
             key.Capability.Id,
             key.Capability.SchemaVersion,
             key.AuthorizedProcessingBoundary);
+        if (key.Dependencies.Count > 0)
+        {
+            canonical += "|dependencies-v1|" + string.Join(
+                '|',
+                new[] { key.Capability.Classification.ToString() }.Concat(
+                    key.Dependencies.Select(dependency => string.Join(
+                        ':',
+                        dependency.Id,
+                        dependency.SchemaVersion,
+                        dependency.Classification))));
+        }
+
         byte[] hash = SHA256.HashData(Encoding.UTF8.GetBytes(FileNameDomain + canonical));
         return Path.Combine(GetIntentsDirectoryPath(), Convert.ToHexStringLower(hash) + JobExtension);
     }

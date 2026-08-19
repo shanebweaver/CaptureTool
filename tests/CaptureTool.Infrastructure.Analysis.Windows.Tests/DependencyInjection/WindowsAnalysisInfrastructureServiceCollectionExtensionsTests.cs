@@ -1,8 +1,10 @@
 using CaptureTool.Application.Abstractions.Analysis.Analyzers;
+using CaptureTool.Application.Abstractions.Analysis.Media;
 using CaptureTool.Application.Abstractions.Edit.Image.TextExtraction;
 using CaptureTool.Domain.Analysis;
 using CaptureTool.Infrastructure.Analysis.Windows.Analyzers;
 using CaptureTool.Infrastructure.Analysis.Windows.DependencyInjection;
+using CaptureTool.Infrastructure.Analysis.Windows.Media;
 using Microsoft.Extensions.DependencyInjection;
 using System.Text.Json;
 
@@ -22,14 +24,23 @@ public sealed class WindowsAnalysisInfrastructureServiceCollectionExtensionsTest
             descriptor.ServiceType == typeof(ICaptureAnalyzer) &&
             descriptor.ImplementationType == typeof(WindowsImageMediaPropertiesAnalyzer) &&
             descriptor.Lifetime == ServiceLifetime.Singleton));
-        Assert.IsTrue(services.Any(descriptor =>
+        Assert.AreEqual(7, services.Count(descriptor =>
             descriptor.ServiceType == typeof(ICaptureAnalyzer) &&
-            descriptor.ImplementationType == typeof(WindowsOcrDocumentAnalyzer) &&
             descriptor.Lifetime == ServiceLifetime.Singleton));
         Assert.IsTrue(services.Any(descriptor =>
             descriptor.ServiceType == typeof(ICaptureAnalyzer) &&
             descriptor.ImplementationType == typeof(WindowsImageDescriptionAnalyzer) &&
             descriptor.Lifetime == ServiceLifetime.Singleton));
+        Assert.IsTrue(services.Any(descriptor =>
+            descriptor.ServiceType == typeof(ICaptureAnalyzer) &&
+            descriptor.ImplementationType == typeof(WindowsVideoDescriptionTrackAnalyzer) &&
+            descriptor.Lifetime == ServiceLifetime.Singleton));
+        Assert.IsTrue(services.Any(descriptor =>
+            descriptor.ServiceType == typeof(IVideoAnalysisFrameSource) &&
+            descriptor.ImplementationType == typeof(WindowsVideoAnalysisFrameSource)));
+        Assert.IsTrue(services.Any(descriptor =>
+            descriptor.ServiceType == typeof(IVideoAudioExtractionService) &&
+            descriptor.ImplementationType == typeof(WindowsVideoAudioExtractionService)));
     }
 
     [TestMethod]
@@ -60,10 +71,16 @@ public sealed class WindowsAnalysisInfrastructureServiceCollectionExtensionsTest
         Assert.IsTrue(analyzers.Any(analyzer => analyzer is WindowsOcrDocumentAnalyzer));
         Assert.IsTrue(analyzers.Any(analyzer => analyzer is WindowsImageMediaPropertiesAnalyzer));
         Assert.IsTrue(analyzers.Any(analyzer => analyzer is WindowsImageDescriptionAnalyzer));
-        Assert.HasCount(3, analyzers);
+        Assert.IsTrue(analyzers.Any(analyzer => analyzer is WindowsVideoOcrTrackAnalyzer));
+        Assert.IsTrue(analyzers.Any(analyzer =>
+            analyzer.Descriptor.Identity.AnalyzerId == WindowsOcrDocumentAnalyzer.WindowsAiAnalyzerId));
+        Assert.IsTrue(analyzers.Any(analyzer =>
+            analyzer.Descriptor.Identity.AnalyzerId == WindowsVideoOcrTrackAnalyzer.WindowsAiAnalyzerId));
+        Assert.IsTrue(analyzers.Any(analyzer => analyzer is WindowsVideoDescriptionTrackAnalyzer));
+        Assert.HasCount(7, analyzers);
 
         var ocr = (WindowsOcrDocumentAnalyzer)analyzers.Single(analyzer =>
-            analyzer is WindowsOcrDocumentAnalyzer);
+            analyzer.Descriptor.Identity.AnalyzerId == WindowsOcrDocumentAnalyzer.LegacyAnalyzerId);
         AnalysisPurpose purpose = new("capture-memory-search", 1);
         CaptureAnalyzerAvailability availability = await ocr.GetAvailabilityAsync(
             new CaptureAnalyzerAvailabilityRequest(

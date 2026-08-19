@@ -1807,8 +1807,8 @@ SOFTWARE.
     <value>La grabación de pantalla no es compatible con este dispositivo.</value>
   </data>
   <data name="CaptureMemory_Setup_Title.Text" xml:space="preserve"><value>Encuentra capturas por su contenido</value></data>
-  <data name="CaptureMemory_Setup_Body.Text" xml:space="preserve"><value>Capture Tool puede usar los modelos de IA ya disponibles en la aplicación para crear metadatos privados administrados por la aplicación para la búsqueda. El análisis permanece en este dispositivo y solo comienza cuando aceptas.</value></data>
-  <data name="CaptureMemory_Setup_Disclosure.Text" xml:space="preserve"><value>Crea propiedades multimedia, reconocimiento de texto y, cuando sea compatible, descripciones visuales. Puedes detener el análisis o borrar estos metadatos en Configuración.</value></data>
+  <data name="CaptureMemory_Setup_Body.Text" xml:space="preserve"><value>Capture Tool puede usar modelos de IA en el dispositivo para crear metadatos privados administrados por la aplicación para la búsqueda. El análisis solo comienza cuando aceptas. Es posible que se descarguen algunos paquetes de modelos durante la configuración; el contenido de tus capturas no se carga.</value></data>
+  <data name="CaptureMemory_Setup_Disclosure.Text" xml:space="preserve"><value>Crea propiedades multimedia, texto reconocido, transcripciones de voz y, cuando sea compatible, descripciones visuales. Puedes detener el análisis o borrar estos metadatos en Configuración.</value></data>
   <data name="CaptureMemory_Setup_FutureButton.Content" xml:space="preserve"><value>Analizar capturas nuevas</value></data>
   <data name="CaptureMemory_Setup_ExistingButton.Content" xml:space="preserve"><value>Incluir capturas existentes</value></data>
   <data name="CaptureMemory_Setup_Preparing.Text" xml:space="preserve"><value>Preparando modelos de IA…</value></data>
@@ -1818,7 +1818,7 @@ SOFTWARE.
   <data name="CaptureMemory_Searching.Text" xml:space="preserve"><value>Buscando…</value></data>
   <data name="CaptureMemory_Indexing.Text" xml:space="preserve"><value>Preparando capturas existentes para la búsqueda…</value></data>
   <data name="CaptureMemory_PartialResults.Message" xml:space="preserve"><value>Estos son resultados parciales mientras se preparan las capturas existentes.</value></data>
-  <data name="CaptureMemory_DescriptionUnsupported.Message" xml:space="preserve"><value>Las descripciones visuales no son compatibles con este dispositivo. La búsqueda por nombre de archivo y texto reconocido sigue disponible.</value></data>
+  <data name="CaptureMemory_LimitedModelCoverage.Message" xml:space="preserve"><value>Algunos modelos de IA no están disponibles en este dispositivo. Capture Memory seguirá analizando los medios y metadatos compatibles.</value></data>
   <data name="CaptureMemory_SourceMissing.Message" xml:space="preserve"><value>Un archivo de origen coincidente se movió o no está disponible. Puedes olvidar su historial administrado por la aplicación.</value></data>
   <data name="CaptureMemory_SearchFailed.Message" xml:space="preserve"><value>La búsqueda de Capture Memory falló.</value></data>
   <data name="CaptureMemory_CorruptProjection.Message" xml:space="preserve"><value>Los datos de búsqueda están dañados. Vuelve a crear los datos administrados por la aplicación.</value></data>

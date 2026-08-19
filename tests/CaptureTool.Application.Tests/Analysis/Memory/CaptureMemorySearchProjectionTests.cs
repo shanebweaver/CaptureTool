@@ -153,6 +153,109 @@ public sealed class CaptureMemorySearchProjectionTests
     }
 
     [TestMethod]
+    public async Task AudioTranscript_ShouldBeSearchableWithMediaKindAndTimedEvidence()
+    {
+        var fixture = new SearchFixture();
+        CaptureId audio = fixture.AddAudioCapture(
+            18,
+            "standup.wav",
+            "We should deploy the capture memory update tomorrow.",
+            [new SpeechTranscriptSegmentV1(
+                "deploy the capture memory update",
+                TimeSpan.FromSeconds(12),
+                TimeSpan.FromSeconds(15))]);
+        using CaptureMemorySearchProjection service = fixture.CreateService();
+
+        IReadOnlyList<CaptureMemorySearchResult> results = await service.SearchAsync(
+            new CaptureMemorySearchRequest("ploy memo", 10));
+        IReadOnlyList<CaptureMemorySearchResult> phraseResults = await service.SearchAsync(
+            new CaptureMemorySearchRequest("deploy the capture memory", 10));
+        IReadOnlyList<CaptureMemorySearchResult> noResults = await service.SearchAsync(
+            new CaptureMemorySearchRequest("quarterly budget", 10));
+
+        Assert.HasCount(1, results);
+        Assert.AreEqual(audio, results[0].CaptureId);
+        Assert.AreEqual(CaptureMediaKind.Audio, results[0].MediaKind);
+        Assert.AreEqual(CaptureMemoryMatchKind.SpeechTranscript, results[0].Evidence.MatchKind);
+        Assert.AreEqual(TimeSpan.FromSeconds(12), results[0].Evidence.Timecode);
+        StringAssert.Contains(results[0].Evidence.Snippet, "capture memory");
+        Assert.HasCount(1, phraseResults);
+        Assert.AreEqual(TimeSpan.FromSeconds(12), phraseResults[0].Evidence.Timecode);
+        Assert.IsEmpty(noResults);
+    }
+
+    [TestMethod]
+    public async Task VideoOcrAndTranscript_ShouldBeSearchableWithDistinctTimedEvidence()
+    {
+        var fixture = new SearchFixture();
+        CaptureId video = fixture.AddVideoCapture(
+            19,
+            "demo.mp4",
+            "Open the Contoso deployment dashboard",
+            [new VideoOcrObservationV1(
+                "Contoso deployment dashboard",
+                TimeSpan.FromSeconds(3.5),
+                TimeSpan.FromSeconds(7))],
+            "The narrator mentions the emergency rollback procedure.",
+            [new SpeechTranscriptSegmentV1(
+                "emergency rollback procedure",
+                TimeSpan.FromSeconds(11),
+                TimeSpan.FromSeconds(14))]);
+        using CaptureMemorySearchProjection service = fixture.CreateService();
+
+        IReadOnlyList<CaptureMemorySearchResult> ocr = await service.SearchAsync(
+            new CaptureMemorySearchRequest("toso deploy", 10));
+        IReadOnlyList<CaptureMemorySearchResult> speech = await service.SearchAsync(
+            new CaptureMemorySearchRequest("ergency roll", 10));
+
+        Assert.HasCount(1, ocr);
+        Assert.AreEqual(video, ocr[0].CaptureId);
+        Assert.AreEqual(CaptureMediaKind.Video, ocr[0].MediaKind);
+        Assert.AreEqual(CaptureMemoryMatchKind.VideoOcrText, ocr[0].Evidence.MatchKind);
+        Assert.AreEqual(TimeSpan.FromSeconds(3.5), ocr[0].Evidence.Timecode);
+        Assert.IsNull(ocr[0].Evidence.PixelBounds);
+        Assert.HasCount(1, speech);
+        Assert.AreEqual(CaptureMemoryMatchKind.SpeechTranscript, speech[0].Evidence.MatchKind);
+        Assert.AreEqual(TimeSpan.FromSeconds(11), speech[0].Evidence.Timecode);
+    }
+
+    [TestMethod]
+    public async Task VideoDescription_ShouldBeSearchableWithVisualEvidenceAndTimecode()
+    {
+        var fixture = new SearchFixture();
+        CaptureId video = fixture.AddVideoCapture(
+            20,
+            "walkthrough.mp4",
+            "unrelated screen text",
+            [new VideoOcrObservationV1(
+                "unrelated screen text",
+                TimeSpan.Zero,
+                TimeSpan.FromSeconds(2))],
+            "unrelated narration",
+            [new SpeechTranscriptSegmentV1(
+                "unrelated narration",
+                TimeSpan.Zero,
+                TimeSpan.FromSeconds(2))],
+            "A person points to the turquoise deployment graph.",
+            [new VideoDescriptionObservationV1(
+                "A person points to the turquoise deployment graph.",
+                TimeSpan.FromSeconds(30),
+                TimeSpan.FromSeconds(45))]);
+        using CaptureMemorySearchProjection service = fixture.CreateService();
+
+        IReadOnlyList<CaptureMemorySearchResult> results = await service.SearchAsync(
+            new CaptureMemorySearchRequest("quoise deploy", 10));
+
+        Assert.HasCount(1, results);
+        Assert.AreEqual(video, results[0].CaptureId);
+        Assert.AreEqual(CaptureMediaKind.Video, results[0].MediaKind);
+        Assert.AreEqual(CaptureMemoryMatchKind.VideoDescription,
+            results[0].Evidence.MatchKind);
+        Assert.AreEqual(TimeSpan.FromSeconds(30), results[0].Evidence.Timecode);
+        StringAssert.Contains(results[0].Evidence.Snippet, "turquoise deployment graph");
+    }
+
+    [TestMethod]
     public async Task Rebuild_ShouldExcludeDuplicateStaleMissingDeletedAndTombstonedItems()
     {
         var fixture = new SearchFixture();
@@ -371,6 +474,128 @@ public sealed class CaptureMemorySearchProjectionTests
             return captureId;
         }
 
+        public CaptureId AddAudioCapture(
+            int identity,
+            string retainedFilename,
+            string transcript,
+            IReadOnlyList<SpeechTranscriptSegmentV1> segments)
+        {
+            CaptureId captureId = CaptureIdFor(identity);
+            DateTimeOffset capturedAt = AnalysisTestData.CapturedAtUtc;
+            SourceRevision sourceRevision = new(
+                100,
+                capturedAt,
+                ContentFingerprint.Sha256(new string('b', 64)));
+            var payload = new SpeechTranscriptV1(transcript, segments, "en-US");
+            var analysis = new CapabilityAnalysis(
+                AnalysisCapabilities.SpeechTranscriptV1,
+                new CanonicalCapabilityResult(
+                    captureId,
+                    sourceRevision,
+                    payload,
+                    AnalysisTestData.CreateAnalyzer(),
+                    ProcessingBoundary.OnDevice,
+                    capturedAt.AddSeconds(1)),
+                latestOutcome: null);
+            CaptureAnalysisRecipe recipe = CaptureAnalysisRecipeDefaults.CreateCaptureMemoryAudioRecipe();
+            Store.Snapshots[captureId] = new CaptureAnalysisStoreSnapshot(
+                1,
+                new CaptureAnalysisRecord(
+                    captureId,
+                    CaptureMediaKind.Audio,
+                    capturedAt,
+                    sourceRevision,
+                    recipe,
+                    [analysis]));
+            Assets[captureId] = new CaptureAsset(
+                captureId,
+                CaptureFileType.Audio,
+                Path.Combine(@"C:\CaptureTool\Captures", retainedFilename),
+                CaptureSourceOwnership.AppOwned,
+                capturedAt);
+            _control.Enroll(captureId, identity + 1L, recipe);
+            return captureId;
+        }
+
+        public CaptureId AddVideoCapture(
+            int identity,
+            string retainedFilename,
+            string videoOcrText,
+            IReadOnlyList<VideoOcrObservationV1> observations,
+            string transcript,
+            IReadOnlyList<SpeechTranscriptSegmentV1> transcriptSegments,
+            string? visualDescription = null,
+            IReadOnlyList<VideoDescriptionObservationV1>? descriptionObservations = null)
+        {
+            CaptureId captureId = CaptureIdFor(identity);
+            DateTimeOffset capturedAt = AnalysisTestData.CapturedAtUtc;
+            SourceRevision sourceRevision = new(
+                100,
+                capturedAt,
+                ContentFingerprint.Sha256(new string('c', 64)));
+            AnalyzerIdentity analyzer = AnalysisTestData.CreateAnalyzer();
+            var videoOcr = new VideoOcrTrackV1(videoOcrText, observations);
+            var speech = new SpeechTranscriptV1(transcript, transcriptSegments, "en-US");
+            var analyses = new List<CapabilityAnalysis>
+            {
+                new CapabilityAnalysis(
+                    AnalysisCapabilities.VideoOcrTrackV1,
+                    new CanonicalCapabilityResult(
+                        captureId,
+                        sourceRevision,
+                        videoOcr,
+                        analyzer,
+                        ProcessingBoundary.OnDevice,
+                        capturedAt.AddSeconds(1)),
+                    latestOutcome: null),
+                new CapabilityAnalysis(
+                    AnalysisCapabilities.SpeechTranscriptV1,
+                    new CanonicalCapabilityResult(
+                        captureId,
+                        sourceRevision,
+                        speech,
+                        analyzer,
+                        ProcessingBoundary.OnDevice,
+                        capturedAt.AddSeconds(2)),
+                    latestOutcome: null),
+            };
+            if (visualDescription != null)
+            {
+                var descriptions = new VideoDescriptionTrackV1(
+                    visualDescription,
+                    descriptionObservations);
+                analyses.Add(new CapabilityAnalysis(
+                    AnalysisCapabilities.VideoDescriptionTrackV1,
+                    new CanonicalCapabilityResult(
+                        captureId,
+                        sourceRevision,
+                        descriptions,
+                        analyzer,
+                        ProcessingBoundary.OnDevice,
+                        capturedAt.AddSeconds(3)),
+                    latestOutcome: null));
+            }
+            CaptureAnalysisRecipe recipe =
+                CaptureAnalysisRecipeDefaults.CreateCaptureMemoryVideoRecipe();
+            Store.Snapshots[captureId] = new CaptureAnalysisStoreSnapshot(
+                1,
+                new CaptureAnalysisRecord(
+                    captureId,
+                    CaptureMediaKind.Video,
+                    capturedAt,
+                    sourceRevision,
+                    recipe,
+                    analyses));
+            Assets[captureId] = new CaptureAsset(
+                captureId,
+                CaptureFileType.Video,
+                Path.Combine(@"C:\CaptureTool\Captures", retainedFilename),
+                CaptureSourceOwnership.AppOwned,
+                capturedAt);
+            _control.Enroll(captureId, identity + 1L, recipe);
+            return captureId;
+        }
+
         public void Exclude(CaptureId captureId)
         {
             _control.Exclude(captureId);
@@ -431,9 +656,12 @@ public sealed class CaptureMemorySearchProjectionTests
         private readonly Dictionary<CaptureId, CaptureAnalysisEnrollment> _enrollments = [];
         private long _revision = 1;
 
-        public void Enroll(CaptureId captureId, long finalizationSequence)
+        public void Enroll(
+            CaptureId captureId,
+            long finalizationSequence,
+            CaptureAnalysisRecipe? selectedRecipe = null)
         {
-            CaptureAnalysisRecipe recipe = CaptureAnalysisRecipeDefaults
+            CaptureAnalysisRecipe recipe = selectedRecipe ?? CaptureAnalysisRecipeDefaults
                 .CreateCaptureMemoryImageRecipe();
             _enrollments[captureId] = new CaptureAnalysisEnrollment(
                 captureId,

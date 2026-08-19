@@ -1,3 +1,5 @@
+using CaptureTool.Application.Abstractions.Analysis.Orchestration;
+using CaptureTool.Application.Abstractions.Analysis.Policy;
 using CaptureTool.Domain.Analysis;
 
 namespace CaptureTool.Application.Tests.Analysis.Domain;
@@ -5,6 +7,25 @@ namespace CaptureTool.Application.Tests.Analysis.Domain;
 [TestClass]
 public sealed class CaptureAnalysisPolicyTests
 {
+    [TestMethod]
+    public void CaptureMemoryDefaults_ShouldAuthorizeEveryCurrentRecipeCapability()
+    {
+        CapabilityDefinition[] recipeCapabilities =
+        [
+            .. CaptureAnalysisRecipeDefaults.CreateCaptureMemoryImageRecipe()
+                .Capabilities.Select(capability => capability.Capability),
+            .. CaptureAnalysisRecipeDefaults.CreateCaptureMemoryAudioRecipe()
+                .Capabilities.Select(capability => capability.Capability),
+            .. CaptureAnalysisRecipeDefaults.CreateCaptureMemoryVideoRecipe()
+                .Capabilities.Select(capability => capability.Capability),
+        ];
+        CaptureAnalysisAuthorizationScope scope =
+            CaptureAnalysisPolicyDefaults.CreateAuthorizationScope();
+
+        Assert.IsTrue(recipeCapabilities.All(scope.Allows));
+        Assert.IsTrue(scope.Allows(AnalysisCapabilities.VideoDescriptionTrackV1));
+    }
+
     [TestMethod]
     public void Unknown_ShouldFailClosed()
     {

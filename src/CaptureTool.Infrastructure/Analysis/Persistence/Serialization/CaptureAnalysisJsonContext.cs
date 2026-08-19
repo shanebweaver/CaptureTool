@@ -12,4 +12,7 @@ namespace CaptureTool.Infrastructure.Analysis.Persistence.Serialization;
 [JsonSerializable(typeof(MediaPropertiesPayloadDocument))]
 [JsonSerializable(typeof(OcrDocumentPayloadDocument))]
 [JsonSerializable(typeof(ImageDescriptionPayloadDocument))]
+[JsonSerializable(typeof(SpeechTranscriptPayloadDocument))]
+[JsonSerializable(typeof(VideoOcrTrackPayloadDocument))]
+[JsonSerializable(typeof(VideoDescriptionTrackPayloadDocument))]
 internal sealed partial class CaptureAnalysisJsonContext : JsonSerializerContext { }

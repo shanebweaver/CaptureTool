@@ -98,6 +98,15 @@ public interface ITextExtractionAnalysisService
 
     TextExtractionReadyState GetReadyState();
 
+    Task<TextExtractionPreparationResult> EnsureReadyAsync(
+        CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        return Task.FromResult(GetReadyState() == TextExtractionReadyState.Ready
+            ? TextExtractionPreparationResult.Success
+            : TextExtractionPreparationResult.NotSupported);
+    }
+
     Task<TextExtractionAnalysisResult> ExtractAnalysisAsync(
         Stream sourceImage,
         CancellationToken cancellationToken = default);

@@ -39,6 +39,9 @@ public enum CaptureMemoryMatchKind
     Filename,
     OcrText,
     ImageDescription,
+    SpeechTranscript,
+    VideoOcrText,
+    VideoDescription,
 }
 
 public sealed record CaptureMemoryPixelBounds

@@ -5,6 +5,11 @@ using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media.Imaging;
 using Windows.Storage;
 using Windows.Storage.FileProperties;
+#if DEBUG
+using CaptureTool.Presentation.Windows.WinUI.Debugging;
+using Microsoft.UI.Xaml.Input;
+using Windows.System;
+#endif
 
 namespace CaptureTool.Presentation.Windows.WinUI.Xaml.Views;
 
@@ -16,9 +21,40 @@ public sealed partial class AppMenuView : AppMenuViewBase
     public AppMenuView()
     {
         InitializeComponent();
+#if DEBUG
+        AddDebugMenu();
+#endif
         ViewModel.RecentCapturesUpdated += ViewModel_RecentCapturesUpdated;
         Loaded += AppMenuView_Loaded;
     }
+
+#if DEBUG
+    private void AddDebugMenu()
+    {
+        var modelLabItem = new MenuFlyoutItem
+        {
+            Text = "AI Model Lab…",
+            Icon = new SymbolIcon(Symbol.Setting),
+        };
+        modelLabItem.KeyboardAccelerators.Add(new KeyboardAccelerator
+        {
+            Key = VirtualKey.M,
+            Modifiers = VirtualKeyModifiers.Control | VirtualKeyModifiers.Shift,
+        });
+        modelLabItem.Click += ShowAiModelLab_Click;
+
+        var debugMenu = new MenuBarItem { Title = "Debug" };
+        debugMenu.Items.Add(modelLabItem);
+        MainMenuBar.Items.Add(debugMenu);
+    }
+
+    private async void ShowAiModelLab_Click(object sender, RoutedEventArgs e)
+    {
+        AiModelLabDialogService service =
+            App.Current.ServiceProvider.GetService<AiModelLabDialogService>();
+        await service.ShowAsync(XamlRoot);
+    }
+#endif
 
     ~AppMenuView()
     {
