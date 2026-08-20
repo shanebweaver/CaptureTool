@@ -12,6 +12,7 @@ using CaptureTool.Application.Abstractions.Store;
 using CaptureTool.Application.Abstractions.TaskEnvironment;
 using CaptureTool.Application.Abstractions.Telemetry;
 using CaptureTool.Application.Abstractions.Themes;
+using CaptureTool.Application.Abstractions.Windowing;
 using CaptureTool.Infrastructure.Storage;
 using CaptureTool.Infrastructure.Windows.Audio;
 using CaptureTool.Infrastructure.Windows.Clipboard;
@@ -25,6 +26,7 @@ using CaptureTool.Infrastructure.Windows.Store;
 using CaptureTool.Infrastructure.Windows.TaskEnvironment;
 using CaptureTool.Infrastructure.Windows.Telemetry;
 using CaptureTool.Infrastructure.Windows.Themes;
+using CaptureTool.Infrastructure.Windows.Windowing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.UI.Dispatching;
 
@@ -35,6 +37,7 @@ public static class WindowsInfrastructureServiceCollectionExtensions
     public static IServiceCollection AddWindowsServices(this IServiceCollection services, DispatcherQueue dispatcherQueue)
     {
         services.AddSingleton<IClipboardService, WindowsClipboardService>();
+        services.AddSingleton<IMainWindowActivationService, MainWindowActivationService>();
         services.AddSingleton<IFeedbackHubService, WindowsFeedbackHubService>();
         services.AddSingleton<IStoreService, WindowsStoreService>();
         services.AddSingleton<IThemeService, WindowsThemeService>();
