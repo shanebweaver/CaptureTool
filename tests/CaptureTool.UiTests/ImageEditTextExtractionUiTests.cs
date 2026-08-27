@@ -92,6 +92,23 @@ public sealed class ImageEditTextExtractionUiTests
                 "ImageEdit_TextExtractionProgressRing",
                 InteractionTimeout);
 
+            Assert.IsTrue(
+                textExtractionButton.IsEnabled,
+                "The Text Extraction button should remain enabled while OCR is running.");
+            textExtractionButton.Click();
+            WaitForElementRemoved(
+                mainWindow,
+                automation,
+                "ImageEdit_TextExtractionProgressRing",
+                InteractionTimeout);
+
+            textExtractionButton.Click();
+            WaitForElement(
+                mainWindow,
+                automation,
+                "ImageEdit_TextExtractionProgressRing",
+                InteractionTimeout);
+
             CaptureWindowScreenshot(app.ProcessId, mainWindow, loadingScreenshotPath);
             Assert.IsTrue(File.Exists(loadingScreenshotPath), "The OCR loading screenshot should exist.");
             Assert.IsGreaterThan(0L, new FileInfo(loadingScreenshotPath).Length, "The OCR loading screenshot should not be empty.");
