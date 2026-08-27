@@ -231,7 +231,9 @@ public sealed class WindowsTextExtractionService : ITextExtractionService
             return TextExtractionResult.NotReady;
         }
 
-        OcrResult ocrResult = await engine.RecognizeAsync(sourceBitmap);
+        OcrResult ocrResult = await engine
+            .RecognizeAsync(sourceBitmap)
+            .AsTask(cancellationToken);
         cancellationToken.ThrowIfCancellationRequested();
 
         List<RecognizedTextRegion> regions = [];

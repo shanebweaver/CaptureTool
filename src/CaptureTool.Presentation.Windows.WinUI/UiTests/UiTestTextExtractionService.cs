@@ -36,11 +36,19 @@ internal sealed class UiTestTextExtractionService : ITextExtractionService
             new("SAMPLE", ScaleBounds(new RectangleF(48, 112, 164, 38), sourceSize), 1, 0),
             new("TEXT", ScaleBounds(new RectangleF(224, 112, 130, 38), sourceSize), 1, 1)
         ];
+        RecognizedQrCodeRegion[] qrCodes = [
+            new(
+                "https://example.com/capturetool",
+                ScaleBounds(new RectangleF(262, 40, 125, 140), sourceSize))
+        ];
 
         return TextExtractionResult.Success(new RecognizedTextDocument(
-            "OCR MODE" + Environment.NewLine + "SAMPLE TEXT",
+            "OCR MODE" + Environment.NewLine +
+                "SAMPLE TEXT" + Environment.NewLine +
+                "https://example.com/capturetool",
             sourceSize,
-            regions));
+            regions,
+            qrCodes));
     }
 
     private static RectangleF ScaleBounds(RectangleF bounds, Size imageSize)
