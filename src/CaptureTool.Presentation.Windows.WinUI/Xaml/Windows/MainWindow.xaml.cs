@@ -2,6 +2,7 @@ using CaptureTool.Application.Abstractions.Logging;
 using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Application.Abstractions.Shutdown;
 using CaptureTool.Application.Abstractions.Themes;
+using CaptureTool.Application.Abstractions.Windowing;
 using CaptureTool.Domain.FileSystem;
 using CaptureTool.Presentation.Shell;
 using CaptureTool.Presentation.Windows.WinUI.AudioCapture;
@@ -34,6 +35,7 @@ public sealed partial class MainWindow : Window
 
     private readonly INavigationCoordinator _navigationCoordinator;
     private readonly ILogService _logService;
+    private readonly IMainWindowActivationService _mainWindowActivationService;
     private readonly IShutdownHandler _shutdownHandler;
     private readonly WinUIAudioCaptureNavigationConfirmationService _audioCaptureNavigationConfirmationService;
     private readonly WinUICaptureDiscardConfirmationService _captureDiscardConfirmationService;
@@ -54,6 +56,7 @@ public sealed partial class MainWindow : Window
     {
         _navigationCoordinator = App.Current.ServiceProvider.GetService<INavigationCoordinator>();
         _logService = App.Current.ServiceProvider.GetService<ILogService>();
+        _mainWindowActivationService = App.Current.ServiceProvider.GetService<IMainWindowActivationService>();
         _shutdownHandler = App.Current.ServiceProvider.GetService<IShutdownHandler>();
         _audioCaptureNavigationConfirmationService = App.Current.ServiceProvider.GetService<WinUIAudioCaptureNavigationConfirmationService>();
         _captureDiscardConfirmationService = App.Current.ServiceProvider.GetService<WinUICaptureDiscardConfirmationService>();
@@ -81,6 +84,7 @@ public sealed partial class MainWindow : Window
         UpdateAppTitle();
 
         Activated += OnActivated;
+        Activated += OnActivationStateChanged;
         AppWindow.Closing += OnAppWindowClosing;
         Closed += OnClosed;
         ViewModel.PropertyChanged += OnViewModelPropertyChanged;
@@ -121,6 +125,7 @@ public sealed partial class MainWindow : Window
     internal void NotifyHidden()
     {
         _isShown = false;
+        _mainWindowActivationService.SetActive(false);
         _telemetryConsentDialogService.SuppressPrompt();
 
         if (NavigationFrame.Content is HomePage homePage)
@@ -291,6 +296,12 @@ public sealed partial class MainWindow : Window
         }
     }
 
+    private void OnActivationStateChanged(object sender, WindowActivatedEventArgs args)
+    {
+        _mainWindowActivationService.SetActive(
+            args.WindowActivationState != WindowActivationState.Deactivated);
+    }
+
     private void BeginCloseConfirmation()
     {
         if (_closeConfirmationInProgress)
@@ -340,7 +351,9 @@ public sealed partial class MainWindow : Window
 
     private void OnClosed(object sender, WindowEventArgs args)
     {
+        _mainWindowActivationService.SetActive(false);
         Activated -= OnActivated;
+        Activated -= OnActivationStateChanged;
         AppWindow.Closing -= OnAppWindowClosing;
         Closed -= OnClosed;
         RootGrid.Loaded -= RootGrid_Loaded;

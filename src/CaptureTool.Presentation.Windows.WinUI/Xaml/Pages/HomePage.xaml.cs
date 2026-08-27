@@ -1,4 +1,5 @@
 using CaptureTool.Application.Abstractions.Logging;
+using CaptureTool.Domain.Capture;
 using CaptureTool.Presentation.Features.Home;
 using CaptureTool.Presentation.Features.RecentCaptures;
 using Microsoft.UI.Xaml;
@@ -290,7 +291,9 @@ public sealed partial class HomePage : HomePageBase
 
         try
         {
-            BitmapImage? thumbnail = await GetThumbnailImageAsync(result.CurrentFilePath);
+            BitmapImage? thumbnail = await GetThumbnailImageAsync(
+                result.CurrentFilePath,
+                result.IsImage ? CaptureFileType.Image : CaptureFileType.Video);
             if (thumbnail == null || CaptureMemoryResultsList.ItemFromContainer(itemContainer) != result)
             {
                 return;
@@ -327,7 +330,9 @@ public sealed partial class HomePage : HomePageBase
 
         try
         {
-            BitmapImage? thumbnail = await GetThumbnailImageAsync(recentCapture.FilePath);
+            BitmapImage? thumbnail = await GetThumbnailImageAsync(
+                recentCapture.FilePath,
+                recentCapture.CaptureFileType);
             if (thumbnail == null || RecentCapturesGridView.ItemFromContainer(itemContainer) != recentCapture)
             {
                 return;
@@ -343,7 +348,9 @@ public sealed partial class HomePage : HomePageBase
         }
     }
 
-    private async Task<BitmapImage?> GetThumbnailImageAsync(string filePath)
+    private async Task<BitmapImage?> GetThumbnailImageAsync(
+        string filePath,
+        CaptureFileType captureFileType)
     {
         if (_thumbnailCache.TryGetValue(filePath, out BitmapImage? cachedThumbnail))
         {
@@ -351,6 +358,31 @@ public sealed partial class HomePage : HomePageBase
         }
 
         StorageFile file = await StorageFile.GetFileFromPathAsync(filePath);
+        BitmapImage? thumbnailImage = captureFileType == CaptureFileType.Image
+            ? await LoadImagePreviewAsync(file)
+            : await LoadStorageThumbnailAsync(file);
+
+        if (thumbnailImage != null)
+        {
+            _thumbnailCache[filePath] = thumbnailImage;
+        }
+
+        return thumbnailImage;
+    }
+
+    private static async Task<BitmapImage> LoadImagePreviewAsync(StorageFile file)
+    {
+        using var stream = await file.OpenReadAsync();
+        BitmapImage previewImage = new()
+        {
+            DecodePixelWidth = (int)RecentCaptureThumbnailSize
+        };
+        await previewImage.SetSourceAsync(stream);
+        return previewImage;
+    }
+
+    private static async Task<BitmapImage?> LoadStorageThumbnailAsync(StorageFile file)
+    {
         using var thumbnail = await file.GetThumbnailAsync(
             ThumbnailMode.SingleItem,
             RecentCaptureThumbnailSize,
@@ -363,7 +395,6 @@ public sealed partial class HomePage : HomePageBase
 
         BitmapImage thumbnailImage = new();
         await thumbnailImage.SetSourceAsync(thumbnail);
-        _thumbnailCache[filePath] = thumbnailImage;
         return thumbnailImage;
     }
 

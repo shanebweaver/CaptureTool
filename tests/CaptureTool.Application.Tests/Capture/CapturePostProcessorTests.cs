@@ -4,6 +4,7 @@ using CaptureTool.Application.Abstractions.Logging;
 using CaptureTool.Application.Abstractions.Settings;
 using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Application.Abstractions.TaskEnvironment;
+using CaptureTool.Application.Abstractions.Windowing;
 using CaptureTool.Application.Capture;
 using CaptureTool.Application.Capture.Audio;
 using CaptureTool.Application.Capture.Image;
@@ -63,6 +64,60 @@ public sealed class CapturePostProcessorTests
     }
 
     [TestMethod]
+    public async Task VideoAutoCopy_WaitsForMainWindowActivation()
+    {
+        const string SourcePath = @"C:\Temp\capture.mp4";
+        var settings = new Mock<ISettingsService>();
+        settings
+            .Setup(service => service.Get(CaptureToolSettings.Settings_VideoCapture_AutoSave))
+            .Returns(false);
+        settings
+            .Setup(service => service.Get(CaptureToolSettings.Settings_VideoCapture_AutoCopy))
+            .Returns(true);
+
+        var activationCompletionSource = new TaskCompletionSource(
+            TaskCreationOptions.RunContinuationsAsynchronously);
+        var activationService = new Mock<IMainWindowActivationService>();
+        activationService
+            .Setup(service => service.WaitUntilActivatedAsync(It.IsAny<CancellationToken>()))
+            .Returns(activationCompletionSource.Task);
+
+        var copyCompletionSource = new TaskCompletionSource(
+            TaskCreationOptions.RunContinuationsAsynchronously);
+        var clipboard = new Mock<IClipboardService>();
+        clipboard
+            .Setup(service => service.CopyFileAsync(
+                It.Is<ClipboardFile>(file => file.FilePath == SourcePath)))
+            .Callback(() => copyCompletionSource.TrySetResult())
+            .Returns(Task.CompletedTask);
+
+        VideoCapturePostProcessor processor = new(
+            clipboard.Object,
+            new CaptureFileAllocator(Mock.Of<IFileSystem>()),
+            settings.Object,
+            Mock.Of<IStorageService>(),
+            CreateImmediateTaskEnvironment().Object,
+            activationService.Object,
+            Mock.Of<ILogService>(),
+            new VideoCaptureFileNameGenerator(TestClock.Instance),
+            new RecordingCaptureAssetLifecycleService());
+
+        processor.Process(new VideoFile(SourcePath));
+
+        clipboard.Verify(
+            service => service.CopyFileAsync(It.IsAny<ClipboardFile>()),
+            Times.Never);
+
+        activationCompletionSource.SetResult();
+        await copyCompletionSource.Task.WaitAsync(TimeSpan.FromSeconds(5));
+
+        clipboard.Verify(
+            service => service.CopyFileAsync(
+                It.Is<ClipboardFile>(file => file.FilePath == SourcePath)),
+            Times.Once);
+    }
+
+    [TestMethod]
     public void VideoAutoSave_CopiesWithoutOverwrite()
     {
         const string SourcePath = @"C:\Temp\capture.mp4";
@@ -84,6 +139,7 @@ public sealed class CapturePostProcessorTests
             settings.Object,
             Mock.Of<IStorageService>(),
             CreateImmediateTaskEnvironment().Object,
+            Mock.Of<IMainWindowActivationService>(),
             Mock.Of<ILogService>(),
             new VideoCaptureFileNameGenerator(TestClock.Instance),
             lifecycle);

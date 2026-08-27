@@ -4,6 +4,7 @@ using CaptureTool.Application.Abstractions.Settings;
 using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Application.Abstractions.TaskEnvironment;
 using CaptureTool.Application.Abstractions.Telemetry;
+using CaptureTool.Application.Abstractions.Windowing;
 using CaptureTool.Application.Capture.Assets;
 using CaptureTool.Domain;
 using CaptureTool.Domain.FileSystem;
@@ -18,6 +19,7 @@ internal sealed class VideoCapturePostProcessor
     private readonly ISettingsService _settingsService;
     private readonly IStorageService _storageService;
     private readonly ITaskEnvironment _taskEnvironment;
+    private readonly IMainWindowActivationService _mainWindowActivationService;
     private readonly ILogService _logService;
     private readonly VideoCaptureFileNameGenerator _fileNameGenerator;
     private readonly ICaptureAssetLifecycleService _captureAssetLifecycleService;
@@ -29,6 +31,7 @@ internal sealed class VideoCapturePostProcessor
         ISettingsService settingsService,
         IStorageService storageService,
         ITaskEnvironment taskEnvironment,
+        IMainWindowActivationService mainWindowActivationService,
         ILogService logService,
         VideoCaptureFileNameGenerator fileNameGenerator,
         ICaptureAssetLifecycleService captureAssetLifecycleService,
@@ -39,6 +42,7 @@ internal sealed class VideoCapturePostProcessor
         _settingsService = settingsService;
         _storageService = storageService;
         _taskEnvironment = taskEnvironment;
+        _mainWindowActivationService = mainWindowActivationService;
         _logService = logService;
         _fileNameGenerator = fileNameGenerator;
         _captureAssetLifecycleService = captureAssetLifecycleService;
@@ -81,6 +85,7 @@ internal sealed class VideoCapturePostProcessor
                     return;
                 }
 
+                await _mainWindowActivationService.WaitUntilActivatedAsync();
                 ClipboardFile clipboardFile = new(videoFile.FilePath);
                 await _clipboardService.CopyFileAsync(clipboardFile);
                 TrackOutput("auto_copy", TelemetryOutcomes.Succeeded);

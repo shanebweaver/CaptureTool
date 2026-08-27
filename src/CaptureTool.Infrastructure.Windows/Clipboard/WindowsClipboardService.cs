@@ -79,7 +79,9 @@ public partial class WindowsClipboardService : IClipboardService
 
         var package = new DataPackage();
         var file = await StorageFile.GetFileFromPathAsync(clipboardFile.FilePath);
-        IStorageItem[] items = [file];
+        // Keep this as the registered List<IStorageItem> type. NativeAOT cannot marshal
+        // a collection-expression array to WinRT's IIterable<IStorageItem> interface.
+        var items = new List<IStorageItem> { file };
         package.SetStorageItems(items);
         return package;
     }

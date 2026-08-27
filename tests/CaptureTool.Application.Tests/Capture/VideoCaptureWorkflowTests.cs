@@ -7,6 +7,7 @@ using CaptureTool.Application.Abstractions.Settings;
 using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Application.Abstractions.TaskEnvironment;
 using CaptureTool.Application.Abstractions.Telemetry;
+using CaptureTool.Application.Abstractions.Windowing;
 using CaptureTool.Application.Capture;
 using CaptureTool.Application.Capture.Video;
 using CaptureTool.Domain.Capture;
@@ -644,6 +645,7 @@ public sealed class VideoCaptureWorkflowTests
             settings.Object,
             storage.Object,
             taskEnvironment.Object,
+            Mock.Of<IMainWindowActivationService>(),
             Mock.Of<ILogService>(),
             fileNameGenerator,
             lifecycle);
