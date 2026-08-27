@@ -11,7 +11,7 @@
     Background="{ThemeResource LayerOnMicaBaseAltFillColorDefault}"
     mc:Ignorable="d">
 
-    <MenuBar>
+    <MenuBar x:Name="MainMenuBar">
         <!--  File  -->
         <MenuBarItem
             x:Uid="AppMenu_FileMenuItem"

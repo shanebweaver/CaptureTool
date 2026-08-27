@@ -99,4 +99,19 @@ public static class AnalysisCapabilities
         new AnalysisCapabilityId("image-description"),
         new CapabilitySchemaVersion(1),
         CapabilityResultClassification.Inference);
+
+    public static CapabilityDefinition SpeechTranscriptV1 { get; } = new(
+        new AnalysisCapabilityId("speech-transcript"),
+        new CapabilitySchemaVersion(1),
+        CapabilityResultClassification.MachineExtracted);
+
+    public static CapabilityDefinition VideoOcrTrackV1 { get; } = new(
+        new AnalysisCapabilityId("video-ocr-track"),
+        new CapabilitySchemaVersion(1),
+        CapabilityResultClassification.MachineExtracted);
+
+    public static CapabilityDefinition VideoDescriptionTrackV1 { get; } = new(
+        new AnalysisCapabilityId("video-description-track"),
+        new CapabilitySchemaVersion(1),
+        CapabilityResultClassification.Inference);
 }

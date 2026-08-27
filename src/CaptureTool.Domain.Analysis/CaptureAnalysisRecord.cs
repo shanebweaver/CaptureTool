@@ -57,6 +57,8 @@ public sealed class CaptureAnalysisRecord
         {
             AddRestoredAnalysis(analysis);
         }
+
+        ValidateDependencyProvenance();
     }
 
     private readonly Dictionary<AnalysisCapabilityId, CapabilityAnalysis> _analyses = [];
@@ -84,7 +86,7 @@ public sealed class CaptureAnalysisRecord
 
     public IReadOnlyList<RecipeCapability> GetCapabilitiesNeedingAnalysis()
     {
-        return Recipe.Capabilities
+        return Recipe.GetExecutionOrder()
             .Where(capability => !HasCanonicalResult(capability.Capability))
             .ToArray();
     }
@@ -152,6 +154,7 @@ public sealed class CaptureAnalysisRecord
         }
 
         Recipe = recipe;
+        InvalidateAnalysesWithMissingOrStaleInputs(invalidated);
         return invalidated.AsReadOnly();
     }
 
@@ -218,6 +221,11 @@ public sealed class CaptureAnalysisRecord
                 retainedOutcome);
         }
 
+        if (retainedResult == null)
+        {
+            InvalidateDependents(currentCapability.Id);
+        }
+
         return true;
     }
 
@@ -228,7 +236,13 @@ public sealed class CaptureAnalysisRecord
             throw new ArgumentException("Capability invalidation requires an ID.", nameof(capabilityId));
         }
 
-        return _analyses.Remove(capabilityId);
+        if (!_analyses.Remove(capabilityId))
+        {
+            return false;
+        }
+
+        InvalidateDependents(capabilityId);
+        return true;
     }
 
     public CapabilityCommitResult TryCommitResult(
@@ -245,6 +259,11 @@ public sealed class CaptureAnalysisRecord
 
         ValidateResult(token, result);
         ValidatePayloadForMedia(result.Payload);
+        if (!Recipe.TryGetCapability(token.Capability.Id, out RecipeCapability requested) ||
+            !HasCurrentDependencyInputs(requested, result))
+        {
+            return CapabilityCommitResult.Stale;
+        }
 
         if (_analyses.TryGetValue(token.Capability.Id, out CapabilityAnalysis? analysis) &&
             analysis.CanonicalResult is { } existing &&
@@ -261,6 +280,7 @@ public sealed class CaptureAnalysisRecord
         _analyses[token.Capability.Id] = analysis == null
             ? new CapabilityAnalysis(token.Capability, result, null)
             : analysis.WithResult(result);
+        InvalidateDependents(token.Capability.Id, result.Reference);
         return CapabilityCommitResult.Committed;
     }
 
@@ -277,6 +297,12 @@ public sealed class CaptureAnalysisRecord
         }
 
         ValidateOutcome(token, outcome);
+        if (!Recipe.TryGetCapability(token.Capability.Id, out RecipeCapability requested) ||
+            requested.Dependencies.Any(dependency => !HasCanonicalResult(dependency)))
+        {
+            return CapabilityCommitResult.Stale;
+        }
+
         if (_analyses.TryGetValue(token.Capability.Id, out CapabilityAnalysis? analysis) &&
             analysis.LatestOutcome is { } existing &&
             existing.IsEquivalentTo(outcome))
@@ -313,6 +339,29 @@ public sealed class CaptureAnalysisRecord
         return _analyses.TryGetValue(capability.Id, out CapabilityAnalysis? analysis) &&
             analysis.Capability == capability &&
             analysis.CanonicalResult != null;
+    }
+
+    private bool HasCurrentDependencyInputs(
+        RecipeCapability requested,
+        CanonicalCapabilityResult result)
+    {
+        if (requested.Dependencies.Count != result.Inputs.Count)
+        {
+            return false;
+        }
+
+        foreach (CapabilityDefinition dependency in requested.Dependencies)
+        {
+            if (!_analyses.TryGetValue(dependency.Id, out CapabilityAnalysis? analysis) ||
+                analysis.Capability != dependency ||
+                analysis.CanonicalResult is not { } canonical ||
+                !result.Inputs.Contains(canonical.Reference))
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     private static DateTimeOffset GetLatestGeneratedAtUtc(CapabilityAnalysis analysis)
@@ -362,6 +411,99 @@ public sealed class CaptureAnalysisRecord
         }
     }
 
+    private void ValidateDependencyProvenance()
+    {
+        foreach (CapabilityAnalysis analysis in _analyses.Values)
+        {
+            if (!Recipe.TryGetCapability(
+                    analysis.Capability.Id,
+                    out RecipeCapability requested))
+            {
+                throw new ArgumentException(
+                    "A restored analysis is not part of the current recipe.",
+                    "analyses");
+            }
+
+            if (analysis.CanonicalResult is { } result &&
+                HasCurrentDependencyInputs(requested, result))
+            {
+                continue;
+            }
+
+            if (analysis.CanonicalResult == null &&
+                requested.Dependencies.All(HasCanonicalResult))
+            {
+                continue;
+            }
+
+            throw new ArgumentException(
+                "A restored result does not reference the recipe inputs that produced it.",
+                "analyses");
+        }
+    }
+
+    private void InvalidateAnalysesWithMissingOrStaleInputs(
+        ICollection<AnalysisCapabilityId> invalidated)
+    {
+        bool changed;
+        do
+        {
+            changed = false;
+            foreach ((AnalysisCapabilityId id, CapabilityAnalysis analysis) in _analyses.ToArray())
+            {
+                bool recipeContainsCapability = Recipe.TryGetCapability(
+                    id,
+                    out RecipeCapability requested);
+                bool hasMissingDependency = recipeContainsCapability &&
+                    requested.Dependencies.Any(dependency => !HasCanonicalResult(dependency));
+                bool hasStaleResult = analysis.CanonicalResult is { } result &&
+                    (!recipeContainsCapability || !HasCurrentDependencyInputs(requested, result));
+                if (!recipeContainsCapability || hasMissingDependency || hasStaleResult)
+                {
+                    _analyses.Remove(id);
+                    if (!invalidated.Contains(id))
+                    {
+                        invalidated.Add(id);
+                    }
+
+                    changed = true;
+                }
+            }
+        }
+        while (changed);
+    }
+
+    private void InvalidateDependents(
+        AnalysisCapabilityId capabilityId,
+        CapabilityResultReference? currentReference = null)
+    {
+        var pending = new Queue<AnalysisCapabilityId>();
+        pending.Enqueue(capabilityId);
+        while (pending.TryDequeue(out AnalysisCapabilityId changedCapability))
+        {
+            foreach ((AnalysisCapabilityId id, CapabilityAnalysis analysis) in _analyses.ToArray())
+            {
+                if (!Recipe.TryGetCapability(id, out RecipeCapability requested) ||
+                    !requested.Dependencies.Any(dependency => dependency.Id == changedCapability))
+                {
+                    continue;
+                }
+
+                CapabilityResultReference? expected = changedCapability == capabilityId
+                    ? currentReference
+                    : null;
+                if (expected.HasValue &&
+                    analysis.CanonicalResult?.Inputs.Contains(expected.Value) == true)
+                {
+                    continue;
+                }
+
+                _analyses.Remove(id);
+                pending.Enqueue(id);
+            }
+        }
+    }
+
     private void ValidatePayloadForMedia(CapabilityPayload payload)
     {
         if (payload is MediaPropertiesV1 mediaProperties && mediaProperties.MediaKind != MediaKind)
@@ -372,6 +514,22 @@ public sealed class CaptureAnalysisRecord
         if (MediaKind != CaptureMediaKind.Image && payload is OcrDocumentV1 or ImageDescriptionV1)
         {
             throw new ArgumentException("The capability payload requires an image source.", nameof(payload));
+        }
+
+        if (MediaKind is not (CaptureMediaKind.Audio or CaptureMediaKind.Video) &&
+            payload is SpeechTranscriptV1)
+        {
+            throw new ArgumentException(
+                "A speech transcript requires an audio or video source.",
+                nameof(payload));
+        }
+
+        if (MediaKind != CaptureMediaKind.Video &&
+            payload is VideoOcrTrackV1 or VideoDescriptionTrackV1)
+        {
+            throw new ArgumentException(
+                "A video analysis track requires a video source.",
+                nameof(payload));
         }
     }
 

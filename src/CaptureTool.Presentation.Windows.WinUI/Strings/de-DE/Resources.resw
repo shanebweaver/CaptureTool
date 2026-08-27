@@ -1801,8 +1801,8 @@ SOFTWARE.
     <value>Die Bildschirmaufnahme wird auf diesem Gerät nicht unterstützt.</value>
   </data>
   <data name="CaptureMemory_Setup_Title.Text" xml:space="preserve"><value>Aufnahmen nach Inhalt finden</value></data>
-  <data name="CaptureMemory_Setup_Body.Text" xml:space="preserve"><value>Capture Tool kann die bereits in der App verfügbaren KI-Modelle verwenden, um private, von der App verwaltete Metadaten für die Suche zu erstellen. Die Analyse bleibt auf diesem Gerät und beginnt erst nach Ihrer Zustimmung.</value></data>
-  <data name="CaptureMemory_Setup_Disclosure.Text" xml:space="preserve"><value>Erstellt Medieneigenschaften, Texterkennung und – falls unterstützt – visuelle Beschreibungen. Sie können die Analyse jederzeit in den Einstellungen beenden oder diese Metadaten löschen.</value></data>
+  <data name="CaptureMemory_Setup_Body.Text" xml:space="preserve"><value>Capture Tool kann KI-Modelle auf dem Gerät verwenden, um private, von der App verwaltete Metadaten für die Suche zu erstellen. Die Analyse beginnt erst nach Ihrer Zustimmung. Einige Modellpakete werden möglicherweise während der Einrichtung heruntergeladen; Ihre Aufnahmeinhalte werden nicht hochgeladen.</value></data>
+  <data name="CaptureMemory_Setup_Disclosure.Text" xml:space="preserve"><value>Erstellt Medieneigenschaften, erkannten Text, Sprachtranskripte und – falls unterstützt – visuelle Beschreibungen. Sie können die Analyse jederzeit in den Einstellungen beenden oder diese Metadaten löschen.</value></data>
   <data name="CaptureMemory_Setup_FutureButton.Content" xml:space="preserve"><value>Neue Aufnahmen analysieren</value></data>
   <data name="CaptureMemory_Setup_ExistingButton.Content" xml:space="preserve"><value>Vorhandene Aufnahmen einbeziehen</value></data>
   <data name="CaptureMemory_Setup_Preparing.Text" xml:space="preserve"><value>KI-Modelle werden vorbereitet…</value></data>
@@ -1812,7 +1812,7 @@ SOFTWARE.
   <data name="CaptureMemory_Searching.Text" xml:space="preserve"><value>Suche läuft…</value></data>
   <data name="CaptureMemory_Indexing.Text" xml:space="preserve"><value>Vorhandene Aufnahmen werden für die Suche vorbereitet…</value></data>
   <data name="CaptureMemory_PartialResults.Message" xml:space="preserve"><value>Dies sind Teilergebnisse, während vorhandene Aufnahmen vorbereitet werden.</value></data>
-  <data name="CaptureMemory_DescriptionUnsupported.Message" xml:space="preserve"><value>Visuelle Beschreibungen werden auf diesem Gerät nicht unterstützt. Die Suche nach Dateiname und erkanntem Text ist weiterhin verfügbar.</value></data>
+  <data name="CaptureMemory_LimitedModelCoverage.Message" xml:space="preserve"><value>Einige KI-Modelle sind auf diesem Gerät nicht verfügbar. Capture Memory analysiert weiterhin unterstützte Medien und Metadaten.</value></data>
   <data name="CaptureMemory_SourceMissing.Message" xml:space="preserve"><value>Eine passende Quelldatei wurde verschoben oder ist nicht verfügbar. Sie können den von der App verwalteten Verlauf vergessen.</value></data>
   <data name="CaptureMemory_SearchFailed.Message" xml:space="preserve"><value>Die Capture-Memory-Suche ist fehlgeschlagen.</value></data>
   <data name="CaptureMemory_CorruptProjection.Message" xml:space="preserve"><value>Die Suchdaten sind beschädigt. Erstellen Sie die von der App verwalteten Suchdaten neu.</value></data>

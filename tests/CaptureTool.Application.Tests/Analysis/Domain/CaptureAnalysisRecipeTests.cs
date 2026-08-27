@@ -1,3 +1,4 @@
+using CaptureTool.Application.Abstractions.Analysis.Orchestration;
 using CaptureTool.Domain.Analysis;
 
 namespace CaptureTool.Application.Tests.Analysis.Domain;
@@ -71,5 +72,156 @@ public sealed class CaptureAnalysisRecipeTests
 
         Assert.IsTrue(first.HasSameSemanticsAs(reordered));
         Assert.IsFalse(first.HasSameSemanticsAs(changedRequirement));
+    }
+
+    [TestMethod]
+    public void DependencyGraph_ShouldRejectMissingAndCyclicCapabilities()
+    {
+        Assert.ThrowsExactly<ArgumentException>(() => new RecipeCapability(
+            AnalysisCapabilities.ImageDescriptionV1,
+            RecipeCapabilityRequirement.Optional,
+            [AnalysisCapabilities.ImageDescriptionV1]));
+        Assert.ThrowsExactly<ArgumentException>(() => new RecipeCapability(
+            AnalysisCapabilities.ImageDescriptionV1,
+            RecipeCapabilityRequirement.Optional,
+            [AnalysisCapabilities.OcrDocumentV1, AnalysisCapabilities.OcrDocumentV1]));
+        Assert.ThrowsExactly<ArgumentException>(() => new RecipeCapability(
+            AnalysisCapabilities.ImageDescriptionV1,
+            RecipeCapabilityRequirement.Optional,
+            [default]));
+
+        Assert.ThrowsExactly<ArgumentException>(() => AnalysisTestData.CreateRecipe(
+            capabilities:
+            [
+                new RecipeCapability(
+                    AnalysisCapabilities.ImageDescriptionV1,
+                    RecipeCapabilityRequirement.Optional,
+                    [AnalysisCapabilities.OcrDocumentV1]),
+            ]));
+
+        Assert.ThrowsExactly<ArgumentException>(() => AnalysisTestData.CreateRecipe(
+            capabilities:
+            [
+                new RecipeCapability(
+                    AnalysisCapabilities.OcrDocumentV1,
+                    RecipeCapabilityRequirement.Optional),
+                new RecipeCapability(
+                    AnalysisCapabilities.ImageDescriptionV1,
+                    RecipeCapabilityRequirement.Required,
+                    [AnalysisCapabilities.OcrDocumentV1]),
+            ]));
+
+        Assert.ThrowsExactly<ArgumentException>(() => AnalysisTestData.CreateRecipe(
+            capabilities:
+            [
+                new RecipeCapability(
+                    AnalysisCapabilities.MediaPropertiesV1,
+                    RecipeCapabilityRequirement.Required,
+                    [AnalysisCapabilities.OcrDocumentV1]),
+                new RecipeCapability(
+                    AnalysisCapabilities.OcrDocumentV1,
+                    RecipeCapabilityRequirement.Required,
+                    [AnalysisCapabilities.MediaPropertiesV1]),
+            ]));
+    }
+
+    [TestMethod]
+    public void GetExecutionOrder_ShouldPlaceDependenciesBeforeConsumers()
+    {
+        CaptureAnalysisRecipe recipe = AnalysisTestData.CreateRecipe(
+            capabilities:
+            [
+                new RecipeCapability(
+                    AnalysisCapabilities.ImageDescriptionV1,
+                    RecipeCapabilityRequirement.Optional,
+                    [AnalysisCapabilities.OcrDocumentV1]),
+                new RecipeCapability(
+                    AnalysisCapabilities.OcrDocumentV1,
+                    RecipeCapabilityRequirement.Required,
+                    [AnalysisCapabilities.MediaPropertiesV1]),
+                new RecipeCapability(
+                    AnalysisCapabilities.MediaPropertiesV1,
+                    RecipeCapabilityRequirement.Required),
+            ]);
+
+        CollectionAssert.AreEqual(
+            new[]
+            {
+                AnalysisCapabilities.MediaPropertiesV1,
+                AnalysisCapabilities.OcrDocumentV1,
+                AnalysisCapabilities.ImageDescriptionV1,
+            },
+            recipe.GetExecutionOrder().Select(capability => capability.Capability).ToArray());
+
+        CaptureAnalysisRecipe withoutDependency = AnalysisTestData.CreateRecipe(
+            2,
+            new RecipeCapability(
+                AnalysisCapabilities.ImageDescriptionV1,
+                RecipeCapabilityRequirement.Optional),
+            new RecipeCapability(
+                AnalysisCapabilities.OcrDocumentV1,
+                RecipeCapabilityRequirement.Required),
+            new RecipeCapability(
+                AnalysisCapabilities.MediaPropertiesV1,
+                RecipeCapabilityRequirement.Required));
+        Assert.IsFalse(recipe.HasSameSemanticsAs(withoutDependency));
+    }
+
+    [TestMethod]
+    public void GetExecutionOrder_ShouldPreserveDeclarationOrderAmongReadyCapabilities()
+    {
+        CaptureAnalysisRecipe recipe = AnalysisTestData.CreateRecipe(
+            capabilities:
+            [
+                new RecipeCapability(
+                    AnalysisCapabilities.ImageDescriptionV1,
+                    RecipeCapabilityRequirement.Optional,
+                    [AnalysisCapabilities.MediaPropertiesV1]),
+                new RecipeCapability(
+                    AnalysisCapabilities.OcrDocumentV1,
+                    RecipeCapabilityRequirement.Required),
+                new RecipeCapability(
+                    AnalysisCapabilities.MediaPropertiesV1,
+                    RecipeCapabilityRequirement.Required),
+            ]);
+
+        CollectionAssert.AreEqual(
+            new[]
+            {
+                AnalysisCapabilities.OcrDocumentV1,
+                AnalysisCapabilities.MediaPropertiesV1,
+                AnalysisCapabilities.ImageDescriptionV1,
+            },
+            recipe.GetExecutionOrder().Select(capability => capability.Capability).ToArray());
+    }
+
+    [TestMethod]
+    public void CaptureMemoryDefaults_ShouldResolveImageAudioAndVideoRecipes()
+    {
+        Assert.IsTrue(CaptureAnalysisRecipeDefaults.TryCreateCaptureMemoryRecipe(
+            CaptureMediaKind.Image,
+            out CaptureAnalysisRecipe? image));
+        Assert.IsTrue(CaptureAnalysisRecipeDefaults.TryCreateCaptureMemoryRecipe(
+            CaptureMediaKind.Audio,
+            out CaptureAnalysisRecipe? audio));
+        Assert.IsTrue(CaptureAnalysisRecipeDefaults.TryCreateCaptureMemoryRecipe(
+            CaptureMediaKind.Video,
+            out CaptureAnalysisRecipe? video));
+
+        Assert.AreEqual(CaptureMediaKind.Image, image!.MediaKind);
+        Assert.AreEqual(CaptureMediaKind.Audio, audio!.MediaKind);
+        Assert.AreEqual(AnalysisCapabilities.SpeechTranscriptV1,
+            audio.Capabilities.Single().Capability);
+        Assert.AreEqual(CaptureMediaKind.Video, video!.MediaKind);
+        Assert.AreEqual(2, video.Version.Value);
+        Assert.AreEqual(AnalysisCapabilities.VideoOcrTrackV1,
+            video.Capabilities.Single(capability =>
+                capability.Requirement == RecipeCapabilityRequirement.Required).Capability);
+        Assert.AreEqual(RecipeCapabilityRequirement.Optional,
+            video.Capabilities.Single(capability =>
+                capability.Capability == AnalysisCapabilities.SpeechTranscriptV1).Requirement);
+        Assert.AreEqual(RecipeCapabilityRequirement.Optional,
+            video.Capabilities.Single(capability =>
+                capability.Capability == AnalysisCapabilities.VideoDescriptionTrackV1).Requirement);
     }
 }

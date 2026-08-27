@@ -1807,8 +1807,8 @@ SOFTWARE.
     <value>Запись с экрана не поддерживается на этом устройстве.</value>
   </data>
   <data name="CaptureMemory_Setup_Title.Text" xml:space="preserve"><value>Находите снимки по их содержимому</value></data>
-  <data name="CaptureMemory_Setup_Body.Text" xml:space="preserve"><value>Capture Tool может использовать уже доступные в приложении модели ИИ для создания закрытых метаданных поиска, которыми управляет приложение. Анализ выполняется только на этом устройстве и начинается лишь после вашего согласия.</value></data>
-  <data name="CaptureMemory_Setup_Disclosure.Text" xml:space="preserve"><value>Создаются свойства медиафайлов, распознанный текст и, если поддерживается, визуальные описания. Анализ можно остановить, а метаданные удалить в параметрах.</value></data>
+  <data name="CaptureMemory_Setup_Body.Text" xml:space="preserve"><value>Capture Tool может использовать модели ИИ на устройстве для создания закрытых метаданных поиска, которыми управляет приложение. Анализ начинается только после вашего согласия. Во время настройки могут быть скачаны некоторые пакеты моделей; содержимое ваших снимков не отправляется.</value></data>
+  <data name="CaptureMemory_Setup_Disclosure.Text" xml:space="preserve"><value>Создаются свойства медиафайлов, распознанный текст, расшифровки речи и, если поддерживается, визуальные описания. Анализ можно остановить, а метаданные удалить в параметрах.</value></data>
   <data name="CaptureMemory_Setup_FutureButton.Content" xml:space="preserve"><value>Анализировать новые снимки</value></data>
   <data name="CaptureMemory_Setup_ExistingButton.Content" xml:space="preserve"><value>Включить существующие снимки</value></data>
   <data name="CaptureMemory_Setup_Preparing.Text" xml:space="preserve"><value>Подготовка моделей ИИ…</value></data>
@@ -1818,7 +1818,7 @@ SOFTWARE.
   <data name="CaptureMemory_Searching.Text" xml:space="preserve"><value>Поиск…</value></data>
   <data name="CaptureMemory_Indexing.Text" xml:space="preserve"><value>Подготовка существующих снимков к поиску…</value></data>
   <data name="CaptureMemory_PartialResults.Message" xml:space="preserve"><value>Это частичные результаты, пока существующие снимки подготавливаются.</value></data>
-  <data name="CaptureMemory_DescriptionUnsupported.Message" xml:space="preserve"><value>Визуальные описания не поддерживаются на этом устройстве. Поиск по имени файла и распознанному тексту по-прежнему доступен.</value></data>
+  <data name="CaptureMemory_LimitedModelCoverage.Message" xml:space="preserve"><value>Некоторые модели ИИ недоступны на этом устройстве. Capture Memory продолжит анализировать поддерживаемые медиафайлы и метаданные.</value></data>
   <data name="CaptureMemory_SourceMissing.Message" xml:space="preserve"><value>Подходящий исходный файл перемещен или недоступен. Можно забыть его историю, которой управляет приложение.</value></data>
   <data name="CaptureMemory_SearchFailed.Message" xml:space="preserve"><value>Сбой поиска Capture Memory.</value></data>
   <data name="CaptureMemory_CorruptProjection.Message" xml:space="preserve"><value>Данные поиска повреждены. Перестройте данные поиска, которыми управляет приложение.</value></data>

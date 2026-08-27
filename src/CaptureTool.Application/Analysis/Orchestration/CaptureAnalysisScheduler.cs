@@ -173,8 +173,11 @@ internal sealed class CaptureAnalysisScheduler : ICaptureAnalysisScheduler
             int enqueued = 0;
             int alreadyExists = 0;
             DateTimeOffset enqueuedAtUtc = GetUtcNow();
-            foreach (RecipeCapability capability in request.Recipe.Capabilities)
+            long executionOrder = 0;
+            foreach (RecipeCapability capability in request.Recipe.GetExecutionOrder())
             {
+                DateTimeOffset capabilityEnqueuedAtUtc = enqueuedAtUtc.AddTicks(executionOrder);
+                executionOrder++;
                 bool hasStaleProducer = HasStaleProducer(
                     existing,
                     capability.Capability,
@@ -185,15 +188,16 @@ internal sealed class CaptureAnalysisScheduler : ICaptureAnalysisScheduler
                 var key = new CaptureAnalysisJobKey(
                     preconditions,
                     capability.Capability,
-                    request.ProcessingBoundary);
+                    request.ProcessingBoundary,
+                    capability.Dependencies);
                 CaptureAnalysisJobEnqueueResult enqueue = await _jobStore
-                    .TryEnqueueAsync(key, enqueuedAtUtc, cancellationToken)
+                    .TryEnqueueAsync(key, capabilityEnqueuedAtUtc, cancellationToken)
                     .ConfigureAwait(false);
                 if (enqueue.Status == CaptureAnalysisJobEnqueueStatus.AlreadyExists &&
                     (request.ForceReanalysis || hasStaleProducer || hasMissingAnalysis))
                 {
                     enqueue = await _jobStore
-                        .TryRequeueAsync(key, enqueuedAtUtc, cancellationToken)
+                        .TryRequeueAsync(key, capabilityEnqueuedAtUtc, cancellationToken)
                         .ConfigureAwait(false);
                 }
 

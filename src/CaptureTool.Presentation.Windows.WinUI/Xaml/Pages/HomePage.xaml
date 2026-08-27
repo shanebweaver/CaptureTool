@@ -384,10 +384,10 @@
                         Message="These are partial results while existing captures are prepared."
                         Severity="Informational" />
                     <InfoBar
-                        x:Uid="CaptureMemory_DescriptionUnsupported"
+                        x:Uid="CaptureMemory_LimitedModelCoverage"
                         IsClosable="False"
-                        IsOpen="{x:Bind ViewModel.CaptureMemory.IsDescriptionUnsupported, Mode=OneWay}"
-                        Message="Visual descriptions are not supported on this device. Filename and recognized-text search are still available."
+                        IsOpen="{x:Bind ViewModel.CaptureMemory.HasLimitedModelCoverage, Mode=OneWay}"
+                        Message="Some AI models are unavailable on this device. Capture Memory will still analyze supported media and metadata."
                         Severity="Informational" />
                     <InfoBar
                         x:Uid="CaptureMemory_SourceMissing"
@@ -483,7 +483,17 @@
                                                     x:Name="CaptureMemoryPreviewImage"
                                                     Opacity="0"
                                                     Stretch="UniformToFill" />
-                                                <SymbolIcon x:Name="CaptureMemoryPreviewFallback" Symbol="Pictures" />
+                                                <Grid x:Name="CaptureMemoryPreviewFallback">
+                                                    <SymbolIcon
+                                                        Symbol="Pictures"
+                                                        Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(IsImage)}" />
+                                                    <SymbolIcon
+                                                        Symbol="Audio"
+                                                        Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(IsAudio)}" />
+                                                    <SymbolIcon
+                                                        Symbol="Video"
+                                                        Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(IsVideo)}" />
+                                                </Grid>
                                                 <Viewbox Stretch="UniformToFill">
                                                     <Canvas Width="{x:Bind RasterWidth}" Height="{x:Bind RasterHeight}">
                                                         <Border
@@ -517,6 +527,11 @@
                                                 Text="{x:Bind Snippet}"
                                                 TextTrimming="CharacterEllipsis"
                                                 TextWrapping="Wrap" />
+                                            <TextBlock
+                                                FontWeight="SemiBold"
+                                                Opacity=".76"
+                                                Text="{x:Bind TimecodeLabel}"
+                                                Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(HasTimecode)}" />
                                             <TextBlock
                                                 x:Uid="CaptureMemory_ResultSourceMissing"
                                                 Text="Source file unavailable"

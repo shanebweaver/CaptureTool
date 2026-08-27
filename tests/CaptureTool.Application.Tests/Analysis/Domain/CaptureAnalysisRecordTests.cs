@@ -108,6 +108,191 @@ public sealed class CaptureAnalysisRecordTests
     }
 
     [TestMethod]
+    public void DependencyProvenance_ShouldRejectMissingInputsAndInvalidateDownstreamResults()
+    {
+        CaptureAnalysisRecipe recipe = AnalysisTestData.CreateRecipe(
+            capabilities:
+            [
+                new RecipeCapability(
+                    AnalysisCapabilities.OcrDocumentV1,
+                    RecipeCapabilityRequirement.Required),
+                new RecipeCapability(
+                    AnalysisCapabilities.ImageDescriptionV1,
+                    RecipeCapabilityRequirement.Optional,
+                    [AnalysisCapabilities.OcrDocumentV1]),
+            ]);
+        CaptureAnalysisRecord record = AnalysisTestData.CreateRecord(recipe: recipe);
+        AnalyzerIdentity analyzer = AnalysisTestData.CreateAnalyzer();
+        AnalysisCommitPreconditions current = AnalysisTestData.CreatePreconditions();
+
+        Assert.AreEqual(CapabilityCommitResult.Committed, Commit(
+            record,
+            CreateOcrPayload("first text"),
+            analyzer));
+        _ = record.TryGetAnalysis(
+            AnalysisCapabilities.OcrDocumentV1.Id,
+            out CapabilityAnalysis? upstream);
+        CapabilityResultReference upstreamReference = upstream!.CanonicalResult!.Reference;
+
+        var description = new ImageDescriptionV1(
+            "A description derived from the extracted text.",
+            ImageDescriptionPurpose.Brief);
+        AnalysisCommitToken descriptionToken = AnalysisTestData.CreateToken(
+            AnalysisCapabilities.ImageDescriptionV1,
+            analyzer,
+            current);
+        Assert.AreEqual(
+            CapabilityCommitResult.Stale,
+            record.TryCommitResult(
+                descriptionToken,
+                current,
+                analyzer.Revision,
+                AnalysisTestData.CreateResult(description, analyzer)));
+        var staleReference = new CapabilityResultReference(
+            CapabilityResultId.New(),
+            upstreamReference.Capability,
+            upstreamReference.AnalyzerRevision,
+            upstreamReference.GeneratedAtUtc);
+        Assert.AreEqual(
+            CapabilityCommitResult.Stale,
+            record.TryCommitResult(
+                descriptionToken,
+                current,
+                analyzer.Revision,
+                AnalysisTestData.CreateResult(
+                    description,
+                    analyzer,
+                    inputs: [staleReference])));
+        CapabilityResultReference extraReference = AnalysisTestData.CreateResult(
+            new MediaPropertiesV1(CaptureMediaKind.Image, new PixelSize(100, 50)),
+            analyzer).Reference;
+        Assert.AreEqual(
+            CapabilityCommitResult.Stale,
+            record.TryCommitResult(
+                descriptionToken,
+                current,
+                analyzer.Revision,
+                AnalysisTestData.CreateResult(
+                    description,
+                    analyzer,
+                    inputs: [upstreamReference, extraReference])));
+        Assert.AreEqual(
+            CapabilityCommitResult.Committed,
+            record.TryCommitResult(
+                descriptionToken,
+                current,
+                analyzer.Revision,
+                AnalysisTestData.CreateResult(
+                    description,
+                    analyzer,
+                    inputs: [upstreamReference])));
+
+        Assert.AreEqual(CapabilityCommitResult.Committed, Commit(
+            record,
+            CreateOcrPayload("replacement text"),
+            analyzer));
+
+        Assert.IsFalse(record.TryGetAnalysis(
+            AnalysisCapabilities.ImageDescriptionV1.Id,
+            out _));
+        Assert.IsTrue(record.TryGetAnalysis(
+            AnalysisCapabilities.OcrDocumentV1.Id,
+            out _));
+    }
+
+    [TestMethod]
+    public void DependencyInvalidation_ShouldCascadeTransitively()
+    {
+        CaptureAnalysisRecipe recipe = AnalysisTestData.CreateRecipe(
+            capabilities:
+            [
+                new RecipeCapability(
+                    AnalysisCapabilities.MediaPropertiesV1,
+                    RecipeCapabilityRequirement.Required),
+                new RecipeCapability(
+                    AnalysisCapabilities.OcrDocumentV1,
+                    RecipeCapabilityRequirement.Required,
+                    [AnalysisCapabilities.MediaPropertiesV1]),
+                new RecipeCapability(
+                    AnalysisCapabilities.ImageDescriptionV1,
+                    RecipeCapabilityRequirement.Optional,
+                    [AnalysisCapabilities.OcrDocumentV1]),
+            ]);
+        CaptureAnalysisRecord record = AnalysisTestData.CreateRecord(recipe: recipe);
+        AnalyzerIdentity analyzer = AnalysisTestData.CreateAnalyzer();
+        AnalysisCommitPreconditions current = AnalysisTestData.CreatePreconditions();
+        AnalysisCommitToken mediaToken = AnalysisTestData.CreateToken(
+            AnalysisCapabilities.MediaPropertiesV1,
+            analyzer,
+            current);
+        var media = new MediaPropertiesV1(
+            CaptureMediaKind.Image,
+            new PixelSize(100, 50));
+        Assert.AreEqual(CapabilityCommitResult.Committed, record.TryCommitResult(
+            mediaToken,
+            current,
+            analyzer.Revision,
+            AnalysisTestData.CreateResult(media, analyzer)));
+        _ = record.TryGetAnalysis(
+            AnalysisCapabilities.MediaPropertiesV1.Id,
+            out CapabilityAnalysis? mediaAnalysis);
+
+        AnalysisCommitToken ocrToken = AnalysisTestData.CreateToken(
+            AnalysisCapabilities.OcrDocumentV1,
+            analyzer,
+            current);
+        Assert.AreEqual(CapabilityCommitResult.Committed, record.TryCommitResult(
+            ocrToken,
+            current,
+            analyzer.Revision,
+            AnalysisTestData.CreateResult(
+                CreateOcrPayload("derived OCR"),
+                analyzer,
+                inputs: [mediaAnalysis!.CanonicalResult!.Reference])));
+        _ = record.TryGetAnalysis(
+            AnalysisCapabilities.OcrDocumentV1.Id,
+            out CapabilityAnalysis? ocrAnalysis);
+
+        AnalysisCommitToken descriptionToken = AnalysisTestData.CreateToken(
+            AnalysisCapabilities.ImageDescriptionV1,
+            analyzer,
+            current);
+        var description = new ImageDescriptionV1(
+            "A transitive derived result.",
+            ImageDescriptionPurpose.Brief);
+        Assert.AreEqual(CapabilityCommitResult.Committed, record.TryCommitResult(
+            descriptionToken,
+            current,
+            analyzer.Revision,
+            AnalysisTestData.CreateResult(
+                description,
+                analyzer,
+                inputs: [ocrAnalysis!.CanonicalResult!.Reference])));
+
+        var replacement = new MediaPropertiesV1(
+            CaptureMediaKind.Image,
+            new PixelSize(200, 100));
+        Assert.AreEqual(CapabilityCommitResult.Committed, record.TryCommitResult(
+            mediaToken,
+            current,
+            analyzer.Revision,
+            AnalysisTestData.CreateResult(
+                replacement,
+                analyzer,
+                generatedAtUtc: AnalysisTestData.GeneratedAtUtc.AddSeconds(1))));
+
+        Assert.IsTrue(record.TryGetAnalysis(
+            AnalysisCapabilities.MediaPropertiesV1.Id,
+            out _));
+        Assert.IsFalse(record.TryGetAnalysis(
+            AnalysisCapabilities.OcrDocumentV1.Id,
+            out _));
+        Assert.IsFalse(record.TryGetAnalysis(
+            AnalysisCapabilities.ImageDescriptionV1.Id,
+            out _));
+    }
+
+    [TestMethod]
     public void RegisterSourceRevision_ShouldRebaseStampOnlyChangeWithoutInvalidatingResults()
     {
         CaptureAnalysisRecord record = AnalysisTestData.CreateRecord();
@@ -584,6 +769,109 @@ public sealed class CaptureAnalysisRecordTests
             [default(AnalyzerRevision)]));
         Assert.ThrowsExactly<ArgumentException>(() => record.InvalidateCapability(
             default(AnalysisCapabilityId)));
+    }
+
+    [TestMethod]
+    public void CaptureRecord_ShouldAllowTranscriptsForTemporalMediaAndRejectThemForImages()
+    {
+        SourceRevision source = AnalysisTestData.CreateSource();
+        AnalyzerIdentity analyzer = AnalysisTestData.CreateAnalyzer();
+        var payload = new SpeechTranscriptV1("A short transcript.");
+        var analysis = new CapabilityAnalysis(
+            AnalysisCapabilities.SpeechTranscriptV1,
+            AnalysisTestData.CreateResult(payload, analyzer, source),
+            latestOutcome: null);
+
+        CaptureAnalysisRecord CreateTemporalRecord(CaptureMediaKind mediaKind) => new(
+            AnalysisTestData.CaptureId,
+            mediaKind,
+            AnalysisTestData.CapturedAtUtc,
+            source,
+            new CaptureAnalysisRecipe(
+                new AnalysisRecipeId($"capture-memory-{mediaKind.ToString().ToLowerInvariant()}"),
+                new AnalysisRecipeVersion(1),
+                mediaKind,
+                [new RecipeCapability(
+                    AnalysisCapabilities.SpeechTranscriptV1,
+                    RecipeCapabilityRequirement.Required)]),
+            [analysis]);
+
+        CaptureAnalysisRecord audio = CreateTemporalRecord(CaptureMediaKind.Audio);
+        CaptureAnalysisRecord video = CreateTemporalRecord(CaptureMediaKind.Video);
+
+        Assert.AreEqual(CaptureMediaKind.Audio, audio.MediaKind);
+        Assert.AreEqual(CaptureMediaKind.Video, video.MediaKind);
+        Assert.ThrowsExactly<ArgumentException>(() =>
+            _ = CreateTemporalRecord(CaptureMediaKind.Image));
+    }
+
+    [TestMethod]
+    public void CaptureRecord_ShouldAllowVideoOcrTrackOnlyForVideo()
+    {
+        SourceRevision source = AnalysisTestData.CreateSource();
+        AnalyzerIdentity analyzer = AnalysisTestData.CreateAnalyzer();
+        var payload = new VideoOcrTrackV1(
+            "video text",
+            [new VideoOcrObservationV1(
+                "video text",
+                TimeSpan.Zero,
+                TimeSpan.FromSeconds(1))]);
+        var analysis = new CapabilityAnalysis(
+            AnalysisCapabilities.VideoOcrTrackV1,
+            AnalysisTestData.CreateResult(payload, analyzer, source),
+            latestOutcome: null);
+
+        CaptureAnalysisRecord CreateRecord(CaptureMediaKind mediaKind) => new(
+            AnalysisTestData.CaptureId,
+            mediaKind,
+            AnalysisTestData.CapturedAtUtc,
+            source,
+            new CaptureAnalysisRecipe(
+                new AnalysisRecipeId("video-ocr-test"),
+                new AnalysisRecipeVersion(1),
+                mediaKind,
+                [new RecipeCapability(
+                    AnalysisCapabilities.VideoOcrTrackV1,
+                    RecipeCapabilityRequirement.Required)]),
+            [analysis]);
+
+        Assert.AreEqual(CaptureMediaKind.Video, CreateRecord(CaptureMediaKind.Video).MediaKind);
+        Assert.ThrowsExactly<ArgumentException>(() => _ = CreateRecord(CaptureMediaKind.Image));
+    }
+
+    [TestMethod]
+    public void CaptureRecord_ShouldAllowVideoDescriptionTrackOnlyForVideo()
+    {
+        SourceRevision source = AnalysisTestData.CreateSource();
+        AnalyzerIdentity analyzer = AnalysisTestData.CreateAnalyzer();
+        var payload = new VideoDescriptionTrackV1(
+            "A settings window is visible.",
+            [new VideoDescriptionObservationV1(
+                "A settings window is visible.",
+                TimeSpan.Zero,
+                TimeSpan.FromSeconds(15))]);
+        var analysis = new CapabilityAnalysis(
+            AnalysisCapabilities.VideoDescriptionTrackV1,
+            AnalysisTestData.CreateResult(payload, analyzer, source),
+            latestOutcome: null);
+
+        CaptureAnalysisRecord CreateRecord(CaptureMediaKind mediaKind) => new(
+            AnalysisTestData.CaptureId,
+            mediaKind,
+            AnalysisTestData.CapturedAtUtc,
+            source,
+            new CaptureAnalysisRecipe(
+                new AnalysisRecipeId("video-description-test"),
+                new AnalysisRecipeVersion(1),
+                mediaKind,
+                [new RecipeCapability(
+                    AnalysisCapabilities.VideoDescriptionTrackV1,
+                    RecipeCapabilityRequirement.Optional)]),
+            [analysis]);
+
+        Assert.AreEqual(CaptureMediaKind.Video, CreateRecord(CaptureMediaKind.Video).MediaKind);
+        Assert.ThrowsExactly<ArgumentException>(() => _ = CreateRecord(CaptureMediaKind.Image));
+        Assert.ThrowsExactly<ArgumentException>(() => _ = CreateRecord(CaptureMediaKind.Audio));
     }
 
     private static CapabilityCommitResult Commit(

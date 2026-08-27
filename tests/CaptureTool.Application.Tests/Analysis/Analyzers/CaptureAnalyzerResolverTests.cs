@@ -155,6 +155,199 @@ public sealed class CaptureAnalyzerResolverTests
         Assert.AreEqual(1, fallback.AvailabilityProbeCount);
     }
 
+    [TestMethod]
+    public async Task Resolve_WhenPreferredProviderNeedsPreparation_ShouldNotSilentlyUseFallback()
+    {
+        FakeAnalyzer preferred = CreateAnalyzer("preferred", qualityTier: 10);
+        preferred.Availability = CaptureAnalyzerAvailability.PreparationRequired;
+        FakeAnalyzer fallback = CreateAnalyzer("fallback", qualityTier: 5);
+        var resolver = new CaptureAnalyzerResolver(
+            new CaptureAnalyzerCatalog([preferred, fallback]),
+            new TestFeatureAvailability(),
+            CreatePreference());
+        AnalysisPurpose purpose = new("capture-memory-search", 1);
+
+        CaptureAnalyzerResolution resolution = await resolver.ResolveAsync(
+            new CaptureAnalyzerResolutionRequest(
+                AnalysisCapabilities.MediaPropertiesV1,
+                CaptureMediaKind.Image,
+                sourceLength: 1,
+                purpose,
+                AnalysisProcessingPolicy.LocalOnly(purpose),
+                resolutionPolicyRevision: 1));
+
+        Assert.AreEqual(CaptureAnalyzerResolutionStatus.WaitingForPreparation, resolution.Status);
+        Assert.IsNull(resolution.Analyzer);
+        Assert.AreEqual(1, preferred.AvailabilityProbeCount);
+        Assert.AreEqual(0, fallback.AvailabilityProbeCount);
+        Assert.AreEqual(
+            CaptureAnalyzerEligibilityStatus.PreparationRequired,
+            resolution.Candidates[0].Eligibility);
+        Assert.HasCount(1, resolution.Candidates);
+    }
+
+    [TestMethod]
+    public async Task Resolve_ForBackgroundExecution_ShouldUseReadyFallbackWhilePreferredNeedsPreparation()
+    {
+        FakeAnalyzer preferred = CreateAnalyzer("preferred", qualityTier: 10);
+        preferred.Availability = CaptureAnalyzerAvailability.PreparationRequired;
+        FakeAnalyzer fallback = CreateAnalyzer("fallback", qualityTier: 5);
+        var resolver = new CaptureAnalyzerResolver(
+            new CaptureAnalyzerCatalog([preferred, fallback]),
+            new TestFeatureAvailability(),
+            CreatePreference());
+        AnalysisPurpose purpose = new("capture-memory-search", 1);
+
+        CaptureAnalyzerResolution resolution = await resolver.ResolveAsync(
+            new CaptureAnalyzerResolutionRequest(
+                AnalysisCapabilities.MediaPropertiesV1,
+                CaptureMediaKind.Image,
+                sourceLength: 1,
+                purpose,
+                AnalysisProcessingPolicy.LocalOnly(purpose),
+                resolutionPolicyRevision: 1,
+                allowReadyFallbackWhenPreparationRequired: true));
+
+        Assert.AreEqual(CaptureAnalyzerResolutionStatus.Resolved, resolution.Status);
+        Assert.AreSame(fallback, resolution.Analyzer);
+        Assert.AreEqual(1, preferred.AvailabilityProbeCount);
+        Assert.AreEqual(1, fallback.AvailabilityProbeCount);
+        Assert.AreEqual(
+            CaptureAnalyzerEligibilityStatus.PreparationRequired,
+            resolution.Candidates[0].Eligibility);
+        Assert.AreEqual(CaptureAnalyzerEligibilityStatus.Eligible, resolution.Candidates[1].Eligibility);
+    }
+
+    [TestMethod]
+    public async Task Resolve_WhenPreferredProviderIsUnsupported_ShouldUseAvailableFallback()
+    {
+        FakeAnalyzer preferred = CreateAnalyzer("preferred", qualityTier: 10);
+        preferred.Availability = CaptureAnalyzerAvailability.Unsupported(new AnalysisFailure(
+            AnalysisFailureCode.CapabilityUnavailable,
+            AnalysisFailureDisposition.Terminal));
+        FakeAnalyzer fallback = CreateAnalyzer("fallback", qualityTier: 5);
+        var resolver = new CaptureAnalyzerResolver(
+            new CaptureAnalyzerCatalog([preferred, fallback]),
+            new TestFeatureAvailability(),
+            CreatePreference());
+        AnalysisPurpose purpose = new("capture-memory-search", 1);
+
+        CaptureAnalyzerResolution resolution = await resolver.ResolveAsync(
+            new CaptureAnalyzerResolutionRequest(
+                AnalysisCapabilities.MediaPropertiesV1,
+                CaptureMediaKind.Image,
+                sourceLength: 1,
+                purpose,
+                AnalysisProcessingPolicy.LocalOnly(purpose),
+                resolutionPolicyRevision: 1));
+
+        Assert.AreEqual(CaptureAnalyzerResolutionStatus.Resolved, resolution.Status);
+        Assert.AreSame(fallback, resolution.Analyzer);
+        Assert.AreEqual(1, preferred.AvailabilityProbeCount);
+        Assert.AreEqual(1, fallback.AvailabilityProbeCount);
+    }
+
+    [TestMethod]
+    public async Task Resolve_WhenDeveloperPrefersAnalyzer_ShouldTryItBeforeHigherQualityCandidate()
+    {
+        FakeAnalyzer preferred = CreateAnalyzer("preferred", qualityTier: 1);
+        FakeAnalyzer higherQuality = CreateAnalyzer("higher-quality", qualityTier: 100);
+        var selection = new TestAnalyzerSelectionService(
+            new CaptureAnalyzerSelection(
+                AnalysisCapabilities.MediaPropertiesV1,
+                CaptureAnalyzerSelectionMode.Prefer,
+                new CaptureAnalyzerSelectionTarget("windows", "preferred")));
+        var resolver = new CaptureAnalyzerResolver(
+            new CaptureAnalyzerCatalog([higherQuality, preferred]),
+            new TestFeatureAvailability(),
+            CreatePreference(),
+            selection);
+        AnalysisPurpose purpose = new("capture-memory-search", 1);
+
+        CaptureAnalyzerResolution resolution = await resolver.ResolveAsync(
+            new CaptureAnalyzerResolutionRequest(
+                AnalysisCapabilities.MediaPropertiesV1,
+                CaptureMediaKind.Image,
+                sourceLength: 500,
+                purpose,
+                AnalysisProcessingPolicy.LocalOnly(purpose),
+                resolutionPolicyRevision: 1));
+
+        Assert.AreEqual(CaptureAnalyzerResolutionStatus.Resolved, resolution.Status);
+        Assert.AreSame(preferred, resolution.Analyzer);
+        Assert.AreEqual(1, preferred.AvailabilityProbeCount);
+        Assert.AreEqual(0, higherQuality.AvailabilityProbeCount);
+    }
+
+    [TestMethod]
+    public async Task Resolve_WhenDeveloperForcesAnalyzer_ShouldNotUseFallback()
+    {
+        FakeAnalyzer forced = CreateAnalyzer("forced", qualityTier: 1);
+        forced.Availability = CaptureAnalyzerAvailability.Unsupported(new AnalysisFailure(
+            AnalysisFailureCode.CapabilityUnavailable,
+            AnalysisFailureDisposition.Terminal));
+        FakeAnalyzer fallback = CreateAnalyzer("fallback", qualityTier: 100);
+        var selection = new TestAnalyzerSelectionService(
+            new CaptureAnalyzerSelection(
+                AnalysisCapabilities.MediaPropertiesV1,
+                CaptureAnalyzerSelectionMode.Force,
+                new CaptureAnalyzerSelectionTarget("windows", "forced")));
+        var resolver = new CaptureAnalyzerResolver(
+            new CaptureAnalyzerCatalog([fallback, forced]),
+            new TestFeatureAvailability(),
+            CreatePreference(),
+            selection);
+        AnalysisPurpose purpose = new("capture-memory-search", 1);
+
+        CaptureAnalyzerResolution resolution = await resolver.ResolveAsync(
+            new CaptureAnalyzerResolutionRequest(
+                AnalysisCapabilities.MediaPropertiesV1,
+                CaptureMediaKind.Image,
+                sourceLength: 500,
+                purpose,
+                AnalysisProcessingPolicy.LocalOnly(purpose),
+                resolutionPolicyRevision: 1));
+
+        Assert.AreEqual(CaptureAnalyzerResolutionStatus.NoEligibleAnalyzer, resolution.Status);
+        Assert.AreEqual(1, forced.AvailabilityProbeCount);
+        Assert.AreEqual(0, fallback.AvailabilityProbeCount);
+        Assert.AreEqual(
+            CaptureAnalyzerEligibilityStatus.AnalyzerFeatureDisabled,
+            resolution.Candidates.Single(candidate =>
+                candidate.Descriptor.Identity.AnalyzerId == "fallback").Eligibility);
+    }
+
+    [TestMethod]
+    public async Task Resolve_WhenDeveloperTurnsCapabilityOff_ShouldNotProbeCandidates()
+    {
+        FakeAnalyzer analyzer = CreateAnalyzer("disabled", qualityTier: 1);
+        var selection = new TestAnalyzerSelectionService(
+            new CaptureAnalyzerSelection(
+                AnalysisCapabilities.MediaPropertiesV1,
+                CaptureAnalyzerSelectionMode.Off));
+        var resolver = new CaptureAnalyzerResolver(
+            new CaptureAnalyzerCatalog([analyzer]),
+            new TestFeatureAvailability(),
+            CreatePreference(),
+            selection);
+        AnalysisPurpose purpose = new("capture-memory-search", 1);
+
+        CaptureAnalyzerResolution resolution = await resolver.ResolveAsync(
+            new CaptureAnalyzerResolutionRequest(
+                AnalysisCapabilities.MediaPropertiesV1,
+                CaptureMediaKind.Image,
+                sourceLength: 500,
+                purpose,
+                AnalysisProcessingPolicy.LocalOnly(purpose),
+                resolutionPolicyRevision: 1));
+
+        Assert.AreEqual(CaptureAnalyzerResolutionStatus.NoEligibleAnalyzer, resolution.Status);
+        Assert.AreEqual(0, analyzer.AvailabilityProbeCount);
+        Assert.AreEqual(
+            CaptureAnalyzerEligibilityStatus.AnalyzerFeatureDisabled,
+            resolution.Candidates.Single().Eligibility);
+    }
+
     private static FakeAnalyzer CreateAnalyzer(
         string id,
         int qualityTier,
@@ -202,6 +395,9 @@ public sealed class CaptureAnalyzerResolverTests
 
         public bool ThrowOnAvailability { get; set; }
 
+        public CaptureAnalyzerAvailability Availability { get; set; } =
+            CaptureAnalyzerAvailability.Available;
+
         public ValueTask<CaptureAnalyzerAvailability> GetAvailabilityAsync(
             CaptureAnalyzerAvailabilityRequest request,
             CancellationToken cancellationToken = default)
@@ -212,7 +408,7 @@ public sealed class CaptureAnalyzerResolverTests
                 throw new InvalidOperationException("Provider probe failed.");
             }
 
-            return ValueTask.FromResult(CaptureAnalyzerAvailability.Available);
+            return ValueTask.FromResult(Availability);
         }
 
         public Task<CaptureAnalyzerOutput> AnalyzeAsync(
@@ -221,6 +417,44 @@ public sealed class CaptureAnalyzerResolverTests
         {
             throw new NotSupportedException();
         }
+    }
+
+    private sealed class TestAnalyzerSelectionService(CaptureAnalyzerSelection selection) :
+        ICaptureAnalyzerSelectionService
+    {
+        public long Revision => 1;
+
+        public CaptureAnalyzerSelection GetSelection(CapabilityDefinition capability) =>
+            capability == selection.Capability
+                ? selection
+                : CaptureAnalyzerSelection.Automatic(capability);
+
+        public int GetPreference(CaptureAnalyzerDescriptor descriptor) =>
+            (selection.Mode is CaptureAnalyzerSelectionMode.Prefer or
+                CaptureAnalyzerSelectionMode.Force) &&
+            Matches(descriptor.Identity)
+                ? 10_000
+                : 0;
+
+        public bool IsAllowed(CaptureAnalyzerDescriptor descriptor) => selection.Mode switch
+        {
+            CaptureAnalyzerSelectionMode.Off when descriptor.Capability == selection.Capability => false,
+            CaptureAnalyzerSelectionMode.Force when descriptor.Capability == selection.Capability =>
+                Matches(descriptor.Identity),
+            _ => true,
+        };
+
+        public bool? GetFeatureEnabledOverride(AnalyzerIdentity analyzer) => null;
+
+        public ValueTask<CaptureAnalyzerSelectionSaveResult> SaveAsync(
+            IEnumerable<CaptureAnalyzerSelection> selections,
+            CancellationToken cancellationToken = default) =>
+            ValueTask.FromResult(new CaptureAnalyzerSelectionSaveResult(
+                CaptureAnalyzerSelectionSaveStatus.Unavailable));
+
+        private bool Matches(AnalyzerIdentity identity) =>
+            string.Equals(selection.Target?.ProviderId, identity.ProviderId, StringComparison.Ordinal) &&
+            string.Equals(selection.Target?.AnalyzerId, identity.AnalyzerId, StringComparison.Ordinal);
     }
 
     private sealed class TestFeatureAvailability : ICaptureAnalysisFeatureAvailability

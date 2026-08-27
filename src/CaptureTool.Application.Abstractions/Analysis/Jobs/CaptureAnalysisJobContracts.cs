@@ -27,10 +27,13 @@ public readonly record struct CaptureAnalysisJobLeaseToken
 
 public sealed record CaptureAnalysisJobKey
 {
+    private readonly IReadOnlyList<CapabilityDefinition> _dependencies;
+
     public CaptureAnalysisJobKey(
         AnalysisCommitPreconditions preconditions,
         CapabilityDefinition capability,
-        ProcessingBoundary authorizedProcessingBoundary)
+        ProcessingBoundary authorizedProcessingBoundary,
+        IEnumerable<CapabilityDefinition>? dependencies = null)
     {
         if (preconditions.CaptureId.IsEmpty)
         {
@@ -48,9 +51,22 @@ public sealed record CaptureAnalysisJobKey
             throw new ArgumentOutOfRangeException(nameof(authorizedProcessingBoundary));
         }
 
+        CapabilityDefinition[] copiedDependencies = [.. dependencies ?? []];
+        if (copiedDependencies.Any(dependency =>
+                dependency.Id.IsEmpty || dependency.Id == capability.Id) ||
+            copiedDependencies.GroupBy(dependency => dependency.Id).Any(group => group.Count() > 1))
+        {
+            throw new ArgumentException(
+                "A job cannot contain empty, self-referencing, or duplicate dependencies.",
+                nameof(dependencies));
+        }
+
         Preconditions = preconditions;
         Capability = capability;
         AuthorizedProcessingBoundary = authorizedProcessingBoundary;
+        _dependencies = Array.AsReadOnly(copiedDependencies
+            .OrderBy(dependency => dependency.Id.Value, StringComparer.Ordinal)
+            .ToArray());
     }
 
     public AnalysisCommitPreconditions Preconditions { get; }
@@ -59,9 +75,34 @@ public sealed record CaptureAnalysisJobKey
 
     public ProcessingBoundary AuthorizedProcessingBoundary { get; }
 
+    public IReadOnlyList<CapabilityDefinition> Dependencies => _dependencies;
+
     public CaptureId CaptureId => Preconditions.CaptureId;
 
     public SourceRevision SourceRevision => Preconditions.SourceRevision;
+
+    public bool Equals(CaptureAnalysisJobKey? other)
+    {
+        return other != null &&
+            Preconditions == other.Preconditions &&
+            Capability == other.Capability &&
+            AuthorizedProcessingBoundary == other.AuthorizedProcessingBoundary &&
+            Dependencies.SequenceEqual(other.Dependencies);
+    }
+
+    public override int GetHashCode()
+    {
+        var hash = new HashCode();
+        hash.Add(Preconditions);
+        hash.Add(Capability);
+        hash.Add(AuthorizedProcessingBoundary);
+        foreach (CapabilityDefinition dependency in Dependencies)
+        {
+            hash.Add(dependency);
+        }
+
+        return hash.ToHashCode();
+    }
 }
 
 public enum CaptureAnalysisJobState
@@ -251,8 +292,17 @@ public sealed record CaptureAnalysisJobIntent
         }
 
         CaptureAnalyzerAttempt? latestAttempt = copiedAttempts.LastOrDefault();
+        // Readiness and dependency notifications make a waiting job runnable without invoking an
+        // analyzer. Their reserved retry marker therefore has no corresponding provider attempt.
+        bool isCapabilityResume = state == CaptureAnalysisJobState.RetryScheduled &&
+            latestFailure is
+            {
+                Code: AnalysisFailureCode.CapabilityUnavailable,
+                Disposition: AnalysisFailureDisposition.Transient,
+            };
         if (latestAttempt != null &&
             ((state == CaptureAnalysisJobState.RetryScheduled &&
+              !isCapabilityResume &&
               (latestAttempt.Status != CaptureAnalyzerAttemptStatus.TransientFailure ||
                latestAttempt.Failure != latestFailure)) ||
              (state == CaptureAnalysisJobState.TerminalFailure &&
@@ -464,6 +514,12 @@ public interface ICaptureAnalysisJobStore
     ValueTask<int> ResumeWaitingForCapabilityAsync(
         CapabilityDefinition capability,
         ProcessingBoundary processingBoundary,
+        DateTimeOffset dueAtUtc,
+        CancellationToken cancellationToken = default);
+
+    ValueTask<int> ResumeWaitingForDependencyAsync(
+        CaptureId captureId,
+        CapabilityDefinition dependency,
         DateTimeOffset dueAtUtc,
         CancellationToken cancellationToken = default);
 

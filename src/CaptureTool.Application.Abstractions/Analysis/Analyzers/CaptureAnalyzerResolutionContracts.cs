@@ -13,7 +13,8 @@ public sealed record CaptureAnalyzerResolutionRequest
         AnalysisPurpose purpose,
         AnalysisProcessingPolicy processingPolicy,
         long resolutionPolicyRevision,
-        IEnumerable<AnalyzerRevision>? attemptedAnalyzers = null)
+        IEnumerable<AnalyzerRevision>? attemptedAnalyzers = null,
+        bool allowReadyFallbackWhenPreparationRequired = false)
     {
         if (capability.Id.IsEmpty)
         {
@@ -58,6 +59,7 @@ public sealed record CaptureAnalyzerResolutionRequest
         Purpose = purpose;
         ProcessingPolicy = processingPolicy;
         ResolutionPolicyRevision = resolutionPolicyRevision;
+        AllowReadyFallbackWhenPreparationRequired = allowReadyFallbackWhenPreparationRequired;
         _attemptedAnalyzers = Array.AsReadOnly(attempted);
     }
 
@@ -72,6 +74,8 @@ public sealed record CaptureAnalyzerResolutionRequest
     public AnalysisProcessingPolicy ProcessingPolicy { get; }
 
     public long ResolutionPolicyRevision { get; }
+
+    public bool AllowReadyFallbackWhenPreparationRequired { get; }
 
     public IReadOnlyList<AnalyzerRevision> AttemptedAnalyzers => _attemptedAnalyzers;
 }

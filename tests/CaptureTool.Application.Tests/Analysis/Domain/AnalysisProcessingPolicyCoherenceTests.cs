@@ -63,7 +63,9 @@ public sealed class AnalysisProcessingPolicyCoherenceTests
     [TestMethod]
     public void EquivalentPolicies_ShouldRequireExactPurposeBoundaryAndProviderSet()
     {
-        AnalysisPurpose changedPurpose = new(AnalysisTestData.Purpose.Id, 2);
+        AnalysisPurpose changedPurpose = new(
+            AnalysisTestData.Purpose.Id,
+            AnalysisTestData.Purpose.Version + 1);
         var local = AnalysisProcessingPolicy.LocalOnly(AnalysisTestData.Purpose);
         var changedPurposePolicy = AnalysisProcessingPolicy.LocalOnly(changedPurpose);
         var remote = new AnalysisProcessingPolicy(

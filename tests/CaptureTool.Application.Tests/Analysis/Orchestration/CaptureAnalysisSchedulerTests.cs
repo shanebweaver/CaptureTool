@@ -100,6 +100,9 @@ public sealed class CaptureAnalysisSchedulerTests
         Assert.AreEqual(CaptureAnalysisScheduleStatus.Scheduled, result.Status);
         Assert.AreEqual(2, result.DurableIntentCount);
         Assert.HasCount(2, jobs.Keys);
+        Assert.HasCount(2, jobs.EnqueuedAtUtc);
+        Assert.AreEqual(CapturedAtUtc.AddMinutes(1), jobs.EnqueuedAtUtc[0]);
+        Assert.AreEqual(CapturedAtUtc.AddMinutes(1).AddTicks(1), jobs.EnqueuedAtUtc[1]);
         Assert.IsTrue(wake.WasCalledAfterAllIntents);
         Assert.AreEqual(1, sourceVerifier.OpenCount);
     }
@@ -366,6 +369,8 @@ public sealed class CaptureAnalysisSchedulerTests
     {
         public List<CaptureAnalysisJobKey> Keys { get; } = [];
 
+        public List<DateTimeOffset> EnqueuedAtUtc { get; } = [];
+
         public CaptureAnalysisJobEnqueueStatus EnqueueStatus { get; set; } =
             CaptureAnalysisJobEnqueueStatus.Enqueued;
 
@@ -377,6 +382,7 @@ public sealed class CaptureAnalysisSchedulerTests
             CancellationToken cancellationToken = default)
         {
             Keys.Add(key);
+            EnqueuedAtUtc.Add(enqueuedAtUtc);
             return ValueTask.FromResult(new CaptureAnalysisJobEnqueueResult(
                 EnqueueStatus,
                 new CaptureAnalysisJobIntent(
@@ -421,6 +427,7 @@ public sealed class CaptureAnalysisSchedulerTests
         public ValueTask<CaptureAnalysisJobMutationResult> TryCompleteAsync(CaptureAnalysisJobLeaseToken leaseToken, CancellationToken cancellationToken = default) => throw new NotSupportedException();
         public ValueTask<CaptureAnalysisJobMutationResult> TryFailTerminalAsync(CaptureAnalysisJobLeaseToken leaseToken, AnalysisFailure failure, CancellationToken cancellationToken = default) => throw new NotSupportedException();
         public ValueTask<int> ResumeWaitingForCapabilityAsync(CapabilityDefinition capability, ProcessingBoundary processingBoundary, DateTimeOffset dueAtUtc, CancellationToken cancellationToken = default) => throw new NotSupportedException();
+        public ValueTask<int> ResumeWaitingForDependencyAsync(CaptureId captureId, CapabilityDefinition dependency, DateTimeOffset dueAtUtc, CancellationToken cancellationToken = default) => throw new NotSupportedException();
         public ValueTask<CaptureAnalysisJobMutationResult> TryCancelAsync(CaptureAnalysisJobKey key, CancellationToken cancellationToken = default) => throw new NotSupportedException();
         public ValueTask<int> CancelCaptureAsync(CaptureId captureId, long minimumTombstoneGeneration, CancellationToken cancellationToken = default) => throw new NotSupportedException();
         public ValueTask<int> CancelBeforeControlGenerationAsync(long controlGeneration, CancellationToken cancellationToken = default) => throw new NotSupportedException();

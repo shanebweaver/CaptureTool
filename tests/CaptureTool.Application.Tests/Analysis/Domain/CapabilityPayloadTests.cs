@@ -229,4 +229,198 @@ public sealed class CapabilityPayloadTests
             "Description",
             ImageDescriptionPurpose.Unknown));
     }
+
+    [TestMethod]
+    public void SpeechTranscriptV1_ShouldNormalizeTextAndPreserveOptionalTimedSegments()
+    {
+        var segments = new List<SpeechTranscriptSegmentV1>
+        {
+            new(
+                "  discuss the launch plan  ",
+                TimeSpan.FromSeconds(12),
+                TimeSpan.FromSeconds(15),
+                "Speaker 1",
+                .8),
+        };
+
+        var payload = new SpeechTranscriptV1(
+            "  discuss the launch plan\r\nnext step  ",
+            segments,
+            "en-US");
+        segments.Clear();
+
+        Assert.AreEqual(AnalysisCapabilities.SpeechTranscriptV1, payload.Definition);
+        Assert.AreEqual(CapabilityResultClassification.MachineExtracted, payload.Definition.Classification);
+        Assert.AreEqual("discuss the launch plan\nnext step", payload.FullText);
+        Assert.HasCount(1, payload.Segments);
+        Assert.AreEqual(TimeSpan.FromSeconds(12), payload.Segments[0].StartTime);
+        Assert.AreEqual("Speaker 1", payload.Segments[0].SpeakerLabel);
+        Assert.IsTrue(payload.IsEquivalentTo(new SpeechTranscriptV1(
+            payload.FullText,
+            payload.Segments,
+            "en-US")));
+    }
+
+    [TestMethod]
+    public void SpeechTranscriptV1_ShouldRejectInvalidTimingConfidenceAndBounds()
+    {
+        Assert.ThrowsExactly<ArgumentException>(() => new SpeechTranscriptSegmentV1(" "));
+        Assert.ThrowsExactly<ArgumentException>(() => new SpeechTranscriptSegmentV1(
+            "text",
+            TimeSpan.FromSeconds(2),
+            TimeSpan.FromSeconds(1)));
+        Assert.ThrowsExactly<ArgumentException>(() => new SpeechTranscriptSegmentV1(
+            "text",
+            TimeSpan.Zero,
+            endTime: null));
+        Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => new SpeechTranscriptSegmentV1(
+            "text",
+            confidence: 1.1));
+        Assert.ThrowsExactly<ArgumentException>(() => new SpeechTranscriptSegmentV1(
+            new string('x', SpeechTranscriptSegmentV1.MaximumTextLength + 1)));
+        Assert.ThrowsExactly<ArgumentException>(() => new SpeechTranscriptV1(
+            new string('x', SpeechTranscriptV1.MaximumFullTextLength + 1)));
+        var segment = new SpeechTranscriptSegmentV1("text");
+        Assert.ThrowsExactly<ArgumentException>(() => new SpeechTranscriptV1(
+            string.Empty,
+            Enumerable.Repeat(segment, SpeechTranscriptV1.MaximumSegmentCount + 1)));
+        Assert.ThrowsExactly<ArgumentException>(() => new SpeechTranscriptV1(
+            string.Empty,
+            [null!]));
+    }
+
+    [TestMethod]
+    public void VideoOcrTrackV1_ShouldNormalizeAndPreserveChronologicalObservations()
+    {
+        var observations = new List<VideoOcrObservationV1>
+        {
+            new("  Project cafe\u0301\r\nstatus  ", TimeSpan.Zero, TimeSpan.FromSeconds(2)),
+            new("Next screen", TimeSpan.FromSeconds(2), TimeSpan.FromSeconds(3)),
+        };
+
+        var payload = new VideoOcrTrackV1(
+            "  Project cafe\u0301 status\r\nNext screen  ",
+            observations);
+        observations.Clear();
+
+        Assert.AreEqual(AnalysisCapabilities.VideoOcrTrackV1, payload.Definition);
+        Assert.AreEqual(CapabilityResultClassification.MachineExtracted,
+            payload.Definition.Classification);
+        Assert.AreEqual("Project caf\u00e9 status\nNext screen", payload.FullText);
+        Assert.HasCount(2, payload.Observations);
+        Assert.AreEqual("Project caf\u00e9\nstatus", payload.Observations[0].Text);
+        Assert.AreEqual(TimeSpan.FromSeconds(2), payload.Observations[0].EndTime);
+        Assert.IsTrue(payload.IsEquivalentTo(new VideoOcrTrackV1(
+            payload.FullText,
+            payload.Observations)));
+    }
+
+    [TestMethod]
+    public void VideoOcrTrackV1_ShouldRejectInvalidTextTimingOrderingAndBounds()
+    {
+        Assert.ThrowsExactly<ArgumentException>(() => new VideoOcrObservationV1(
+            " ",
+            TimeSpan.Zero,
+            TimeSpan.FromSeconds(1)));
+        Assert.ThrowsExactly<ArgumentException>(() => new VideoOcrObservationV1(
+            "text",
+            TimeSpan.FromSeconds(1),
+            TimeSpan.FromSeconds(1)));
+        Assert.ThrowsExactly<ArgumentException>(() => new VideoOcrObservationV1(
+            new string('x', VideoOcrObservationV1.MaximumTextLength + 1),
+            TimeSpan.Zero,
+            TimeSpan.FromSeconds(1)));
+        Assert.ThrowsExactly<ArgumentException>(() => new VideoOcrTrackV1(
+            new string('x', VideoOcrTrackV1.MaximumFullTextLength + 1)));
+        var observation = new VideoOcrObservationV1(
+            "text",
+            TimeSpan.Zero,
+            TimeSpan.FromSeconds(1));
+        Assert.ThrowsExactly<ArgumentException>(() => new VideoOcrTrackV1(
+            string.Empty,
+            Enumerable.Repeat(observation, VideoOcrTrackV1.MaximumObservationCount + 1)));
+        Assert.ThrowsExactly<ArgumentException>(() => new VideoOcrTrackV1(
+            string.Empty,
+            [null!]));
+        Assert.ThrowsExactly<ArgumentException>(() => new VideoOcrTrackV1(
+            "overlap",
+            [
+                observation,
+                new VideoOcrObservationV1(
+                    "overlap",
+                    TimeSpan.FromMilliseconds(500),
+                    TimeSpan.FromSeconds(2)),
+            ]));
+    }
+
+    [TestMethod]
+    public void VideoDescriptionTrackV1_ShouldNormalizeAndRemainExplicitlyClassifiedAsInference()
+    {
+        var observations = new List<VideoDescriptionObservationV1>
+        {
+            new("  A presenter opens the cafe\u0301 dashboard.  ",
+                TimeSpan.Zero,
+                TimeSpan.FromSeconds(15)),
+            new("A deployment confirmation is visible.",
+                TimeSpan.FromSeconds(15),
+                TimeSpan.FromSeconds(30)),
+        };
+
+        var payload = new VideoDescriptionTrackV1(
+            "  A presenter opens the cafe\u0301 dashboard.\r\nA deployment confirmation is visible.  ",
+            observations);
+        observations.Clear();
+
+        Assert.AreEqual(AnalysisCapabilities.VideoDescriptionTrackV1, payload.Definition);
+        Assert.AreEqual(CapabilityResultClassification.Inference,
+            payload.Definition.Classification);
+        Assert.AreEqual(
+            "A presenter opens the caf\u00e9 dashboard.\nA deployment confirmation is visible.",
+            payload.FullText);
+        Assert.HasCount(2, payload.Observations);
+        Assert.AreEqual(TimeSpan.FromSeconds(15), payload.Observations[1].StartTime);
+        Assert.IsTrue(payload.IsEquivalentTo(new VideoDescriptionTrackV1(
+            payload.FullText,
+            payload.Observations)));
+    }
+
+    [TestMethod]
+    public void VideoDescriptionTrackV1_ShouldRejectInvalidTextTimingOrderingAndBounds()
+    {
+        Assert.ThrowsExactly<ArgumentException>(() => new VideoDescriptionObservationV1(
+            " ",
+            TimeSpan.Zero,
+            TimeSpan.FromSeconds(1)));
+        Assert.ThrowsExactly<ArgumentException>(() => new VideoDescriptionObservationV1(
+            "description",
+            TimeSpan.FromSeconds(1),
+            TimeSpan.FromSeconds(1)));
+        Assert.ThrowsExactly<ArgumentException>(() => new VideoDescriptionObservationV1(
+            new string('x', VideoDescriptionObservationV1.MaximumDescriptionLength + 1),
+            TimeSpan.Zero,
+            TimeSpan.FromSeconds(1)));
+        Assert.ThrowsExactly<ArgumentException>(() => new VideoDescriptionTrackV1(
+            new string('x', VideoDescriptionTrackV1.MaximumFullTextLength + 1)));
+        var observation = new VideoDescriptionObservationV1(
+            "description",
+            TimeSpan.Zero,
+            TimeSpan.FromSeconds(1));
+        Assert.ThrowsExactly<ArgumentException>(() => new VideoDescriptionTrackV1(
+            string.Empty,
+            Enumerable.Repeat(
+                observation,
+                VideoDescriptionTrackV1.MaximumObservationCount + 1)));
+        Assert.ThrowsExactly<ArgumentException>(() => new VideoDescriptionTrackV1(
+            string.Empty,
+            [null!]));
+        Assert.ThrowsExactly<ArgumentException>(() => new VideoDescriptionTrackV1(
+            "overlap",
+            [
+                observation,
+                new VideoDescriptionObservationV1(
+                    "overlap",
+                    TimeSpan.FromMilliseconds(500),
+                    TimeSpan.FromSeconds(2)),
+            ]));
+    }
 }

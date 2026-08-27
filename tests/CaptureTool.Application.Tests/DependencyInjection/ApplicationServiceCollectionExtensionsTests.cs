@@ -2,6 +2,7 @@ using CaptureTool.Application.Abstractions.Activation;
 using CaptureTool.Application.Abstractions.Ai;
 using CaptureTool.Application.Abstractions.Analysis.Policy;
 using CaptureTool.Application.Abstractions.Analysis.Analyzers;
+using CaptureTool.Application.Abstractions.Analysis.Checkpoints;
 using CaptureTool.Application.Abstractions.Analysis.Jobs;
 using CaptureTool.Application.Abstractions.Analysis.Intake;
 using CaptureTool.Application.Abstractions.Analysis.Maintenance;
@@ -87,6 +88,8 @@ public sealed class ApplicationServiceCollectionExtensionsTests
         AssertHasRegistration<ICaptureAnalyzerResolutionPreference, CaptureAnalyzerResolutionPreference>(
             services,
             ServiceLifetime.Singleton);
+        AssertHasRegistration<ICaptureAnalyzerSelectionService,
+            AutomaticCaptureAnalyzerSelectionService>(services, ServiceLifetime.Singleton);
         AssertHasRegistration<ICaptureAnalyzerResolver, CaptureAnalyzerResolver>(services, ServiceLifetime.Singleton);
         AssertHasRegistration<CaptureAnalysisCapabilityPreparationService, CaptureAnalysisCapabilityPreparationService>(
             services,
@@ -166,6 +169,7 @@ public sealed class ApplicationServiceCollectionExtensionsTests
         services.AddSingleton(Mock.Of<ICaptureAnalysisFeatureAvailability>());
         services.AddSingleton(Mock.Of<ISettingsService>());
         services.AddSingleton(Mock.Of<ICaptureAnalysisJobStore>());
+        services.AddSingleton(Mock.Of<ICaptureAnalysisCheckpointStore>());
         services.AddSingleton(Mock.Of<ICaptureAnalysisStore>());
         services.AddSingleton(Mock.Of<ICaptureAnalysisMutationCoordinator>());
         services.AddSingleton(Mock.Of<ICaptureAnalysisProjectionMaintenance>());

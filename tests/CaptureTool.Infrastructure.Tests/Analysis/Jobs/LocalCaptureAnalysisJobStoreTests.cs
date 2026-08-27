@@ -257,6 +257,135 @@ public sealed class LocalCaptureAnalysisJobStoreTests
     }
 
     [TestMethod]
+    public async Task WaitingIntentWithAttemptHistory_ShouldResumeWithoutRewritingHistory()
+    {
+        using LocalCaptureAnalysisJobStore store = CreateStore(
+            AnalysisPersistenceTestData.CreateTestFolder());
+        CaptureAnalysisJobKey key = CreateKey();
+        _ = await store.TryEnqueueAsync(key, EnqueuedAtUtc);
+        CaptureAnalysisJobLease lease = (await store.TryLeaseNextDueAsync(
+            EnqueuedAtUtc,
+            TimeSpan.FromMinutes(2)))!;
+        var attemptFailure = new AnalysisFailure(
+            AnalysisFailureCode.ProviderUnavailable,
+            AnalysisFailureDisposition.Transient);
+        CaptureAnalyzerAttempt attempt = CreateAttempt(
+            1,
+            CaptureAnalyzerAttemptStatus.TransientFailure,
+            attemptFailure);
+        _ = await store.TryRecordAttemptAsync(lease.LeaseToken, attempt);
+        _ = await store.TryWaitForCapabilityAsync(
+            lease.LeaseToken,
+            new AnalysisFailure(
+                AnalysisFailureCode.ModelNotReady,
+                AnalysisFailureDisposition.Transient));
+        DateTimeOffset due = EnqueuedAtUtc.AddMinutes(5);
+
+        int resumed = await store.ResumeWaitingForCapabilityAsync(
+            key.Capability,
+            key.AuthorizedProcessingBoundary,
+            due);
+
+        Assert.AreEqual(1, resumed);
+        CaptureAnalysisJobIntent restored = (await store.GetAsync(key))!;
+        Assert.AreEqual(CaptureAnalysisJobState.RetryScheduled, restored.State);
+        Assert.AreEqual(due, restored.NextAttemptAtUtc);
+        Assert.AreEqual(
+            new AnalysisFailure(
+                AnalysisFailureCode.CapabilityUnavailable,
+                AnalysisFailureDisposition.Transient),
+            restored.LatestFailure);
+        Assert.AreEqual(1, restored.AttemptCount);
+        CollectionAssert.AreEqual(new[] { attempt }, restored.Attempts.ToArray());
+        Assert.IsNull(await store.TryLeaseNextDueAsync(
+            due.AddTicks(-1),
+            TimeSpan.FromMinutes(1)));
+        Assert.IsNotNull(await store.TryLeaseNextDueAsync(due, TimeSpan.FromMinutes(1)));
+    }
+
+    [TestMethod]
+    public async Task DependencyCompletion_ShouldResumeOnlyMatchingCaptureConsumers()
+    {
+        using LocalCaptureAnalysisJobStore store = CreateStore(
+            AnalysisPersistenceTestData.CreateTestFolder());
+        CaptureTool.Domain.CaptureId captureId = CaptureTool.Domain.CaptureId.New();
+        CaptureAnalysisJobKey dependent = CreateKey(
+            captureId,
+            capability: AnalysisCapabilities.ImageDescriptionV1,
+            dependencies: [AnalysisCapabilities.OcrDocumentV1]);
+        CaptureAnalysisJobKey unrelated = CreateKey(
+            capability: AnalysisCapabilities.ImageDescriptionV1,
+            dependencies: [AnalysisCapabilities.OcrDocumentV1]);
+        _ = await store.TryEnqueueAsync(dependent, EnqueuedAtUtc);
+        _ = await store.TryEnqueueAsync(unrelated, EnqueuedAtUtc.AddTicks(1));
+        CaptureAnalysisJobLease first = (await store.TryLeaseNextDueAsync(
+            EnqueuedAtUtc,
+            TimeSpan.FromMinutes(1)))!;
+        var attemptFailure = new AnalysisFailure(
+            AnalysisFailureCode.Timeout,
+            AnalysisFailureDisposition.Transient);
+        CaptureAnalyzerAttempt attempt = CreateAttempt(
+            1,
+            CaptureAnalyzerAttemptStatus.TransientFailure,
+            attemptFailure);
+        _ = await store.TryRecordAttemptAsync(first.LeaseToken, attempt);
+        _ = await store.TryWaitForCapabilityAsync(first.LeaseToken, reason: null);
+        CaptureAnalysisJobLease second = (await store.TryLeaseNextDueAsync(
+            EnqueuedAtUtc.AddTicks(1),
+            TimeSpan.FromMinutes(1)))!;
+        _ = await store.TryWaitForCapabilityAsync(second.LeaseToken, reason: null);
+
+        DateTimeOffset due = EnqueuedAtUtc.AddMinutes(1);
+        int resumed = await store.ResumeWaitingForDependencyAsync(
+            captureId,
+            AnalysisCapabilities.OcrDocumentV1,
+            due);
+
+        Assert.AreEqual(1, resumed);
+        CaptureAnalysisJobIntent restored = (await store.GetAsync(dependent))!;
+        Assert.AreEqual(CaptureAnalysisJobState.RetryScheduled, restored.State);
+        Assert.AreEqual(1, restored.AttemptCount);
+        CollectionAssert.AreEqual(new[] { attempt }, restored.Attempts.ToArray());
+        CollectionAssert.AreEqual(
+            new[] { AnalysisCapabilities.OcrDocumentV1 },
+            restored.Key.Dependencies.ToArray());
+        Assert.AreEqual(
+            CaptureAnalysisJobState.WaitingForCapability,
+            (await store.GetAsync(unrelated))!.State);
+    }
+
+    [TestMethod]
+    public void DurableIdentity_ShouldIncludeNormalizedCapabilityDependencies()
+    {
+        using LocalCaptureAnalysisJobStore store = CreateStore(
+            AnalysisPersistenceTestData.CreateTestFolder());
+        CaptureTool.Domain.CaptureId captureId = CaptureTool.Domain.CaptureId.New();
+        CaptureAnalysisJobKey ocrDependent = CreateKey(
+            captureId,
+            capability: AnalysisCapabilities.ImageDescriptionV1,
+            dependencies:
+            [
+                AnalysisCapabilities.OcrDocumentV1,
+                AnalysisCapabilities.MediaPropertiesV1,
+            ]);
+        CaptureAnalysisJobKey mediaDependent = CreateKey(
+            captureId,
+            capability: AnalysisCapabilities.ImageDescriptionV1,
+            dependencies: [AnalysisCapabilities.MediaPropertiesV1]);
+
+        Assert.AreNotEqual(
+            store.GetJobFilePath(ocrDependent),
+            store.GetJobFilePath(mediaDependent));
+        Assert.AreEqual(
+            store.GetJobFilePath(ocrDependent),
+            store.GetJobFilePath(new CaptureAnalysisJobKey(
+                ocrDependent.Preconditions,
+                ocrDependent.Capability,
+                ocrDependent.AuthorizedProcessingBoundary,
+                ocrDependent.Dependencies.Reverse())));
+    }
+
+    [TestMethod]
     public async Task LeaseMutation_ShouldRejectLostLeaseAndInvalidTransitions()
     {
         using LocalCaptureAnalysisJobStore store = CreateStore(
@@ -343,7 +472,9 @@ public sealed class LocalCaptureAnalysisJobStoreTests
         CaptureTool.Domain.CaptureId? captureId = null,
         long controlGeneration = 3,
         long tombstoneGeneration = 0,
-        long resolutionPolicyRevision = 1)
+        long resolutionPolicyRevision = 1,
+        CapabilityDefinition? capability = null,
+        IEnumerable<CapabilityDefinition>? dependencies = null)
     {
         SourceRevision source = AnalysisPersistenceTestData.SourceRevision;
         var preconditions = new AnalysisCommitPreconditions(
@@ -359,7 +490,11 @@ public sealed class LocalCaptureAnalysisJobStoreTests
             new AnalysisRecipeId("capture-memory-image"),
             new AnalysisRecipeVersion(1),
             resolutionPolicyRevision);
-        return new(preconditions, AnalysisCapabilities.MediaPropertiesV1, ProcessingBoundary.OnDevice);
+        return new(
+            preconditions,
+            capability ?? AnalysisCapabilities.MediaPropertiesV1,
+            ProcessingBoundary.OnDevice,
+            dependencies);
     }
 
     private static CaptureAnalyzerAttempt CreateAttempt(

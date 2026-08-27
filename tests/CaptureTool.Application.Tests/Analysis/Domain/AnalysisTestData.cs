@@ -1,3 +1,4 @@
+using CaptureTool.Application.Abstractions.Analysis.Policy;
 using CaptureTool.Domain;
 using CaptureTool.Domain.Analysis;
 using CaptureTool.Domain.Analysis.Payloads;
@@ -9,7 +10,8 @@ internal static class AnalysisTestData
     public static readonly CaptureId CaptureId = new(new Guid("3c12e543-4918-4382-b5e2-7864aabb5209"));
     public static readonly DateTimeOffset CapturedAtUtc = new(2026, 8, 6, 19, 30, 0, TimeSpan.Zero);
     public static readonly DateTimeOffset GeneratedAtUtc = CapturedAtUtc.AddSeconds(2);
-    public static readonly AnalysisPurpose Purpose = new("capture-memory-search", 1);
+    public static readonly AnalysisPurpose Purpose =
+        CaptureAnalysisPolicyDefaults.CaptureMemorySearchPurpose;
     public static readonly AnalysisRecipeId RecipeId = new("capture-memory-image");
 
     public static SourceRevision CreateSource(
@@ -101,7 +103,8 @@ internal static class AnalysisTestData
         CapabilityPayload payload,
         AnalyzerIdentity analyzer,
         SourceRevision? sourceRevision = null,
-        DateTimeOffset? generatedAtUtc = null)
+        DateTimeOffset? generatedAtUtc = null,
+        IEnumerable<CapabilityResultReference>? inputs = null)
     {
         return new(
             CaptureId,
@@ -109,7 +112,8 @@ internal static class AnalysisTestData
             payload,
             analyzer,
             ProcessingBoundary.OnDevice,
-            generatedAtUtc ?? GeneratedAtUtc);
+            generatedAtUtc ?? GeneratedAtUtc,
+            inputs);
     }
 
     public static CaptureAnalysisRecord CreateRecord(

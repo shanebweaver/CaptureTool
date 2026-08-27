@@ -148,7 +148,7 @@ public sealed class CaptureMemoryHomeViewModelTests
     }
 
     [TestMethod]
-    public async Task EnableFutureCaptureMemory_AllowsOptionalDescriptionToBeUnsupported()
+    public async Task EnableFutureCaptureMemory_AllowsUnavailableModelsWithLimitedCoverage()
     {
         CaptureAnalysisPolicySnapshot initial = CreatePolicySnapshot(authorized: false);
         CaptureAnalysisPolicySnapshot authorized = CreatePolicySnapshot(authorized: true);
@@ -189,7 +189,7 @@ public sealed class CaptureMemoryHomeViewModelTests
         await viewModel.EnableForFutureCommand.ExecuteAsync(null);
 
         Assert.IsTrue(viewModel.IsAuthorized);
-        Assert.IsTrue(viewModel.IsDescriptionUnsupported);
+        Assert.IsTrue(viewModel.HasLimitedModelCoverage);
         Assert.IsFalse(viewModel.HasSetupFailure);
     }
 
@@ -226,7 +226,16 @@ public sealed class CaptureMemoryHomeViewModelTests
                 backfillAuthorized));
         var preparation = new Mock<IUserInitiatedAnalysisCapabilityPreparationService>();
         preparation.Setup(value => value.PrepareAsync(
-                It.IsAny<AnalysisCapabilityPreparationRequest>(),
+                It.Is<AnalysisCapabilityPreparationRequest>(request =>
+                    request.Capability.Id == AnalysisCapabilities.SpeechTranscriptV1.Id),
+                It.IsAny<IProgress<AnalysisCapabilityPreparationProgress>>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(AnalysisCapabilityPreparationState.Unsupported(new AnalysisFailure(
+                AnalysisFailureCode.CapabilityUnavailable,
+                AnalysisFailureDisposition.Terminal)));
+        preparation.Setup(value => value.PrepareAsync(
+                It.Is<AnalysisCapabilityPreparationRequest>(request =>
+                    request.Capability.Id != AnalysisCapabilities.SpeechTranscriptV1.Id),
                 It.IsAny<IProgress<AnalysisCapabilityPreparationProgress>>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(AnalysisCapabilityPreparationState.Ready(
@@ -253,6 +262,7 @@ public sealed class CaptureMemoryHomeViewModelTests
         Assert.IsTrue(viewModel.IsAuthorized);
         Assert.IsFalse(viewModel.IsIndexing);
         Assert.AreEqual(1, viewModel.IndexProgress);
+        Assert.IsTrue(viewModel.HasLimitedModelCoverage);
         Assert.IsFalse(viewModel.HasSetupFailure);
         backfill.Verify(value => value.RunAsync(
             It.IsAny<IProgress<CaptureAnalysisBackfillProgress>>(),
@@ -385,6 +395,117 @@ public sealed class CaptureMemoryHomeViewModelTests
         confirmation.VerifyAll();
     }
 
+    [TestMethod]
+    public async Task AudioTranscriptResult_ShouldExposeMediaStateAndTimecodeWithoutThumbnail()
+    {
+        CaptureId captureId = CaptureId.New();
+        var search = new Mock<ICaptureMemorySearchService>();
+        search.Setup(value => value.SearchAsync(
+                It.IsAny<CaptureMemorySearchRequest>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync([CreateResult(
+                captureId,
+                1,
+                CaptureMemoryMatchKind.SpeechTranscript,
+                "deploy the audio pipeline",
+                CaptureMediaKind.Audio,
+                TimeSpan.FromSeconds(72))]);
+        var resolver = new Mock<ICaptureMemoryResultResolver>();
+        resolver.Setup(value => value.ResolveAsync(captureId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new CaptureMemoryResultLocation(
+                captureId,
+                CaptureMemoryResultLocationStatus.Available,
+                "standup.wav",
+                @"C:\Captures\standup.wav"));
+        CaptureMemoryHomeViewModel viewModel = CreateViewModel(search.Object, resolver.Object);
+        await viewModel.LoadAsync(CancellationToken.None);
+        viewModel.SearchQuery = "audio";
+
+        await viewModel.SearchCompletion;
+
+        CaptureMemorySearchResultViewModel result = viewModel.Results.Single();
+        Assert.IsTrue(result.IsAudio);
+        Assert.IsFalse(result.IsImage);
+        Assert.IsFalse(result.IsVideo);
+        Assert.IsFalse(result.CanLoadThumbnail);
+        Assert.AreEqual("1:12", result.TimecodeLabel);
+        Assert.IsTrue(result.HasTimecode);
+        Assert.AreEqual("Transcript match", result.ExplanationLabel);
+        StringAssert.Contains(result.AutomationName, "1:12");
+    }
+
+    [TestMethod]
+    public async Task VideoOcrResult_ShouldExposeVideoThumbnailAndTextTimecode()
+    {
+        CaptureId captureId = CaptureId.New();
+        var search = new Mock<ICaptureMemorySearchService>();
+        search.Setup(value => value.SearchAsync(
+                It.IsAny<CaptureMemorySearchRequest>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync([CreateResult(
+                captureId,
+                1,
+                CaptureMemoryMatchKind.VideoOcrText,
+                "deployment dashboard",
+                CaptureMediaKind.Video,
+                TimeSpan.FromSeconds(3.5))]);
+        var resolver = new Mock<ICaptureMemoryResultResolver>();
+        resolver.Setup(value => value.ResolveAsync(captureId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new CaptureMemoryResultLocation(
+                captureId,
+                CaptureMemoryResultLocationStatus.Available,
+                "demo.mp4",
+                @"C:\Captures\demo.mp4"));
+        CaptureMemoryHomeViewModel viewModel = CreateViewModel(search.Object, resolver.Object);
+        await viewModel.LoadAsync(CancellationToken.None);
+        viewModel.SearchQuery = "dashboard";
+
+        await viewModel.SearchCompletion;
+
+        CaptureMemorySearchResultViewModel result = viewModel.Results.Single();
+        Assert.IsTrue(result.IsVideo);
+        Assert.IsTrue(result.CanLoadThumbnail);
+        Assert.AreEqual("0:03", result.TimecodeLabel);
+        Assert.AreEqual("Text match", result.ExplanationLabel);
+        Assert.IsFalse(result.HasOcrBounds);
+    }
+
+    [TestMethod]
+    public async Task VideoDescriptionResult_ShouldExposeVisualMatchAndTimecode()
+    {
+        CaptureId captureId = CaptureId.New();
+        var search = new Mock<ICaptureMemorySearchService>();
+        search.Setup(value => value.SearchAsync(
+                It.IsAny<CaptureMemorySearchRequest>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync([CreateResult(
+                captureId,
+                1,
+                CaptureMemoryMatchKind.VideoDescription,
+                "a person points at the deployment graph",
+                CaptureMediaKind.Video,
+                TimeSpan.FromSeconds(30))]);
+        var resolver = new Mock<ICaptureMemoryResultResolver>();
+        resolver.Setup(value => value.ResolveAsync(captureId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new CaptureMemoryResultLocation(
+                captureId,
+                CaptureMemoryResultLocationStatus.Available,
+                "walkthrough.mp4",
+                @"C:\Captures\walkthrough.mp4"));
+        CaptureMemoryHomeViewModel viewModel = CreateViewModel(search.Object, resolver.Object);
+        await viewModel.LoadAsync(CancellationToken.None);
+        viewModel.SearchQuery = "deployment graph";
+
+        await viewModel.SearchCompletion;
+
+        CaptureMemorySearchResultViewModel result = viewModel.Results.Single();
+        Assert.IsTrue(result.IsVideo);
+        Assert.IsTrue(result.CanLoadThumbnail);
+        Assert.AreEqual("0:30", result.TimecodeLabel);
+        Assert.AreEqual("Visual match", result.ExplanationLabel);
+        Assert.AreEqual(CaptureMemoryMatchKind.VideoDescription, result.MatchKind);
+    }
+
     private static CaptureMemoryHomeViewModel CreateViewModel(
         ICaptureMemorySearchService searchService,
         ICaptureMemoryResultResolver? resolver = null,
@@ -471,15 +592,17 @@ public sealed class CaptureMemoryHomeViewModelTests
         CaptureId id,
         int rank,
         CaptureMemoryMatchKind matchKind,
-        string snippet)
+        string snippet,
+        CaptureMediaKind mediaKind = CaptureMediaKind.Image,
+        TimeSpan? timecode = null)
     {
         return new CaptureMemorySearchResult(
             id,
-            CaptureMediaKind.Image,
+            mediaKind,
             DateTimeOffset.UtcNow,
             1,
             rank,
-            new CaptureMemoryMatchEvidence(matchKind, snippet));
+            new CaptureMemoryMatchEvidence(matchKind, snippet, timecode: timecode));
     }
 
     private static AnalyzerIdentity CreateAnalyzerIdentity()

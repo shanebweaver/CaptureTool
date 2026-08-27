@@ -2088,8 +2088,8 @@ SOFTWARE.
     <comment>Shown while the audio playback pipeline opens a source.</comment>
   </data>
   <data name="CaptureMemory_Setup_Title.Text" xml:space="preserve"><value>Find captures by what is in them</value></data>
-  <data name="CaptureMemory_Setup_Body.Text" xml:space="preserve"><value>Capture Tool can use the AI models already available in the app to create private, app-managed metadata for search. Analysis stays on this device and starts only after you opt in.</value></data>
-  <data name="CaptureMemory_Setup_Disclosure.Text" xml:space="preserve"><value>Creates media properties, text recognition, and—when supported—visual descriptions. You can stop analysis or erase this metadata at any time in Settings.</value></data>
+  <data name="CaptureMemory_Setup_Body.Text" xml:space="preserve"><value>Capture Tool can use on-device AI models to create private, app-managed metadata for search. Analysis starts only after you opt in. Some model packages may be downloaded during setup; your capture content is not uploaded.</value></data>
+  <data name="CaptureMemory_Setup_Disclosure.Text" xml:space="preserve"><value>Creates media properties, recognized text, speech transcripts, and, when supported, visual descriptions. You can stop analysis or erase this metadata at any time in Settings.</value></data>
   <data name="CaptureMemory_Setup_FutureButton.Content" xml:space="preserve"><value>Analyze new captures</value></data>
   <data name="CaptureMemory_Setup_ExistingButton.Content" xml:space="preserve"><value>Include existing captures</value></data>
   <data name="CaptureMemory_Setup_Preparing.Text" xml:space="preserve"><value>Preparing AI models…</value></data>
@@ -2099,7 +2099,7 @@ SOFTWARE.
   <data name="CaptureMemory_Searching.Text" xml:space="preserve"><value>Searching…</value></data>
   <data name="CaptureMemory_Indexing.Text" xml:space="preserve"><value>Preparing existing captures for search…</value></data>
   <data name="CaptureMemory_PartialResults.Message" xml:space="preserve"><value>These are partial results while existing captures are prepared.</value></data>
-  <data name="CaptureMemory_DescriptionUnsupported.Message" xml:space="preserve"><value>Visual descriptions are not supported on this device. Filename and recognized-text search are still available.</value></data>
+  <data name="CaptureMemory_LimitedModelCoverage.Message" xml:space="preserve"><value>Some AI models are unavailable on this device. Capture Memory will still analyze supported media and metadata.</value></data>
   <data name="CaptureMemory_SourceMissing.Message" xml:space="preserve"><value>A matching source file has moved or is unavailable. You can forget its app-managed history.</value></data>
   <data name="CaptureMemory_SearchFailed.Message" xml:space="preserve"><value>Capture Memory search failed.</value></data>
   <data name="CaptureMemory_CorruptProjection.Message" xml:space="preserve"><value>The search data is damaged. Rebuild the app-managed search data to continue.</value></data>
@@ -2115,6 +2115,7 @@ SOFTWARE.
   <data name="CaptureMemory_ResultForget.AutomationProperties.Name" xml:space="preserve"><value>Forget capture history</value></data>
   <data name="CaptureMemory_Match_Text" xml:space="preserve"><value>Text match</value></data>
   <data name="CaptureMemory_Match_Visual" xml:space="preserve"><value>Visual match</value></data>
+  <data name="CaptureMemory_Match_Transcript" xml:space="preserve"><value>Transcript match</value></data>
   <data name="CaptureMemory_Match_Filename" xml:space="preserve"><value>Filename match</value></data>
   <data name="CaptureMemory_MediaKind_Image" xml:space="preserve"><value>Image</value></data>
   <data name="CaptureMemory_MediaKind_Video" xml:space="preserve"><value>Video</value></data>

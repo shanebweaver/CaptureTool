@@ -2,6 +2,7 @@ using CaptureTool.Application.Abstractions.Analysis.Persistence;
 using CaptureTool.Domain.Analysis;
 using CaptureTool.Domain.Analysis.Payloads;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace CaptureTool.Infrastructure.Analysis.Persistence.Serialization;
 
@@ -129,6 +130,9 @@ internal sealed class RecipeCapabilityDocument
     public CapabilityDefinitionDocument Capability { get; set; } = new();
 
     public RecipeCapabilityRequirement Requirement { get; set; }
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public List<CapabilityDefinitionDocument>? Dependencies { get; set; }
 }
 
 internal sealed class CapabilityDefinitionDocument
@@ -151,13 +155,30 @@ internal sealed class CaptureAnalysisCapabilityEntryDocument
 
 internal sealed class CanonicalCapabilityResultDocument
 {
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public Guid? ResultId { get; set; }
+
     public AnalyzerIdentityDocument Analyzer { get; set; } = new();
 
     public ProcessingBoundary ProcessingBoundary { get; set; }
 
     public DateTimeOffset GeneratedAtUtc { get; set; }
 
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public List<CapabilityResultReferenceDocument>? Inputs { get; set; }
+
     public JsonElement Payload { get; set; }
+}
+
+internal sealed class CapabilityResultReferenceDocument
+{
+    public Guid ResultId { get; set; }
+
+    public CapabilityDefinitionDocument Capability { get; set; } = new();
+
+    public string AnalyzerRevision { get; set; } = string.Empty;
+
+    public DateTimeOffset GeneratedAtUtc { get; set; }
 }
 
 internal sealed class CapabilityOutcomeDocument
@@ -300,4 +321,58 @@ internal sealed class ImageDescriptionPayloadDocument
     public string? Style { get; set; }
 
     public double? Confidence { get; set; }
+}
+
+internal sealed class SpeechTranscriptPayloadDocument
+{
+    public string FullText { get; set; } = string.Empty;
+
+    public string? LanguageTag { get; set; }
+
+    public List<SpeechTranscriptSegmentDocument> Segments { get; set; } = [];
+}
+
+internal sealed class SpeechTranscriptSegmentDocument
+{
+    public string Text { get; set; } = string.Empty;
+
+    public long? StartTicks { get; set; }
+
+    public long? EndTicks { get; set; }
+
+    public string? SpeakerLabel { get; set; }
+
+    public double? Confidence { get; set; }
+}
+
+internal sealed class VideoOcrTrackPayloadDocument
+{
+    public string FullText { get; set; } = string.Empty;
+
+    public List<VideoOcrObservationDocument> Observations { get; set; } = [];
+}
+
+internal sealed class VideoOcrObservationDocument
+{
+    public string Text { get; set; } = string.Empty;
+
+    public long StartTicks { get; set; }
+
+    public long EndTicks { get; set; }
+}
+
+internal sealed class VideoDescriptionTrackPayloadDocument
+{
+    public string FullText { get; set; } = string.Empty;
+
+    public List<VideoDescriptionObservationDocument> Observations { get; set; } = [];
+}
+
+internal sealed class VideoDescriptionObservationDocument
+{
+    public string Description { get; set; } = string.Empty;
+
+    public long StartTicks { get; set; }
+
+    public long EndTicks { get; set; }
 }

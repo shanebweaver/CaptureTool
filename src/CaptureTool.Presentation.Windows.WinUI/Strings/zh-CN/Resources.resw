@@ -1807,8 +1807,8 @@ SOFTWARE.
     <value>此设备不支持屏幕录制。</value>
   </data>
   <data name="CaptureMemory_Setup_Title.Text" xml:space="preserve"><value>按内容查找捕获</value></data>
-  <data name="CaptureMemory_Setup_Body.Text" xml:space="preserve"><value>Capture Tool 可以使用应用中已有的 AI 模型创建由应用管理的私密搜索元数据。分析仅在此设备上进行，并且只有在你选择加入后才会开始。</value></data>
-  <data name="CaptureMemory_Setup_Disclosure.Text" xml:space="preserve"><value>将创建媒体属性、文本识别，以及在支持时创建视觉描述。你可以随时在“设置”中停止分析或清除此元数据。</value></data>
+  <data name="CaptureMemory_Setup_Body.Text" xml:space="preserve"><value>Capture Tool 可以使用设备上的 AI 模型创建由应用管理的私密搜索元数据。只有在你选择加入后才会开始分析。设置期间可能会下载一些模型包；你的捕获内容不会被上传。</value></data>
+  <data name="CaptureMemory_Setup_Disclosure.Text" xml:space="preserve"><value>将创建媒体属性、识别的文本、语音转写，以及在支持时创建视觉描述。你可以随时在“设置”中停止分析或清除此元数据。</value></data>
   <data name="CaptureMemory_Setup_FutureButton.Content" xml:space="preserve"><value>分析新的捕获</value></data>
   <data name="CaptureMemory_Setup_ExistingButton.Content" xml:space="preserve"><value>包括现有捕获</value></data>
   <data name="CaptureMemory_Setup_Preparing.Text" xml:space="preserve"><value>正在准备 AI 模型…</value></data>
@@ -1818,7 +1818,7 @@ SOFTWARE.
   <data name="CaptureMemory_Searching.Text" xml:space="preserve"><value>正在搜索…</value></data>
   <data name="CaptureMemory_Indexing.Text" xml:space="preserve"><value>正在准备现有捕获以供搜索…</value></data>
   <data name="CaptureMemory_PartialResults.Message" xml:space="preserve"><value>在准备现有捕获期间，这些是部分结果。</value></data>
-  <data name="CaptureMemory_DescriptionUnsupported.Message" xml:space="preserve"><value>此设备不支持视觉描述。仍可按文件名和已识别文本搜索。</value></data>
+  <data name="CaptureMemory_LimitedModelCoverage.Message" xml:space="preserve"><value>此设备上的部分 AI 模型不可用。Capture Memory 仍会分析受支持的媒体和元数据。</value></data>
   <data name="CaptureMemory_SourceMissing.Message" xml:space="preserve"><value>匹配的源文件已移动或不可用。你可以忘记由应用管理的相关历史记录。</value></data>
   <data name="CaptureMemory_SearchFailed.Message" xml:space="preserve"><value>Capture Memory 搜索失败。</value></data>
   <data name="CaptureMemory_CorruptProjection.Message" xml:space="preserve"><value>搜索数据已损坏。请重新生成由应用管理的搜索数据。</value></data>

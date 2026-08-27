@@ -12,6 +12,9 @@ using CaptureTool.Presentation.Windows.WinUI.CaptureMemory;
 using CaptureTool.Presentation.Windows.WinUI.Edit;
 using CaptureTool.Presentation.Windows.WinUI.EditSessions;
 using CaptureTool.Presentation.Windows.WinUI.Telemetry;
+#if DEBUG
+using CaptureTool.Presentation.Windows.WinUI.Debugging;
+#endif
 using Microsoft.Extensions.DependencyInjection;
 
 namespace CaptureTool.Presentation.Windows.WinUI.DependencyInjection;
@@ -37,6 +40,9 @@ public static class WindowsPresentationServiceCollectionExtensions
         services.AddSingleton<ImageSuperResolutionPreparationConsentService>();
         services.AddSingleton<IImageSuperResolutionPreparationConsentService>(sp => sp.GetRequiredService<ImageSuperResolutionPreparationConsentService>());
         services.AddSingleton<TelemetryConsentDialogService>();
+#if DEBUG
+        services.AddSingleton<AiModelLabDialogService>();
+#endif
         return services;
     }
 }

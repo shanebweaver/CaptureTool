@@ -14,11 +14,14 @@ public static class CaptureAnalysisPolicyDefaults
             AnalysisCapabilities.ImageDescriptionV1,
             AnalysisCapabilities.MediaPropertiesV1,
             AnalysisCapabilities.OcrDocumentV1,
+            AnalysisCapabilities.SpeechTranscriptV1,
+            AnalysisCapabilities.VideoOcrTrackV1,
+            AnalysisCapabilities.VideoDescriptionTrackV1,
         ]);
 
     public const string CaptureMemorySearchPurposeId = "capture-memory-search";
 
-    public const int CaptureMemorySearchPurposeVersion = 1;
+    public const int CaptureMemorySearchPurposeVersion = 3;
 
     public static AnalysisPurpose CaptureMemorySearchPurpose =>
         new(CaptureMemorySearchPurposeId, CaptureMemorySearchPurposeVersion);

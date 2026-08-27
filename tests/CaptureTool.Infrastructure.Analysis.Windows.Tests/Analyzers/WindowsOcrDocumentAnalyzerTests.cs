@@ -1,4 +1,5 @@
 using CaptureTool.Application.Abstractions.Analysis.Analyzers;
+using CaptureTool.Application.Abstractions.Analysis.Preparation;
 using CaptureTool.Application.Abstractions.Edit.Image.TextExtraction;
 using CaptureTool.Domain;
 using CaptureTool.Domain.Analysis;
@@ -279,6 +280,24 @@ public sealed class WindowsOcrDocumentAnalyzerTests
         {
             Assert.AreEqual(AnalysisFailureDisposition.Transient, availability.Failure?.Disposition);
         }
+    }
+
+    [TestMethod]
+    [DataRow(TextExtractionReadyState.Ready, CaptureAnalyzerPreparationStatus.Succeeded)]
+    [DataRow(TextExtractionReadyState.NotSupported,
+        CaptureAnalyzerPreparationStatus.Unsupported)]
+    public async Task Prepare_ShouldUseProviderNeutralDefaultPreparationContract(
+        TextExtractionReadyState readyState,
+        CaptureAnalyzerPreparationStatus expected)
+    {
+        var analyzer = new WindowsOcrDocumentAnalyzer(
+            new StubTextExtractionAnalysisService(
+                TextExtractionAnalysisResult.Unavailable,
+                readyState: readyState));
+
+        CaptureAnalyzerPreparationResult result = await analyzer.PrepareAsync();
+
+        Assert.AreEqual(expected, result.Status);
     }
 
     private static WindowsOcrDocumentAnalyzer CreateAnalyzer(TextExtractionAnalysisResult result)

@@ -17,9 +17,29 @@
           "featureFlag": "CaptureAnalysis_Analyzer_WindowsOcrDocument"
         },
         {
+          "analyzerId": "windows-ai-ocr-document",
+          "capability": "ocr-document/v1",
+          "featureFlag": "CaptureAnalysis_Analyzer_WindowsAiOcrDocument"
+        },
+        {
           "analyzerId": "windows-image-description",
           "capability": "image-description/v1",
           "featureFlag": "CaptureAnalysis_Analyzer_WindowsImageDescription"
+        },
+        {
+          "analyzerId": "windows-video-frame-ocr",
+          "capability": "video-ocr-track/v1",
+          "featureFlag": "CaptureAnalysis_Analyzer_WindowsVideoFrameOcr"
+        },
+        {
+          "analyzerId": "windows-ai-video-frame-ocr",
+          "capability": "video-ocr-track/v1",
+          "featureFlag": "CaptureAnalysis_Analyzer_WindowsAiVideoFrameOcr"
+        },
+        {
+          "analyzerId": "windows-video-frame-description",
+          "capability": "video-description-track/v1",
+          "featureFlag": "CaptureAnalysis_Analyzer_WindowsVideoFrameDescription"
         }
       ]
     }

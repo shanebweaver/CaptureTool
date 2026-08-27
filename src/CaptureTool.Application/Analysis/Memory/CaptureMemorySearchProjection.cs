@@ -19,6 +19,12 @@ internal sealed class CaptureMemorySearchProjection :
     private const double FilenamePhraseScore = 850;
     private const double OcrPhraseScore = 700;
     private const double OcrTokenScore = 650;
+    private const double VideoOcrPhraseScore = 700;
+    private const double VideoOcrTokenScore = 650;
+    private const double TranscriptPhraseScore = 675;
+    private const double TranscriptTokenScore = 625;
+    private const double VideoDescriptionPhraseScore = 575;
+    private const double VideoDescriptionTokenScore = 525;
     private const double DescriptionPhraseScore = 550;
     private const double DescriptionTokenScore = 500;
     private const double FilenameTokenScore = 400;
@@ -336,12 +342,33 @@ internal sealed class CaptureMemorySearchProjection :
             ImageDescriptionV1? description = GetPayload<ImageDescriptionV1>(
                 record,
                 AnalysisCapabilities.ImageDescriptionV1);
+            SpeechTranscriptV1? transcript = GetPayload<SpeechTranscriptV1>(
+                record,
+                AnalysisCapabilities.SpeechTranscriptV1);
+            VideoOcrTrackV1? videoOcr = GetPayload<VideoOcrTrackV1>(
+                record,
+                AnalysisCapabilities.VideoOcrTrackV1);
+            VideoDescriptionTrackV1? videoDescription = GetPayload<VideoDescriptionTrackV1>(
+                record,
+                AnalysisCapabilities.VideoDescriptionTrackV1);
             CaptureMemoryNormalizedText? normalizedOcr = ocr == null
                 ? null
                 : CaptureMemoryTextNormalizer.Normalize(ocr.FullText);
             CaptureMemoryNormalizedText? normalizedDescription = description == null
                 ? null
                 : CaptureMemoryTextNormalizer.Normalize(description.Description);
+            CaptureMemoryNormalizedText? normalizedTranscript =
+                string.IsNullOrWhiteSpace(transcript?.FullText)
+                    ? null
+                    : CaptureMemoryTextNormalizer.Normalize(transcript.FullText);
+            CaptureMemoryNormalizedText? normalizedVideoOcr =
+                string.IsNullOrWhiteSpace(videoOcr?.FullText)
+                    ? null
+                    : CaptureMemoryTextNormalizer.Normalize(videoOcr.FullText);
+            CaptureMemoryNormalizedText? normalizedVideoDescription =
+                string.IsNullOrWhiteSpace(videoDescription?.FullText)
+                    ? null
+                    : CaptureMemoryTextNormalizer.Normalize(videoDescription.FullText);
             OcrEvidenceEntry[] lines = ocr == null
                 ? []
                 : ocr.Regions
@@ -358,6 +385,34 @@ internal sealed class CaptureMemorySearchProjection :
                             checked((int)ocr.RasterSize.Width),
                             checked((int)ocr.RasterSize.Height))))
                     .ToArray();
+            TranscriptEvidenceEntry[] transcriptSegments = transcript == null
+                ? []
+                : transcript.Segments
+                    .Where(segment => !string.IsNullOrWhiteSpace(segment.Text))
+                    .Select(segment => new TranscriptEvidenceEntry(
+                        segment.Text,
+                        CaptureMemoryTextNormalizer.Normalize(segment.Text),
+                        segment.StartTime))
+                    .ToArray();
+            VideoOcrEvidenceEntry[] videoOcrObservations = videoOcr == null
+                ? []
+                : videoOcr.Observations
+                    .Where(observation => !string.IsNullOrWhiteSpace(observation.Text))
+                    .Select(observation => new VideoOcrEvidenceEntry(
+                        observation.Text,
+                        CaptureMemoryTextNormalizer.Normalize(observation.Text),
+                        observation.StartTime))
+                    .ToArray();
+            VideoDescriptionEvidenceEntry[] videoDescriptionObservations =
+                videoDescription == null
+                    ? []
+                    : videoDescription.Observations
+                        .Where(observation => !string.IsNullOrWhiteSpace(observation.Description))
+                        .Select(observation => new VideoDescriptionEvidenceEntry(
+                            observation.Description,
+                            CaptureMemoryTextNormalizer.Normalize(observation.Description),
+                            observation.StartTime))
+                        .ToArray();
 
             return new ProjectionEntry(
                 record.CaptureId,
@@ -368,8 +423,17 @@ internal sealed class CaptureMemorySearchProjection :
                 ocr?.FullText,
                 normalizedOcr,
                 lines,
+                videoOcr?.FullText,
+                normalizedVideoOcr,
+                videoOcrObservations,
+                videoDescription?.FullText,
+                normalizedVideoDescription,
+                videoDescriptionObservations,
                 description?.Description,
-                normalizedDescription);
+                normalizedDescription,
+                transcript?.FullText,
+                normalizedTranscript,
+                transcriptSegments);
         }
         catch (Exception ex) when (ex is ArgumentException or OverflowException)
         {
@@ -433,6 +497,24 @@ internal sealed class CaptureMemorySearchProjection :
             return ocr;
         }
 
+        SearchMatch? videoOcr = MatchVideoOcr(entry, rawQuery, query);
+        if (videoOcr != null)
+        {
+            return videoOcr;
+        }
+
+        SearchMatch? transcript = MatchTranscript(entry, rawQuery, query);
+        if (transcript != null)
+        {
+            return transcript;
+        }
+
+        SearchMatch? videoDescription = MatchVideoDescription(entry, rawQuery, query);
+        if (videoDescription != null)
+        {
+            return videoDescription;
+        }
+
         SearchMatch? description = MatchDescription(entry, rawQuery, query);
         if (description != null)
         {
@@ -493,6 +575,88 @@ internal sealed class CaptureMemorySearchProjection :
             rawQuery);
     }
 
+    private static SearchMatch? MatchTranscript(
+        ProjectionEntry entry,
+        string rawQuery,
+        CaptureMemoryNormalizedText query)
+    {
+        if (entry.TranscriptText == null || entry.TranscriptNormalized == null)
+        {
+            return null;
+        }
+
+        if (query.Tokens.Length > 1 && CaptureMemoryTextNormalizer.ContainsPhrase(
+            entry.TranscriptNormalized.Value,
+            query.Value))
+        {
+            TranscriptEvidenceEntry? segment = entry.TranscriptSegments.FirstOrDefault(candidate =>
+                CaptureMemoryTextNormalizer.ContainsPhrase(candidate.Normalized.Value, query.Value));
+            return CreateTranscriptMatch(entry, TranscriptPhraseScore, segment, rawQuery);
+        }
+
+        CaptureMemoryTokenMatch tokens = CaptureMemoryTextNormalizer.MatchTokens(
+            query.Tokens,
+            entry.TranscriptNormalized.TokenSet,
+            entry.TranscriptNormalized.Tokens);
+        if (tokens == CaptureMemoryTokenMatch.None)
+        {
+            return null;
+        }
+
+        TranscriptEvidenceEntry? evidenceSegment = entry.TranscriptSegments.FirstOrDefault(candidate =>
+            CaptureMemoryTextNormalizer.MatchTokens(
+                query.Tokens,
+                candidate.Normalized.TokenSet,
+                candidate.Normalized.Tokens) != CaptureMemoryTokenMatch.None);
+        return CreateTranscriptMatch(
+            entry,
+            TranscriptTokenScore - GetTokenMatchPenalty(tokens),
+            evidenceSegment,
+            rawQuery);
+    }
+
+    private static SearchMatch? MatchVideoOcr(
+        ProjectionEntry entry,
+        string rawQuery,
+        CaptureMemoryNormalizedText query)
+    {
+        if (entry.VideoOcrText == null || entry.VideoOcrNormalized == null)
+        {
+            return null;
+        }
+
+        if (query.Tokens.Length > 1 && CaptureMemoryTextNormalizer.ContainsPhrase(
+            entry.VideoOcrNormalized.Value,
+            query.Value))
+        {
+            VideoOcrEvidenceEntry? observation = entry.VideoOcrObservations.FirstOrDefault(
+                candidate => CaptureMemoryTextNormalizer.ContainsPhrase(
+                    candidate.Normalized.Value,
+                    query.Value));
+            return CreateVideoOcrMatch(entry, VideoOcrPhraseScore, observation, rawQuery);
+        }
+
+        CaptureMemoryTokenMatch tokens = CaptureMemoryTextNormalizer.MatchTokens(
+            query.Tokens,
+            entry.VideoOcrNormalized.TokenSet,
+            entry.VideoOcrNormalized.Tokens);
+        if (tokens == CaptureMemoryTokenMatch.None)
+        {
+            return null;
+        }
+
+        VideoOcrEvidenceEntry? evidenceObservation = entry.VideoOcrObservations.FirstOrDefault(
+            candidate => CaptureMemoryTextNormalizer.MatchTokens(
+                query.Tokens,
+                candidate.Normalized.TokenSet,
+                candidate.Normalized.Tokens) != CaptureMemoryTokenMatch.None);
+        return CreateVideoOcrMatch(
+            entry,
+            VideoOcrTokenScore - GetTokenMatchPenalty(tokens),
+            evidenceObservation,
+            rawQuery);
+    }
+
     private static SearchMatch? MatchDescription(
         ProjectionEntry entry,
         string rawQuery,
@@ -545,13 +709,107 @@ internal sealed class CaptureMemorySearchProjection :
             line?.Bounds);
     }
 
+    private static SearchMatch? MatchVideoDescription(
+        ProjectionEntry entry,
+        string rawQuery,
+        CaptureMemoryNormalizedText query)
+    {
+        if (entry.VideoDescriptionText == null || entry.VideoDescriptionNormalized == null)
+        {
+            return null;
+        }
+
+        if (query.Tokens.Length > 1 && CaptureMemoryTextNormalizer.ContainsPhrase(
+            entry.VideoDescriptionNormalized.Value,
+            query.Value))
+        {
+            VideoDescriptionEvidenceEntry? observation =
+                entry.VideoDescriptionObservations.FirstOrDefault(candidate =>
+                    CaptureMemoryTextNormalizer.ContainsPhrase(
+                        candidate.Normalized.Value,
+                        query.Value));
+            return CreateVideoDescriptionMatch(
+                entry,
+                VideoDescriptionPhraseScore,
+                observation,
+                rawQuery);
+        }
+
+        CaptureMemoryTokenMatch tokens = CaptureMemoryTextNormalizer.MatchTokens(
+            query.Tokens,
+            entry.VideoDescriptionNormalized.TokenSet,
+            entry.VideoDescriptionNormalized.Tokens);
+        if (tokens == CaptureMemoryTokenMatch.None)
+        {
+            return null;
+        }
+
+        VideoDescriptionEvidenceEntry? evidence =
+            entry.VideoDescriptionObservations.FirstOrDefault(candidate =>
+                CaptureMemoryTextNormalizer.MatchTokens(
+                    query.Tokens,
+                    candidate.Normalized.TokenSet,
+                    candidate.Normalized.Tokens) != CaptureMemoryTokenMatch.None);
+        return CreateVideoDescriptionMatch(
+            entry,
+            VideoDescriptionTokenScore - GetTokenMatchPenalty(tokens),
+            evidence,
+            rawQuery);
+    }
+
+    private static SearchMatch CreateTranscriptMatch(
+        ProjectionEntry entry,
+        double baseScore,
+        TranscriptEvidenceEntry? segment,
+        string rawQuery)
+    {
+        return CreateMatch(
+            entry,
+            baseScore,
+            CaptureMemoryMatchKind.SpeechTranscript,
+            segment?.Text ?? entry.TranscriptText!,
+            rawQuery,
+            timecode: segment?.StartTime);
+    }
+
+    private static SearchMatch CreateVideoOcrMatch(
+        ProjectionEntry entry,
+        double baseScore,
+        VideoOcrEvidenceEntry? observation,
+        string rawQuery)
+    {
+        return CreateMatch(
+            entry,
+            baseScore,
+            CaptureMemoryMatchKind.VideoOcrText,
+            observation?.Text ?? entry.VideoOcrText!,
+            rawQuery,
+            timecode: observation?.StartTime);
+    }
+
+    private static SearchMatch CreateVideoDescriptionMatch(
+        ProjectionEntry entry,
+        double baseScore,
+        VideoDescriptionEvidenceEntry? observation,
+        string rawQuery)
+    {
+        return CreateMatch(
+            entry,
+            baseScore,
+            CaptureMemoryMatchKind.VideoDescription,
+            observation?.Text ?? entry.VideoDescriptionText!,
+            rawQuery,
+            timecode: observation?.StartTime);
+    }
+
     private static SearchMatch CreateMatch(
         ProjectionEntry entry,
         double baseScore,
         CaptureMemoryMatchKind matchKind,
         string source,
         string rawQuery,
-        CaptureMemoryPixelBounds? bounds = null)
+        CaptureMemoryPixelBounds? bounds = null,
+        TimeSpan? timecode = null)
     {
         double recency = entry.CapturedAtUtc.UtcDateTime.Ticks /
             (double)DateTime.MaxValue.Ticks * MaximumRecencyTieBreaker;
@@ -561,7 +819,8 @@ internal sealed class CaptureMemorySearchProjection :
             new CaptureMemoryMatchEvidence(
                 matchKind,
                 CaptureMemoryTextNormalizer.CreateSafeSnippet(source, rawQuery),
-                bounds));
+                bounds,
+                timecode));
     }
 
     private static double GetTokenMatchPenalty(CaptureMemoryTokenMatch match)
@@ -584,13 +843,37 @@ internal sealed class CaptureMemorySearchProjection :
         string? OcrText,
         CaptureMemoryNormalizedText? OcrNormalized,
         IReadOnlyList<OcrEvidenceEntry> OcrLines,
+        string? VideoOcrText,
+        CaptureMemoryNormalizedText? VideoOcrNormalized,
+        IReadOnlyList<VideoOcrEvidenceEntry> VideoOcrObservations,
+        string? VideoDescriptionText,
+        CaptureMemoryNormalizedText? VideoDescriptionNormalized,
+        IReadOnlyList<VideoDescriptionEvidenceEntry> VideoDescriptionObservations,
         string? Description,
-        CaptureMemoryNormalizedText? DescriptionNormalized);
+        CaptureMemoryNormalizedText? DescriptionNormalized,
+        string? TranscriptText,
+        CaptureMemoryNormalizedText? TranscriptNormalized,
+        IReadOnlyList<TranscriptEvidenceEntry> TranscriptSegments);
 
     private sealed record OcrEvidenceEntry(
         string Text,
         CaptureMemoryNormalizedText Normalized,
         CaptureMemoryPixelBounds Bounds);
+
+    private sealed record TranscriptEvidenceEntry(
+        string Text,
+        CaptureMemoryNormalizedText Normalized,
+        TimeSpan? StartTime);
+
+    private sealed record VideoOcrEvidenceEntry(
+        string Text,
+        CaptureMemoryNormalizedText Normalized,
+        TimeSpan StartTime);
+
+    private sealed record VideoDescriptionEvidenceEntry(
+        string Text,
+        CaptureMemoryNormalizedText Normalized,
+        TimeSpan StartTime);
 
     private sealed record SearchMatch(
         ProjectionEntry Entry,

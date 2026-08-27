@@ -48,7 +48,12 @@ public enum RecipeCapabilityRequirement
 
 public readonly record struct RecipeCapability
 {
-    public RecipeCapability(CapabilityDefinition capability, RecipeCapabilityRequirement requirement)
+    private readonly IReadOnlyList<CapabilityDefinition>? _dependencies;
+
+    public RecipeCapability(
+        CapabilityDefinition capability,
+        RecipeCapabilityRequirement requirement,
+        IEnumerable<CapabilityDefinition>? dependencies = null)
     {
         if (capability.Id.IsEmpty)
         {
@@ -60,13 +65,46 @@ public readonly record struct RecipeCapability
             throw new ArgumentOutOfRangeException(nameof(requirement));
         }
 
+        CapabilityDefinition[] copiedDependencies = [.. dependencies ?? []];
+        if (copiedDependencies.Any(dependency => dependency.Id.IsEmpty))
+        {
+            throw new ArgumentException(
+                "A recipe dependency requires a capability definition.",
+                nameof(dependencies));
+        }
+
+        if (copiedDependencies.Any(dependency => dependency.Id == capability.Id))
+        {
+            throw new ArgumentException(
+                "A recipe capability cannot depend on itself.",
+                nameof(dependencies));
+        }
+
+        if (copiedDependencies.GroupBy(dependency => dependency.Id).Any(group => group.Count() > 1))
+        {
+            throw new ArgumentException(
+                "A recipe capability cannot contain duplicate dependencies.",
+                nameof(dependencies));
+        }
+
         Capability = capability;
         Requirement = requirement;
+        _dependencies = Array.AsReadOnly(copiedDependencies);
     }
 
     public CapabilityDefinition Capability { get; }
 
     public RecipeCapabilityRequirement Requirement { get; }
+
+    public IReadOnlyList<CapabilityDefinition> Dependencies => _dependencies ?? [];
+
+    public bool HasSameSemanticsAs(RecipeCapability other)
+    {
+        return Capability == other.Capability &&
+            Requirement == other.Requirement &&
+            Dependencies.Count == other.Dependencies.Count &&
+            Dependencies.All(dependency => other.Dependencies.Contains(dependency));
+    }
 }
 
 public sealed class CaptureAnalysisRecipe
@@ -122,6 +160,33 @@ public sealed class CaptureAnalysisRecipe
                 nameof(capabilities));
         }
 
+        var capabilitiesById = copiedCapabilities.ToDictionary(
+            capability => capability.Capability.Id);
+        foreach (RecipeCapability capability in copiedCapabilities)
+        {
+            foreach (CapabilityDefinition dependency in capability.Dependencies)
+            {
+                if (!capabilitiesById.TryGetValue(dependency.Id, out RecipeCapability requested) ||
+                    requested.Capability != dependency)
+                {
+                    throw new ArgumentException(
+                        $"Capability '{capability.Capability.Id}' depends on a capability " +
+                        "that is not part of the recipe with the same schema.",
+                        nameof(capabilities));
+                }
+
+                if (capability.Requirement == RecipeCapabilityRequirement.Required &&
+                    requested.Requirement == RecipeCapabilityRequirement.Optional)
+                {
+                    throw new ArgumentException(
+                        "A required capability cannot depend on an optional capability.",
+                        nameof(capabilities));
+                }
+            }
+        }
+
+        EnsureAcyclic(capabilitiesById);
+
         Id = id;
         Version = version;
         MediaKind = mediaKind;
@@ -164,6 +229,70 @@ public sealed class CaptureAnalysisRecipe
 
         return _capabilities.All(capability =>
             other.TryGetCapability(capability.Capability.Id, out RecipeCapability otherCapability) &&
-            capability == otherCapability);
+            capability.HasSameSemanticsAs(otherCapability));
+    }
+
+    public IReadOnlyList<RecipeCapability> GetExecutionOrder()
+    {
+        var ordered = new List<RecipeCapability>(_capabilities.Count);
+        var remainingDependencies = _capabilities.ToDictionary(
+            capability => capability.Capability.Id,
+            capability => capability.Dependencies.Count);
+        var scheduled = new HashSet<AnalysisCapabilityId>();
+        while (ordered.Count < _capabilities.Count)
+        {
+            RecipeCapability next = _capabilities.First(capability =>
+                !scheduled.Contains(capability.Capability.Id) &&
+                remainingDependencies[capability.Capability.Id] == 0);
+            ordered.Add(next);
+            _ = scheduled.Add(next.Capability.Id);
+
+            foreach (RecipeCapability consumer in _capabilities.Where(capability =>
+                !scheduled.Contains(capability.Capability.Id) &&
+                capability.Dependencies.Any(dependency => dependency.Id == next.Capability.Id)))
+            {
+                remainingDependencies[consumer.Capability.Id]--;
+            }
+        }
+
+        return ordered.AsReadOnly();
+    }
+
+    private static void EnsureAcyclic(
+        IReadOnlyDictionary<AnalysisCapabilityId, RecipeCapability> capabilities)
+    {
+        var visiting = new HashSet<AnalysisCapabilityId>();
+        var visited = new HashSet<AnalysisCapabilityId>();
+
+        foreach (RecipeCapability capability in capabilities.Values)
+        {
+            VisitForCycle(capability, capabilities, visiting, visited);
+        }
+    }
+
+    private static void VisitForCycle(
+        RecipeCapability capability,
+        IReadOnlyDictionary<AnalysisCapabilityId, RecipeCapability> capabilities,
+        ISet<AnalysisCapabilityId> visiting,
+        ISet<AnalysisCapabilityId> visited)
+    {
+        AnalysisCapabilityId id = capability.Capability.Id;
+        if (visited.Contains(id))
+        {
+            return;
+        }
+
+        if (!visiting.Add(id))
+        {
+            throw new ArgumentException("A recipe capability dependency graph cannot contain a cycle.");
+        }
+
+        foreach (CapabilityDefinition dependency in capability.Dependencies)
+        {
+            VisitForCycle(capabilities[dependency.Id], capabilities, visiting, visited);
+        }
+
+        _ = visiting.Remove(id);
+        _ = visited.Add(id);
     }
 }

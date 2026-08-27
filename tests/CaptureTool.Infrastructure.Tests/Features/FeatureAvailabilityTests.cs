@@ -1,3 +1,4 @@
+using CaptureTool.Application.Abstractions.Analysis.Analyzers;
 using CaptureTool.Application.Abstractions.Analysis.Policy;
 using CaptureTool.Application.Abstractions.Analysis.Memory;
 using CaptureTool.Application.Abstractions.Edit.Image.Description;
@@ -85,6 +86,110 @@ public sealed class FeatureAvailabilityTests
         Assert.IsFalse(providerDisabled.IsAnalyzerEnabled(analyzer));
         Assert.IsTrue(analyzerDisabled.IsProviderEnabled("microsoft-windows"));
         Assert.IsFalse(analyzerDisabled.IsAnalyzerEnabled(analyzer));
+    }
+
+    [TestMethod]
+    public void CaptureAnalysisFeatureAvailability_AppliesDeveloperOverrideAndRevision()
+    {
+        AnalyzerIdentity analyzer = CreateAnalyzerIdentity();
+        var selection = new StubAnalyzerSelectionService(revision: 17, enabledOverride: true);
+        var availability = new CaptureAnalysisFeatureAvailability(
+            new SelectiveFeatureManager(
+                AppFeatures.Feature_CaptureAnalysis_Analyzer_WindowsOcrDocument),
+            selection);
+
+        Assert.IsTrue(availability.IsAnalyzerEnabled(analyzer));
+        Assert.AreEqual(5_000_000_017L, availability.ResolutionPolicyRevision);
+    }
+
+    [TestMethod]
+    public void CaptureAnalysisFeatureAvailability_DoesNotOverrideProviderKillSwitch()
+    {
+        var selection = new StubAnalyzerSelectionService(revision: 1, enabledOverride: true);
+        var availability = new CaptureAnalysisFeatureAvailability(
+            new SelectiveFeatureManager(
+                AppFeatures.Feature_CaptureAnalysis_Provider_MicrosoftWindows),
+            selection);
+
+        Assert.IsFalse(availability.IsAnalyzerEnabled(CreateAnalyzerIdentity()));
+    }
+
+    [TestMethod]
+    public void CaptureAnalysisFeatureAvailability_RecognizesFoundryLocalSpeechKillSwitches()
+    {
+        AnalyzerIdentity analyzer = CreateFoundryLocalAnalyzerIdentity();
+        var enabled = new CaptureAnalysisFeatureAvailability(new ConstantFeatureManager(true));
+        var providerDisabled = new CaptureAnalysisFeatureAvailability(
+            new SelectiveFeatureManager(
+                AppFeatures.Feature_CaptureAnalysis_Provider_MicrosoftFoundryLocal));
+        var analyzerDisabled = new CaptureAnalysisFeatureAvailability(
+            new SelectiveFeatureManager(
+                AppFeatures.Feature_CaptureAnalysis_Analyzer_FoundryLocalSpeechTranscript));
+
+        Assert.IsTrue(enabled.IsProviderEnabled("microsoft-foundry-local"));
+        Assert.IsTrue(enabled.IsAnalyzerEnabled(analyzer));
+        Assert.IsFalse(providerDisabled.IsProviderEnabled("microsoft-foundry-local"));
+        Assert.IsFalse(providerDisabled.IsAnalyzerEnabled(analyzer));
+        Assert.IsTrue(analyzerDisabled.IsProviderEnabled("microsoft-foundry-local"));
+        Assert.IsFalse(analyzerDisabled.IsAnalyzerEnabled(analyzer));
+    }
+
+    [TestMethod]
+    public void CaptureAnalysisFeatureAvailability_RecognizesWindowsVideoOcrKillSwitch()
+    {
+        var analyzer = new AnalyzerIdentity(
+            "windows-video-frame-ocr",
+            "microsoft-windows",
+            "windows-media-ocr",
+            null,
+            "1",
+            "windows-media-ocr",
+            null,
+            null,
+            null);
+        var enabled = new CaptureAnalysisFeatureAvailability(new ConstantFeatureManager(true));
+        var disabled = new CaptureAnalysisFeatureAvailability(
+            new SelectiveFeatureManager(
+                AppFeatures.Feature_CaptureAnalysis_Analyzer_WindowsVideoFrameOcr));
+
+        Assert.IsTrue(enabled.IsAnalyzerEnabled(analyzer));
+        Assert.IsFalse(disabled.IsAnalyzerEnabled(analyzer));
+    }
+
+    [TestMethod]
+    public void CaptureAnalysisFeatureAvailability_RecognizesNewWindowsAiAnalyzerKillSwitches()
+    {
+        (string AnalyzerId, FeatureFlag Flag)[] cases =
+        [
+            ("windows-ai-ocr-document",
+                AppFeatures.Feature_CaptureAnalysis_Analyzer_WindowsAiOcrDocument),
+            ("windows-ai-video-frame-ocr",
+                AppFeatures.Feature_CaptureAnalysis_Analyzer_WindowsAiVideoFrameOcr),
+            ("windows-video-frame-description",
+                AppFeatures.Feature_CaptureAnalysis_Analyzer_WindowsVideoFrameDescription),
+            ("windows-ai-speech-transcript",
+                AppFeatures.Feature_CaptureAnalysis_Analyzer_WindowsAiSpeechTranscript),
+        ];
+        var enabled = new CaptureAnalysisFeatureAvailability(new ConstantFeatureManager(true));
+
+        foreach ((string analyzerId, FeatureFlag flag) in cases)
+        {
+            var analyzer = new AnalyzerIdentity(
+                analyzerId,
+                "microsoft-windows",
+                "model",
+                null,
+                "1",
+                "runtime",
+                null,
+                null,
+                null);
+            var disabled = new CaptureAnalysisFeatureAvailability(
+                new SelectiveFeatureManager(flag));
+
+            Assert.IsTrue(enabled.IsAnalyzerEnabled(analyzer), analyzerId);
+            Assert.IsFalse(disabled.IsAnalyzerEnabled(analyzer), analyzerId);
+        }
     }
 
     [TestMethod]
@@ -304,6 +409,20 @@ public sealed class FeatureAvailabilityTests
             null);
     }
 
+    private static AnalyzerIdentity CreateFoundryLocalAnalyzerIdentity()
+    {
+        return new(
+            "foundry-local-speech-transcript",
+            "microsoft-foundry-local",
+            "whisper-tiny",
+            null,
+            "1",
+            "microsoft-foundry-local-core",
+            "1.2.3",
+            "1.2.3",
+            null);
+    }
+
     private sealed class ConstantFeatureManager : IFeatureManager
     {
         private readonly bool _isEnabled;
@@ -340,6 +459,27 @@ public sealed class FeatureAvailabilityTests
         public bool IsProviderEnabled(string providerId) => enabled;
 
         public bool IsAnalyzerEnabled(AnalyzerIdentity analyzer) => enabled;
+    }
+
+    private sealed class StubAnalyzerSelectionService(long revision, bool? enabledOverride) :
+        ICaptureAnalyzerSelectionService
+    {
+        public long Revision => revision;
+
+        public CaptureAnalyzerSelection GetSelection(CapabilityDefinition capability) =>
+            CaptureAnalyzerSelection.Automatic(capability);
+
+        public int GetPreference(CaptureAnalyzerDescriptor descriptor) => 0;
+
+        public bool IsAllowed(CaptureAnalyzerDescriptor descriptor) => true;
+
+        public bool? GetFeatureEnabledOverride(AnalyzerIdentity analyzer) => enabledOverride;
+
+        public ValueTask<CaptureAnalyzerSelectionSaveResult> SaveAsync(
+            IEnumerable<CaptureAnalyzerSelection> selections,
+            CancellationToken cancellationToken = default) =>
+            ValueTask.FromResult(new CaptureAnalyzerSelectionSaveResult(
+                CaptureAnalyzerSelectionSaveStatus.Unavailable));
     }
 
     private sealed class StubImageSuperResolutionService(ImageSuperResolutionReadyState readyState)

@@ -305,11 +305,15 @@ public sealed record CaptureAnalyzerAvailabilityRequest
 
 public sealed record CaptureAnalysisRequest
 {
+    private readonly IReadOnlyList<CanonicalCapabilityResult> _inputs;
+
     public CaptureAnalysisRequest(
         CaptureAnalyzerDescriptor descriptor,
         AnalysisPurpose purpose,
         AnalysisProcessingPolicy processingPolicy,
-        ICaptureAnalysisSource source)
+        ICaptureAnalysisSource source,
+        IEnumerable<CanonicalCapabilityResult>? inputs = null,
+        ICaptureAnalyzerCheckpoint? checkpoint = null)
     {
         ArgumentNullException.ThrowIfNull(descriptor);
 
@@ -343,10 +347,26 @@ public sealed record CaptureAnalysisRequest
                 nameof(descriptor));
         }
 
+        CanonicalCapabilityResult[] copiedInputs = [.. inputs ?? []];
+        if (copiedInputs.Any(input =>
+                input.CaptureId != source.CaptureId ||
+                input.SourceRevision != source.SourceRevision ||
+                input.Capability.Id == descriptor.Capability.Id) ||
+            copiedInputs.GroupBy(input => input.Capability.Id).Any(group => group.Count() > 1))
+        {
+            throw new ArgumentException(
+                "Analyzer inputs must be distinct normalized results from the same capture source.",
+                nameof(inputs));
+        }
+
         Descriptor = descriptor;
         Purpose = purpose;
         ProcessingPolicy = processingPolicy;
         Source = source;
+        _inputs = Array.AsReadOnly(copiedInputs
+            .OrderBy(input => input.Capability.Id.Value, StringComparer.Ordinal)
+            .ToArray());
+        Checkpoint = checkpoint ?? NullCaptureAnalyzerCheckpoint.Instance;
     }
 
     public CaptureAnalyzerDescriptor Descriptor { get; }
@@ -361,11 +381,53 @@ public sealed record CaptureAnalysisRequest
 
     public ICaptureAnalysisSource Source { get; }
 
+    public IReadOnlyList<CanonicalCapabilityResult> Inputs => _inputs;
+
+    public ICaptureAnalyzerCheckpoint Checkpoint { get; }
+
     public bool IsEligibleFor(CaptureAnalyzerDescriptor descriptor)
     {
         ArgumentNullException.ThrowIfNull(descriptor);
 
         return descriptor == Descriptor;
+    }
+}
+
+public interface ICaptureAnalyzerCheckpoint
+{
+    ValueTask<ReadOnlyMemory<byte>?> ReadAsync(
+        CancellationToken cancellationToken = default);
+
+    ValueTask WriteAsync(
+        ReadOnlyMemory<byte> payload,
+        CancellationToken cancellationToken = default);
+
+    ValueTask ClearAsync(CancellationToken cancellationToken = default);
+}
+
+internal sealed class NullCaptureAnalyzerCheckpoint : ICaptureAnalyzerCheckpoint
+{
+    public static NullCaptureAnalyzerCheckpoint Instance { get; } = new();
+
+    public ValueTask<ReadOnlyMemory<byte>?> ReadAsync(
+        CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        return ValueTask.FromResult<ReadOnlyMemory<byte>?>(null);
+    }
+
+    public ValueTask WriteAsync(
+        ReadOnlyMemory<byte> payload,
+        CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        return ValueTask.CompletedTask;
+    }
+
+    public ValueTask ClearAsync(CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        return ValueTask.CompletedTask;
     }
 }
 
