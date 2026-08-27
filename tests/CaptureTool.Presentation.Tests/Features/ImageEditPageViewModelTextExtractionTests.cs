@@ -347,6 +347,105 @@ public sealed class ImageEditPageViewModelTextExtractionTests
     }
 
     [TestMethod]
+    public async Task ToggleTextExtractionMode_WhenModelPreparationIsRunning_ShouldRemainEnabledAndCancelOnSecondClick()
+    {
+        var textExtraction = new Mock<ITextExtractionService>();
+        var pendingPreparation = new TaskCompletionSource<TextExtractionPreparationResult>(
+            TaskCreationOptions.RunContinuationsAsynchronously);
+        CancellationToken preparationToken = default;
+
+        textExtraction
+            .Setup(service => service.GetReadyState())
+            .Returns(TextExtractionReadyState.PreparationNeeded);
+        textExtraction
+            .Setup(service => service.EnsureReadyAsync(It.IsAny<CancellationToken>()))
+            .Returns((CancellationToken cancellationToken) =>
+            {
+                preparationToken = cancellationToken;
+                return pendingPreparation.Task;
+            });
+
+        ImageEditPageViewModel viewModel = CreateViewModel(
+            textExtractionService: textExtraction.Object);
+
+        await viewModel.LoadAsync(new ImageFile("original.png"), CancellationToken.None);
+        Task originalExecution = viewModel.ToggleTextExtractionModeCommand.ExecuteAsync(null);
+
+        viewModel.IsTextExtractionModeActive.Should().BeTrue();
+        viewModel.IsTextExtractionRunning.Should().BeTrue();
+        viewModel.CanToggleTextExtraction.Should().BeTrue();
+        viewModel.ToggleTextExtractionModeCommand.CanExecute(null).Should().BeTrue();
+
+        await viewModel.ToggleTextExtractionModeCommand.ExecuteAsync(null);
+
+        preparationToken.IsCancellationRequested.Should().BeTrue();
+        viewModel.IsTextExtractionModeActive.Should().BeFalse();
+        viewModel.IsTextExtractionRunning.Should().BeFalse();
+        viewModel.ToggleTextExtractionModeCommand.CanExecute(null).Should().BeTrue();
+
+        pendingPreparation.SetResult(TextExtractionPreparationResult.Success);
+        await originalExecution;
+
+        textExtraction.Verify(service => service.ExtractAsync(
+            It.IsAny<TextExtractionRequest>(),
+            It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [TestMethod]
+    public async Task ChangingModes_WhenTextExtractionIsRunning_ShouldCancelAndDismissProgress()
+    {
+        var exporter = new Mock<IImageCanvasExporter>();
+        var textExtraction = new Mock<ITextExtractionService>();
+        var pendingResult = new TaskCompletionSource<TextExtractionResult>(
+            TaskCreationOptions.RunContinuationsAsynchronously);
+        CancellationToken extractionToken = default;
+
+        exporter
+            .Setup(service => service.RenderToStreamAsync(
+                It.IsAny<IDrawable[]>(),
+                It.IsAny<ImageCanvasRenderOptions>()))
+            .ReturnsAsync(() => new MemoryStream([1, 2, 3]));
+        textExtraction
+            .Setup(service => service.GetReadyState())
+            .Returns(TextExtractionReadyState.Ready);
+        textExtraction
+            .Setup(service => service.ExtractAsync(
+                It.IsAny<TextExtractionRequest>(),
+                It.IsAny<CancellationToken>()))
+            .Returns((TextExtractionRequest _, CancellationToken cancellationToken) =>
+            {
+                extractionToken = cancellationToken;
+                return pendingResult.Task;
+            });
+
+        ImageEditPageViewModel viewModel = CreateViewModel(
+            imageCanvasExporter: exporter.Object,
+            textExtractionService: textExtraction.Object);
+
+        await viewModel.LoadAsync(new ImageFile("original.png"), CancellationToken.None);
+        Task originalExecution = viewModel.ToggleTextExtractionModeCommand.ExecuteAsync(null);
+
+        viewModel.IsTextExtractionModeActive.Should().BeTrue();
+        viewModel.IsTextExtractionRunning.Should().BeTrue();
+
+        viewModel.ToggleCropModeCommand.Execute(null);
+
+        extractionToken.IsCancellationRequested.Should().BeTrue();
+        viewModel.IsCropModeActive.Should().BeTrue();
+        viewModel.IsTextExtractionModeActive.Should().BeFalse();
+        viewModel.IsTextExtractionRunning.Should().BeFalse();
+
+        pendingResult.SetResult(TextExtractionResult.Success(new RecognizedTextDocument(
+            "stale",
+            new Size(100, 50),
+            [new RecognizedTextRegion("stale", new RectangleF(10, 10, 20, 5))])));
+        await originalExecution;
+
+        viewModel.TextExtractionRegions.Should().BeEmpty();
+        viewModel.TextExtractionTool.Text.Should().BeEmpty();
+    }
+
+    [TestMethod]
     public async Task ToggleTextExtractionMode_WhenImageIsTooLarge_ShouldShowLocalizedMessage()
     {
         var exporter = new Mock<IImageCanvasExporter>();

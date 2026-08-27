@@ -235,7 +235,7 @@ public sealed class WindowsAiTextExtractionService :
             regions);
     }
 
-    private static bool TryToPixelBounds(
+    internal static bool TryToPixelBounds(
         RecognizedTextBoundingBox polygon,
         int rasterWidth,
         int rasterHeight,

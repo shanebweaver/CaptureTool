@@ -18,9 +18,23 @@ public sealed class FallbackWindowsTextExtractionService : ITextExtractionServic
     public TextExtractionReadyState GetReadyState()
     {
         TextExtractionReadyState windowsAiState = _windowsAi.GetReadyState();
-        return windowsAiState == TextExtractionReadyState.Ready
-            ? windowsAiState
-            : _legacy.GetReadyState();
+        TextExtractionReadyState legacyState = _legacy.GetReadyState();
+        return GetCombinedReadyState(windowsAiState, legacyState);
+    }
+
+    internal static TextExtractionReadyState GetCombinedReadyState(
+        TextExtractionReadyState windowsAiState,
+        TextExtractionReadyState legacyState)
+    {
+        return windowsAiState switch
+        {
+            TextExtractionReadyState.Ready => TextExtractionReadyState.Ready,
+            TextExtractionReadyState.PreparationNeeded => TextExtractionReadyState.PreparationNeeded,
+            _ when legacyState == TextExtractionReadyState.Ready => TextExtractionReadyState.Ready,
+            TextExtractionReadyState.Disabled => TextExtractionReadyState.Disabled,
+            TextExtractionReadyState.NotSupported => TextExtractionReadyState.NotSupported,
+            _ => legacyState,
+        };
     }
 
     public async Task<TextExtractionPreparationResult> EnsureReadyAsync(

@@ -30,4 +30,23 @@ public sealed class WindowsTextExtractionServiceTests
         await Assert.ThrowsExactlyAsync<OperationCanceledException>(() =>
             service.ExtractAnalysisAsync(source, cancellation.Token));
     }
+
+    [TestMethod]
+    [DataRow(TextExtractionReadyState.Ready, TextExtractionReadyState.NotSupported, TextExtractionReadyState.Ready)]
+    [DataRow(TextExtractionReadyState.PreparationNeeded, TextExtractionReadyState.Ready, TextExtractionReadyState.PreparationNeeded)]
+    [DataRow(TextExtractionReadyState.NotSupported, TextExtractionReadyState.Ready, TextExtractionReadyState.Ready)]
+    [DataRow(TextExtractionReadyState.Disabled, TextExtractionReadyState.Ready, TextExtractionReadyState.Ready)]
+    [DataRow(TextExtractionReadyState.NotSupported, TextExtractionReadyState.NotSupported, TextExtractionReadyState.NotSupported)]
+    [DataRow(TextExtractionReadyState.Disabled, TextExtractionReadyState.NotSupported, TextExtractionReadyState.Disabled)]
+    public void FallbackReadyState_ShouldPreferWindowsAiPreparationAndLegacyAvailability(
+        TextExtractionReadyState windowsAiState,
+        TextExtractionReadyState legacyState,
+        TextExtractionReadyState expected)
+    {
+        Assert.AreEqual(
+            expected,
+            FallbackWindowsTextExtractionService.GetCombinedReadyState(
+                windowsAiState,
+                legacyState));
+    }
 }

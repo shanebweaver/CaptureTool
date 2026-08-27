@@ -833,7 +833,8 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         ToggleTextExtractionModeCommand = new AsyncRelayCommand(
             ToggleTextExtractionModeAsync,
             () => CanToggleTextExtraction,
-            AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
+            AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler |
+                AsyncRelayCommandOptions.AllowConcurrentExecutions);
         ToggleImageDescriptionModeCommand = new AsyncRelayCommand(
             ToggleImageDescriptionModeAsync,
             () => CanToggleImageDescription,
@@ -2350,6 +2351,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
             {
                 TextExtractionPreparationResult preparationResult =
                     await _textExtractionService.EnsureReadyAsync(cancellationToken);
+                cancellationToken.ThrowIfCancellationRequested();
                 if (preparationResult.Status != TextExtractionPreparationStatus.Success)
                 {
                     ShowTextExtractionFailure(GetPreparationFailureMessage(preparationResult));
@@ -2821,8 +2823,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     {
         CanToggleTextExtraction = IsLoaded &&
             IsTextExtractionFeatureEnabled &&
-            IsTextExtractionAvailable &&
-            (IsTextExtractionModeActive || !IsTextExtractionRunning);
+            IsTextExtractionAvailable;
     }
 
     private void UpdateImageDescriptionAvailability()
@@ -2974,6 +2975,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     private void CancelTextExtractionWork()
     {
         _operationCoordinator.Cancel(ImageEditOperation.TextExtraction);
+        IsTextExtractionRunning = false;
     }
 
     private void CancelImageDescriptionWork()

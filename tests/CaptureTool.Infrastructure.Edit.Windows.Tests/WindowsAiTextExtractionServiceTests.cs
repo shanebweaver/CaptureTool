@@ -1,5 +1,7 @@
 using CaptureTool.Application.Abstractions.Edit.Image.TextExtraction;
 using Microsoft.Windows.AI;
+using Microsoft.Windows.AI.Imaging;
+using WinPoint = Windows.Foundation.Point;
 
 namespace CaptureTool.Infrastructure.Edit.Windows.Tests;
 
@@ -30,6 +32,27 @@ public sealed class WindowsAiTextExtractionServiceTests
         TextExtractionReadyState expected)
     {
         Assert.AreEqual(expected, WindowsAiTextExtractionService.MapReadyState(source));
+    }
+
+    [TestMethod]
+    public void TryToPixelBounds_ReturnsAxisAlignedBoundsForRotatedText()
+    {
+        var polygon = new RecognizedTextBoundingBox
+        {
+            TopLeft = new WinPoint(20, 10),
+            TopRight = new WinPoint(80, 20),
+            BottomRight = new WinPoint(70, 50),
+            BottomLeft = new WinPoint(10, 40),
+        };
+
+        bool succeeded = WindowsAiTextExtractionService.TryToPixelBounds(
+            polygon,
+            rasterWidth: 100,
+            rasterHeight: 60,
+            out TextExtractionPixelBounds result);
+
+        Assert.IsTrue(succeeded);
+        Assert.AreEqual(new TextExtractionPixelBounds(10, 10, 70, 40), result);
     }
 
     [TestMethod]
