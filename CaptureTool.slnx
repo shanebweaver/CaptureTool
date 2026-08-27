@@ -30,11 +30,6 @@
       <Platform Solution="*|ARM64" Project="ARM64" />
       <Platform Solution="*|x64" Project="x64" />
     </Project>
-    <Project Path="src/CaptureTool.Infrastructure.Analysis.Windows.Experimental/CaptureTool.Infrastructure.Analysis.Windows.Experimental.csproj">
-      <Platform Solution="*|ARM64" Project="ARM64" />
-      <Platform Solution="*|x64" Project="x64" />
-      <Build Solution="Release|*" Project="false" />
-    </Project>
     <Project Path="src/CaptureTool.Infrastructure.Analysis.FoundryLocal/CaptureTool.Infrastructure.Analysis.FoundryLocal.csproj">
       <Platform Solution="*|ARM64" Project="ARM64" />
       <Platform Solution="*|x64" Project="x64" />

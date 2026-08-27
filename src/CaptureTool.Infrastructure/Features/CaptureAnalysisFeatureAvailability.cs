@@ -7,7 +7,7 @@ namespace CaptureTool.Infrastructure.Features;
 
 public sealed class CaptureAnalysisFeatureAvailability : ICaptureAnalysisFeatureAvailability
 {
-    private const long CurrentResolutionPolicyRevision = 5;
+    private const long CurrentResolutionPolicyRevision = 7;
     private const string MicrosoftWindowsProviderId = "microsoft-windows";
     private const string MicrosoftFoundryLocalProviderId = "microsoft-foundry-local";
 
@@ -73,10 +73,11 @@ public sealed class CaptureAnalysisFeatureAvailability : ICaptureAnalysisFeature
                 AppFeatures.Feature_CaptureAnalysis_Analyzer_WindowsAiVideoFrameOcr),
             "windows-video-frame-description" => _featureManager.IsEnabled(
                 AppFeatures.Feature_CaptureAnalysis_Analyzer_WindowsVideoFrameDescription),
-            "windows-ai-speech-transcript" => _featureManager.IsEnabled(
-                AppFeatures.Feature_CaptureAnalysis_Analyzer_WindowsAiSpeechTranscript),
             "foundry-local-speech-transcript" => _featureManager.IsEnabled(
                 AppFeatures.Feature_CaptureAnalysis_Analyzer_FoundryLocalSpeechTranscript),
+            "foundry-local-nemotron-multilingual-speech-transcript" =>
+                _featureManager.IsEnabled(
+                    AppFeatures.Feature_CaptureAnalysis_NemotronMultilingualSpeech),
             _ => false,
         };
     }

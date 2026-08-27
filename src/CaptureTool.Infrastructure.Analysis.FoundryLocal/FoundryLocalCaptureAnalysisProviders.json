@@ -10,6 +10,11 @@
           "analyzerId": "foundry-local-speech-transcript",
           "capability": "speech-transcript/v1",
           "featureFlag": "CaptureAnalysis_Analyzer_FoundryLocalSpeechTranscript"
+        },
+        {
+          "analyzerId": "foundry-local-nemotron-multilingual-speech-transcript",
+          "capability": "speech-transcript/v1",
+          "featureFlag": "CaptureAnalysis_NemotronMultilingualSpeech"
         }
       ]
     }

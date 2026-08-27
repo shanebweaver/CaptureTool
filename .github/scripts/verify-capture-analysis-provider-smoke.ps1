@@ -21,6 +21,30 @@ $temporaryRoot = Join-Path $temporaryParent ("CaptureTool-Analysis-Smoke-" + [Gu
 $uploadRoot = Join-Path $temporaryRoot 'upload'
 $bundleRoot = Join-Path $temporaryRoot 'bundle'
 
+function Assert-PackagedNativeAsset {
+    param(
+        [Parameter(Mandatory = $true)][string]$AppRoot,
+        [Parameter(Mandatory = $true)][string]$FileName,
+        [Parameter(Mandatory = $true)][string]$ExpectedPath,
+        [Parameter(Mandatory = $true)][string]$PackageName
+    )
+
+    if (-not (Test-Path -LiteralPath $ExpectedPath -PathType Leaf)) {
+        throw "Resolved package asset was not found: $ExpectedPath."
+    }
+
+    $packaged = @(Get-ChildItem -LiteralPath $AppRoot -Recurse -File -Filter $FileName)
+    if ($packaged.Count -ne 1) {
+        throw "Expected exactly one $FileName from $PackageName, found $($packaged.Count)."
+    }
+
+    $expectedHash = (Get-FileHash -LiteralPath $ExpectedPath -Algorithm SHA256).Hash
+    $packagedHash = (Get-FileHash -LiteralPath $packaged[0].FullName -Algorithm SHA256).Hash
+    if ($packagedHash -ne $expectedHash) {
+        throw "$FileName does not match the runtime selected from $PackageName."
+    }
+}
+
 try {
     New-Item -ItemType Directory -Path $uploadRoot, $bundleRoot -Force | Out-Null
     Add-Type -AssemblyName System.IO.Compression.FileSystem
@@ -38,6 +62,45 @@ try {
     if ($prereleaseWindowsAppSdkPackages.Count -gt 0) {
         throw "The Store build resolved prerelease Windows App SDK packages: $($prereleaseWindowsAppSdkPackages -join ', ')."
     }
+
+    $resolvedFoundryPackages = @($projectAssets.libraries.PSObject.Properties.Name |
+        Where-Object { $_ -match '^Microsoft\.AI\.Foundry\.Local(?:\.|/)' })
+    $prereleaseFoundryPackages = @($resolvedFoundryPackages |
+        Where-Object { ($_ -split '/', 2)[1] -match '-' })
+    if ($prereleaseFoundryPackages.Count -gt 0) {
+        throw "The Store build resolved prerelease Foundry Local packages: $($prereleaseFoundryPackages -join ', ')."
+    }
+    if (-not ($resolvedFoundryPackages | Where-Object {
+        $_ -match '^Microsoft\.AI\.Foundry\.Local\.WinML/'
+    })) {
+        throw 'The Store build did not resolve the supported in-process Microsoft.AI.Foundry.Local.WinML SDK.'
+    }
+
+    $resolvedFoundryCorePackages = @($resolvedFoundryPackages |
+        Where-Object { $_ -match '^Microsoft\.AI\.Foundry\.Local\.Core\.WinML/' })
+    $resolvedWinMlPackages = @($projectAssets.libraries.PSObject.Properties.Name |
+        Where-Object { $_ -match '^Microsoft\.Windows\.AI\.MachineLearning/' })
+    $resolvedFoundryInferencePackages = @($projectAssets.libraries.PSObject.Properties.Name |
+        Where-Object {
+            $_ -match '^Microsoft\.ML\.OnnxRuntime(?:GenAI)?\.Foundry/'
+        })
+    $prereleaseFoundryRuntimePackages = @(
+        $resolvedWinMlPackages + $resolvedFoundryInferencePackages |
+            Where-Object { ($_ -split '/', 2)[1] -match '-' })
+    if ($prereleaseFoundryRuntimePackages.Count -gt 0) {
+        throw "The Store build resolved prerelease Foundry runtime packages: $($prereleaseFoundryRuntimePackages -join ', ')."
+    }
+    if ($resolvedFoundryCorePackages.Count -ne 1 -or $resolvedWinMlPackages.Count -ne 1) {
+        throw 'The Store build must resolve exactly one Foundry Core WinML and one Windows AI MachineLearning package.'
+    }
+
+    $nugetPackageRoot = @($projectAssets.packageFolders.PSObject.Properties.Name) |
+        Select-Object -First 1
+    if ([string]::IsNullOrWhiteSpace($nugetPackageRoot)) {
+        throw 'The Store project assets file does not declare a NuGet package root.'
+    }
+    $foundryCoreVersion = ($resolvedFoundryCorePackages[0] -split '/', 2)[1]
+    $winMlVersion = ($resolvedWinMlPackages[0] -split '/', 2)[1]
 
     $upload = Get-ChildItem -LiteralPath $resolvedPackageRoot -Recurse -File -Filter '*_bundle.msixupload' |
         Sort-Object Length -Descending |
@@ -100,24 +163,66 @@ try {
             throw "$($appPackage.Name) contains experimental Windows AI payload: $($experimentalPayload.Name -join ', ')."
         }
 
+        $foundryCliPayload = @(Get-ChildItem -LiteralPath $appRoot -Recurse -File |
+            Where-Object {
+                $_.Name -in @('foundry.exe', 'foundry.cmd', 'foundry-local.exe')
+            })
+        if ($foundryCliPayload.Count -gt 0) {
+            throw "$($appPackage.Name) contains a Foundry Local CLI payload: $($foundryCliPayload.Name -join ', ')."
+        }
+
+        $runtimeIdentifier = "win-$architecture"
+        Assert-PackagedNativeAsset `
+            -AppRoot $appRoot `
+            -FileName 'Microsoft.AI.Foundry.Local.Core.dll' `
+            -ExpectedPath (Join-Path $nugetPackageRoot "microsoft.ai.foundry.local.core.winml\$foundryCoreVersion\runtimes\$runtimeIdentifier\native\Microsoft.AI.Foundry.Local.Core.dll") `
+            -PackageName "Microsoft.AI.Foundry.Local.Core.WinML/$foundryCoreVersion"
+        Assert-PackagedNativeAsset `
+            -AppRoot $appRoot `
+            -FileName 'Microsoft.Windows.AI.MachineLearning.dll' `
+            -ExpectedPath (Join-Path $nugetPackageRoot "microsoft.windows.ai.machinelearning\$winMlVersion\runtimes\$runtimeIdentifier\native\Microsoft.Windows.AI.MachineLearning.dll") `
+            -PackageName "Microsoft.Windows.AI.MachineLearning/$winMlVersion"
+
         $appExecutable = Get-ChildItem -LiteralPath $appRoot -Recurse -File -Filter 'CaptureTool.Presentation.Windows.WinUI.exe' |
             Select-Object -First 1
         if (-not $appExecutable) {
             throw "$($appPackage.Name) does not contain the Native AOT application executable."
         }
 
-        $providerManifestFile = Get-ChildItem -LiteralPath $appRoot -Recurse -File -Filter 'CaptureAnalysisProviders.json' |
+        $providerManifestFiles = @(Get-ChildItem -LiteralPath $appRoot -Recurse -File `
+            -Filter '*CaptureAnalysisProviders.json')
+        if ($providerManifestFiles.Count -eq 0) {
+            throw "$($appPackage.Name) does not contain a Capture Analysis provider manifest."
+        }
+
+        $packagedProviders = @()
+        foreach ($providerManifestFile in $providerManifestFiles) {
+            $providerManifest = Get-Content -Raw -LiteralPath $providerManifestFile.FullName |
+                ConvertFrom-Json
+            if ($providerManifest.schemaVersion -ne 1 -or
+                $providerManifest.processingBoundary -ne 'on-device') {
+                throw "$($appPackage.Name) contains an invalid or non-local provider manifest '$($providerManifestFile.Name)'."
+            }
+
+            $packagedProviders += @($providerManifest.providers)
+        }
+
+        $foundryProvider = @($packagedProviders) |
+            Where-Object { $_.providerId -eq 'microsoft-foundry-local' } |
             Select-Object -First 1
-        if (-not $providerManifestFile) {
-            throw "$($appPackage.Name) does not contain CaptureAnalysisProviders.json."
+        if (-not $foundryProvider) {
+            throw "$($appPackage.Name) does not declare the Microsoft Foundry Local provider."
+        }
+        if (-not (@($foundryProvider.analyzers).analyzerId -contains
+            'foundry-local-speech-transcript')) {
+            throw "$($appPackage.Name) does not declare the Foundry Local speech adapter."
+        }
+        if (-not (@($foundryProvider.analyzers).analyzerId -contains
+            'foundry-local-nemotron-multilingual-speech-transcript')) {
+            throw "$($appPackage.Name) does not declare the preferred Foundry Local multilingual speech adapter."
         }
 
-        $providerManifest = Get-Content -Raw -LiteralPath $providerManifestFile.FullName | ConvertFrom-Json
-        if ($providerManifest.schemaVersion -ne 1 -or $providerManifest.processingBoundary -ne 'on-device') {
-            throw "$($appPackage.Name) contains an invalid or non-local provider manifest."
-        }
-
-        $provider = @($providerManifest.providers) |
+        $provider = @($packagedProviders) |
             Where-Object { $_.providerId -eq $run.providerId } |
             Select-Object -First 1
         if (-not $provider) {

@@ -15,7 +15,7 @@ The architecture is capability-driven rather than vendor-driven. Application cod
 
 The Capture context gains a small durable `CaptureAsset` catalog and outbox so app-created media has an identity and retained source independent of UI history or auto-save location. A protected, durable Analysis control ledger owns enrollment, exclusions, and tombstone generations. The canonical source of derived knowledge is an app-owned, current-user-protected metadata envelope for each stable `CaptureId`; optimized search projections are disposable and rebuildable. A provider must never own Capture Tool's retention, deletion, consent, or migration semantics.
 
-The first release is local-only and begins with Capture Tool-created images, audio recordings, and videos after explicit opt-in. Preferred analyzers use Windows App SDK AI for OCR, image description, and—behind an experimental provider flag—speech recognition. Devices that cannot run those APIs remain supported through legacy Windows OCR and Microsoft Foundry Local Whisper fallbacks. Video uses Windows media decoding to persist time-coded OCR, selected-frame descriptions, and speech tracks. It does not continuously observe the screen, analyze arbitrary opened files, send capture content to remote models, or provide generated answers over capture history.
+The first release is local-only and begins with Capture Tool-created images, audio recordings, and videos after explicit opt-in. Stable Windows App SDK AI analyzers provide OCR and image description, with legacy Windows OCR available on unsupported devices. Stable Microsoft Foundry Local Nemotron multilingual ASR is the preferred speech analyzer and stable Whisper Tiny is its on-device fallback. Video uses Windows media decoding to persist time-coded OCR, selected-frame descriptions, and speech tracks. It does not continuously observe the screen, analyze arbitrary opened files, send capture content to remote models, or provide generated answers over capture history.
 
 The implemented hardening requirements are specified in [Capability dependencies and result lineage](./prd-capture-analysis-capability-dependencies.md) and [Resumable analyzers and managed artifact lifecycle](./prd-capture-analysis-resumable-analyzers.md).
 
@@ -156,8 +156,7 @@ Owns setup, consent dialogs, progress, search state, result explanations, and us
 | `CaptureTool.Infrastructure/Analysis` | Provider-neutral protected document/control repositories, durable job repository, source-generated persistence DTOs, in-memory lexical projection, and feature-availability adapters. |
 | `CaptureTool.Infrastructure.Windows/Security` | Windows current-user data-protection adapter. |
 | `CaptureTool.Infrastructure.Analysis.Windows` (new) | Windows media facts, stable Windows App SDK AI and legacy Windows OCR adapters, selected-frame image description, nominal video-frame decoding, video-audio extraction, and capability probing. |
-| `CaptureTool.Infrastructure.Analysis.Windows.Experimental` | Debug-only adapters that require prerelease Windows AI packages. This assembly is excluded from every non-Debug graph and Store artifact; Windows AI Speech is its first adapter. |
-| `CaptureTool.Infrastructure.Analysis.FoundryLocal` | On-device speech-transcription adapter and explicit model-package preparation through Microsoft Foundry Local Core. Native ABI and provider details do not cross this assembly boundary. |
+| `CaptureTool.Infrastructure.Analysis.FoundryLocal` | On-device speech-transcription adapter and explicit execution-provider/model preparation through the supported in-process Microsoft Foundry Local WinML C# SDK. SDK and provider details do not cross this assembly boundary. |
 | Future provider assemblies | One assembly per materially different SDK/data boundary, such as an Azure-hosted provider. Each references application contracts, never presentation. |
 | `CaptureTool.Presentation/Features/CaptureMemory` | View models and presentation state for setup, preparation, progress, search, forget, clear, search-index rebuild, and reanalysis. |
 | `CaptureTool.Presentation.Windows.WinUI` | WinUI dialogs, Home XAML, localization, accessibility, and composition-root registration. |
@@ -166,11 +165,11 @@ Owns setup, consent dialogs, progress, search state, result explanations, and us
 
 The existing `WindowsTextExtractionService` and `WindowsImageDescriptionService` are the first Analysis model implementations; the pipeline must reuse them rather than duplicate their Windows AI calls. Their application-facing boundary gains an explicit model/provenance descriptor (or a companion descriptor interface implemented by the same service). Analysis adapters depend only on those abstractions, so `Infrastructure.Analysis.Windows` does not reference `Infrastructure.Edit.Windows` even though the composition root supplies its registered implementations.
 
-### Experimental Windows AI release boundary
+### Stable AI release boundary
 
-`EnableExperimentalWindowsAi` is a compile-time build gate, not a runtime feature flag. It defaults to `true` only for Debug and `false` for every other configuration. When enabled, central package management selects the matching experimental Windows App SDK packages, the WinUI composition root references and registers `CaptureTool.Infrastructure.Analysis.Windows.Experimental`, and its separate provider manifest is copied to the app output. Individual analyzer feature flags still decide whether an included adapter may run.
+The repository contains no prerelease Windows AI provider project or conditional experimental package graph. Central package management selects stable Windows App SDK, Windows App SDK AI, and Foundry Local WinML SDK versions for every configuration. A repository-wide MSBuild target rejects prerelease version selections in Debug, Release, and Store builds, while provider feature flags remain available as operational kill switches rather than release-channel selectors.
 
-For Release and Store builds, central package management selects stable Windows App SDK packages, the experimental project reference and provider manifest do not enter the build graph, and Foundry Local remains the speech implementation. A repository-wide MSBuild target rejects both `EnableExperimentalWindowsAi=true` and prerelease Windows App SDK version selections in every non-Debug configuration. Store-package smoke validation independently inspects the resolved NuGet graph and both architecture packages for prerelease packages or experimental payload files. This makes the Store boundary fail closed even if a future experimental analyzer is enabled accidentally at runtime.
+Foundry Core.WinML 1.2.4 embeds an older copy of the WinML native runtime while declaring it as a versioned dependency; packaging removes only that older duplicate and retains the newer NuGet-resolved runtime shared with Windows App SDK AI. Store-package smoke validation independently inspects the resolved NuGet graph for supported in-process SDKs, rejects prerelease Foundry inference runtimes, verifies the packaged Foundry Core and WinML native assets byte-for-byte against the resolved stable packages, and checks both architecture packages for CLI or retired experimental payloads. This makes the Store boundary fail closed even when Native AOT compiles managed SDK assemblies into the application executable.
 
 ### Debug-only AI Model Lab
 
@@ -178,7 +177,7 @@ Provider comparison is a developer tool, not a public settings surface. Debug bu
 
 The model-selection port lives in Application so the resolver remains provider-neutral. Its production implementation is immutable automatic selection. Debug composition replaces that service with a locally persisted Infrastructure policy and compiles the dialog, menu item, and persistence adapter only under `DEBUG`. Debug composition also enables the two top-level Capture Analysis and Capture Memory flags locally, while their generated Release defaults remain off. A selection revision contributes to `ResolutionPolicyRevision`, so queued and canonical work cannot silently retain an obsolete resolution decision.
 
-Developer selection never grants a new data boundary or processing purpose, and consent remains mandatory before any capture is analyzed. Release platform flags and provider kill switches remain authoritative. Within an already compiled and authorized provider, Debug **Prefer** or **Force** may override an analyzer-specific default-off flag so a developer can exercise that adapter; **Force** and **Off** also filter resolver candidates directly. `EnableExperimentalWindowsAi` still controls build inventory: a stable-parity Debug build cannot select an adapter it did not compile, and every Release build contains only the automatic selection service with no Model Lab UX, top-level flag override, or saved-policy implementation.
+Developer selection never grants a new data boundary or processing purpose, and consent remains mandatory before any capture is analyzed. Release platform flags and provider kill switches remain authoritative. Within an already compiled and authorized provider, Debug **Prefer** or **Force** may override an analyzer-specific default-off flag; **Force** and **Off** also filter resolver candidates directly. Debug and Release now share the same stable provider inventory. Every Release build contains only the automatic selection service with no Model Lab UX, top-level flag override, or saved-policy implementation.
 
 ## Domain model
 
@@ -319,7 +318,7 @@ The application reads flags and provider kill switches through `ICaptureAnalysis
 
 ### Adding, disabling, or removing a model
 
-- **Add:** implement `ICaptureAnalyzer`, declare its capability/schema/boundary/provenance, register it explicitly, add an independent default-off provider flag when experimental, and pass the shared analyzer contract/evaluation suite.
+- **Add:** implement `ICaptureAnalyzer`, declare its capability/schema/boundary/provenance, register it explicitly, add an independent operational kill switch, and pass the shared analyzer contract/evaluation suite. Prerelease provider dependencies are not eligible for the product repository.
 - **Disable:** turn off its provider flag. New intents re-resolve to another eligible analyzer only within the already authorized boundary; otherwise they remain `WaitingForCapability`. Capture Memory and results from other capabilities continue working.
 - **Remove:** remove the DI registration and provider package. Existing normalized results remain readable because envelopes contain app-owned payloads and producer provenance rather than provider DTOs. A product/security revocation can separately invalidate/purge that producer's results.
 - **Replace:** advance the producer fingerprint or resolution-policy revision. Only affected capabilities become stale and reanalysis remains policy-controlled.
@@ -334,8 +333,8 @@ The same port supports several deployment shapes without conflating their trust 
 
 | Provider family | Example assembly | Boundary and rule |
 |---|---|---|
-| Windows/on-device | `CaptureTool.Infrastructure.Analysis.Windows` | Prefers Windows App SDK AI Text Recognizer, Image Description, and experimental Speech Recognition after runtime/model-readiness checks. Legacy `Windows.Media.Ocr` remains an OCR fallback. Eligible for the local-only MVP. |
-| Microsoft packaged local runtime | `CaptureTool.Infrastructure.Analysis.FoundryLocal` | Acquires and runs the `whisper-tiny` speech model through Microsoft Foundry Local. It is the speech fallback when Windows AI speech is disabled or unsupported. Media stays on device; package acquisition is an explicit user preparation step. |
+| Windows/on-device | `CaptureTool.Infrastructure.Analysis.Windows` | Uses stable Windows App SDK AI Text Recognizer and Image Description after runtime/model-readiness checks. Legacy `Windows.Media.Ocr` remains an OCR fallback. Eligible for the local-only MVP. |
+| Microsoft packaged local runtime | `CaptureTool.Infrastructure.Analysis.FoundryLocal` | Resolves stable `nvidia-nemotron-3.5-asr-streaming-multilingual-0.6b` as the preferred multilingual speech analyzer and `whisper-tiny` as the fallback. The in-process Foundry Local WinML C# SDK selects a compatible registered/cached device variant. User-initiated preparation may acquire execution providers and the selected model; a cached CPU variant remains the bounded fallback when acceleration cannot be acquired. Media stays on device and no CLI or local REST service is used. |
 | Other packaged local runtime | A future `CaptureTool.Infrastructure.Analysis.Onnx` or model-specific assembly | Ships or acquires a local model; must pass Native AOT, architecture, license, size, and preparation review before registration. |
 | Microsoft-hosted service | A future Azure/Microsoft provider assembly | Remote boundary; requires provider-specific authorization, secure credentials, declared data sent, and no implicit fallback. |
 | Other hosted service | One isolated assembly per SDK/provider | Same remote requirements; cannot share credentials, consent, raw DTOs, or failure types with another provider. |
@@ -547,7 +546,7 @@ flowchart LR
     Recipe --> Intent["Provider-neutral capability intents"]
     Intent --> Resolver["Eligible analyzer resolver"]
     Resolver --> Audio["Audio source or extracted video WAV"]
-    Audio --> Speech["Windows AI speech or Foundry fallback"]
+    Audio --> Speech["Stable Foundry Local speech analyzer"]
     Speech --> Transcript["speech-transcript/v1"]
     Resolver --> Frames["Adaptive OCR samples (about every 1 second)"]
     Frames --> Ocr["Windows AI OCR or legacy fallback"]
@@ -562,11 +561,15 @@ flowchart LR
     Projection --> Result["Audio/video result with evidence and timecode"]
 ```
 
-The audio slice hands the finalized app-owned WAV source to the resolved `speech-transcript/v1` analyzer. Windows AI Speech Recognition is the higher-quality experimental option; Microsoft Foundry Local remains the stable local fallback. Both adapters create only app-owned working copies when their APIs require paths, delete those exact temporary files after each call, and return only the normalized Capture Tool payload. The queue never stores a provider path or raw response.
+The audio slice hands the finalized app-owned WAV source to a stable Microsoft Foundry Local `speech-transcript/v1` analyzer. Preferred Nemotron uses the stable live-transcription SDK and multilingual auto-detection. Fallback Whisper maps Capture Tool's selected UI language through an explicit allowlist for the six localized languages (`de`, `en`, `es`, `fr`, `ru`, and `zh`) and uses deterministic English for an unknown system language; this avoids unconstrained Whisper detection without claiming that UI language always matches the recording. Both adapters create only app-owned working copies, delete those exact temporary files after each call, and return only normalized Capture Tool payloads. The queue never stores a provider path or raw response. Windows AI Speech Recognition is intentionally absent until Microsoft provides a stable, Store-supported API and a separate release review approves it.
 
-The speech adapters plan source-relative WAV windows of at most 15 seconds. Each non-empty window becomes a transcript segment whose time range maps back to the original capture, so the lexical projection can return a useful timecode even when a runtime returns only full text. If a later runtime supplies finer native segments, its adapter can preserve and offset those ranges inside the window instead of replacing them with the coarse fallback. Windowing also keeps each inference call bounded. This is adapter policy, represented in `AdapterVersion` and the configuration fingerprint; it does not change the provider-neutral transcript schema.
+The speech adapters plan source-relative WAV windows of at most 15 seconds and normalize supported PCM or IEEE-float WAV input to 16 kHz, 16-bit mono PCM before inference. Each non-empty window becomes a transcript segment whose time range maps back to the original capture, so the lexical projection can return a useful timecode even when a runtime returns only full text. Native segment timestamps are preserved and offset inside the source window. Windowing and the live SDK's bounded push queue keep memory bounded. Language hint, normalization policy, streaming mode, and failure/fallback policy are represented in `AdapterVersion` and the configuration fingerprint; they do not change the provider-neutral transcript schema.
 
-The provider references the Microsoft Foundry Local Core package and isolates its small native command ABI inside the infrastructure assembly. This avoids exposing provider types and keeps Capture Tool's Native AOT build warning-free while the managed Foundry 1.x audio client retains a reflection-based response dependency. The adapter is replaceable in place when a public AOT-safe managed audio session is available; the analyzer port, recipe, metadata, and search projection do not change.
+The provider references the stable `Microsoft.AI.Foundry.Local.WinML` 1.2.4 C# SDK and uses its in-process manager, catalog, model lifecycle, file-audio client, and live-audio session. It never starts the optional web service and has no dependency on the preview CLI or CLI REST surface. Passive analyzer availability checks do not initialize the SDK or acquire components. Explicit preparation initializes the SDK with content-free fatal-only logging, downloads/registers missing execution providers, re-fetches the catalog, requests the selected alias, accepts the SDK-selected hardware variant, downloads it only when not cached, and loads it. If execution-provider acquisition fails, catalog resolution may still select a compatible cached/registered CPU variant; no fallback crosses the on-device boundary. Each model serializes load, inference, and unload through its adapter. A Windows high/over-limit memory notification unloads every loaded speech model while preserving downloaded caches and per-alias exact provenance, so later authorized preparation reloads without an implicit network acquisition. When an enabled Nemotron attempt cannot normalize input, fails at runtime, or returns no final speech, it records a terminal candidate outcome so the existing resolver can immediately try Whisper within the same authorized on-device intent.
+
+Native AOT analysis remains warning-as-error by default. Foundry Local 1.2.4 source-generates the audio response it uses, but the inherited Betalgo response contract roots an unused reflection-based error-message converter. The Store project expands analyzer warnings and downgrades only that dependency's `IL2026`/`IL3050` codes so they remain visible; all other trim/AOT warnings still fail the build. The exception must be revalidated or removed with every Foundry SDK update.
+
+The adapter records the requested alias, exact resolved catalog model id/version, catalog-metadata fingerprint, SDK/package version, device class, execution provider, adapter version, and alias-selection policy in `AnalyzerIdentity`. The last non-content model provenance is atomically cached under the app's local-cache Foundry directory so the same exact analyzer revision is available during restart reconciliation before the model is loaded. A changed model, device variant, SDK/configuration, or selection policy produces a new analyzer revision and follows existing stale/reanalysis rules. Model and execution-provider caches are app-created runtime assets rather than canonical Capture data: Clear Memory and revoke-and-erase remove transcripts and search visibility but do not implicitly delete runtime packages.
 
 Video is deliberately a composition of capabilities rather than one special "scan video" operation. The video recipe schedules frame OCR, selected-frame description, and audio demultiplexing/transcription independently, then projects all three forms of time-coded evidence into the same search result contract. OCR is scheduled first so useful visual text becomes searchable before slower optional speech and description work. The Windows frame source selects the first frame, approximately one nearest frame per second, and the final decodable frame with `MediaComposition.GetThumbnailAsync(..., NearestFrame)`. For long videos it increases the interval just enough to stay within 1,000 OCR samples. Each selected frame is sent to the preferred ready OCR service; consecutive identical recognized text is coalesced into one time range extending to the next sample boundary. This bounds model work while retaining deterministic first/final coverage.
 
@@ -758,8 +761,8 @@ AddWindowsCaptureAnalyzers()
   singleton: provider feature-availability and preparation adapters
 
 AddFoundryLocalAnalysisProvider()
-  singleton enumerable: speech transcript
-  singleton: Foundry Local runtime/preparation adapter
+  singleton enumerable: preferred Nemotron and fallback Whisper speech transcript analyzers
+  singleton: Foundry Local WinML SDK client, per-alias model-provenance store, model runtime/preparation adapters
 
 AddWindowsServices()
   singleton: current-user data protection
@@ -770,7 +773,7 @@ The WinUI composition root adds the new Windows Analysis infrastructure project 
 ## Security, privacy, telemetry, and logs
 
 - Analyze only intentional captured-origin media after policy grant.
-- Keep media analysis on device. Network access is limited to explicit model-package preparation; capture media and derived text are not uploaded.
+- Keep media analysis on device. Network access for Foundry runtime/model acquisition is limited to explicit preparation; capture media, transcripts, filenames, paths, search queries, and derived text are not uploaded or written to SDK logs.
 - Protect the Capture Asset catalog/change feed, Analysis control ledger, metadata, job records, and any persistent projection to the current user.
 - Do not persist raw prompts, raw provider responses, full-size derived copies, or temporary extracted frames.
 - Do not emit query text or hashes, OCR, captions, paths, filenames, window titles, thumbnails, embeddings, or content IDs to telemetry.
@@ -898,13 +901,14 @@ Rejected for the initial product. Explicit DI registration is deterministic and 
 17. Ship local-only analysis first; remote providers require separate policy and consent.
 18. Add temporal media through media-specific recipes and normalized time-coded capability results; do not create a separate audio/video job system.
 19. Use Microsoft Foundry Local as the first speech provider behind the existing analyzer port, with explicit package preparation and no remote media processing.
-20. Isolate the Foundry Local Core native command ABI inside its provider assembly until an AOT-safe public managed audio session can replace it.
+20. Use the supported in-process Foundry Local WinML C# SDK by alias, retain exact resolved model/device/runtime provenance, and reject CLI, local REST, prerelease package, or hard-coded CPU dependencies in the Store path.
 21. Produce dependable source-relative audio timecodes with bounded WAV windows, while preferring finer provider-native segments whenever they are available.
 22. Implement video as independent `video-ocr-track` and optional `speech-transcript` capabilities: OCR every bounded nominal frame, coalesce only canonical duplicate text, and delete derived frame/audio artifacts after use.
 23. Model multi-stage analysis as an acyclic recipe dependency graph, pass only normalized canonical inputs to analyzers, and persist exact upstream result references.
 24. Make upstream replacement invalidate transitive dependents and wake only dependency-ready intents; do not let analyzers coordinate through provider state or storage queries.
 25. Support long-running analyzers with bounded, current-user-protected, analyzer-revision-scoped disposable checkpoints; resume sampled video OCR from an exact media timestamp and prune abandoned checkpoints and working artifacts after seven days.
 26. Keep provider/model comparison in a Debug-only AI Model Lab; route its Auto/Prefer/Force/Off choices through the application resolver, retain provider authorization as a hard boundary, and compile the UX and mutable local policy out of Release.
+27. Improve speech input with explicit language policy and 16 kHz mono normalization; prefer stable Nemotron multilingual ASR and fall back deterministically to Whisper when the preferred attempt cannot produce a usable result.
 
 ## Open questions
 

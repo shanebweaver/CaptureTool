@@ -4,9 +4,6 @@ using CaptureTool.Infrastructure.Capture.Windows.DependencyInjection;
 using CaptureTool.Infrastructure.DependencyInjection;
 using CaptureTool.Infrastructure.Edit.Windows.DependencyInjection;
 using CaptureTool.Infrastructure.Analysis.Windows.DependencyInjection;
-#if CAPTURETOOL_EXPERIMENTAL_WINDOWS_AI
-using CaptureTool.Infrastructure.Analysis.Windows.Experimental.DependencyInjection;
-#endif
 using CaptureTool.Infrastructure.Analysis.FoundryLocal.DependencyInjection;
 using CaptureTool.Infrastructure.Windows.DependencyInjection;
 using CaptureTool.Presentation.DependencyInjection;
@@ -43,9 +40,6 @@ public partial class AppServiceProvider : IServiceProvider, IDisposable
         // Windows domains
         collection.AddWindowsCaptureDomains();
         collection.AddWindowsAnalysisDomains();
-#if CAPTURETOOL_EXPERIMENTAL_WINDOWS_AI
-        collection.AddExperimentalWindowsAiAnalysis();
-#endif
         collection.AddFoundryLocalAnalysisProvider();
         collection.AddWindowsEditDomains();
 
@@ -70,6 +64,8 @@ public partial class AppServiceProvider : IServiceProvider, IDisposable
     }
 
     public T GetService<T>() where T : notnull => _serviceProvider.GetRequiredService<T>();
+    public IEnumerable<T> GetServices<T>() where T : notnull =>
+        _serviceProvider.GetServices<T>();
     public object GetService(Type t) => _serviceProvider.GetRequiredService(t);
 
     public void Dispose()

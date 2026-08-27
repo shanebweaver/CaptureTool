@@ -89,6 +89,67 @@ public sealed class FoundryLocalSpeechTranscriptAnalyzerTests
     }
 
     [TestMethod]
+    public void NemotronDescriptor_ShouldUseIndependentIdentityAndHigherEvaluationTier()
+    {
+        var analyzer = new FoundryLocalSpeechTranscriptAnalyzer(
+            new StubTranscriptionService(),
+            videoAudioExtraction: null,
+            FoundryLocalSpeechModelConfiguration.NemotronMultilingual);
+
+        Assert.AreEqual(
+            "foundry-local-nemotron-multilingual-speech-transcript",
+            analyzer.Descriptor.Identity.AnalyzerId);
+        Assert.AreEqual(
+            "nvidia-nemotron-3.5-asr-streaming-multilingual-0.6b",
+            analyzer.Descriptor.Identity.ModelId);
+        Assert.AreEqual("1.0.0", analyzer.Descriptor.Identity.AdapterVersion);
+        Assert.AreEqual(50, analyzer.Descriptor.QualityTier);
+    }
+
+    [TestMethod]
+    public void Descriptor_WhenAppSpeechLanguageChanges_ShouldAdvanceAnalyzerRevision()
+    {
+        var service = new StubTranscriptionService { LanguageHint = "en" };
+        var analyzer = new FoundryLocalSpeechTranscriptAnalyzer(service);
+        AnalyzerRevision englishRevision = analyzer.Descriptor.Revision;
+
+        service.LanguageHint = "fr";
+
+        Assert.AreNotEqual(englishRevision, analyzer.Descriptor.Revision);
+    }
+
+    [TestMethod]
+    public async Task Prepare_ShouldPromoteDescriptorToExactResolvedModelProvenance()
+    {
+        var provenance = new FoundryLocalModelProvenance(
+            "whisper-tiny",
+            "whisper-tiny-winml-gpu-v4",
+            "4",
+            "GPU",
+            "WinMLExecutionProvider",
+            $"sha256:{new string('a', 64)}");
+        var service = new StubTranscriptionService
+        {
+            PreparationStatus = FoundryLocalSpeechPreparationStatus.Succeeded,
+            PreparationProvenance = provenance,
+        };
+        var analyzer = new FoundryLocalSpeechTranscriptAnalyzer(service);
+        AnalyzerRevision unresolvedRevision = analyzer.Descriptor.Revision;
+
+        CaptureAnalyzerPreparationResult result = await analyzer.PrepareAsync();
+        AnalyzerIdentity resolved = analyzer.Descriptor.Identity;
+
+        Assert.AreEqual(CaptureAnalyzerPreparationStatus.Succeeded, result.Status);
+        Assert.AreEqual(provenance.ResolvedModelId, resolved.ModelId);
+        Assert.AreEqual("4;alias=whisper-tiny", resolved.ModelVersion);
+        Assert.AreEqual("2.1.0", resolved.AdapterVersion);
+        Assert.AreEqual("1.2.4", resolved.RuntimeVersion);
+        StringAssert.Contains(resolved.RuntimeId, "device=gpu");
+        StringAssert.Contains(resolved.RuntimeId, "ep=winmlexecutionprovider");
+        Assert.AreNotEqual(unresolvedRevision, resolved.Revision);
+    }
+
+    [TestMethod]
     [DataRow(FoundryLocalSpeechPreparationStatus.Unsupported,
         CaptureAnalyzerPreparationStatus.Unsupported, AnalysisFailureDisposition.Terminal)]
     [DataRow(FoundryLocalSpeechPreparationStatus.Cancelled,
@@ -318,6 +379,12 @@ public sealed class FoundryLocalSpeechTranscriptAnalyzerTests
 
     private sealed class StubTranscriptionService : IFoundryLocalSpeechTranscriptionService
     {
+        public FoundryLocalModelProvenance? ModelProvenance { get; set; }
+
+        public string LanguageHint { get; set; } = "en";
+
+        public FoundryLocalModelProvenance? PreparationProvenance { get; init; }
+
         public FoundryLocalSpeechReadyState ReadyState { get; init; } =
             FoundryLocalSpeechReadyState.Ready;
 
@@ -343,6 +410,8 @@ public sealed class FoundryLocalSpeechTranscriptAnalyzerTests
                 progress?.Report(value);
             }
 
+            ModelProvenance = PreparationProvenance;
+
             return Task.FromResult(new FoundryLocalSpeechPreparationResult(PreparationStatus));
         }
 
@@ -355,6 +424,9 @@ public sealed class FoundryLocalSpeechTranscriptAnalyzerTests
             ReceivedAudio = copy.ToArray();
             return TranscriptionResult;
         }
+
+        public Task ReleaseModelAsync(CancellationToken cancellationToken = default) =>
+            Task.CompletedTask;
     }
 
     private sealed class RecordingProgress : IProgress<AnalysisCapabilityPreparationProgress>

@@ -18,12 +18,14 @@ public sealed class FeatureManagementTests
     }
 
     [TestMethod]
-    public void CaptureAnalysisReleaseFlags_ShouldBeDisabledByDefault()
+    public void CaptureAnalysisConfiguredFlags_ShouldEnableSearchAndNemotron()
     {
         var manager = new MicrosoftFeatureManager();
 
-        Assert.IsFalse(manager.IsEnabled(AppFeatures.Feature_CaptureAnalysis_Platform));
-        Assert.IsFalse(manager.IsEnabled(AppFeatures.Feature_CaptureMemory_Search));
+        Assert.IsTrue(manager.IsEnabled(AppFeatures.Feature_CaptureAnalysis_Platform));
+        Assert.IsTrue(manager.IsEnabled(AppFeatures.Feature_CaptureMemory_Search));
+        Assert.IsTrue(manager.IsEnabled(
+            AppFeatures.Feature_CaptureAnalysis_NemotronMultilingualSpeech));
     }
 
     [TestMethod]

@@ -45,6 +45,10 @@ public sealed record FoundryLocalTranscriptionSegment(
 
 public interface IFoundryLocalSpeechTranscriptionService
 {
+    FoundryLocalModelProvenance? ModelProvenance { get; }
+
+    string LanguageHint { get; }
+
     FoundryLocalSpeechReadyState GetReadyState();
 
     Task<FoundryLocalSpeechPreparationResult> PrepareAsync(
@@ -54,28 +58,70 @@ public interface IFoundryLocalSpeechTranscriptionService
     Task<FoundryLocalTranscriptionResult> TranscribeAsync(
         Stream audio,
         CancellationToken cancellationToken = default);
+
+    Task ReleaseModelAsync(CancellationToken cancellationToken = default);
 }
 
-public sealed class FoundryLocalSpeechTranscriptionService :
+internal class FoundryLocalSpeechTranscriptionService :
     IFoundryLocalSpeechTranscriptionService,
     IDisposable
 {
     private const int MaximumSegmentCount = 50_000;
     public const string ModelAlias = "whisper-tiny";
-    public const string RuntimeVersion = "1.2.3";
+    public const string RuntimeVersion = "1.2.4";
+    public const string SelectionPolicyRevision =
+        "alias-auto-winml-pcm16-app-language-allowlist-v3";
     public static readonly TimeSpan MaximumTimestampWindow = TimeSpan.FromSeconds(15);
 
     private readonly SemaphoreSlim _gate = new(1, 1);
-    private readonly FoundryLocalAudioCommandExecutor _audioCommandExecutor = new();
-    private string? _modelId;
-    private bool _coreInitialized;
+    private readonly IFoundryLocalSdkClient _sdkClient;
+    private readonly IFoundryLocalModelProvenanceStore _provenanceStore;
+    private readonly FoundryLocalSpeechModelConfiguration _configuration;
+    private readonly IFoundryLocalSpeechLanguagePolicy _languagePolicy;
+    private IFoundryLocalSdkModel? _model;
+    private FoundryLocalModelProvenance? _modelProvenance;
     private bool _unsupported;
     private bool _disposed;
+
+    public FoundryLocalSpeechTranscriptionService(
+        IFoundryLocalSdkClient sdkClient,
+        IFoundryLocalModelProvenanceStore provenanceStore)
+        : this(
+            sdkClient,
+            provenanceStore,
+            FoundryLocalSpeechModelConfiguration.Whisper,
+            new FixedFoundryLocalSpeechLanguagePolicy(
+                FoundryLocalSpeechModelConfiguration.Whisper.DefaultLanguageHint))
+    {
+    }
+
+    protected FoundryLocalSpeechTranscriptionService(
+        IFoundryLocalSdkClient sdkClient,
+        IFoundryLocalModelProvenanceStore provenanceStore,
+        FoundryLocalSpeechModelConfiguration configuration,
+        IFoundryLocalSpeechLanguagePolicy languagePolicy)
+    {
+        ArgumentNullException.ThrowIfNull(sdkClient);
+        ArgumentNullException.ThrowIfNull(provenanceStore);
+        ArgumentNullException.ThrowIfNull(configuration);
+        ArgumentNullException.ThrowIfNull(languagePolicy);
+        _sdkClient = sdkClient;
+        _provenanceStore = provenanceStore;
+        _configuration = configuration;
+        _languagePolicy = languagePolicy;
+        _modelProvenance = provenanceStore.TryRead(configuration.ModelAlias);
+    }
+
+    internal FoundryLocalSpeechModelConfiguration Configuration => _configuration;
+
+    public FoundryLocalModelProvenance? ModelProvenance => _modelProvenance;
+
+    public string LanguageHint => _languagePolicy.GetLanguageHint(_configuration);
 
     public FoundryLocalSpeechReadyState GetReadyState()
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
-        if (_modelId != null)
+        if (_model != null)
         {
             return FoundryLocalSpeechReadyState.Ready;
         }
@@ -90,41 +136,63 @@ public sealed class FoundryLocalSpeechTranscriptionService :
         CancellationToken cancellationToken = default)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
-        await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
-            if (_modelId != null)
+            await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException)
+        {
+            return new(FoundryLocalSpeechPreparationStatus.Cancelled);
+        }
+
+        try
+        {
+            if (_model != null)
             {
                 progress?.Report(1);
                 return new(FoundryLocalSpeechPreparationStatus.Succeeded);
             }
 
-            if (!_coreInitialized)
-            {
-                await _audioCommandExecutor.InitializeAsync(cancellationToken)
-                    .ConfigureAwait(false);
-                _coreInitialized = true;
-            }
+            progress?.Report(0.01);
+            await _sdkClient.InitializeAsync(cancellationToken).ConfigureAwait(false);
+            progress?.Report(0.03);
 
-            string? modelId = await _audioCommandExecutor.FindModelIdAsync(
-                ModelAlias,
-                "CPU",
-                cancellationToken)
+            await TryPrepareExecutionProvidersAsync(progress, cancellationToken)
                 .ConfigureAwait(false);
-            if (modelId == null)
+
+            IFoundryLocalSdkModel? model = await _sdkClient
+                .GetModelAsync(_configuration.ModelAlias, cancellationToken)
+                .ConfigureAwait(false);
+            if (model == null)
             {
                 _unsupported = true;
                 return new(FoundryLocalSpeechPreparationStatus.Unsupported);
             }
 
-            progress?.Report(0.05);
-            await _audioCommandExecutor.DownloadModelAsync(modelId, cancellationToken)
-                .ConfigureAwait(false);
-            progress?.Report(0.92);
-            await _audioCommandExecutor.LoadModelAsync(modelId, cancellationToken)
-                .ConfigureAwait(false);
+            if (!await model.IsCachedAsync(cancellationToken).ConfigureAwait(false))
+            {
+                await model.DownloadAsync(
+                    percent => progress?.Report(0.2 + (0.7 * ClampPercent(percent))),
+                    cancellationToken).ConfigureAwait(false);
+            }
 
-            _modelId = modelId;
+            progress?.Report(0.9);
+            await model.LoadAsync(cancellationToken).ConfigureAwait(false);
+
+            FoundryLocalModelProvenance provenance = model.Provenance;
+            try
+            {
+                _provenanceStore.Write(provenance);
+            }
+            catch
+            {
+                // Exact provenance remains available in memory for this session. A later
+                // successful preparation can repair the non-content restart cache.
+            }
+
+            _modelProvenance = provenance;
+            _model = model;
+            _unsupported = false;
             progress?.Report(1);
             return new(FoundryLocalSpeechPreparationStatus.Succeeded);
         }
@@ -153,19 +221,30 @@ public sealed class FoundryLocalSpeechTranscriptionService :
     {
         ArgumentNullException.ThrowIfNull(audio);
         ObjectDisposedException.ThrowIf(_disposed, this);
-        string? modelId = _modelId;
-        if (modelId == null)
-        {
-            return new(FoundryLocalTranscriptionStatus.PreparationRequired);
-        }
-
-        string temporaryFolder = Path.Combine(
-            Path.GetTempPath(),
-            "CaptureTool",
-            "AnalysisAudio");
-        string temporaryPath = Path.Combine(temporaryFolder, $"{Guid.NewGuid():N}.wav");
         try
         {
+            await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException)
+        {
+            return new(FoundryLocalTranscriptionStatus.Cancelled);
+        }
+
+        string? temporaryPath = null;
+        try
+        {
+            string languageHint = LanguageHint;
+            IFoundryLocalSdkModel? model = _model;
+            if (model == null)
+            {
+                return new(FoundryLocalTranscriptionStatus.PreparationRequired);
+            }
+
+            string temporaryFolder = Path.Combine(
+                Path.GetTempPath(),
+                "CaptureTool",
+                "AnalysisAudio");
+            temporaryPath = Path.Combine(temporaryFolder, $"{Guid.NewGuid():N}.wav");
             Directory.CreateDirectory(temporaryFolder);
             await using (var temporary = new FileStream(
                 temporaryPath,
@@ -179,10 +258,10 @@ public sealed class FoundryLocalSpeechTranscriptionService :
             }
 
             return await TranscribePreparedWaveAsync(
-                modelId,
+                model,
                 temporaryPath,
-                cancellationToken)
-                .ConfigureAwait(false);
+                languageHint,
+                cancellationToken).ConfigureAwait(false);
         }
         catch (OperationCanceledException)
         {
@@ -194,21 +273,33 @@ public sealed class FoundryLocalSpeechTranscriptionService :
         }
         catch
         {
-            return new(FoundryLocalTranscriptionStatus.Failed);
+            return new(_configuration.FallbackOnFailure
+                ? FoundryLocalTranscriptionStatus.Unsupported
+                : FoundryLocalTranscriptionStatus.Failed);
         }
         finally
         {
-            try
+            TryDeleteWorkingFile(temporaryPath);
+            _gate.Release();
+        }
+    }
+
+    public async Task ReleaseModelAsync(CancellationToken cancellationToken = default)
+    {
+        ObjectDisposedException.ThrowIf(_disposed, this);
+        await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            IFoundryLocalSdkModel? model = _model;
+            _model = null;
+            if (model != null)
             {
-                if (File.Exists(temporaryPath))
-                {
-                    File.Delete(temporaryPath);
-                }
+                await model.UnloadAsync(cancellationToken).ConfigureAwait(false);
             }
-            catch
-            {
-                // The file contains only an app-created working copy and is safe to retry later.
-            }
+        }
+        finally
+        {
+            _gate.Release();
         }
     }
 
@@ -220,27 +311,84 @@ public sealed class FoundryLocalSpeechTranscriptionService :
         }
 
         _disposed = true;
-        _modelId = null;
+        IFoundryLocalSdkModel? model = _model;
+        _model = null;
+        _modelProvenance = null;
+        if (model != null)
+        {
+            try
+            {
+                model.UnloadAsync(CancellationToken.None).GetAwaiter().GetResult();
+            }
+            catch
+            {
+                // App shutdown is best effort; the SDK manager releases remaining resources.
+            }
+        }
+
         _gate.Dispose();
         GC.SuppressFinalize(this);
     }
 
+    private async Task TryPrepareExecutionProvidersAsync(
+        IProgress<double>? progress,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            string[] missingProviders = _sdkClient.DiscoverExecutionProviders()
+                .Where(provider => !provider.IsRegistered)
+                .Select(provider => provider.Name)
+                .ToArray();
+            if (missingProviders.Length > 0)
+            {
+                _ = await _sdkClient.DownloadAndRegisterExecutionProvidersAsync(
+                    missingProviders,
+                    (_, percent) => progress?.Report(0.03 + (0.17 * ClampPercent(percent))),
+                    cancellationToken).ConfigureAwait(false);
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch
+        {
+            // Acceleration is optional. Re-fetch the catalog and let the SDK choose a
+            // compatible registered or cached variant, including its CPU fallback.
+        }
+
+        progress?.Report(0.2);
+    }
+
     private async Task<FoundryLocalTranscriptionResult> TranscribePreparedWaveAsync(
-        string modelId,
+        IFoundryLocalSdkModel model,
         string temporaryPath,
+        string languageHint,
         CancellationToken cancellationToken)
     {
         if (!WaveAudioChunkPlan.TryCreate(
                 temporaryPath,
-                MaximumTimestampWindow,
+                FoundryLocalSpeechModelConfiguration.MaximumTimestampWindow,
                 out WaveAudioChunkPlan? plan) ||
             plan == null ||
             plan.Chunks.Count == 0)
         {
-            FoundryLocalAudioTranscription transcription = await _audioCommandExecutor
-                .TranscribeAsync(modelId, temporaryPath, cancellationToken)
+            if (_configuration.TranscriptionMode == FoundryLocalSpeechTranscriptionMode.LivePcm)
+            {
+                return new(FoundryLocalTranscriptionStatus.Unsupported);
+            }
+
+            FoundryLocalAudioTranscription transcription = await model
+                .TranscribeAsync(
+                    temporaryPath,
+                    languageHint,
+                    _configuration.TranscriptionMode,
+                    cancellationToken)
                 .ConfigureAwait(false);
-            return CreateResultWithoutWavePlan(transcription);
+            return CreateResultWithoutWavePlan(
+                transcription,
+                GetResultLanguageFallback(languageHint));
         }
 
         var transcriptParts = new List<string>(plan.Chunks.Count);
@@ -250,6 +398,7 @@ public sealed class FoundryLocalSpeechTranscriptionService :
         {
             cancellationToken.ThrowIfCancellationRequested();
             string? chunkPath = null;
+            string? normalizedPath = null;
             try
             {
                 string analysisPath = temporaryPath;
@@ -263,8 +412,29 @@ public sealed class FoundryLocalSpeechTranscriptionService :
                     analysisPath = chunkPath;
                 }
 
-                FoundryLocalAudioTranscription transcription = await _audioCommandExecutor
-                    .TranscribeAsync(modelId, analysisPath, cancellationToken)
+                normalizedPath = Path.Combine(
+                    Path.GetDirectoryName(temporaryPath)!,
+                    $"{Guid.NewGuid():N}.wav");
+                bool normalized = WavePcm16MonoNormalizer.TryNormalize(
+                    analysisPath,
+                    normalizedPath,
+                    cancellationToken);
+                if (normalized)
+                {
+                    analysisPath = normalizedPath;
+                }
+                else if (_configuration.TranscriptionMode ==
+                    FoundryLocalSpeechTranscriptionMode.LivePcm)
+                {
+                    return new(FoundryLocalTranscriptionStatus.Unsupported);
+                }
+
+                FoundryLocalAudioTranscription transcription = await model
+                    .TranscribeAsync(
+                        analysisPath,
+                        languageHint,
+                        _configuration.TranscriptionMode,
+                        cancellationToken)
                     .ConfigureAwait(false);
                 string normalizedText = NormalizeTranscript(transcription.Text);
                 if (normalizedText.Length > 0)
@@ -272,24 +442,33 @@ public sealed class FoundryLocalSpeechTranscriptionService :
                     transcriptParts.Add(normalizedText);
                 }
 
-                languageTag ??= NormalizeLanguageTag(transcription.Language);
+                languageTag ??= NormalizeLanguageTag(transcription.Language) ??
+                    GetResultLanguageFallback(languageHint);
                 AddTimestampedSegments(timestampedSegments, transcription, chunk, normalizedText);
             }
             finally
             {
+                TryDeleteWorkingFile(normalizedPath);
                 TryDeleteWorkingFile(chunkPath);
             }
         }
 
+        string transcript = string.Join('\n', transcriptParts);
+        if (_configuration.FallbackOnFailure && transcript.Length == 0)
+        {
+            return new(FoundryLocalTranscriptionStatus.Unsupported);
+        }
+
         return new FoundryLocalTranscriptionResult(
             FoundryLocalTranscriptionStatus.Succeeded,
-            string.Join('\n', transcriptParts),
+            transcript,
             timestampedSegments.AsReadOnly(),
             languageTag);
     }
 
     private static FoundryLocalTranscriptionResult CreateResultWithoutWavePlan(
-        FoundryLocalAudioTranscription transcription)
+        FoundryLocalAudioTranscription transcription,
+        string? resultLanguageFallback)
     {
         string transcript = NormalizeTranscript(transcription.Text);
         IReadOnlyList<FoundryLocalTranscriptionSegment> segments = transcription.Segments
@@ -303,7 +482,7 @@ public sealed class FoundryLocalSpeechTranscriptionService :
             FoundryLocalTranscriptionStatus.Succeeded,
             transcript,
             segments,
-            NormalizeLanguageTag(transcription.Language));
+            NormalizeLanguageTag(transcription.Language) ?? resultLanguageFallback);
     }
 
     private static void AddTimestampedSegments(
@@ -352,6 +531,11 @@ public sealed class FoundryLocalSpeechTranscriptionService :
         }
     }
 
+    private static double ClampPercent(double percent)
+    {
+        return Math.Clamp(percent, 0, 100) / 100;
+    }
+
     private static string NormalizeTranscript(string text)
     {
         return text
@@ -366,6 +550,13 @@ public sealed class FoundryLocalSpeechTranscriptionService :
         return string.IsNullOrWhiteSpace(languageTag)
             ? null
             : languageTag.Trim().Normalize(NormalizationForm.FormC);
+    }
+
+    private static string? GetResultLanguageFallback(string languageHint)
+    {
+        return string.Equals(languageHint, "auto", StringComparison.OrdinalIgnoreCase)
+            ? null
+            : languageHint;
     }
 
     private static void TryDeleteWorkingFile(string? path)
@@ -386,5 +577,37 @@ public sealed class FoundryLocalSpeechTranscriptionService :
         {
             // The path is a uniquely named app-created working copy and is safe to retry later.
         }
+    }
+}
+
+internal sealed class FoundryLocalWhisperSpeechTranscriptionService :
+    FoundryLocalSpeechTranscriptionService
+{
+    public FoundryLocalWhisperSpeechTranscriptionService(
+        IFoundryLocalSdkClient sdkClient,
+        IFoundryLocalModelProvenanceStore provenanceStore,
+        IFoundryLocalSpeechLanguagePolicy languagePolicy)
+        : base(
+            sdkClient,
+            provenanceStore,
+            FoundryLocalSpeechModelConfiguration.Whisper,
+            languagePolicy)
+    {
+    }
+}
+
+internal sealed class FoundryLocalNemotronSpeechTranscriptionService :
+    FoundryLocalSpeechTranscriptionService
+{
+    public FoundryLocalNemotronSpeechTranscriptionService(
+        IFoundryLocalSdkClient sdkClient,
+        IFoundryLocalModelProvenanceStore provenanceStore,
+        IFoundryLocalSpeechLanguagePolicy languagePolicy)
+        : base(
+            sdkClient,
+            provenanceStore,
+            FoundryLocalSpeechModelConfiguration.NemotronMultilingual,
+            languagePolicy)
+    {
     }
 }

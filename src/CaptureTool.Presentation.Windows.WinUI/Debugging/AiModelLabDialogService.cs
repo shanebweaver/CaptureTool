@@ -190,13 +190,8 @@ internal sealed class AiModelLabDialogService
 
     private static FrameworkElement CreateBuildInfoBar()
     {
-#if CAPTURETOOL_EXPERIMENTAL_WINDOWS_AI
-        const string message = "Experimental Windows AI is compiled into this Debug build. " +
-            "Release builds still exclude it and use stable packages.";
-#else
-        const string message = "This is a stable-parity Debug build. Experimental Windows AI " +
-            "is not compiled in, so only stable analyzers are listed.";
-#endif
+        const string message = "Debug and Release use the same stable AI provider inventory. " +
+            "Only the developer selection controls are Debug-only.";
         return new InfoBar
         {
             IsOpen = true,
@@ -319,8 +314,9 @@ internal sealed class AiModelLabDialogService
         "windows-ai-video-frame-ocr" => "Windows AI Text Recognition",
         "windows-video-frame-ocr" => "Windows Media OCR (legacy)",
         "windows-video-frame-description" => "Windows AI Image Description",
-        "windows-ai-speech-transcript" => "Windows AI Speech Recognition (experimental)",
         "foundry-local-speech-transcript" => "Foundry Local Whisper Tiny",
+        "foundry-local-nemotron-multilingual-speech-transcript" =>
+            "Foundry Local Nemotron Multilingual ASR",
         _ => analyzerId,
     };
 

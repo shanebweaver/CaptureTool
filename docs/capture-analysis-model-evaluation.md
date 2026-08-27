@@ -22,7 +22,7 @@ This keeps the dependency direction toward contracts. A future provider supplies
 
 ## Provider controls
 
-Capture Analysis is off by default through `CaptureAnalysis_Platform`. Debug composition enables that flag and `CaptureMemory_Search` locally for model development; Release retains the generated off defaults. The built-in provider then has its own `CaptureAnalysis_Provider_MicrosoftWindows` kill switch, and each packaged adapter has an independent analyzer switch. All built-in provider switches default on so enabling the hidden platform flag produces the current behavior; any provider or adapter can still be disabled independently. Adding an adapter requires all of the following:
+Capture Analysis and Capture Memory are compiled on, while the product's existing explicit AI consent controls whether capture analysis may run. The built-in provider then has its own `CaptureAnalysis_Provider_MicrosoftWindows` kill switch, and each packaged adapter has an independent analyzer switch. Release-active provider switches default on, including preferred Nemotron multilingual speech; any provider or adapter can still be disabled independently. Adding an adapter requires all of the following:
 
 1. A unique analyzer identity and versioned capability result contract.
 2. An explicit provider flag and analyzer flag. Unknown identities are not authorized.
@@ -92,6 +92,12 @@ These files are app/tool-created non-user content and may be deleted under the a
 - the complete built-in adapter set.
 
 The script also requires the evaluation run to declare a passing smoke for both architectures. This is a package-structure/AOT compatibility gate; device-specific model preparation and quality measurements remain part of the versioned offline run.
+
+For the Foundry Local provider, the package gate additionally requires the stable in-process `Microsoft.AI.Foundry.Local.WinML` SDK in the resolved graph, rejects prerelease Foundry packages and CLI executables in both app packages, and verifies that the packaged Foundry Core and WinML native libraries exactly match the NuGet-resolved stable assets for each architecture. It relies on the analyzer run metadata to identify the exact catalog model, device class, execution provider, SDK/package version, adapter version, and selection-policy/configuration fingerprint. Initial execution-provider and model downloads are preparation cost, not search latency, and must be measured separately from cached offline inference.
+
+Speech evaluation records the explicit language policy with every run. Preferred Nemotron uses multilingual auto-detection, while fallback Whisper maps the selected app language through the bounded `de`/`en`/`es`/`fr`/`ru`/`zh` allowlist and uses deterministic English for any other system language. Release evidence must report word error rate and no-speech false positives per language, accent/noise cohort, timestamp error, real-time factor, and immediate Whisper fallback; an aggregate score cannot hide a localized regression.
+
+The stable 1.2.4 SDK source-generates its audio response metadata and checks Core command failures before response-data deserialization. Its transitive Betalgo response base still roots an unused reflection-based error-message converter, producing `IL2026` and `IL3050` during Native AOT analysis. Store publication expands (rather than groups) those warnings and leaves only those two codes as visible non-errors; any other trim/AOT warning remains release-blocking. Re-evaluate and remove this exception when the SDK changes its audio response dependency.
 
 ## Remote providers
 

@@ -99,7 +99,7 @@ public sealed class FeatureAvailabilityTests
             selection);
 
         Assert.IsTrue(availability.IsAnalyzerEnabled(analyzer));
-        Assert.AreEqual(5_000_000_017L, availability.ResolutionPolicyRevision);
+        Assert.AreEqual(7_000_000_017L, availability.ResolutionPolicyRevision);
     }
 
     [TestMethod]
@@ -118,6 +118,16 @@ public sealed class FeatureAvailabilityTests
     public void CaptureAnalysisFeatureAvailability_RecognizesFoundryLocalSpeechKillSwitches()
     {
         AnalyzerIdentity analyzer = CreateFoundryLocalAnalyzerIdentity();
+        var nemotronAnalyzer = new AnalyzerIdentity(
+            "foundry-local-nemotron-multilingual-speech-transcript",
+            "microsoft-foundry-local",
+            "nvidia-nemotron-3.5-asr-streaming-multilingual-0.6b",
+            null,
+            "1.0.0",
+            "microsoft-foundry-local-winml",
+            "1.2.4",
+            "1.2.4",
+            null);
         var enabled = new CaptureAnalysisFeatureAvailability(new ConstantFeatureManager(true));
         var providerDisabled = new CaptureAnalysisFeatureAvailability(
             new SelectiveFeatureManager(
@@ -125,6 +135,9 @@ public sealed class FeatureAvailabilityTests
         var analyzerDisabled = new CaptureAnalysisFeatureAvailability(
             new SelectiveFeatureManager(
                 AppFeatures.Feature_CaptureAnalysis_Analyzer_FoundryLocalSpeechTranscript));
+        var nemotronDisabled = new CaptureAnalysisFeatureAvailability(
+            new SelectiveFeatureManager(
+                AppFeatures.Feature_CaptureAnalysis_NemotronMultilingualSpeech));
 
         Assert.IsTrue(enabled.IsProviderEnabled("microsoft-foundry-local"));
         Assert.IsTrue(enabled.IsAnalyzerEnabled(analyzer));
@@ -132,6 +145,8 @@ public sealed class FeatureAvailabilityTests
         Assert.IsFalse(providerDisabled.IsAnalyzerEnabled(analyzer));
         Assert.IsTrue(analyzerDisabled.IsProviderEnabled("microsoft-foundry-local"));
         Assert.IsFalse(analyzerDisabled.IsAnalyzerEnabled(analyzer));
+        Assert.IsTrue(nemotronDisabled.IsAnalyzerEnabled(analyzer));
+        Assert.IsFalse(nemotronDisabled.IsAnalyzerEnabled(nemotronAnalyzer));
     }
 
     [TestMethod]
@@ -167,8 +182,6 @@ public sealed class FeatureAvailabilityTests
                 AppFeatures.Feature_CaptureAnalysis_Analyzer_WindowsAiVideoFrameOcr),
             ("windows-video-frame-description",
                 AppFeatures.Feature_CaptureAnalysis_Analyzer_WindowsVideoFrameDescription),
-            ("windows-ai-speech-transcript",
-                AppFeatures.Feature_CaptureAnalysis_Analyzer_WindowsAiSpeechTranscript),
         ];
         var enabled = new CaptureAnalysisFeatureAvailability(new ConstantFeatureManager(true));
 
@@ -416,10 +429,10 @@ public sealed class FeatureAvailabilityTests
             "microsoft-foundry-local",
             "whisper-tiny",
             null,
-            "1",
-            "microsoft-foundry-local-core",
-            "1.2.3",
-            "1.2.3",
+            "2.1.0",
+            "microsoft-foundry-local-winml",
+            "1.2.4",
+            "1.2.4",
             null);
     }
 

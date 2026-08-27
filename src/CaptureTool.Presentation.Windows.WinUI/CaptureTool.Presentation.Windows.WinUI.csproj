@@ -27,11 +27,6 @@
              Link="CaptureAnalysisProviders.json"
              CopyToOutputDirectory="PreserveNewest"
              CopyToPublishDirectory="PreserveNewest" />
-    <Content Include="..\CaptureTool.Infrastructure.Analysis.Windows.Experimental\ExperimentalWindowsAiCaptureAnalysisProviders.json"
-             Link="ExperimentalWindowsAiCaptureAnalysisProviders.json"
-             CopyToOutputDirectory="PreserveNewest"
-             CopyToPublishDirectory="PreserveNewest"
-             Condition="'$(EnableExperimentalWindowsAi)' == 'true'" />
     <Manifest Include="$(ApplicationManifest)" />
   </ItemGroup>
 
@@ -56,9 +51,6 @@
     <ProjectReference Include="..\CaptureTool.Application\CaptureTool.Application.csproj" GlobalPropertiesToRemove="WindowsAppSDKSelfContained;WindowsPackageType;EnableMsixTooling" />
     <ProjectReference Include="..\CaptureTool.Infrastructure.Edit.Windows\CaptureTool.Infrastructure.Edit.Windows.csproj" GlobalPropertiesToRemove="WindowsAppSDKSelfContained;WindowsPackageType;EnableMsixTooling" />
     <ProjectReference Include="..\CaptureTool.Infrastructure.Analysis.Windows\CaptureTool.Infrastructure.Analysis.Windows.csproj" GlobalPropertiesToRemove="WindowsAppSDKSelfContained;WindowsPackageType;EnableMsixTooling" />
-    <ProjectReference Include="..\CaptureTool.Infrastructure.Analysis.Windows.Experimental\CaptureTool.Infrastructure.Analysis.Windows.Experimental.csproj"
-                      GlobalPropertiesToRemove="WindowsAppSDKSelfContained;WindowsPackageType;EnableMsixTooling"
-                      Condition="'$(EnableExperimentalWindowsAi)' == 'true'" />
     <ProjectReference Include="..\CaptureTool.Infrastructure.Analysis.FoundryLocal\CaptureTool.Infrastructure.Analysis.FoundryLocal.csproj" GlobalPropertiesToRemove="WindowsAppSDKSelfContained;WindowsPackageType;EnableMsixTooling" />
     <ProjectReference Include="..\CaptureTool.Domain\CaptureTool.Domain.csproj" GlobalPropertiesToRemove="WindowsAppSDKSelfContained;WindowsPackageType;EnableMsixTooling" />
     <ProjectReference Include="..\CaptureTool.Domain.Analysis\CaptureTool.Domain.Analysis.csproj" GlobalPropertiesToRemove="WindowsAppSDKSelfContained;WindowsPackageType;EnableMsixTooling" />
@@ -108,6 +100,43 @@
 
     <Error Condition="!Exists('%(_CaptureToolCaptureKitAsset.Identity)')"
            Text="CaptureKit $(CaptureKitPackageVersion) is missing required asset %(_CaptureToolCaptureKitAsset.Identity)." />
+  </Target>
+
+  <!-- Foundry Local Core.WinML 1.2.4 embeds WinML 2.1.1 while also declaring
+       Microsoft.Windows.AI.MachineLearning >= 2.1.1. Windows App SDK AI resolves
+       a newer compatible WinML package, so retain the NuGet-resolved runtime and
+       remove only the older bundled duplicate before copy/publish/MSIX layout. -->
+  <Target Name="UseResolvedWindowsMachineLearningRuntime"
+          AfterTargets="ResolvePackageAssets"
+          Condition="'$(DesignTimeBuild)' != 'true' and '$(RuntimeIdentifier)' != ''">
+    <ItemGroup>
+      <_CaptureToolBundledFoundryWinMl Include="@(NativeCopyLocalItems)"
+          Condition="'%(NativeCopyLocalItems.NuGetPackageId)' == 'Microsoft.AI.Foundry.Local.Core.WinML' and
+                     '%(NativeCopyLocalItems.DestinationSubPath)' == 'Microsoft.Windows.AI.MachineLearning.dll'" />
+      <_CaptureToolResolvedWinMl Include="@(NativeCopyLocalItems)"
+          Condition="'%(NativeCopyLocalItems.NuGetPackageId)' == 'Microsoft.Windows.AI.MachineLearning' and
+                     '%(NativeCopyLocalItems.DestinationSubPath)' == 'Microsoft.Windows.AI.MachineLearning.dll'" />
+      <NativeCopyLocalItems Remove="@(_CaptureToolBundledFoundryWinMl)" />
+    </ItemGroup>
+
+    <Error Condition="'@(_CaptureToolBundledFoundryWinMl)' == ''"
+           Text="The Foundry Local bundled WinML runtime duplicate was not found for $(RuntimeIdentifier); revalidate the package collision policy." />
+    <Error Condition="'@(_CaptureToolResolvedWinMl)' == '' or !Exists('%(_CaptureToolResolvedWinMl.Identity)')"
+           Text="The resolved Microsoft.Windows.AI.MachineLearning runtime is missing for $(RuntimeIdentifier)." />
+  </Target>
+
+  <!-- NativeCopyLocalItems normally supplies the loose-build native runtime. Removing
+       Foundry's stale embedded copy above means the NuGet-resolved copy must be placed
+       in OutDir explicitly. Store packaging has its own resolved publish payload. -->
+  <Target Name="CopyResolvedWindowsMachineLearningRuntimeToBuildOutput"
+          AfterTargets="CopyFilesToOutputDirectory"
+          DependsOnTargets="UseResolvedWindowsMachineLearningRuntime"
+          Condition="'$(DesignTimeBuild)' != 'true' and
+                     '$(RuntimeIdentifier)' != '' and
+                     '$(GenerateAppxPackageOnBuild)' != 'true'">
+    <Copy SourceFiles="@(_CaptureToolResolvedWinMl)"
+          DestinationFiles="@(_CaptureToolResolvedWinMl->'$(OutDir)%(DestinationSubPath)')"
+          SkipUnchangedFiles="true" />
   </Target>
     
   <!-- 
@@ -160,6 +189,13 @@
     <PublishReadyToRun Condition="'$(Configuration)' != 'Debug'">True</PublishReadyToRun>
     <PublishTrimmed Condition="'$(Configuration)' == 'Debug'">False</PublishTrimmed>
     <PublishTrimmed Condition="'$(Configuration)' != 'Debug'">True</PublishTrimmed>
+    <!-- Foundry Local 1.2.4 source-generates the audio response contract and checks
+         Core errors before deserializing response data. Its Betalgo response base type
+         nevertheless roots an unused reflection-based Error.Message converter. Keep
+         those two warning codes visible at method granularity while preventing only
+         that stable transitive-package defect from failing Native AOT publication. -->
+    <TrimmerSingleWarn Condition="'$(PublishAot)' == 'true'">false</TrimmerSingleWarn>
+    <WarningsNotAsErrors Condition="'$(PublishAot)' == 'true'">$(WarningsNotAsErrors);IL2026;IL3050</WarningsNotAsErrors>
   </PropertyGroup>
 
   <!-- Use the Native AOT PDB that matches the packaged app executable for Store symbol packages. -->

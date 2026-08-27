@@ -11,17 +11,6 @@
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
   </PropertyGroup>
 
-  <!--
-    Experimental Windows AI APIs are a local-development dependency only.
-    Release and other non-Debug configurations fail closed in
-    Directory.Build.targets, even if this property is overridden externally.
-  -->
-  <PropertyGroup>
-    <EnableExperimentalWindowsAi Condition="'$(EnableExperimentalWindowsAi)' == '' and ('$(Configuration)' == '' or '$(Configuration)' == 'Debug')">true</EnableExperimentalWindowsAi>
-    <EnableExperimentalWindowsAi Condition="'$(EnableExperimentalWindowsAi)' == ''">false</EnableExperimentalWindowsAi>
-    <DefineConstants Condition="'$(EnableExperimentalWindowsAi)' == 'true'">$(DefineConstants);CAPTURETOOL_EXPERIMENTAL_WINDOWS_AI</DefineConstants>
-  </PropertyGroup>
-
   <PropertyGroup>
     <CaptureKitSiblingPackageSource>$(MSBuildThisFileDirectory)..\CaptureKit\artifacts\packages</CaptureKitSiblingPackageSource>
     <CaptureKitWorkflowPackageSource>$(MSBuildThisFileDirectory)CaptureKit\artifacts\packages</CaptureKitWorkflowPackageSource>

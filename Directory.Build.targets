@@ -1,17 +1,16 @@
 <Project>
   <!--
-    Store/release builds must never resolve an experimental Windows App SDK.
+    Every build must use stable Windows AI and Foundry Local application SDKs.
     Keep this validation global so a future project cannot accidentally bypass
     the boundary by adding its own package reference.
   -->
-  <Target Name="ValidateWindowsAiReleaseChannel"
-          BeforeTargets="CollectPackageReferences;PrepareForBuild;Publish"
-          Condition="'$(Configuration)' != 'Debug'">
-    <Error Condition="'$(EnableExperimentalWindowsAi)' == 'true'"
-           Text="Experimental Windows AI is restricted to Debug builds. Remove EnableExperimentalWindowsAi=true for $(Configuration)." />
+  <Target Name="ValidateAiReleaseChannels"
+          BeforeTargets="CollectPackageReferences;PrepareForBuild;Publish">
     <Error Condition="$([System.String]::Copy('$(MicrosoftWindowsAppSdkVersion)').Contains('-'))"
            Text="$(Configuration) builds must use a stable Microsoft.WindowsAppSDK version, but $(MicrosoftWindowsAppSdkVersion) was selected." />
     <Error Condition="$([System.String]::Copy('$(MicrosoftWindowsAppSdkAiVersion)').Contains('-'))"
            Text="$(Configuration) builds must use a stable Microsoft.WindowsAppSDK.AI version, but $(MicrosoftWindowsAppSdkAiVersion) was selected." />
+    <Error Condition="$([System.String]::Copy('$(MicrosoftFoundryLocalSdkVersion)').Contains('-'))"
+           Text="$(Configuration) builds must use a stable Microsoft.AI.Foundry.Local.WinML version, but $(MicrosoftFoundryLocalSdkVersion) was selected." />
   </Target>
 </Project>

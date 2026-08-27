@@ -3,37 +3,80 @@ using CaptureTool.Application.Abstractions.Analysis.Media;
 using CaptureTool.Application.Abstractions.Analysis.Preparation;
 using CaptureTool.Domain.Analysis;
 using CaptureTool.Domain.Analysis.Payloads;
+using System.Globalization;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace CaptureTool.Infrastructure.Analysis.FoundryLocal;
 
 public sealed class FoundryLocalSpeechTranscriptAnalyzer : IPreparableCaptureAnalyzer
 {
-    public const string AdapterVersion = "1.2.0";
+    public const string AdapterVersion = "2.1.0";
 
     private readonly IFoundryLocalSpeechTranscriptionService _transcription;
     private readonly IVideoAudioExtractionService? _videoAudioExtraction;
+    private readonly FoundryLocalSpeechModelConfiguration _configuration;
+    private readonly object _descriptorGate = new();
+    private FoundryLocalModelProvenance? _resolvedProvenance;
+    private string? _resolvedLanguageHint;
+    private CaptureAnalyzerDescriptor? _resolvedDescriptor;
 
     public FoundryLocalSpeechTranscriptAnalyzer(
         IFoundryLocalSpeechTranscriptionService transcription,
         IVideoAudioExtractionService? videoAudioExtraction = null)
+        : this(
+            transcription,
+            videoAudioExtraction,
+            FoundryLocalSpeechModelConfiguration.Whisper)
+    {
+    }
+
+    internal FoundryLocalSpeechTranscriptAnalyzer(
+        IFoundryLocalSpeechTranscriptionService transcription,
+        IVideoAudioExtractionService? videoAudioExtraction,
+        FoundryLocalSpeechModelConfiguration configuration)
     {
         ArgumentNullException.ThrowIfNull(transcription);
+        ArgumentNullException.ThrowIfNull(configuration);
         _transcription = transcription;
         _videoAudioExtraction = videoAudioExtraction;
-        Descriptor = new CaptureAnalyzerDescriptor(
+        _configuration = configuration;
+    }
+
+    public CaptureAnalyzerDescriptor Descriptor
+    {
+        get
+        {
+            FoundryLocalModelProvenance? provenance = _transcription.ModelProvenance;
+            string languageHint = _transcription.LanguageHint;
+
+            lock (_descriptorGate)
+            {
+                if (_resolvedDescriptor == null ||
+                    _resolvedProvenance != provenance ||
+                    !string.Equals(
+                        _resolvedLanguageHint,
+                        languageHint,
+                        StringComparison.Ordinal))
+                {
+                    _resolvedProvenance = provenance;
+                    _resolvedLanguageHint = languageHint;
+                    _resolvedDescriptor = CreateDescriptor(CreateIdentity(
+                        provenance,
+                        languageHint));
+                }
+
+                return _resolvedDescriptor;
+            }
+        }
+    }
+
+    private CaptureAnalyzerDescriptor CreateDescriptor(AnalyzerIdentity identity)
+    {
+        return new CaptureAnalyzerDescriptor(
             AnalysisCapabilities.SpeechTranscriptV1,
-            new AnalyzerIdentity(
-                analyzerId: "foundry-local-speech-transcript",
-                providerId: "microsoft-foundry-local",
-                modelId: FoundryLocalSpeechTranscriptionService.ModelAlias,
-                modelVersion: null,
-                adapterVersion: AdapterVersion,
-                runtimeId: "microsoft-foundry-local-core",
-                runtimeVersion: FoundryLocalSpeechTranscriptionService.RuntimeVersion,
-                packageVersion: FoundryLocalSpeechTranscriptionService.RuntimeVersion,
-                configurationFingerprint:
-                    "sha256:77aa0597f58f79700e57f137f42183c33121597dd6876415c08787bc34ff4e67"),
-            videoAudioExtraction == null
+            identity,
+            _videoAudioExtraction == null
                 ? [CaptureMediaKind.Audio]
                 : [CaptureMediaKind.Audio, CaptureMediaKind.Video],
             ProcessingBoundary.OnDevice,
@@ -41,11 +84,70 @@ public sealed class FoundryLocalSpeechTranscriptAnalyzer : IPreparableCaptureAna
             CaptureAnalyzerRequirement.ModelPackage |
                 CaptureAnalyzerRequirement.UserInitiatedPreparation,
             CaptureAnalyzerWorkloadClass.AiIntensive,
-            maximumSourceBytes: 2L * 1024 * 1024 * 1024,
-            qualityTier: 40);
+            maximumSourceBytes: MaximumSourceBytes,
+            qualityTier: _configuration.QualityTier);
     }
 
-    public CaptureAnalyzerDescriptor Descriptor { get; }
+    private AnalyzerIdentity CreateIdentity(
+        FoundryLocalModelProvenance? model,
+        string languageHint)
+    {
+        string runtimeId = model == null
+            ? "microsoft-foundry-local-winml"
+            : string.Create(
+                CultureInfo.InvariantCulture,
+                $"microsoft-foundry-local-winml;device={Escape(model.DeviceType)};ep={Escape(model.ExecutionProvider)}");
+        return new AnalyzerIdentity(
+            analyzerId: _configuration.AnalyzerId,
+            providerId: "microsoft-foundry-local",
+            modelId: model?.ResolvedModelId ?? _configuration.ModelAlias,
+            modelVersion: model == null
+                ? null
+                : $"{model.ModelVersion};alias={Escape(model.RequestedAlias)}",
+            adapterVersion: _configuration.AdapterVersion,
+            runtimeId: runtimeId,
+            runtimeVersion: FoundryLocalSpeechModelConfiguration.RuntimeVersion,
+            packageVersion: FoundryLocalSpeechModelConfiguration.RuntimeVersion,
+            configurationFingerprint: ComputeConfigurationFingerprint(model, languageHint));
+    }
+
+    private string ComputeConfigurationFingerprint(
+        FoundryLocalModelProvenance? model,
+        string languageHint)
+    {
+        var canonical = new StringBuilder();
+        Append(canonical, _configuration.ModelAlias);
+        Append(canonical, _configuration.SelectionPolicyRevision);
+        Append(canonical, languageHint);
+        Append(canonical, _configuration.TranscriptionMode.ToString());
+        Append(canonical, _configuration.FallbackOnFailure.ToString());
+        Append(canonical, FoundryLocalSpeechModelConfiguration.RuntimeVersion);
+        Append(canonical, MaximumSourceBytes.ToString(CultureInfo.InvariantCulture));
+        Append(canonical, FoundryLocalSpeechModelConfiguration.MaximumTimestampWindow.Ticks
+            .ToString(CultureInfo.InvariantCulture));
+        Append(canonical, model?.ResolvedModelId);
+        Append(canonical, model?.ModelVersion);
+        Append(canonical, model?.DeviceType);
+        Append(canonical, model?.ExecutionProvider);
+        Append(canonical, model?.CatalogFingerprint);
+        return $"sha256:{Convert.ToHexStringLower(SHA256.HashData(
+            Encoding.UTF8.GetBytes(canonical.ToString())))}";
+    }
+
+    private static string Escape(string value)
+    {
+        return Uri.EscapeDataString(value.Trim()).ToLowerInvariant();
+    }
+
+    private static void Append(StringBuilder builder, string? value)
+    {
+        string normalized = value ?? string.Empty;
+        builder.Append(normalized.Length.ToString(CultureInfo.InvariantCulture));
+        builder.Append(':');
+        builder.Append(normalized);
+    }
+
+    private const long MaximumSourceBytes = 2L * 1024 * 1024 * 1024;
 
     public ValueTask<CaptureAnalyzerAvailability> GetAvailabilityAsync(
         CaptureAnalyzerAvailabilityRequest request,

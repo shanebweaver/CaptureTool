@@ -2,10 +2,9 @@
   <PropertyGroup>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
     <CaptureKitPackageVersion>1.0.5</CaptureKitPackageVersion>
-    <MicrosoftWindowsAppSdkVersion Condition="'$(EnableExperimentalWindowsAi)' == 'true'">2.3.2-experimentalA</MicrosoftWindowsAppSdkVersion>
-    <MicrosoftWindowsAppSdkAiVersion Condition="'$(EnableExperimentalWindowsAi)' == 'true'">2.3.10-experimental</MicrosoftWindowsAppSdkAiVersion>
-    <MicrosoftWindowsAppSdkVersion Condition="'$(EnableExperimentalWindowsAi)' != 'true'">2.3.1</MicrosoftWindowsAppSdkVersion>
-    <MicrosoftWindowsAppSdkAiVersion Condition="'$(EnableExperimentalWindowsAi)' != 'true'">2.3.4</MicrosoftWindowsAppSdkAiVersion>
+    <MicrosoftWindowsAppSdkVersion>2.3.1</MicrosoftWindowsAppSdkVersion>
+    <MicrosoftWindowsAppSdkAiVersion>2.3.4</MicrosoftWindowsAppSdkAiVersion>
+    <MicrosoftFoundryLocalSdkVersion>1.2.4</MicrosoftFoundryLocalSdkVersion>
   </PropertyGroup>
   <ItemGroup>
     <PackageVersion Include="CaptureKit.Abstractions" Version="$(CaptureKitPackageVersion)" />
@@ -18,7 +17,7 @@
     <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="10.0.9" />
     <PackageVersion Include="Microsoft.Extensions.Hosting" Version="9.0.7" />
     <PackageVersion Include="Microsoft.Extensions.Logging.Console" Version="10.0.9" />
-    <PackageVersion Include="Microsoft.AI.Foundry.Local.Core" Version="1.2.3" />
+    <PackageVersion Include="Microsoft.AI.Foundry.Local.WinML" Version="$(MicrosoftFoundryLocalSdkVersion)" />
     <PackageVersion Include="Microsoft.Graphics.Win2D" Version="1.4.0" />
     <PackageVersion Include="Microsoft.Services.Store.SDK" Version="10.1705.16001" />
     <PackageVersion Include="Microsoft.Services.Store.Engagement" Version="10.2307.3001" />
