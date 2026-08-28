@@ -121,7 +121,7 @@ internal class FoundryLocalSpeechTranscriptionService :
     public FoundryLocalSpeechReadyState GetReadyState()
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
-        if (_model != null)
+        if (_model != null || HasRestorableCachedModel())
         {
             return FoundryLocalSpeechReadyState.Ready;
         }
@@ -240,6 +240,11 @@ internal class FoundryLocalSpeechTranscriptionService :
         {
             string languageHint = LanguageHint;
             IFoundryLocalSdkModel? model = _model;
+            if (model == null && HasRestorableCachedModel())
+            {
+                model = await RestoreCachedModelAsync(cancellationToken).ConfigureAwait(false);
+            }
+
             if (model == null)
             {
                 return new(FoundryLocalTranscriptionStatus.PreparationRequired);
@@ -539,6 +544,67 @@ internal class FoundryLocalSpeechTranscriptionService :
     private static double ClampPercent(double percent)
     {
         return Math.Clamp(percent, 0, 100) / 100;
+    }
+
+    private bool HasRestorableCachedModel()
+    {
+        FoundryLocalModelProvenance? provenance = _modelProvenance;
+        return provenance != null &&
+            string.Equals(
+                provenance.RequestedAlias,
+                _configuration.ModelAlias,
+                StringComparison.Ordinal) &&
+            _configuration.DevicePreference switch
+            {
+                FoundryLocalModelDevicePreference.Cpu =>
+                    string.Equals(provenance.DeviceType, "CPU", StringComparison.OrdinalIgnoreCase) &&
+                    string.Equals(
+                        provenance.ExecutionProvider,
+                        "CPUExecutionProvider",
+                        StringComparison.OrdinalIgnoreCase),
+                _ => false,
+            };
+    }
+
+    private async Task<IFoundryLocalSdkModel?> RestoreCachedModelAsync(
+        CancellationToken cancellationToken)
+    {
+        FoundryLocalModelProvenance? expected = _modelProvenance;
+        if (expected == null || !HasRestorableCachedModel())
+        {
+            return null;
+        }
+
+        await _sdkClient.InitializeAsync(cancellationToken).ConfigureAwait(false);
+        IFoundryLocalSdkModel? model = await _sdkClient
+            .GetCachedModelAsync(expected, cancellationToken)
+            .ConfigureAwait(false);
+        if (model == null || !MatchesPersistedProvenance(model.Provenance, expected))
+        {
+            return null;
+        }
+
+        await model.LoadAsync(cancellationToken).ConfigureAwait(false);
+        _model = model;
+        return model;
+    }
+
+    private static bool MatchesPersistedProvenance(
+        FoundryLocalModelProvenance actual,
+        FoundryLocalModelProvenance expected)
+    {
+        return string.Equals(actual.RequestedAlias, expected.RequestedAlias, StringComparison.Ordinal) &&
+            string.Equals(actual.ResolvedModelId, expected.ResolvedModelId, StringComparison.Ordinal) &&
+            string.Equals(actual.ModelVersion, expected.ModelVersion, StringComparison.Ordinal) &&
+            string.Equals(actual.DeviceType, expected.DeviceType, StringComparison.OrdinalIgnoreCase) &&
+            string.Equals(
+                actual.ExecutionProvider,
+                expected.ExecutionProvider,
+                StringComparison.OrdinalIgnoreCase) &&
+            string.Equals(
+                actual.CatalogFingerprint,
+                expected.CatalogFingerprint,
+                StringComparison.Ordinal);
     }
 
     private static string NormalizeTranscript(string text)

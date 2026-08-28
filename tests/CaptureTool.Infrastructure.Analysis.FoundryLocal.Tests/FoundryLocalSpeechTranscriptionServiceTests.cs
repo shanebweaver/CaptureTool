@@ -13,6 +13,13 @@ public sealed class FoundryLocalSpeechTranscriptionServiceTests
         "WinMLExecutionProvider",
         $"sha256:{new string('a', 64)}");
 
+    private static readonly FoundryLocalModelProvenance CpuProvenance = GpuProvenance with
+    {
+        ResolvedModelId = "whisper-tiny-cpu-v4",
+        DeviceType = "CPU",
+        ExecutionProvider = "CPUExecutionProvider",
+    };
+
     [TestMethod]
     public void GetReadyState_DoesNotInitializeOrAcquireAnything()
     {
@@ -37,6 +44,18 @@ public sealed class FoundryLocalSpeechTranscriptionServiceTests
         Assert.AreEqual(FoundryLocalSpeechReadyState.PreparationNeeded, service.GetReadyState());
         Assert.AreEqual(0, sdk.InitializeCalls);
         Assert.AreEqual(0, sdk.GetModelCalls);
+    }
+
+    [TestMethod]
+    public void Constructor_WithPreparedCpuProvenance_IsReadyWithoutLoadingTheModel()
+    {
+        var sdk = new FakeSdkClient();
+        using var service = CreateService(sdk, CpuProvenance);
+
+        Assert.AreEqual(CpuProvenance, service.ModelProvenance);
+        Assert.AreEqual(FoundryLocalSpeechReadyState.Ready, service.GetReadyState());
+        Assert.AreEqual(0, sdk.InitializeCalls);
+        Assert.AreEqual(0, sdk.GetCachedModelCalls);
     }
 
     [TestMethod]
@@ -179,6 +198,51 @@ public sealed class FoundryLocalSpeechTranscriptionServiceTests
             new MemoryStream([1, 2, 3], writable: false));
 
         Assert.AreEqual(FoundryLocalTranscriptionStatus.PreparationRequired, result.Status);
+        Assert.AreEqual(0, sdk.GetModelCalls);
+    }
+
+    [TestMethod]
+    public async Task TranscribeAsync_AfterRestart_RestoresPreparedCpuModelWithoutDownloading()
+    {
+        var model = new FakeSdkModel(CpuProvenance) { IsCached = true };
+        model.Transcriptions.Enqueue(new FoundryLocalAudioTranscription(
+            "restored transcript",
+            [],
+            "en"));
+        var sdk = new FakeSdkClient { CachedModel = model };
+        using var service = CreateService(sdk, CpuProvenance);
+        string path = CreateWaveFile(durationSeconds: 1);
+        try
+        {
+            await using FileStream audio = File.OpenRead(path);
+            FoundryLocalTranscriptionResult result = await service.TranscribeAsync(audio);
+
+            Assert.AreEqual(FoundryLocalTranscriptionStatus.Succeeded, result.Status);
+            Assert.AreEqual("restored transcript", result.Transcript);
+            Assert.AreEqual(1, sdk.InitializeCalls);
+            Assert.AreEqual(1, sdk.GetCachedModelCalls);
+            Assert.AreEqual(0, sdk.GetModelCalls);
+            Assert.AreEqual(0, model.DownloadCalls);
+            Assert.AreEqual(1, model.LoadCalls);
+        }
+        finally
+        {
+            TryDelete(path);
+        }
+    }
+
+    [TestMethod]
+    public async Task TranscribeAsync_WhenPreparedCpuModelWasRemoved_RequiresPreparationWithoutDownload()
+    {
+        var sdk = new FakeSdkClient { CachedModel = null };
+        using var service = CreateService(sdk, CpuProvenance);
+
+        FoundryLocalTranscriptionResult result = await service.TranscribeAsync(
+            new MemoryStream([1, 2, 3], writable: false));
+
+        Assert.AreEqual(FoundryLocalTranscriptionStatus.PreparationRequired, result.Status);
+        Assert.AreEqual(1, sdk.InitializeCalls);
+        Assert.AreEqual(1, sdk.GetCachedModelCalls);
         Assert.AreEqual(0, sdk.GetModelCalls);
     }
 
@@ -451,6 +515,8 @@ public sealed class FoundryLocalSpeechTranscriptionServiceTests
 
         public IFoundryLocalSdkModel? Model { get; init; }
 
+        public IFoundryLocalSdkModel? CachedModel { get; init; }
+
         public Exception? DownloadExecutionProviderException { get; init; }
 
         public int InitializeCalls { get; private set; }
@@ -458,6 +524,8 @@ public sealed class FoundryLocalSpeechTranscriptionServiceTests
         public int DownloadExecutionProviderCalls { get; private set; }
 
         public int GetModelCalls { get; private set; }
+
+        public int GetCachedModelCalls { get; private set; }
 
         public string? RequestedAlias { get; private set; }
 
@@ -506,6 +574,15 @@ public sealed class FoundryLocalSpeechTranscriptionServiceTests
             RequestedAlias = modelAlias;
             RequestedDevicePreference = devicePreference;
             return Task.FromResult(Model);
+        }
+
+        public Task<IFoundryLocalSdkModel?> GetCachedModelAsync(
+            FoundryLocalModelProvenance provenance,
+            CancellationToken cancellationToken)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            GetCachedModelCalls++;
+            return Task.FromResult(CachedModel);
         }
 
         public void Dispose()

@@ -96,7 +96,7 @@ internal sealed class AiModelLabDialogService
             var reanalyze = new CheckBox
             {
                 Content = "Reanalyze all enrolled captures after applying",
-                IsChecked = false,
+                IsChecked = true,
             };
             var content = new StackPanel
             {

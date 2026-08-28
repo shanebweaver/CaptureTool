@@ -56,6 +56,10 @@ internal interface IFoundryLocalSdkClient : IDisposable
         string modelAlias,
         FoundryLocalModelDevicePreference devicePreference,
         CancellationToken cancellationToken);
+
+    Task<IFoundryLocalSdkModel?> GetCachedModelAsync(
+        FoundryLocalModelProvenance provenance,
+        CancellationToken cancellationToken);
 }
 
 internal interface IFoundryLocalSdkModel
@@ -216,6 +220,27 @@ internal sealed class FoundryLocalSdkClient : IFoundryLocalSdkClient
 
         model.SelectVariant(selectedVariant);
         return new FoundryLocalSdkModel(modelAlias, model);
+    }
+
+    public async Task<IFoundryLocalSdkModel?> GetCachedModelAsync(
+        FoundryLocalModelProvenance provenance,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(provenance);
+        ObjectDisposedException.ThrowIf(_disposed, this);
+        ICatalog catalog = await GetManager()
+            .GetCatalogAsync(cancellationToken)
+            .ConfigureAwait(false);
+        IReadOnlyList<IModel> cachedModels = await catalog
+            .GetCachedModelsAsync(cancellationToken)
+            .ConfigureAwait(false);
+        IModel? cachedModel = cachedModels.FirstOrDefault(model => string.Equals(
+            model.Id,
+            provenance.ResolvedModelId,
+            StringComparison.Ordinal));
+        return cachedModel == null
+            ? null
+            : new FoundryLocalSdkModel(provenance.RequestedAlias, cachedModel);
     }
 
     public void Dispose()
