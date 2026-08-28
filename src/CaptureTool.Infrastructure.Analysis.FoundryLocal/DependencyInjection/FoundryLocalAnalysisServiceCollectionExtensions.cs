@@ -1,5 +1,6 @@
 using CaptureTool.Application.Abstractions.Analysis.Analyzers;
 using CaptureTool.Application.Abstractions.Analysis.Media;
+using CaptureTool.Application.Abstractions.Analysis.Models;
 using CaptureTool.Application.Abstractions.Localization;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -17,6 +18,11 @@ public static class FoundryLocalAnalysisServiceCollectionExtensions
                 provider.GetRequiredService<ILocalizationService>()));
         services.AddSingleton<FoundryLocalNemotronSpeechTranscriptionService>();
         services.AddSingleton<FoundryLocalWhisperSpeechTranscriptionService>();
+        services.AddSingleton<IFoundryLocalSpeechModelMaintenanceLeaseSource>(provider =>
+            provider.GetRequiredService<FoundryLocalNemotronSpeechTranscriptionService>());
+        services.AddSingleton<IFoundryLocalSpeechModelMaintenanceLeaseSource>(provider =>
+            provider.GetRequiredService<FoundryLocalWhisperSpeechTranscriptionService>());
+        services.AddSingleton<IAiModelStorageService, FoundryLocalAiModelStorageService>();
         services.AddSingleton<IFoundryLocalSpeechTranscriptionService>(provider =>
             provider.GetRequiredService<FoundryLocalNemotronSpeechTranscriptionService>());
         services.AddSingleton<IFoundryLocalSpeechTranscriptionService>(provider =>

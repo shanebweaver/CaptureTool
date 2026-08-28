@@ -12,6 +12,8 @@ internal interface IFoundryLocalModelProvenanceStore
     FoundryLocalModelProvenance? TryRead(string requestedAlias);
 
     void Write(FoundryLocalModelProvenance provenance);
+
+    void Delete(string requestedAlias);
 }
 
 internal sealed class FoundryLocalModelProvenanceStore : IFoundryLocalModelProvenanceStore
@@ -117,6 +119,13 @@ internal sealed class FoundryLocalModelProvenanceStore : IFoundryLocalModelProve
         }
     }
 
+    public void Delete(string requestedAlias)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(requestedAlias);
+        TryDelete(GetPath(requestedAlias));
+        TryDelete(GetLegacyPath());
+    }
+
     internal string GetPath(string requestedAlias)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(requestedAlias);
@@ -136,6 +145,22 @@ internal sealed class FoundryLocalModelProvenanceStore : IFoundryLocalModelProve
             "CaptureAnalysis",
             "FoundryLocal",
             "model-provenance-v1.json");
+    }
+
+    private static void TryDelete(string path)
+    {
+        try
+        {
+            if (File.Exists(path))
+            {
+                File.Delete(path);
+            }
+        }
+        catch
+        {
+            // Provenance is disposable app-created metadata. A stale file is ignored
+            // when the SDK reports that its referenced model is no longer cached.
+        }
     }
 
     private static string RequireValid(string value)

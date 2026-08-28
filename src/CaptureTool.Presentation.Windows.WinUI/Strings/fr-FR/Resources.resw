@@ -1921,4 +1921,18 @@ SOFTWARE.
   <data name="CaptureMemory_Confirmation_DeleteTitle" xml:space="preserve"><value>Supprimer cette capture ?</value></data>
   <data name="CaptureMemory_Confirmation_DeleteContent" xml:space="preserve"><value>Cela supprime définitivement la source conservée appartenant à l’application et retire ses données Mémoire. Les copies enregistrées ou exportées séparément restent intactes.</value></data>
   <data name="CaptureMemory_Confirmation_DeleteButton" xml:space="preserve"><value>Supprimer la capture</value></data>
+  <data name="Settings_AiModelStorage_Header.Text" xml:space="preserve"><value>Stockage des modèles d’IA</value></data>
+  <data name="Settings_AiModelStorage_Title.Text" xml:space="preserve"><value>Modèles téléchargés sur l’appareil</value></data>
+  <data name="Settings_AiModelStorage_Description.Text" xml:space="preserve"><value>Gérez les packages de modèles séparément des captures et des métadonnées analysées. Suspendez l’analyse des nouvelles captures avant la suppression ; la reconnaissance vocale téléchargera de nouveau les modèles nécessaires.</value></data>
+  <data name="Settings_AiModelStorage_RemoveButton.Content" xml:space="preserve"><value>Supprimer les modèles</value></data>
+  <data name="Settings_AiModelStorage_Size" xml:space="preserve"><value>Les modèles téléchargés sur l’appareil utilisent {0}.</value></data>
+  <data name="Settings_AiModelStorage_SizeUnavailable" xml:space="preserve"><value>Impossible de mesurer le stockage des modèles téléchargés.</value></data>
+  <data name="Settings_AiModelStorage_PauseRequired" xml:space="preserve"><value>Suspendez l’analyse des nouvelles captures avant de supprimer les modèles téléchargés.</value></data>
+  <data name="Settings_AiModelStorage_Removing" xml:space="preserve"><value>Suppression des modèles d’IA téléchargés…</value></data>
+  <data name="Settings_AiModelStorage_RemoveIncomplete" xml:space="preserve"><value>{0} modèle(s) supprimé(s), mais {1} modèle(s) n’ont pas pu être supprimé(s). Redémarrez l’application et réessayez.</value></data>
+  <data name="Settings_AiModelStorage_NothingToRemove" xml:space="preserve"><value>Aucun modèle d’IA téléchargé n’a été trouvé.</value></data>
+  <data name="Settings_AiModelStorage_RemoveSucceeded" xml:space="preserve"><value>{0} modèle(s) téléchargé(s) supprimé(s) et {1} libérés. Les captures et les métadonnées analysées ont été conservées.</value></data>
+  <data name="CaptureMemory_Confirmation_RemoveModelsTitle" xml:space="preserve"><value>Supprimer les modèles d’IA téléchargés ?</value></data>
+  <data name="CaptureMemory_Confirmation_RemoveModelsContent" xml:space="preserve"><value>Cette action supprime les packages de modèles téléchargés sur l’appareil par Capture Tool. Les captures et les métadonnées analysées sont conservées. L’analyse vocale téléchargera de nouveau ses modèles si nécessaire.</value></data>
+  <data name="CaptureMemory_Confirmation_RemoveModelsButton" xml:space="preserve"><value>Supprimer les modèles</value></data>
 </root>

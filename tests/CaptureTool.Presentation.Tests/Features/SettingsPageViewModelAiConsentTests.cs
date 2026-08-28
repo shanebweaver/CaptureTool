@@ -1,4 +1,6 @@
 using CaptureTool.Application.Abstractions.Ai;
+using CaptureTool.Application.Abstractions.Analysis.Consent;
+using CaptureTool.Application.Abstractions.Analysis.Models;
 using CaptureTool.Application.Abstractions.Edit.Image.Description;
 using CaptureTool.Application.Abstractions.Edit.Image.ForegroundExtraction;
 using CaptureTool.Application.Abstractions.Edit.Image.ObjectErase;
@@ -217,6 +219,59 @@ public sealed class SettingsPageViewModelAiConsentTests
     }
 
     [TestMethod]
+    public async Task LoadAsync_WithModelStorage_ShouldReportDownloadedModelSize()
+    {
+        var modelStorage = new Mock<IAiModelStorageService>();
+        modelStorage
+            .Setup(service => service.GetSnapshotAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new AiModelStorageSnapshot(2L * 1024 * 1024 * 1024));
+        SettingsPageViewModel viewModel = CreateViewModel(
+            aiModelStorageService: modelStorage.Object,
+            confirmationService: Mock.Of<ICaptureAnalysisSettingsConfirmationDialogService>());
+
+        await viewModel.LoadAsync(TestContext.CancellationToken);
+
+        viewModel.IsAiModelStorageVisible.Should().BeTrue();
+        viewModel.IsAiModelStorageMeasured.Should().BeTrue();
+        viewModel.DownloadedAiModelByteCount.Should().Be(2L * 1024 * 1024 * 1024);
+        viewModel.AiModelStorageSummaryText.Should().Contain("2.0 GB");
+        viewModel.CanRemoveDownloadedAiModels.Should().BeTrue();
+    }
+
+    [TestMethod]
+    public async Task RemoveDownloadedAiModelsCommand_ShouldConfirmAndPreserveReportedRemainder()
+    {
+        var modelStorage = new Mock<IAiModelStorageService>();
+        modelStorage
+            .Setup(service => service.GetSnapshotAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new AiModelStorageSnapshot(4096));
+        modelStorage
+            .Setup(service => service.RemoveDownloadedModelsAsync(
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new AiModelStorageRemovalResult(2, 4096, 0, 0));
+        var confirmation = new Mock<ICaptureAnalysisSettingsConfirmationDialogService>();
+        confirmation
+            .Setup(service => service.ConfirmAsync(
+                It.Is<CaptureAnalysisSettingsConfirmationRequest>(request =>
+                    request.Action == CaptureAnalysisSettingsAction.RemoveDownloadedModels),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(CaptureAnalysisConfirmationDecision.Confirmed);
+        SettingsPageViewModel viewModel = CreateViewModel(
+            aiModelStorageService: modelStorage.Object,
+            confirmationService: confirmation.Object);
+        await viewModel.LoadAsync(TestContext.CancellationToken);
+
+        await viewModel.RemoveDownloadedAiModelsCommand.ExecuteAsync(null);
+
+        viewModel.DownloadedAiModelByteCount.Should().Be(0);
+        viewModel.AiModelStorageStatusText.Should().Contain("2 downloaded model");
+        viewModel.AiModelStorageStatusText.Should().Contain("4.0 KB");
+        modelStorage.Verify(
+            service => service.RemoveDownloadedModelsAsync(It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [TestMethod]
     public async Task LoadAsync_WhenOnlyImageDescriptionFeatureEnabled_ShouldShowImageDescriptionConsentOnly()
     {
         SettingsPageViewModel viewModel = CreateViewModel(
@@ -321,7 +376,9 @@ public sealed class SettingsPageViewModelAiConsentTests
         IUpdateImageAutoSaveUseCase? updateImageAutoSaveAction = null,
         bool aiConsentSaveSucceeded = true,
         IRestoreDefaultsUseCase? restoreDefaultsUseCase = null,
-        IClearTempFilesUseCase? clearTempFilesUseCase = null)
+        IClearTempFilesUseCase? clearTempFilesUseCase = null,
+        IAiModelStorageService? aiModelStorageService = null,
+        ICaptureAnalysisSettingsConfirmationDialogService? confirmationService = null)
     {
         var localization = new Mock<ILocalizationService>();
         localization
@@ -338,6 +395,9 @@ public sealed class SettingsPageViewModelAiConsentTests
                 "Settings_AiConsent_ImageObjectEraseDisplayName" => "Localized object erase",
                 "Settings_AiConsent_ImageObjectExtractionDisplayName" => "Localized object extraction",
                 "Settings_AiConsent_VideoSuperResolutionDisplayName" => "Localized video super resolution",
+                "Settings_AiModelStorage_Size" => "Downloaded on-device models use {0}.",
+                "Settings_AiModelStorage_RemoveSucceeded" =>
+                    "Removed {0} downloaded model(s) and freed {1}. Capture files and analyzed metadata were kept.",
                 _ => resourceKey
             });
 
@@ -453,7 +513,10 @@ public sealed class SettingsPageViewModelAiConsentTests
                 service.IsImageObjectExtractionEnabled == isImageObjectExtractionEnabled),
             Mock.Of<IVideoSuperResolutionFeatureAvailability>(service =>
                 service.IsVideoSuperResolutionEnabled == isVideoSuperResolutionEnabled),
-            telemetryConsentService);
+            telemetryConsentService,
+            captureMemory: null,
+            aiModelStorageService,
+            confirmationService);
     }
 
     public TestContext TestContext { get; set; } = null!;

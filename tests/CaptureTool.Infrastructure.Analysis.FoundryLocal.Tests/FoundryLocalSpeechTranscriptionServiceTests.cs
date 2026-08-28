@@ -585,6 +585,16 @@ public sealed class FoundryLocalSpeechTranscriptionServiceTests
             return Task.FromResult(CachedModel);
         }
 
+        public Task<IReadOnlyList<IFoundryLocalSdkModel>> GetCachedModelsAsync(
+            CancellationToken cancellationToken)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            IReadOnlyList<IFoundryLocalSdkModel> models = CachedModel == null
+                ? []
+                : [CachedModel];
+            return Task.FromResult(models);
+        }
+
         public void Dispose()
         {
         }
@@ -612,6 +622,10 @@ public sealed class FoundryLocalSpeechTranscriptionServiceTests
 
             WrittenProvenance = provenance;
         }
+
+        public void Delete(string requestedAlias)
+        {
+        }
     }
 
     private sealed class FakeSdkModel(FoundryLocalModelProvenance provenance)
@@ -630,6 +644,8 @@ public sealed class FoundryLocalSpeechTranscriptionServiceTests
         public int LoadCalls { get; private set; }
 
         public int UnloadCalls { get; private set; }
+
+        public int RemoveFromCacheCalls { get; private set; }
 
         public Queue<FoundryLocalAudioTranscription> Transcriptions { get; } = new();
 
@@ -671,6 +687,13 @@ public sealed class FoundryLocalSpeechTranscriptionServiceTests
         public Task UnloadAsync(CancellationToken cancellationToken)
         {
             UnloadCalls++;
+            return Task.CompletedTask;
+        }
+
+        public Task RemoveFromCacheAsync(CancellationToken cancellationToken)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            RemoveFromCacheCalls++;
             return Task.CompletedTask;
         }
 

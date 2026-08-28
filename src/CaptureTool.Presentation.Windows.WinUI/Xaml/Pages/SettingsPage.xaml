@@ -976,6 +976,57 @@
                         </Grid>
                     </StackPanel>
 
+                    <!--  Downloaded AI model storage section  -->
+                    <StackPanel
+                        Spacing="4"
+                        Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.IsAiModelStorageVisible), Mode=OneWay}">
+                        <TextBlock x:Uid="Settings_AiModelStorage_Header" Margin="0,4" />
+
+                        <Grid
+                            Padding="16,12"
+                            Background="{ThemeResource CardBackgroundFillColorDefault}"
+                            BorderBrush="{ThemeResource CardStrokeColorDefault}"
+                            BorderThickness="1"
+                            ColumnSpacing="16"
+                            CornerRadius="4">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+
+                            <SymbolIcon Symbol="Download" />
+
+                            <StackPanel Grid.Column="1" Spacing="4">
+                                <TextBlock
+                                    x:Uid="Settings_AiModelStorage_Title"
+                                    FontWeight="SemiBold"
+                                    TextWrapping="WrapWholeWords" />
+                                <TextBlock
+                                    x:Uid="Settings_AiModelStorage_Description"
+                                    FontSize="12"
+                                    Opacity=".75"
+                                    TextWrapping="WrapWholeWords" />
+                                <TextBlock
+                                    AutomationProperties.AutomationId="Settings_AiModelStorageSummary"
+                                    Text="{x:Bind ViewModel.AiModelStorageSummaryText, Mode=OneWay}"
+                                    TextWrapping="WrapWholeWords" />
+                                <TextBlock
+                                    AutomationProperties.AutomationId="Settings_AiModelStorageStatus"
+                                    AutomationProperties.LiveSetting="Polite"
+                                    Text="{x:Bind ViewModel.AiModelStorageStatusText, Mode=OneWay}"
+                                    TextWrapping="WrapWholeWords"
+                                    Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.HasAiModelStorageStatus), Mode=OneWay}" />
+                            </StackPanel>
+
+                            <Button
+                                x:Uid="Settings_AiModelStorage_RemoveButton"
+                                Grid.Column="2"
+                                AutomationProperties.AutomationId="Settings_RemoveDownloadedAiModelsButton"
+                                Command="{x:Bind ViewModel.RemoveDownloadedAiModelsCommand, Mode=OneWay}" />
+                        </Grid>
+                    </StackPanel>
+
                     <!--  AI consent section  -->
                     <StackPanel Spacing="4" Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.IsAiConsentSettingsVisible), Mode=OneWay}">
                         <TextBlock x:Uid="Settings_AiConsentHeaderLabel" Margin="0,4" />

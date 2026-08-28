@@ -60,6 +60,9 @@ internal interface IFoundryLocalSdkClient : IDisposable
     Task<IFoundryLocalSdkModel?> GetCachedModelAsync(
         FoundryLocalModelProvenance provenance,
         CancellationToken cancellationToken);
+
+    Task<IReadOnlyList<IFoundryLocalSdkModel>> GetCachedModelsAsync(
+        CancellationToken cancellationToken);
 }
 
 internal interface IFoundryLocalSdkModel
@@ -75,6 +78,8 @@ internal interface IFoundryLocalSdkModel
     Task LoadAsync(CancellationToken cancellationToken);
 
     Task UnloadAsync(CancellationToken cancellationToken);
+
+    Task RemoveFromCacheAsync(CancellationToken cancellationToken);
 
     Task<FoundryLocalAudioTranscription> TranscribeAsync(
         string audioFilePath,
@@ -243,6 +248,21 @@ internal sealed class FoundryLocalSdkClient : IFoundryLocalSdkClient
             : new FoundryLocalSdkModel(provenance.RequestedAlias, cachedModel);
     }
 
+    public async Task<IReadOnlyList<IFoundryLocalSdkModel>> GetCachedModelsAsync(
+        CancellationToken cancellationToken)
+    {
+        ObjectDisposedException.ThrowIf(_disposed, this);
+        ICatalog catalog = await GetManager()
+            .GetCatalogAsync(cancellationToken)
+            .ConfigureAwait(false);
+        IReadOnlyList<IModel> cachedModels = await catalog
+            .GetCachedModelsAsync(cancellationToken)
+            .ConfigureAwait(false);
+        return cachedModels
+            .Select(model => (IFoundryLocalSdkModel)new FoundryLocalSdkModel(model.Id, model))
+            .ToArray();
+    }
+
     public void Dispose()
     {
         if (_disposed)
@@ -321,6 +341,11 @@ internal sealed class FoundryLocalSdkModel : IFoundryLocalSdkModel
     public Task UnloadAsync(CancellationToken cancellationToken)
     {
         return _model.UnloadAsync(cancellationToken);
+    }
+
+    public Task RemoveFromCacheAsync(CancellationToken cancellationToken)
+    {
+        return _model.RemoveFromCacheAsync(cancellationToken);
     }
 
     public async Task<FoundryLocalAudioTranscription> TranscribeAsync(

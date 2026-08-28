@@ -107,6 +107,16 @@ internal sealed class CaptureMemoryConfirmationDialogService :
                 GetString(
                     "CaptureMemory_Confirmation_ReanalyzeButton",
                     "Reanalyze captures")),
+            CaptureAnalysisSettingsAction.RemoveDownloadedModels => new(
+                GetString(
+                    "CaptureMemory_Confirmation_RemoveModelsTitle",
+                    "Remove downloaded AI models?"),
+                GetString(
+                    "CaptureMemory_Confirmation_RemoveModelsContent",
+                    "This removes on-device model packages downloaded by Capture Tool. Capture files and analyzed metadata are kept. Speech analysis will download its models again when needed."),
+                GetString(
+                    "CaptureMemory_Confirmation_RemoveModelsButton",
+                    "Remove models")),
             CaptureAnalysisSettingsAction.RemoveFromMemory => new(
                 GetString(
                     "CaptureMemory_Confirmation_RemoveTitle",

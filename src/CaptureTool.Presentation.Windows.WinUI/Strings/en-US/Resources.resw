@@ -2205,4 +2205,18 @@ SOFTWARE.
   <data name="CaptureMemory_Confirmation_DeleteTitle" xml:space="preserve"><value>Delete this capture?</value></data>
   <data name="CaptureMemory_Confirmation_DeleteContent" xml:space="preserve"><value>This permanently deletes the app-owned retained source and removes its app-managed Memory data. Any separately saved or exported copy remains.</value></data>
   <data name="CaptureMemory_Confirmation_DeleteButton" xml:space="preserve"><value>Delete capture</value></data>
+  <data name="Settings_AiModelStorage_Header.Text" xml:space="preserve"><value>AI model storage</value></data>
+  <data name="Settings_AiModelStorage_Title.Text" xml:space="preserve"><value>Downloaded on-device models</value></data>
+  <data name="Settings_AiModelStorage_Description.Text" xml:space="preserve"><value>Manage model packages separately from captures and analyzed metadata. Pause analysis of new captures before removal; speech recognition downloads its models again when needed.</value></data>
+  <data name="Settings_AiModelStorage_RemoveButton.Content" xml:space="preserve"><value>Remove models</value></data>
+  <data name="Settings_AiModelStorage_Size" xml:space="preserve"><value>Downloaded on-device models use {0}.</value></data>
+  <data name="Settings_AiModelStorage_SizeUnavailable" xml:space="preserve"><value>Downloaded model storage could not be measured.</value></data>
+  <data name="Settings_AiModelStorage_PauseRequired" xml:space="preserve"><value>Pause analysis of new captures before removing downloaded models.</value></data>
+  <data name="Settings_AiModelStorage_Removing" xml:space="preserve"><value>Removing downloaded AI models…</value></data>
+  <data name="Settings_AiModelStorage_RemoveIncomplete" xml:space="preserve"><value>Removed {0} model(s), but {1} model(s) could not be removed. Try again after restarting the app.</value></data>
+  <data name="Settings_AiModelStorage_NothingToRemove" xml:space="preserve"><value>No downloaded AI models were found.</value></data>
+  <data name="Settings_AiModelStorage_RemoveSucceeded" xml:space="preserve"><value>Removed {0} downloaded model(s) and freed {1}. Capture files and analyzed metadata were kept.</value></data>
+  <data name="CaptureMemory_Confirmation_RemoveModelsTitle" xml:space="preserve"><value>Remove downloaded AI models?</value></data>
+  <data name="CaptureMemory_Confirmation_RemoveModelsContent" xml:space="preserve"><value>This removes on-device model packages downloaded by Capture Tool. Capture files and analyzed metadata are kept. Speech analysis will download its models again when needed.</value></data>
+  <data name="CaptureMemory_Confirmation_RemoveModelsButton" xml:space="preserve"><value>Remove models</value></data>
 </root>

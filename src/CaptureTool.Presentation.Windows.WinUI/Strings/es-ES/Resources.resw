@@ -1921,4 +1921,18 @@ SOFTWARE.
   <data name="CaptureMemory_Confirmation_DeleteTitle" xml:space="preserve"><value>¿Eliminar esta captura?</value></data>
   <data name="CaptureMemory_Confirmation_DeleteContent" xml:space="preserve"><value>Esto elimina permanentemente la fuente retenida propiedad de la aplicación y quita sus datos de Memoria. Las copias guardadas o exportadas por separado permanecen.</value></data>
   <data name="CaptureMemory_Confirmation_DeleteButton" xml:space="preserve"><value>Eliminar captura</value></data>
+  <data name="Settings_AiModelStorage_Header.Text" xml:space="preserve"><value>Almacenamiento de modelos de IA</value></data>
+  <data name="Settings_AiModelStorage_Title.Text" xml:space="preserve"><value>Modelos descargados en el dispositivo</value></data>
+  <data name="Settings_AiModelStorage_Description.Text" xml:space="preserve"><value>Administra los paquetes de modelos por separado de las capturas y los metadatos analizados. Pausa el análisis de capturas nuevas antes de quitarlos; el reconocimiento de voz volverá a descargar los modelos cuando los necesite.</value></data>
+  <data name="Settings_AiModelStorage_RemoveButton.Content" xml:space="preserve"><value>Quitar modelos</value></data>
+  <data name="Settings_AiModelStorage_Size" xml:space="preserve"><value>Los modelos descargados en el dispositivo usan {0}.</value></data>
+  <data name="Settings_AiModelStorage_SizeUnavailable" xml:space="preserve"><value>No se pudo medir el almacenamiento de modelos descargados.</value></data>
+  <data name="Settings_AiModelStorage_PauseRequired" xml:space="preserve"><value>Pausa el análisis de capturas nuevas antes de quitar los modelos descargados.</value></data>
+  <data name="Settings_AiModelStorage_Removing" xml:space="preserve"><value>Quitando modelos de IA descargados…</value></data>
+  <data name="Settings_AiModelStorage_RemoveIncomplete" xml:space="preserve"><value>Se quitaron {0} modelo(s), pero no se pudieron quitar {1}. Reinicia la aplicación e inténtalo de nuevo.</value></data>
+  <data name="Settings_AiModelStorage_NothingToRemove" xml:space="preserve"><value>No se encontraron modelos de IA descargados.</value></data>
+  <data name="Settings_AiModelStorage_RemoveSucceeded" xml:space="preserve"><value>Se quitaron {0} modelo(s) descargados y se liberaron {1}. Se conservaron las capturas y los metadatos analizados.</value></data>
+  <data name="CaptureMemory_Confirmation_RemoveModelsTitle" xml:space="preserve"><value>¿Quitar los modelos de IA descargados?</value></data>
+  <data name="CaptureMemory_Confirmation_RemoveModelsContent" xml:space="preserve"><value>Esto quita los paquetes de modelos en el dispositivo descargados por Capture Tool. Se conservan las capturas y los metadatos analizados. El análisis de voz volverá a descargar los modelos cuando los necesite.</value></data>
+  <data name="CaptureMemory_Confirmation_RemoveModelsButton" xml:space="preserve"><value>Quitar modelos</value></data>
 </root>

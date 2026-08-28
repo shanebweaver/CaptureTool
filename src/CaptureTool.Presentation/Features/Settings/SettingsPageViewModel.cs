@@ -1,4 +1,6 @@
 using CaptureTool.Application.Abstractions.Ai;
+using CaptureTool.Application.Abstractions.Analysis.Consent;
+using CaptureTool.Application.Abstractions.Analysis.Models;
 using CaptureTool.Application.Abstractions.Edit.Image.Description;
 using CaptureTool.Application.Abstractions.Edit.Image.ForegroundExtraction;
 using CaptureTool.Application.Abstractions.Edit.Image.ObjectErase;
@@ -42,6 +44,7 @@ using CaptureTool.Presentation.Factories;
 using CaptureTool.Presentation.ViewModels;
 using CommunityToolkit.Mvvm.Input;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Globalization;
 
 namespace CaptureTool.Presentation.Features.Settings;
@@ -89,6 +92,9 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
     private readonly IFactoryServiceWithArgs<AppLanguageViewModel, IAppLanguage?> _appLanguageViewModelFactory;
     private readonly IFactoryServiceWithArgs<AppThemeViewModel, AppTheme> _appThemeViewModelFactory;
     private readonly ITelemetryConsentService? _telemetryConsentService;
+    private readonly IAiModelStorageService? _aiModelStorageService;
+    private readonly ICaptureAnalysisSettingsConfirmationDialogService?
+        _captureAnalysisConfirmationService;
 
     private readonly AppTheme[] SupportedAppThemes = [
         AppTheme.Light,
@@ -122,6 +128,7 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
     public IAsyncRelayCommand OpenStoreReviewCommand { get; }
     public IAsyncRelayCommand<bool> UpdateStoreReviewRemindersEnabledCommand { get; }
     public IAsyncRelayCommand<bool> UpdateOptionalUsageDataEnabledCommand { get; }
+    public IAsyncRelayCommand RemoveDownloadedAiModelsCommand { get; }
 
     public ObservableCollection<AppLanguageViewModel> AppLanguages
     {
@@ -282,6 +289,76 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
     public bool HasTemporaryFilesStatus =>
         !string.IsNullOrWhiteSpace(TemporaryFilesStatusText);
 
+    public bool IsAiModelStorageVisible => _aiModelStorageService != null;
+
+    public long DownloadedAiModelByteCount
+    {
+        get;
+        private set
+        {
+            if (Set(ref field, value))
+            {
+                RaisePropertyChanged(nameof(CanRemoveDownloadedAiModels));
+                RemoveDownloadedAiModelsCommand.NotifyCanExecuteChanged();
+            }
+        }
+    }
+
+    public bool IsAiModelStorageMeasured
+    {
+        get;
+        private set
+        {
+            if (Set(ref field, value))
+            {
+                RaisePropertyChanged(nameof(CanRemoveDownloadedAiModels));
+                RemoveDownloadedAiModelsCommand.NotifyCanExecuteChanged();
+            }
+        }
+    }
+
+    public bool IsAiModelStorageBusy
+    {
+        get;
+        private set
+        {
+            if (Set(ref field, value))
+            {
+                RaisePropertyChanged(nameof(CanRemoveDownloadedAiModels));
+                RemoveDownloadedAiModelsCommand.NotifyCanExecuteChanged();
+            }
+        }
+    }
+
+    public string AiModelStorageSummaryText
+    {
+        get;
+        private set => Set(ref field, value);
+    }
+
+    public string AiModelStorageStatusText
+    {
+        get;
+        private set
+        {
+            if (Set(ref field, value))
+            {
+                RaisePropertyChanged(nameof(HasAiModelStorageStatus));
+            }
+        }
+    }
+
+    public bool HasAiModelStorageStatus =>
+        !string.IsNullOrWhiteSpace(AiModelStorageStatusText);
+
+    public bool CanRemoveDownloadedAiModels =>
+        _aiModelStorageService != null &&
+        _captureAnalysisConfirmationService != null &&
+        IsAiModelStorageMeasured &&
+        DownloadedAiModelByteCount > 0 &&
+        !IsAiModelStorageBusy &&
+        (!CaptureMemory.IsAuthorized || !CaptureMemory.IsAnalyzingNewCaptures);
+
     public CaptureMemorySettingsViewModel CaptureMemory { get; }
 
     public SettingsPageViewModel(
@@ -326,7 +403,10 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
         IImageObjectExtractionFeatureAvailability? imageObjectExtractionFeatureAvailability = null,
         IVideoSuperResolutionFeatureAvailability? videoSuperResolutionFeatureAvailability = null,
         ITelemetryConsentService? telemetryConsentService = null,
-        CaptureMemorySettingsViewModel? captureMemory = null)
+        CaptureMemorySettingsViewModel? captureMemory = null,
+        IAiModelStorageService? aiModelStorageService = null,
+        ICaptureAnalysisSettingsConfirmationDialogService?
+            captureAnalysisConfirmationService = null)
     {
         _goBackAction = goBackAction;
         _restartAppAction = restartAppAction;
@@ -362,6 +442,8 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
         _videoSuperResolutionFeatureAvailability =
             videoSuperResolutionFeatureAvailability ?? new DisabledVideoSuperResolutionFeatureAvailability();
         _telemetryConsentService = telemetryConsentService;
+        _aiModelStorageService = aiModelStorageService;
+        _captureAnalysisConfirmationService = captureAnalysisConfirmationService;
         _localizationService = localizationService;
         _themeService = themeService;
         _settingsService = settingsService;
@@ -371,6 +453,7 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
         _appLanguageViewModelFactory = appLanguageViewModelFactory;
         _appThemeViewModelFactory = appThemeViewModelFactory;
         CaptureMemory = captureMemory ?? new CaptureMemorySettingsViewModel();
+        CaptureMemory.PropertyChanged += CaptureMemory_PropertyChanged;
 
         AppThemes = [];
         AppLanguages = [];
@@ -380,6 +463,8 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
         VideosFolderPath = string.Empty;
         TemporaryFilesFolderPath = string.Empty;
         TemporaryFilesStatusText = string.Empty;
+        AiModelStorageSummaryText = string.Empty;
+        AiModelStorageStatusText = string.Empty;
 
         ChangeScreenshotsFolderCommand = new AsyncRelayCommand(ChangeScreenshotsFolderAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
         OpenScreenshotsFolderCommand = new AsyncRelayCommand(OpenScreenshotsFolderAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
@@ -407,6 +492,10 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
         OpenStoreReviewCommand = new AsyncRelayCommand(OpenStoreReviewAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
         UpdateStoreReviewRemindersEnabledCommand = new AsyncRelayCommand<bool>(UpdateStoreReviewRemindersEnabledAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
         UpdateOptionalUsageDataEnabledCommand = new AsyncRelayCommand<bool>(UpdateOptionalUsageDataEnabledAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
+        RemoveDownloadedAiModelsCommand = new AsyncRelayCommand(
+            RemoveDownloadedAiModelsAsync,
+            () => CanRemoveDownloadedAiModels,
+            AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
     }
 
     public override async Task LoadAsync(CancellationToken cancellationToken)
@@ -508,12 +597,14 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
         TemporaryFilesFolderPath = _storageService.GetApplicationScratchFolderPath();
 
         await CaptureMemory.LoadAsync(cancellationToken);
+        await RefreshAiModelStorageAsync(cancellationToken);
 
         await base.LoadAsync(cancellationToken);
     }
 
     public override void Dispose()
     {
+        CaptureMemory.PropertyChanged -= CaptureMemory_PropertyChanged;
         CaptureMemory.Dispose();
         base.Dispose();
     }
@@ -970,6 +1061,109 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
         return string.IsNullOrWhiteSpace(localizedDisplayName)
             ? consent.DisplayName
             : localizedDisplayName;
+    }
+
+    private async Task RefreshAiModelStorageAsync(CancellationToken cancellationToken)
+    {
+        if (_aiModelStorageService == null)
+        {
+            return;
+        }
+
+        AiModelStorageSnapshot snapshot = await _aiModelStorageService
+            .GetSnapshotAsync(cancellationToken)
+            .ConfigureAwait(true);
+        DownloadedAiModelByteCount = snapshot.DownloadedByteCount;
+        IsAiModelStorageMeasured = snapshot.MeasurementSucceeded;
+        AiModelStorageSummaryText = snapshot.MeasurementSucceeded
+            ? string.Format(
+                CultureInfo.CurrentCulture,
+                GetString(
+                    "Settings_AiModelStorage_Size",
+                    "Downloaded on-device models use {0}."),
+                FormatByteCount(snapshot.DownloadedByteCount))
+            : GetString(
+                "Settings_AiModelStorage_SizeUnavailable",
+                "Downloaded model storage could not be measured.");
+    }
+
+    private async Task RemoveDownloadedAiModelsAsync()
+    {
+        if (_aiModelStorageService == null ||
+            _captureAnalysisConfirmationService == null ||
+            !CanRemoveDownloadedAiModels)
+        {
+            AiModelStorageStatusText = GetString(
+                "Settings_AiModelStorage_PauseRequired",
+                "Pause analysis of new captures before removing downloaded models.");
+            return;
+        }
+
+        CaptureAnalysisConfirmationDecision decision =
+            await _captureAnalysisConfirmationService.ConfirmAsync(
+                new CaptureAnalysisSettingsConfirmationRequest(
+                    CaptureAnalysisSettingsAction.RemoveDownloadedModels),
+                CancellationToken.None);
+        if (decision != CaptureAnalysisConfirmationDecision.Confirmed)
+        {
+            return;
+        }
+
+        IsAiModelStorageBusy = true;
+        AiModelStorageStatusText = GetString(
+            "Settings_AiModelStorage_Removing",
+            "Removing downloaded AI models…");
+        try
+        {
+            AiModelStorageRemovalResult result = await _aiModelStorageService
+                .RemoveDownloadedModelsAsync(CancellationToken.None);
+            DownloadedAiModelByteCount = result.RemainingByteCount;
+            IsAiModelStorageMeasured = true;
+            AiModelStorageSummaryText = string.Format(
+                CultureInfo.CurrentCulture,
+                GetString(
+                    "Settings_AiModelStorage_Size",
+                    "Downloaded on-device models use {0}."),
+                FormatByteCount(result.RemainingByteCount));
+
+            if (!result.Succeeded)
+            {
+                AiModelStorageStatusText = string.Format(
+                    CultureInfo.CurrentCulture,
+                    GetString(
+                        "Settings_AiModelStorage_RemoveIncomplete",
+                        "Removed {0} model(s), but {1} model(s) could not be removed. Try again after restarting the app."),
+                    result.RemovedModelCount,
+                    result.FailedModelCount);
+                return;
+            }
+
+            AiModelStorageStatusText = result.RemovedModelCount == 0
+                ? GetString(
+                    "Settings_AiModelStorage_NothingToRemove",
+                    "No downloaded AI models were found.")
+                : string.Format(
+                    CultureInfo.CurrentCulture,
+                    GetString(
+                        "Settings_AiModelStorage_RemoveSucceeded",
+                        "Removed {0} downloaded model(s) and freed {1}. Capture files and analyzed metadata were kept."),
+                    result.RemovedModelCount,
+                    FormatByteCount(result.ReclaimedByteCount));
+        }
+        finally
+        {
+            IsAiModelStorageBusy = false;
+        }
+    }
+
+    private void CaptureMemory_PropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName is nameof(CaptureMemorySettingsViewModel.IsAuthorized) or
+            nameof(CaptureMemorySettingsViewModel.IsAnalyzingNewCaptures))
+        {
+            RaisePropertyChanged(nameof(CanRemoveDownloadedAiModels));
+            RemoveDownloadedAiModelsCommand.NotifyCanExecuteChanged();
+        }
     }
 
     private static string FormatByteCount(long byteCount)

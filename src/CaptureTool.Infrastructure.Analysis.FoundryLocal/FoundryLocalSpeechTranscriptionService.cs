@@ -62,8 +62,15 @@ public interface IFoundryLocalSpeechTranscriptionService
     Task ReleaseModelAsync(CancellationToken cancellationToken = default);
 }
 
+internal interface IFoundryLocalSpeechModelMaintenanceLeaseSource
+{
+    ValueTask<IAsyncDisposable> AcquireModelMaintenanceLeaseAsync(
+        CancellationToken cancellationToken = default);
+}
+
 internal class FoundryLocalSpeechTranscriptionService :
     IFoundryLocalSpeechTranscriptionService,
+    IFoundryLocalSpeechModelMaintenanceLeaseSource,
     IDisposable
 {
     private const int MaximumSegmentCount = 50_000;
@@ -313,6 +320,31 @@ internal class FoundryLocalSpeechTranscriptionService :
         }
     }
 
+    public async ValueTask<IAsyncDisposable> AcquireModelMaintenanceLeaseAsync(
+        CancellationToken cancellationToken = default)
+    {
+        ObjectDisposedException.ThrowIf(_disposed, this);
+        await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            IFoundryLocalSdkModel? model = _model;
+            _model = null;
+            _modelProvenance = null;
+            _unsupported = false;
+            if (model != null)
+            {
+                await model.UnloadAsync(cancellationToken).ConfigureAwait(false);
+            }
+
+            return new ModelMaintenanceLease(_gate);
+        }
+        catch
+        {
+            _gate.Release();
+            throw;
+        }
+    }
+
     public void Dispose()
     {
         if (_disposed)
@@ -369,6 +401,17 @@ internal class FoundryLocalSpeechTranscriptionService :
         }
 
         progress?.Report(0.2);
+    }
+
+    private sealed class ModelMaintenanceLease(SemaphoreSlim gate) : IAsyncDisposable
+    {
+        private SemaphoreSlim? _gate = gate;
+
+        public ValueTask DisposeAsync()
+        {
+            Interlocked.Exchange(ref _gate, null)?.Release();
+            return ValueTask.CompletedTask;
+        }
     }
 
     private async Task<FoundryLocalTranscriptionResult> TranscribePreparedWaveAsync(

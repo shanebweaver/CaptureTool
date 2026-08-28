@@ -1921,4 +1921,18 @@ SOFTWARE.
   <data name="CaptureMemory_Confirmation_DeleteTitle" xml:space="preserve"><value>删除此捕获？</value></data>
   <data name="CaptureMemory_Confirmation_DeleteContent" xml:space="preserve"><value>这将永久删除应用拥有的保留源，并移除其应用管理的记忆数据。单独保存或导出的副本会保留。</value></data>
   <data name="CaptureMemory_Confirmation_DeleteButton" xml:space="preserve"><value>删除捕获</value></data>
+  <data name="Settings_AiModelStorage_Header.Text" xml:space="preserve"><value>AI 模型存储</value></data>
+  <data name="Settings_AiModelStorage_Title.Text" xml:space="preserve"><value>已下载的设备端模型</value></data>
+  <data name="Settings_AiModelStorage_Description.Text" xml:space="preserve"><value>模型包与捕获内容和已分析的元数据分开管理。移除前请暂停分析新捕获；语音识别会在需要时重新下载模型。</value></data>
+  <data name="Settings_AiModelStorage_RemoveButton.Content" xml:space="preserve"><value>移除模型</value></data>
+  <data name="Settings_AiModelStorage_Size" xml:space="preserve"><value>已下载的设备端模型占用 {0}。</value></data>
+  <data name="Settings_AiModelStorage_SizeUnavailable" xml:space="preserve"><value>无法测量已下载模型的存储空间。</value></data>
+  <data name="Settings_AiModelStorage_PauseRequired" xml:space="preserve"><value>移除已下载的模型前，请暂停分析新捕获。</value></data>
+  <data name="Settings_AiModelStorage_Removing" xml:space="preserve"><value>正在移除已下载的 AI 模型…</value></data>
+  <data name="Settings_AiModelStorage_RemoveIncomplete" xml:space="preserve"><value>已移除 {0} 个模型，但有 {1} 个模型无法移除。请重启应用后重试。</value></data>
+  <data name="Settings_AiModelStorage_NothingToRemove" xml:space="preserve"><value>未找到已下载的 AI 模型。</value></data>
+  <data name="Settings_AiModelStorage_RemoveSucceeded" xml:space="preserve"><value>已移除 {0} 个下载的模型并释放 {1}。捕获文件和已分析的元数据均已保留。</value></data>
+  <data name="CaptureMemory_Confirmation_RemoveModelsTitle" xml:space="preserve"><value>移除已下载的 AI 模型?</value></data>
+  <data name="CaptureMemory_Confirmation_RemoveModelsContent" xml:space="preserve"><value>这将移除 Capture Tool 下载的设备端模型包。捕获文件和已分析的元数据会保留。语音分析会在需要时重新下载模型。</value></data>
+  <data name="CaptureMemory_Confirmation_RemoveModelsButton" xml:space="preserve"><value>移除模型</value></data>
 </root>

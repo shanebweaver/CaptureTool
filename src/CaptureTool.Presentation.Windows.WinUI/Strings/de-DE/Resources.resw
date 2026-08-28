@@ -1915,4 +1915,18 @@ SOFTWARE.
   <data name="CaptureMemory_Confirmation_DeleteTitle" xml:space="preserve"><value>Diese Aufnahme löschen?</value></data>
   <data name="CaptureMemory_Confirmation_DeleteContent" xml:space="preserve"><value>Dies löscht die app-eigene beibehaltene Quelle dauerhaft und entfernt ihre appverwalteten Memory-Daten. Separat gespeicherte oder exportierte Kopien bleiben erhalten.</value></data>
   <data name="CaptureMemory_Confirmation_DeleteButton" xml:space="preserve"><value>Aufnahme löschen</value></data>
+  <data name="Settings_AiModelStorage_Header.Text" xml:space="preserve"><value>KI-Modellspeicher</value></data>
+  <data name="Settings_AiModelStorage_Title.Text" xml:space="preserve"><value>Heruntergeladene lokale Modelle</value></data>
+  <data name="Settings_AiModelStorage_Description.Text" xml:space="preserve"><value>Modellpakete getrennt von Aufnahmen und analysierten Metadaten verwalten. Pausieren Sie vor dem Entfernen die Analyse neuer Aufnahmen; die Spracherkennung lädt benötigte Modelle erneut herunter.</value></data>
+  <data name="Settings_AiModelStorage_RemoveButton.Content" xml:space="preserve"><value>Modelle entfernen</value></data>
+  <data name="Settings_AiModelStorage_Size" xml:space="preserve"><value>Heruntergeladene lokale Modelle belegen {0}.</value></data>
+  <data name="Settings_AiModelStorage_SizeUnavailable" xml:space="preserve"><value>Der Speicher für heruntergeladene Modelle konnte nicht gemessen werden.</value></data>
+  <data name="Settings_AiModelStorage_PauseRequired" xml:space="preserve"><value>Pausieren Sie die Analyse neuer Aufnahmen, bevor Sie heruntergeladene Modelle entfernen.</value></data>
+  <data name="Settings_AiModelStorage_Removing" xml:space="preserve"><value>Heruntergeladene KI-Modelle werden entfernt…</value></data>
+  <data name="Settings_AiModelStorage_RemoveIncomplete" xml:space="preserve"><value>{0} Modell(e) entfernt, aber {1} Modell(e) konnten nicht entfernt werden. Starten Sie die App neu und versuchen Sie es erneut.</value></data>
+  <data name="Settings_AiModelStorage_NothingToRemove" xml:space="preserve"><value>Keine heruntergeladenen KI-Modelle gefunden.</value></data>
+  <data name="Settings_AiModelStorage_RemoveSucceeded" xml:space="preserve"><value>{0} heruntergeladene(s) Modell(e) entfernt und {1} freigegeben. Aufnahmen und analysierte Metadaten wurden beibehalten.</value></data>
+  <data name="CaptureMemory_Confirmation_RemoveModelsTitle" xml:space="preserve"><value>Heruntergeladene KI-Modelle entfernen?</value></data>
+  <data name="CaptureMemory_Confirmation_RemoveModelsContent" xml:space="preserve"><value>Dadurch werden von Capture Tool heruntergeladene lokale Modellpakete entfernt. Aufnahmen und analysierte Metadaten bleiben erhalten. Die Sprachanalyse lädt die Modelle bei Bedarf erneut herunter.</value></data>
+  <data name="CaptureMemory_Confirmation_RemoveModelsButton" xml:space="preserve"><value>Modelle entfernen</value></data>
 </root>

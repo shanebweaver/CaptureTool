@@ -1921,4 +1921,18 @@ SOFTWARE.
   <data name="CaptureMemory_Confirmation_DeleteTitle" xml:space="preserve"><value>Удалить этот снимок?</value></data>
   <data name="CaptureMemory_Confirmation_DeleteContent" xml:space="preserve"><value>Сохранённый источник, принадлежащий приложению, будет безвозвратно удалён вместе с данными памяти приложения. Отдельно сохранённые или экспортированные копии останутся.</value></data>
   <data name="CaptureMemory_Confirmation_DeleteButton" xml:space="preserve"><value>Удалить снимок</value></data>
+  <data name="Settings_AiModelStorage_Header.Text" xml:space="preserve"><value>Хранилище моделей ИИ</value></data>
+  <data name="Settings_AiModelStorage_Title.Text" xml:space="preserve"><value>Скачанные локальные модели</value></data>
+  <data name="Settings_AiModelStorage_Description.Text" xml:space="preserve"><value>Управляйте пакетами моделей отдельно от снимков и проанализированных метаданных. Перед удалением приостановите анализ новых снимков; распознавание речи снова скачает нужные модели.</value></data>
+  <data name="Settings_AiModelStorage_RemoveButton.Content" xml:space="preserve"><value>Удалить модели</value></data>
+  <data name="Settings_AiModelStorage_Size" xml:space="preserve"><value>Скачанные локальные модели занимают {0}.</value></data>
+  <data name="Settings_AiModelStorage_SizeUnavailable" xml:space="preserve"><value>Не удалось определить размер хранилища скачанных моделей.</value></data>
+  <data name="Settings_AiModelStorage_PauseRequired" xml:space="preserve"><value>Приостановите анализ новых снимков перед удалением скачанных моделей.</value></data>
+  <data name="Settings_AiModelStorage_Removing" xml:space="preserve"><value>Удаление скачанных моделей ИИ…</value></data>
+  <data name="Settings_AiModelStorage_RemoveIncomplete" xml:space="preserve"><value>Удалено моделей: {0}; не удалось удалить: {1}. Перезапустите приложение и повторите попытку.</value></data>
+  <data name="Settings_AiModelStorage_NothingToRemove" xml:space="preserve"><value>Скачанные модели ИИ не найдены.</value></data>
+  <data name="Settings_AiModelStorage_RemoveSucceeded" xml:space="preserve"><value>Удалено скачанных моделей: {0}; освобождено {1}. Снимки и проанализированные метаданные сохранены.</value></data>
+  <data name="CaptureMemory_Confirmation_RemoveModelsTitle" xml:space="preserve"><value>Удалить скачанные модели ИИ?</value></data>
+  <data name="CaptureMemory_Confirmation_RemoveModelsContent" xml:space="preserve"><value>Будут удалены пакеты локальных моделей, скачанные Capture Tool. Снимки и проанализированные метаданные сохранятся. Анализ речи снова скачает модели, когда они понадобятся.</value></data>
+  <data name="CaptureMemory_Confirmation_RemoveModelsButton" xml:space="preserve"><value>Удалить модели</value></data>
 </root>

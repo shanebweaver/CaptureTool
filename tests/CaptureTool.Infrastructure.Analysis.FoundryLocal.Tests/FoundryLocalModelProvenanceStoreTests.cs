@@ -95,6 +95,41 @@ public sealed class FoundryLocalModelProvenanceStoreTests
         }
     }
 
+    [TestMethod]
+    public void Delete_ShouldRemoveOnlyRequestedAliasProvenance()
+    {
+        string root = CreateRoot();
+        try
+        {
+            var store = new FoundryLocalModelProvenanceStore(new StubPathProvider(root));
+            var whisper = new FoundryLocalModelProvenance(
+                "whisper-tiny",
+                "whisper-tiny-cpu-v4",
+                "4",
+                "CPU",
+                "CPUExecutionProvider",
+                $"sha256:{new string('a', 64)}");
+            var nemotron = new FoundryLocalModelProvenance(
+                "nvidia-nemotron-3.5-asr-streaming-multilingual-0.6b",
+                "nemotron-cpu-v1",
+                "1",
+                "CPU",
+                "CPUExecutionProvider",
+                $"sha256:{new string('b', 64)}");
+            store.Write(whisper);
+            store.Write(nemotron);
+
+            store.Delete(whisper.RequestedAlias);
+
+            Assert.IsNull(store.TryRead(whisper.RequestedAlias));
+            Assert.AreEqual(nemotron, store.TryRead(nemotron.RequestedAlias));
+        }
+        finally
+        {
+            TryDeleteRoot(root);
+        }
+    }
+
     private static string CreateRoot()
     {
         string root = Path.Combine(
