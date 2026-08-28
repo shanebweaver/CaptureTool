@@ -100,7 +100,6 @@ internal sealed class AiModelLabDialogService
             };
             var content = new StackPanel
             {
-                Width = 720,
                 Spacing = 12,
             };
             content.Children.Add(new TextBlock
