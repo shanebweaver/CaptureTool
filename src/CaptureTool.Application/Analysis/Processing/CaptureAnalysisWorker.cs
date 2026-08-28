@@ -21,6 +21,7 @@ internal sealed class CaptureAnalysisWorker : ICaptureAnalysisWorker
     private static readonly TimeSpan LeaseDuration = TimeSpan.FromMinutes(2);
     private static readonly TimeSpan FailureDelay = TimeSpan.FromSeconds(5);
     private static readonly TimeSpan InitialRetryDelay = TimeSpan.FromSeconds(15);
+    private static readonly TimeSpan CapabilityWaitRecheckDelay = TimeSpan.FromSeconds(15);
     private static readonly TimeSpan MaximumRetryDelay = TimeSpan.FromMinutes(15);
     private static readonly TimeSpan CheckpointRetention = TimeSpan.FromDays(7);
     private const int MaximumAttempts = 8;
@@ -239,12 +240,8 @@ internal sealed class CaptureAnalysisWorker : ICaptureAnalysisWorker
             .ToArray();
         if (dependencyInputs.Length != intent.Key.Dependencies.Count)
         {
-            _ = await _jobStore.TryWaitForCapabilityAsync(
-                lease.LeaseToken,
-                new AnalysisFailure(
-                    AnalysisFailureCode.CapabilityUnavailable,
-                    AnalysisFailureDisposition.Transient),
-                cancellationToken).ConfigureAwait(false);
+            await WaitForDependenciesAsync(lease, intent, cancellationToken)
+                .ConfigureAwait(false);
             return;
         }
 
@@ -269,20 +266,16 @@ internal sealed class CaptureAnalysisWorker : ICaptureAnalysisWorker
         while (!cancellationToken.IsCancellationRequested)
         {
             CaptureAnalyzerResolution resolution = await _resolver.ResolveAsync(
-                new CaptureAnalyzerResolutionRequest(
-                    intent.Key.Capability,
-                    mediaKind,
-                    expected.SourceRevision.Length,
-                    expected.Purpose,
-                    RestrictToBoundary(processingPolicy, intent.Key.AuthorizedProcessingBoundary),
-                    expected.ResolutionPolicyRevision,
-                    attempted,
-                    allowReadyFallbackWhenPreparationRequired: true),
+                CreateResolutionRequest(intent, mediaKind, processingPolicy, attempted),
                 cancellationToken).ConfigureAwait(false);
             if (resolution.Status == CaptureAnalyzerResolutionStatus.WaitingForPreparation)
             {
-                _ = await _jobStore.TryWaitForCapabilityAsync(
-                    lease.LeaseToken,
+                await WaitForAnalyzerAvailabilityAsync(
+                    lease,
+                    intent,
+                    mediaKind,
+                    processingPolicy,
+                    attempted,
                     new AnalysisFailure(
                         AnalysisFailureCode.ModelNotReady,
                         AnalysisFailureDisposition.Transient),
@@ -315,8 +308,12 @@ internal sealed class CaptureAnalysisWorker : ICaptureAnalysisWorker
                 }
                 else
                 {
-                    _ = await _jobStore.TryWaitForCapabilityAsync(
-                        lease.LeaseToken,
+                    await WaitForAnalyzerAvailabilityAsync(
+                        lease,
+                        intent,
+                        mediaKind,
+                        processingPolicy,
+                        attempted,
                         new AnalysisFailure(
                             AnalysisFailureCode.CapabilityUnavailable,
                             AnalysisFailureDisposition.Transient),
@@ -609,6 +606,104 @@ internal sealed class CaptureAnalysisWorker : ICaptureAnalysisWorker
                 continue;
             }
         }
+    }
+
+    private async Task WaitForDependenciesAsync(
+        CaptureAnalysisJobLease lease,
+        CaptureAnalysisJobIntent intent,
+        CancellationToken cancellationToken)
+    {
+        var reason = new AnalysisFailure(
+            AnalysisFailureCode.CapabilityUnavailable,
+            AnalysisFailureDisposition.Transient);
+        CaptureAnalysisJobMutationResult waiting = await _jobStore.TryWaitForCapabilityAsync(
+            lease.LeaseToken,
+            reason,
+            GetUtcNow() + CapabilityWaitRecheckDelay,
+            cancellationToken).ConfigureAwait(false);
+        if (waiting.Status != CaptureAnalysisJobMutationStatus.Succeeded)
+        {
+            return;
+        }
+
+        // Close the lost-wakeup race where the producer commits after our first metadata read
+        // but just before this job durably enters its waiting state. The timed wait remains as a
+        // watchdog for storage/provider failures and older readiness notifications.
+        CaptureAnalysisStoreSnapshot? refreshed = await _metadataStore
+            .GetAsync(intent.Key.CaptureId, cancellationToken)
+            .ConfigureAwait(false);
+        if (refreshed == null ||
+            refreshed.Record.SourceRevision != intent.Key.SourceRevision ||
+            refreshed.Record.Recipe.Id != intent.Key.Preconditions.RecipeId ||
+            refreshed.Record.Recipe.Version != intent.Key.Preconditions.RecipeVersion ||
+            !intent.Key.Dependencies.All(dependency =>
+                refreshed.Record.TryGetAnalysis(dependency.Id, out CapabilityAnalysis? analysis) &&
+                analysis?.Capability == dependency))
+        {
+            return;
+        }
+
+        _ = await _jobStore.ResumeWaitingForDependencyAsync(
+            intent.Key.CaptureId,
+            intent.Key.Dependencies[0],
+            GetUtcNow(),
+            cancellationToken).ConfigureAwait(false);
+    }
+
+    private async Task WaitForAnalyzerAvailabilityAsync(
+        CaptureAnalysisJobLease lease,
+        CaptureAnalysisJobIntent intent,
+        CaptureMediaKind mediaKind,
+        AnalysisProcessingPolicy processingPolicy,
+        IReadOnlySet<AnalyzerRevision> attempted,
+        AnalysisFailure reason,
+        CancellationToken cancellationToken)
+    {
+        CaptureAnalysisJobMutationResult waiting = await _jobStore.TryWaitForCapabilityAsync(
+            lease.LeaseToken,
+            reason,
+            GetUtcNow() + CapabilityWaitRecheckDelay,
+            cancellationToken).ConfigureAwait(false);
+        if (waiting.Status != CaptureAnalysisJobMutationStatus.Succeeded)
+        {
+            return;
+        }
+
+        // Preparation can complete between the resolver probe and the durable wait mutation.
+        // Recheck after the mutation so either this path or the preparation completion signal
+        // observes the waiting job. The durable recheck time is the final liveness guarantee.
+        CaptureAnalyzerResolution refreshed = await _resolver.ResolveAsync(
+            CreateResolutionRequest(intent, mediaKind, processingPolicy, attempted),
+            cancellationToken).ConfigureAwait(false);
+        if (refreshed.Status != CaptureAnalyzerResolutionStatus.Resolved ||
+            refreshed.Analyzer == null)
+        {
+            return;
+        }
+
+        _ = await _jobStore.ResumeWaitingForCapabilityAsync(
+            intent.Key.Capability,
+            intent.Key.AuthorizedProcessingBoundary,
+            GetUtcNow(),
+            cancellationToken).ConfigureAwait(false);
+    }
+
+    private static CaptureAnalyzerResolutionRequest CreateResolutionRequest(
+        CaptureAnalysisJobIntent intent,
+        CaptureMediaKind mediaKind,
+        AnalysisProcessingPolicy processingPolicy,
+        IEnumerable<AnalyzerRevision> attempted)
+    {
+        AnalysisCommitPreconditions expected = intent.Key.Preconditions;
+        return new CaptureAnalyzerResolutionRequest(
+            intent.Key.Capability,
+            mediaKind,
+            expected.SourceRevision.Length,
+            expected.Purpose,
+            RestrictToBoundary(processingPolicy, intent.Key.AuthorizedProcessingBoundary),
+            expected.ResolutionPolicyRevision,
+            attempted,
+            allowReadyFallbackWhenPreparationRequired: true);
     }
 
     private async ValueTask<AnalysisProcessingPolicy?> TryGetAuthorizedPolicyAsync(

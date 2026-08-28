@@ -89,9 +89,9 @@ public sealed class CaptureAnalysisWorkerTests
 
         fixture.JobStore.Verify(store => store.TryWaitForCapabilityAsync(
             fixture.Lease.LeaseToken,
-            It.Is<AnalysisFailure?>(failure =>
-                failure.HasValue &&
-                failure.Value.Code == AnalysisFailureCode.CapabilityUnavailable),
+            It.Is<AnalysisFailure>(failure =>
+                failure.Code == AnalysisFailureCode.CapabilityUnavailable),
+            fixture.UtcNow.AddSeconds(15),
             It.IsAny<CancellationToken>()), Times.Once);
         fixture.Resolver.Verify(resolver => resolver.ResolveAsync(
             It.IsAny<CaptureAnalyzerResolutionRequest>(),
@@ -99,6 +99,29 @@ public sealed class CaptureAnalysisWorkerTests
         fixture.Analyzer.Verify(analyzer => analyzer.AnalyzeAsync(
             It.IsAny<CaptureAnalysisRequest>(),
             It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [TestMethod]
+    public async Task Run_WhenDependencyCompletesBeforeWaitIsDurable_ShouldResumeConsumer()
+    {
+        using var fixture = new WorkerFixture();
+        fixture.ConfigureMissingDependency();
+        CaptureAnalysisStoreSnapshot missing = fixture.Snapshot!;
+        fixture.ConfigureDependencyInput();
+        CaptureAnalysisStoreSnapshot completed = fixture.Snapshot!;
+        fixture.Metadata.SetupSequence(store => store.GetAsync(
+                fixture.Intent.Key.CaptureId,
+                It.IsAny<CancellationToken>()))
+            .Returns(ValueTask.FromResult<CaptureAnalysisStoreSnapshot?>(missing))
+            .Returns(ValueTask.FromResult<CaptureAnalysisStoreSnapshot?>(completed));
+
+        await fixture.RunAsync();
+
+        fixture.JobStore.Verify(store => store.ResumeWaitingForDependencyAsync(
+            fixture.Intent.Key.CaptureId,
+            AnalysisCapabilities.OcrDocumentV1,
+            fixture.UtcNow,
+            It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [TestMethod]
@@ -111,12 +134,33 @@ public sealed class CaptureAnalysisWorkerTests
 
         fixture.JobStore.Verify(store => store.TryWaitForCapabilityAsync(
             fixture.Lease.LeaseToken,
-            It.Is<AnalysisFailure?>(failure =>
-                failure.HasValue && failure.Value.Code == AnalysisFailureCode.ModelNotReady),
+            It.Is<AnalysisFailure>(failure =>
+                failure.Code == AnalysisFailureCode.ModelNotReady),
+            fixture.UtcNow.AddSeconds(15),
             It.IsAny<CancellationToken>()), Times.Once);
         fixture.Analyzer.Verify(analyzer => analyzer.AnalyzeAsync(
             It.IsAny<CaptureAnalysisRequest>(),
             It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [TestMethod]
+    public async Task Run_WhenModelBecomesReadyBeforeWaitIsDurable_ShouldResumeCapability()
+    {
+        using var fixture = new WorkerFixture();
+        fixture.Resolutions =
+        [
+            fixture.WaitingForPreparationResolution,
+            fixture.ResolvedResolution,
+        ];
+
+        await fixture.RunAsync();
+
+        Assert.HasCount(2, fixture.ResolutionRequests);
+        fixture.JobStore.Verify(store => store.ResumeWaitingForCapabilityAsync(
+            fixture.Intent.Key.Capability,
+            fixture.Intent.Key.AuthorizedProcessingBoundary,
+            fixture.UtcNow,
+            It.IsAny<CancellationToken>()), Times.Exactly(2));
     }
 
     [TestMethod]
@@ -129,8 +173,9 @@ public sealed class CaptureAnalysisWorkerTests
 
         fixture.JobStore.Verify(store => store.TryWaitForCapabilityAsync(
             fixture.Lease.LeaseToken,
-            It.Is<AnalysisFailure?>(failure =>
-                failure.HasValue && failure.Value.Code == AnalysisFailureCode.CapabilityUnavailable),
+            It.Is<AnalysisFailure>(failure =>
+                failure.Code == AnalysisFailureCode.CapabilityUnavailable),
+            fixture.UtcNow.AddSeconds(15),
             It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -193,12 +238,13 @@ public sealed class CaptureAnalysisWorkerTests
 
         fixture.JobStore.Verify(store => store.TryWaitForCapabilityAsync(
             fixture.Lease.LeaseToken,
-            It.Is<AnalysisFailure?>(failure =>
-                failure.HasValue && failure.Value.Code == AnalysisFailureCode.CapabilityUnavailable),
+            It.Is<AnalysisFailure>(failure =>
+                failure.Code == AnalysisFailureCode.CapabilityUnavailable),
+            fixture.UtcNow.AddSeconds(15),
             It.IsAny<CancellationToken>()), Times.Once);
-        Assert.HasCount(2, fixture.ResolutionRequests);
-        Assert.IsTrue(fixture.ResolutionRequests[1].AttemptedAnalyzers.Contains(
-            fixture.AnalyzerIdentity.Revision));
+        Assert.HasCount(3, fixture.ResolutionRequests);
+        Assert.IsTrue(fixture.ResolutionRequests.Skip(1).All(request =>
+            request.AttemptedAnalyzers.Contains(fixture.AnalyzerIdentity.Revision)));
     }
 
     [TestMethod]
@@ -1047,12 +1093,15 @@ public sealed class CaptureAnalysisWorkerTests
                     latestFailure: null)));
             JobStore.Setup(value => value.TryWaitForCapabilityAsync(
                     It.IsAny<CaptureAnalysisJobLeaseToken>(),
-                    It.IsAny<AnalysisFailure?>(),
+                    It.IsAny<AnalysisFailure>(),
+                    It.IsAny<DateTimeOffset>(),
                     It.IsAny<CancellationToken>()))
-                .Returns((CaptureAnalysisJobLeaseToken _, AnalysisFailure? failure, CancellationToken _) =>
+                .Returns((CaptureAnalysisJobLeaseToken _, AnalysisFailure failure,
+                    DateTimeOffset nextAttemptAtUtc, CancellationToken _) =>
                     ValueTask.FromResult(SucceededMutation(
                         CaptureAnalysisJobState.WaitingForCapability,
-                        failure)));
+                        failure,
+                        nextAttemptAtUtc)));
             JobStore.Setup(value => value.TryScheduleRetryAsync(
                     It.IsAny<CaptureAnalysisJobLeaseToken>(),
                     It.IsAny<AnalysisFailure>(),

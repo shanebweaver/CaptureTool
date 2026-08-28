@@ -228,7 +228,8 @@ public sealed class LocalCaptureAnalysisJobStoreTests
             AnalysisFailureDisposition.Transient);
         CaptureAnalysisJobMutationResult waiting = await store.TryWaitForCapabilityAsync(
             firstLease.LeaseToken,
-            waitingReason);
+            waitingReason,
+            EnqueuedAtUtc.AddMinutes(10));
         DateTimeOffset due = EnqueuedAtUtc.AddMinutes(5);
         int resumed = await store.ResumeWaitingForCapabilityAsync(
             key.Capability,
@@ -257,6 +258,39 @@ public sealed class LocalCaptureAnalysisJobStoreTests
     }
 
     [TestMethod]
+    public async Task WaitingIntent_ShouldBecomeLeaseableAtDurableRecheckTime()
+    {
+        using LocalCaptureAnalysisJobStore store = CreateStore(
+            AnalysisPersistenceTestData.CreateTestFolder());
+        CaptureAnalysisJobKey key = CreateKey();
+        _ = await store.TryEnqueueAsync(key, EnqueuedAtUtc);
+        CaptureAnalysisJobLease firstLease = (await store.TryLeaseNextDueAsync(
+            EnqueuedAtUtc,
+            TimeSpan.FromMinutes(2)))!;
+        DateTimeOffset recheckAtUtc = EnqueuedAtUtc.AddSeconds(15);
+        var waitingReason = new AnalysisFailure(
+            AnalysisFailureCode.ModelNotReady,
+            AnalysisFailureDisposition.Transient);
+
+        CaptureAnalysisJobMutationResult waiting = await store.TryWaitForCapabilityAsync(
+            firstLease.LeaseToken,
+            waitingReason,
+            recheckAtUtc);
+
+        Assert.AreEqual(CaptureAnalysisJobState.WaitingForCapability, waiting.Intent!.State);
+        Assert.AreEqual(recheckAtUtc, waiting.Intent.NextAttemptAtUtc);
+        Assert.AreEqual(recheckAtUtc, await store.GetNextDueTimeAsync());
+        Assert.IsNull(await store.TryLeaseNextDueAsync(
+            recheckAtUtc.AddTicks(-1),
+            TimeSpan.FromMinutes(2)));
+        CaptureAnalysisJobLease resumed = (await store.TryLeaseNextDueAsync(
+            recheckAtUtc,
+            TimeSpan.FromMinutes(2)))!;
+        Assert.AreEqual(CaptureAnalysisJobState.Running, resumed.Intent.State);
+        Assert.AreEqual(waitingReason, resumed.Intent.LatestFailure);
+    }
+
+    [TestMethod]
     public async Task WaitingIntentWithAttemptHistory_ShouldResumeWithoutRewritingHistory()
     {
         using LocalCaptureAnalysisJobStore store = CreateStore(
@@ -278,7 +312,8 @@ public sealed class LocalCaptureAnalysisJobStoreTests
             lease.LeaseToken,
             new AnalysisFailure(
                 AnalysisFailureCode.ModelNotReady,
-                AnalysisFailureDisposition.Transient));
+                AnalysisFailureDisposition.Transient),
+            EnqueuedAtUtc.AddMinutes(10));
         DateTimeOffset due = EnqueuedAtUtc.AddMinutes(5);
 
         int resumed = await store.ResumeWaitingForCapabilityAsync(
@@ -329,11 +364,20 @@ public sealed class LocalCaptureAnalysisJobStoreTests
             CaptureAnalyzerAttemptStatus.TransientFailure,
             attemptFailure);
         _ = await store.TryRecordAttemptAsync(first.LeaseToken, attempt);
-        _ = await store.TryWaitForCapabilityAsync(first.LeaseToken, reason: null);
+        var dependencyReason = new AnalysisFailure(
+            AnalysisFailureCode.CapabilityUnavailable,
+            AnalysisFailureDisposition.Transient);
+        _ = await store.TryWaitForCapabilityAsync(
+            first.LeaseToken,
+            dependencyReason,
+            EnqueuedAtUtc.AddMinutes(10));
         CaptureAnalysisJobLease second = (await store.TryLeaseNextDueAsync(
             EnqueuedAtUtc.AddTicks(1),
             TimeSpan.FromMinutes(1)))!;
-        _ = await store.TryWaitForCapabilityAsync(second.LeaseToken, reason: null);
+        _ = await store.TryWaitForCapabilityAsync(
+            second.LeaseToken,
+            dependencyReason,
+            EnqueuedAtUtc.AddMinutes(10));
 
         DateTimeOffset due = EnqueuedAtUtc.AddMinutes(1);
         int resumed = await store.ResumeWaitingForDependencyAsync(
@@ -409,7 +453,10 @@ public sealed class LocalCaptureAnalysisJobStoreTests
             lease.LeaseToken,
             transientFailure,
             EnqueuedAtUtc.AddMinutes(1));
-        _ = await store.TryWaitForCapabilityAsync(lease.LeaseToken, transientFailure);
+        _ = await store.TryWaitForCapabilityAsync(
+            lease.LeaseToken,
+            transientFailure,
+            EnqueuedAtUtc.AddMinutes(10));
         CaptureAnalysisJobMutationResult noLongerRunning = await store.TryRenewLeaseAsync(
             lease.LeaseToken,
             EnqueuedAtUtc.AddSeconds(1),

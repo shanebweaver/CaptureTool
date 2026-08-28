@@ -143,10 +143,30 @@ public sealed class CaptureAnalysisContractInvariantTests
             AnalysisTestData.GeneratedAtUtc.AddMinutes(1),
             transientFailure,
             attempts);
+        var timedWait = new CaptureAnalysisJobIntent(
+            key,
+            CaptureAnalysisJobState.WaitingForCapability,
+            0,
+            AnalysisTestData.GeneratedAtUtc,
+            AnalysisTestData.GeneratedAtUtc.AddSeconds(15),
+            transientFailure,
+            []);
+        var legacyWait = new CaptureAnalysisJobIntent(
+            key,
+            CaptureAnalysisJobState.WaitingForCapability,
+            0,
+            AnalysisTestData.GeneratedAtUtc,
+            nextAttemptAtUtc: null,
+            transientFailure,
+            []);
 
         attempts.Clear();
 
         Assert.HasCount(1, intent.Attempts);
+        Assert.AreEqual(
+            AnalysisTestData.GeneratedAtUtc.AddSeconds(15),
+            timedWait.NextAttemptAtUtc);
+        Assert.IsNull(legacyWait.NextAttemptAtUtc);
         Assert.ThrowsExactly<ArgumentException>(() => new CaptureAnalysisJobIntent(
             key,
             CaptureAnalysisJobState.RetryScheduled,

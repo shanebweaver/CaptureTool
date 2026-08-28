@@ -347,13 +347,23 @@ internal sealed class LocalCaptureAnalysisJobStore : ICaptureAnalysisJobStore, I
 
     public ValueTask<CaptureAnalysisJobMutationResult> TryWaitForCapabilityAsync(
         CaptureAnalysisJobLeaseToken leaseToken,
-        AnalysisFailure? reason,
+        AnalysisFailure reason,
+        DateTimeOffset recheckAtUtc,
         CancellationToken cancellationToken = default)
     {
-        if (reason is { IsEmpty: true })
+        if (reason.IsEmpty)
         {
             throw new ArgumentException("A capability wait reason must be bounded.", nameof(reason));
         }
+
+        if (reason.Disposition != AnalysisFailureDisposition.Transient)
+        {
+            throw new ArgumentException(
+                "A timed capability wait requires a transient reason.",
+                nameof(reason));
+        }
+
+        EnsureUtc(recheckAtUtc, nameof(recheckAtUtc));
 
         return MutateLeaseAsync(
             leaseToken,
@@ -361,7 +371,7 @@ internal sealed class LocalCaptureAnalysisJobStore : ICaptureAnalysisJobStore, I
                 CopyIntent(
                     stored.Intent,
                     CaptureAnalysisJobState.WaitingForCapability,
-                    nextAttemptAtUtc: null,
+                    nextAttemptAtUtc: recheckAtUtc,
                     latestFailure: reason),
                 null,
                 null)),
@@ -843,7 +853,9 @@ internal sealed class LocalCaptureAnalysisJobStore : ICaptureAnalysisJobStore, I
     private static bool IsDue(StoredJob job, DateTimeOffset nowUtc)
     {
         return job.Intent.State == CaptureAnalysisJobState.Pending ||
-            job.Intent.State == CaptureAnalysisJobState.RetryScheduled &&
+            job.Intent.State is (
+                CaptureAnalysisJobState.RetryScheduled or
+                CaptureAnalysisJobState.WaitingForCapability) &&
             job.Intent.NextAttemptAtUtc <= nowUtc;
     }
 
@@ -853,6 +865,7 @@ internal sealed class LocalCaptureAnalysisJobStore : ICaptureAnalysisJobStore, I
         {
             CaptureAnalysisJobState.Pending => job.Intent.EnqueuedAtUtc,
             CaptureAnalysisJobState.RetryScheduled => job.Intent.NextAttemptAtUtc,
+            CaptureAnalysisJobState.WaitingForCapability => job.Intent.NextAttemptAtUtc,
             CaptureAnalysisJobState.Running => job.LeaseExpiresAtUtc,
             _ => null,
         };

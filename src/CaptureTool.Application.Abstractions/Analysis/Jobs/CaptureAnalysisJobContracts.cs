@@ -259,9 +259,15 @@ public sealed record CaptureAnalysisJobIntent
         }
 
         bool isRetry = state == CaptureAnalysisJobState.RetryScheduled;
-        if (isRetry != nextAttemptAtUtc.HasValue)
+        bool isTimedCapabilityWait =
+            state == CaptureAnalysisJobState.WaitingForCapability &&
+            nextAttemptAtUtc.HasValue;
+        if ((isRetry && !nextAttemptAtUtc.HasValue) ||
+            (!isRetry && state != CaptureAnalysisJobState.WaitingForCapability &&
+             nextAttemptAtUtc.HasValue))
         {
-            throw new ArgumentException("Only retry-scheduled jobs have a next-attempt time.");
+            throw new ArgumentException(
+                "Only retry-scheduled jobs and timed capability waits have a next-attempt time.");
         }
 
         if (nextAttemptAtUtc < enqueuedAtUtc)
@@ -272,6 +278,14 @@ public sealed record CaptureAnalysisJobIntent
         if (isRetry && latestFailure?.Disposition != AnalysisFailureDisposition.Transient)
         {
             throw new ArgumentException("A scheduled retry requires a transient failure.", nameof(latestFailure));
+        }
+
+        if (isTimedCapabilityWait &&
+            latestFailure?.Disposition != AnalysisFailureDisposition.Transient)
+        {
+            throw new ArgumentException(
+                "A timed capability wait requires a transient failure.",
+                nameof(latestFailure));
         }
 
         if (state == CaptureAnalysisJobState.TerminalFailure &&
@@ -499,7 +513,8 @@ public interface ICaptureAnalysisJobStore
 
     ValueTask<CaptureAnalysisJobMutationResult> TryWaitForCapabilityAsync(
         CaptureAnalysisJobLeaseToken leaseToken,
-        AnalysisFailure? reason,
+        AnalysisFailure reason,
+        DateTimeOffset recheckAtUtc,
         CancellationToken cancellationToken = default);
 
     ValueTask<CaptureAnalysisJobMutationResult> TryCompleteAsync(
