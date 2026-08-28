@@ -14,6 +14,7 @@ public sealed class FoundryLocalSpeechTranscriptAnalyzer : IPreparableCaptureAna
     public const string AdapterVersion = "2.2.0";
 
     private readonly IFoundryLocalSpeechTranscriptionService _transcription;
+    private readonly IFoundryLocalSpeechTranscriptionService? _fallbackPreparation;
     private readonly IVideoAudioExtractionService? _videoAudioExtraction;
     private readonly FoundryLocalSpeechModelConfiguration _configuration;
     private readonly object _descriptorGate = new();
@@ -27,18 +28,21 @@ public sealed class FoundryLocalSpeechTranscriptAnalyzer : IPreparableCaptureAna
         : this(
             transcription,
             videoAudioExtraction,
-            FoundryLocalSpeechModelConfiguration.Whisper)
+            FoundryLocalSpeechModelConfiguration.Whisper,
+            fallbackPreparation: null)
     {
     }
 
     internal FoundryLocalSpeechTranscriptAnalyzer(
         IFoundryLocalSpeechTranscriptionService transcription,
         IVideoAudioExtractionService? videoAudioExtraction,
-        FoundryLocalSpeechModelConfiguration configuration)
+        FoundryLocalSpeechModelConfiguration configuration,
+        IFoundryLocalSpeechTranscriptionService? fallbackPreparation = null)
     {
         ArgumentNullException.ThrowIfNull(transcription);
         ArgumentNullException.ThrowIfNull(configuration);
         _transcription = transcription;
+        _fallbackPreparation = fallbackPreparation;
         _videoAudioExtraction = videoAudioExtraction;
         _configuration = configuration;
     }
@@ -181,13 +185,47 @@ public sealed class FoundryLocalSpeechTranscriptAnalyzer : IPreparableCaptureAna
         IProgress<AnalysisCapabilityPreparationProgress>? progress = null,
         CancellationToken cancellationToken = default)
     {
+        double primaryShare = _fallbackPreparation == null ? 1 : 0.75;
         IProgress<double>? providerProgress = progress == null
             ? null
             : new DelegateProgress<double>(fraction =>
-                progress.Report(new AnalysisCapabilityPreparationProgress(fraction)));
+                progress.Report(new AnalysisCapabilityPreparationProgress(
+                    fraction * primaryShare)));
         FoundryLocalSpeechPreparationResult result = await _transcription
             .PrepareAsync(providerProgress, cancellationToken)
             .ConfigureAwait(false);
+        FoundryLocalSpeechPreparationResult? fallbackResult = null;
+        if (_fallbackPreparation != null &&
+            result.Status is (FoundryLocalSpeechPreparationStatus.Succeeded or
+                FoundryLocalSpeechPreparationStatus.Unsupported))
+        {
+            IProgress<double>? fallbackProgress = progress == null
+                ? null
+                : new DelegateProgress<double>(fraction =>
+                    progress.Report(new AnalysisCapabilityPreparationProgress(
+                        primaryShare + (fraction * (1 - primaryShare)))));
+            fallbackResult = await _fallbackPreparation
+                .PrepareAsync(fallbackProgress, cancellationToken)
+                .ConfigureAwait(false);
+        }
+
+        if (fallbackResult?.Status == FoundryLocalSpeechPreparationStatus.Cancelled)
+        {
+            return CaptureAnalyzerPreparationResult.Cancelled;
+        }
+
+        if (result.Status == FoundryLocalSpeechPreparationStatus.Unsupported &&
+            fallbackResult?.Status == FoundryLocalSpeechPreparationStatus.Succeeded)
+        {
+            return CaptureAnalyzerPreparationResult.Succeeded;
+        }
+
+        return MapPreparationResult(result);
+    }
+
+    private static CaptureAnalyzerPreparationResult MapPreparationResult(
+        FoundryLocalSpeechPreparationResult result)
+    {
         return result.Status switch
         {
             FoundryLocalSpeechPreparationStatus.Succeeded =>

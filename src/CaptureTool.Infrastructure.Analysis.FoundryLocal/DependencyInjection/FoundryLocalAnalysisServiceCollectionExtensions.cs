@@ -30,7 +30,8 @@ public static class FoundryLocalAnalysisServiceCollectionExtensions
             new FoundryLocalSpeechTranscriptAnalyzer(
                 provider.GetRequiredService<FoundryLocalNemotronSpeechTranscriptionService>(),
                 provider.GetService<IVideoAudioExtractionService>(),
-                FoundryLocalSpeechModelConfiguration.NemotronMultilingual));
+                FoundryLocalSpeechModelConfiguration.NemotronMultilingual,
+                provider.GetRequiredService<FoundryLocalWhisperSpeechTranscriptionService>()));
         return services;
     }
 }

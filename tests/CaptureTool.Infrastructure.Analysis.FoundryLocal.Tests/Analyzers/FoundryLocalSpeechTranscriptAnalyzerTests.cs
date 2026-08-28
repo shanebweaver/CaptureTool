@@ -107,6 +107,58 @@ public sealed class FoundryLocalSpeechTranscriptAnalyzerTests
     }
 
     [TestMethod]
+    public async Task NemotronPrepare_ShouldAlsoPrepareWhisperFallback()
+    {
+        var nemotron = new StubTranscriptionService
+        {
+            PreparationStatus = FoundryLocalSpeechPreparationStatus.Succeeded,
+            PreparationProgress = [1],
+        };
+        var whisper = new StubTranscriptionService
+        {
+            PreparationStatus = FoundryLocalSpeechPreparationStatus.Succeeded,
+            PreparationProgress = [1],
+        };
+        var analyzer = new FoundryLocalSpeechTranscriptAnalyzer(
+            nemotron,
+            videoAudioExtraction: null,
+            FoundryLocalSpeechModelConfiguration.NemotronMultilingual,
+            whisper);
+        var progress = new RecordingProgress();
+
+        CaptureAnalyzerPreparationResult result = await analyzer.PrepareAsync(progress);
+
+        Assert.AreEqual(CaptureAnalyzerPreparationStatus.Succeeded, result.Status);
+        Assert.AreEqual(1, nemotron.PrepareCalls);
+        Assert.AreEqual(1, whisper.PrepareCalls);
+        CollectionAssert.AreEqual(new[] { 0.75, 1d }, progress.Values.ToArray());
+    }
+
+    [TestMethod]
+    public async Task NemotronPrepare_WhenUnavailable_ShouldAllowPreparedWhisperFallback()
+    {
+        var nemotron = new StubTranscriptionService
+        {
+            PreparationStatus = FoundryLocalSpeechPreparationStatus.Unsupported,
+        };
+        var whisper = new StubTranscriptionService
+        {
+            PreparationStatus = FoundryLocalSpeechPreparationStatus.Succeeded,
+        };
+        var analyzer = new FoundryLocalSpeechTranscriptAnalyzer(
+            nemotron,
+            videoAudioExtraction: null,
+            FoundryLocalSpeechModelConfiguration.NemotronMultilingual,
+            whisper);
+
+        CaptureAnalyzerPreparationResult result = await analyzer.PrepareAsync();
+
+        Assert.AreEqual(CaptureAnalyzerPreparationStatus.Succeeded, result.Status);
+        Assert.AreEqual(1, nemotron.PrepareCalls);
+        Assert.AreEqual(1, whisper.PrepareCalls);
+    }
+
+    [TestMethod]
     public void Descriptor_WhenAppSpeechLanguageChanges_ShouldAdvanceAnalyzerRevision()
     {
         var service = new StubTranscriptionService { LanguageHint = "en" };
@@ -393,6 +445,8 @@ public sealed class FoundryLocalSpeechTranscriptAnalyzerTests
 
         public double[] PreparationProgress { get; init; } = [];
 
+        public int PrepareCalls { get; private set; }
+
         public FoundryLocalTranscriptionResult TranscriptionResult { get; init; } =
             new(FoundryLocalTranscriptionStatus.Failed);
 
@@ -405,6 +459,7 @@ public sealed class FoundryLocalSpeechTranscriptAnalyzerTests
             CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
+            PrepareCalls++;
             foreach (double value in PreparationProgress)
             {
                 progress?.Report(value);
