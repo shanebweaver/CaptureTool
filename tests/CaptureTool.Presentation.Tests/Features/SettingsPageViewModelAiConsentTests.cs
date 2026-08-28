@@ -134,7 +134,8 @@ public sealed class SettingsPageViewModelAiConsentTests
         viewModel.IsAiConsentSettingsVisible.Should().BeTrue();
         viewModel.AiFeatureConsents.Should().ContainSingle(consent =>
             consent.FeatureId == AiFeatureId.ImageSuperResolution &&
-            consent.DisplayName == "Super image resolution");
+            consent.DisplayName == "Localized image super resolution" &&
+            consent.Description.Contains("editing tool"));
     }
 
     [TestMethod]
@@ -193,6 +194,26 @@ public sealed class SettingsPageViewModelAiConsentTests
         await viewModel.RestoreDefaultSettingsCommand.ExecuteAsync(null);
 
         viewModel.SelectedAppThemeIndex.Should().Be(selectedThemeIndex);
+    }
+
+    [TestMethod]
+    public async Task ClearTemporaryFilesCommand_ShouldReportReclaimedAndActiveWorkingFiles()
+    {
+        var clear = new Mock<IClearTempFilesUseCase>();
+        clear.Setup(service => service.ExecuteAsync(
+                It.IsAny<ClearTempFilesRequest>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(UseCaseResponse<ClearTempFilesResponse>.Success(
+                new ClearTempFilesResponse(2, 4096, 1, 1024, 0)));
+        SettingsPageViewModel viewModel = CreateViewModel(clearTempFilesUseCase: clear.Object);
+        await viewModel.LoadAsync(TestContext.CancellationToken);
+
+        await viewModel.ClearTemporaryFilesCommand.ExecuteAsync(null);
+
+        viewModel.HasTemporaryFilesStatus.Should().BeTrue();
+        viewModel.TemporaryFilesStatusText.Should().Contain("4.0 KB");
+        viewModel.TemporaryFilesStatusText.Should().Contain("2 temporary item");
+        viewModel.TemporaryFilesStatusText.Should().Contain("1 active item");
     }
 
     [TestMethod]
@@ -299,7 +320,8 @@ public sealed class SettingsPageViewModelAiConsentTests
         SettingsMutationStatus settingsMutationStatus = SettingsMutationStatus.Saved,
         IUpdateImageAutoSaveUseCase? updateImageAutoSaveAction = null,
         bool aiConsentSaveSucceeded = true,
-        IRestoreDefaultsUseCase? restoreDefaultsUseCase = null)
+        IRestoreDefaultsUseCase? restoreDefaultsUseCase = null,
+        IClearTempFilesUseCase? clearTempFilesUseCase = null)
     {
         var localization = new Mock<ILocalizationService>();
         localization
@@ -310,6 +332,7 @@ public sealed class SettingsPageViewModelAiConsentTests
             .Returns<string>(resourceKey => resourceKey switch
             {
                 "Settings_AiConsent_TextExtractionDisplayName" => "Localized text extraction",
+                "Settings_AiConsent_ImageSuperResolutionDisplayName" => "Localized image super resolution",
                 "Settings_AiConsent_ImageDescriptionDisplayName" => "Localized image description",
                 "Settings_AiConsent_ImageForegroundExtractionDisplayName" => "Localized background removal",
                 "Settings_AiConsent_ImageObjectEraseDisplayName" => "Localized object erase",
@@ -400,7 +423,7 @@ public sealed class SettingsPageViewModelAiConsentTests
             Mock.Of<IChangeVideosFolderUseCase>(),
             Mock.Of<IOpenVideosFolderUseCase>(),
             Mock.Of<IOpenTempFolderUseCase>(),
-            Mock.Of<IClearTempFilesUseCase>(),
+            clearTempFilesUseCase ?? Mock.Of<IClearTempFilesUseCase>(),
             restoreDefaultsUseCase ?? Mock.Of<IRestoreDefaultsUseCase>(),
             aiFeatureConsentService.Object,
             Mock.Of<IAiConsentSettingsFeatureAvailability>(service =>

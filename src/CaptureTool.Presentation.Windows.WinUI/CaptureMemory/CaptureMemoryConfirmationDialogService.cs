@@ -80,13 +80,13 @@ internal sealed class CaptureMemoryConfirmationDialogService :
             CaptureAnalysisSettingsAction.ClearMemory => new(
                 GetString(
                     "CaptureMemory_Confirmation_ClearTitle",
-                    "Clear Capture Memory?"),
+                    "Delete analyzed capture data?"),
                 GetString(
                     "CaptureMemory_Confirmation_ClearContent",
-                    "This erases app-managed metadata and search data for enrolled captures. Analysis of new captures remains on. Original capture files are not deleted."),
+                    "This erases app-managed AI metadata and search data for enrolled captures. Future analysis remains on, and an explicit reanalysis can recreate the data from retained captures. Original files are not deleted."),
                 GetString(
                     "CaptureMemory_Confirmation_ClearButton",
-                    "Clear Memory")),
+                    "Delete analyzed data")),
             CaptureAnalysisSettingsAction.RebuildSearchIndex => new(
                 GetString(
                     "CaptureMemory_Confirmation_RebuildTitle",

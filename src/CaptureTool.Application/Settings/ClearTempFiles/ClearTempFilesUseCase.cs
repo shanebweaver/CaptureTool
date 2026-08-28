@@ -32,9 +32,15 @@ internal sealed class ClearTempFilesUseCase : IClearTempFilesUseCase
             activityId: ActivityId,
             useCase: () =>
             {
-                _scratchArtifactStore.ClearUnleasedArtifacts();
+                ScratchArtifactCleanupResult cleanup =
+                    _scratchArtifactStore.ClearUnleasedArtifacts();
                 _recentCapturesChangeNotifier.NotifyRecentCapturesChanged();
-                return new ClearTempFilesResponse();
+                return new ClearTempFilesResponse(
+                    cleanup.DeletedItemCount,
+                    cleanup.DeletedByteCount,
+                    cleanup.ActiveItemCount,
+                    cleanup.ActiveByteCount,
+                    cleanup.FailedItemCount);
             },
             cancellationToken: cancellationToken);
     }

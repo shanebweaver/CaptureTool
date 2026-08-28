@@ -99,12 +99,15 @@ public sealed class CaptureMemorySettingsViewModel : ViewModelBase
             if (Set(ref field, value))
             {
                 RaisePropertyChanged(nameof(ShowAuthorizedControls));
+                RaisePropertyChanged(nameof(CanChangeAnalysisState));
                 RaiseCommandStates();
             }
         }
     }
 
     public bool ShowAuthorizedControls => IsAuthorized;
+
+    public bool CanChangeAnalysisState => CanMutatePolicy;
 
     public bool IsAnalyzingNewCaptures
     {
@@ -115,6 +118,7 @@ public sealed class CaptureMemorySettingsViewModel : ViewModelBase
             {
                 RaisePropertyChanged(nameof(ShowStopAction));
                 RaisePropertyChanged(nameof(ShowResumeAction));
+                RaisePropertyChanged(nameof(CanChangeAnalysisState));
                 RaiseCommandStates();
             }
         }
@@ -156,6 +160,7 @@ public sealed class CaptureMemorySettingsViewModel : ViewModelBase
             if (Set(ref field, value))
             {
                 RaisePropertyChanged(nameof(ShowProgress));
+                RaisePropertyChanged(nameof(CanChangeAnalysisState));
                 RaiseCommandStates();
             }
         }
@@ -255,6 +260,27 @@ public sealed class CaptureMemorySettingsViewModel : ViewModelBase
             (revision, token) => _policyCommandService!.ResumeFutureCaptureAdmissionAsync(revision, token),
             "CaptureMemory_Settings_ResumeSucceeded",
             "Capture Memory will analyze new captures on this device. Original captures are not modified.");
+    }
+
+    public async Task SetAnalyzingNewCapturesAsync(bool shouldAnalyze)
+    {
+        if (!CanChangeAnalysisState || shouldAnalyze == IsAnalyzingNewCaptures)
+        {
+            return;
+        }
+
+        if (shouldAnalyze)
+        {
+            await ResumeAnalyzingNewCapturesAsync();
+        }
+        else
+        {
+            await StopAnalyzingNewCapturesAsync();
+        }
+
+        // A cancelled confirmation leaves the policy unchanged. Re-notify the one-way UI
+        // binding so the switch returns to the durable policy state.
+        RaisePropertyChanged(nameof(IsAnalyzingNewCaptures));
     }
 
     private async Task TurnOffAndEraseAsync()

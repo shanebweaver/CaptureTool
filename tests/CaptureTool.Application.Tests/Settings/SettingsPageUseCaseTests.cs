@@ -119,6 +119,9 @@ public sealed class SettingsPageUseCaseTests
     public async Task ClearTempFilesUseCase_ClearsOnlyUnleasedScratchArtifacts()
     {
         var scratchArtifactStore = new Mock<IScratchArtifactStore>();
+        scratchArtifactStore
+            .Setup(store => store.ClearUnleasedArtifacts())
+            .Returns(new ScratchArtifactCleanupResult(2, 4096, 1, 1024, 0));
         var recentCapturesChangeNotifier = new Mock<IRecentCapturesChangeNotifier>();
         var useCase = new ClearTempFilesUseCase(
             scratchArtifactStore.Object,
@@ -128,6 +131,11 @@ public sealed class SettingsPageUseCaseTests
         ClearTempFilesResponse response = (await useCase.ExecuteAsync(new ClearTempFilesRequest(), TestContext.CancellationToken)).Value!;
 
         Assert.IsTrue(response.Succeeded);
+        Assert.AreEqual(2, response.DeletedItemCount);
+        Assert.AreEqual(4096, response.DeletedByteCount);
+        Assert.AreEqual(1, response.ActiveItemCount);
+        Assert.AreEqual(1024, response.ActiveByteCount);
+        Assert.AreEqual(0, response.FailedItemCount);
         scratchArtifactStore.Verify(store => store.ClearUnleasedArtifacts(), Times.Once);
         recentCapturesChangeNotifier.Verify(
             notifier => notifier.NotifyRecentCapturesChanged(),

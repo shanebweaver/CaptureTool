@@ -889,17 +889,22 @@ SOFTWARE.
     <value>Gespiegelt</value>
   </data>
   <data name="Settings_TemporaryFolder_ClearButton.Text" xml:space="preserve">
-    <value>Dateien löschen</value>
+    <value>Arbeitsdateien löschen</value>
   </data>
   <data name="Settings_TemporaryFolder_ScreenshotsFolderLabel.Text" xml:space="preserve">
-    <value>Ordner für temporäre Dateien:</value>
+    <value>Ordner für temporäre Arbeitsdateien:</value>
   </data>
   <data name="Settings_TemporaryFolder_SubtitleLabel.Text" xml:space="preserve">
-    <value>Wird für den normalen App-Betrieb verwendet. Sie können diese Dateien jederzeit löschen.</value>
+    <value>Nicht verwendete Bearbeitungs- und Vorschaukopien können sicher gelöscht werden. Dateien einer aktiven Bearbeitung bleiben erhalten.</value>
   </data>
   <data name="Settings_TemporaryFolder_HeaderLabel.Text" xml:space="preserve">
-    <value>Temporäre Dateien</value>
+    <value>Temporäre Arbeitsdateien</value>
   </data>
+  <data name="Settings_TemporaryFolder_Clearing" xml:space="preserve"><value>Temporäre Arbeitsdateien werden gelöscht…</value></data>
+  <data name="Settings_TemporaryFolder_ClearFailed" xml:space="preserve"><value>Temporäre Arbeitsdateien konnten nicht gelöscht werden.</value></data>
+  <data name="Settings_TemporaryFolder_ClearIncomplete" xml:space="preserve"><value>{0} aus {1} temporären Element(en) wurden gelöscht, aber {2} Element(e) konnten nicht entfernt werden. {3} aktive Element(e) blieben erhalten.</value></data>
+  <data name="Settings_TemporaryFolder_NothingToClear" xml:space="preserve"><value>Es wurden keine ungenutzten temporären Arbeitsdateien gefunden. {0} aktive Element(e) blieben erhalten.</value></data>
+  <data name="Settings_TemporaryFolder_ClearSucceeded" xml:space="preserve"><value>{0} aus {1} temporären Element(en) wurden gelöscht. {2} aktive Element(e) blieben erhalten.</value></data>
   <data name="Settings_OtherHeaderLabel.Text" xml:space="preserve">
     <value>Andere</value>
   </data>
@@ -1477,14 +1482,16 @@ SOFTWARE.
     <value>Die Texterkennung verwendet ein KI-Modell auf dem Gerät, um Text und Textpositionen im aktuellen Bild zu erkennen.</value>
   </data>
   <data name="Settings_AiConsentHeaderLabel.Text" xml:space="preserve">
-    <value>KI-Zustimmung</value>
+    <value>KI-Bearbeitungsfunktionen</value>
   </data>
+  <data name="Settings_AiConsentSectionDescription.Text" xml:space="preserve"><value>Diese Einstellungen gelten nur für Bearbeitungswerkzeuge, die Sie selbst starten. Sie steuern nicht die Capture Memory-Analyse.</value></data>
   <data name="Settings_AiConsentDescription.Text" xml:space="preserve">
-    <value>Dieser KI-Funktion erlauben, Bilder auf diesem Gerät zu verarbeiten.</value>
+    <value>Dieses lokale KI-Bearbeitungswerkzeug zulassen, wenn Sie es verwenden möchten.</value>
   </data>
   <data name="Settings_AiConsent_TextExtractionDisplayName" xml:space="preserve">
     <value>Texterkennung</value>
   </data>
+  <data name="Settings_AiConsent_ImageSuperResolutionDisplayName" xml:space="preserve"><value>Bild-Superauflösung</value></data>
   <data name="ImageEdit_ImageDescriptionButton.Label" xml:space="preserve">
     <value>Bildbeschreibung</value>
   </data>
@@ -1841,17 +1848,23 @@ SOFTWARE.
   <data name="CaptureMemory_Settings_AnalysisDescription.Text" xml:space="preserve"><value>Steuert, ob autorisierte KI-Modelle auf dem Gerät Aufnahmen analysieren. Capture Tool speichert nur appverwaltete Metadaten und verändert Originalaufnahmen nie.</value></data>
   <data name="CaptureMemory_Settings_StopButton.Content" xml:space="preserve"><value>Analyse neuer Aufnahmen beenden</value></data>
   <data name="CaptureMemory_Settings_ResumeButton.Content" xml:space="preserve"><value>Analyse neuer Aufnahmen fortsetzen</value></data>
+  <data name="CaptureMemory_Settings_AnalyzeNewToggle.Header" xml:space="preserve"><value>Neue Aufnahmen analysieren</value></data>
+  <data name="CaptureMemory_Settings_AnalyzeNewToggle.OnContent" xml:space="preserve"><value>Ein</value></data>
+  <data name="CaptureMemory_Settings_AnalyzeNewToggle.OffContent" xml:space="preserve"><value>Angehalten</value></data>
   <data name="CaptureMemory_Settings_TurnOffButton.Content" xml:space="preserve"><value>Deaktivieren und löschen</value></data>
   <data name="CaptureMemory_Settings_DataTitle.Text" xml:space="preserve"><value>Memory-Daten</value></data>
   <data name="CaptureMemory_Settings_DataDescription.Text" xml:space="preserve"><value>Von der App erstellte Metadaten getrennt von den Originaldateien verwalten.</value></data>
-  <data name="CaptureMemory_Settings_ClearTitle.Text" xml:space="preserve"><value>Memory leeren</value></data>
-  <data name="CaptureMemory_Settings_ClearDescription.Text" xml:space="preserve"><value>Metadaten und Suchdaten löschen, während die Analyse neuer Aufnahmen aktiviert bleibt.</value></data>
-  <data name="CaptureMemory_Settings_ClearButton.Content" xml:space="preserve"><value>Memory leeren</value></data>
-  <data name="CaptureMemory_Settings_RebuildTitle.Text" xml:space="preserve"><value>Suchindex neu erstellen</value></data>
-  <data name="CaptureMemory_Settings_RebuildDescription.Text" xml:space="preserve"><value>Entbehrliche Suchdaten aus Metadaten neu erstellen. Es werden weder KI-Modelle noch Aufnahmequellen verwendet.</value></data>
+  <data name="CaptureMemory_Settings_ClearTitle.Text" xml:space="preserve"><value>Analysierte Aufnahmedaten löschen</value></data>
+  <data name="CaptureMemory_Settings_ClearDescription.Text" xml:space="preserve"><value>KI-Metadaten und Suchdaten löschen, während die zukünftige Analyse aktiviert bleibt. Eine erneute Analyse kann diese Daten aus aufbewahrten Aufnahmen wiederherstellen.</value></data>
+  <data name="CaptureMemory_Settings_ClearButton.Content" xml:space="preserve"><value>Analysierte Daten löschen</value></data>
+  <data name="CaptureMemory_Settings_TurnOffTitle.Text" xml:space="preserve"><value>Capture Memory deaktivieren</value></data>
+  <data name="CaptureMemory_Settings_TurnOffDescription.Text" xml:space="preserve"><value>Alle Capture Memory-Analysen beenden und abgeleitete Daten löschen. Originalaufnahmen und gespeicherte Exporte bleiben erhalten.</value></data>
+  <data name="CaptureMemory_Settings_Troubleshooting.Header" xml:space="preserve"><value>Problembehandlung</value></data>
+  <data name="CaptureMemory_Settings_RebuildTitle.Text" xml:space="preserve"><value>Suche reparieren</value></data>
+  <data name="CaptureMemory_Settings_RebuildDescription.Text" xml:space="preserve"><value>Suchergebnisse aus vorhandenen Metadaten neu erstellen, ohne KI auszuführen oder Aufnahmequellen zu lesen.</value></data>
   <data name="CaptureMemory_Settings_RebuildButton.Content" xml:space="preserve"><value>Index neu erstellen</value></data>
-  <data name="CaptureMemory_Settings_ReanalyzeTitle.Text" xml:space="preserve"><value>Aufnahmen erneut analysieren</value></data>
-  <data name="CaptureMemory_Settings_ReanalyzeDescription.Text" xml:space="preserve"><value>Autorisierte KI-Modelle vorbereiten und registrierte Aufnahmequellen erneut lesen. Originale bleiben unverändert.</value></data>
+  <data name="CaptureMemory_Settings_ReanalyzeTitle.Text" xml:space="preserve"><value>Suchergebnisse verbessern</value></data>
+  <data name="CaptureMemory_Settings_ReanalyzeDescription.Text" xml:space="preserve"><value>Geeignete Aufnahmen nach Erkennungs- oder Modellverbesserungen erneut analysieren. Modelle können vorbereitet werden; Originale bleiben unverändert.</value></data>
   <data name="CaptureMemory_Settings_ReanalyzeButton.Content" xml:space="preserve"><value>Erneut analysieren</value></data>
   <data name="CaptureMemory_Settings_CancelButton.Content" xml:space="preserve"><value>Abbrechen</value></data>
   <data name="CaptureMemory_Settings_Failure.Title" xml:space="preserve"><value>Capture Memory-Aktion fehlgeschlagen</value></data>
@@ -1887,9 +1900,9 @@ SOFTWARE.
   <data name="CaptureMemory_Confirmation_EraseTitle" xml:space="preserve"><value>Capture Memory deaktivieren und Daten löschen?</value></data>
   <data name="CaptureMemory_Confirmation_EraseContent" xml:space="preserve"><value>Dies beendet alle Capture Memory-Analysen und löscht appverwaltete Metadaten, Aufträge und Suchdaten. Originaldateien und separat gespeicherte Exporte werden nicht gelöscht.</value></data>
   <data name="CaptureMemory_Confirmation_EraseButton" xml:space="preserve"><value>Deaktivieren und löschen</value></data>
-  <data name="CaptureMemory_Confirmation_ClearTitle" xml:space="preserve"><value>Capture Memory leeren?</value></data>
-  <data name="CaptureMemory_Confirmation_ClearContent" xml:space="preserve"><value>Dies löscht appverwaltete Metadaten und Suchdaten registrierter Aufnahmen. Die Analyse neuer Aufnahmen bleibt aktiviert. Originaldateien werden nicht gelöscht.</value></data>
-  <data name="CaptureMemory_Confirmation_ClearButton" xml:space="preserve"><value>Memory leeren</value></data>
+  <data name="CaptureMemory_Confirmation_ClearTitle" xml:space="preserve"><value>Analysierte Aufnahmedaten löschen?</value></data>
+  <data name="CaptureMemory_Confirmation_ClearContent" xml:space="preserve"><value>Appverwaltete KI-Metadaten und Suchdaten registrierter Aufnahmen werden gelöscht. Die zukünftige Analyse bleibt aktiviert; eine ausdrücklich gestartete erneute Analyse kann die Daten aus aufbewahrten Aufnahmen wiederherstellen. Originaldateien werden nicht gelöscht.</value></data>
+  <data name="CaptureMemory_Confirmation_ClearButton" xml:space="preserve"><value>Analysierte Daten löschen</value></data>
   <data name="CaptureMemory_Confirmation_RebuildTitle" xml:space="preserve"><value>Suchindex neu erstellen?</value></data>
   <data name="CaptureMemory_Confirmation_RebuildContent" xml:space="preserve"><value>Dies erstellt entbehrliche Suchdaten aus vorhandenen appverwalteten Metadaten neu. KI-Modelle und Aufnahmequellen werden nicht verwendet, Originaldateien nicht verändert.</value></data>
   <data name="CaptureMemory_Confirmation_RebuildButton" xml:space="preserve"><value>Index neu erstellen</value></data>

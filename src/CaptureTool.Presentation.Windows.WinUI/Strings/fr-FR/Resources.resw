@@ -883,17 +883,22 @@ SOFTWARE.
     <value>Miroir</value>
   </data>
   <data name="Settings_TemporaryFolder_ClearButton.Text" xml:space="preserve">
-    <value>Effacer les fichiers</value>
+    <value>Effacer les fichiers de travail</value>
   </data>
   <data name="Settings_TemporaryFolder_ScreenshotsFolderLabel.Text" xml:space="preserve">
-    <value>Dossier des fichiers temporaires :</value>
+    <value>Dossier des fichiers de travail temporaires :</value>
   </data>
   <data name="Settings_TemporaryFolder_SubtitleLabel.Text" xml:space="preserve">
-    <value>Utilisé pour le fonctionnement normal de l'application. Vous pouvez effacer ces fichiers à tout moment.</value>
+    <value>Les copies d’édition et d’aperçu inutilisées peuvent être effacées sans risque. Les fichiers d’une modification active sont conservés.</value>
   </data>
   <data name="Settings_TemporaryFolder_HeaderLabel.Text" xml:space="preserve">
-    <value>Fichiers temporaires</value>
+    <value>Fichiers de travail temporaires</value>
   </data>
+  <data name="Settings_TemporaryFolder_Clearing" xml:space="preserve"><value>Effacement des fichiers de travail temporaires…</value></data>
+  <data name="Settings_TemporaryFolder_ClearFailed" xml:space="preserve"><value>Les fichiers de travail temporaires n’ont pas pu être effacés.</value></data>
+  <data name="Settings_TemporaryFolder_ClearIncomplete" xml:space="preserve"><value>{0} ont été effacés dans {1} élément(s) temporaire(s), mais {2} élément(s) n’ont pas pu être supprimés. {3} élément(s) actif(s) ont été conservés.</value></data>
+  <data name="Settings_TemporaryFolder_NothingToClear" xml:space="preserve"><value>Aucun fichier de travail temporaire inutilisé n’a été trouvé. {0} élément(s) actif(s) ont été conservés.</value></data>
+  <data name="Settings_TemporaryFolder_ClearSucceeded" xml:space="preserve"><value>{0} ont été effacés dans {1} élément(s) temporaire(s). {2} élément(s) actif(s) ont été conservés.</value></data>
   <data name="Settings_OtherHeaderLabel.Text" xml:space="preserve">
     <value>Autres</value>
   </data>
@@ -1483,14 +1488,16 @@ SOFTWARE.
     <value>L’extraction de texte utilise un modèle d’IA sur l’appareil pour détecter le texte et sa position dans l’image actuelle.</value>
   </data>
   <data name="Settings_AiConsentHeaderLabel.Text" xml:space="preserve">
-    <value>Consentement pour l’IA</value>
+    <value>Fonctionnalités d’édition par IA</value>
   </data>
+  <data name="Settings_AiConsentSectionDescription.Text" xml:space="preserve"><value>Ces contrôles s’appliquent uniquement aux outils d’édition que vous choisissez d’exécuter. Ils ne contrôlent pas l’analyse Mémoire des captures.</value></data>
   <data name="Settings_AiConsentDescription.Text" xml:space="preserve">
-    <value>Autoriser cette fonctionnalité d’IA à traiter les images sur cet appareil.</value>
+    <value>Autoriser cet outil d’édition par IA sur l’appareil lorsque vous choisissez de l’utiliser.</value>
   </data>
   <data name="Settings_AiConsent_TextExtractionDisplayName" xml:space="preserve">
     <value>Extraction de texte</value>
   </data>
+  <data name="Settings_AiConsent_ImageSuperResolutionDisplayName" xml:space="preserve"><value>Super-résolution d’image</value></data>
   <data name="ImageEdit_ImageDescriptionButton.Label" xml:space="preserve">
     <value>Description de l’image</value>
   </data>
@@ -1847,17 +1854,23 @@ SOFTWARE.
   <data name="CaptureMemory_Settings_AnalysisDescription.Text" xml:space="preserve"><value>Détermine si les modèles d’IA autorisés sur l’appareil analysent les captures. Capture Tool ne stocke que des métadonnées gérées par l’application et ne modifie jamais les originaux.</value></data>
   <data name="CaptureMemory_Settings_StopButton.Content" xml:space="preserve"><value>Arrêter l’analyse des nouvelles captures</value></data>
   <data name="CaptureMemory_Settings_ResumeButton.Content" xml:space="preserve"><value>Reprendre l’analyse des nouvelles captures</value></data>
+  <data name="CaptureMemory_Settings_AnalyzeNewToggle.Header" xml:space="preserve"><value>Analyser les nouvelles captures</value></data>
+  <data name="CaptureMemory_Settings_AnalyzeNewToggle.OnContent" xml:space="preserve"><value>Activé</value></data>
+  <data name="CaptureMemory_Settings_AnalyzeNewToggle.OffContent" xml:space="preserve"><value>En pause</value></data>
   <data name="CaptureMemory_Settings_TurnOffButton.Content" xml:space="preserve"><value>Désactiver et effacer</value></data>
   <data name="CaptureMemory_Settings_DataTitle.Text" xml:space="preserve"><value>Données de Mémoire</value></data>
   <data name="CaptureMemory_Settings_DataDescription.Text" xml:space="preserve"><value>Gérez les métadonnées créées par l’application séparément des fichiers d’origine.</value></data>
-  <data name="CaptureMemory_Settings_ClearTitle.Text" xml:space="preserve"><value>Effacer Mémoire</value></data>
-  <data name="CaptureMemory_Settings_ClearDescription.Text" xml:space="preserve"><value>Efface les métadonnées et la recherche tout en gardant l’analyse active pour les nouvelles captures.</value></data>
-  <data name="CaptureMemory_Settings_ClearButton.Content" xml:space="preserve"><value>Effacer Mémoire</value></data>
-  <data name="CaptureMemory_Settings_RebuildTitle.Text" xml:space="preserve"><value>Reconstruire l’index de recherche</value></data>
-  <data name="CaptureMemory_Settings_RebuildDescription.Text" xml:space="preserve"><value>Recrée les données de recherche jetables depuis les métadonnées. Aucun modèle d’IA ni fichier source n’est utilisé.</value></data>
+  <data name="CaptureMemory_Settings_ClearTitle.Text" xml:space="preserve"><value>Supprimer les données de captures analysées</value></data>
+  <data name="CaptureMemory_Settings_ClearDescription.Text" xml:space="preserve"><value>Efface les métadonnées d’IA et la recherche tout en gardant l’analyse future active. Une nouvelle analyse peut les recréer depuis les captures conservées.</value></data>
+  <data name="CaptureMemory_Settings_ClearButton.Content" xml:space="preserve"><value>Supprimer les données analysées</value></data>
+  <data name="CaptureMemory_Settings_TurnOffTitle.Text" xml:space="preserve"><value>Désactiver Mémoire des captures</value></data>
+  <data name="CaptureMemory_Settings_TurnOffDescription.Text" xml:space="preserve"><value>Arrête toute analyse Mémoire et efface ses données dérivées. Les captures d’origine et les exportations enregistrées sont conservées.</value></data>
+  <data name="CaptureMemory_Settings_Troubleshooting.Header" xml:space="preserve"><value>Résolution des problèmes</value></data>
+  <data name="CaptureMemory_Settings_RebuildTitle.Text" xml:space="preserve"><value>Réparer la recherche</value></data>
+  <data name="CaptureMemory_Settings_RebuildDescription.Text" xml:space="preserve"><value>Recrée les résultats depuis les métadonnées existantes sans exécuter l’IA ni lire les sources.</value></data>
   <data name="CaptureMemory_Settings_RebuildButton.Content" xml:space="preserve"><value>Reconstruire l’index</value></data>
-  <data name="CaptureMemory_Settings_ReanalyzeTitle.Text" xml:space="preserve"><value>Réanalyser les captures</value></data>
-  <data name="CaptureMemory_Settings_ReanalyzeDescription.Text" xml:space="preserve"><value>Prépare les modèles d’IA autorisés et relit les sources inscrites. Les originaux restent inchangés.</value></data>
+  <data name="CaptureMemory_Settings_ReanalyzeTitle.Text" xml:space="preserve"><value>Améliorer les résultats de recherche</value></data>
+  <data name="CaptureMemory_Settings_ReanalyzeDescription.Text" xml:space="preserve"><value>Réanalyse les captures éligibles après des améliorations de reconnaissance ou de modèle. Les modèles peuvent être préparés et les originaux restent inchangés.</value></data>
   <data name="CaptureMemory_Settings_ReanalyzeButton.Content" xml:space="preserve"><value>Réanalyser</value></data>
   <data name="CaptureMemory_Settings_CancelButton.Content" xml:space="preserve"><value>Annuler</value></data>
   <data name="CaptureMemory_Settings_Failure.Title" xml:space="preserve"><value>Échec de l’action Mémoire</value></data>
@@ -1893,9 +1906,9 @@ SOFTWARE.
   <data name="CaptureMemory_Confirmation_EraseTitle" xml:space="preserve"><value>Désactiver Mémoire et effacer ses données ?</value></data>
   <data name="CaptureMemory_Confirmation_EraseContent" xml:space="preserve"><value>Cela arrête toute analyse et efface les métadonnées, tâches et données de recherche gérées par l’application. Les originaux et exports enregistrés séparément ne sont pas supprimés.</value></data>
   <data name="CaptureMemory_Confirmation_EraseButton" xml:space="preserve"><value>Désactiver et effacer</value></data>
-  <data name="CaptureMemory_Confirmation_ClearTitle" xml:space="preserve"><value>Effacer Mémoire des captures ?</value></data>
-  <data name="CaptureMemory_Confirmation_ClearContent" xml:space="preserve"><value>Cela efface les métadonnées et la recherche des captures inscrites. L’analyse des nouvelles captures reste active. Les fichiers d’origine ne sont pas supprimés.</value></data>
-  <data name="CaptureMemory_Confirmation_ClearButton" xml:space="preserve"><value>Effacer Mémoire</value></data>
+  <data name="CaptureMemory_Confirmation_ClearTitle" xml:space="preserve"><value>Supprimer les données de captures analysées ?</value></data>
+  <data name="CaptureMemory_Confirmation_ClearContent" xml:space="preserve"><value>Cela efface les métadonnées d’IA et la recherche des captures inscrites. L’analyse future reste active et une nouvelle analyse explicite peut recréer les données depuis les captures conservées. Les fichiers d’origine ne sont pas supprimés.</value></data>
+  <data name="CaptureMemory_Confirmation_ClearButton" xml:space="preserve"><value>Supprimer les données analysées</value></data>
   <data name="CaptureMemory_Confirmation_RebuildTitle" xml:space="preserve"><value>Reconstruire l’index de recherche ?</value></data>
   <data name="CaptureMemory_Confirmation_RebuildContent" xml:space="preserve"><value>Cela recrée les données de recherche jetables depuis les métadonnées existantes. Aucun modèle d’IA ni source n’est lu, et les originaux ne sont pas modifiés.</value></data>
   <data name="CaptureMemory_Confirmation_RebuildButton" xml:space="preserve"><value>Reconstruire l’index</value></data>

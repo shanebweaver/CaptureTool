@@ -883,17 +883,22 @@ SOFTWARE.
     <value>Отражено</value>
   </data>
   <data name="Settings_TemporaryFolder_ClearButton.Text" xml:space="preserve">
-    <value>Удалить файлы</value>
+    <value>Удалить рабочие файлы</value>
   </data>
   <data name="Settings_TemporaryFolder_ScreenshotsFolderLabel.Text" xml:space="preserve">
-    <value>Папка временных файлов:</value>
+    <value>Папка временных рабочих файлов:</value>
   </data>
   <data name="Settings_TemporaryFolder_SubtitleLabel.Text" xml:space="preserve">
-    <value>Используется для нормальной работы приложения. Вы можете удалить эти файлы в любое время.</value>
+    <value>Неиспользуемые копии для редактирования и предпросмотра можно безопасно удалить. Файлы активного редактирования сохраняются.</value>
   </data>
   <data name="Settings_TemporaryFolder_HeaderLabel.Text" xml:space="preserve">
-    <value>Временные файлы</value>
+    <value>Временные рабочие файлы</value>
   </data>
+  <data name="Settings_TemporaryFolder_Clearing" xml:space="preserve"><value>Удаление временных рабочих файлов…</value></data>
+  <data name="Settings_TemporaryFolder_ClearFailed" xml:space="preserve"><value>Не удалось удалить временные рабочие файлы.</value></data>
+  <data name="Settings_TemporaryFolder_ClearIncomplete" xml:space="preserve"><value>Удалено {0} из {1} временных элементов, но не удалось удалить {2}. Сохранено активных элементов: {3}.</value></data>
+  <data name="Settings_TemporaryFolder_NothingToClear" xml:space="preserve"><value>Неиспользуемые временные рабочие файлы не найдены. Сохранено активных элементов: {0}.</value></data>
+  <data name="Settings_TemporaryFolder_ClearSucceeded" xml:space="preserve"><value>Удалено {0} из {1} временных элементов. Сохранено активных элементов: {2}.</value></data>
   <data name="Settings_OtherHeaderLabel.Text" xml:space="preserve">
     <value>Прочее</value>
   </data>
@@ -1483,14 +1488,16 @@ SOFTWARE.
     <value>Функция распознавания текста использует локальную модель ИИ для обнаружения текста и его расположения на текущем изображении.</value>
   </data>
   <data name="Settings_AiConsentHeaderLabel.Text" xml:space="preserve">
-    <value>Согласие на использование ИИ</value>
+    <value>Функции редактирования с ИИ</value>
   </data>
+  <data name="Settings_AiConsentSectionDescription.Text" xml:space="preserve"><value>Эти настройки относятся только к инструментам редактирования, которые вы запускаете сами. Они не управляют анализом памяти снимков.</value></data>
   <data name="Settings_AiConsentDescription.Text" xml:space="preserve">
-    <value>Разрешить этой функции ИИ обрабатывать изображения на этом устройстве.</value>
+    <value>Разрешить локальный инструмент редактирования с ИИ, когда вы решите им воспользоваться.</value>
   </data>
   <data name="Settings_AiConsent_TextExtractionDisplayName" xml:space="preserve">
     <value>Распознавание текста</value>
   </data>
+  <data name="Settings_AiConsent_ImageSuperResolutionDisplayName" xml:space="preserve"><value>Сверхразрешение изображения</value></data>
   <data name="ImageEdit_ImageDescriptionButton.Label" xml:space="preserve">
     <value>Описание изображения</value>
   </data>
@@ -1847,17 +1854,23 @@ SOFTWARE.
   <data name="CaptureMemory_Settings_AnalysisDescription.Text" xml:space="preserve"><value>Управляет анализом снимков разрешёнными локальными моделями ИИ. Capture Tool хранит только метаданные приложения и никогда не изменяет оригиналы.</value></data>
   <data name="CaptureMemory_Settings_StopButton.Content" xml:space="preserve"><value>Не анализировать новые снимки</value></data>
   <data name="CaptureMemory_Settings_ResumeButton.Content" xml:space="preserve"><value>Возобновить анализ новых снимков</value></data>
+  <data name="CaptureMemory_Settings_AnalyzeNewToggle.Header" xml:space="preserve"><value>Анализировать новые снимки</value></data>
+  <data name="CaptureMemory_Settings_AnalyzeNewToggle.OnContent" xml:space="preserve"><value>Вкл.</value></data>
+  <data name="CaptureMemory_Settings_AnalyzeNewToggle.OffContent" xml:space="preserve"><value>Приостановлено</value></data>
   <data name="CaptureMemory_Settings_TurnOffButton.Content" xml:space="preserve"><value>Отключить и стереть</value></data>
   <data name="CaptureMemory_Settings_DataTitle.Text" xml:space="preserve"><value>Данные памяти</value></data>
   <data name="CaptureMemory_Settings_DataDescription.Text" xml:space="preserve"><value>Управляйте метаданными приложения отдельно от исходных файлов снимков.</value></data>
-  <data name="CaptureMemory_Settings_ClearTitle.Text" xml:space="preserve"><value>Очистить память</value></data>
-  <data name="CaptureMemory_Settings_ClearDescription.Text" xml:space="preserve"><value>Стереть метаданные и данные поиска, сохранив анализ новых снимков включённым.</value></data>
-  <data name="CaptureMemory_Settings_ClearButton.Content" xml:space="preserve"><value>Очистить память</value></data>
-  <data name="CaptureMemory_Settings_RebuildTitle.Text" xml:space="preserve"><value>Перестроить поисковый индекс</value></data>
-  <data name="CaptureMemory_Settings_RebuildDescription.Text" xml:space="preserve"><value>Создать заново удаляемые данные поиска из метаданных. Модели ИИ и источники снимков не используются.</value></data>
+  <data name="CaptureMemory_Settings_ClearTitle.Text" xml:space="preserve"><value>Удалить данные анализа снимков</value></data>
+  <data name="CaptureMemory_Settings_ClearDescription.Text" xml:space="preserve"><value>Стереть метаданные ИИ и данные поиска, сохранив будущий анализ включённым. Повторный анализ может создать их заново из сохранённых снимков.</value></data>
+  <data name="CaptureMemory_Settings_ClearButton.Content" xml:space="preserve"><value>Удалить данные анализа</value></data>
+  <data name="CaptureMemory_Settings_TurnOffTitle.Text" xml:space="preserve"><value>Отключить память снимков</value></data>
+  <data name="CaptureMemory_Settings_TurnOffDescription.Text" xml:space="preserve"><value>Остановить весь анализ памяти и стереть производные данные. Оригиналы снимков и сохранённые экспорты останутся.</value></data>
+  <data name="CaptureMemory_Settings_Troubleshooting.Header" xml:space="preserve"><value>Устранение неполадок</value></data>
+  <data name="CaptureMemory_Settings_RebuildTitle.Text" xml:space="preserve"><value>Восстановить поиск</value></data>
+  <data name="CaptureMemory_Settings_RebuildDescription.Text" xml:space="preserve"><value>Создать результаты поиска заново из существующих метаданных без запуска ИИ и чтения источников.</value></data>
   <data name="CaptureMemory_Settings_RebuildButton.Content" xml:space="preserve"><value>Перестроить индекс</value></data>
-  <data name="CaptureMemory_Settings_ReanalyzeTitle.Text" xml:space="preserve"><value>Повторно проанализировать снимки</value></data>
-  <data name="CaptureMemory_Settings_ReanalyzeDescription.Text" xml:space="preserve"><value>Подготовить разрешённые модели ИИ и снова прочитать источники включённых снимков. Оригиналы не изменяются.</value></data>
+  <data name="CaptureMemory_Settings_ReanalyzeTitle.Text" xml:space="preserve"><value>Улучшить результаты поиска</value></data>
+  <data name="CaptureMemory_Settings_ReanalyzeDescription.Text" xml:space="preserve"><value>Повторно проанализировать подходящие снимки после улучшения распознавания или моделей. Модели могут быть подготовлены; оригиналы не изменяются.</value></data>
   <data name="CaptureMemory_Settings_ReanalyzeButton.Content" xml:space="preserve"><value>Повторить анализ</value></data>
   <data name="CaptureMemory_Settings_CancelButton.Content" xml:space="preserve"><value>Отмена</value></data>
   <data name="CaptureMemory_Settings_Failure.Title" xml:space="preserve"><value>Не удалось выполнить действие памяти</value></data>
@@ -1893,9 +1906,9 @@ SOFTWARE.
   <data name="CaptureMemory_Confirmation_EraseTitle" xml:space="preserve"><value>Отключить память снимков и стереть её данные?</value></data>
   <data name="CaptureMemory_Confirmation_EraseContent" xml:space="preserve"><value>Анализ памяти будет остановлен, а метаданные, задания и данные поиска приложения — стёрты. Оригиналы и отдельно сохранённые экспорты не удаляются.</value></data>
   <data name="CaptureMemory_Confirmation_EraseButton" xml:space="preserve"><value>Отключить и стереть</value></data>
-  <data name="CaptureMemory_Confirmation_ClearTitle" xml:space="preserve"><value>Очистить память снимков?</value></data>
-  <data name="CaptureMemory_Confirmation_ClearContent" xml:space="preserve"><value>Метаданные и данные поиска включённых снимков будут стёрты. Анализ новых снимков останется включённым. Исходные файлы не удаляются.</value></data>
-  <data name="CaptureMemory_Confirmation_ClearButton" xml:space="preserve"><value>Очистить память</value></data>
+  <data name="CaptureMemory_Confirmation_ClearTitle" xml:space="preserve"><value>Удалить данные анализа снимков?</value></data>
+  <data name="CaptureMemory_Confirmation_ClearContent" xml:space="preserve"><value>Метаданные ИИ и данные поиска включённых снимков будут стёрты. Будущий анализ останется включённым, а явно запущенный повторный анализ сможет создать данные заново из сохранённых снимков. Исходные файлы не удаляются.</value></data>
+  <data name="CaptureMemory_Confirmation_ClearButton" xml:space="preserve"><value>Удалить данные анализа</value></data>
   <data name="CaptureMemory_Confirmation_RebuildTitle" xml:space="preserve"><value>Перестроить поисковый индекс?</value></data>
   <data name="CaptureMemory_Confirmation_RebuildContent" xml:space="preserve"><value>Удаляемые данные поиска будут заново созданы из метаданных приложения. Модели ИИ и источники не используются, оригиналы не изменяются.</value></data>
   <data name="CaptureMemory_Confirmation_RebuildButton" xml:space="preserve"><value>Перестроить индекс</value></data>

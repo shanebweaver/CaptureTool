@@ -63,13 +63,14 @@ public sealed class CaptureMemorySettingsViewModelTests
             confirmationService: confirmation.Object);
         await viewModel.LoadAsync(CancellationToken.None);
 
-        await viewModel.StopAnalyzingNewCapturesCommand.ExecuteAsync(null);
+        Assert.IsTrue(viewModel.CanChangeAnalysisState);
+        await viewModel.SetAnalyzingNewCapturesAsync(false);
 
         Assert.IsTrue(viewModel.IsAuthorized);
         Assert.IsFalse(viewModel.IsAnalyzingNewCaptures);
         Assert.AreEqual(1, viewModel.ActiveCaptureCount);
 
-        await viewModel.ResumeAnalyzingNewCapturesCommand.ExecuteAsync(null);
+        await viewModel.SetAnalyzingNewCapturesAsync(true);
 
         Assert.IsTrue(viewModel.IsAnalyzingNewCaptures);
         Assert.AreEqual(1, viewModel.ActiveCaptureCount);
