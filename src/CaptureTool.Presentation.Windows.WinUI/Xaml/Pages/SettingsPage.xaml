@@ -893,11 +893,37 @@
                                 </Grid>
 
                                 <Expander
-                                    x:Uid="CaptureMemory_Settings_Troubleshooting"
                                     HorizontalAlignment="Stretch"
+                                    VerticalAlignment="Top"
                                     HorizontalContentAlignment="Stretch"
-                                    AutomationProperties.AutomationId="Settings_CaptureMemoryTroubleshootingExpander">
-                                    <StackPanel Padding="0,8,0,0" Spacing="12">
+                                    AutomationProperties.AutomationId="Settings_CaptureMemoryTroubleshootingExpander"
+                                    AutomationProperties.LabeledBy="{x:Bind CaptureMemoryTroubleshootingHeaderTextBlock}"
+                                    ExpandDirection="Down">
+                                    <Expander.Header>
+                                        <Grid Padding="0,12">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition />
+                                            </Grid.ColumnDefinitions>
+
+                                            <SymbolIcon Symbol="Repair" />
+
+                                            <StackPanel Grid.Column="1" Padding="16,0,0,0">
+                                                <TextBlock
+                                                    x:Name="CaptureMemoryTroubleshootingHeaderTextBlock"
+                                                    x:Uid="CaptureMemory_Settings_TroubleshootingTitle"
+                                                    TextTrimming="WordEllipsis"
+                                                    TextWrapping="NoWrap" />
+                                                <TextBlock
+                                                    x:Uid="CaptureMemory_Settings_TroubleshootingSubtitle"
+                                                    FontSize="12"
+                                                    Opacity=".75"
+                                                    TextTrimming="WordEllipsis"
+                                                    TextWrapping="NoWrap" />
+                                            </StackPanel>
+                                        </Grid>
+                                    </Expander.Header>
+                                    <StackPanel Margin="4,0" Padding="0,0,0,8" Spacing="12">
                                         <Grid ColumnSpacing="12">
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition />

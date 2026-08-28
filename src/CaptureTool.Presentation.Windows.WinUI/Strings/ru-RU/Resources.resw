@@ -1865,7 +1865,8 @@ SOFTWARE.
   <data name="CaptureMemory_Settings_ClearButton.Content" xml:space="preserve"><value>Удалить данные анализа</value></data>
   <data name="CaptureMemory_Settings_TurnOffTitle.Text" xml:space="preserve"><value>Отключить память снимков</value></data>
   <data name="CaptureMemory_Settings_TurnOffDescription.Text" xml:space="preserve"><value>Остановить весь анализ памяти и стереть производные данные. Оригиналы снимков и сохранённые экспорты останутся.</value></data>
-  <data name="CaptureMemory_Settings_Troubleshooting.Header" xml:space="preserve"><value>Устранение неполадок</value></data>
+  <data name="CaptureMemory_Settings_TroubleshootingTitle.Text" xml:space="preserve"><value>Устранение неполадок</value></data>
+  <data name="CaptureMemory_Settings_TroubleshootingSubtitle.Text" xml:space="preserve"><value>Исправьте данные поиска или повторите анализ, если результаты отсутствуют или устарели.</value></data>
   <data name="CaptureMemory_Settings_RebuildTitle.Text" xml:space="preserve"><value>Восстановить поиск</value></data>
   <data name="CaptureMemory_Settings_RebuildDescription.Text" xml:space="preserve"><value>Создать результаты поиска заново из существующих метаданных без запуска ИИ и чтения источников.</value></data>
   <data name="CaptureMemory_Settings_RebuildButton.Content" xml:space="preserve"><value>Перестроить индекс</value></data>

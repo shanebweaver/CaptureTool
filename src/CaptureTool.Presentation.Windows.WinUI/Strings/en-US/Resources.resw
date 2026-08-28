@@ -2149,7 +2149,8 @@ SOFTWARE.
   <data name="CaptureMemory_Settings_ClearButton.Content" xml:space="preserve"><value>Delete analyzed data</value></data>
   <data name="CaptureMemory_Settings_TurnOffTitle.Text" xml:space="preserve"><value>Turn off Capture Memory</value></data>
   <data name="CaptureMemory_Settings_TurnOffDescription.Text" xml:space="preserve"><value>Stop all Capture Memory analysis and erase its derived data. Original captures and saved exports are kept.</value></data>
-  <data name="CaptureMemory_Settings_Troubleshooting.Header" xml:space="preserve"><value>Troubleshooting</value></data>
+  <data name="CaptureMemory_Settings_TroubleshootingTitle.Text" xml:space="preserve"><value>Troubleshooting</value></data>
+  <data name="CaptureMemory_Settings_TroubleshootingSubtitle.Text" xml:space="preserve"><value>Repair search data or rerun analysis when results are missing or out of date.</value></data>
   <data name="CaptureMemory_Settings_RebuildTitle.Text" xml:space="preserve"><value>Repair search</value></data>
   <data name="CaptureMemory_Settings_RebuildDescription.Text" xml:space="preserve"><value>Recreate search results from existing metadata without running AI or reading capture sources.</value></data>
   <data name="CaptureMemory_Settings_RebuildButton.Content" xml:space="preserve"><value>Rebuild index</value></data>

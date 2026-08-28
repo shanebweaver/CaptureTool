@@ -1865,7 +1865,8 @@ SOFTWARE.
   <data name="CaptureMemory_Settings_ClearButton.Content" xml:space="preserve"><value>Supprimer les données analysées</value></data>
   <data name="CaptureMemory_Settings_TurnOffTitle.Text" xml:space="preserve"><value>Désactiver Mémoire des captures</value></data>
   <data name="CaptureMemory_Settings_TurnOffDescription.Text" xml:space="preserve"><value>Arrête toute analyse Mémoire et efface ses données dérivées. Les captures d’origine et les exportations enregistrées sont conservées.</value></data>
-  <data name="CaptureMemory_Settings_Troubleshooting.Header" xml:space="preserve"><value>Résolution des problèmes</value></data>
+  <data name="CaptureMemory_Settings_TroubleshootingTitle.Text" xml:space="preserve"><value>Résolution des problèmes</value></data>
+  <data name="CaptureMemory_Settings_TroubleshootingSubtitle.Text" xml:space="preserve"><value>Réparez les données de recherche ou relancez l’analyse si des résultats sont absents ou obsolètes.</value></data>
   <data name="CaptureMemory_Settings_RebuildTitle.Text" xml:space="preserve"><value>Réparer la recherche</value></data>
   <data name="CaptureMemory_Settings_RebuildDescription.Text" xml:space="preserve"><value>Recrée les résultats depuis les métadonnées existantes sans exécuter l’IA ni lire les sources.</value></data>
   <data name="CaptureMemory_Settings_RebuildButton.Content" xml:space="preserve"><value>Reconstruire l’index</value></data>

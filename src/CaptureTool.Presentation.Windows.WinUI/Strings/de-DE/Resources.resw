@@ -1859,7 +1859,8 @@ SOFTWARE.
   <data name="CaptureMemory_Settings_ClearButton.Content" xml:space="preserve"><value>Analysierte Daten löschen</value></data>
   <data name="CaptureMemory_Settings_TurnOffTitle.Text" xml:space="preserve"><value>Capture Memory deaktivieren</value></data>
   <data name="CaptureMemory_Settings_TurnOffDescription.Text" xml:space="preserve"><value>Alle Capture Memory-Analysen beenden und abgeleitete Daten löschen. Originalaufnahmen und gespeicherte Exporte bleiben erhalten.</value></data>
-  <data name="CaptureMemory_Settings_Troubleshooting.Header" xml:space="preserve"><value>Problembehandlung</value></data>
+  <data name="CaptureMemory_Settings_TroubleshootingTitle.Text" xml:space="preserve"><value>Problembehandlung</value></data>
+  <data name="CaptureMemory_Settings_TroubleshootingSubtitle.Text" xml:space="preserve"><value>Suchdaten reparieren oder die Analyse erneut ausführen, wenn Ergebnisse fehlen oder veraltet sind.</value></data>
   <data name="CaptureMemory_Settings_RebuildTitle.Text" xml:space="preserve"><value>Suche reparieren</value></data>
   <data name="CaptureMemory_Settings_RebuildDescription.Text" xml:space="preserve"><value>Suchergebnisse aus vorhandenen Metadaten neu erstellen, ohne KI auszuführen oder Aufnahmequellen zu lesen.</value></data>
   <data name="CaptureMemory_Settings_RebuildButton.Content" xml:space="preserve"><value>Index neu erstellen</value></data>
