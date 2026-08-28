@@ -7,7 +7,7 @@ namespace CaptureTool.Infrastructure.Features;
 
 public sealed class CaptureAnalysisFeatureAvailability : ICaptureAnalysisFeatureAvailability
 {
-    private const long CurrentResolutionPolicyRevision = 7;
+    private const long CurrentResolutionPolicyRevision = 8;
     private const string MicrosoftWindowsProviderId = "microsoft-windows";
     private const string MicrosoftFoundryLocalProviderId = "microsoft-foundry-local";
 

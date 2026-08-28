@@ -11,7 +11,7 @@ namespace CaptureTool.Infrastructure.Analysis.FoundryLocal;
 
 public sealed class FoundryLocalSpeechTranscriptAnalyzer : IPreparableCaptureAnalyzer
 {
-    public const string AdapterVersion = "2.1.0";
+    public const string AdapterVersion = "2.2.0";
 
     private readonly IFoundryLocalSpeechTranscriptionService _transcription;
     private readonly IVideoAudioExtractionService? _videoAudioExtraction;

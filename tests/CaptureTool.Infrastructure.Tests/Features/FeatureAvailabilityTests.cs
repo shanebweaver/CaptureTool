@@ -99,7 +99,7 @@ public sealed class FeatureAvailabilityTests
             selection);
 
         Assert.IsTrue(availability.IsAnalyzerEnabled(analyzer));
-        Assert.AreEqual(7_000_000_017L, availability.ResolutionPolicyRevision);
+        Assert.AreEqual(8_000_000_017L, availability.ResolutionPolicyRevision);
     }
 
     [TestMethod]

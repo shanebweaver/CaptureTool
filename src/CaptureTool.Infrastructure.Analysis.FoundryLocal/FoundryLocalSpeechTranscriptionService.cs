@@ -70,7 +70,7 @@ internal class FoundryLocalSpeechTranscriptionService :
     public const string ModelAlias = "whisper-tiny";
     public const string RuntimeVersion = "1.2.4";
     public const string SelectionPolicyRevision =
-        "alias-auto-winml-pcm16-app-language-allowlist-v3";
+        "alias-cpu-pcm16-app-language-allowlist-v4";
     public static readonly TimeSpan MaximumTimestampWindow = TimeSpan.FromSeconds(15);
 
     private readonly SemaphoreSlim _gate = new(1, 1);
@@ -157,11 +157,16 @@ internal class FoundryLocalSpeechTranscriptionService :
             await _sdkClient.InitializeAsync(cancellationToken).ConfigureAwait(false);
             progress?.Report(0.03);
 
-            await TryPrepareExecutionProvidersAsync(progress, cancellationToken)
-                .ConfigureAwait(false);
+            // Foundry's automatic accelerator choice can select a CUDA model that loads
+            // successfully but is incompatible with the installed GPU at inference time.
+            // Speech uses the catalog's CPU variant for deterministic Store-safe behavior.
+            progress?.Report(0.2);
 
             IFoundryLocalSdkModel? model = await _sdkClient
-                .GetModelAsync(_configuration.ModelAlias, cancellationToken)
+                .GetModelAsync(
+                    _configuration.ModelAlias,
+                    _configuration.DevicePreference,
+                    cancellationToken)
                 .ConfigureAwait(false);
             if (model == null)
             {

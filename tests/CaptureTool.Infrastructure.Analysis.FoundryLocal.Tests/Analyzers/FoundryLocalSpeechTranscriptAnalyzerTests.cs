@@ -102,7 +102,7 @@ public sealed class FoundryLocalSpeechTranscriptAnalyzerTests
         Assert.AreEqual(
             "nvidia-nemotron-3.5-asr-streaming-multilingual-0.6b",
             analyzer.Descriptor.Identity.ModelId);
-        Assert.AreEqual("1.0.0", analyzer.Descriptor.Identity.AdapterVersion);
+        Assert.AreEqual("1.1.0", analyzer.Descriptor.Identity.AdapterVersion);
         Assert.AreEqual(50, analyzer.Descriptor.QualityTier);
     }
 
@@ -142,7 +142,7 @@ public sealed class FoundryLocalSpeechTranscriptAnalyzerTests
         Assert.AreEqual(CaptureAnalyzerPreparationStatus.Succeeded, result.Status);
         Assert.AreEqual(provenance.ResolvedModelId, resolved.ModelId);
         Assert.AreEqual("4;alias=whisper-tiny", resolved.ModelVersion);
-        Assert.AreEqual("2.1.0", resolved.AdapterVersion);
+        Assert.AreEqual("2.2.0", resolved.AdapterVersion);
         Assert.AreEqual("1.2.4", resolved.RuntimeVersion);
         StringAssert.Contains(resolved.RuntimeId, "device=gpu");
         StringAssert.Contains(resolved.RuntimeId, "ep=winmlexecutionprovider");

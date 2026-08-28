@@ -18,6 +18,11 @@ internal sealed record FoundryLocalExecutionProviderDownloadResult(
     IReadOnlyList<string> RegisteredProviders,
     IReadOnlyList<string> FailedProviders);
 
+internal enum FoundryLocalModelDevicePreference
+{
+    Cpu,
+}
+
 public sealed record FoundryLocalModelProvenance(
     string RequestedAlias,
     string ResolvedModelId,
@@ -49,6 +54,7 @@ internal interface IFoundryLocalSdkClient : IDisposable
 
     Task<IFoundryLocalSdkModel?> GetModelAsync(
         string modelAlias,
+        FoundryLocalModelDevicePreference devicePreference,
         CancellationToken cancellationToken);
 }
 
@@ -181,6 +187,7 @@ internal sealed class FoundryLocalSdkClient : IFoundryLocalSdkClient
 
     public async Task<IFoundryLocalSdkModel?> GetModelAsync(
         string modelAlias,
+        FoundryLocalModelDevicePreference devicePreference,
         CancellationToken cancellationToken)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(modelAlias);
@@ -191,9 +198,24 @@ internal sealed class FoundryLocalSdkClient : IFoundryLocalSdkClient
         IModel? model = await catalog
             .GetModelAsync(modelAlias, cancellationToken)
             .ConfigureAwait(false);
-        return model == null
-            ? null
-            : new FoundryLocalSdkModel(modelAlias, model);
+        if (model == null)
+        {
+            return null;
+        }
+
+        IModel? selectedVariant = devicePreference switch
+        {
+            FoundryLocalModelDevicePreference.Cpu => model.Variants.FirstOrDefault(
+                variant => variant.Info.Runtime?.DeviceType == DeviceType.CPU),
+            _ => null,
+        };
+        if (selectedVariant == null)
+        {
+            return null;
+        }
+
+        model.SelectVariant(selectedVariant);
+        return new FoundryLocalSdkModel(modelAlias, model);
     }
 
     public void Dispose()

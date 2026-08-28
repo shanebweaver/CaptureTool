@@ -40,7 +40,7 @@ public sealed class FoundryLocalSpeechTranscriptionServiceTests
     }
 
     [TestMethod]
-    public async Task PrepareAsync_DownloadsExecutionProvidersAndSelectedModelExplicitly()
+    public async Task PrepareAsync_SelectsAndDownloadsCpuModelExplicitly()
     {
         var model = new FakeSdkModel(GpuProvenance) { IsCached = false };
         var sdk = new FakeSdkClient
@@ -60,10 +60,9 @@ public sealed class FoundryLocalSpeechTranscriptionServiceTests
 
         Assert.AreEqual(FoundryLocalSpeechPreparationStatus.Succeeded, result.Status);
         Assert.AreEqual(1, sdk.InitializeCalls);
-        CollectionAssert.AreEqual(
-            new[] { "WinMLExecutionProvider" },
-            sdk.RequestedExecutionProviders.ToArray());
+        Assert.AreEqual(0, sdk.DownloadExecutionProviderCalls);
         Assert.AreEqual("whisper-tiny", sdk.RequestedAlias);
+        Assert.AreEqual(FoundryLocalModelDevicePreference.Cpu, sdk.RequestedDevicePreference);
         Assert.AreEqual(1, model.IsCachedCalls);
         Assert.AreEqual(1, model.DownloadCalls);
         Assert.AreEqual(1, model.LoadCalls);
@@ -74,7 +73,7 @@ public sealed class FoundryLocalSpeechTranscriptionServiceTests
     }
 
     [TestMethod]
-    public async Task PrepareAsync_WhenAccelerationAcquisitionFails_UsesCachedCpuFallback()
+    public async Task PrepareAsync_UsesCachedCpuWithoutAcquiringAccelerators()
     {
         FoundryLocalModelProvenance cpu = GpuProvenance with
         {
@@ -94,6 +93,7 @@ public sealed class FoundryLocalSpeechTranscriptionServiceTests
         FoundryLocalSpeechPreparationResult result = await service.PrepareAsync();
 
         Assert.AreEqual(FoundryLocalSpeechPreparationStatus.Succeeded, result.Status);
+        Assert.AreEqual(0, sdk.DownloadExecutionProviderCalls);
         Assert.AreEqual(0, model.DownloadCalls);
         Assert.AreEqual(1, model.LoadCalls);
         Assert.AreEqual(cpu, service.ModelProvenance);
@@ -461,6 +461,8 @@ public sealed class FoundryLocalSpeechTranscriptionServiceTests
 
         public string? RequestedAlias { get; private set; }
 
+        public FoundryLocalModelDevicePreference? RequestedDevicePreference { get; private set; }
+
         public List<string> RequestedExecutionProviders { get; } = [];
 
         public Task InitializeAsync(CancellationToken cancellationToken)
@@ -496,11 +498,13 @@ public sealed class FoundryLocalSpeechTranscriptionServiceTests
 
         public Task<IFoundryLocalSdkModel?> GetModelAsync(
             string modelAlias,
+            FoundryLocalModelDevicePreference devicePreference,
             CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
             GetModelCalls++;
             RequestedAlias = modelAlias;
+            RequestedDevicePreference = devicePreference;
             return Task.FromResult(Model);
         }
 

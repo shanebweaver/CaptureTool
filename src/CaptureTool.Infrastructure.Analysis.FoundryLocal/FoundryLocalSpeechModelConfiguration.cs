@@ -12,6 +12,7 @@ internal sealed record FoundryLocalSpeechModelConfiguration(
     string AdapterVersion,
     string SelectionPolicyRevision,
     string DefaultLanguageHint,
+    FoundryLocalModelDevicePreference DevicePreference,
     FoundryLocalSpeechTranscriptionMode TranscriptionMode,
     int QualityTier,
     bool FallbackOnFailure)
@@ -23,9 +24,10 @@ internal sealed record FoundryLocalSpeechModelConfiguration(
     public static FoundryLocalSpeechModelConfiguration Whisper { get; } = new(
         AnalyzerId: "foundry-local-speech-transcript",
         ModelAlias: "whisper-tiny",
-        AdapterVersion: "2.1.0",
-        SelectionPolicyRevision: "alias-auto-winml-pcm16-app-language-allowlist-v3",
+        AdapterVersion: "2.2.0",
+        SelectionPolicyRevision: "alias-cpu-pcm16-app-language-allowlist-v4",
         DefaultLanguageHint: "en",
+        DevicePreference: FoundryLocalModelDevicePreference.Cpu,
         TranscriptionMode: FoundryLocalSpeechTranscriptionMode.File,
         QualityTier: 40,
         FallbackOnFailure: false);
@@ -33,9 +35,10 @@ internal sealed record FoundryLocalSpeechModelConfiguration(
     public static FoundryLocalSpeechModelConfiguration NemotronMultilingual { get; } = new(
         AnalyzerId: "foundry-local-nemotron-multilingual-speech-transcript",
         ModelAlias: "nvidia-nemotron-3.5-asr-streaming-multilingual-0.6b",
-        AdapterVersion: "1.0.0",
-        SelectionPolicyRevision: "alias-auto-winml-live-pcm16-language-auto-v1",
+        AdapterVersion: "1.1.0",
+        SelectionPolicyRevision: "alias-cpu-live-pcm16-language-auto-v2",
         DefaultLanguageHint: "auto",
+        DevicePreference: FoundryLocalModelDevicePreference.Cpu,
         TranscriptionMode: FoundryLocalSpeechTranscriptionMode.LivePcm,
         QualityTier: 50,
         FallbackOnFailure: true);
