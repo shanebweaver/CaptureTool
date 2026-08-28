@@ -5,7 +5,9 @@ public interface IFileSystem
     bool FileExists(string filePath);
     bool DirectoryExists(string folderPath);
     IEnumerable<string> EnumerateFiles(string folderPath, string searchPattern);
+    IEnumerable<string> EnumerateFilesRecursively(string folderPath, string searchPattern);
     IEnumerable<string> EnumerateFileSystemEntries(string folderPath);
+    long GetFileLength(string filePath);
     DateTime GetLastWriteTimeUtc(string filePath);
     void SetLastWriteTimeUtc(string filePath, DateTime lastWriteTimeUtc);
     void CreateDirectory(string folderPath);

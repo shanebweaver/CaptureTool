@@ -89,21 +89,46 @@ internal sealed class ScratchArtifactStore : IScratchArtifactStore
         }
     }
 
-    public void ClearUnleasedArtifacts()
+    public ScratchArtifactCleanupResult ClearUnleasedArtifacts()
     {
         string rootPath = GetNormalizedRootPath();
         if (!_fileSystem.DirectoryExists(rootPath))
         {
-            return;
+            return default;
         }
 
+        int deletedItemCount = 0;
+        long deletedByteCount = 0;
+        int activeItemCount = 0;
+        long activeByteCount = 0;
+        int failedItemCount = 0;
         foreach (string entry in _fileSystem.EnumerateFileSystemEntries(rootPath))
         {
-            if (!IsActive(entry))
+            long byteCount = GetEntryByteCount(entry);
+            if (IsActive(entry))
             {
-                TryDeleteEntry(entry);
+                activeItemCount++;
+                activeByteCount += byteCount;
+                continue;
+            }
+
+            if (TryDeleteEntry(entry))
+            {
+                deletedItemCount++;
+                deletedByteCount += byteCount;
+            }
+            else
+            {
+                failedItemCount++;
             }
         }
+
+        return new ScratchArtifactCleanupResult(
+            deletedItemCount,
+            deletedByteCount,
+            activeItemCount,
+            activeByteCount,
+            failedItemCount);
     }
 
     public void ScavengeStaleArtifacts(TimeSpan maximumAge)
@@ -186,7 +211,36 @@ internal sealed class ScratchArtifactStore : IScratchArtifactStore
             .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
     }
 
-    private void TryDeleteEntry(string entry)
+    private long GetEntryByteCount(string entry)
+    {
+        try
+        {
+            if (_fileSystem.FileExists(entry))
+            {
+                return _fileSystem.GetFileLength(entry);
+            }
+
+            if (!_fileSystem.DirectoryExists(entry))
+            {
+                return 0;
+            }
+
+            long byteCount = 0;
+            foreach (string filePath in _fileSystem.EnumerateFilesRecursively(entry, "*"))
+            {
+                byteCount = checked(byteCount + _fileSystem.GetFileLength(filePath));
+            }
+
+            return byteCount;
+        }
+        catch (Exception ex)
+        {
+            _logService.LogException(ex, $"Failed to measure scratch artifact: {entry}");
+            return 0;
+        }
+    }
+
+    private bool TryDeleteEntry(string entry)
     {
         try
         {
@@ -198,10 +252,13 @@ internal sealed class ScratchArtifactStore : IScratchArtifactStore
             {
                 _fileSystem.DeleteFile(entry);
             }
+
+            return !_fileSystem.DirectoryExists(entry) && !_fileSystem.FileExists(entry);
         }
         catch (Exception ex)
         {
             _logService.LogException(ex, $"Failed to delete scratch artifact: {entry}");
+            return false;
         }
     }
 

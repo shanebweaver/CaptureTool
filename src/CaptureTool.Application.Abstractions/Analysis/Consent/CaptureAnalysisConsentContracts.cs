@@ -79,6 +79,7 @@ public enum CaptureAnalysisSettingsAction
     ClearMemory,
     RebuildSearchIndex,
     ReanalyzeCaptures,
+    RemoveDownloadedModels,
     RemoveFromMemory,
     DeleteCapture,
 }

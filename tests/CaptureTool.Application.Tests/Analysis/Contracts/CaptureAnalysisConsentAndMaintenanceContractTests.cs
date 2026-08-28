@@ -133,6 +133,7 @@ public sealed class CaptureAnalysisConsentAndMaintenanceContractTests
                 nameof(CaptureAnalysisSettingsAction.ClearMemory),
                 nameof(CaptureAnalysisSettingsAction.RebuildSearchIndex),
                 nameof(CaptureAnalysisSettingsAction.ReanalyzeCaptures),
+                nameof(CaptureAnalysisSettingsAction.RemoveDownloadedModels),
                 nameof(CaptureAnalysisSettingsAction.RemoveFromMemory),
                 nameof(CaptureAnalysisSettingsAction.DeleteCapture),
             },

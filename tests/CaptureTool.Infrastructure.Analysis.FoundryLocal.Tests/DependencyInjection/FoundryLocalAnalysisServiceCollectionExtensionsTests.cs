@@ -1,4 +1,5 @@
 using CaptureTool.Application.Abstractions.Analysis.Analyzers;
+using CaptureTool.Application.Abstractions.Analysis.Models;
 using CaptureTool.Application.Abstractions.Localization;
 using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Infrastructure.Analysis.FoundryLocal.DependencyInjection;
@@ -38,6 +39,10 @@ public sealed class FoundryLocalAnalysisServiceCollectionExtensionsTests
             descriptor.ServiceType == typeof(FoundryLocalWhisperSpeechTranscriptionService)));
         Assert.IsTrue(services.Any(descriptor =>
             descriptor.ServiceType == typeof(FoundryLocalNemotronSpeechTranscriptionService)));
+        Assert.IsTrue(services.Any(descriptor =>
+            descriptor.ServiceType == typeof(IAiModelStorageService) &&
+            descriptor.ImplementationType == typeof(FoundryLocalAiModelStorageService) &&
+            descriptor.Lifetime == ServiceLifetime.Singleton));
     }
 
     [TestMethod]
@@ -94,9 +99,12 @@ public sealed class FoundryLocalAnalysisServiceCollectionExtensionsTests
         IFoundryLocalSpeechTranscriptionService[] transcriptionServices = provider
             .GetServices<IFoundryLocalSpeechTranscriptionService>()
             .ToArray();
+        IAiModelStorageService modelStorage = provider
+            .GetRequiredService<IAiModelStorageService>();
 
         Assert.HasCount(2, analyzers);
         Assert.HasCount(2, transcriptionServices);
+        Assert.IsInstanceOfType<FoundryLocalAiModelStorageService>(modelStorage);
         Assert.AreEqual("fr", transcriptionServices[^1].LanguageHint);
         CollectionAssert.AreEquivalent(
             new[]

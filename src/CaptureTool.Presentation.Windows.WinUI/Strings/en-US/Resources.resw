@@ -1155,21 +1155,26 @@ SOFTWARE.
     <comment>The display name for the mirrored image orientation.</comment>
   </data>
   <data name="Settings_TemporaryFolder_ClearButton.Text" xml:space="preserve">
-    <value>Clear files</value>
-    <comment>The label for the button that deletes all files in the application temp folder.</comment>
+    <value>Clear working files</value>
+    <comment>The label for the button that deletes unused app-owned Scratch working artifacts while preserving active editor leases.</comment>
   </data>
   <data name="Settings_TemporaryFolder_ScreenshotsFolderLabel.Text" xml:space="preserve">
-    <value>Temporary files folder:</value>
+    <value>Temporary working files folder:</value>
     <comment>The label for the button that opens the app temporary folder.</comment>
   </data>
   <data name="Settings_TemporaryFolder_SubtitleLabel.Text" xml:space="preserve">
-    <value>Used for normal app operation. You can clear these files at any time.</value>
+    <value>Unused editing and preview copies can be cleared safely. Files used by an active edit are kept.</value>
     <comment>The subtitle value for the section on the settings page that helps the user access the app temporary folder.</comment>
   </data>
   <data name="Settings_TemporaryFolder_HeaderLabel.Text" xml:space="preserve">
-    <value>Temporary files</value>
+    <value>Temporary working files</value>
     <comment>The header for the settings section that helps the user access the app temporary folder.</comment>
   </data>
+  <data name="Settings_TemporaryFolder_Clearing" xml:space="preserve"><value>Clearing temporary working files…</value></data>
+  <data name="Settings_TemporaryFolder_ClearFailed" xml:space="preserve"><value>Temporary working files could not be cleared.</value></data>
+  <data name="Settings_TemporaryFolder_ClearIncomplete" xml:space="preserve"><value>Cleared {0} from {1} temporary item(s), but {2} item(s) could not be removed. {3} active item(s) were kept.</value></data>
+  <data name="Settings_TemporaryFolder_NothingToClear" xml:space="preserve"><value>No unused temporary working files were found. {0} active item(s) were kept.</value></data>
+  <data name="Settings_TemporaryFolder_ClearSucceeded" xml:space="preserve"><value>Cleared {0} from {1} temporary item(s). {2} active item(s) were kept.</value></data>
   <data name="Settings_OtherHeaderLabel.Text" xml:space="preserve">
     <value>Other</value>
     <comment>The header for the section with uncategorized settings</comment>
@@ -1725,13 +1730,17 @@ SOFTWARE.
     <value>Text Extraction uses an on-device AI model to detect text and text locations in the current image.</value>
   </data>
   <data name="Settings_AiConsentHeaderLabel.Text" xml:space="preserve">
-    <value>AI consent</value>
+    <value>AI editing features</value>
   </data>
+  <data name="Settings_AiConsentSectionDescription.Text" xml:space="preserve"><value>These controls apply only to editing tools you choose to run. They do not control Capture Memory analysis.</value></data>
   <data name="Settings_AiConsentDescription.Text" xml:space="preserve">
-    <value>Allow this AI feature to process images on this device.</value>
+    <value>Allow this on-device AI editing tool when you choose to use it.</value>
   </data>
   <data name="Settings_AiConsent_TextExtractionDisplayName" xml:space="preserve">
     <value>Text extraction</value>
+  </data>
+  <data name="Settings_AiConsent_ImageSuperResolutionDisplayName" xml:space="preserve">
+    <value>Image super resolution</value>
   </data>
   <data name="ImageEdit_ImageDescriptionButton.Label" xml:space="preserve">
     <value>Image description</value>
@@ -2127,19 +2136,25 @@ SOFTWARE.
   <data name="CaptureMemory_Settings_Header.Text" xml:space="preserve"><value>Capture Memory</value></data>
   <data name="CaptureMemory_Settings_AnalysisTitle.Text" xml:space="preserve"><value>Capture analysis</value></data>
   <data name="CaptureMemory_Settings_AnalysisDescription.Text" xml:space="preserve"><value>Controls whether authorized on-device AI models analyze captures. Capture Tool stores only app-managed metadata and never modifies original captures.</value></data>
+  <data name="CaptureMemory_Settings_AnalyzeNewToggle.Header" xml:space="preserve"><value>Analyze new captures</value></data>
+  <data name="CaptureMemory_Settings_AnalyzeNewToggle.OnContent" xml:space="preserve"><value>On</value></data>
+  <data name="CaptureMemory_Settings_AnalyzeNewToggle.OffContent" xml:space="preserve"><value>Paused</value></data>
   <data name="CaptureMemory_Settings_StopButton.Content" xml:space="preserve"><value>Stop analyzing new captures</value></data>
   <data name="CaptureMemory_Settings_ResumeButton.Content" xml:space="preserve"><value>Resume analyzing new captures</value></data>
   <data name="CaptureMemory_Settings_TurnOffButton.Content" xml:space="preserve"><value>Turn off and erase</value></data>
   <data name="CaptureMemory_Settings_DataTitle.Text" xml:space="preserve"><value>Memory data</value></data>
   <data name="CaptureMemory_Settings_DataDescription.Text" xml:space="preserve"><value>Manage app-created metadata separately from original capture files.</value></data>
-  <data name="CaptureMemory_Settings_ClearTitle.Text" xml:space="preserve"><value>Clear Memory</value></data>
-  <data name="CaptureMemory_Settings_ClearDescription.Text" xml:space="preserve"><value>Erase metadata and search data while keeping analysis on for new captures.</value></data>
-  <data name="CaptureMemory_Settings_ClearButton.Content" xml:space="preserve"><value>Clear Memory</value></data>
-  <data name="CaptureMemory_Settings_RebuildTitle.Text" xml:space="preserve"><value>Rebuild search index</value></data>
-  <data name="CaptureMemory_Settings_RebuildDescription.Text" xml:space="preserve"><value>Recreate disposable search data from metadata. No AI model or capture source is used.</value></data>
+  <data name="CaptureMemory_Settings_ClearTitle.Text" xml:space="preserve"><value>Delete analyzed capture data</value></data>
+  <data name="CaptureMemory_Settings_ClearDescription.Text" xml:space="preserve"><value>Erase AI metadata and search data while keeping future analysis on. Reanalysis can recreate this data from retained captures.</value></data>
+  <data name="CaptureMemory_Settings_ClearButton.Content" xml:space="preserve"><value>Delete analyzed data</value></data>
+  <data name="CaptureMemory_Settings_TurnOffTitle.Text" xml:space="preserve"><value>Turn off Capture Memory</value></data>
+  <data name="CaptureMemory_Settings_TurnOffDescription.Text" xml:space="preserve"><value>Stop all Capture Memory analysis and erase its derived data. Original captures and saved exports are kept.</value></data>
+  <data name="CaptureMemory_Settings_Troubleshooting.Header" xml:space="preserve"><value>Troubleshooting</value></data>
+  <data name="CaptureMemory_Settings_RebuildTitle.Text" xml:space="preserve"><value>Repair search</value></data>
+  <data name="CaptureMemory_Settings_RebuildDescription.Text" xml:space="preserve"><value>Recreate search results from existing metadata without running AI or reading capture sources.</value></data>
   <data name="CaptureMemory_Settings_RebuildButton.Content" xml:space="preserve"><value>Rebuild index</value></data>
-  <data name="CaptureMemory_Settings_ReanalyzeTitle.Text" xml:space="preserve"><value>Reanalyze captures</value></data>
-  <data name="CaptureMemory_Settings_ReanalyzeDescription.Text" xml:space="preserve"><value>Prepare authorized AI models and read enrolled capture sources again. Originals remain unchanged.</value></data>
+  <data name="CaptureMemory_Settings_ReanalyzeTitle.Text" xml:space="preserve"><value>Improve search results</value></data>
+  <data name="CaptureMemory_Settings_ReanalyzeDescription.Text" xml:space="preserve"><value>Reanalyze eligible captures after recognition or model improvements. Models may be prepared and originals remain unchanged.</value></data>
   <data name="CaptureMemory_Settings_ReanalyzeButton.Content" xml:space="preserve"><value>Reanalyze</value></data>
   <data name="CaptureMemory_Settings_CancelButton.Content" xml:space="preserve"><value>Cancel</value></data>
   <data name="CaptureMemory_Settings_Failure.Title" xml:space="preserve"><value>Capture Memory action failed</value></data>
@@ -2175,9 +2190,9 @@ SOFTWARE.
   <data name="CaptureMemory_Confirmation_EraseTitle" xml:space="preserve"><value>Turn off Capture Memory and erase its data?</value></data>
   <data name="CaptureMemory_Confirmation_EraseContent" xml:space="preserve"><value>This stops all Capture Memory analysis and erases app-managed metadata, jobs, and search data. Original capture files and separately saved exports are not deleted.</value></data>
   <data name="CaptureMemory_Confirmation_EraseButton" xml:space="preserve"><value>Turn off and erase</value></data>
-  <data name="CaptureMemory_Confirmation_ClearTitle" xml:space="preserve"><value>Clear Capture Memory?</value></data>
-  <data name="CaptureMemory_Confirmation_ClearContent" xml:space="preserve"><value>This erases app-managed metadata and search data for enrolled captures. Analysis of new captures remains on. Original capture files are not deleted.</value></data>
-  <data name="CaptureMemory_Confirmation_ClearButton" xml:space="preserve"><value>Clear Memory</value></data>
+  <data name="CaptureMemory_Confirmation_ClearTitle" xml:space="preserve"><value>Delete analyzed capture data?</value></data>
+  <data name="CaptureMemory_Confirmation_ClearContent" xml:space="preserve"><value>This erases app-managed AI metadata and search data for enrolled captures. Future analysis remains on, and an explicit reanalysis can recreate the data from retained captures. Original files are not deleted.</value></data>
+  <data name="CaptureMemory_Confirmation_ClearButton" xml:space="preserve"><value>Delete analyzed data</value></data>
   <data name="CaptureMemory_Confirmation_RebuildTitle" xml:space="preserve"><value>Rebuild the search index?</value></data>
   <data name="CaptureMemory_Confirmation_RebuildContent" xml:space="preserve"><value>This recreates disposable search data from existing app-managed metadata. It does not run AI models, read capture sources, or modify original files.</value></data>
   <data name="CaptureMemory_Confirmation_RebuildButton" xml:space="preserve"><value>Rebuild index</value></data>
@@ -2190,4 +2205,18 @@ SOFTWARE.
   <data name="CaptureMemory_Confirmation_DeleteTitle" xml:space="preserve"><value>Delete this capture?</value></data>
   <data name="CaptureMemory_Confirmation_DeleteContent" xml:space="preserve"><value>This permanently deletes the app-owned retained source and removes its app-managed Memory data. Any separately saved or exported copy remains.</value></data>
   <data name="CaptureMemory_Confirmation_DeleteButton" xml:space="preserve"><value>Delete capture</value></data>
+  <data name="Settings_AiModelStorage_Header.Text" xml:space="preserve"><value>AI model storage</value></data>
+  <data name="Settings_AiModelStorage_Title.Text" xml:space="preserve"><value>Downloaded on-device models</value></data>
+  <data name="Settings_AiModelStorage_Description.Text" xml:space="preserve"><value>Manage model packages separately from captures and analyzed metadata. Pause analysis of new captures before removal; speech recognition downloads its models again when needed.</value></data>
+  <data name="Settings_AiModelStorage_RemoveButton.Content" xml:space="preserve"><value>Remove models</value></data>
+  <data name="Settings_AiModelStorage_Size" xml:space="preserve"><value>Downloaded on-device models use {0}.</value></data>
+  <data name="Settings_AiModelStorage_SizeUnavailable" xml:space="preserve"><value>Downloaded model storage could not be measured.</value></data>
+  <data name="Settings_AiModelStorage_PauseRequired" xml:space="preserve"><value>Pause analysis of new captures before removing downloaded models.</value></data>
+  <data name="Settings_AiModelStorage_Removing" xml:space="preserve"><value>Removing downloaded AI models…</value></data>
+  <data name="Settings_AiModelStorage_RemoveIncomplete" xml:space="preserve"><value>Removed {0} model(s), but {1} model(s) could not be removed. Try again after restarting the app.</value></data>
+  <data name="Settings_AiModelStorage_NothingToRemove" xml:space="preserve"><value>No downloaded AI models were found.</value></data>
+  <data name="Settings_AiModelStorage_RemoveSucceeded" xml:space="preserve"><value>Removed {0} downloaded model(s) and freed {1}. Capture files and analyzed metadata were kept.</value></data>
+  <data name="CaptureMemory_Confirmation_RemoveModelsTitle" xml:space="preserve"><value>Remove downloaded AI models?</value></data>
+  <data name="CaptureMemory_Confirmation_RemoveModelsContent" xml:space="preserve"><value>This removes on-device model packages downloaded by Capture Tool. Capture files and analyzed metadata are kept. Speech analysis will download its models again when needed.</value></data>
+  <data name="CaptureMemory_Confirmation_RemoveModelsButton" xml:space="preserve"><value>Remove models</value></data>
 </root>

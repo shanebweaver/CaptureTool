@@ -8,16 +8,20 @@ public sealed partial class AiFeatureConsentViewModel : ViewModelBase
     public AiFeatureConsentViewModel(
         AiFeatureId featureId,
         string displayName,
+        string description,
         bool isConsented)
     {
         FeatureId = featureId;
         DisplayName = displayName;
+        Description = description;
         IsConsented = isConsented;
     }
 
     public AiFeatureId FeatureId { get; }
 
     public string DisplayName { get; }
+
+    public string Description { get; }
 
     public bool IsConsented
     {

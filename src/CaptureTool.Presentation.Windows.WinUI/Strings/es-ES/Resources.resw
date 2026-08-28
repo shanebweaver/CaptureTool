@@ -883,17 +883,22 @@ SOFTWARE.
     <value>Reflejado</value>
   </data>
   <data name="Settings_TemporaryFolder_ClearButton.Text" xml:space="preserve">
-    <value>Borrar archivos</value>
+    <value>Borrar archivos de trabajo</value>
   </data>
   <data name="Settings_TemporaryFolder_ScreenshotsFolderLabel.Text" xml:space="preserve">
-    <value>Carpeta de archivos temporales:</value>
+    <value>Carpeta de archivos de trabajo temporales:</value>
   </data>
   <data name="Settings_TemporaryFolder_SubtitleLabel.Text" xml:space="preserve">
-    <value>Se utiliza para el funcionamiento normal de la aplicación. Puede borrar estos archivos en cualquier momento.</value>
+    <value>Las copias de edición y vista previa que no se usen se pueden borrar con seguridad. Se conservan los archivos de una edición activa.</value>
   </data>
   <data name="Settings_TemporaryFolder_HeaderLabel.Text" xml:space="preserve">
-    <value>Archivos temporales</value>
+    <value>Archivos de trabajo temporales</value>
   </data>
+  <data name="Settings_TemporaryFolder_Clearing" xml:space="preserve"><value>Borrando archivos de trabajo temporales…</value></data>
+  <data name="Settings_TemporaryFolder_ClearFailed" xml:space="preserve"><value>No se pudieron borrar los archivos de trabajo temporales.</value></data>
+  <data name="Settings_TemporaryFolder_ClearIncomplete" xml:space="preserve"><value>Se borraron {0} de {1} elemento(s) temporales, pero no se pudieron quitar {2}. Se conservaron {3} elemento(s) activos.</value></data>
+  <data name="Settings_TemporaryFolder_NothingToClear" xml:space="preserve"><value>No se encontraron archivos de trabajo temporales sin usar. Se conservaron {0} elemento(s) activos.</value></data>
+  <data name="Settings_TemporaryFolder_ClearSucceeded" xml:space="preserve"><value>Se borraron {0} de {1} elemento(s) temporales. Se conservaron {2} elemento(s) activos.</value></data>
   <data name="Settings_OtherHeaderLabel.Text" xml:space="preserve">
     <value>Otros</value>
   </data>
@@ -1483,14 +1488,16 @@ SOFTWARE.
     <value>La extracción de texto usa un modelo de IA en el dispositivo para detectar texto y su ubicación en la imagen actual.</value>
   </data>
   <data name="Settings_AiConsentHeaderLabel.Text" xml:space="preserve">
-    <value>Consentimiento para IA</value>
+    <value>Características de edición con IA</value>
   </data>
+  <data name="Settings_AiConsentSectionDescription.Text" xml:space="preserve"><value>Estos controles solo se aplican a las herramientas de edición que decida ejecutar. No controlan el análisis de Memoria de capturas.</value></data>
   <data name="Settings_AiConsentDescription.Text" xml:space="preserve">
-    <value>Permitir que esta característica de IA procese imágenes en este dispositivo.</value>
+    <value>Permitir esta herramienta de edición con IA en el dispositivo cuando decida usarla.</value>
   </data>
   <data name="Settings_AiConsent_TextExtractionDisplayName" xml:space="preserve">
     <value>Extracción de texto</value>
   </data>
+  <data name="Settings_AiConsent_ImageSuperResolutionDisplayName" xml:space="preserve"><value>Superresolución de imagen</value></data>
   <data name="ImageEdit_ImageDescriptionButton.Label" xml:space="preserve">
     <value>Descripción de imagen</value>
   </data>
@@ -1847,17 +1854,23 @@ SOFTWARE.
   <data name="CaptureMemory_Settings_AnalysisDescription.Text" xml:space="preserve"><value>Controla si los modelos de IA autorizados del dispositivo analizan capturas. Capture Tool solo guarda metadatos administrados por la aplicación y nunca modifica las capturas originales.</value></data>
   <data name="CaptureMemory_Settings_StopButton.Content" xml:space="preserve"><value>Dejar de analizar capturas nuevas</value></data>
   <data name="CaptureMemory_Settings_ResumeButton.Content" xml:space="preserve"><value>Reanudar el análisis de capturas nuevas</value></data>
+  <data name="CaptureMemory_Settings_AnalyzeNewToggle.Header" xml:space="preserve"><value>Analizar capturas nuevas</value></data>
+  <data name="CaptureMemory_Settings_AnalyzeNewToggle.OnContent" xml:space="preserve"><value>Activado</value></data>
+  <data name="CaptureMemory_Settings_AnalyzeNewToggle.OffContent" xml:space="preserve"><value>En pausa</value></data>
   <data name="CaptureMemory_Settings_TurnOffButton.Content" xml:space="preserve"><value>Desactivar y borrar</value></data>
   <data name="CaptureMemory_Settings_DataTitle.Text" xml:space="preserve"><value>Datos de Memoria</value></data>
   <data name="CaptureMemory_Settings_DataDescription.Text" xml:space="preserve"><value>Administra los metadatos creados por la aplicación por separado de los archivos originales.</value></data>
-  <data name="CaptureMemory_Settings_ClearTitle.Text" xml:space="preserve"><value>Borrar Memoria</value></data>
-  <data name="CaptureMemory_Settings_ClearDescription.Text" xml:space="preserve"><value>Borra metadatos y datos de búsqueda sin desactivar el análisis de capturas nuevas.</value></data>
-  <data name="CaptureMemory_Settings_ClearButton.Content" xml:space="preserve"><value>Borrar Memoria</value></data>
-  <data name="CaptureMemory_Settings_RebuildTitle.Text" xml:space="preserve"><value>Reconstruir índice de búsqueda</value></data>
-  <data name="CaptureMemory_Settings_RebuildDescription.Text" xml:space="preserve"><value>Vuelve a crear datos de búsqueda desechables a partir de metadatos. No usa modelos de IA ni fuentes de captura.</value></data>
+  <data name="CaptureMemory_Settings_ClearTitle.Text" xml:space="preserve"><value>Eliminar datos de capturas analizados</value></data>
+  <data name="CaptureMemory_Settings_ClearDescription.Text" xml:space="preserve"><value>Borra metadatos de IA y datos de búsqueda sin desactivar el análisis futuro. El nuevo análisis puede recrearlos a partir de capturas conservadas.</value></data>
+  <data name="CaptureMemory_Settings_ClearButton.Content" xml:space="preserve"><value>Eliminar datos analizados</value></data>
+  <data name="CaptureMemory_Settings_TurnOffTitle.Text" xml:space="preserve"><value>Desactivar Memoria de capturas</value></data>
+  <data name="CaptureMemory_Settings_TurnOffDescription.Text" xml:space="preserve"><value>Detiene todo el análisis de Memoria y borra sus datos derivados. Se conservan las capturas originales y las exportaciones guardadas.</value></data>
+  <data name="CaptureMemory_Settings_Troubleshooting.Header" xml:space="preserve"><value>Solución de problemas</value></data>
+  <data name="CaptureMemory_Settings_RebuildTitle.Text" xml:space="preserve"><value>Reparar búsqueda</value></data>
+  <data name="CaptureMemory_Settings_RebuildDescription.Text" xml:space="preserve"><value>Vuelve a crear los resultados a partir de metadatos existentes sin ejecutar IA ni leer las fuentes.</value></data>
   <data name="CaptureMemory_Settings_RebuildButton.Content" xml:space="preserve"><value>Reconstruir índice</value></data>
-  <data name="CaptureMemory_Settings_ReanalyzeTitle.Text" xml:space="preserve"><value>Volver a analizar capturas</value></data>
-  <data name="CaptureMemory_Settings_ReanalyzeDescription.Text" xml:space="preserve"><value>Prepara modelos de IA autorizados y vuelve a leer las fuentes inscritas. Los originales no cambian.</value></data>
+  <data name="CaptureMemory_Settings_ReanalyzeTitle.Text" xml:space="preserve"><value>Mejorar resultados de búsqueda</value></data>
+  <data name="CaptureMemory_Settings_ReanalyzeDescription.Text" xml:space="preserve"><value>Vuelve a analizar capturas aptas tras mejoras de reconocimiento o modelos. Puede preparar modelos y no modifica los originales.</value></data>
   <data name="CaptureMemory_Settings_ReanalyzeButton.Content" xml:space="preserve"><value>Volver a analizar</value></data>
   <data name="CaptureMemory_Settings_CancelButton.Content" xml:space="preserve"><value>Cancelar</value></data>
   <data name="CaptureMemory_Settings_Failure.Title" xml:space="preserve"><value>Error en la acción de Memoria</value></data>
@@ -1893,9 +1906,9 @@ SOFTWARE.
   <data name="CaptureMemory_Confirmation_EraseTitle" xml:space="preserve"><value>¿Desactivar Memoria y borrar sus datos?</value></data>
   <data name="CaptureMemory_Confirmation_EraseContent" xml:space="preserve"><value>Esto detiene todo análisis de Memoria y borra metadatos, trabajos y datos de búsqueda de la aplicación. No elimina archivos originales ni exportaciones guardadas por separado.</value></data>
   <data name="CaptureMemory_Confirmation_EraseButton" xml:space="preserve"><value>Desactivar y borrar</value></data>
-  <data name="CaptureMemory_Confirmation_ClearTitle" xml:space="preserve"><value>¿Borrar Memoria de capturas?</value></data>
-  <data name="CaptureMemory_Confirmation_ClearContent" xml:space="preserve"><value>Esto borra metadatos y datos de búsqueda de capturas inscritas. El análisis de capturas nuevas sigue activado. No se eliminan archivos originales.</value></data>
-  <data name="CaptureMemory_Confirmation_ClearButton" xml:space="preserve"><value>Borrar Memoria</value></data>
+  <data name="CaptureMemory_Confirmation_ClearTitle" xml:space="preserve"><value>¿Eliminar los datos de capturas analizados?</value></data>
+  <data name="CaptureMemory_Confirmation_ClearContent" xml:space="preserve"><value>Esto borra metadatos de IA y datos de búsqueda de capturas inscritas. El análisis futuro sigue activado y un nuevo análisis explícito puede recrear los datos a partir de capturas conservadas. No se eliminan los archivos originales.</value></data>
+  <data name="CaptureMemory_Confirmation_ClearButton" xml:space="preserve"><value>Eliminar datos analizados</value></data>
   <data name="CaptureMemory_Confirmation_RebuildTitle" xml:space="preserve"><value>¿Reconstruir el índice de búsqueda?</value></data>
   <data name="CaptureMemory_Confirmation_RebuildContent" xml:space="preserve"><value>Esto vuelve a crear datos de búsqueda desechables desde metadatos existentes. No ejecuta modelos de IA, no lee fuentes ni modifica archivos originales.</value></data>
   <data name="CaptureMemory_Confirmation_RebuildButton" xml:space="preserve"><value>Reconstruir índice</value></data>
@@ -1908,4 +1921,18 @@ SOFTWARE.
   <data name="CaptureMemory_Confirmation_DeleteTitle" xml:space="preserve"><value>¿Eliminar esta captura?</value></data>
   <data name="CaptureMemory_Confirmation_DeleteContent" xml:space="preserve"><value>Esto elimina permanentemente la fuente retenida propiedad de la aplicación y quita sus datos de Memoria. Las copias guardadas o exportadas por separado permanecen.</value></data>
   <data name="CaptureMemory_Confirmation_DeleteButton" xml:space="preserve"><value>Eliminar captura</value></data>
+  <data name="Settings_AiModelStorage_Header.Text" xml:space="preserve"><value>Almacenamiento de modelos de IA</value></data>
+  <data name="Settings_AiModelStorage_Title.Text" xml:space="preserve"><value>Modelos descargados en el dispositivo</value></data>
+  <data name="Settings_AiModelStorage_Description.Text" xml:space="preserve"><value>Administra los paquetes de modelos por separado de las capturas y los metadatos analizados. Pausa el análisis de capturas nuevas antes de quitarlos; el reconocimiento de voz volverá a descargar los modelos cuando los necesite.</value></data>
+  <data name="Settings_AiModelStorage_RemoveButton.Content" xml:space="preserve"><value>Quitar modelos</value></data>
+  <data name="Settings_AiModelStorage_Size" xml:space="preserve"><value>Los modelos descargados en el dispositivo usan {0}.</value></data>
+  <data name="Settings_AiModelStorage_SizeUnavailable" xml:space="preserve"><value>No se pudo medir el almacenamiento de modelos descargados.</value></data>
+  <data name="Settings_AiModelStorage_PauseRequired" xml:space="preserve"><value>Pausa el análisis de capturas nuevas antes de quitar los modelos descargados.</value></data>
+  <data name="Settings_AiModelStorage_Removing" xml:space="preserve"><value>Quitando modelos de IA descargados…</value></data>
+  <data name="Settings_AiModelStorage_RemoveIncomplete" xml:space="preserve"><value>Se quitaron {0} modelo(s), pero no se pudieron quitar {1}. Reinicia la aplicación e inténtalo de nuevo.</value></data>
+  <data name="Settings_AiModelStorage_NothingToRemove" xml:space="preserve"><value>No se encontraron modelos de IA descargados.</value></data>
+  <data name="Settings_AiModelStorage_RemoveSucceeded" xml:space="preserve"><value>Se quitaron {0} modelo(s) descargados y se liberaron {1}. Se conservaron las capturas y los metadatos analizados.</value></data>
+  <data name="CaptureMemory_Confirmation_RemoveModelsTitle" xml:space="preserve"><value>¿Quitar los modelos de IA descargados?</value></data>
+  <data name="CaptureMemory_Confirmation_RemoveModelsContent" xml:space="preserve"><value>Esto quita los paquetes de modelos en el dispositivo descargados por Capture Tool. Se conservan las capturas y los metadatos analizados. El análisis de voz volverá a descargar los modelos cuando los necesite.</value></data>
+  <data name="CaptureMemory_Confirmation_RemoveModelsButton" xml:space="preserve"><value>Quitar modelos</value></data>
 </root>

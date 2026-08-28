@@ -883,17 +883,22 @@ SOFTWARE.
     <value>镜像</value>
   </data>
   <data name="Settings_TemporaryFolder_ClearButton.Text" xml:space="preserve">
-    <value>清除文件</value>
+    <value>清除工作文件</value>
   </data>
   <data name="Settings_TemporaryFolder_ScreenshotsFolderLabel.Text" xml:space="preserve">
-    <value>临时文件夹：</value>
+    <value>临时工作文件夹：</value>
   </data>
   <data name="Settings_TemporaryFolder_SubtitleLabel.Text" xml:space="preserve">
-    <value>用于应用的正常运行。您可以随时清除这些文件。</value>
+    <value>可以安全清除未使用的编辑和预览副本。正在编辑的文件会保留。</value>
   </data>
   <data name="Settings_TemporaryFolder_HeaderLabel.Text" xml:space="preserve">
-    <value>临时文件</value>
+    <value>临时工作文件</value>
   </data>
+  <data name="Settings_TemporaryFolder_Clearing" xml:space="preserve"><value>正在清除临时工作文件…</value></data>
+  <data name="Settings_TemporaryFolder_ClearFailed" xml:space="preserve"><value>无法清除临时工作文件。</value></data>
+  <data name="Settings_TemporaryFolder_ClearIncomplete" xml:space="preserve"><value>已从 {1} 个临时项目中清除 {0}，但有 {2} 个项目无法移除。已保留 {3} 个正在使用的项目。</value></data>
+  <data name="Settings_TemporaryFolder_NothingToClear" xml:space="preserve"><value>未找到未使用的临时工作文件。已保留 {0} 个正在使用的项目。</value></data>
+  <data name="Settings_TemporaryFolder_ClearSucceeded" xml:space="preserve"><value>已从 {1} 个临时项目中清除 {0}。已保留 {2} 个正在使用的项目。</value></data>
   <data name="Settings_OtherHeaderLabel.Text" xml:space="preserve">
     <value>其他</value>
   </data>
@@ -1483,14 +1488,16 @@ SOFTWARE.
     <value>文本提取功能使用设备上的 AI 模型检测当前图像中的文本及文本位置。</value>
   </data>
   <data name="Settings_AiConsentHeaderLabel.Text" xml:space="preserve">
-    <value>AI 功能权限</value>
+    <value>AI 编辑功能</value>
   </data>
+  <data name="Settings_AiConsentSectionDescription.Text" xml:space="preserve"><value>这些控件仅适用于您主动运行的编辑工具，不会控制捕获记忆分析。</value></data>
   <data name="Settings_AiConsentDescription.Text" xml:space="preserve">
-    <value>允许此 AI 功能在此设备上处理图像。</value>
+    <value>当您选择使用时，允许此设备上的 AI 编辑工具运行。</value>
   </data>
   <data name="Settings_AiConsent_TextExtractionDisplayName" xml:space="preserve">
     <value>文本提取</value>
   </data>
+  <data name="Settings_AiConsent_ImageSuperResolutionDisplayName" xml:space="preserve"><value>图像超分辨率</value></data>
   <data name="ImageEdit_ImageDescriptionButton.Label" xml:space="preserve">
     <value>图像描述</value>
   </data>
@@ -1847,17 +1854,23 @@ SOFTWARE.
   <data name="CaptureMemory_Settings_AnalysisDescription.Text" xml:space="preserve"><value>控制已授权的设备端 AI 模型是否分析捕获。Capture Tool 仅存储应用管理的元数据，绝不会修改原始捕获。</value></data>
   <data name="CaptureMemory_Settings_StopButton.Content" xml:space="preserve"><value>停止分析新捕获</value></data>
   <data name="CaptureMemory_Settings_ResumeButton.Content" xml:space="preserve"><value>恢复分析新捕获</value></data>
+  <data name="CaptureMemory_Settings_AnalyzeNewToggle.Header" xml:space="preserve"><value>分析新捕获</value></data>
+  <data name="CaptureMemory_Settings_AnalyzeNewToggle.OnContent" xml:space="preserve"><value>开启</value></data>
+  <data name="CaptureMemory_Settings_AnalyzeNewToggle.OffContent" xml:space="preserve"><value>已暂停</value></data>
   <data name="CaptureMemory_Settings_TurnOffButton.Content" xml:space="preserve"><value>关闭并擦除</value></data>
   <data name="CaptureMemory_Settings_DataTitle.Text" xml:space="preserve"><value>记忆数据</value></data>
   <data name="CaptureMemory_Settings_DataDescription.Text" xml:space="preserve"><value>将应用创建的元数据与原始捕获文件分开管理。</value></data>
-  <data name="CaptureMemory_Settings_ClearTitle.Text" xml:space="preserve"><value>清除记忆</value></data>
-  <data name="CaptureMemory_Settings_ClearDescription.Text" xml:space="preserve"><value>擦除元数据和搜索数据，同时继续分析新捕获。</value></data>
-  <data name="CaptureMemory_Settings_ClearButton.Content" xml:space="preserve"><value>清除记忆</value></data>
-  <data name="CaptureMemory_Settings_RebuildTitle.Text" xml:space="preserve"><value>重建搜索索引</value></data>
-  <data name="CaptureMemory_Settings_RebuildDescription.Text" xml:space="preserve"><value>从元数据重新创建可丢弃的搜索数据。不会使用 AI 模型或读取捕获源。</value></data>
+  <data name="CaptureMemory_Settings_ClearTitle.Text" xml:space="preserve"><value>删除已分析的捕获数据</value></data>
+  <data name="CaptureMemory_Settings_ClearDescription.Text" xml:space="preserve"><value>擦除 AI 元数据和搜索数据，同时继续分析未来的捕获。重新分析可从保留的捕获中再次生成这些数据。</value></data>
+  <data name="CaptureMemory_Settings_ClearButton.Content" xml:space="preserve"><value>删除分析数据</value></data>
+  <data name="CaptureMemory_Settings_TurnOffTitle.Text" xml:space="preserve"><value>关闭捕获记忆</value></data>
+  <data name="CaptureMemory_Settings_TurnOffDescription.Text" xml:space="preserve"><value>停止所有捕获记忆分析并擦除派生数据。原始捕获和已保存的导出会保留。</value></data>
+  <data name="CaptureMemory_Settings_Troubleshooting.Header" xml:space="preserve"><value>疑难解答</value></data>
+  <data name="CaptureMemory_Settings_RebuildTitle.Text" xml:space="preserve"><value>修复搜索</value></data>
+  <data name="CaptureMemory_Settings_RebuildDescription.Text" xml:space="preserve"><value>从现有元数据重新创建搜索结果，不运行 AI，也不读取捕获源。</value></data>
   <data name="CaptureMemory_Settings_RebuildButton.Content" xml:space="preserve"><value>重建索引</value></data>
-  <data name="CaptureMemory_Settings_ReanalyzeTitle.Text" xml:space="preserve"><value>重新分析捕获</value></data>
-  <data name="CaptureMemory_Settings_ReanalyzeDescription.Text" xml:space="preserve"><value>准备已授权的 AI 模型并再次读取已登记的捕获源。原始文件保持不变。</value></data>
+  <data name="CaptureMemory_Settings_ReanalyzeTitle.Text" xml:space="preserve"><value>改善搜索结果</value></data>
+  <data name="CaptureMemory_Settings_ReanalyzeDescription.Text" xml:space="preserve"><value>在识别或模型改进后重新分析符合条件的捕获。可能会准备模型，且不会修改原始文件。</value></data>
   <data name="CaptureMemory_Settings_ReanalyzeButton.Content" xml:space="preserve"><value>重新分析</value></data>
   <data name="CaptureMemory_Settings_CancelButton.Content" xml:space="preserve"><value>取消</value></data>
   <data name="CaptureMemory_Settings_Failure.Title" xml:space="preserve"><value>捕获记忆操作失败</value></data>
@@ -1893,9 +1906,9 @@ SOFTWARE.
   <data name="CaptureMemory_Confirmation_EraseTitle" xml:space="preserve"><value>关闭捕获记忆并擦除其数据？</value></data>
   <data name="CaptureMemory_Confirmation_EraseContent" xml:space="preserve"><value>这将停止所有捕获记忆分析，并擦除应用管理的元数据、任务和搜索数据。不会删除原始文件或单独保存的导出文件。</value></data>
   <data name="CaptureMemory_Confirmation_EraseButton" xml:space="preserve"><value>关闭并擦除</value></data>
-  <data name="CaptureMemory_Confirmation_ClearTitle" xml:space="preserve"><value>清除捕获记忆？</value></data>
-  <data name="CaptureMemory_Confirmation_ClearContent" xml:space="preserve"><value>这将擦除已登记捕获的应用管理元数据和搜索数据。仍会分析新捕获。不会删除原始文件。</value></data>
-  <data name="CaptureMemory_Confirmation_ClearButton" xml:space="preserve"><value>清除记忆</value></data>
+  <data name="CaptureMemory_Confirmation_ClearTitle" xml:space="preserve"><value>删除已分析的捕获数据？</value></data>
+  <data name="CaptureMemory_Confirmation_ClearContent" xml:space="preserve"><value>这将擦除已登记捕获的应用管理 AI 元数据和搜索数据。未来分析仍会开启，明确启动重新分析后可从保留的捕获中再次生成数据。不会删除原始文件。</value></data>
+  <data name="CaptureMemory_Confirmation_ClearButton" xml:space="preserve"><value>删除分析数据</value></data>
   <data name="CaptureMemory_Confirmation_RebuildTitle" xml:space="preserve"><value>重建搜索索引？</value></data>
   <data name="CaptureMemory_Confirmation_RebuildContent" xml:space="preserve"><value>这将从现有的应用管理元数据重新创建可丢弃的搜索数据。不会运行 AI 模型、读取捕获源或修改原始文件。</value></data>
   <data name="CaptureMemory_Confirmation_RebuildButton" xml:space="preserve"><value>重建索引</value></data>
@@ -1908,4 +1921,18 @@ SOFTWARE.
   <data name="CaptureMemory_Confirmation_DeleteTitle" xml:space="preserve"><value>删除此捕获？</value></data>
   <data name="CaptureMemory_Confirmation_DeleteContent" xml:space="preserve"><value>这将永久删除应用拥有的保留源，并移除其应用管理的记忆数据。单独保存或导出的副本会保留。</value></data>
   <data name="CaptureMemory_Confirmation_DeleteButton" xml:space="preserve"><value>删除捕获</value></data>
+  <data name="Settings_AiModelStorage_Header.Text" xml:space="preserve"><value>AI 模型存储</value></data>
+  <data name="Settings_AiModelStorage_Title.Text" xml:space="preserve"><value>已下载的设备端模型</value></data>
+  <data name="Settings_AiModelStorage_Description.Text" xml:space="preserve"><value>模型包与捕获内容和已分析的元数据分开管理。移除前请暂停分析新捕获；语音识别会在需要时重新下载模型。</value></data>
+  <data name="Settings_AiModelStorage_RemoveButton.Content" xml:space="preserve"><value>移除模型</value></data>
+  <data name="Settings_AiModelStorage_Size" xml:space="preserve"><value>已下载的设备端模型占用 {0}。</value></data>
+  <data name="Settings_AiModelStorage_SizeUnavailable" xml:space="preserve"><value>无法测量已下载模型的存储空间。</value></data>
+  <data name="Settings_AiModelStorage_PauseRequired" xml:space="preserve"><value>移除已下载的模型前，请暂停分析新捕获。</value></data>
+  <data name="Settings_AiModelStorage_Removing" xml:space="preserve"><value>正在移除已下载的 AI 模型…</value></data>
+  <data name="Settings_AiModelStorage_RemoveIncomplete" xml:space="preserve"><value>已移除 {0} 个模型，但有 {1} 个模型无法移除。请重启应用后重试。</value></data>
+  <data name="Settings_AiModelStorage_NothingToRemove" xml:space="preserve"><value>未找到已下载的 AI 模型。</value></data>
+  <data name="Settings_AiModelStorage_RemoveSucceeded" xml:space="preserve"><value>已移除 {0} 个下载的模型并释放 {1}。捕获文件和已分析的元数据均已保留。</value></data>
+  <data name="CaptureMemory_Confirmation_RemoveModelsTitle" xml:space="preserve"><value>移除已下载的 AI 模型?</value></data>
+  <data name="CaptureMemory_Confirmation_RemoveModelsContent" xml:space="preserve"><value>这将移除 Capture Tool 下载的设备端模型包。捕获文件和已分析的元数据会保留。语音分析会在需要时重新下载模型。</value></data>
+  <data name="CaptureMemory_Confirmation_RemoveModelsButton" xml:space="preserve"><value>移除模型</value></data>
 </root>

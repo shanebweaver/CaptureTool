@@ -168,8 +168,13 @@ public sealed class CaptureMemoryHomeUiTests
                 "Settings_CaptureMemoryClearButton");
             FocusAndClick(clear);
             WaitForElement(app.ProcessId, automation, "CaptureMemoryConfirmationDialog");
-            WaitForElementByName(app.ProcessId, automation, "Clear Memory").Click();
+            WaitForElementByName(app.ProcessId, automation, "Delete analyzed data").Click();
             WaitForMarker(temporaryDirectory, "capture-memory-cleared.marker");
+
+            FocusAndClick(WaitForElement(
+                app.ProcessId,
+                automation,
+                "Settings_CaptureMemoryTroubleshootingExpander"));
 
             AutomationElement reanalyze = WaitForElement(
                 app.ProcessId,
@@ -190,20 +195,16 @@ public sealed class CaptureMemoryHomeUiTests
             WaitForElementByName(app.ProcessId, automation, "Rebuild index").Click();
             WaitForMarker(temporaryDirectory, "capture-memory-rebuilt.marker");
 
-            AutomationElement stop = WaitForElement(
+            AutomationElement analysisToggle = WaitForElement(
                 app.ProcessId,
                 automation,
-                "Settings_CaptureMemoryStopButton");
-            FocusAndClick(stop);
+                "Settings_CaptureMemoryAnalyzeNewToggle");
+            FocusAndClick(analysisToggle);
             WaitForElement(app.ProcessId, automation, "CaptureMemoryConfirmationDialog");
             WaitForElementByName(app.ProcessId, automation, "Stop analyzing").Click();
             WaitForMarker(temporaryDirectory, "capture-memory-stopped.marker");
 
-            AutomationElement resume = WaitForElement(
-                app.ProcessId,
-                automation,
-                "Settings_CaptureMemoryResumeButton");
-            FocusAndClick(resume);
+            FocusAndClick(analysisToggle);
             WaitForMarker(temporaryDirectory, "capture-memory-resumed.marker");
 
             AutomationElement turnOff = WaitForElement(
