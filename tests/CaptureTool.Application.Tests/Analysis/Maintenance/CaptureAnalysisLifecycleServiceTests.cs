@@ -313,6 +313,60 @@ public sealed class CaptureAnalysisLifecycleServiceTests
     }
 
     [TestMethod]
+    public async Task ReanalyzeCapturesAsync_WhenRequiredPreparationFails_ShouldAttemptRemainingCapabilities()
+    {
+        CaptureAnalysisEnrollment enrolled = CreateEnrollment(2);
+        var store = new TestControlStore(CreateControl(enrolled));
+        Mock<ICaptureAssetCatalog> assets = CreateAssetCatalog(enrolled.CaptureId, 2);
+        assets.Setup(catalog => catalog.Get(enrolled.CaptureId)).Returns(
+            CreateAsset(enrolled.CaptureId, CaptureSourceOwnership.AppOwned));
+        var attempted = new List<AnalysisCapabilityId>();
+        var preparation = new Mock<IUserInitiatedAnalysisCapabilityPreparationService>();
+        preparation.Setup(service => service.PrepareAsync(
+                It.IsAny<AnalysisCapabilityPreparationRequest>(),
+                It.IsAny<IProgress<AnalysisCapabilityPreparationProgress>>(),
+                It.IsAny<CancellationToken>()))
+            .Returns<AnalysisCapabilityPreparationRequest,
+                IProgress<AnalysisCapabilityPreparationProgress>?,
+                CancellationToken>((request, _, _) =>
+                {
+                    attempted.Add(request.Capability.Id);
+                    return Task.FromResult(
+                        request.Capability.Id == AnalysisCapabilities.MediaPropertiesV1.Id
+                            ? AnalysisCapabilityPreparationState.Failed(new AnalysisFailure(
+                                AnalysisFailureCode.ProviderUnavailable,
+                                AnalysisFailureDisposition.Transient))
+                            : AnalysisCapabilityPreparationState.Ready(
+                                AnalysisTestData.CreateAnalyzer(),
+                                ProcessingBoundary.OnDevice));
+                });
+        var scheduler = new Mock<ICaptureAnalysisScheduler>(MockBehavior.Strict);
+        using CaptureAnalysisLifecycleService service = new(
+            store,
+            assets.Object,
+            new TestCleanupCoordinator(),
+            Mock.Of<ICaptureAnalysisProjectionMaintenance>(),
+            preparation.Object,
+            scheduler.Object);
+
+        CaptureAnalysisMaintenanceResult result = await service.ReanalyzeCapturesAsync(
+            new CaptureAnalysisReanalysisRequest(
+                CaptureAnalysisReanalysisScope.AllEnrolledCaptures),
+            new RecordingMaintenanceProgress());
+
+        Assert.AreEqual(CaptureAnalysisMaintenanceStatus.Incomplete, result.Status);
+        CollectionAssert.AreEqual(
+            new[]
+            {
+                AnalysisCapabilities.MediaPropertiesV1.Id,
+                AnalysisCapabilities.OcrDocumentV1.Id,
+                AnalysisCapabilities.ImageDescriptionV1.Id,
+            },
+            attempted.ToArray());
+        scheduler.VerifyNoOtherCalls();
+    }
+
+    [TestMethod]
     public async Task ForgetHistory_ShouldTombstoneBeforeRemovingDerivedState()
     {
         List<string> ordering = [];

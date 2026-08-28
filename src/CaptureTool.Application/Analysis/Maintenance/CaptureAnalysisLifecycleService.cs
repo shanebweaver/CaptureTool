@@ -413,6 +413,7 @@ internal sealed class CaptureAnalysisLifecycleService :
                 .Distinct()
                 .ToArray();
             ProcessingBoundary? boundary = null;
+            bool preparationIncomplete = false;
             progress?.Report(new CaptureAnalysisMaintenanceProgress(
                 CaptureAnalysisMaintenancePhase.PreparingModels,
                 0));
@@ -445,10 +446,9 @@ internal sealed class CaptureAnalysisLifecycleService :
                      prepared.ProcessingBoundary is not ProcessingBoundary preparedBoundary ||
                      (boundary.HasValue && boundary.Value != preparedBoundary)))
                 {
-                    return new(CaptureAnalysisMaintenanceStatus.Incomplete);
+                    preparationIncomplete = true;
                 }
-
-                if (prepared.ProcessingBoundary is ProcessingBoundary currentBoundary)
+                else if (prepared.ProcessingBoundary is ProcessingBoundary currentBoundary)
                 {
                     boundary ??= currentBoundary;
                 }
@@ -458,7 +458,7 @@ internal sealed class CaptureAnalysisLifecycleService :
                     ((double)(index + 1) / preparations.Length) * 0.5));
             }
 
-            if (!boundary.HasValue)
+            if (preparationIncomplete || !boundary.HasValue)
             {
                 return new(CaptureAnalysisMaintenanceStatus.Incomplete);
             }
