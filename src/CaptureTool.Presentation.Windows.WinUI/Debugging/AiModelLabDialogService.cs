@@ -52,18 +52,22 @@ internal sealed class AiModelLabDialogService
     private readonly ICaptureAnalyzerCatalog _catalog;
     private readonly ICaptureAnalyzerSelectionService _selections;
     private readonly ICaptureAnalysisMaintenanceService _maintenance;
+    private readonly CaptureAnalysisInspectorDialogService _inspector;
 
     public AiModelLabDialogService(
         ICaptureAnalyzerCatalog catalog,
         ICaptureAnalyzerSelectionService selections,
-        ICaptureAnalysisMaintenanceService maintenance)
+        ICaptureAnalysisMaintenanceService maintenance,
+        CaptureAnalysisInspectorDialogService inspector)
     {
         ArgumentNullException.ThrowIfNull(catalog);
         ArgumentNullException.ThrowIfNull(selections);
         ArgumentNullException.ThrowIfNull(maintenance);
+        ArgumentNullException.ThrowIfNull(inspector);
         _catalog = catalog;
         _selections = selections;
         _maintenance = maintenance;
+        _inspector = inspector;
     }
 
     public async Task ShowAsync(XamlRoot xamlRoot)
@@ -77,6 +81,18 @@ internal sealed class AiModelLabDialogService
         try
         {
             List<CapabilityRow> rows = await CreateRowsAsync().ConfigureAwait(true);
+            bool inspectRequested = false;
+            ContentDialog? dialog = null;
+            var inspectButton = new Button
+            {
+                Content = "Open Capture Analysis Inspector…",
+                HorizontalAlignment = HorizontalAlignment.Left,
+            };
+            inspectButton.Click += (_, _) =>
+            {
+                inspectRequested = true;
+                dialog?.Hide();
+            };
             var reanalyze = new CheckBox
             {
                 Content = "Reanalyze all enrolled captures after applying",
@@ -95,13 +111,20 @@ internal sealed class AiModelLabDialogService
                 TextWrapping = TextWrapping.WrapWholeWords,
             });
             content.Children.Add(CreateBuildInfoBar());
+            content.Children.Add(new TextBlock
+            {
+                Text = "Inspect the protected metadata generated for each capture, including " +
+                    "extracted text, timestamps, outcomes, and exact model provenance.",
+                TextWrapping = TextWrapping.WrapWholeWords,
+            });
+            content.Children.Add(inspectButton);
             foreach (CapabilityRow row in rows)
             {
                 content.Children.Add(CreateCapabilityPanel(row));
             }
             content.Children.Add(reanalyze);
 
-            var dialog = new ContentDialog
+            dialog = new ContentDialog
             {
                 XamlRoot = xamlRoot,
                 Title = "AI Model Lab",
@@ -119,6 +142,12 @@ internal sealed class AiModelLabDialogService
             };
 
             ContentDialogResult result = await dialog.ShowAsync();
+            if (inspectRequested)
+            {
+                await _inspector.ShowAsync(xamlRoot);
+                return;
+            }
+
             if (result == ContentDialogResult.None)
             {
                 return;

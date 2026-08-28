@@ -12,6 +12,7 @@ using CaptureTool.Application.Abstractions.Analysis.Persistence;
 using CaptureTool.Application.Abstractions.Analysis.Preparation;
 using CaptureTool.Application.Abstractions.Analysis.Processing;
 using CaptureTool.Application.Abstractions.Analysis.Privacy;
+using CaptureTool.Application.Abstractions.Analysis.Queries;
 using CaptureTool.Application.Abstractions.Capture;
 using CaptureTool.Application.Abstractions.Capture.Assets;
 using CaptureTool.Application.Abstractions.Capture.Audio.CancelAudioCapture;
@@ -39,6 +40,7 @@ using CaptureTool.Application.Analysis.Memory;
 using CaptureTool.Application.Analysis.Orchestration;
 using CaptureTool.Application.Analysis.Preparation;
 using CaptureTool.Application.Analysis.Processing;
+using CaptureTool.Application.Analysis.Queries;
 using CaptureTool.Application.Capture.Audio;
 using CaptureTool.Application.Capture.Audio.CancelAudioCapture;
 using CaptureTool.Application.Capture.Assets;
@@ -91,6 +93,9 @@ public sealed class ApplicationServiceCollectionExtensionsTests
         AssertHasRegistration<ICaptureAnalyzerSelectionService,
             AutomaticCaptureAnalyzerSelectionService>(services, ServiceLifetime.Singleton);
         AssertHasRegistration<ICaptureAnalyzerResolver, CaptureAnalyzerResolver>(services, ServiceLifetime.Singleton);
+        AssertHasRegistration<ICaptureAnalysisQueryService, CaptureAnalysisQueryService>(
+            services,
+            ServiceLifetime.Singleton);
         AssertHasRegistration<CaptureAnalysisCapabilityPreparationService, CaptureAnalysisCapabilityPreparationService>(
             services,
             ServiceLifetime.Singleton);

@@ -42,6 +42,7 @@ public static class WindowsPresentationServiceCollectionExtensions
         services.AddSingleton<TelemetryConsentDialogService>();
 #if DEBUG
         services.AddSingleton<AiModelLabDialogService>();
+        services.AddSingleton<CaptureAnalysisInspectorDialogService>();
 #endif
         return services;
     }
