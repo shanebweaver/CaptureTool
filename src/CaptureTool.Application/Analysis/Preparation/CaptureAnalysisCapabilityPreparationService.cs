@@ -24,6 +24,8 @@ public sealed class CaptureAnalysisCapabilityPreparationService :
     private readonly ConcurrentDictionary<AnalyzerRevision, PreparationActivityState>
         _preparing = new();
 
+    public event EventHandler? ActivityChanged;
+
     public CaptureAnalysisCapabilityPreparationService(
         ICaptureAnalyzerResolver resolver,
         ICaptureAnalyzerCatalog catalog,
@@ -118,6 +120,7 @@ public sealed class CaptureAnalysisCapabilityPreparationService :
             }
 
             ownsPreparation = true;
+            ActivityChanged?.Invoke(this, EventArgs.Empty);
             var activityProgress = new DelegateProgress<AnalysisCapabilityPreparationProgress>(
                 value =>
                 {
@@ -168,6 +171,7 @@ public sealed class CaptureAnalysisCapabilityPreparationService :
             if (ownsPreparation && candidate != null)
             {
                 _preparing.TryRemove(candidate.Descriptor.Revision, out _);
+                ActivityChanged?.Invoke(this, EventArgs.Empty);
             }
         }
     }

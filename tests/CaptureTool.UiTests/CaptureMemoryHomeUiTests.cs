@@ -183,6 +183,10 @@ public sealed class CaptureMemoryHomeUiTests
             FocusAndClick(reanalyze);
             WaitForElement(app.ProcessId, automation, "CaptureMemoryConfirmationDialog");
             WaitForElementByName(app.ProcessId, automation, "Reanalyze captures").Click();
+            WaitForElement(
+                app.ProcessId,
+                automation,
+                "MainWindow_BackgroundActivityButton");
             WaitForMarker(temporaryDirectory, "capture-memory-reanalyzed.marker");
             WaitForElement(app.ProcessId, automation, "Settings_CaptureMemoryOperationStatus");
 
@@ -226,6 +230,17 @@ public sealed class CaptureMemoryHomeUiTests
                     : null,
                 InteractionTimeout,
                 "Capture Memory to report that analysis is off");
+
+            FocusAndClick(WaitForElement(
+                app.ProcessId,
+                automation,
+                "Settings_CaptureMemoryEnableButton"));
+            WaitFor(
+                () => policyStatus.Name.Contains("on", StringComparison.OrdinalIgnoreCase)
+                    ? new object()
+                    : null,
+                InteractionTimeout,
+                "Capture Memory to turn back on from Settings");
         }
         finally
         {

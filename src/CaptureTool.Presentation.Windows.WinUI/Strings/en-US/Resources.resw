@@ -2247,4 +2247,8 @@ SOFTWARE.
   <data name="BackgroundActivity_SpeechModelTitle" xml:space="preserve"><value>Preparing speech recognition</value></data>
   <data name="BackgroundActivity_VisualModelTitle" xml:space="preserve"><value>Preparing visual analysis</value></data>
   <data name="BackgroundActivity_GenericModelTitle" xml:space="preserve"><value>Preparing AI analysis</value></data>
+  <data name="CaptureMemory_Settings_EnableButton.Content" xml:space="preserve"><value>Turn on Capture Memory</value></data>
+  <data name="CaptureMemory_Settings_EnablePreparing" xml:space="preserve"><value>Turning on Capture Memory and preparing on-device AI models…</value></data>
+  <data name="CaptureMemory_Settings_EnableSucceeded" xml:space="preserve"><value>Capture Memory is on for new captures. On-device AI models are ready.</value></data>
+  <data name="CaptureMemory_Settings_EnableLimited" xml:space="preserve"><value>Capture Memory is on. Some AI models are not ready yet, so supported captures will be analyzed with available on-device capabilities.</value></data>
 </root>

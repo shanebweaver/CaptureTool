@@ -1,8 +1,10 @@
 using CaptureTool.Application.Abstractions.Analysis.Consent;
 using CaptureTool.Application.Abstractions.Analysis.Maintenance;
 using CaptureTool.Application.Abstractions.Analysis.Memory;
+using CaptureTool.Application.Abstractions.Analysis.Orchestration;
 using CaptureTool.Application.Abstractions.Analysis.Persistence;
 using CaptureTool.Application.Abstractions.Analysis.Policy;
+using CaptureTool.Application.Abstractions.Analysis.Preparation;
 using CaptureTool.Application.Abstractions.Localization;
 using CaptureTool.Domain.Analysis;
 using CaptureTool.Presentation.ViewModels;
@@ -18,6 +20,7 @@ public sealed class CaptureMemorySettingsViewModel : ViewModelBase
     private readonly ICaptureAnalysisMaintenanceService? _maintenanceService;
     private readonly ICaptureAnalysisSettingsConfirmationDialogService? _confirmationService;
     private readonly ILocalizationService? _localizationService;
+    private readonly IUserInitiatedAnalysisCapabilityPreparationService? _preparationService;
     private CancellationTokenSource? _operationCancellation;
 
     public CaptureMemorySettingsViewModel(
@@ -26,7 +29,8 @@ public sealed class CaptureMemorySettingsViewModel : ViewModelBase
         ICaptureAnalysisPolicyCommandService? policyCommandService = null,
         ICaptureAnalysisMaintenanceService? maintenanceService = null,
         ICaptureAnalysisSettingsConfirmationDialogService? confirmationService = null,
-        ILocalizationService? localizationService = null)
+        ILocalizationService? localizationService = null,
+        IUserInitiatedAnalysisCapabilityPreparationService? preparationService = null)
     {
         _featureAvailability = featureAvailability;
         _policyService = policyService;
@@ -34,6 +38,12 @@ public sealed class CaptureMemorySettingsViewModel : ViewModelBase
         _maintenanceService = maintenanceService;
         _confirmationService = confirmationService;
         _localizationService = localizationService;
+        _preparationService = preparationService;
+
+        EnableCaptureMemoryCommand = new AsyncRelayCommand(
+            EnableCaptureMemoryAsync,
+            () => CanEnableCaptureMemory,
+            AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
 
         StopAnalyzingNewCapturesCommand = new AsyncRelayCommand(
             StopAnalyzingNewCapturesAsync,
@@ -75,6 +85,8 @@ public sealed class CaptureMemorySettingsViewModel : ViewModelBase
 
     public IAsyncRelayCommand StopAnalyzingNewCapturesCommand { get; }
 
+    public IAsyncRelayCommand EnableCaptureMemoryCommand { get; }
+
     public IAsyncRelayCommand ResumeAnalyzingNewCapturesCommand { get; }
 
     public IAsyncRelayCommand TurnOffAndEraseCommand { get; }
@@ -99,6 +111,7 @@ public sealed class CaptureMemorySettingsViewModel : ViewModelBase
             if (Set(ref field, value))
             {
                 RaisePropertyChanged(nameof(ShowAuthorizedControls));
+                RaisePropertyChanged(nameof(ShowEnableAction));
                 RaisePropertyChanged(nameof(CanChangeAnalysisState));
                 RaiseCommandStates();
             }
@@ -106,6 +119,21 @@ public sealed class CaptureMemorySettingsViewModel : ViewModelBase
     }
 
     public bool ShowAuthorizedControls => IsAuthorized;
+
+    public bool ShowEnableAction => IsVisible && IsPolicyAvailable && !IsAuthorized;
+
+    public bool IsPolicyAvailable
+    {
+        get;
+        private set
+        {
+            if (Set(ref field, value))
+            {
+                RaisePropertyChanged(nameof(ShowEnableAction));
+                RaiseCommandStates();
+            }
+        }
+    }
 
     public bool CanChangeAnalysisState => CanMutatePolicy;
 
@@ -160,6 +188,7 @@ public sealed class CaptureMemorySettingsViewModel : ViewModelBase
             if (Set(ref field, value))
             {
                 RaisePropertyChanged(nameof(ShowProgress));
+                RaisePropertyChanged(nameof(ShowEnableAction));
                 RaisePropertyChanged(nameof(CanChangeAnalysisState));
                 RaiseCommandStates();
             }
@@ -216,6 +245,10 @@ public sealed class CaptureMemorySettingsViewModel : ViewModelBase
     private bool CanMutatePolicy =>
         IsVisible && IsAuthorized && !IsBusy && _policyCommandService != null;
 
+    private bool CanEnableCaptureMemory =>
+        ShowEnableAction && !IsBusy && _policyService != null &&
+        _policyCommandService != null && _preparationService != null;
+
     private bool CanRunAuthorizedMaintenance =>
         IsVisible && IsAuthorized && !IsBusy && _maintenanceService != null;
 
@@ -239,6 +272,104 @@ public sealed class CaptureMemorySettingsViewModel : ViewModelBase
         {
             ApplyUnavailablePolicy();
         }
+    }
+
+    private async Task EnableCaptureMemoryAsync()
+    {
+        CancellationToken token = BeginOperation(
+            "CaptureMemory_Settings_EnablePreparing",
+            "Turning on Capture Memory and preparing on-device AI models…");
+        try
+        {
+            CaptureAnalysisPolicySnapshot current = await _policyService!
+                .GetCurrentAsync(token);
+            var consent = new CaptureAnalysisConsentResponse(
+                CaptureAnalysisPolicyDefaults.CreateConsentDisclosure(),
+                CaptureAnalysisConsentDecision.GrantedForFutureCaptures);
+            CaptureAnalysisPolicyChangeResult result = await _policyCommandService!
+                .ApplyConsentDecisionAsync(
+                    consent,
+                    current.ControlDocumentRevision,
+                    token);
+            ApplyPolicy(result.Policy);
+            if (result.Status != CaptureAnalysisPolicyChangeStatus.Succeeded ||
+                result.Policy.Policy?.ProcessingPolicy is not { } processingPolicy)
+            {
+                ApplyPolicyChangeResult(
+                    result,
+                    "CaptureMemory_Settings_EnableSucceeded",
+                    "Capture Memory is on for new captures.");
+                return;
+            }
+
+            bool hasLimitedModelCoverage = await PrepareAuthorizedModelsAsync(
+                processingPolicy,
+                token);
+            OperationProgress = 1;
+            OperationStatusText = hasLimitedModelCoverage
+                ? GetString(
+                    "CaptureMemory_Settings_EnableLimited",
+                    "Capture Memory is on. Some AI models are not ready yet, so supported captures will be analyzed with available on-device capabilities.")
+                : GetString(
+                    "CaptureMemory_Settings_EnableSucceeded",
+                    "Capture Memory is on for new captures. On-device AI models are ready.");
+        }
+        catch (OperationCanceledException)
+        {
+            ApplyCancelled();
+        }
+        catch
+        {
+            ApplyUnavailableOperation();
+        }
+        finally
+        {
+            EndOperation();
+            await RefreshAfterOperationAsync();
+        }
+    }
+
+    private async Task<bool> PrepareAuthorizedModelsAsync(
+        AnalysisProcessingPolicy processingPolicy,
+        CancellationToken cancellationToken)
+    {
+        CaptureAnalysisRecipe[] recipes =
+        [
+            CaptureAnalysisRecipeDefaults.CreateCaptureMemoryImageRecipe(),
+            CaptureAnalysisRecipeDefaults.CreateCaptureMemoryAudioRecipe(),
+            CaptureAnalysisRecipeDefaults.CreateCaptureMemoryVideoRecipe(),
+        ];
+        var preparations = recipes
+            .SelectMany(recipe => recipe.Capabilities.Select(capability => new
+            {
+                recipe.MediaKind,
+                Capability = capability.Capability,
+            }))
+            .ToArray();
+        bool hasLimitedCoverage = false;
+        IsPreparingModels = true;
+        for (int index = 0; index < preparations.Length; index++)
+        {
+            double capabilityStart = (double)index / preparations.Length;
+            double capabilityShare = 1d / preparations.Length;
+            var progress = new DelegateProgress<AnalysisCapabilityPreparationProgress>(value =>
+                OperationProgress = capabilityStart +
+                    (value.FractionComplete * capabilityShare));
+            AnalysisCapabilityPreparationState prepared = await _preparationService!
+                .PrepareAsync(
+                    new AnalysisCapabilityPreparationRequest(
+                        preparations[index].Capability,
+                        preparations[index].MediaKind,
+                        CaptureAnalysisPolicyDefaults.CaptureMemorySearchPurpose,
+                        processingPolicy),
+                    progress,
+                    cancellationToken);
+            OperationProgress = capabilityStart + capabilityShare;
+            hasLimitedCoverage |=
+                prepared.Status != AnalysisCapabilityPreparationStatus.Ready;
+        }
+
+        return hasLimitedCoverage;
     }
 
     private async Task StopAnalyzingNewCapturesAsync()
@@ -477,6 +608,7 @@ public sealed class CaptureMemorySettingsViewModel : ViewModelBase
 
     private void ApplyPolicy(CaptureAnalysisPolicySnapshot snapshot)
     {
+        IsPolicyAvailable = snapshot.Status == CaptureAnalysisPolicySnapshotStatus.Available;
         IsAuthorized = snapshot.IsProcessingAuthorized;
         IsAnalyzingNewCaptures = snapshot.IsProcessingAuthorized &&
             snapshot.Policy?.IsFutureCaptureAdmissionEnabled == true;
@@ -513,6 +645,7 @@ public sealed class CaptureMemorySettingsViewModel : ViewModelBase
 
     private void ApplyUnavailablePolicy()
     {
+        IsPolicyAvailable = false;
         IsAuthorized = false;
         IsAnalyzingNewCaptures = false;
         ActiveCaptureCount = 0;
@@ -631,6 +764,7 @@ public sealed class CaptureMemorySettingsViewModel : ViewModelBase
 
     private void RaiseCommandStates()
     {
+        EnableCaptureMemoryCommand.NotifyCanExecuteChanged();
         StopAnalyzingNewCapturesCommand.NotifyCanExecuteChanged();
         ResumeAnalyzingNewCapturesCommand.NotifyCanExecuteChanged();
         TurnOffAndEraseCommand.NotifyCanExecuteChanged();

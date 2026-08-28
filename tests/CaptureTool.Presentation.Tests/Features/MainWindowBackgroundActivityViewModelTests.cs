@@ -37,6 +37,12 @@ public sealed class MainWindowBackgroundActivityViewModelTests
             .ReturnsAsync(new CaptureAnalysisActivitySnapshot(failedCaptureCount: 2))
             .ReturnsAsync(new CaptureAnalysisActivitySnapshot());
         using MainWindowViewModel viewModel = CreateViewModel(activityQuery.Object);
+        int refreshRequests = 0;
+        viewModel.BackgroundActivityRefreshRequested += (_, _) => refreshRequests++;
+
+        activityQuery.Raise(service => service.ActivityChanged += null, EventArgs.Empty);
+
+        Assert.AreEqual(1, refreshRequests);
 
         await viewModel.RefreshBackgroundActivityAsync();
 

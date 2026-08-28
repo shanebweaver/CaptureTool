@@ -10,10 +10,16 @@ namespace CaptureTool.Application.Analysis.Activity;
 internal sealed class CaptureAnalysisActivityQueryService :
     ICaptureAnalysisActivityQueryService
 {
+    private static readonly TimeSpan CompletedPreparationVisibility =
+        TimeSpan.FromSeconds(2);
+
     private readonly ICaptureAnalysisJobStore _jobStore;
     private readonly ICaptureAnalysisPolicyService _policyService;
     private readonly IAnalysisCapabilityPreparationActivityQueryService
         _preparationActivityQuery;
+    private readonly object _preparationGate = new();
+    private IReadOnlyList<CaptureAnalysisModelPreparationActivity> _recentPreparations = [];
+    private DateTimeOffset _recentPreparationsExpireAtUtc;
 
     public CaptureAnalysisActivityQueryService(
         ICaptureAnalysisJobStore jobStore,
@@ -26,33 +32,47 @@ internal sealed class CaptureAnalysisActivityQueryService :
         _jobStore = jobStore;
         _policyService = policyService;
         _preparationActivityQuery = preparationActivityQuery;
+        _preparationActivityQuery.ActivityChanged += OnPreparationActivityChanged;
     }
+
+    public event EventHandler? ActivityChanged;
 
     public async ValueTask<CaptureAnalysisActivitySnapshot> GetCurrentAsync(
         CancellationToken cancellationToken = default)
     {
         IReadOnlyList<CaptureAnalysisModelPreparationActivity> preparations =
-            _preparationActivityQuery.GetCurrentPreparations();
+            GetVisiblePreparations();
         var running = new HashSet<CaptureId>();
         var queued = new HashSet<CaptureId>();
         var waiting = new HashSet<CaptureId>();
         var retry = new HashSet<CaptureId>();
         var failed = new HashSet<CaptureId>();
 
-        await foreach (CaptureAnalysisJobIntent job in _jobStore
-            .ReadAllAsync(cancellationToken)
-            .ConfigureAwait(false))
+        try
         {
-            HashSet<CaptureId>? target = job.State switch
+            await foreach (CaptureAnalysisJobIntent job in _jobStore
+                .ReadAllAsync(cancellationToken)
+                .ConfigureAwait(false))
             {
-                CaptureAnalysisJobState.Running => running,
-                CaptureAnalysisJobState.Pending => queued,
-                CaptureAnalysisJobState.WaitingForCapability => waiting,
-                CaptureAnalysisJobState.RetryScheduled => retry,
-                CaptureAnalysisJobState.TerminalFailure => failed,
-                _ => null,
-            };
-            target?.Add(job.Key.CaptureId);
+                HashSet<CaptureId>? target = job.State switch
+                {
+                    CaptureAnalysisJobState.Running => running,
+                    CaptureAnalysisJobState.Pending => queued,
+                    CaptureAnalysisJobState.WaitingForCapability => waiting,
+                    CaptureAnalysisJobState.RetryScheduled => retry,
+                    CaptureAnalysisJobState.TerminalFailure => failed,
+                    _ => null,
+                };
+                target?.Add(job.Key.CaptureId);
+            }
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch
+        {
+            // Live model progress remains useful if durable job diagnostics are unavailable.
         }
 
         queued.ExceptWith(running);
@@ -73,6 +93,37 @@ internal sealed class CaptureAnalysisActivityQueryService :
             failed.Count,
             isBackfillInProgress,
             backfillFraction);
+    }
+
+    private IReadOnlyList<CaptureAnalysisModelPreparationActivity> GetVisiblePreparations()
+    {
+        IReadOnlyList<CaptureAnalysisModelPreparationActivity> current =
+            _preparationActivityQuery.GetCurrentPreparations();
+        lock (_preparationGate)
+        {
+            if (current.Count > 0)
+            {
+                _recentPreparations = current;
+                _recentPreparationsExpireAtUtc =
+                    DateTimeOffset.UtcNow + CompletedPreparationVisibility;
+                return current;
+            }
+
+            if (_recentPreparations.Count > 0 &&
+                DateTimeOffset.UtcNow < _recentPreparationsExpireAtUtc)
+            {
+                return _recentPreparations;
+            }
+
+            _recentPreparations = [];
+            return [];
+        }
+    }
+
+    private void OnPreparationActivityChanged(object? sender, EventArgs e)
+    {
+        _ = GetVisiblePreparations();
+        ActivityChanged?.Invoke(this, EventArgs.Empty);
     }
 
     private async ValueTask<(bool IsInProgress, double Fraction)>

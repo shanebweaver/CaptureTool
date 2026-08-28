@@ -126,6 +126,8 @@ public sealed class CaptureAnalysisCapabilityPreparationServiceTests
             return CaptureAnalyzerPreparationResult.Succeeded;
         };
         TestContext context = CreateContext(analyzer);
+        int activityChanges = 0;
+        context.Service.ActivityChanged += (_, _) => activityChanges++;
 
         Task<AnalysisCapabilityPreparationState> preparation =
             context.Service.PrepareAsync(CreateRequest());
@@ -145,6 +147,7 @@ public sealed class CaptureAnalysisCapabilityPreparationServiceTests
 
         Assert.AreEqual(AnalysisCapabilityPreparationStatus.Ready, completed.Status);
         Assert.IsEmpty(context.Service.GetCurrentPreparations());
+        Assert.AreEqual(2, activityChanges);
     }
 
     [TestMethod]

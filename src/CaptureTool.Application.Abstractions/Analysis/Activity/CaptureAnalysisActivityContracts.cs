@@ -118,6 +118,8 @@ public sealed record CaptureAnalysisActivitySnapshot
 
 public interface ICaptureAnalysisActivityQueryService
 {
+    event EventHandler? ActivityChanged;
+
     ValueTask<CaptureAnalysisActivitySnapshot> GetCurrentAsync(
         CancellationToken cancellationToken = default);
 }

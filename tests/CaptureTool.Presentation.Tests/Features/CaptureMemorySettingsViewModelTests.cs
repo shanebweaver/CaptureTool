@@ -4,6 +4,7 @@ using CaptureTool.Application.Abstractions.Analysis.Memory;
 using CaptureTool.Application.Abstractions.Analysis.Orchestration;
 using CaptureTool.Application.Abstractions.Analysis.Persistence;
 using CaptureTool.Application.Abstractions.Analysis.Policy;
+using CaptureTool.Application.Abstractions.Analysis.Preparation;
 using CaptureTool.Domain;
 using CaptureTool.Domain.Analysis;
 using CaptureTool.Presentation.Features.Settings;
@@ -273,18 +274,81 @@ public sealed class CaptureMemorySettingsViewModelTests
         Assert.AreEqual(0, viewModel.ActiveCaptureCount);
     }
 
+    [TestMethod]
+    public async Task EnableCaptureMemory_WhenOff_ShouldGrantFutureCapturesAndPrepareModels()
+    {
+        CaptureAnalysisPolicySnapshot current = CreateOffSnapshot(documentRevision: 2);
+        CaptureAnalysisPolicySnapshot enabled = CreateSnapshot(
+            futureAdmission: true,
+            documentRevision: 3);
+        var policy = new Mock<ICaptureAnalysisPolicyService>();
+        policy.Setup(value => value.GetCurrentAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(() => current);
+        var commands = new Mock<ICaptureAnalysisPolicyCommandService>();
+        commands.Setup(value => value.ApplyConsentDecisionAsync(
+                It.Is<CaptureAnalysisConsentResponse>(response =>
+                    response.Decision ==
+                        CaptureAnalysisConsentDecision.GrantedForFutureCaptures),
+                2,
+                It.IsAny<CancellationToken>()))
+            .Returns(() =>
+            {
+                current = enabled;
+                return ValueTask.FromResult(new CaptureAnalysisPolicyChangeResult(
+                    CaptureAnalysisPolicyChangeStatus.Succeeded,
+                    enabled));
+            });
+        var preparation = new Mock<IUserInitiatedAnalysisCapabilityPreparationService>();
+        preparation.Setup(value => value.PrepareAsync(
+                It.IsAny<AnalysisCapabilityPreparationRequest>(),
+                It.IsAny<IProgress<AnalysisCapabilityPreparationProgress>>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync((AnalysisCapabilityPreparationRequest request,
+                IProgress<AnalysisCapabilityPreparationProgress> progress,
+                CancellationToken _) =>
+            {
+                progress.Report(new AnalysisCapabilityPreparationProgress(1));
+                return AnalysisCapabilityPreparationState.Ready(
+                    CreateAnalyzer(request.Capability.Id.Value),
+                    ProcessingBoundary.OnDevice);
+            });
+        var viewModel = CreateViewModel(
+            policy.Object,
+            commands.Object,
+            preparationService: preparation.Object);
+        await viewModel.LoadAsync(CancellationToken.None);
+
+        Assert.IsTrue(viewModel.ShowEnableAction);
+        Assert.IsTrue(viewModel.EnableCaptureMemoryCommand.CanExecute(null));
+
+        await viewModel.EnableCaptureMemoryCommand.ExecuteAsync(null);
+
+        Assert.IsTrue(viewModel.IsAuthorized);
+        Assert.IsTrue(viewModel.IsAnalyzingNewCaptures);
+        Assert.IsFalse(viewModel.ShowEnableAction);
+        Assert.AreEqual(1, viewModel.OperationProgress);
+        StringAssert.Contains(viewModel.OperationStatusText, "models are ready");
+        preparation.Verify(value => value.PrepareAsync(
+            It.IsAny<AnalysisCapabilityPreparationRequest>(),
+            It.IsAny<IProgress<AnalysisCapabilityPreparationProgress>>(),
+            It.IsAny<CancellationToken>()), Times.AtLeastOnce);
+    }
+
     private static CaptureMemorySettingsViewModel CreateViewModel(
         ICaptureAnalysisPolicyService policyService,
         ICaptureAnalysisPolicyCommandService? policyCommandService = null,
         ICaptureAnalysisMaintenanceService? maintenanceService = null,
-        ICaptureAnalysisSettingsConfirmationDialogService? confirmationService = null)
+        ICaptureAnalysisSettingsConfirmationDialogService? confirmationService = null,
+        IUserInitiatedAnalysisCapabilityPreparationService? preparationService = null)
     {
         return new CaptureMemorySettingsViewModel(
             new TestFeatureAvailability(true),
             policyService,
             policyCommandService,
             maintenanceService,
-            confirmationService);
+            confirmationService,
+            localizationService: null,
+            preparationService);
     }
 
     private static Mock<ICaptureAnalysisPolicyService> CreatePolicyService()
@@ -372,6 +436,20 @@ public sealed class CaptureMemorySettingsViewModelTests
             CaptureAnalysisPolicySnapshotStatus.Available,
             CaptureAnalysisConsentState.Granted,
             control);
+    }
+
+    private static AnalyzerIdentity CreateAnalyzer(string analyzerId)
+    {
+        return new AnalyzerIdentity(
+            analyzerId,
+            "test-provider",
+            "test-model",
+            "1",
+            "1",
+            "test-runtime",
+            "1",
+            null,
+            null);
     }
 
     private sealed class TestFeatureAvailability(bool enabled) :

@@ -65,6 +65,43 @@ public sealed class CaptureAnalysisActivityQueryServiceTests
         Assert.IsTrue(snapshot.HasActivity);
     }
 
+    [TestMethod]
+    public async Task GetCurrent_WhenDurableJobsAreUnavailable_ShouldStillExposeModelPreparation()
+    {
+        var jobStore = new Mock<ICaptureAnalysisJobStore>(MockBehavior.Strict);
+        jobStore
+            .Setup(store => store.ReadAllAsync(It.IsAny<CancellationToken>()))
+            .Throws(new IOException("Job diagnostics unavailable."));
+        var policyService = new Mock<ICaptureAnalysisPolicyService>(MockBehavior.Strict);
+        policyService
+            .Setup(service => service.GetCurrentAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new CaptureAnalysisPolicySnapshot(
+                CaptureAnalysisPolicySnapshotStatus.FeatureDisabled,
+                CaptureAnalysisConsentState.Unknown));
+        var preparationQuery = new Mock<IAnalysisCapabilityPreparationActivityQueryService>(
+            MockBehavior.Strict);
+        preparationQuery
+            .Setup(query => query.GetCurrentPreparations())
+            .Returns(
+            [
+                new CaptureAnalysisModelPreparationActivity(
+                    AnalysisTestData.CreateAnalyzer(),
+                    AnalysisCapabilities.SpeechTranscriptV1,
+                    CaptureMediaKind.Audio,
+                    0.6),
+            ]);
+        var service = new CaptureAnalysisActivityQueryService(
+            jobStore.Object,
+            policyService.Object,
+            preparationQuery.Object);
+
+        CaptureAnalysisActivitySnapshot snapshot = await service.GetCurrentAsync();
+
+        Assert.HasCount(1, snapshot.ModelPreparations);
+        Assert.AreEqual(0.6, snapshot.ModelPreparations[0].FractionComplete);
+        Assert.IsTrue(snapshot.HasActivity);
+    }
+
     private static CaptureAnalysisJobIntent CreateJob(
         CaptureId captureId,
         CapabilityDefinition capability,

@@ -1963,4 +1963,8 @@ SOFTWARE.
   <data name="BackgroundActivity_SpeechModelTitle" xml:space="preserve"><value>Подготовка распознавания речи</value></data>
   <data name="BackgroundActivity_VisualModelTitle" xml:space="preserve"><value>Подготовка визуального анализа</value></data>
   <data name="BackgroundActivity_GenericModelTitle" xml:space="preserve"><value>Подготовка анализа ИИ</value></data>
+  <data name="CaptureMemory_Settings_EnableButton.Content" xml:space="preserve"><value>Включить Capture Memory</value></data>
+  <data name="CaptureMemory_Settings_EnablePreparing" xml:space="preserve"><value>Включение Capture Memory и подготовка локальных моделей ИИ…</value></data>
+  <data name="CaptureMemory_Settings_EnableSucceeded" xml:space="preserve"><value>Capture Memory включён для новых снимков. Локальные модели ИИ готовы.</value></data>
+  <data name="CaptureMemory_Settings_EnableLimited" xml:space="preserve"><value>Capture Memory включён. Некоторые модели ИИ ещё не готовы; поддерживаемые снимки будут анализироваться с помощью доступных локальных функций.</value></data>
 </root>

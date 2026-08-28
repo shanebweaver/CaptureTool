@@ -1963,4 +1963,8 @@ SOFTWARE.
   <data name="BackgroundActivity_SpeechModelTitle" xml:space="preserve"><value>Préparation de la reconnaissance vocale</value></data>
   <data name="BackgroundActivity_VisualModelTitle" xml:space="preserve"><value>Préparation de l’analyse visuelle</value></data>
   <data name="BackgroundActivity_GenericModelTitle" xml:space="preserve"><value>Préparation de l’analyse par IA</value></data>
+  <data name="CaptureMemory_Settings_EnableButton.Content" xml:space="preserve"><value>Activer Capture Memory</value></data>
+  <data name="CaptureMemory_Settings_EnablePreparing" xml:space="preserve"><value>Activation de Capture Memory et préparation des modèles d’IA sur l’appareil…</value></data>
+  <data name="CaptureMemory_Settings_EnableSucceeded" xml:space="preserve"><value>Capture Memory est activé pour les nouvelles captures. Les modèles d’IA sur l’appareil sont prêts.</value></data>
+  <data name="CaptureMemory_Settings_EnableLimited" xml:space="preserve"><value>Capture Memory est activé. Certains modèles d’IA ne sont pas encore prêts ; les captures prises en charge seront analysées avec les fonctions disponibles sur l’appareil.</value></data>
 </root>

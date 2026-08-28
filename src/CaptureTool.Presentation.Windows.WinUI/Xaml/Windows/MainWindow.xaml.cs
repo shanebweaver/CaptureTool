@@ -98,6 +98,8 @@ public sealed partial class MainWindow : Window
         AppWindow.Closing += OnAppWindowClosing;
         Closed += OnClosed;
         ViewModel.PropertyChanged += OnViewModelPropertyChanged;
+        ViewModel.BackgroundActivityRefreshRequested +=
+            OnBackgroundActivityRefreshRequested;
 
         UpdateRequestedAppTheme();
         UpdateTitleBarColors();
@@ -322,6 +324,16 @@ public sealed partial class MainWindow : Window
 
         _backgroundActivityTimer.Start();
         _ = RefreshBackgroundActivityAsync();
+    }
+
+    private void OnBackgroundActivityRefreshRequested(object? sender, EventArgs e)
+    {
+        if (!_isShown || _backgroundActivityCancellation.IsCancellationRequested)
+        {
+            return;
+        }
+
+        _ = DispatcherQueue.TryEnqueue(() => _ = RefreshBackgroundActivityAsync());
     }
 
     private async void BackgroundActivityTimer_Tick(
@@ -552,6 +564,8 @@ public sealed partial class MainWindow : Window
         _backgroundActivityPulseStoryboard?.Stop();
 
         ViewModel.PropertyChanged -= OnViewModelPropertyChanged;
+        ViewModel.BackgroundActivityRefreshRequested -=
+            OnBackgroundActivityRefreshRequested;
 
         ViewModel.Dispose();
 

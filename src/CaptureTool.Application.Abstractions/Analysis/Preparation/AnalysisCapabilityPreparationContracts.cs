@@ -242,5 +242,7 @@ public interface IUserInitiatedAnalysisCapabilityPreparationService
 
 public interface IAnalysisCapabilityPreparationActivityQueryService
 {
+    event EventHandler? ActivityChanged;
+
     IReadOnlyList<CaptureAnalysisModelPreparationActivity> GetCurrentPreparations();
 }

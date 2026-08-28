@@ -1,4 +1,5 @@
 using CaptureTool.Application.Abstractions.Analysis.Consent;
+using CaptureTool.Application.Abstractions.Analysis.Activity;
 using CaptureTool.Application.Abstractions.Analysis.Memory;
 using CaptureTool.Application.Abstractions.Analysis.Maintenance;
 using CaptureTool.Application.Abstractions.Analysis.Persistence;
@@ -17,6 +18,7 @@ internal sealed class UiTestCaptureMemoryService :
     ICaptureMemoryFeatureAvailability,
     ICaptureAnalysisPolicyService,
     ICaptureAnalysisPolicyCommandService,
+    ICaptureAnalysisActivityQueryService,
     IUserInitiatedAnalysisCapabilityPreparationService,
     ICaptureMemorySearchService,
     ICaptureMemoryResultResolver,
@@ -31,6 +33,9 @@ internal sealed class UiTestCaptureMemoryService :
     private long _documentRevision = 1;
     private bool _forgotten;
     private bool _memoryCleared;
+    private CaptureAnalysisActivitySnapshot _activity = new();
+
+    public event EventHandler? ActivityChanged;
 
     public UiTestCaptureMemoryService(UiTestLaunchOptions options)
     {
@@ -46,6 +51,14 @@ internal sealed class UiTestCaptureMemoryService :
     {
         cancellationToken.ThrowIfCancellationRequested();
         return ValueTask.FromResult(CreateSnapshot());
+    }
+
+    ValueTask<CaptureAnalysisActivitySnapshot>
+        ICaptureAnalysisActivityQueryService.GetCurrentAsync(
+            CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        return ValueTask.FromResult(_activity);
     }
 
     public ValueTask<CaptureAnalysisPolicyChangeResult> ApplyConsentDecisionAsync(
@@ -234,7 +247,7 @@ internal sealed class UiTestCaptureMemoryService :
         return ReanalyzeCoreAsync(progress, cancellationToken);
     }
 
-    private ValueTask<CaptureAnalysisMaintenanceResult> ReanalyzeCoreAsync(
+    private async ValueTask<CaptureAnalysisMaintenanceResult> ReanalyzeCoreAsync(
         IProgress<CaptureAnalysisMaintenanceProgress>? progress,
         CancellationToken cancellationToken)
     {
@@ -245,16 +258,49 @@ internal sealed class UiTestCaptureMemoryService :
             _documentRevision++;
         }
 
-        progress?.Report(new CaptureAnalysisMaintenanceProgress(
-            CaptureAnalysisMaintenancePhase.PreparingModels,
-            0.5));
-        progress?.Report(new CaptureAnalysisMaintenanceProgress(
-            CaptureAnalysisMaintenancePhase.SchedulingCaptures,
-            1));
-        WriteMarker("capture-memory-reanalyzed.marker");
-        return ValueTask.FromResult(new CaptureAnalysisMaintenanceResult(
-            CaptureAnalysisMaintenanceStatus.Succeeded,
-            affectedCaptureCount: _forgotten ? 0 : 1));
+        _activity = new CaptureAnalysisActivitySnapshot(
+            modelPreparations:
+            [
+                new CaptureAnalysisModelPreparationActivity(
+                    CreateAnalyzer(AnalysisCapabilities.SpeechTranscriptV1.Id.Value),
+                    AnalysisCapabilities.SpeechTranscriptV1,
+                    CaptureMediaKind.Audio,
+                    0.5),
+            ]);
+        ActivityChanged?.Invoke(this, EventArgs.Empty);
+        try
+        {
+            progress?.Report(new CaptureAnalysisMaintenanceProgress(
+                CaptureAnalysisMaintenancePhase.PreparingModels,
+                0.5));
+            await Task.Delay(TimeSpan.FromSeconds(2), cancellationToken);
+            progress?.Report(new CaptureAnalysisMaintenanceProgress(
+                CaptureAnalysisMaintenancePhase.SchedulingCaptures,
+                1));
+            WriteMarker("capture-memory-reanalyzed.marker");
+            return new CaptureAnalysisMaintenanceResult(
+                CaptureAnalysisMaintenanceStatus.Succeeded,
+                affectedCaptureCount: _forgotten ? 0 : 1);
+        }
+        finally
+        {
+            _activity = new CaptureAnalysisActivitySnapshot();
+            ActivityChanged?.Invoke(this, EventArgs.Empty);
+        }
+    }
+
+    private static AnalyzerIdentity CreateAnalyzer(string analyzerId)
+    {
+        return new AnalyzerIdentity(
+            analyzerId,
+            "ui-test-provider",
+            "ui-test-model",
+            "1",
+            "1",
+            "ui-test-runtime",
+            "1",
+            "1",
+            null);
     }
 
     public ValueTask<CaptureAnalysisAdmissionDecision> AuthorizeAdmissionAsync(

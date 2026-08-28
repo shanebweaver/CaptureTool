@@ -22,6 +22,8 @@ public sealed partial class MainWindowViewModel : ViewModelBase
     private readonly IOpenSettingsPageUseCase? _openSettingsPageUseCase;
     private int _activityRefreshInProgress;
 
+    public event EventHandler? BackgroundActivityRefreshRequested;
+
     public IRelayCommand DismissNotificationCommand { get; }
 
     public IAsyncRelayCommand OpenBackgroundActivitySettingsCommand { get; }
@@ -108,6 +110,10 @@ public sealed partial class MainWindowViewModel : ViewModelBase
         _openSettingsPageUseCase = openSettingsPageUseCase;
         _themeService.CurrentThemeChanged += OnCurrentThemeChanged;
         _notificationService.PropertyChanged += OnNotificationServicePropertyChanged;
+        if (_activityQueryService != null)
+        {
+            _activityQueryService.ActivityChanged += OnBackgroundActivityChanged;
+        }
         DefaultAppTheme = _themeService.DefaultTheme;
         CurrentAppTheme = _themeService.CurrentTheme;
         DismissNotificationCommand = new RelayCommand(_notificationService.DismissCurrent);
@@ -134,10 +140,6 @@ public sealed partial class MainWindowViewModel : ViewModelBase
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
         }
-        catch
-        {
-            // Background status is advisory and must never destabilize the main window.
-        }
         finally
         {
             Interlocked.Exchange(ref _activityRefreshInProgress, 0);
@@ -163,6 +165,11 @@ public sealed partial class MainWindowViewModel : ViewModelBase
         }
     }
 
+    private void OnBackgroundActivityChanged(object? sender, EventArgs e)
+    {
+        BackgroundActivityRefreshRequested?.Invoke(this, EventArgs.Empty);
+    }
+
     public bool IsCurrentNavigationRequest(INavigationRequest request)
     {
         return _currentRequest?.Route == request.Route &&
@@ -185,6 +192,10 @@ public sealed partial class MainWindowViewModel : ViewModelBase
         {
             _themeService.CurrentThemeChanged -= OnCurrentThemeChanged;
             _notificationService.PropertyChanged -= OnNotificationServicePropertyChanged;
+            if (_activityQueryService != null)
+            {
+                _activityQueryService.ActivityChanged -= OnBackgroundActivityChanged;
+            }
             _currentRequest = null;
         }
         finally

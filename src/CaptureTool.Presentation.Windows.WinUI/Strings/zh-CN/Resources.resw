@@ -1963,4 +1963,8 @@ SOFTWARE.
   <data name="BackgroundActivity_SpeechModelTitle" xml:space="preserve"><value>正在准备语音识别</value></data>
   <data name="BackgroundActivity_VisualModelTitle" xml:space="preserve"><value>正在准备视觉分析</value></data>
   <data name="BackgroundActivity_GenericModelTitle" xml:space="preserve"><value>正在准备 AI 分析</value></data>
+  <data name="CaptureMemory_Settings_EnableButton.Content" xml:space="preserve"><value>打开 Capture Memory</value></data>
+  <data name="CaptureMemory_Settings_EnablePreparing" xml:space="preserve"><value>正在打开 Capture Memory 并准备设备端 AI 模型…</value></data>
+  <data name="CaptureMemory_Settings_EnableSucceeded" xml:space="preserve"><value>Capture Memory 已为新捕获打开。设备端 AI 模型已就绪。</value></data>
+  <data name="CaptureMemory_Settings_EnableLimited" xml:space="preserve"><value>Capture Memory 已打开。部分 AI 模型尚未就绪；系统将使用设备上的可用功能分析受支持的捕获。</value></data>
 </root>
