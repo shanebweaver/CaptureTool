@@ -1,6 +1,7 @@
 using CaptureTool.Application.Abstractions.Activation;
 using CaptureTool.Application.Abstractions.Ai;
 using CaptureTool.Application.Abstractions.Analysis.Policy;
+using CaptureTool.Application.Abstractions.Analysis.Activity;
 using CaptureTool.Application.Abstractions.Analysis.Analyzers;
 using CaptureTool.Application.Abstractions.Analysis.Checkpoints;
 using CaptureTool.Application.Abstractions.Analysis.Jobs;
@@ -33,6 +34,7 @@ using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Application.Activation;
 using CaptureTool.Application.Ai;
 using CaptureTool.Application.Analysis.Policy;
+using CaptureTool.Application.Analysis.Activity;
 using CaptureTool.Application.Analysis.Analyzers;
 using CaptureTool.Application.Analysis.Intake;
 using CaptureTool.Application.Analysis.Maintenance;
@@ -103,6 +105,12 @@ public sealed class ApplicationServiceCollectionExtensionsTests
             services,
             ServiceLifetime.Singleton);
         AssertHasFactoryRegistration<IUserInitiatedAnalysisCapabilityPreparationService>(
+            services,
+            ServiceLifetime.Singleton);
+        AssertHasFactoryRegistration<IAnalysisCapabilityPreparationActivityQueryService>(
+            services,
+            ServiceLifetime.Singleton);
+        AssertHasRegistration<ICaptureAnalysisActivityQueryService, CaptureAnalysisActivityQueryService>(
             services,
             ServiceLifetime.Singleton);
         AssertHasRegistration<ICaptureAnalysisScheduler, CaptureAnalysisScheduler>(services, ServiceLifetime.Singleton);

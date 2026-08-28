@@ -1936,4 +1936,31 @@ SOFTWARE.
   <data name="CaptureMemory_Confirmation_RemoveModelsTitle" xml:space="preserve"><value>移除已下载的 AI 模型?</value></data>
   <data name="CaptureMemory_Confirmation_RemoveModelsContent" xml:space="preserve"><value>这将移除 Capture Tool 下载的设备端模型包。捕获文件和已分析的元数据会保留。语音分析会在需要时重新下载模型。</value></data>
   <data name="CaptureMemory_Confirmation_RemoveModelsButton" xml:space="preserve"><value>移除模型</value></data>
+  <data name="BackgroundActivity_Button.AutomationProperties.Name" xml:space="preserve"><value>查看后台活动</value></data>
+  <data name="BackgroundActivity_Header.Text" xml:space="preserve"><value>后台活动</value></data>
+  <data name="BackgroundActivity_Subtitle.Text" xml:space="preserve"><value>你使用应用时，Capture Tool 会继续在后台工作。</value></data>
+  <data name="BackgroundActivity_OpenSettingsButton.Content" xml:space="preserve"><value>打开 Capture Memory 设置</value></data>
+  <data name="BackgroundActivity_ModelPreparationDetail" xml:space="preserve"><value>正在下载并准备设备端模型（{0}%）</value></data>
+  <data name="BackgroundActivity_BackfillTitle" xml:space="preserve"><value>正在分析现有捕获</value></data>
+  <data name="BackgroundActivity_BackfillDetail" xml:space="preserve"><value>正在准备 Capture Memory（{0}%）</value></data>
+  <data name="BackgroundActivity_AnalysisTitle" xml:space="preserve"><value>正在分析捕获</value></data>
+  <data name="BackgroundActivity_QueuedTitle" xml:space="preserve"><value>分析已排队</value></data>
+  <data name="BackgroundActivity_AnalysisDetail" xml:space="preserve"><value>{0} 个正在处理，{1} 个已排队</value></data>
+  <data name="BackgroundActivity_WaitingTitle" xml:space="preserve"><value>正在等待 AI 模型</value></data>
+  <data name="BackgroundActivity_WaitingDetail" xml:space="preserve"><value>{0} 个捕获将在模型就绪后继续</value></data>
+  <data name="BackgroundActivity_RetryTitle" xml:space="preserve"><value>将重试分析</value></data>
+  <data name="BackgroundActivity_RetryDetail" xml:space="preserve"><value>{0} 个捕获正在等待再次尝试</value></data>
+  <data name="BackgroundActivity_FailedTitle" xml:space="preserve"><value>分析需要注意</value></data>
+  <data name="BackgroundActivity_FailedDetail" xml:space="preserve"><value>{0} 个捕获无法完成分析</value></data>
+  <data name="BackgroundActivity_ModelPreparationSummary" xml:space="preserve"><value>正在准备 AI 模型（{0}%）</value></data>
+  <data name="BackgroundActivity_MultipleModelsSummary" xml:space="preserve"><value>正在准备 {0} 个 AI 模型</value></data>
+  <data name="BackgroundActivity_BackfillSummary" xml:space="preserve"><value>正在分析现有捕获（{0}%）</value></data>
+  <data name="BackgroundActivity_AnalysisSummary" xml:space="preserve"><value>正在分析 {0} 个捕获</value></data>
+  <data name="BackgroundActivity_QueuedSummary" xml:space="preserve"><value>{0} 个捕获已排队</value></data>
+  <data name="BackgroundActivity_WaitingSummary" xml:space="preserve"><value>{0} 个捕获正在等待模型</value></data>
+  <data name="BackgroundActivity_RetrySummary" xml:space="preserve"><value>{0} 个分析重试待处理</value></data>
+  <data name="BackgroundActivity_FailedSummary" xml:space="preserve"><value>{0} 个分析问题</value></data>
+  <data name="BackgroundActivity_SpeechModelTitle" xml:space="preserve"><value>正在准备语音识别</value></data>
+  <data name="BackgroundActivity_VisualModelTitle" xml:space="preserve"><value>正在准备视觉分析</value></data>
+  <data name="BackgroundActivity_GenericModelTitle" xml:space="preserve"><value>正在准备 AI 分析</value></data>
 </root>

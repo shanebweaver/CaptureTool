@@ -2220,4 +2220,31 @@ SOFTWARE.
   <data name="CaptureMemory_Confirmation_RemoveModelsTitle" xml:space="preserve"><value>Remove downloaded AI models?</value></data>
   <data name="CaptureMemory_Confirmation_RemoveModelsContent" xml:space="preserve"><value>This removes on-device model packages downloaded by Capture Tool. Capture files and analyzed metadata are kept. Speech analysis will download its models again when needed.</value></data>
   <data name="CaptureMemory_Confirmation_RemoveModelsButton" xml:space="preserve"><value>Remove models</value></data>
+  <data name="BackgroundActivity_Button.AutomationProperties.Name" xml:space="preserve"><value>View background activity</value></data>
+  <data name="BackgroundActivity_Header.Text" xml:space="preserve"><value>Background activity</value></data>
+  <data name="BackgroundActivity_Subtitle.Text" xml:space="preserve"><value>Capture Tool keeps working while you use the app.</value></data>
+  <data name="BackgroundActivity_OpenSettingsButton.Content" xml:space="preserve"><value>Open Capture Memory settings</value></data>
+  <data name="BackgroundActivity_ModelPreparationDetail" xml:space="preserve"><value>Downloading and preparing on-device model ({0}%)</value></data>
+  <data name="BackgroundActivity_BackfillTitle" xml:space="preserve"><value>Analyzing existing captures</value></data>
+  <data name="BackgroundActivity_BackfillDetail" xml:space="preserve"><value>Preparing Capture Memory ({0}%)</value></data>
+  <data name="BackgroundActivity_AnalysisTitle" xml:space="preserve"><value>Analyzing captures</value></data>
+  <data name="BackgroundActivity_QueuedTitle" xml:space="preserve"><value>Analysis queued</value></data>
+  <data name="BackgroundActivity_AnalysisDetail" xml:space="preserve"><value>{0} active, {1} queued</value></data>
+  <data name="BackgroundActivity_WaitingTitle" xml:space="preserve"><value>Waiting for an AI model</value></data>
+  <data name="BackgroundActivity_WaitingDetail" xml:space="preserve"><value>{0} capture(s) will continue when the model is ready</value></data>
+  <data name="BackgroundActivity_RetryTitle" xml:space="preserve"><value>Analysis will retry</value></data>
+  <data name="BackgroundActivity_RetryDetail" xml:space="preserve"><value>{0} capture(s) are waiting for another attempt</value></data>
+  <data name="BackgroundActivity_FailedTitle" xml:space="preserve"><value>Analysis needs attention</value></data>
+  <data name="BackgroundActivity_FailedDetail" xml:space="preserve"><value>{0} capture(s) could not be analyzed</value></data>
+  <data name="BackgroundActivity_ModelPreparationSummary" xml:space="preserve"><value>Preparing AI model ({0}%)</value></data>
+  <data name="BackgroundActivity_MultipleModelsSummary" xml:space="preserve"><value>Preparing {0} AI models</value></data>
+  <data name="BackgroundActivity_BackfillSummary" xml:space="preserve"><value>Analyzing existing captures ({0}%)</value></data>
+  <data name="BackgroundActivity_AnalysisSummary" xml:space="preserve"><value>Analyzing {0} capture(s)</value></data>
+  <data name="BackgroundActivity_QueuedSummary" xml:space="preserve"><value>{0} capture(s) queued</value></data>
+  <data name="BackgroundActivity_WaitingSummary" xml:space="preserve"><value>{0} capture(s) waiting for a model</value></data>
+  <data name="BackgroundActivity_RetrySummary" xml:space="preserve"><value>{0} analysis retry pending</value></data>
+  <data name="BackgroundActivity_FailedSummary" xml:space="preserve"><value>{0} analysis issue(s)</value></data>
+  <data name="BackgroundActivity_SpeechModelTitle" xml:space="preserve"><value>Preparing speech recognition</value></data>
+  <data name="BackgroundActivity_VisualModelTitle" xml:space="preserve"><value>Preparing visual analysis</value></data>
+  <data name="BackgroundActivity_GenericModelTitle" xml:space="preserve"><value>Preparing AI analysis</value></data>
 </root>

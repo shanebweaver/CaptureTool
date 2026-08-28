@@ -1936,4 +1936,31 @@ SOFTWARE.
   <data name="CaptureMemory_Confirmation_RemoveModelsTitle" xml:space="preserve"><value>Удалить скачанные модели ИИ?</value></data>
   <data name="CaptureMemory_Confirmation_RemoveModelsContent" xml:space="preserve"><value>Будут удалены пакеты локальных моделей, скачанные Capture Tool. Снимки и проанализированные метаданные сохранятся. Анализ речи снова скачает модели, когда они понадобятся.</value></data>
   <data name="CaptureMemory_Confirmation_RemoveModelsButton" xml:space="preserve"><value>Удалить модели</value></data>
+  <data name="BackgroundActivity_Button.AutomationProperties.Name" xml:space="preserve"><value>Показать фоновую активность</value></data>
+  <data name="BackgroundActivity_Header.Text" xml:space="preserve"><value>Фоновая активность</value></data>
+  <data name="BackgroundActivity_Subtitle.Text" xml:space="preserve"><value>Capture Tool продолжает работу, пока вы пользуетесь приложением.</value></data>
+  <data name="BackgroundActivity_OpenSettingsButton.Content" xml:space="preserve"><value>Открыть параметры Capture Memory</value></data>
+  <data name="BackgroundActivity_ModelPreparationDetail" xml:space="preserve"><value>Скачивание и подготовка локальной модели ({0} %)</value></data>
+  <data name="BackgroundActivity_BackfillTitle" xml:space="preserve"><value>Анализ существующих снимков</value></data>
+  <data name="BackgroundActivity_BackfillDetail" xml:space="preserve"><value>Подготовка Capture Memory ({0} %)</value></data>
+  <data name="BackgroundActivity_AnalysisTitle" xml:space="preserve"><value>Анализ снимков</value></data>
+  <data name="BackgroundActivity_QueuedTitle" xml:space="preserve"><value>Анализ в очереди</value></data>
+  <data name="BackgroundActivity_AnalysisDetail" xml:space="preserve"><value>Активно: {0}, в очереди: {1}</value></data>
+  <data name="BackgroundActivity_WaitingTitle" xml:space="preserve"><value>Ожидание модели ИИ</value></data>
+  <data name="BackgroundActivity_WaitingDetail" xml:space="preserve"><value>Снимков в ожидании готовности модели: {0}</value></data>
+  <data name="BackgroundActivity_RetryTitle" xml:space="preserve"><value>Анализ будет повторён</value></data>
+  <data name="BackgroundActivity_RetryDetail" xml:space="preserve"><value>Снимков в ожидании повторной попытки: {0}</value></data>
+  <data name="BackgroundActivity_FailedTitle" xml:space="preserve"><value>Анализ требует внимания</value></data>
+  <data name="BackgroundActivity_FailedDetail" xml:space="preserve"><value>Не удалось проанализировать снимков: {0}</value></data>
+  <data name="BackgroundActivity_ModelPreparationSummary" xml:space="preserve"><value>Подготовка модели ИИ ({0} %)</value></data>
+  <data name="BackgroundActivity_MultipleModelsSummary" xml:space="preserve"><value>Подготовка моделей ИИ: {0}</value></data>
+  <data name="BackgroundActivity_BackfillSummary" xml:space="preserve"><value>Анализ существующих снимков ({0} %)</value></data>
+  <data name="BackgroundActivity_AnalysisSummary" xml:space="preserve"><value>Анализ снимков: {0}</value></data>
+  <data name="BackgroundActivity_QueuedSummary" xml:space="preserve"><value>Снимков в очереди: {0}</value></data>
+  <data name="BackgroundActivity_WaitingSummary" xml:space="preserve"><value>Снимков в ожидании модели: {0}</value></data>
+  <data name="BackgroundActivity_RetrySummary" xml:space="preserve"><value>Повторных попыток анализа: {0}</value></data>
+  <data name="BackgroundActivity_FailedSummary" xml:space="preserve"><value>Проблем анализа: {0}</value></data>
+  <data name="BackgroundActivity_SpeechModelTitle" xml:space="preserve"><value>Подготовка распознавания речи</value></data>
+  <data name="BackgroundActivity_VisualModelTitle" xml:space="preserve"><value>Подготовка визуального анализа</value></data>
+  <data name="BackgroundActivity_GenericModelTitle" xml:space="preserve"><value>Подготовка анализа ИИ</value></data>
 </root>

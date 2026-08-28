@@ -7,6 +7,7 @@
     xmlns:local="using:CaptureTool.Presentation.Windows.WinUI.Xaml.Windows"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:pages="using:CaptureTool.Presentation.Windows.WinUI.Xaml.Pages"
+    xmlns:shell="using:CaptureTool.Presentation.Shell"
     xmlns:utils="using:CaptureTool.Presentation.Windows.WinUI.Utils"
     xmlns:views="using:CaptureTool.Presentation.Windows.WinUI.Xaml.Views"
     mc:Ignorable="d">
@@ -115,6 +116,170 @@
                         <FontIcon FontSize="12" Glyph="{StaticResource Cancel}" />
                     </Button>
                 </Grid>
+            </Border>
+
+            <Border
+                x:Name="BackgroundActivityHost"
+                MaxWidth="420"
+                MinWidth="300"
+                Margin="12"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Bottom"
+                Background="{ThemeResource SystemControlBackgroundChromeMediumLowBrush}"
+                BorderBrush="{ThemeResource SystemControlForegroundBaseLowBrush}"
+                BorderThickness="1"
+                Canvas.ZIndex="99"
+                CornerRadius="10"
+                AutomationProperties.AutomationId="MainWindow_BackgroundActivityHost"
+                Opacity="0"
+                Visibility="Collapsed">
+                <Border.RenderTransform>
+                    <TransformGroup>
+                        <ScaleTransform
+                            x:Name="BackgroundActivityScaleTransform"
+                            ScaleX="0.96"
+                            ScaleY="0.96" />
+                        <TranslateTransform
+                            x:Name="BackgroundActivityTranslateTransform"
+                            Y="12" />
+                    </TransformGroup>
+                </Border.RenderTransform>
+
+                <Button
+                    x:Uid="BackgroundActivity_Button"
+                    Padding="12,10"
+                    HorizontalContentAlignment="Stretch"
+                    AutomationProperties.AutomationId="MainWindow_BackgroundActivityButton"
+                    AutomationProperties.LiveSetting="Polite"
+                    Background="Transparent"
+                    BorderBrush="Transparent">
+                    <Button.Flyout>
+                        <Flyout Placement="TopEdgeAlignedRight">
+                            <StackPanel Width="360" Spacing="12">
+                                <StackPanel Spacing="3">
+                                    <TextBlock
+                                        x:Uid="BackgroundActivity_Header"
+                                        FontSize="18"
+                                        FontWeight="SemiBold"
+                                        TextWrapping="WrapWholeWords" />
+                                    <TextBlock
+                                        x:Uid="BackgroundActivity_Subtitle"
+                                        FontSize="12"
+                                        Opacity=".72"
+                                        TextWrapping="WrapWholeWords" />
+                                </StackPanel>
+
+                                <ItemsControl ItemsSource="{x:Bind ViewModel.BackgroundActivities, Mode=OneWay}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="shell:BackgroundActivityItemViewModel">
+                                            <Grid Padding="0,7" ColumnSpacing="12">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="24" />
+                                                    <ColumnDefinition />
+                                                </Grid.ColumnDefinitions>
+                                                <Grid.RowDefinitions>
+                                                    <RowDefinition Height="Auto" />
+                                                    <RowDefinition Height="Auto" />
+                                                </Grid.RowDefinitions>
+
+                                                <Grid Width="20" Height="20">
+                                                    <ProgressRing
+                                                        Width="18"
+                                                        Height="18"
+                                                        IsActive="{x:Bind IsActive}"
+                                                        Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(IsActive)}" />
+                                                    <SymbolIcon
+                                                        Symbol="Important"
+                                                        Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(IsAttention)}" />
+                                                    <SymbolIcon
+                                                        Symbol="Clock"
+                                                        Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(IsWaiting)}" />
+                                                </Grid>
+
+                                                <StackPanel Grid.Column="1" Spacing="2">
+                                                    <TextBlock
+                                                        FontWeight="SemiBold"
+                                                        Text="{x:Bind Title}"
+                                                        TextWrapping="WrapWholeWords" />
+                                                    <TextBlock
+                                                        FontSize="12"
+                                                        Opacity=".72"
+                                                        Text="{x:Bind Detail}"
+                                                        TextWrapping="WrapWholeWords" />
+                                                </StackPanel>
+
+                                                <ProgressBar
+                                                    Grid.Row="1"
+                                                    Grid.Column="1"
+                                                    Height="3"
+                                                    Margin="0,7,0,0"
+                                                    IsIndeterminate="{x:Bind IsIndeterminate}"
+                                                    Maximum="1"
+                                                    Value="{x:Bind Progress}"
+                                                    Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ShowProgress)}" />
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+
+                                <Button
+                                    x:Uid="BackgroundActivity_OpenSettingsButton"
+                                    HorizontalAlignment="Left"
+                                    Command="{x:Bind ViewModel.OpenBackgroundActivitySettingsCommand}" />
+                            </StackPanel>
+                        </Flyout>
+                    </Button.Flyout>
+
+                    <Grid ColumnSpacing="10" RowSpacing="7">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="24" />
+                            <ColumnDefinition />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <Grid Width="22" Height="22">
+                            <SymbolIcon
+                                x:Name="BackgroundActivityGlyph"
+                                Symbol="Sync"
+                                Visibility="{x:Bind utils:VisibilityUtility.InverseBoolToVisibility(ViewModel.HasBackgroundActivityAttention), Mode=OneWay}" />
+                            <SymbolIcon
+                                Foreground="{ThemeResource SystemFillColorCriticalBrush}"
+                                Symbol="Important"
+                                Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.HasBackgroundActivityAttention), Mode=OneWay}" />
+                            <ProgressRing
+                                Width="20"
+                                Height="20"
+                                IsActive="{x:Bind ViewModel.HasActiveBackgroundActivity, Mode=OneWay}" />
+                        </Grid>
+
+                        <TextBlock
+                            Grid.Column="1"
+                            VerticalAlignment="Center"
+                            AutomationProperties.LiveSetting="Polite"
+                            FontWeight="SemiBold"
+                            Text="{x:Bind ViewModel.BackgroundActivitySummary, Mode=OneWay}"
+                            TextTrimming="CharacterEllipsis"
+                            TextWrapping="NoWrap" />
+
+                        <SymbolIcon
+                            Grid.Column="2"
+                            VerticalAlignment="Center"
+                            Symbol="Up" />
+
+                        <ProgressBar
+                            Grid.Row="1"
+                            Grid.ColumnSpan="3"
+                            Height="3"
+                            IsIndeterminate="False"
+                            Maximum="1"
+                            Value="{x:Bind ViewModel.PrimaryActivityProgress, Mode=OneWay}"
+                            Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.IsPrimaryActivityDeterminate), Mode=OneWay}" />
+                    </Grid>
+                </Button>
             </Border>
         </Grid>
     </Grid>

@@ -1930,4 +1930,31 @@ SOFTWARE.
   <data name="CaptureMemory_Confirmation_RemoveModelsTitle" xml:space="preserve"><value>Heruntergeladene KI-Modelle entfernen?</value></data>
   <data name="CaptureMemory_Confirmation_RemoveModelsContent" xml:space="preserve"><value>Dadurch werden von Capture Tool heruntergeladene lokale Modellpakete entfernt. Aufnahmen und analysierte Metadaten bleiben erhalten. Die Sprachanalyse lädt die Modelle bei Bedarf erneut herunter.</value></data>
   <data name="CaptureMemory_Confirmation_RemoveModelsButton" xml:space="preserve"><value>Modelle entfernen</value></data>
+  <data name="BackgroundActivity_Button.AutomationProperties.Name" xml:space="preserve"><value>Hintergrundaktivität anzeigen</value></data>
+  <data name="BackgroundActivity_Header.Text" xml:space="preserve"><value>Hintergrundaktivität</value></data>
+  <data name="BackgroundActivity_Subtitle.Text" xml:space="preserve"><value>Capture Tool arbeitet weiter, während Sie die App verwenden.</value></data>
+  <data name="BackgroundActivity_OpenSettingsButton.Content" xml:space="preserve"><value>Capture Memory-Einstellungen öffnen</value></data>
+  <data name="BackgroundActivity_ModelPreparationDetail" xml:space="preserve"><value>Lokales Modell wird heruntergeladen und vorbereitet ({0} %)</value></data>
+  <data name="BackgroundActivity_BackfillTitle" xml:space="preserve"><value>Vorhandene Aufnahmen werden analysiert</value></data>
+  <data name="BackgroundActivity_BackfillDetail" xml:space="preserve"><value>Capture Memory wird vorbereitet ({0} %)</value></data>
+  <data name="BackgroundActivity_AnalysisTitle" xml:space="preserve"><value>Aufnahmen werden analysiert</value></data>
+  <data name="BackgroundActivity_QueuedTitle" xml:space="preserve"><value>Analyse in Warteschlange</value></data>
+  <data name="BackgroundActivity_AnalysisDetail" xml:space="preserve"><value>{0} aktiv, {1} in Warteschlange</value></data>
+  <data name="BackgroundActivity_WaitingTitle" xml:space="preserve"><value>Warten auf ein KI-Modell</value></data>
+  <data name="BackgroundActivity_WaitingDetail" xml:space="preserve"><value>{0} Aufnahme(n) werden fortgesetzt, sobald das Modell bereit ist</value></data>
+  <data name="BackgroundActivity_RetryTitle" xml:space="preserve"><value>Analyse wird wiederholt</value></data>
+  <data name="BackgroundActivity_RetryDetail" xml:space="preserve"><value>{0} Aufnahme(n) warten auf einen weiteren Versuch</value></data>
+  <data name="BackgroundActivity_FailedTitle" xml:space="preserve"><value>Analyse erfordert Aufmerksamkeit</value></data>
+  <data name="BackgroundActivity_FailedDetail" xml:space="preserve"><value>{0} Aufnahme(n) konnten nicht analysiert werden</value></data>
+  <data name="BackgroundActivity_ModelPreparationSummary" xml:space="preserve"><value>KI-Modell wird vorbereitet ({0} %)</value></data>
+  <data name="BackgroundActivity_MultipleModelsSummary" xml:space="preserve"><value>{0} KI-Modelle werden vorbereitet</value></data>
+  <data name="BackgroundActivity_BackfillSummary" xml:space="preserve"><value>Vorhandene Aufnahmen werden analysiert ({0} %)</value></data>
+  <data name="BackgroundActivity_AnalysisSummary" xml:space="preserve"><value>{0} Aufnahme(n) werden analysiert</value></data>
+  <data name="BackgroundActivity_QueuedSummary" xml:space="preserve"><value>{0} Aufnahme(n) in Warteschlange</value></data>
+  <data name="BackgroundActivity_WaitingSummary" xml:space="preserve"><value>{0} Aufnahme(n) warten auf ein Modell</value></data>
+  <data name="BackgroundActivity_RetrySummary" xml:space="preserve"><value>{0} Analysewiederholung ausstehend</value></data>
+  <data name="BackgroundActivity_FailedSummary" xml:space="preserve"><value>{0} Analyseproblem(e)</value></data>
+  <data name="BackgroundActivity_SpeechModelTitle" xml:space="preserve"><value>Spracherkennung wird vorbereitet</value></data>
+  <data name="BackgroundActivity_VisualModelTitle" xml:space="preserve"><value>Visuelle Analyse wird vorbereitet</value></data>
+  <data name="BackgroundActivity_GenericModelTitle" xml:space="preserve"><value>KI-Analyse wird vorbereitet</value></data>
 </root>

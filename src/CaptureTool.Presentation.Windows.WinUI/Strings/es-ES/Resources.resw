@@ -1936,4 +1936,31 @@ SOFTWARE.
   <data name="CaptureMemory_Confirmation_RemoveModelsTitle" xml:space="preserve"><value>¿Quitar los modelos de IA descargados?</value></data>
   <data name="CaptureMemory_Confirmation_RemoveModelsContent" xml:space="preserve"><value>Esto quita los paquetes de modelos en el dispositivo descargados por Capture Tool. Se conservan las capturas y los metadatos analizados. El análisis de voz volverá a descargar los modelos cuando los necesite.</value></data>
   <data name="CaptureMemory_Confirmation_RemoveModelsButton" xml:space="preserve"><value>Quitar modelos</value></data>
+  <data name="BackgroundActivity_Button.AutomationProperties.Name" xml:space="preserve"><value>Ver actividad en segundo plano</value></data>
+  <data name="BackgroundActivity_Header.Text" xml:space="preserve"><value>Actividad en segundo plano</value></data>
+  <data name="BackgroundActivity_Subtitle.Text" xml:space="preserve"><value>Capture Tool sigue trabajando mientras usas la aplicación.</value></data>
+  <data name="BackgroundActivity_OpenSettingsButton.Content" xml:space="preserve"><value>Abrir configuración de Capture Memory</value></data>
+  <data name="BackgroundActivity_ModelPreparationDetail" xml:space="preserve"><value>Descargando y preparando el modelo en el dispositivo ({0} %)</value></data>
+  <data name="BackgroundActivity_BackfillTitle" xml:space="preserve"><value>Analizando capturas existentes</value></data>
+  <data name="BackgroundActivity_BackfillDetail" xml:space="preserve"><value>Preparando Capture Memory ({0} %)</value></data>
+  <data name="BackgroundActivity_AnalysisTitle" xml:space="preserve"><value>Analizando capturas</value></data>
+  <data name="BackgroundActivity_QueuedTitle" xml:space="preserve"><value>Análisis en cola</value></data>
+  <data name="BackgroundActivity_AnalysisDetail" xml:space="preserve"><value>{0} activas, {1} en cola</value></data>
+  <data name="BackgroundActivity_WaitingTitle" xml:space="preserve"><value>Esperando un modelo de IA</value></data>
+  <data name="BackgroundActivity_WaitingDetail" xml:space="preserve"><value>{0} captura(s) continuarán cuando el modelo esté listo</value></data>
+  <data name="BackgroundActivity_RetryTitle" xml:space="preserve"><value>El análisis se reintentará</value></data>
+  <data name="BackgroundActivity_RetryDetail" xml:space="preserve"><value>{0} captura(s) esperan otro intento</value></data>
+  <data name="BackgroundActivity_FailedTitle" xml:space="preserve"><value>El análisis requiere atención</value></data>
+  <data name="BackgroundActivity_FailedDetail" xml:space="preserve"><value>No se pudieron analizar {0} captura(s)</value></data>
+  <data name="BackgroundActivity_ModelPreparationSummary" xml:space="preserve"><value>Preparando modelo de IA ({0} %)</value></data>
+  <data name="BackgroundActivity_MultipleModelsSummary" xml:space="preserve"><value>Preparando {0} modelos de IA</value></data>
+  <data name="BackgroundActivity_BackfillSummary" xml:space="preserve"><value>Analizando capturas existentes ({0} %)</value></data>
+  <data name="BackgroundActivity_AnalysisSummary" xml:space="preserve"><value>Analizando {0} captura(s)</value></data>
+  <data name="BackgroundActivity_QueuedSummary" xml:space="preserve"><value>{0} captura(s) en cola</value></data>
+  <data name="BackgroundActivity_WaitingSummary" xml:space="preserve"><value>{0} captura(s) esperan un modelo</value></data>
+  <data name="BackgroundActivity_RetrySummary" xml:space="preserve"><value>{0} reintento(s) de análisis pendientes</value></data>
+  <data name="BackgroundActivity_FailedSummary" xml:space="preserve"><value>{0} problema(s) de análisis</value></data>
+  <data name="BackgroundActivity_SpeechModelTitle" xml:space="preserve"><value>Preparando el reconocimiento de voz</value></data>
+  <data name="BackgroundActivity_VisualModelTitle" xml:space="preserve"><value>Preparando el análisis visual</value></data>
+  <data name="BackgroundActivity_GenericModelTitle" xml:space="preserve"><value>Preparando el análisis de IA</value></data>
 </root>

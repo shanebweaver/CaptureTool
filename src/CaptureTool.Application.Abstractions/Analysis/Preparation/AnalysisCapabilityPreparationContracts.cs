@@ -1,4 +1,5 @@
 using CaptureTool.Application.Abstractions.Analysis.Analyzers;
+using CaptureTool.Application.Abstractions.Analysis.Activity;
 using CaptureTool.Domain.Analysis;
 
 namespace CaptureTool.Application.Abstractions.Analysis.Preparation;
@@ -237,4 +238,9 @@ public interface IUserInitiatedAnalysisCapabilityPreparationService
         AnalysisCapabilityPreparationRequest request,
         IProgress<AnalysisCapabilityPreparationProgress>? progress = null,
         CancellationToken cancellationToken = default);
+}
+
+public interface IAnalysisCapabilityPreparationActivityQueryService
+{
+    IReadOnlyList<CaptureAnalysisModelPreparationActivity> GetCurrentPreparations();
 }

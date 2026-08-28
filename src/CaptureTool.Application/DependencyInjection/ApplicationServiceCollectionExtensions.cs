@@ -1,4 +1,5 @@
 using CaptureTool.Application.Abstractions.Ai;
+using CaptureTool.Application.Abstractions.Analysis.Activity;
 using CaptureTool.Application.Abstractions.Analysis.Policy;
 using CaptureTool.Application.Abstractions.Analysis.Analyzers;
 using CaptureTool.Application.Abstractions.Analysis.Intake;
@@ -15,6 +16,7 @@ using CaptureTool.Application.Abstractions.EditSessions;
 using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Application.Ai;
+using CaptureTool.Application.Analysis.Activity;
 using CaptureTool.Application.Analysis.Policy;
 using CaptureTool.Application.Analysis.Analyzers;
 using CaptureTool.Application.Analysis.Intake;
@@ -76,6 +78,10 @@ public static class ApplicationServiceCollectionExtensions
             provider.GetRequiredService<CaptureAnalysisCapabilityPreparationService>());
         services.AddSingleton<IUserInitiatedAnalysisCapabilityPreparationService>(provider =>
             provider.GetRequiredService<CaptureAnalysisCapabilityPreparationService>());
+        services.AddSingleton<IAnalysisCapabilityPreparationActivityQueryService>(provider =>
+            provider.GetRequiredService<CaptureAnalysisCapabilityPreparationService>());
+        services.AddSingleton<ICaptureAnalysisActivityQueryService,
+            CaptureAnalysisActivityQueryService>();
         services.AddSingleton<CaptureAnalysisPolicyService>();
         services.AddSingleton<ICaptureAnalysisPolicyService>(provider =>
             provider.GetRequiredService<CaptureAnalysisPolicyService>());

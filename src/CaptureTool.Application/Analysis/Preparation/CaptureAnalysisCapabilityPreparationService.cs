@@ -1,4 +1,5 @@
 using CaptureTool.Application.Abstractions.Analysis.Analyzers;
+using CaptureTool.Application.Abstractions.Analysis.Activity;
 using CaptureTool.Application.Abstractions.Analysis.Intake;
 using CaptureTool.Application.Abstractions.Analysis.Jobs;
 using CaptureTool.Application.Abstractions.Analysis.Policy;
@@ -11,7 +12,8 @@ namespace CaptureTool.Application.Analysis.Preparation;
 
 public sealed class CaptureAnalysisCapabilityPreparationService :
     IAnalysisCapabilityPreparationQueryService,
-    IUserInitiatedAnalysisCapabilityPreparationService
+    IUserInitiatedAnalysisCapabilityPreparationService,
+    IAnalysisCapabilityPreparationActivityQueryService
 {
     private readonly ICaptureAnalyzerResolver _resolver;
     private readonly ICaptureAnalyzerCatalog _catalog;
@@ -19,7 +21,8 @@ public sealed class CaptureAnalysisCapabilityPreparationService :
     private readonly ICaptureAnalysisJobStore _jobStore;
     private readonly ICaptureAnalysisWakeSignal _wakeSignal;
     private readonly IClock _clock;
-    private readonly ConcurrentDictionary<AnalyzerRevision, byte> _preparing = new();
+    private readonly ConcurrentDictionary<AnalyzerRevision, PreparationActivityState>
+        _preparing = new();
 
     public CaptureAnalysisCapabilityPreparationService(
         ICaptureAnalyzerResolver resolver,
@@ -51,6 +54,14 @@ public sealed class CaptureAnalysisCapabilityPreparationService :
         CaptureAnalyzerResolution resolution = await ResolveAsync(request, cancellationToken)
             .ConfigureAwait(false);
         return ToPreparationState(resolution);
+    }
+
+    public IReadOnlyList<CaptureAnalysisModelPreparationActivity> GetCurrentPreparations()
+    {
+        return _preparing.Values
+            .Select(state => state.CreateSnapshot())
+            .OrderBy(activity => activity.Analyzer.AnalyzerId, StringComparer.Ordinal)
+            .ToArray();
     }
 
     public async Task<AnalysisCapabilityPreparationState> PrepareAsync(
@@ -95,7 +106,11 @@ public sealed class CaptureAnalysisCapabilityPreparationService :
                 return InvalidResponseFailure();
             }
 
-            if (!_preparing.TryAdd(candidate.Descriptor.Revision, 0))
+            var activityState = new PreparationActivityState(
+                candidate.Descriptor.Identity,
+                request.Capability,
+                request.MediaKind);
+            if (!_preparing.TryAdd(candidate.Descriptor.Revision, activityState))
             {
                 return AnalysisCapabilityPreparationState.Preparing(
                     candidate.Descriptor.Identity,
@@ -103,8 +118,14 @@ public sealed class CaptureAnalysisCapabilityPreparationService :
             }
 
             ownsPreparation = true;
+            var activityProgress = new DelegateProgress<AnalysisCapabilityPreparationProgress>(
+                value =>
+                {
+                    activityState.Update(value.FractionComplete);
+                    progress?.Report(value);
+                });
             CaptureAnalyzerPreparationResult result = await preparable
-                .PrepareAsync(progress, cancellationToken)
+                .PrepareAsync(activityProgress, cancellationToken)
                 .ConfigureAwait(false);
             if (result.Status != CaptureAnalyzerPreparationStatus.Succeeded)
             {
@@ -275,5 +296,36 @@ public sealed class CaptureAnalysisCapabilityPreparationService :
             new DateTimeOffset(utcNow),
             cancellationToken).ConfigureAwait(false);
         _ = _wakeSignal.TrySignal();
+    }
+
+    private sealed class PreparationActivityState(
+        AnalyzerIdentity analyzer,
+        CapabilityDefinition capability,
+        CaptureMediaKind mediaKind)
+    {
+        private long _fractionBits = BitConverter.DoubleToInt64Bits(0);
+
+        public void Update(double fractionComplete)
+        {
+            Interlocked.Exchange(
+                ref _fractionBits,
+                BitConverter.DoubleToInt64Bits(Math.Clamp(fractionComplete, 0, 1)));
+        }
+
+        public CaptureAnalysisModelPreparationActivity CreateSnapshot()
+        {
+            double fraction = BitConverter.Int64BitsToDouble(
+                Interlocked.Read(ref _fractionBits));
+            return new CaptureAnalysisModelPreparationActivity(
+                analyzer,
+                capability,
+                mediaKind,
+                fraction);
+        }
+    }
+
+    private sealed class DelegateProgress<T>(Action<T> report) : IProgress<T>
+    {
+        public void Report(T value) => report(value);
     }
 }

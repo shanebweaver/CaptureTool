@@ -1,4 +1,5 @@
 using CaptureTool.Application.Abstractions.Analysis.Analyzers;
+using CaptureTool.Application.Abstractions.Analysis.Activity;
 using CaptureTool.Application.Abstractions.Analysis.Intake;
 using CaptureTool.Application.Abstractions.Analysis.Jobs;
 using CaptureTool.Application.Abstractions.Analysis.Policy;
@@ -108,6 +109,42 @@ public sealed class CaptureAnalysisCapabilityPreparationServiceTests
         AnalysisCapabilityPreparationState completed = await first;
         Assert.AreEqual(AnalysisCapabilityPreparationStatus.Ready, completed.Status);
         Assert.AreEqual(1, context.WakeSignal.SignalCount);
+    }
+
+    [TestMethod]
+    public async Task ActivePreparation_ShouldExposeProviderProgressUntilPreparationCompletes()
+    {
+        var entered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var release = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var analyzer = new StubPreparableAnalyzer(CaptureAnalyzerAvailabilityStatus.PreparationRequired);
+        analyzer.PrepareHandler = async (progress, cancellationToken) =>
+        {
+            progress?.Report(new AnalysisCapabilityPreparationProgress(0.42));
+            entered.SetResult();
+            await release.Task.WaitAsync(cancellationToken);
+            analyzer.AvailabilityStatus = CaptureAnalyzerAvailabilityStatus.Available;
+            return CaptureAnalyzerPreparationResult.Succeeded;
+        };
+        TestContext context = CreateContext(analyzer);
+
+        Task<AnalysisCapabilityPreparationState> preparation =
+            context.Service.PrepareAsync(CreateRequest());
+        await entered.Task;
+
+        IReadOnlyList<CaptureAnalysisModelPreparationActivity> activities =
+            context.Service.GetCurrentPreparations();
+        Assert.HasCount(1, activities);
+        CaptureAnalysisModelPreparationActivity activity = activities[0];
+        Assert.AreEqual(analyzer.Descriptor.Identity, activity.Analyzer);
+        Assert.AreEqual(AnalysisCapabilities.ImageDescriptionV1, activity.Capability);
+        Assert.AreEqual(CaptureMediaKind.Image, activity.MediaKind);
+        Assert.AreEqual(0.42, activity.FractionComplete);
+
+        release.SetResult();
+        AnalysisCapabilityPreparationState completed = await preparation;
+
+        Assert.AreEqual(AnalysisCapabilityPreparationStatus.Ready, completed.Status);
+        Assert.IsEmpty(context.Service.GetCurrentPreparations());
     }
 
     [TestMethod]
