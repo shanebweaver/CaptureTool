@@ -298,13 +298,45 @@ internal sealed class CaptureAnalysisWorker : ICaptureAnalysisWorker
                     latest.Status is CaptureAnalyzerAttemptStatus.Unsupported or
                         CaptureAnalyzerAttemptStatus.TerminalFailure)
                 {
-                    await CommitOutcomeAndFailAsync(
+                    await CommitOutcomeAndFinishAsync(
                         lease.LeaseToken,
                         intent,
                         latest.Analyzer,
                         terminalFailure,
                         latest.Status == CaptureAnalyzerAttemptStatus.Unsupported,
+                        requestedCapability.Requirement == RecipeCapabilityRequirement.Optional,
                         cancellationToken).ConfigureAwait(false);
+                }
+                else if (TryGetPermanentUnavailability(
+                    resolution,
+                    intent,
+                    mediaKind,
+                    out AnalyzerIdentity? unavailableAnalyzer,
+                    out AnalysisFailure unavailableFailure,
+                    out bool unsupported))
+                {
+                    if (unavailableAnalyzer != null)
+                    {
+                        await CommitOutcomeAndFinishAsync(
+                            lease.LeaseToken,
+                            intent,
+                            unavailableAnalyzer,
+                            unavailableFailure,
+                            unsupported,
+                            optional: requestedCapability.Requirement ==
+                                RecipeCapabilityRequirement.Optional,
+                            cancellationToken: cancellationToken).ConfigureAwait(false);
+                    }
+                    else
+                    {
+                        await FinishUnavailableJobAsync(
+                            lease.LeaseToken,
+                            intent,
+                            unavailableFailure,
+                            requestedCapability.Requirement ==
+                                RecipeCapabilityRequirement.Optional,
+                            cancellationToken).ConfigureAwait(false);
+                    }
                 }
                 else
                 {
@@ -490,13 +522,15 @@ internal sealed class CaptureAnalysisWorker : ICaptureAnalysisWorker
                         return;
                     }
 
-                    await CommitOutcomeAndFailAsync(
+                    await CommitOutcomeAndFinishAsync(
                         lease.LeaseToken,
                         terminalRecorded.Intent!,
                         analyzer.Descriptor.Identity,
                         invalidResponse,
                         unsupported: false,
-                        cancellationToken).ConfigureAwait(false);
+                        optional: requestedCapability.Requirement ==
+                            RecipeCapabilityRequirement.Optional,
+                        cancellationToken: cancellationToken).ConfigureAwait(false);
                     return;
                 }
 
@@ -591,13 +625,15 @@ internal sealed class CaptureAnalysisWorker : ICaptureAnalysisWorker
                         .ConfigureAwait(false);
                     if (terminalRecorded.Status == CaptureAnalysisJobMutationStatus.Succeeded)
                     {
-                        await CommitOutcomeAndFailAsync(
+                        await CommitOutcomeAndFinishAsync(
                             lease.LeaseToken,
                             terminalRecorded.Intent!,
                             analyzer.Descriptor.Identity,
                             exhausted,
                             unsupported: false,
-                            cancellationToken).ConfigureAwait(false);
+                            optional: requestedCapability.Requirement ==
+                                RecipeCapabilityRequirement.Optional,
+                            cancellationToken: cancellationToken).ConfigureAwait(false);
                     }
 
                     return;
@@ -704,6 +740,43 @@ internal sealed class CaptureAnalysisWorker : ICaptureAnalysisWorker
             expected.ResolutionPolicyRevision,
             attempted,
             allowReadyFallbackWhenPreparationRequired: true);
+    }
+
+    private static bool TryGetPermanentUnavailability(
+        CaptureAnalyzerResolution resolution,
+        CaptureAnalysisJobIntent intent,
+        CaptureMediaKind mediaKind,
+        out AnalyzerIdentity? analyzer,
+        out AnalysisFailure failure,
+        out bool unsupported)
+    {
+        CaptureAnalyzerCandidateEvaluation[] relevant = resolution.Candidates
+            .Where(candidate =>
+                candidate.Descriptor.Capability == intent.Key.Capability &&
+                candidate.Descriptor.ProcessingBoundary ==
+                    intent.Key.AuthorizedProcessingBoundary &&
+                candidate.Descriptor.SupportedMediaKinds.Contains(mediaKind))
+            .ToArray();
+        if (relevant.Any(candidate =>
+            candidate.Eligibility == CaptureAnalyzerEligibilityStatus.PreparationRequired ||
+            candidate.Availability?.Status ==
+                CaptureAnalyzerAvailabilityStatus.TemporarilyUnavailable))
+        {
+            analyzer = null;
+            failure = default;
+            unsupported = false;
+            return false;
+        }
+
+        CaptureAnalyzerCandidateEvaluation? terminal = relevant.FirstOrDefault(candidate =>
+            candidate.Availability?.Status == CaptureAnalyzerAvailabilityStatus.Unsupported);
+        CaptureAnalyzerCandidateEvaluation? representative = terminal ?? relevant.FirstOrDefault();
+        analyzer = representative?.Descriptor.Identity;
+        failure = terminal?.Availability?.Failure ?? new AnalysisFailure(
+            AnalysisFailureCode.CapabilityUnavailable,
+            AnalysisFailureDisposition.Terminal);
+        unsupported = terminal != null;
+        return true;
     }
 
     private async ValueTask<AnalysisProcessingPolicy?> TryGetAuthorizedPolicyAsync(
@@ -841,12 +914,13 @@ internal sealed class CaptureAnalysisWorker : ICaptureAnalysisWorker
         return CaptureAnalysisStoreWriteStatus.Conflict;
     }
 
-    private async Task CommitOutcomeAndFailAsync(
+    private async Task CommitOutcomeAndFinishAsync(
         CaptureAnalysisJobLeaseToken leaseToken,
         CaptureAnalysisJobIntent intent,
         AnalyzerIdentity analyzer,
         AnalysisFailure failure,
         bool unsupported,
+        bool optional,
         CancellationToken cancellationToken)
     {
         var token = new AnalysisCommitToken(
@@ -872,6 +946,28 @@ internal sealed class CaptureAnalysisWorker : ICaptureAnalysisWorker
                 outcome,
                 snapshot.DocumentRevision,
                 cancellationToken).ConfigureAwait(false);
+        }
+
+        await FinishUnavailableJobAsync(
+            leaseToken,
+            intent,
+            failure,
+            optional,
+            cancellationToken).ConfigureAwait(false);
+    }
+
+    private async Task FinishUnavailableJobAsync(
+        CaptureAnalysisJobLeaseToken leaseToken,
+        CaptureAnalysisJobIntent intent,
+        AnalysisFailure failure,
+        bool optional,
+        CancellationToken cancellationToken)
+    {
+        if (optional)
+        {
+            _ = await _jobStore.TryCancelAsync(intent.Key, cancellationToken)
+                .ConfigureAwait(false);
+            return;
         }
 
         _ = await _jobStore.TryFailTerminalAsync(leaseToken, failure, cancellationToken)

@@ -164,10 +164,22 @@ public sealed class CaptureAnalysisWorkerTests
     }
 
     [TestMethod]
-    public async Task Run_ShouldWaitWhenNoAnalyzerIsEligible()
+    public async Task Run_ShouldWaitWhenAnalyzerIsTemporarilyUnavailable()
     {
         using var fixture = new WorkerFixture();
-        fixture.Resolutions = [CaptureAnalyzerResolution.NoEligibleAnalyzer([])];
+        var transientFailure = new AnalysisFailure(
+            AnalysisFailureCode.ProviderUnavailable,
+            AnalysisFailureDisposition.Transient);
+        fixture.Resolutions =
+        [
+            CaptureAnalyzerResolution.NoEligibleAnalyzer(
+            [
+                new CaptureAnalyzerCandidateEvaluation(
+                    fixture.Descriptor,
+                    CaptureAnalyzerEligibilityStatus.Unavailable,
+                    CaptureAnalyzerAvailability.TemporarilyUnavailable(transientFailure)),
+            ]),
+        ];
 
         await fixture.RunAsync();
 
@@ -177,6 +189,86 @@ public sealed class CaptureAnalysisWorkerTests
                 failure.Code == AnalysisFailureCode.CapabilityUnavailable),
             fixture.UtcNow.AddSeconds(15),
             It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [TestMethod]
+    public async Task Run_WhenRequiredModelIsUnsupported_ShouldRecordAndFinishTerminally()
+    {
+        using var fixture = new WorkerFixture();
+        var unavailable = new AnalysisFailure(
+            AnalysisFailureCode.CapabilityUnavailable,
+            AnalysisFailureDisposition.Terminal);
+        fixture.Resolutions =
+        [
+            CaptureAnalyzerResolution.NoEligibleAnalyzer(
+            [
+                new CaptureAnalyzerCandidateEvaluation(
+                    fixture.Descriptor,
+                    CaptureAnalyzerEligibilityStatus.Unavailable,
+                    CaptureAnalyzerAvailability.Unsupported(unavailable)),
+            ]),
+        ];
+
+        await fixture.RunAsync();
+
+        fixture.Mutation.Verify(coordinator => coordinator.TryCommitCapabilityAsync(
+            It.IsAny<AnalysisCommitToken>(),
+            It.Is<CapabilityOutcome>(outcome =>
+                outcome.State == CapabilityOutcomeState.Unsupported &&
+                outcome.Failure == unavailable),
+            It.IsAny<long>(),
+            It.IsAny<CancellationToken>()), Times.Once);
+        fixture.JobStore.Verify(store => store.TryFailTerminalAsync(
+            fixture.Lease.LeaseToken,
+            unavailable,
+            It.IsAny<CancellationToken>()), Times.Once);
+        fixture.JobStore.Verify(store => store.TryWaitForCapabilityAsync(
+            It.IsAny<CaptureAnalysisJobLeaseToken>(),
+            It.IsAny<AnalysisFailure>(),
+            It.IsAny<DateTimeOffset>(),
+            It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [TestMethod]
+    public async Task Run_WhenOptionalModelIsUnsupported_ShouldRecordAndStopQuietly()
+    {
+        using var fixture = new WorkerFixture();
+        fixture.ConfigureOptionalCapability();
+        var unavailable = new AnalysisFailure(
+            AnalysisFailureCode.CapabilityUnavailable,
+            AnalysisFailureDisposition.Terminal);
+        fixture.Resolutions =
+        [
+            CaptureAnalyzerResolution.NoEligibleAnalyzer(
+            [
+                new CaptureAnalyzerCandidateEvaluation(
+                    fixture.Descriptor,
+                    CaptureAnalyzerEligibilityStatus.Unavailable,
+                    CaptureAnalyzerAvailability.Unsupported(unavailable)),
+            ]),
+        ];
+
+        await fixture.RunAsync();
+
+        fixture.Mutation.Verify(coordinator => coordinator.TryCommitCapabilityAsync(
+            It.IsAny<AnalysisCommitToken>(),
+            It.Is<CapabilityOutcome>(outcome =>
+                outcome.State == CapabilityOutcomeState.Unsupported &&
+                outcome.Failure == unavailable),
+            It.IsAny<long>(),
+            It.IsAny<CancellationToken>()), Times.Once);
+        fixture.JobStore.Verify(store => store.TryCancelAsync(
+            fixture.Intent.Key,
+            It.IsAny<CancellationToken>()), Times.Once);
+        fixture.JobStore.Verify(store => store.TryFailTerminalAsync(
+            It.IsAny<CaptureAnalysisJobLeaseToken>(),
+            It.IsAny<AnalysisFailure>(),
+            It.IsAny<CancellationToken>()), Times.Never);
+        fixture.JobStore.Verify(store => store.TryWaitForCapabilityAsync(
+            It.IsAny<CaptureAnalysisJobLeaseToken>(),
+            It.IsAny<AnalysisFailure>(),
+            It.IsAny<DateTimeOffset>(),
+            It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [TestMethod]
@@ -229,22 +321,43 @@ public sealed class CaptureAnalysisWorkerTests
     }
 
     [TestMethod]
-    public async Task Run_ShouldSkipDeniedAnalyzerAndWaitForAnotherCandidate()
+    public async Task Run_ShouldFinishWhenAllAnalyzerCandidatesAreDenied()
     {
         using var fixture = new WorkerFixture();
         fixture.DeniedStages.Add(CaptureAnalysisAuthorizationStage.AnalyzerInvocation);
+        fixture.Resolutions =
+        [
+            fixture.ResolvedResolution,
+            CaptureAnalyzerResolution.NoEligibleAnalyzer(
+            [
+                new CaptureAnalyzerCandidateEvaluation(
+                    fixture.Descriptor,
+                    CaptureAnalyzerEligibilityStatus.Unavailable),
+            ]),
+        ];
 
         await fixture.RunAsync();
 
         fixture.JobStore.Verify(store => store.TryWaitForCapabilityAsync(
+            It.IsAny<CaptureAnalysisJobLeaseToken>(),
+            It.IsAny<AnalysisFailure>(),
+            It.IsAny<DateTimeOffset>(),
+            It.IsAny<CancellationToken>()), Times.Never);
+        fixture.JobStore.Verify(store => store.TryFailTerminalAsync(
             fixture.Lease.LeaseToken,
             It.Is<AnalysisFailure>(failure =>
-                failure.Code == AnalysisFailureCode.CapabilityUnavailable),
-            fixture.UtcNow.AddSeconds(15),
+                failure.Code == AnalysisFailureCode.CapabilityUnavailable &&
+                failure.Disposition == AnalysisFailureDisposition.Terminal),
             It.IsAny<CancellationToken>()), Times.Once);
-        Assert.HasCount(3, fixture.ResolutionRequests);
-        Assert.IsTrue(fixture.ResolutionRequests.Skip(1).All(request =>
-            request.AttemptedAnalyzers.Contains(fixture.AnalyzerIdentity.Revision)));
+        fixture.Mutation.Verify(coordinator => coordinator.TryCommitCapabilityAsync(
+            It.IsAny<AnalysisCommitToken>(),
+            It.Is<CapabilityOutcome>(outcome =>
+                outcome.State == CapabilityOutcomeState.TerminalFailure),
+            It.IsAny<long>(),
+            It.IsAny<CancellationToken>()), Times.Once);
+        Assert.HasCount(2, fixture.ResolutionRequests);
+        Assert.IsTrue(fixture.ResolutionRequests[1].AttemptedAnalyzers.Contains(
+            fixture.AnalyzerIdentity.Revision));
     }
 
     [TestMethod]
@@ -874,6 +987,25 @@ public sealed class CaptureAnalysisWorkerTests
                 Lease.LeaseToken,
                 Intent,
                 UtcNow.AddMinutes(2));
+        }
+
+        public void ConfigureOptionalCapability()
+        {
+            CaptureAnalysisRecipe recipe = AnalysisTestData.CreateRecipe(
+                capabilities:
+                [
+                    new RecipeCapability(
+                        Intent.Key.Capability,
+                        RecipeCapabilityRequirement.Optional),
+                ]);
+            Snapshot = new CaptureAnalysisStoreSnapshot(
+                2,
+                new CaptureAnalysisRecord(
+                    Preconditions.CaptureId,
+                    CaptureMediaKind.Image,
+                    AnalysisTestData.CapturedAtUtc,
+                    Preconditions.SourceRevision,
+                    recipe));
         }
 
         public void SetInitialAttempts(params CaptureAnalyzerAttempt[] attempts)
