@@ -634,7 +634,7 @@ public sealed class CaptureAnalysisPolicyServiceTests
     }
 
     [TestMethod]
-    public async Task RevokeAndRenew_ShouldNotResurrectOldEnrollments()
+    public async Task RevokeAndRenew_ShouldRequireExplicitBackfillToReadmitClearedEnrollments()
     {
         CaptureAnalysisPolicy policy = CreateGrantedPolicy(watermark: 3);
         CaptureAnalysisEnrollment enrolled = CreateEnrollment(assetSequence: 4);
@@ -686,7 +686,7 @@ public sealed class CaptureAnalysisPolicyServiceTests
         CaptureAnalysisEnrollment retired = store.Snapshot.State.Enrollments.Single(candidate =>
             candidate.CaptureId == enrolled.CaptureId);
         Assert.AreEqual(CaptureAnalysisEnrollmentState.Excluded, retired.State);
-        Assert.AreEqual(CaptureAnalysisExclusionReason.UserExcluded, retired.ExclusionReason);
+        Assert.AreEqual(CaptureAnalysisExclusionReason.MemoryCleared, retired.ExclusionReason);
         Assert.AreEqual(1, retired.TombstoneGeneration);
         Assert.AreEqual(
             CaptureAnalysisPolicyDenialReason.CaptureExcluded,
@@ -694,6 +694,22 @@ public sealed class CaptureAnalysisPolicyServiceTests
         Assert.AreEqual(
             CaptureAnalysisPolicyDenialReason.CaptureExcluded,
             admission.DenialReason);
+
+        await service.AuthorizeExistingCaptureBackfillAsync(store.Snapshot.DocumentRevision);
+        CaptureAnalysisAdmissionDecision readmitted = await service.AuthorizeAdmissionAsync(new(
+            CreateFinalization(4), AnalysisTestData.Purpose,
+            CaptureAnalysisAdmissionKind.ExistingCaptureBackfill));
+        Assert.IsTrue(readmitted.IsAuthorized);
+        Assert.AreEqual(0, readmitted.EnrollmentGeneration);
+        Assert.AreEqual(retired.TombstoneGeneration, readmitted.TombstoneGeneration);
+        foreach (CaptureAnalysisEnrollment protectedRow in new[] { excluded, forgotten })
+        {
+            CaptureAnalysisAdmissionDecision denied = await service.AuthorizeAdmissionAsync(new(
+                new CaptureAssetChange(4, protectedRow.CaptureId, 1,
+                    CaptureAssetChangeType.Finalized, AnalysisTestData.CapturedAtUtc),
+                AnalysisTestData.Purpose, CaptureAnalysisAdmissionKind.ExistingCaptureBackfill));
+            Assert.IsFalse(denied.IsAuthorized);
+        }
     }
 
     [TestMethod]

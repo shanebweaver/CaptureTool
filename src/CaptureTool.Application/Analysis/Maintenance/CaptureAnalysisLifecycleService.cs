@@ -70,7 +70,8 @@ internal sealed class CaptureAnalysisLifecycleService :
                     return new(CaptureAnalysisExclusionStatus.Rejected, request);
                 }
 
-                if (existing?.State == CaptureAnalysisEnrollmentState.Excluded)
+                if (existing?.State == CaptureAnalysisEnrollmentState.Excluded &&
+                    existing.ExclusionReason != CaptureAnalysisExclusionReason.MemoryCleared)
                 {
                     _ = await _cleanup.ReconcileCaptureAsync(request.CaptureId, cancellationToken)
                         .ConfigureAwait(false);

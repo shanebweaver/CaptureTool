@@ -344,6 +344,30 @@ public sealed class CaptureMemorySearchProjectionTests
     }
 
     [TestMethod]
+    public async Task IndexChanges_ShouldNotifySubscribersAfterSearchableStateIsPublished()
+    {
+        var fixture = new SearchFixture();
+        CaptureId captureId = fixture.AddCapture(49, "capture.png", "searchable after analysis", null);
+        using CaptureMemorySearchProjection service = fixture.CreateService();
+        var observedSearches = new List<Task<IReadOnlyList<CaptureMemorySearchResult>>>();
+        service.SearchIndexChanged += (_, _) => observedSearches.Add(service.SearchAsync(
+            new CaptureMemorySearchRequest("searchable after analysis", 10)).AsTask());
+
+        await service.RefreshAsync(captureId);
+        Assert.HasCount(1, observedSearches);
+        Assert.HasCount(1, await observedSearches[0].WaitAsync(TimeSpan.FromSeconds(5)));
+        await service.RemoveAsync(captureId);
+        Assert.HasCount(2, observedSearches);
+        Assert.IsEmpty(await observedSearches[1]);
+        _ = await service.RebuildAsync();
+        Assert.HasCount(3, observedSearches);
+        Assert.HasCount(1, await observedSearches[2]);
+        await service.ClearAsync();
+        Assert.HasCount(4, observedSearches);
+        Assert.IsEmpty(await observedSearches[3]);
+    }
+
+    [TestMethod]
     public async Task Refresh_ShouldUsePreferredOpenFilenameThenFallBackToRetainedSourceFilename()
     {
         var fixture = new SearchFixture();

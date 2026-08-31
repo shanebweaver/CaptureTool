@@ -98,6 +98,12 @@ internal sealed class CaptureAnalysisPolicyService :
         CaptureAnalysisEnrollment? enrollment = state.Enrollments.FirstOrDefault(
             item => item.CaptureId == request.CaptureId);
         CaptureAnalysisPolicyDenialReason? enrollmentDenial = GetEnrollmentDenial(enrollment);
+        bool canRestoreCleared = enrollment is
+            { State: CaptureAnalysisEnrollmentState.Excluded,
+              ExclusionReason: CaptureAnalysisExclusionReason.MemoryCleared } &&
+            request.Kind == CaptureAnalysisAdmissionKind.ExistingCaptureBackfill &&
+            enrollment.AssetFinalizationSequence == request.AssetFinalizationSequence &&
+            policy.IsExistingCaptureBackfillEligible(request.AssetFinalizationSequence);
         if (request.IsPrivateCapture || enrollment?.ExclusionReason == CaptureAnalysisExclusionReason.PrivateCapture)
         {
             return DenyAdmission(
@@ -107,7 +113,7 @@ internal sealed class CaptureAnalysisPolicyService :
                 enrollment);
         }
 
-        if (enrollmentDenial.HasValue)
+        if (enrollmentDenial.HasValue && !canRestoreCleared)
         {
             return DenyAdmission(request, enrollmentDenial.Value, state, enrollment);
         }
@@ -145,7 +151,7 @@ internal sealed class CaptureAnalysisPolicyService :
             state.PolicyRevision,
             state.ControlGeneration,
             0,
-            0,
+            enrollment?.TombstoneGeneration ?? 0,
             state.AuthorizationScope!);
     }
 
@@ -512,13 +518,14 @@ internal sealed class CaptureAnalysisPolicyService :
 
         // An enrolled row is evidence for one authorization epoch only. Retire it to a path-free
         // tombstone before asynchronous cleanup so late jobs cannot resurrect derived content and
-        // a restart can finish the purge.
+        // a restart can finish the purge. Global retirement is not a permanent per-capture
+        // exclusion: a later explicit existing-capture opt-in may start a fresh generation.
         return current.Enrollments.Select(enrollment =>
             enrollment.State == CaptureAnalysisEnrollmentState.Enrolled
                 ? new CaptureAnalysisEnrollment(
                     enrollment.CaptureId,
                     CaptureAnalysisEnrollmentState.Excluded,
-                    CaptureAnalysisExclusionReason.UserExcluded,
+                    CaptureAnalysisExclusionReason.MemoryCleared,
                     checked(enrollment.EnrollmentGeneration + 1),
                     checked(enrollment.TombstoneGeneration + 1),
                     enrollment.AssetFinalizationSequence,

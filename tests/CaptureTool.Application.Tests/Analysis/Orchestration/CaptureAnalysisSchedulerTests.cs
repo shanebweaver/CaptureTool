@@ -1,4 +1,6 @@
 using CaptureTool.Application.Abstractions.Analysis.Analyzers;
+using CaptureTool.Application.Abstractions.Analysis.Consent;
+using CaptureTool.Application.Abstractions.Analysis.Memory;
 using CaptureTool.Application.Abstractions.Analysis.Intake;
 using CaptureTool.Application.Abstractions.Analysis.Jobs;
 using CaptureTool.Application.Abstractions.Analysis.Orchestration;
@@ -6,9 +8,15 @@ using CaptureTool.Application.Abstractions.Analysis.Persistence;
 using CaptureTool.Application.Abstractions.Analysis.Policy;
 using CaptureTool.Application.Abstractions.Analysis.Sources;
 using CaptureTool.Application.Abstractions.Capture.Assets;
+using CaptureTool.Application.Abstractions.Files;
+using CaptureTool.Application.Abstractions.Settings;
 using CaptureTool.Application.Abstractions.Time;
 using CaptureTool.Application.Analysis.Analyzers;
+using CaptureTool.Application.Analysis.Intake;
+using CaptureTool.Application.Analysis.Maintenance;
+using CaptureTool.Application.Analysis.Memory;
 using CaptureTool.Application.Analysis.Orchestration;
+using CaptureTool.Application.Analysis.Policy;
 using CaptureTool.Domain;
 using CaptureTool.Domain.Analysis;
 using CaptureTool.Domain.Analysis.Payloads;
@@ -206,6 +214,114 @@ public sealed class CaptureAnalysisSchedulerTests
         Assert.AreEqual(1, jobs.RequeueCount);
     }
 
+    [TestMethod]
+    public async Task RepeatedEraseEnableAndBackfill_ShouldScheduleFreshGenerationsAndRestoreSearch()
+    {
+        CaptureId id = CaptureId.New();
+        var asset = new CaptureAsset(id, CaptureFileType.Image,
+            Path.GetFullPath(Path.Combine(Path.GetTempPath(), $"{id}.png")),
+            CaptureSourceOwnership.AppOwned, CapturedAtUtc);
+        var finalization = new CaptureAssetChange(11, id, 1,
+            CaptureAssetChangeType.Finalized, CapturedAtUtc);
+        var assets = new StubCaptureAssetCatalog(asset, finalization);
+        var control = new StubControlStore(new CaptureAnalysisControlSnapshot(1,
+            new CaptureAnalysisControlState(CaptureAnalysisPolicy.Unknown.GrantFutureCaptures(
+                CaptureAnalysisPolicyDefaults.CreateAuthorizationScope(), 10), [])));
+        string consent = CaptureAnalysisConsentSettingValues.Granted;
+        var settings = new Mock<ISettingsService>();
+        settings.Setup(value => value.IsSet(CaptureToolSettings.Settings_CaptureAnalysisConsent)).Returns(true);
+        settings.Setup(value => value.Get(CaptureToolSettings.Settings_CaptureAnalysisConsent)).Returns(() => consent);
+        settings.Setup(value => value.TrySetAndSaveAsync(CaptureToolSettings.Settings_CaptureAnalysisConsent,
+                It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((IStringSettingDefinition _, string value, CancellationToken _) =>
+            {
+                consent = value;
+                return SettingsMutationResult.Saved;
+            });
+        var feature = new StubFeatureAvailability();
+        using var policy = new CaptureAnalysisPolicyService(assets, control, feature, settings.Object);
+        var metadata = new StubMetadataStore();
+        using var projection = new CaptureMemorySearchProjection(metadata, control, assets);
+        var cleanup = new ClearingCleanupCoordinator(metadata, projection);
+        var commands = new CaptureAnalysisPolicyCommandService(policy, cleanup);
+        var jobs = new RecordingJobStore();
+        var source = new StubVerifiedSource(id);
+        CaptureAnalysisRecipe recipe = CaptureAnalysisRecipeDefaults.CreateCaptureMemoryImageRecipe();
+        var scheduler = new CaptureAnalysisScheduler(policy, control, new StubSourceVerifier(source),
+            new StubMutationCoordinator(metadata, asset, recipe), metadata, jobs,
+            new RecordingWakeSignal(jobs, recipe.Capabilities.Count), feature, new CaptureAnalyzerCatalog([]),
+            assets, new StubClock(CapturedAtUtc), cleanup);
+        var changes = new Mock<ICaptureAssetChangeReader>();
+        changes.Setup(value => value.ReadAfterAsync(It.IsAny<long>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((long checkpoint, CancellationToken _) => new CaptureAssetChangeBatch(
+                checkpoint, 11, 11, checkpoint < 11 ? [finalization] : []));
+        using var intake = new CaptureAnalysisIntakeService(changes.Object, assets, control, policy,
+            scheduler, jobs, projection, feature, Mock.Of<IFileSystem>(), cleanup);
+
+        for (int cycle = 0; cycle < 4; cycle++)
+        {
+            if (cycle == 0)
+            {
+                Assert.AreEqual(CaptureAnalysisScheduleStatus.Scheduled,
+                    (await scheduler.ScheduleAsync(new(new CaptureAnalysisAdmissionRequest(finalization,
+                        CaptureAnalysisPolicyDefaults.CaptureMemorySearchPurpose,
+                        CaptureAnalysisAdmissionKind.FutureCapture), recipe, ProcessingBoundary.OnDevice))).Status);
+            }
+            else
+            {
+                await commands.ApplyConsentDecisionAsync(new CaptureAnalysisConsentResponse(
+                    CaptureAnalysisPolicyDefaults.CreateConsentDisclosure(),
+                    CaptureAnalysisConsentDecision.GrantedForFutureCaptures), control.Snapshot.DocumentRevision);
+                Assert.IsFalse((await policy.AuthorizeAdmissionAsync(new(finalization,
+                    CaptureAnalysisPolicyDefaults.CaptureMemorySearchPurpose,
+                    CaptureAnalysisAdmissionKind.FutureCapture))).IsAuthorized);
+                await commands.AuthorizeExistingCaptureBackfillAsync(control.Snapshot.DocumentRevision);
+                CaptureAnalysisBackfillRunResult backfill = await intake.RunAsync();
+                Assert.AreEqual(CaptureAnalysisBackfillRunStatus.Completed, backfill.Status);
+                Assert.AreEqual(1, backfill.Progress.ScheduledCaptureCount);
+            }
+
+            CaptureAnalysisEnrollment enrollment = control.Snapshot.State.Enrollments.Single();
+            Assert.AreEqual(CaptureAnalysisEnrollmentState.Enrolled, enrollment.State);
+            Assert.AreEqual(cycle * 2 + 1, enrollment.EnrollmentGeneration);
+            Assert.AreEqual(cycle, enrollment.TombstoneGeneration);
+            Assert.HasCount((cycle + 1) * recipe.Capabilities.Count, jobs.Keys);
+            Assert.AreEqual(jobs.Keys.Count, jobs.Keys.Distinct().Count());
+
+            // Simulate fresh model output, then use the real projection/search implementation.
+            string recognizedText = $"recovered text cycle {cycle}";
+            var result = new CanonicalCapabilityResult(id, source.SourceRevision,
+                new OcrDocumentV1(new PixelSize(100, 100), recognizedText, [], []),
+                CreateAnalyzerIdentity("1"), ProcessingBoundary.OnDevice, CapturedAtUtc);
+            metadata.Snapshot = new CaptureAnalysisStoreSnapshot(2,
+                new CaptureAnalysisRecord(id, CaptureMediaKind.Image, CapturedAtUtc,
+                    source.SourceRevision, recipe,
+                    [new CapabilityAnalysis(AnalysisCapabilities.OcrDocumentV1, result, null)]));
+            await projection.RefreshAsync(id);
+            Assert.HasCount(1, await projection.SearchAsync(new CaptureMemorySearchRequest(recognizedText, 10)));
+
+            await commands.RevokeAsync(control.Snapshot.DocumentRevision);
+            Assert.AreEqual(CaptureAnalysisExclusionReason.MemoryCleared,
+                control.Snapshot.State.Enrollments.Single().ExclusionReason);
+            Assert.IsNull(metadata.Snapshot);
+            Assert.IsEmpty(await projection.SearchAsync(new CaptureMemorySearchRequest(recognizedText, 10)));
+        }
+    }
+
+    private sealed class ClearingCleanupCoordinator(
+        StubMetadataStore metadata, CaptureMemorySearchProjection projection) : ICaptureAnalysisCleanupCoordinator
+    {
+        public async ValueTask<bool> ReconcileAsync(CancellationToken cancellationToken = default)
+        {
+            metadata.Snapshot = null;
+            await projection.ClearAsync(cancellationToken);
+            return true;
+        }
+
+        public ValueTask<bool> ReconcileCaptureAsync(CaptureId id,
+            CancellationToken cancellationToken = default) => ValueTask.FromResult(true);
+    }
+
     private static AnalyzerIdentity CreateAnalyzerIdentity(string adapterVersion) => new(
         "windows-media-properties",
         "windows",
@@ -254,13 +370,26 @@ public sealed class CaptureAnalysisSchedulerTests
     private sealed class StubControlStore(CaptureAnalysisControlSnapshot snapshot) :
         ICaptureAnalysisControlStore
     {
+        public CaptureAnalysisControlSnapshot Snapshot { get; private set; } = snapshot;
+
         public ValueTask<CaptureAnalysisControlSnapshot> GetAsync(
-            CancellationToken cancellationToken = default) => ValueTask.FromResult(snapshot);
+            CancellationToken cancellationToken = default) => ValueTask.FromResult(Snapshot);
 
         public ValueTask<CaptureAnalysisControlWriteResult> TryWriteAsync(
             CaptureAnalysisControlState state,
             long expectedDocumentRevision,
-            CancellationToken cancellationToken = default) => throw new NotSupportedException();
+            CancellationToken cancellationToken = default)
+        {
+            if (expectedDocumentRevision != Snapshot.DocumentRevision)
+            {
+                return ValueTask.FromResult(new CaptureAnalysisControlWriteResult(
+                    CaptureAnalysisControlWriteStatus.Conflict, Snapshot));
+            }
+
+            Snapshot = new(Snapshot.DocumentRevision + 1, state);
+            return ValueTask.FromResult(new CaptureAnalysisControlWriteResult(
+                CaptureAnalysisControlWriteStatus.Succeeded, Snapshot));
+        }
     }
 
     private sealed class StubSourceVerifier(IVerifiedCaptureAnalysisSource source) :

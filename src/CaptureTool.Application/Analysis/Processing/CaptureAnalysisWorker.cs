@@ -405,6 +405,13 @@ internal sealed class CaptureAnalysisWorker : ICaptureAnalysisWorker
                     intent = recovered.Intent!;
                 }
 
+                if (!await RefreshProjectionBeforeCompletionAsync(
+                    lease.LeaseToken, intent, analyzer.Descriptor.Identity, cancellationToken)
+                    .ConfigureAwait(false))
+                {
+                    return;
+                }
+
                 CaptureAnalysisJobMutationResult completed = await _jobStore.TryCompleteAsync(
                     lease.LeaseToken,
                     cancellationToken).ConfigureAwait(false);
@@ -415,8 +422,6 @@ internal sealed class CaptureAnalysisWorker : ICaptureAnalysisWorker
                         intent.Key.Capability,
                         GetUtcNow(),
                         cancellationToken).ConfigureAwait(false);
-                    await TryRefreshProjectionAsync(intent.Key.CaptureId, cancellationToken)
-                        .ConfigureAwait(false);
                 }
 
                 return;
@@ -552,6 +557,13 @@ internal sealed class CaptureAnalysisWorker : ICaptureAnalysisWorker
                 if (commit == CaptureAnalysisStoreWriteStatus.Succeeded)
                 {
                     await TryClearCheckpointAsync(checkpoint).ConfigureAwait(false);
+                    if (!await RefreshProjectionBeforeCompletionAsync(
+                        lease.LeaseToken, intent, analyzer.Descriptor.Identity, cancellationToken)
+                        .ConfigureAwait(false))
+                    {
+                        return;
+                    }
+
                     CaptureAnalysisJobMutationResult completed = await _jobStore.TryCompleteAsync(
                         lease.LeaseToken,
                         cancellationToken).ConfigureAwait(false);
@@ -562,8 +574,6 @@ internal sealed class CaptureAnalysisWorker : ICaptureAnalysisWorker
                             intent.Key.Capability,
                             GetUtcNow(),
                             cancellationToken).ConfigureAwait(false);
-                        await TryRefreshProjectionAsync(expected.CaptureId, cancellationToken)
-                            .ConfigureAwait(false);
                     }
                 }
                 else if (commit == CaptureAnalysisStoreWriteStatus.StaleCommit)
@@ -1021,6 +1031,34 @@ internal sealed class CaptureAnalysisWorker : ICaptureAnalysisWorker
             failure,
             GetUtcNow() + retryDelay,
             cancellationToken).ConfigureAwait(false);
+    }
+
+    private async Task<bool> RefreshProjectionBeforeCompletionAsync(
+        CaptureAnalysisJobLeaseToken leaseToken,
+        CaptureAnalysisJobIntent intent,
+        AnalyzerIdentity analyzer,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            // Search must observe committed metadata before activity can report this job done.
+            await _projectionRefresher.RefreshAsync(intent.Key.CaptureId, cancellationToken)
+                .ConfigureAwait(false);
+            return true;
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception exception)
+        {
+            _logService.LogException(exception, "Failed to refresh a Capture Analysis projection.");
+            // The canonical result is already committed. Recovery refreshes the projection
+            // without invoking the model again, rather than silently marking the job complete.
+            await RecordCommitRetryAsync(leaseToken, intent, analyzer, GetUtcNow(), cancellationToken)
+                .ConfigureAwait(false);
+            return false;
+        }
     }
 
     private async Task RefreshCompletedProjectionsAsync(CancellationToken cancellationToken)

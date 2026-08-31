@@ -53,6 +53,64 @@ public sealed class CaptureAnalysisWorkerTests
     }
 
     [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task Run_ShouldKeepJobActiveUntilSearchProjectionIsPublished(bool alreadyCommitted)
+    {
+        using var fixture = new WorkerFixture();
+        if (alreadyCommitted)
+        {
+            fixture.SetCommittedResult();
+        }
+
+        var started = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var publish = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        fixture.Projection.Setup(value => value.RefreshAsync(
+                fixture.Intent.Key.CaptureId, It.IsAny<CancellationToken>()))
+            .Returns(() =>
+            {
+                started.TrySetResult();
+                return new ValueTask(publish.Task);
+            });
+        Task run = fixture.RunAsync();
+        await started.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        fixture.JobStore.Verify(value => value.TryCompleteAsync(
+            It.IsAny<CaptureAnalysisJobLeaseToken>(), It.IsAny<CancellationToken>()), Times.Never);
+        publish.SetResult();
+        await run;
+        fixture.JobStore.Verify(value => value.TryCompleteAsync(
+            fixture.Lease.LeaseToken, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task Run_WhenProjectionFails_ShouldRetryInsteadOfReportingCompletion(bool alreadyCommitted)
+    {
+        using var fixture = new WorkerFixture();
+        if (alreadyCommitted)
+        {
+            fixture.SetCommittedResult();
+        }
+
+        fixture.Projection.Setup(value => value.RefreshAsync(
+                It.IsAny<CaptureId>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new IOException("Index unavailable"));
+
+        await fixture.RunAsync();
+
+        fixture.JobStore.Verify(value => value.TryCompleteAsync(
+            It.IsAny<CaptureAnalysisJobLeaseToken>(), It.IsAny<CancellationToken>()), Times.Never);
+        fixture.JobStore.Verify(value => value.TryScheduleRetryAsync(
+            fixture.Lease.LeaseToken,
+            It.Is<AnalysisFailure>(failure => failure.Disposition == AnalysisFailureDisposition.Transient),
+            It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()), Times.Once);
+        fixture.Analyzer.Verify(value => value.AnalyzeAsync(
+            It.IsAny<CaptureAnalysisRequest>(), It.IsAny<CancellationToken>()),
+            alreadyCommitted ? Times.Never() : Times.Once());
+    }
+
+    [TestMethod]
     public async Task Run_ShouldPassNormalizedDependenciesAndCommitExactInputProvenance()
     {
         using var fixture = new WorkerFixture();
@@ -594,7 +652,7 @@ public sealed class CaptureAnalysisWorkerTests
     }
 
     [TestMethod]
-    public async Task Run_ShouldIgnoreProjectionFailureAfterDurableCompletion()
+    public async Task Run_ShouldLogProjectionFailureWithoutReportingCompletion()
     {
         using var fixture = new WorkerFixture();
         fixture.Projection.Setup(projection => projection.RefreshAsync(
@@ -606,7 +664,7 @@ public sealed class CaptureAnalysisWorkerTests
 
         fixture.JobStore.Verify(store => store.TryCompleteAsync(
             fixture.Lease.LeaseToken,
-            It.IsAny<CancellationToken>()), Times.Once);
+            It.IsAny<CancellationToken>()), Times.Never);
         fixture.Log.Verify(log => log.LogException(
             It.IsAny<IOException>(),
             "Failed to refresh a Capture Analysis projection."), Times.Once);

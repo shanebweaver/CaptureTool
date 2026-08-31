@@ -203,3 +203,8 @@ public interface ICaptureMemoryFeatureAvailability
 {
     bool IsCaptureMemorySearchEnabled { get; }
 }
+
+public interface ICaptureMemorySearchChangeNotifier
+{
+    event EventHandler? SearchIndexChanged;
+}

@@ -37,6 +37,9 @@ public sealed class CaptureMemoryHomeViewModel : ViewModelBase
     private Task _searchCompletion = Task.CompletedTask;
     private int _searchGeneration;
     private string _searchQuery = string.Empty;
+    private readonly ICaptureMemorySearchChangeNotifier? _searchChangeNotifier;
+    private SynchronizationContext? _searchUiContext;
+    private bool _searchChangesSubscribed;
 
     public CaptureMemoryHomeViewModel(
         ICaptureMemoryFeatureAvailability? featureAvailability = null,
@@ -54,6 +57,7 @@ public sealed class CaptureMemoryHomeViewModel : ViewModelBase
     {
         _featureAvailability = featureAvailability;
         _searchService = searchService;
+        _searchChangeNotifier = searchService as ICaptureMemorySearchChangeNotifier;
         _resultResolver = resultResolver;
         _openResultUseCase = openResultUseCase;
         _policyService = policyService;
@@ -239,7 +243,15 @@ public sealed class CaptureMemoryHomeViewModel : ViewModelBase
 
     public async Task LoadAsync(CancellationToken cancellationToken)
     {
+        _searchUiContext = SynchronizationContext.Current;
+        if (!_searchChangesSubscribed && _searchChangeNotifier != null)
+        {
+            _searchChangeNotifier.SearchIndexChanged += OnSearchIndexChanged;
+            _searchChangesSubscribed = true;
+        }
+
         await RefreshPolicyAsync(cancellationToken);
+        _searchCompletion = QueueSearchAsync(SearchQuery, debounce: false);
         if (IsIndexing && _backfillService != null && _backfillCompletion.IsCompleted)
         {
             _backfillCompletion = RunBackfillAsync();
@@ -248,8 +260,14 @@ public sealed class CaptureMemoryHomeViewModel : ViewModelBase
 
     public override void Dispose()
     {
+        if (_searchChangesSubscribed && _searchChangeNotifier != null)
+        {
+            _searchChangeNotifier.SearchIndexChanged -= OnSearchIndexChanged;
+            _searchChangesSubscribed = false;
+        }
         _searchCancellation?.Cancel();
         _searchCancellation?.Dispose();
+        _searchCancellation = null;
         _policyRefreshCancellation?.Cancel();
         base.Dispose();
     }
@@ -367,6 +385,8 @@ public sealed class CaptureMemoryHomeViewModel : ViewModelBase
         finally
         {
             IsPreparing = false;
+            // Fast backfill can publish results while setup still hides the search UI.
+            _searchCompletion = QueueSearchAsync(SearchQuery, debounce: false);
         }
     }
 
@@ -482,7 +502,28 @@ public sealed class CaptureMemoryHomeViewModel : ViewModelBase
         }
     }
 
-    private Task QueueSearchAsync(string query)
+    private void OnSearchIndexChanged(object? sender, EventArgs e)
+    {
+        void RefreshSearch()
+        {
+            if (_searchChangesSubscribed)
+            {
+                _searchCompletion = QueueSearchAsync(SearchQuery, debounce: false);
+            }
+        }
+
+        // Index updates originate in the analysis worker, but bound results belong to the UI.
+        if (_searchUiContext != null && SynchronizationContext.Current != _searchUiContext)
+        {
+            _searchUiContext.Post(_ => RefreshSearch(), null);
+        }
+        else
+        {
+            RefreshSearch();
+        }
+    }
+
+    private Task QueueSearchAsync(string query, bool debounce = true)
     {
         int generation = Interlocked.Increment(ref _searchGeneration);
         _searchCancellation?.Cancel();
@@ -508,14 +549,17 @@ public sealed class CaptureMemoryHomeViewModel : ViewModelBase
 
         var cancellation = new CancellationTokenSource();
         _searchCancellation = cancellation;
-        return SearchAsync(query, generation, cancellation.Token);
+        return SearchAsync(query, generation, cancellation.Token, debounce);
     }
 
-    private async Task SearchAsync(string query, int generation, CancellationToken cancellationToken)
+    private async Task SearchAsync(string query, int generation, CancellationToken cancellationToken, bool debounce)
     {
         try
         {
-            await Task.Delay(TimeSpan.FromMilliseconds(150), cancellationToken);
+            if (debounce)
+            {
+                await Task.Delay(TimeSpan.FromMilliseconds(150), cancellationToken);
+            }
             IsSearching = true;
             HasSearchFailure = false;
             HasCorruptProjection = false;

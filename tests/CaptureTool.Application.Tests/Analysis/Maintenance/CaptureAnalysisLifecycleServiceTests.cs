@@ -47,6 +47,33 @@ public sealed class CaptureAnalysisLifecycleServiceTests
     }
 
     [TestMethod]
+    [DataRow(CaptureAnalysisExclusionKind.UserExcluded, CaptureAnalysisExclusionReason.UserExcluded)]
+    [DataRow(CaptureAnalysisExclusionKind.PrivateCapture, CaptureAnalysisExclusionReason.PrivateCapture)]
+    public async Task ExcludeAsync_AfterMemoryClear_ShouldPersistPermanentExclusion(
+        CaptureAnalysisExclusionKind kind,
+        CaptureAnalysisExclusionReason reason)
+    {
+        CaptureAnalysisEnrollment enrolled = CreateEnrollment(2);
+        var store = new TestControlStore(CreateControl(enrolled));
+        using CaptureAnalysisLifecycleService service = CreateService(
+            store,
+            CreateAssetCatalog(enrolled.CaptureId, 2),
+            new TestCleanupCoordinator());
+        _ = await service.ClearMemoryAsync();
+        CaptureAnalysisEnrollment cleared = store.Snapshot.State.Enrollments.Single();
+
+        CaptureAnalysisExclusionResult result = await service.ExcludeAsync(
+            new CaptureAnalysisExclusionRequest(enrolled.CaptureId, kind));
+
+        Assert.AreEqual(CaptureAnalysisExclusionStatus.Succeeded, result.Status);
+        CaptureAnalysisEnrollment excluded = store.Snapshot.State.Enrollments.Single();
+        Assert.AreEqual(CaptureAnalysisEnrollmentState.Excluded, excluded.State);
+        Assert.AreEqual(reason, excluded.ExclusionReason);
+        Assert.AreEqual(cleared.EnrollmentGeneration + 1, excluded.EnrollmentGeneration);
+        Assert.AreEqual(cleared.TombstoneGeneration + 1, excluded.TombstoneGeneration);
+    }
+
+    [TestMethod]
     public async Task ClearMemoryAsync_ShouldResetWatermarkBeforeCleanupAndKeepFutureAdmissionEnabled()
     {
         List<string> ordering = [];

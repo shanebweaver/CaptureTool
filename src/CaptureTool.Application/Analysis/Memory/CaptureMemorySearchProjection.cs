@@ -11,6 +11,7 @@ namespace CaptureTool.Application.Analysis.Memory;
 
 internal sealed class CaptureMemorySearchProjection :
     ICaptureMemorySearchService,
+    ICaptureMemorySearchChangeNotifier,
     ICaptureAnalysisProjectionRefresher,
     ICaptureAnalysisProjectionMaintenance,
     IDisposable
@@ -40,6 +41,8 @@ internal sealed class CaptureMemorySearchProjection :
     private readonly object _stateGate = new();
     private Dictionary<CaptureId, ProjectionEntry> _entries = [];
     private bool _isInitialized;
+
+    public event EventHandler? SearchIndexChanged;
 
     public CaptureMemorySearchProjection(
         ICaptureAnalysisStore metadataStore,
@@ -147,6 +150,8 @@ internal sealed class CaptureMemorySearchProjection :
         {
             _mutationGate.Release();
         }
+
+        SearchIndexChanged?.Invoke(this, EventArgs.Empty);
     }
 
     public async ValueTask RemoveAsync(
@@ -170,6 +175,8 @@ internal sealed class CaptureMemorySearchProjection :
         {
             _mutationGate.Release();
         }
+
+        SearchIndexChanged?.Invoke(this, EventArgs.Empty);
     }
 
     public async ValueTask ClearAsync(CancellationToken cancellationToken = default)
@@ -187,19 +194,25 @@ internal sealed class CaptureMemorySearchProjection :
         {
             _mutationGate.Release();
         }
+
+        SearchIndexChanged?.Invoke(this, EventArgs.Empty);
     }
 
     public async ValueTask<int> RebuildAsync(CancellationToken cancellationToken = default)
     {
+        int count;
         await _mutationGate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
-            return await RebuildCoreAsync(cancellationToken).ConfigureAwait(false);
+            count = await RebuildCoreAsync(cancellationToken).ConfigureAwait(false);
         }
         finally
         {
             _mutationGate.Release();
         }
+
+        SearchIndexChanged?.Invoke(this, EventArgs.Empty);
+        return count;
     }
 
     public void Dispose()

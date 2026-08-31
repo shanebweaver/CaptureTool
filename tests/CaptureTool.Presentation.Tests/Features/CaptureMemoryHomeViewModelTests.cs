@@ -45,6 +45,42 @@ public sealed class CaptureMemoryHomeViewModelTests
     }
 
     [TestMethod]
+    public async Task IndexChanges_ShouldRefreshTheCurrentQueryAfterEraseAndReanalysis()
+    {
+        CaptureId id = CaptureId.New();
+        IReadOnlyList<CaptureMemorySearchResult> matches = [];
+        var search = new Mock<ICaptureMemorySearchService>();
+        var changes = search.As<ICaptureMemorySearchChangeNotifier>();
+        search.Setup(value => value.SearchAsync(
+                It.IsAny<CaptureMemorySearchRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(() => matches);
+        using CaptureMemoryHomeViewModel viewModel = CreateViewModel(search.Object);
+        await viewModel.LoadAsync(CancellationToken.None);
+        viewModel.SearchQuery = "recognized words";
+        await viewModel.SearchCompletion;
+        Assert.IsTrue(viewModel.ShowNoMatches);
+
+        for (int cycle = 0; cycle < 3; cycle++)
+        {
+            matches = [CreateResult(id, 1, CaptureMemoryMatchKind.OcrText, "recognized words")];
+            changes.Raise(value => value.SearchIndexChanged += null, EventArgs.Empty);
+            await viewModel.SearchCompletion;
+            Assert.HasCount(1, viewModel.Results);
+            Assert.AreEqual("recognized words", viewModel.SearchQuery);
+            matches = [];
+            changes.Raise(value => value.SearchIndexChanged += null, EventArgs.Empty);
+            await viewModel.SearchCompletion;
+            Assert.IsEmpty(viewModel.Results);
+        }
+
+        viewModel.Dispose();
+        search.Invocations.Clear();
+        changes.Raise(value => value.SearchIndexChanged += null, EventArgs.Empty);
+        search.Verify(value => value.SearchAsync(It.IsAny<CaptureMemorySearchRequest>(),
+            It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [TestMethod]
     public async Task Search_CancelsStaleResultsAndMapsExplanationsAndMissingSources()
     {
         CaptureId staleId = CaptureId.New();
@@ -197,7 +233,7 @@ public sealed class CaptureMemoryHomeViewModelTests
     }
 
     [TestMethod]
-    public async Task EnableExistingCaptureMemory_ShouldStartAuthorizedBackfill()
+    public async Task EnableExistingCaptureMemory_ShouldStartAuthorizedBackfillAndRefreshExistingQuery()
     {
         CaptureAnalysisPolicySnapshot initial = CreatePolicySnapshot(authorized: false);
         CaptureAnalysisPolicySnapshot authorized = CreatePolicySnapshot(authorized: true);
@@ -245,25 +281,34 @@ public sealed class CaptureMemoryHomeViewModelTests
             .ReturnsAsync(AnalysisCapabilityPreparationState.Ready(
                 CreateAnalyzerIdentity(),
                 ProcessingBoundary.OnDevice));
+        var search = new Mock<ICaptureMemorySearchService>();
+        var changes = search.As<ICaptureMemorySearchChangeNotifier>();
+        search.Setup(value => value.SearchAsync(
+                It.IsAny<CaptureMemorySearchRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync([CreateResult(CaptureId.New(), 1, CaptureMemoryMatchKind.OcrText, "recognized words")]);
         var backfill = new Mock<ICaptureAnalysisBackfillService>();
         backfill.Setup(value => value.RunAsync(
                 It.IsAny<IProgress<CaptureAnalysisBackfillProgress>>(),
                 It.IsAny<CancellationToken>()))
+            .Callback(() => changes.Raise(value => value.SearchIndexChanged += null, EventArgs.Empty))
             .ReturnsAsync(new CaptureAnalysisBackfillRunResult(
                 CaptureAnalysisBackfillRunStatus.Completed,
                 new CaptureAnalysisBackfillProgress(12, 12, 2)));
         CaptureMemoryHomeViewModel viewModel = CreateViewModel(
-            Mock.Of<ICaptureMemorySearchService>(),
+            search.Object,
             policyService: policy.Object,
             policyCommandService: commands.Object,
             preparationService: preparation.Object,
             backfillService: backfill.Object);
         await viewModel.LoadAsync(CancellationToken.None);
 
+        viewModel.SearchQuery = "recognized words";
         viewModel.IncludeExistingCaptures = true;
         await viewModel.EnableCaptureMemoryCommand.ExecuteAsync(null);
         await viewModel.BackfillCompletion;
+        await viewModel.SearchCompletion;
 
+        Assert.HasCount(1, viewModel.Results);
         Assert.IsTrue(viewModel.IsAuthorized);
         Assert.IsFalse(viewModel.IsIndexing);
         Assert.AreEqual(1, viewModel.IndexProgress);

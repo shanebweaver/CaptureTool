@@ -7,6 +7,7 @@ using CaptureTool.Application.Abstractions.Analysis.Policy;
 using CaptureTool.Application.Abstractions.Analysis.Sources;
 using CaptureTool.Application.Abstractions.Capture.Assets;
 using CaptureTool.Application.Abstractions.Time;
+using CaptureTool.Application.Analysis.Maintenance;
 using CaptureTool.Domain.Analysis;
 using CaptureTool.Domain.Capture;
 
@@ -27,6 +28,7 @@ internal sealed class CaptureAnalysisScheduler : ICaptureAnalysisScheduler
     private readonly ICaptureAnalyzerCatalog _analyzers;
     private readonly IClock _clock;
     private readonly ICaptureAssetCatalog _captureAssets;
+    private readonly ICaptureAnalysisCleanupCoordinator? _cleanup;
 
     public CaptureAnalysisScheduler(
         ICaptureAnalysisPolicyService policyService,
@@ -39,7 +41,8 @@ internal sealed class CaptureAnalysisScheduler : ICaptureAnalysisScheduler
         ICaptureAnalysisFeatureAvailability featureAvailability,
         ICaptureAnalyzerCatalog analyzers,
         ICaptureAssetCatalog captureAssets,
-        IClock clock)
+        IClock clock,
+        ICaptureAnalysisCleanupCoordinator? cleanup = null)
     {
         _policyService = policyService;
         _controlStore = controlStore;
@@ -52,6 +55,7 @@ internal sealed class CaptureAnalysisScheduler : ICaptureAnalysisScheduler
         _analyzers = analyzers;
         _captureAssets = captureAssets;
         _clock = clock;
+        _cleanup = cleanup;
     }
 
     public async ValueTask<CaptureAnalysisScheduleResult> ScheduleAsync(
@@ -265,26 +269,45 @@ internal sealed class CaptureAnalysisScheduler : ICaptureAnalysisScheduler
             CaptureAnalysisControlSnapshot current = await _controlStore
                 .GetAsync(cancellationToken)
                 .ConfigureAwait(false);
+            CaptureAnalysisEnrollment? retired = current.State.Enrollments.FirstOrDefault(
+                enrollment => enrollment.CaptureId == request.Admission.CaptureId);
+            bool canRestoreCleared = retired is
+                { State: CaptureAnalysisEnrollmentState.Excluded,
+                  ExclusionReason: CaptureAnalysisExclusionReason.MemoryCleared } &&
+                request.Admission.Kind == CaptureAnalysisAdmissionKind.ExistingCaptureBackfill &&
+                retired.TombstoneGeneration == admission.TombstoneGeneration &&
+                retired.AssetFinalizationSequence == request.Admission.AssetFinalizationSequence &&
+                current.State.Policy.IsExistingCaptureBackfillEligible(
+                    request.Admission.AssetFinalizationSequence);
             if (current.State.ControlGeneration != admission.ControlGeneration ||
                 current.State.PolicyRevision != admission.PolicyRevision ||
-                current.State.Enrollments.Any(enrollment =>
-                    enrollment.CaptureId == request.Admission.CaptureId))
+                retired != null && !canRestoreCleared)
             {
                 continue;
+            }
+
+            // Finish the old generation's purge before creating fresh work. The CAS below
+            // rejects a concurrent exclusion/revoke, and generations fence off old workers.
+            if (canRestoreCleared && (_cleanup == null ||
+                !await _cleanup.ReconcileCaptureAsync(request.Admission.CaptureId, cancellationToken)
+                    .ConfigureAwait(false)))
+            {
+                return CaptureAnalysisAdmissionDecision.Denied(
+                    request.Admission, CaptureAnalysisPolicyDenialReason.PolicyUnavailable);
             }
 
             var enrollment = new CaptureAnalysisEnrollment(
                 request.Admission.CaptureId,
                 CaptureAnalysisEnrollmentState.Enrolled,
                 CaptureAnalysisExclusionReason.None,
-                enrollmentGeneration: 1,
+                enrollmentGeneration: checked((retired?.EnrollmentGeneration ?? 0) + 1),
                 tombstoneGeneration: admission.TombstoneGeneration,
                 request.Admission.AssetFinalizationSequence,
                 request.Recipe.Id,
                 request.Recipe.Version);
             var nextState = new CaptureAnalysisControlState(
                 current.State.Policy,
-                [.. current.State.Enrollments, enrollment],
+                [.. current.State.Enrollments.Where(row => row.CaptureId != enrollment.CaptureId), enrollment],
                 current.State.CaptureChangeCheckpoint);
             CaptureAnalysisControlWriteResult write = await _controlStore.TryWriteAsync(
                 nextState,
