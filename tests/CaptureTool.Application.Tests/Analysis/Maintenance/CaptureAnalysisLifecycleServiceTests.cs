@@ -403,7 +403,7 @@ public sealed class CaptureAnalysisLifecycleServiceTests
     [DataRow(false, false)]
     [DataRow(true, false)]
     [DataRow(false, true)]
-    public async Task ReanalyzeMixedLibrary_WhenSpeechIsUnavailable_ShouldStillQueueImages(bool throws, bool allUnavailable)
+    public async Task ReanalyzeMixedLibrary_WhenPreparationIsUnavailable_ShouldStillQueueDurableWork(bool throws, bool allUnavailable)
     {
         CaptureAnalysisEnrollment image = CreateEnrollment(2);
         CaptureId audioId = CaptureId.New();
@@ -431,11 +431,13 @@ public sealed class CaptureAnalysisLifecycleServiceTests
                             AnalysisFailureCode.CapabilityUnavailable, AnalysisFailureDisposition.Terminal)))
                     : Task.FromResult(AnalysisCapabilityPreparationState.Ready(
                         AnalysisTestData.CreateAnalyzer(), ProcessingBoundary.OnDevice)));
+        var scheduledCaptures = new List<CaptureId>();
         var scheduler = new Mock<ICaptureAnalysisScheduler>(MockBehavior.Strict);
         scheduler.Setup(service => service.ScheduleAsync(
-                It.Is<CaptureAnalysisScheduleRequest>(request =>
-                    request.Admission.CaptureId == image.CaptureId && request.ForceReanalysis),
+                It.Is<CaptureAnalysisScheduleRequest>(request => request.ForceReanalysis),
                 It.IsAny<CancellationToken>()))
+            .Callback<CaptureAnalysisScheduleRequest, CancellationToken>((request, _) =>
+                scheduledCaptures.Add(request.Admission.CaptureId))
             .ReturnsAsync(new CaptureAnalysisScheduleResult(CaptureAnalysisScheduleStatus.Scheduled, 3));
         using var service = new CaptureAnalysisLifecycleService(store, assets.Object,
             new TestCleanupCoordinator(), Mock.Of<ICaptureAnalysisProjectionMaintenance>(), preparation.Object, scheduler.Object);
@@ -443,9 +445,12 @@ public sealed class CaptureAnalysisLifecycleServiceTests
         var result = await service.ReanalyzeCapturesAsync(new(CaptureAnalysisReanalysisScope.AllEnrolledCaptures));
 
         Assert.AreEqual(CaptureAnalysisMaintenanceStatus.Incomplete, result.Status);
-        Assert.AreEqual(allUnavailable ? 0 : 1, result.AffectedCaptureCount);
+        Assert.AreEqual(2, result.AffectedCaptureCount);
+        CollectionAssert.AreEquivalent(
+            new[] { image.CaptureId, audioId },
+            scheduledCaptures.ToArray());
         scheduler.Verify(service => service.ScheduleAsync(It.IsAny<CaptureAnalysisScheduleRequest>(),
-            It.IsAny<CancellationToken>()), allUnavailable ? Times.Never() : Times.Once());
+            It.IsAny<CancellationToken>()), Times.Exactly(2));
     }
 
     [TestMethod]

@@ -480,11 +480,6 @@ internal sealed class CaptureAnalysisLifecycleService :
                     ((double)(index + 1) / preparations.Length) * 0.5));
             }
 
-            if (readyBoundaries.Count == 0)
-            {
-                return new(CaptureAnalysisMaintenanceStatus.Incomplete);
-            }
-
             int scheduled = 0;
             int requestedCaptureCount = request.Scope ==
                 CaptureAnalysisReanalysisScope.SelectedCaptures
@@ -496,15 +491,17 @@ internal sealed class CaptureAnalysisLifecycleService :
             for (int index = 0; index < workItems.Length; index++)
             {
                 ReanalysisWorkItem item = workItems[index];
-                // Reanalysis uses the same per-capability durable pipeline as new captures.
-                // Missing speech support must not prevent OCR (or another media kind) running.
-                // Do not claim to queue a capture if none of its capabilities can run.
-                if (!readyBoundaries.TryGetValue(item.Recipe.MediaKind, out var boundaries))
-                {
-                    ReportSchedulingProgress(progress, index, workItems.Length);
-                    continue;
-                }
-                ProcessingBoundary boundary = processingPolicy.AllowedBoundaries.First(boundaries.Contains);
+                // Preparation is a best-effort model warm-up, not an admission gate. New captures
+                // enter the durable worker even when a provider is still starting, and reanalysis
+                // must have the same semantics. Otherwise a transient preparation result can
+                // restore the enrollment while creating no jobs, leaving metadata and search empty.
+                // Prefer a boundary that preparation confirmed, then fall back to policy order;
+                // the durable worker is the authority on capability readiness and retry behavior.
+                ProcessingBoundary boundary = readyBoundaries.TryGetValue(
+                    item.Recipe.MediaKind,
+                    out HashSet<ProcessingBoundary>? boundaries)
+                        ? processingPolicy.AllowedBoundaries.First(boundaries.Contains)
+                        : processingPolicy.AllowedBoundaries[0];
                 var admission = new CaptureAnalysisAdmissionRequest(
                     item.Finalization,
                     purpose,

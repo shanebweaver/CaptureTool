@@ -79,7 +79,7 @@ internal sealed class UiTestCaptureMemoryService :
 
         _policy = _policy.GrantFutureCaptures(
             CaptureAnalysisPolicyDefaults.CreateAuthorizationScope(),
-            currentSequence: 0);
+            currentSequence: _policy.FutureCaptureSequenceWatermark);
         _documentRevision++;
         return Succeeded();
     }

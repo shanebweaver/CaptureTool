@@ -157,7 +157,7 @@ public sealed class CaptureMemoryHomeUiTests
             window.Focus();
 
             WaitForElement(app.ProcessId, automation, "AppMenu_FileMenuItem").Click();
-            WaitForElement(app.ProcessId, automation, "AppMenu_SettingsItem").Click();
+            Invoke(WaitForElement(app.ProcessId, automation, "AppMenu_SettingsItem"));
             EnableWithExistingCaptures(app.ProcessId, automation, "Settings");
             WaitForMarker(temporaryDirectory, "capture-memory-backfilled.marker");
 
@@ -170,7 +170,7 @@ public sealed class CaptureMemoryHomeUiTests
             WaitForElementByName(app.ProcessId, automation, "Delete analyzed data").Click();
             WaitForMarker(temporaryDirectory, "capture-memory-cleared.marker");
 
-            FocusAndClick(WaitForElement(
+            Expand(WaitForElement(
                 app.ProcessId,
                 automation,
                 "Settings_CaptureMemoryTroubleshootingExpander"));
@@ -202,12 +202,12 @@ public sealed class CaptureMemoryHomeUiTests
                 app.ProcessId,
                 automation,
                 "Settings_CaptureMemoryAnalyzeNewToggle");
-            FocusAndClick(analysisToggle);
+            Toggle(analysisToggle);
             WaitForElement(app.ProcessId, automation, "CaptureMemoryConfirmationDialog");
             WaitForElementByName(app.ProcessId, automation, "Stop analyzing").Click();
             WaitForMarker(temporaryDirectory, "capture-memory-stopped.marker");
 
-            FocusAndClick(analysisToggle);
+            Toggle(analysisToggle);
             WaitForMarker(temporaryDirectory, "capture-memory-resumed.marker");
 
             AutomationElement turnOff = WaitForElement(
@@ -219,12 +219,13 @@ public sealed class CaptureMemoryHomeUiTests
             WaitForElementByName(app.ProcessId, automation, "Turn off and erase").Click();
             WaitForMarker(temporaryDirectory, "capture-memory-erased.marker");
 
-            AutomationElement policyStatus = WaitForElement(
+            _ = WaitForElement(
                 app.ProcessId,
                 automation,
                 "Settings_CaptureMemoryPolicyStatus");
             WaitFor(
-                () => policyStatus.Name.Contains("off", StringComparison.OrdinalIgnoreCase)
+                () => FindElement(app.ProcessId, automation, "Settings_CaptureMemoryPolicyStatus")?
+                    .Name.Contains("off", StringComparison.OrdinalIgnoreCase) == true
                     ? new object()
                     : null,
                 InteractionTimeout,
@@ -238,7 +239,8 @@ public sealed class CaptureMemoryHomeUiTests
                 automation,
                 "Settings_CaptureMemoryEnableButton"));
             WaitFor(
-                () => policyStatus.Name.Contains("on", StringComparison.OrdinalIgnoreCase)
+                () => FindElement(app.ProcessId, automation, "Settings_CaptureMemoryPolicyStatus")?
+                    .Name.Contains("on", StringComparison.OrdinalIgnoreCase) == true
                     ? new object()
                     : null,
                 InteractionTimeout,
@@ -326,6 +328,41 @@ public sealed class CaptureMemoryHomeUiTests
                     "*.analysis",
                     SearchOption.AllDirectories).Any(),
                 "The real pipeline should persist a protected metadata envelope.");
+
+            // This is the release-critical lifecycle seam: clearing removes canonical metadata
+            // and the projection, then reanalysis must recreate both through the durable worker.
+            WaitForElement(app.ProcessId, automation, "AppMenu_FileMenuItem").Click();
+            Invoke(WaitForElement(app.ProcessId, automation, "AppMenu_SettingsItem"));
+            FocusAndClick(WaitForElement(app.ProcessId, automation, "Settings_CaptureMemoryClearButton"));
+            WaitForElement(app.ProcessId, automation, "CaptureMemoryConfirmationDialog");
+            WaitForElementByName(app.ProcessId, automation, "Delete analyzed data").Click();
+            AutomationElement expander = WaitForElement(
+                app.ProcessId, automation, "Settings_CaptureMemoryTroubleshootingExpander");
+            Expand(expander);
+            AutomationElement reanalyze = WaitForElement(
+                app.ProcessId, automation, "Settings_CaptureMemoryReanalyzeButton");
+            WaitFor(() => reanalyze.IsEnabled ? new object() : null,
+                InteractionTimeout, "Reanalyze to become available after clearing Memory");
+            FocusAndClick(reanalyze);
+            WaitForElement(app.ProcessId, automation, "CaptureMemoryConfirmationDialog");
+            WaitForElementByName(app.ProcessId, automation, "Reanalyze captures").Click();
+            WaitFor(() => !reanalyze.IsEnabled ? new object() : null,
+                InteractionTimeout, "reanalysis scheduling to start");
+            WaitFor(() => reanalyze.IsEnabled ? new object() : null,
+                RealAnalysisTimeout, "reanalysis scheduling to finish");
+
+            WaitForElement(app.ProcessId, automation, "AppMenu_FileMenuItem").Click();
+            Invoke(WaitForElement(app.ProcessId, automation, "AppMenu_HomeItem"));
+            AutomationElement restoredSearch = WaitForElement(
+                app.ProcessId, automation, "Home_CaptureMemorySearchBox");
+            _ = WaitForRealAnalysisResult(
+                app.ProcessId, automation, restoredSearch, "urple come");
+            Assert.IsTrue(
+                Directory.EnumerateFiles(
+                    Path.Combine(temporaryDirectory, "LocalCache", "CaptureAnalysis", "metadata-v1"),
+                    "*.analysis",
+                    SearchOption.AllDirectories).Any(),
+                "Reanalysis should recreate protected canonical metadata before search returns.");
         }
         finally
         {
@@ -347,6 +384,26 @@ public sealed class CaptureMemoryHomeUiTests
     private static void FocusAndClick(AutomationElement element)
     {
         element.AsButton().Invoke();
+    }
+
+    private static void Invoke(AutomationElement element)
+    {
+        Assert.IsTrue(element.Patterns.Invoke.IsSupported);
+        element.Patterns.Invoke.Pattern.Invoke();
+    }
+
+    private static void Expand(AutomationElement element)
+    {
+        Assert.IsTrue(
+            element.Patterns.ExpandCollapse.IsSupported,
+            "The Settings troubleshooting control should expose the expand/collapse pattern.");
+        element.Patterns.ExpandCollapse.Pattern.Expand();
+    }
+
+    private static void Toggle(AutomationElement element)
+    {
+        Assert.IsTrue(element.Patterns.Toggle.IsSupported);
+        element.Patterns.Toggle.Pattern.Toggle();
     }
 
     private static void WaitForMarker(string directory, string filename)
@@ -376,12 +433,7 @@ public sealed class CaptureMemoryHomeUiTests
         string temporaryDirectory,
         string capturePath)
     {
-        ProcessStartInfo startInfo = new(executable)
-        {
-            UseShellExecute = false,
-            WorkingDirectory = Path.GetDirectoryName(executable),
-        };
-        foreach (string argument in new[]
+        string[] arguments =
         {
             "--capturetool-ui-test",
             "--ui-test-capture-memory",
@@ -391,13 +443,8 @@ public sealed class CaptureMemoryHomeUiTests
             dataDirectory,
             "--ui-test-temp-dir",
             temporaryDirectory,
-        })
-        {
-            startInfo.ArgumentList.Add(argument);
-        }
-
-        Process process = Process.Start(startInfo) ?? throw new InvalidOperationException("Failed to launch Capture Tool.");
-        return new LaunchedApp(process);
+        };
+        return new LaunchedApp(LaunchProcess(executable, arguments));
     }
 
     private static LaunchedApp LaunchRealCaptureAnalysis(
@@ -405,12 +452,7 @@ public sealed class CaptureMemoryHomeUiTests
         string dataDirectory,
         string temporaryDirectory)
     {
-        ProcessStartInfo startInfo = new(executable)
-        {
-            UseShellExecute = false,
-            WorkingDirectory = Path.GetDirectoryName(executable),
-        };
-        foreach (string argument in new[]
+        string[] arguments =
         {
             "--capturetool-ui-test",
             "--ui-test-enable-capture-analysis",
@@ -418,15 +460,42 @@ public sealed class CaptureMemoryHomeUiTests
             dataDirectory,
             "--ui-test-temp-dir",
             temporaryDirectory,
-        })
+        };
+        return new LaunchedApp(LaunchProcess(executable, arguments));
+    }
+
+    private static Process LaunchProcess(string executable, IReadOnlyList<string> arguments)
+    {
+        string? appUserModelId = Environment.GetEnvironmentVariable(
+            "CAPTURETOOL_UI_TEST_APP_ID");
+        if (!string.IsNullOrWhiteSpace(appUserModelId))
+        {
+            var activationManager = (IApplicationActivationManager)new ApplicationActivationManager();
+            int result = activationManager.ActivateApplication(
+                appUserModelId,
+                string.Join(' ', arguments.Select(QuoteArgument)),
+                ActivateOptions.NoErrorUI,
+                out uint processId);
+            Marshal.ThrowExceptionForHR(result);
+            return Process.GetProcessById(checked((int)processId));
+        }
+
+        ProcessStartInfo startInfo = new(executable)
+        {
+            UseShellExecute = false,
+            WorkingDirectory = Path.GetDirectoryName(executable),
+        };
+        foreach (string argument in arguments)
         {
             startInfo.ArgumentList.Add(argument);
         }
 
-        Process process = Process.Start(startInfo) ??
+        return Process.Start(startInfo) ??
             throw new InvalidOperationException("Failed to launch Capture Tool.");
-        return new LaunchedApp(process);
     }
+
+    private static string QuoteArgument(string value) =>
+        $"\"{value.Replace("\"", "\\\"", StringComparison.Ordinal)}\"";
 
     private static AutomationElement WaitForRealAnalysisResult(
         int processId,
@@ -614,5 +683,36 @@ public sealed class CaptureMemoryHomeUiTests
         }
 
         public void Dispose() => Close();
+    }
+
+    [Flags]
+    private enum ActivateOptions : uint
+    {
+        NoErrorUI = 2,
+    }
+
+    [ComImport]
+    [Guid("2e941141-7f97-4756-ba1d-9decde894a3d")]
+    [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+    private interface IApplicationActivationManager
+    {
+        [PreserveSig]
+        int ActivateApplication(
+            [MarshalAs(UnmanagedType.LPWStr)] string appUserModelId,
+            [MarshalAs(UnmanagedType.LPWStr)] string arguments,
+            ActivateOptions options,
+            out uint processId);
+
+        [PreserveSig]
+        int ActivateForFile(IntPtr appUserModelId, IntPtr itemArray, IntPtr verb, out uint processId);
+
+        [PreserveSig]
+        int ActivateForProtocol(IntPtr appUserModelId, IntPtr itemArray, out uint processId);
+    }
+
+    [ComImport]
+    [Guid("45BA127D-10A8-46EA-8AB7-56EA9078943C")]
+    private class ApplicationActivationManager
+    {
     }
 }
