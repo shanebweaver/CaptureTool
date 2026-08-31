@@ -17,6 +17,8 @@ internal sealed class CaptureAnalysisJobDocument
 
 internal sealed class CaptureAnalysisJobIntentDocument
 {
+    public Guid? OperationId { get; set; }
+
     public required CaptureAnalysisJobKeyDocument Key { get; set; }
 
     public CaptureAnalysisJobState State { get; set; }

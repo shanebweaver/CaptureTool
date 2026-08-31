@@ -1,15 +1,10 @@
 using CaptureTool.Application.Abstractions.Analysis.Consent;
-using CaptureTool.Application.Abstractions.Analysis.Intake;
 using CaptureTool.Application.Abstractions.Analysis.Maintenance;
 using CaptureTool.Application.Abstractions.Analysis.Memory;
-using CaptureTool.Application.Abstractions.Analysis.Orchestration;
-using CaptureTool.Application.Abstractions.Analysis.Policy;
-using CaptureTool.Application.Abstractions.Analysis.Preparation;
 using CaptureTool.Application.Abstractions.Capture.Assets;
 using CaptureTool.Application.Abstractions.Library.CaptureMemory;
 using CaptureTool.Application.Abstractions.Localization;
 using CaptureTool.Application.Abstractions.UseCases;
-using CaptureTool.Domain.Analysis;
 using CaptureTool.Presentation.ViewModels;
 using CaptureTool.Presentation.Features.CaptureMemory;
 using CommunityToolkit.Mvvm.Input;
@@ -24,18 +19,16 @@ public sealed class CaptureMemoryHomeViewModel : ViewModelBase
     private readonly ICaptureMemorySearchService? _searchService;
     private readonly ICaptureMemoryResultResolver? _resultResolver;
     private readonly IOpenCaptureMemoryResultUseCase? _openResultUseCase;
-    private readonly ICaptureAnalysisPolicyService? _policyService;
-    private readonly ICaptureAnalysisPolicyCommandService? _policyCommandService;
-    private readonly IUserInitiatedAnalysisCapabilityPreparationService? _preparationService;
-    private readonly ICaptureAnalysisBackfillService? _backfillService;
-    private readonly ICaptureAnalysisMaintenanceService? _maintenanceService;
+    private readonly ICaptureMemoryWorkflow? _workflow;
+    private bool _workflowSubscribed;
+    private bool _workflowBusy;
+    private bool _starting;
     private readonly ICaptureAssetRemovalService? _assetRemovalService;
     private readonly ICaptureAnalysisSettingsConfirmationDialogService? _confirmationService;
     private readonly ILocalizationService? _localizationService;
     private CancellationTokenSource? _searchCancellation;
     private readonly CaptureMemoryStateRefreshLoop _stateRefresh;
     private long _policyReadGeneration;
-    private Task _backfillCompletion = Task.CompletedTask;
     private Task _searchCompletion = Task.CompletedTask;
     private int _searchGeneration;
     private string _searchQuery = string.Empty;
@@ -48,25 +41,17 @@ public sealed class CaptureMemoryHomeViewModel : ViewModelBase
         ICaptureMemorySearchService? searchService = null,
         ICaptureMemoryResultResolver? resultResolver = null,
         IOpenCaptureMemoryResultUseCase? openResultUseCase = null,
-        ICaptureAnalysisPolicyService? policyService = null,
-        ICaptureAnalysisPolicyCommandService? policyCommandService = null,
-        IUserInitiatedAnalysisCapabilityPreparationService? preparationService = null,
-        ICaptureAnalysisMaintenanceService? maintenanceService = null,
+        ICaptureMemoryWorkflow? workflow = null,
         ICaptureAssetRemovalService? assetRemovalService = null,
         ILocalizationService? localizationService = null,
-        ICaptureAnalysisSettingsConfirmationDialogService? confirmationService = null,
-        ICaptureAnalysisBackfillService? backfillService = null)
+        ICaptureAnalysisSettingsConfirmationDialogService? confirmationService = null)
     {
         _featureAvailability = featureAvailability;
         _searchService = searchService;
         _searchChangeNotifier = searchService as ICaptureMemorySearchChangeNotifier;
         _resultResolver = resultResolver;
         _openResultUseCase = openResultUseCase;
-        _policyService = policyService;
-        _policyCommandService = policyCommandService;
-        _preparationService = preparationService;
-        _backfillService = backfillService;
-        _maintenanceService = maintenanceService;
+        _workflow = workflow;
         _assetRemovalService = assetRemovalService;
         _confirmationService = confirmationService;
         _localizationService = localizationService;
@@ -95,7 +80,7 @@ public sealed class CaptureMemoryHomeViewModel : ViewModelBase
 
     public bool IncludeExistingCaptures { get; set => Set(ref field, value); }
 
-    public bool CanChangeSetupOptions => IsFeatureEnabled && !IsPreparing;
+    public bool CanChangeSetupOptions => IsFeatureEnabled && !_workflowBusy && !_starting;
 
     public IRelayCommand ClearSearchCommand { get; }
 
@@ -108,8 +93,6 @@ public sealed class CaptureMemoryHomeViewModel : ViewModelBase
     public IAsyncRelayCommand<CaptureMemorySearchResultViewModel> DeleteResultCommand { get; }
 
     public ObservableCollection<CaptureMemorySearchResultViewModel> Results => _results;
-
-    public Task BackfillCompletion => _backfillCompletion;
 
     public Task SearchCompletion => _searchCompletion;
 
@@ -253,16 +236,17 @@ public sealed class CaptureMemoryHomeViewModel : ViewModelBase
             _searchChangesSubscribed = true;
         }
 
+        if (!_workflowSubscribed && _workflow != null)
+        {
+            _workflow.Changed += OnWorkflowChanged;
+            _workflowSubscribed = true;
+        }
         await RefreshPolicyAsync(cancellationToken);
         if (IsFeatureEnabled)
         {
             _stateRefresh.Start();
         }
         _searchCompletion = QueueSearchAsync(SearchQuery, debounce: false);
-        if (IsIndexing && _backfillService != null && _backfillCompletion.IsCompleted)
-        {
-            _backfillCompletion = RunBackfillAsync();
-        }
     }
 
     public override void Dispose()
@@ -272,6 +256,11 @@ public sealed class CaptureMemoryHomeViewModel : ViewModelBase
             _searchChangeNotifier.SearchIndexChanged -= OnSearchIndexChanged;
             _searchChangesSubscribed = false;
         }
+        if (_workflowSubscribed && _workflow != null)
+        {
+            _workflow.Changed -= OnWorkflowChanged;
+            _workflowSubscribed = false;
+        }
         _searchCancellation?.Cancel();
         _searchCancellation?.Dispose();
         _searchCancellation = null;
@@ -280,215 +269,76 @@ public sealed class CaptureMemoryHomeViewModel : ViewModelBase
         base.Dispose();
     }
 
-    private bool CanEnable() => IsFeatureEnabled && !IsPreparing;
+    private bool CanEnable() => CanChangeSetupOptions && _workflow != null;
 
     private async Task EnableAsync()
     {
-        // Snapshot this one-time opt-in before awaiting model preparation.
-        bool includeExistingCaptures = IncludeExistingCaptures;
-        if (_policyService == null ||
-            _policyCommandService == null ||
-            _preparationService == null ||
-            includeExistingCaptures && _backfillService == null)
-        {
-            HasSetupFailure = true;
-            return;
-        }
-
-        _policyReadGeneration++;
+        if (_workflow == null) { return; }
+        bool includeExisting = IncludeExistingCaptures;
+        _starting = true;
         IsPreparing = true;
-        PreparationProgress = 0;
         HasSetupFailure = false;
-        HasLimitedModelCoverage = false;
-
+        NotifyWorkflowState();
         try
         {
-            CaptureAnalysisPolicySnapshot current = await _policyService.GetCurrentAsync(CancellationToken.None);
-            var consent = new CaptureAnalysisConsentResponse(
-                CaptureAnalysisPolicyDefaults.CreateConsentDisclosure(),
-                CaptureAnalysisConsentDecision.GrantedForFutureCaptures);
-            CaptureAnalysisPolicyChangeResult consentChange = await _policyCommandService.ApplyConsentDecisionAsync(
-                consent,
-                current.ControlDocumentRevision,
-                CancellationToken.None);
-            if (consentChange.Status != CaptureAnalysisPolicyChangeStatus.Succeeded ||
-                consentChange.Policy.Policy?.ProcessingPolicy is not { } processingPolicy)
-            {
-                HasSetupFailure = true;
-                return;
-            }
-
-            ApplyPolicy(consentChange.Policy);
-            CaptureAnalysisRecipe[] recipes =
-            [
-                CaptureAnalysisRecipeDefaults.CreateCaptureMemoryImageRecipe(),
-                CaptureAnalysisRecipeDefaults.CreateCaptureMemoryAudioRecipe(),
-                CaptureAnalysisRecipeDefaults.CreateCaptureMemoryVideoRecipe(),
-            ];
-            var preparations = recipes
-                .SelectMany(recipe => recipe.Capabilities.Select(capability => new
-                {
-                    recipe.MediaKind,
-                    RecipeCapability = capability,
-                }))
-                .ToArray();
-            for (int index = 0; index < preparations.Length; index++)
-            {
-                RecipeCapability recipeCapability = preparations[index].RecipeCapability;
-                CaptureMediaKind mediaKind = preparations[index].MediaKind;
-                double capabilityStart = (double)index / preparations.Length;
-                double capabilityShare = 1d / preparations.Length;
-                var progress = new Progress<AnalysisCapabilityPreparationProgress>(value =>
-                    PreparationProgress = capabilityStart + (value.FractionComplete * capabilityShare));
-                var request = new AnalysisCapabilityPreparationRequest(
-                    recipeCapability.Capability,
-                    mediaKind,
-                    CaptureAnalysisPolicyDefaults.CaptureMemorySearchPurpose,
-                    processingPolicy);
-                AnalysisCapabilityPreparationState prepared = await _preparationService.PrepareAsync(
-                    request,
-                    progress,
-                    CancellationToken.None);
-
-                if (prepared.Status != AnalysisCapabilityPreparationStatus.Ready)
-                {
-                    // Analyzer inventory is media-specific. An unavailable audio, video, or
-                    // optional description model must not prevent supported captures (notably
-                    // images with legacy OCR fallback) from being enrolled and searched.
-                    HasLimitedModelCoverage = true;
-                }
-            }
-
-            PreparationProgress = 1;
-            CaptureAnalysisPolicySnapshot resultingPolicy = consentChange.Policy;
-            if (includeExistingCaptures)
-            {
-                // Captures can be enrolled while models prepare, advancing the control revision.
-                CaptureAnalysisPolicySnapshot latest = await _policyService.GetCurrentAsync(CancellationToken.None);
-                CaptureAnalysisPolicyChangeResult backfill = await _policyCommandService.AuthorizeExistingCaptureBackfillAsync(
-                    latest.ControlDocumentRevision,
-                    CancellationToken.None);
-                if (backfill.Status != CaptureAnalysisPolicyChangeStatus.Succeeded)
-                {
-                    HasSetupFailure = true;
-                    return;
-                }
-
-                resultingPolicy = backfill.Policy;
-            }
-
-            ApplyPolicy(resultingPolicy);
-            if (includeExistingCaptures)
-            {
-                _backfillCompletion = RunBackfillAsync();
-            }
+            CaptureMemoryOperation result = await _workflow.ExecuteAsync(
+                new(CaptureMemoryOperationKind.Enable, includeExisting), CancellationToken.None);
+            if (includeExisting && result.IsSchedulingComplete) { IncludeExistingCaptures = false; }
+            HasSetupFailure = result.Status is not (CaptureMemoryOperationStatus.Succeeded or CaptureMemoryOperationStatus.Partial);
         }
-        catch (OperationCanceledException)
-        {
-            HasSetupFailure = true;
-        }
-        catch
-        {
-            HasSetupFailure = true;
-        }
+        catch { HasSetupFailure = true; }
         finally
         {
-            IsPreparing = false;
-            // Fast backfill can publish results while setup still hides the search UI.
+            _starting = false;
+            if (_workflowSubscribed) { await RefreshPolicyAsync(CancellationToken.None); }
+            NotifyWorkflowState();
             _searchCompletion = QueueSearchAsync(SearchQuery, debounce: false);
-        }
-    }
-
-    private async Task RunBackfillAsync()
-    {
-        try
-        {
-            var progress = new Progress<CaptureAnalysisBackfillProgress>(value =>
-            {
-                IndexProgress = value.Fraction;
-                IsIndexing = value.Checkpoint < value.UpperSequence;
-            });
-            CaptureAnalysisBackfillRunResult result = await _backfillService!.RunAsync(
-                progress,
-                CancellationToken.None);
-            if (result.Status is not (
-                CaptureAnalysisBackfillRunStatus.Completed or
-                CaptureAnalysisBackfillRunStatus.AlreadyCompleted))
-            {
-                HasSetupFailure = true;
-            }
-            else
-            {
-                IncludeExistingCaptures = false;
-            }
-        }
-        catch (OperationCanceledException)
-        {
-            HasSetupFailure = true;
-        }
-        catch
-        {
-            HasSetupFailure = true;
-        }
-        finally
-        {
-            await RefreshPolicyAsync(CancellationToken.None);
         }
     }
 
     private async Task RefreshPolicyAsync(CancellationToken cancellationToken)
     {
-        if (!IsFeatureEnabled || _policyService == null)
-        {
-            IsAuthorized = false;
-            IsIndexing = false;
-            IndexProgress = 0;
-            return;
-        }
-
-        long generation = _policyReadGeneration;
+        if (!IsFeatureEnabled || _workflow == null) { IsAuthorized = false; return; }
+        long generation = ++_policyReadGeneration;
         try
         {
-            CaptureAnalysisPolicySnapshot snapshot = await _policyService.GetCurrentAsync(cancellationToken);
+            CaptureMemoryWorkflowSnapshot snapshot = await _workflow.GetCurrentAsync(cancellationToken);
             cancellationToken.ThrowIfCancellationRequested();
-            if (generation == _policyReadGeneration)
+            if (generation != _policyReadGeneration) { return; }
+            bool wasSearchVisible = ShowSearch;
+            IsAuthorized = snapshot.Policy.IsProcessingAuthorized;
+            _workflowBusy = snapshot.IsBusy;
+            CaptureMemoryOperation? operation = snapshot.Operation;
+            IsPreparing = _starting || operation is { IsRunning: true, Request.Kind: CaptureMemoryOperationKind.Enable,
+                Phase: CaptureMemoryOperationPhase.Accepted or CaptureMemoryOperationPhase.Authorizing or CaptureMemoryOperationPhase.PreparingModels };
+            IsIndexing = operation is { IsRunning: true, Phase: CaptureMemoryOperationPhase.SchedulingCaptures };
+            PreparationProgress = IndexProgress = snapshot.FractionComplete;
+            if (operation?.Request.Kind == CaptureMemoryOperationKind.Enable)
             {
-                ApplyPolicy(snapshot);
+                HasLimitedModelCoverage = operation.HasLimitedModelCoverage;
+                HasSetupFailure = operation.Status is CaptureMemoryOperationStatus.Failed or CaptureMemoryOperationStatus.Conflict or CaptureMemoryOperationStatus.Rejected;
             }
+            NotifyWorkflowState();
+            if (wasSearchVisible != ShowSearch) { _searchCompletion = QueueSearchAsync(SearchQuery, debounce: false); }
         }
-        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
-        {
-            throw;
-        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { throw; }
         catch
         {
-            if (generation == _policyReadGeneration)
-            {
-                IsAuthorized = false;
-                HasSetupFailure = true;
-            }
+            if (generation == _policyReadGeneration) { IsAuthorized = false; HasSetupFailure = true; }
         }
     }
 
-    private void ApplyPolicy(CaptureAnalysisPolicySnapshot snapshot)
+    private void NotifyWorkflowState()
     {
-        _policyReadGeneration++;
-        bool wasAuthorized = IsAuthorized;
-        IsAuthorized = snapshot.IsProcessingAuthorized;
-        UpdateIndexState(snapshot.Policy);
-        if (wasAuthorized != IsAuthorized)
-        {
-            _searchCompletion = QueueSearchAsync(SearchQuery, debounce: false);
-        }
+        RaisePropertyChanged(nameof(CanChangeSetupOptions));
+        EnableCaptureMemoryCommand.NotifyCanExecuteChanged();
     }
 
-    private void UpdateIndexState(CaptureAnalysisPolicy? policy)
+    private void OnWorkflowChanged(object? sender, EventArgs e)
     {
-        IsIndexing = policy?.BackfillState is
-            CaptureAnalysisBackfillState.Authorized or CaptureAnalysisBackfillState.InProgress;
-        IndexProgress = policy?.BackfillUpperSequence > 0
-            ? Math.Clamp((double)policy.BackfillCheckpoint / policy.BackfillUpperSequence, 0, 1)
-            : policy?.BackfillState == CaptureAnalysisBackfillState.Completed ? 1 : 0;
+        void Refresh() { if (_workflowSubscribed) { _ = RefreshPolicyAsync(CancellationToken.None); } }
+        if (_searchUiContext != null && SynchronizationContext.Current != _searchUiContext) { _searchUiContext.Post(_ => Refresh(), null); }
+        else { Refresh(); }
     }
 
     private void OnSearchIndexChanged(object? sender, EventArgs e)
@@ -625,10 +475,10 @@ public sealed class CaptureMemoryHomeViewModel : ViewModelBase
 
     private async Task RetryAsync()
     {
-        if (HasCorruptProjection && _maintenanceService != null)
+        if (HasCorruptProjection && _workflow != null)
         {
-            CaptureAnalysisMaintenanceResult rebuilt = await _maintenanceService.RebuildSearchIndexAsync(CancellationToken.None);
-            if (rebuilt.Status != CaptureAnalysisMaintenanceStatus.Succeeded)
+            CaptureMemoryOperation rebuilt = await _workflow.ExecuteAsync(new(CaptureMemoryOperationKind.RebuildSearch), CancellationToken.None);
+            if (rebuilt.Status != CaptureMemoryOperationStatus.Succeeded)
             {
                 HasSearchFailure = true;
                 return;

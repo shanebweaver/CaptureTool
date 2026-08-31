@@ -9,6 +9,7 @@ using CaptureTool.Application.Abstractions.Telemetry;
 using CaptureTool.Application.Capture.Assets;
 using CaptureTool.Application.Analysis.Intake;
 using CaptureTool.Application.Analysis.Processing;
+using CaptureTool.Application.Abstractions.Analysis.Memory;
 
 namespace CaptureTool.Application.Activation;
 
@@ -30,6 +31,7 @@ internal sealed class ApplicationStartupInitializer : IApplicationStartupInitial
     private readonly ITelemetryConsentService? _telemetryConsentService;
     private readonly CaptureAnalysisWorkerHost? _captureAnalysisWorkerHost;
     private readonly ICaptureAnalysisReconciler? _captureAnalysisReconciler;
+    private readonly ICaptureMemoryWorkflow? _captureMemoryWorkflow;
     private readonly SemaphoreSlim _semaphore = new(1, 1);
 
     private bool _isInitialized;
@@ -48,7 +50,8 @@ internal sealed class ApplicationStartupInitializer : IApplicationStartupInitial
         ITelemetryService? telemetryService = null,
         ITelemetryConsentService? telemetryConsentService = null,
         CaptureAnalysisWorkerHost? captureAnalysisWorkerHost = null,
-        ICaptureAnalysisReconciler? captureAnalysisReconciler = null)
+        ICaptureAnalysisReconciler? captureAnalysisReconciler = null,
+        ICaptureMemoryWorkflow? captureMemoryWorkflow = null)
     {
         _cancellationService = cancellationService;
         _settingsService = settingsService;
@@ -64,6 +67,7 @@ internal sealed class ApplicationStartupInitializer : IApplicationStartupInitial
         _telemetryConsentService = telemetryConsentService;
         _captureAnalysisWorkerHost = captureAnalysisWorkerHost;
         _captureAnalysisReconciler = captureAnalysisReconciler;
+        _captureMemoryWorkflow = captureMemoryWorkflow;
     }
 
     public async Task InitializeAsync(CancellationToken cancellationToken = default)
@@ -93,6 +97,12 @@ internal sealed class ApplicationStartupInitializer : IApplicationStartupInitial
             await InitializeCaptureAssetsAsync(cancellationTokenSource.Token);
             await ReconcileCaptureAnalysisAsync(cancellationTokenSource.Token);
             _captureAnalysisWorkerHost?.Start();
+            if (_captureMemoryWorkflow != null)
+            {
+                try { await _captureMemoryWorkflow.ResumeAsync(cancellationTokenSource.Token); }
+                catch (OperationCanceledException) when (cancellationTokenSource.IsCancellationRequested) { throw; }
+                catch (Exception ex) { _logService.LogException(ex, "Failed to resume Capture Memory work."); }
+            }
 
             string languageOverride = _settingsService.Get(CaptureToolSettings.Settings_LanguageOverride);
             _localizationService.Initialize(languageOverride);

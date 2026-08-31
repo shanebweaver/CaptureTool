@@ -18,6 +18,7 @@ internal static class CaptureAnalysisJobDocumentMapper
             Intent = new CaptureAnalysisJobIntentDocument
             {
                 Key = ToDocument(intent.Key),
+                OperationId = intent.OperationId,
                 State = intent.State,
                 AttemptCount = intent.AttemptCount,
                 EnqueuedAtUtc = intent.EnqueuedAtUtc,
@@ -45,7 +46,8 @@ internal static class CaptureAnalysisJobDocumentMapper
             intent.EnqueuedAtUtc,
             intent.NextAttemptAtUtc,
             latestFailure,
-            intent.Attempts.Select(ToDomain));
+            intent.Attempts.Select(ToDomain),
+            intent.OperationId);
         CaptureAnalysisJobLeaseToken? leaseToken = document.LeaseToken.HasValue
             ? new CaptureAnalysisJobLeaseToken(document.LeaseToken.Value)
             : null;

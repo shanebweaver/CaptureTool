@@ -92,7 +92,8 @@ public sealed record CaptureAnalysisReanalysisRequest
 
     public CaptureAnalysisReanalysisRequest(
         CaptureAnalysisReanalysisScope scope,
-        IEnumerable<CaptureId>? captureIds = null)
+        IEnumerable<CaptureId>? captureIds = null,
+        Guid? operationId = null)
     {
         if (!Enum.IsDefined(scope) || scope == CaptureAnalysisReanalysisScope.Unknown)
         {
@@ -118,10 +119,14 @@ public sealed record CaptureAnalysisReanalysisRequest
         }
 
         Scope = scope;
+        if (operationId == Guid.Empty) { throw new ArgumentException("Operation identity must be nonempty.", nameof(operationId)); }
+        OperationId = operationId;
         _captureIds = Array.AsReadOnly(copiedCaptureIds);
     }
 
     public CaptureAnalysisReanalysisScope Scope { get; }
+
+    public Guid? OperationId { get; }
 
     public IReadOnlyList<CaptureId> CaptureIds => _captureIds;
 }

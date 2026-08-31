@@ -29,6 +29,7 @@ internal sealed class CaptureAnalysisScheduler : ICaptureAnalysisScheduler
     private readonly IClock _clock;
     private readonly ICaptureAssetCatalog _captureAssets;
     private readonly ICaptureAnalysisCleanupCoordinator? _cleanup;
+    private readonly CaptureAnalysisEnrollmentGate _enrollmentGate;
 
     public CaptureAnalysisScheduler(
         ICaptureAnalysisPolicyService policyService,
@@ -42,7 +43,8 @@ internal sealed class CaptureAnalysisScheduler : ICaptureAnalysisScheduler
         ICaptureAnalyzerCatalog analyzers,
         ICaptureAssetCatalog captureAssets,
         IClock clock,
-        ICaptureAnalysisCleanupCoordinator? cleanup = null)
+        ICaptureAnalysisCleanupCoordinator? cleanup = null,
+        CaptureAnalysisEnrollmentGate? enrollmentGate = null)
     {
         _policyService = policyService;
         _controlStore = controlStore;
@@ -56,6 +58,7 @@ internal sealed class CaptureAnalysisScheduler : ICaptureAnalysisScheduler
         _captureAssets = captureAssets;
         _clock = clock;
         _cleanup = cleanup;
+        _enrollmentGate = enrollmentGate ?? new();
     }
 
     public async ValueTask<CaptureAnalysisScheduleResult> ScheduleAsync(
@@ -194,10 +197,10 @@ internal sealed class CaptureAnalysisScheduler : ICaptureAnalysisScheduler
                     capability.Capability,
                     request.ProcessingBoundary,
                     capability.Dependencies);
-                CaptureAnalysisJobEnqueueResult enqueue = await _jobStore
-                    .TryEnqueueAsync(key, capabilityEnqueuedAtUtc, cancellationToken)
-                    .ConfigureAwait(false);
-                if (enqueue.Status == CaptureAnalysisJobEnqueueStatus.AlreadyExists &&
+                CaptureAnalysisJobEnqueueResult enqueue = request.OperationId is Guid operationId
+                    ? await _jobStore.TryScheduleOperationAsync(key, capabilityEnqueuedAtUtc, operationId, cancellationToken).ConfigureAwait(false)
+                    : await _jobStore.TryEnqueueAsync(key, capabilityEnqueuedAtUtc, cancellationToken).ConfigureAwait(false);
+                if (!request.OperationId.HasValue && enqueue.Status == CaptureAnalysisJobEnqueueStatus.AlreadyExists &&
                     (request.ForceReanalysis || hasStaleProducer || hasMissingAnalysis))
                 {
                     enqueue = await _jobStore
@@ -307,6 +310,7 @@ internal sealed class CaptureAnalysisScheduler : ICaptureAnalysisScheduler
                 current.State.Policy,
                 [.. current.State.Enrollments.Where(row => row.CaptureId != enrollment.CaptureId), enrollment],
                 current.State.CaptureChangeCheckpoint);
+            using IDisposable enrollmentLease = await _enrollmentGate.EnterAsync(cancellationToken).ConfigureAwait(false);
             CaptureAnalysisControlWriteResult write = await _controlStore.TryWriteAsync(
                 nextState,
                 current.DocumentRevision,

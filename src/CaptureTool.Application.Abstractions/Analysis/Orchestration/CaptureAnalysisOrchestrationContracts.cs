@@ -10,7 +10,8 @@ public sealed record CaptureAnalysisScheduleRequest
         CaptureAnalysisAdmissionRequest admission,
         CaptureAnalysisRecipe recipe,
         ProcessingBoundary processingBoundary,
-        bool forceReanalysis = false)
+        bool forceReanalysis = false,
+        Guid? operationId = null)
     {
         ArgumentNullException.ThrowIfNull(admission);
         ArgumentNullException.ThrowIfNull(recipe);
@@ -23,6 +24,11 @@ public sealed record CaptureAnalysisScheduleRequest
         Recipe = recipe;
         ProcessingBoundary = processingBoundary;
         ForceReanalysis = forceReanalysis;
+        if (operationId == Guid.Empty || operationId.HasValue && !forceReanalysis)
+        {
+            throw new ArgumentException("An operation identity requires explicit reanalysis.", nameof(operationId));
+        }
+        OperationId = operationId;
     }
 
     public CaptureAnalysisAdmissionRequest Admission { get; }
@@ -32,6 +38,8 @@ public sealed record CaptureAnalysisScheduleRequest
     public ProcessingBoundary ProcessingBoundary { get; }
 
     public bool ForceReanalysis { get; }
+
+    public Guid? OperationId { get; }
 }
 
 public enum CaptureAnalysisScheduleStatus

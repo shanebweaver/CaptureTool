@@ -796,6 +796,46 @@ public sealed class CaptureAnalysisLifecycleServiceTests
     }
 
     [TestMethod]
+    public async Task QueuedCleanup_ShouldNotDeleteAConcurrentlyRestoredEnrollment()
+    {
+        CaptureAnalysisEnrollment tombstone = new(
+            AnalysisTestData.CaptureId,
+            CaptureAnalysisEnrollmentState.Excluded,
+            CaptureAnalysisExclusionReason.MemoryCleared,
+            enrollmentGeneration: 2,
+            tombstoneGeneration: 1,
+            assetFinalizationSequence: 2,
+            requestedRecipeId: null,
+            requestedRecipeVersion: null);
+        var store = new TestControlStore(CreateControl(tombstone));
+        var gate = new CaptureAnalysisEnrollmentGate();
+        var projection = new Mock<ICaptureAnalysisProjectionMaintenance>(MockBehavior.Strict);
+        var coordinator = new CaptureAnalysisCleanupCoordinator(
+            store,
+            Mock.Of<ICaptureAnalysisJobStore>(MockBehavior.Strict),
+            Mock.Of<ICaptureAnalysisCheckpointStore>(MockBehavior.Strict),
+            Mock.Of<ICaptureAnalysisStore>(MockBehavior.Strict),
+            Mock.Of<ICaptureAnalysisMutationCoordinator>(MockBehavior.Strict),
+            projection.Object,
+            Mock.Of<ICaptureAssetCatalog>(MockBehavior.Strict),
+            Mock.Of<IRecentCaptureCatalog>(MockBehavior.Strict),
+            Mock.Of<IFileSystem>(MockBehavior.Strict),
+            gate);
+        using IDisposable lease = await gate.EnterAsync(CancellationToken.None);
+        Task<bool> cleanup = coordinator.ReconcileCaptureAsync(tombstone.CaptureId).AsTask();
+        await Task.Yield();
+        CaptureAnalysisRecipe recipe = CaptureAnalysisRecipeDefaults.CreateCaptureMemoryImageRecipe();
+        var restored = new CaptureAnalysisEnrollment(tombstone.CaptureId,
+            CaptureAnalysisEnrollmentState.Enrolled, CaptureAnalysisExclusionReason.None,
+            3, tombstone.TombstoneGeneration, tombstone.AssetFinalizationSequence, recipe.Id, recipe.Version);
+        await store.TryWriteAsync(new(store.Snapshot.State.Policy, [restored]), store.Snapshot.DocumentRevision);
+        lease.Dispose();
+
+        Assert.IsTrue(await cleanup.WaitAsync(TimeSpan.FromSeconds(1)));
+        projection.VerifyNoOtherCalls();
+    }
+
+    [TestMethod]
     public async Task ForgetHistory_ShouldResumeCleanupWithoutWritingAnotherTombstone()
     {
         CaptureAnalysisEnrollment enrolled = CreateEnrollment(2);

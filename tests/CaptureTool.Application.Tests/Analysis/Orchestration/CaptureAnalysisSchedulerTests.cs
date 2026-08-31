@@ -496,6 +496,10 @@ public sealed class CaptureAnalysisSchedulerTests
 
     private sealed class RecordingJobStore : ICaptureAnalysisJobStore
     {
+        public ValueTask<CaptureAnalysisJobEnqueueResult> TryScheduleOperationAsync(
+            CaptureAnalysisJobKey key, DateTimeOffset enqueuedAtUtc, Guid operationId, CancellationToken cancellationToken = default) =>
+            TryRequeueAsync(key, enqueuedAtUtc, cancellationToken);
+
         public List<CaptureAnalysisJobKey> Keys { get; } = [];
 
         public List<DateTimeOffset> EnqueuedAtUtc { get; } = [];

@@ -85,6 +85,8 @@ public static class ApplicationServiceCollectionExtensions
         services.AddSingleton<CaptureAnalysisPolicyService>();
         services.AddSingleton<ICaptureAnalysisPolicyService>(provider =>
             provider.GetRequiredService<CaptureAnalysisPolicyService>());
+        services.AddSingleton<CaptureAnalysisEnrollmentGate>();
+        services.AddSingleton<ICaptureMemoryWorkflow, CaptureMemoryWorkflow>();
         services.AddSingleton<ICaptureAnalysisScheduler, CaptureAnalysisScheduler>();
         services.AddSingleton<CaptureMemorySearchProjection>();
         services.AddSingleton<ICaptureMemorySearchService>(provider =>

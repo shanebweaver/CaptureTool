@@ -131,6 +131,44 @@ internal sealed class LocalCaptureAnalysisJobStore : ICaptureAnalysisJobStore, I
         }
     }
 
+    public async ValueTask<CaptureAnalysisJobEnqueueResult> TryScheduleOperationAsync(
+        CaptureAnalysisJobKey key, DateTimeOffset enqueuedAtUtc, Guid operationId,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(key);
+        if (operationId == Guid.Empty) { throw new ArgumentException("Operation identity must be nonempty.", nameof(operationId)); }
+        EnsureUtc(enqueuedAtUtc, nameof(enqueuedAtUtc));
+        await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            string path = GetJobFilePath(key);
+            JobLoadResult loaded = Load(path);
+            if (loaded.Status is not (JobLoadStatus.Known or JobLoadStatus.Missing))
+            {
+                return new(CaptureAnalysisJobEnqueueStatus.Unavailable);
+            }
+            StoredJob? existing = loaded.Job;
+            if (existing != null && existing.Intent.Key != key) { return new(CaptureAnalysisJobEnqueueStatus.Rejected); }
+            if (existing?.Intent.OperationId == operationId)
+            {
+                return new(CaptureAnalysisJobEnqueueStatus.AlreadyExists, existing.Intent);
+            }
+            bool adopt = existing?.Intent.State is CaptureAnalysisJobState.Pending or CaptureAnalysisJobState.Running
+                or CaptureAnalysisJobState.WaitingForCapability or CaptureAnalysisJobState.RetryScheduled;
+            CaptureAnalysisJobIntent intent = adopt
+                ? new(key, existing!.Intent.State, existing.Intent.AttemptCount, existing.Intent.EnqueuedAtUtc,
+                    existing.Intent.NextAttemptAtUtc, existing.Intent.LatestFailure, existing.Intent.Attempts, operationId)
+                : new(key, CaptureAnalysisJobState.Pending, 0, enqueuedAtUtc, null, null, [], operationId);
+            StoredJob next = adopt
+                ? new(intent, existing!.LeaseToken, existing.LeaseExpiresAtUtc)
+                : new(intent, null, null);
+            return TryWrite(path, next)
+                ? new(adopt ? CaptureAnalysisJobEnqueueStatus.AlreadyExists : CaptureAnalysisJobEnqueueStatus.Enqueued, intent)
+                : new(CaptureAnalysisJobEnqueueStatus.Unavailable);
+        }
+        finally { _gate.Release(); }
+    }
+
     public async ValueTask<CaptureAnalysisJobEnqueueResult> TryRequeueAsync(
         CaptureAnalysisJobKey key,
         DateTimeOffset enqueuedAtUtc,
@@ -886,7 +924,8 @@ internal sealed class LocalCaptureAnalysisJobStore : ICaptureAnalysisJobStore, I
             intent.EnqueuedAtUtc,
             nextAttemptAtUtc,
             latestFailure,
-            copiedAttempts);
+            copiedAttempts,
+            intent.OperationId);
     }
 
     private static void EnsureUtc(DateTimeOffset value, string parameterName)

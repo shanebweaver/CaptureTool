@@ -258,6 +258,46 @@ public sealed class LocalCaptureAnalysisJobStoreTests
     }
 
     [TestMethod]
+    public async Task OperationReplay_ShouldPreserveCompletedWorkAcrossRestartAndAllowANewReanalysis()
+    {
+        string root = AnalysisPersistenceTestData.CreateTestFolder();
+        CaptureAnalysisJobKey key = CreateKey();
+        Guid operation = Guid.NewGuid();
+        using (LocalCaptureAnalysisJobStore store = CreateStore(root))
+        {
+            Assert.AreEqual(CaptureAnalysisJobEnqueueStatus.Enqueued,
+                (await store.TryScheduleOperationAsync(key, EnqueuedAtUtc, operation)).Status);
+            CaptureAnalysisJobLease lease = (await store.TryLeaseNextDueAsync(EnqueuedAtUtc, TimeSpan.FromMinutes(1)))!;
+            await store.TryRecordAttemptAsync(lease.LeaseToken, CreateAttempt(1, CaptureAnalyzerAttemptStatus.Succeeded, null));
+            await store.TryCompleteAsync(lease.LeaseToken);
+        }
+        using LocalCaptureAnalysisJobStore restarted = CreateStore(root);
+        var replay = await restarted.TryScheduleOperationAsync(key, EnqueuedAtUtc.AddMinutes(2), operation);
+        Assert.AreEqual(CaptureAnalysisJobEnqueueStatus.AlreadyExists, replay.Status);
+        Assert.AreEqual(CaptureAnalysisJobState.Completed, replay.Intent!.State);
+        Assert.AreEqual(operation, replay.Intent.OperationId);
+        Assert.AreEqual(1, replay.Intent.AttemptCount);
+        var next = await restarted.TryScheduleOperationAsync(key, EnqueuedAtUtc.AddMinutes(3), Guid.NewGuid());
+        Assert.AreEqual(CaptureAnalysisJobState.Pending, next.Intent!.State);
+        Assert.AreEqual(0, next.Intent.AttemptCount);
+    }
+
+    [TestMethod]
+    public async Task Operation_ShouldAdoptRunningWorkWithoutInvalidatingItsLease()
+    {
+        using LocalCaptureAnalysisJobStore store = CreateStore(AnalysisPersistenceTestData.CreateTestFolder());
+        CaptureAnalysisJobKey key = CreateKey();
+        await store.TryEnqueueAsync(key, EnqueuedAtUtc);
+        CaptureAnalysisJobLease lease = (await store.TryLeaseNextDueAsync(EnqueuedAtUtc, TimeSpan.FromMinutes(1)))!;
+        Guid operation = Guid.NewGuid();
+        var adopted = await store.TryScheduleOperationAsync(key, EnqueuedAtUtc.AddSeconds(1), operation);
+        Assert.AreEqual(CaptureAnalysisJobState.Running, adopted.Intent!.State);
+        await store.TryRecordAttemptAsync(lease.LeaseToken, CreateAttempt(1, CaptureAnalyzerAttemptStatus.Succeeded, null));
+        Assert.AreEqual(CaptureAnalysisJobMutationStatus.Succeeded, (await store.TryCompleteAsync(lease.LeaseToken)).Status);
+        Assert.AreEqual(operation, (await store.GetAsync(key))!.OperationId);
+    }
+
+    [TestMethod]
     public async Task WaitingIntent_ShouldBecomeLeaseableAtDurableRecheckTime()
     {
         using LocalCaptureAnalysisJobStore store = CreateStore(

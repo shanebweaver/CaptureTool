@@ -213,7 +213,8 @@ public sealed record CaptureAnalysisJobIntent
         DateTimeOffset enqueuedAtUtc,
         DateTimeOffset? nextAttemptAtUtc,
         AnalysisFailure? latestFailure,
-        IEnumerable<CaptureAnalyzerAttempt> attempts)
+        IEnumerable<CaptureAnalyzerAttempt> attempts,
+        Guid? operationId = null)
     {
         ArgumentNullException.ThrowIfNull(key);
         if (!Enum.IsDefined(state) || state == CaptureAnalysisJobState.Unknown)
@@ -338,6 +339,8 @@ public sealed record CaptureAnalysisJobIntent
         NextAttemptAtUtc = nextAttemptAtUtc;
         LatestFailure = latestFailure;
         _attempts = Array.AsReadOnly(copiedAttempts);
+        if (operationId == Guid.Empty) { throw new ArgumentException("Operation identity must be nonempty.", nameof(operationId)); }
+        OperationId = operationId;
     }
 
     public CaptureAnalysisJobKey Key { get; }
@@ -353,6 +356,8 @@ public sealed record CaptureAnalysisJobIntent
     public AnalysisFailure? LatestFailure { get; }
 
     public IReadOnlyList<CaptureAnalyzerAttempt> Attempts => _attempts;
+
+    public Guid? OperationId { get; }
 }
 
 public sealed record CaptureAnalysisJobLease
@@ -465,6 +470,14 @@ public sealed record CaptureAnalysisJobMutationResult
 
 public interface ICaptureAnalysisJobStore
 {
+    // Atomically creates/requeues terminal work once per operation, or adopts live work.
+    // Replaying a recovered operation must not re-run jobs it already completed.
+    ValueTask<CaptureAnalysisJobEnqueueResult> TryScheduleOperationAsync(
+        CaptureAnalysisJobKey key,
+        DateTimeOffset enqueuedAtUtc,
+        Guid operationId,
+        CancellationToken cancellationToken = default);
+
     ValueTask<CaptureAnalysisJobIntent?> GetAsync(
         CaptureAnalysisJobKey key,
         CancellationToken cancellationToken = default);

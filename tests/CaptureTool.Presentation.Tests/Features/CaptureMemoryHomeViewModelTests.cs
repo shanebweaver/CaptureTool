@@ -184,178 +184,49 @@ public sealed class CaptureMemoryHomeViewModelTests
     }
 
     [TestMethod]
-    public async Task EnableFutureCaptureMemory_AllowsUnavailableModelsWithLimitedCoverage()
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task Enable_ShouldDelegateToSharedWorkflowAndRefreshExistingQuery(bool includeExisting)
     {
-        CaptureAnalysisPolicySnapshot initial = CreatePolicySnapshot(authorized: false);
-        CaptureAnalysisPolicySnapshot authorized = CreatePolicySnapshot(authorized: true);
-        var policy = new Mock<ICaptureAnalysisPolicyService>();
-        policy.Setup(value => value.GetCurrentAsync(It.IsAny<CancellationToken>())).ReturnsAsync(initial);
-        var commands = new Mock<ICaptureAnalysisPolicyCommandService>();
-        commands.Setup(value => value.ApplyConsentDecisionAsync(
-                It.IsAny<CaptureTool.Application.Abstractions.Analysis.Consent.CaptureAnalysisConsentResponse>(),
-                initial.ControlDocumentRevision,
-                It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new CaptureAnalysisPolicyChangeResult(
-                CaptureAnalysisPolicyChangeStatus.Succeeded,
-                authorized));
-        var preparation = new Mock<IUserInitiatedAnalysisCapabilityPreparationService>();
-        preparation.Setup(value => value.PrepareAsync(
-                It.Is<AnalysisCapabilityPreparationRequest>(request =>
-                    request.Capability.Id == AnalysisCapabilities.ImageDescriptionV1.Id),
-                It.IsAny<IProgress<AnalysisCapabilityPreparationProgress>>(),
-                It.IsAny<CancellationToken>()))
-            .ReturnsAsync(AnalysisCapabilityPreparationState.Unsupported(new AnalysisFailure(
-                AnalysisFailureCode.CapabilityUnavailable,
-                AnalysisFailureDisposition.Terminal)));
-        preparation.Setup(value => value.PrepareAsync(
-                It.Is<AnalysisCapabilityPreparationRequest>(request =>
-                    request.Capability.Id != AnalysisCapabilities.ImageDescriptionV1.Id),
-                It.IsAny<IProgress<AnalysisCapabilityPreparationProgress>>(),
-                It.IsAny<CancellationToken>()))
-            .ReturnsAsync(AnalysisCapabilityPreparationState.Ready(
-                CreateAnalyzerIdentity(),
-                ProcessingBoundary.OnDevice));
-        CaptureMemoryHomeViewModel viewModel = CreateViewModel(
-            Mock.Of<ICaptureMemorySearchService>(),
-            policyService: policy.Object,
-            policyCommandService: commands.Object,
-            preparationService: preparation.Object);
-        await viewModel.LoadAsync(CancellationToken.None);
-
-        Assert.IsFalse(viewModel.IncludeExistingCaptures);
-        await viewModel.EnableCaptureMemoryCommand.ExecuteAsync(null);
-
-        Assert.IsTrue(viewModel.IsAuthorized);
-        Assert.IsTrue(viewModel.HasLimitedModelCoverage);
-        Assert.IsFalse(viewModel.HasSetupFailure);
-        commands.Verify(value => value.AuthorizeExistingCaptureBackfillAsync(
-            It.IsAny<long>(), It.IsAny<CancellationToken>()), Times.Never);
-    }
-
-    [TestMethod]
-    public async Task EnableExistingCaptureMemory_ShouldStartAuthorizedBackfillAndRefreshExistingQuery()
-    {
-        CaptureAnalysisPolicySnapshot initial = CreatePolicySnapshot(authorized: false);
-        CaptureAnalysisPolicySnapshot authorized = CreatePolicySnapshot(authorized: true);
-        CaptureAnalysisPolicy backfillPolicy = authorized.Policy!
-            .AuthorizeExistingCaptureBackfill(currentSequence: 12);
-        CaptureAnalysisPolicy completedPolicy = backfillPolicy
-            .StartExistingCaptureBackfill()
-            .AdvanceExistingCaptureBackfill(checkpoint: 12);
-        CaptureAnalysisPolicySnapshot backfillAuthorized = CreatePolicySnapshot(backfillPolicy);
-        CaptureAnalysisPolicySnapshot completed = CreatePolicySnapshot(completedPolicy);
-        var policy = new Mock<ICaptureAnalysisPolicyService>();
-        policy.SetupSequence(value => value.GetCurrentAsync(It.IsAny<CancellationToken>()))
-            .ReturnsAsync(initial)
-            .ReturnsAsync(initial)
-            .ReturnsAsync(authorized)
-            .ReturnsAsync(completed);
-        var commands = new Mock<ICaptureAnalysisPolicyCommandService>();
-        commands.Setup(value => value.ApplyConsentDecisionAsync(
-                It.IsAny<CaptureTool.Application.Abstractions.Analysis.Consent.CaptureAnalysisConsentResponse>(),
-                initial.ControlDocumentRevision,
-                It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new CaptureAnalysisPolicyChangeResult(
-                CaptureAnalysisPolicyChangeStatus.Succeeded,
-                authorized));
-        commands.Setup(value => value.AuthorizeExistingCaptureBackfillAsync(
-                authorized.ControlDocumentRevision,
-                It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new CaptureAnalysisPolicyChangeResult(
-                CaptureAnalysisPolicyChangeStatus.Succeeded,
-                backfillAuthorized));
-        var preparation = new Mock<IUserInitiatedAnalysisCapabilityPreparationService>();
-        preparation.Setup(value => value.PrepareAsync(
-                It.Is<AnalysisCapabilityPreparationRequest>(request =>
-                    request.Capability.Id == AnalysisCapabilities.SpeechTranscriptV1.Id),
-                It.IsAny<IProgress<AnalysisCapabilityPreparationProgress>>(),
-                It.IsAny<CancellationToken>()))
-            .ReturnsAsync(AnalysisCapabilityPreparationState.Unsupported(new AnalysisFailure(
-                AnalysisFailureCode.CapabilityUnavailable,
-                AnalysisFailureDisposition.Terminal)));
-        preparation.Setup(value => value.PrepareAsync(
-                It.Is<AnalysisCapabilityPreparationRequest>(request =>
-                    request.Capability.Id != AnalysisCapabilities.SpeechTranscriptV1.Id),
-                It.IsAny<IProgress<AnalysisCapabilityPreparationProgress>>(),
-                It.IsAny<CancellationToken>()))
-            .ReturnsAsync(AnalysisCapabilityPreparationState.Ready(
-                CreateAnalyzerIdentity(),
-                ProcessingBoundary.OnDevice));
+        var workflow = new TestCaptureMemoryWorkflow { Current = new(CreatePolicySnapshot(false), null) };
+        workflow.Execute = request =>
+        {
+            var result = TestCaptureMemoryWorkflow.Operation(request.Kind, CaptureMemoryOperationStatus.Succeeded,
+                scheduled: includeExisting);
+            workflow.Current = new(CreatePolicySnapshot(true), result);
+            workflow.Publish();
+            return Task.FromResult(result);
+        };
         var search = new Mock<ICaptureMemorySearchService>();
-        var changes = search.As<ICaptureMemorySearchChangeNotifier>();
-        search.Setup(value => value.SearchAsync(
-                It.IsAny<CaptureMemorySearchRequest>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync([CreateResult(CaptureId.New(), 1, CaptureMemoryMatchKind.OcrText, "recognized words")]);
-        var backfill = new Mock<ICaptureAnalysisBackfillService>();
-        backfill.Setup(value => value.RunAsync(
-                It.IsAny<IProgress<CaptureAnalysisBackfillProgress>>(),
-                It.IsAny<CancellationToken>()))
-            .Callback(() => changes.Raise(value => value.SearchIndexChanged += null, EventArgs.Empty))
-            .ReturnsAsync(new CaptureAnalysisBackfillRunResult(
-                CaptureAnalysisBackfillRunStatus.Completed,
-                new CaptureAnalysisBackfillProgress(12, 12, 2)));
-        CaptureMemoryHomeViewModel viewModel = CreateViewModel(
-            search.Object,
-            policyService: policy.Object,
-            policyCommandService: commands.Object,
-            preparationService: preparation.Object,
-            backfillService: backfill.Object);
-        await viewModel.LoadAsync(CancellationToken.None);
-
-        viewModel.SearchQuery = "recognized words";
-        viewModel.IncludeExistingCaptures = true;
-        await viewModel.EnableCaptureMemoryCommand.ExecuteAsync(null);
-        await viewModel.BackfillCompletion;
-        await viewModel.SearchCompletion;
-
-        Assert.HasCount(1, viewModel.Results);
-        Assert.IsTrue(viewModel.IsAuthorized);
-        Assert.IsFalse(viewModel.IsIndexing);
-        Assert.AreEqual(1, viewModel.IndexProgress);
-        Assert.IsTrue(viewModel.HasLimitedModelCoverage);
-        Assert.IsFalse(viewModel.HasSetupFailure);
-        Assert.IsFalse(viewModel.IncludeExistingCaptures);
-        backfill.Verify(value => value.RunAsync(
-            It.IsAny<IProgress<CaptureAnalysisBackfillProgress>>(),
-            It.IsAny<CancellationToken>()), Times.Once);
+        search.Setup(s => s.SearchAsync(It.IsAny<CaptureMemorySearchRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync([]);
+        using var vm = new CaptureMemoryHomeViewModel(new EnabledCaptureMemoryFeatureAvailability(),
+            search.Object, CreateAvailableResolver(), workflow: workflow);
+        await vm.LoadAsync(CancellationToken.None);
+        vm.SearchQuery = "recognized words";
+        vm.IncludeExistingCaptures = includeExisting;
+        await vm.EnableCaptureMemoryCommand.ExecuteAsync(null);
+        await vm.SearchCompletion;
+        Assert.AreEqual(includeExisting, workflow.Requests.Single().IncludeExistingCaptures);
+        Assert.IsTrue(vm.ShowSearch);
+        Assert.IsFalse(vm.IsPreparing);
+        search.Verify(s => s.SearchAsync(It.IsAny<CaptureMemorySearchRequest>(), It.IsAny<CancellationToken>()), Times.AtLeastOnce());
     }
 
     [TestMethod]
-    public async Task Load_ShouldResumeAnAuthorizedBackfill()
+    public async Task Load_ShouldObserveAppWorkWithoutStartingOrResumingIt()
     {
-        CaptureAnalysisPolicy backfillPolicy = CaptureAnalysisPolicy.Unknown
-            .GrantFutureCaptures(
-                CaptureAnalysisPolicyDefaults.CreateAuthorizationScope(),
-                currentSequence: 4)
-            .AuthorizeExistingCaptureBackfill(currentSequence: 8);
-        CaptureAnalysisPolicy completedPolicy = backfillPolicy
-            .StartExistingCaptureBackfill()
-            .AdvanceExistingCaptureBackfill(checkpoint: 8);
-        var policy = new Mock<ICaptureAnalysisPolicyService>();
-        policy.SetupSequence(value => value.GetCurrentAsync(It.IsAny<CancellationToken>()))
-            .ReturnsAsync(CreatePolicySnapshot(backfillPolicy))
-            .ReturnsAsync(CreatePolicySnapshot(completedPolicy));
-        var backfill = new Mock<ICaptureAnalysisBackfillService>();
-        backfill.Setup(value => value.RunAsync(
-                It.IsAny<IProgress<CaptureAnalysisBackfillProgress>>(),
-                It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new CaptureAnalysisBackfillRunResult(
-                CaptureAnalysisBackfillRunStatus.Completed,
-                new CaptureAnalysisBackfillProgress(8, 8, 1)));
-        CaptureMemoryHomeViewModel viewModel = CreateViewModel(
-            Mock.Of<ICaptureMemorySearchService>(),
-            policyService: policy.Object,
-            backfillService: backfill.Object);
-
-        await viewModel.LoadAsync(CancellationToken.None);
-        await viewModel.BackfillCompletion;
-
-        Assert.IsFalse(viewModel.IsIndexing);
-        Assert.AreEqual(1, viewModel.IndexProgress);
-        Assert.IsFalse(viewModel.HasSetupFailure);
-        backfill.Verify(value => value.RunAsync(
-            It.IsAny<IProgress<CaptureAnalysisBackfillProgress>>(),
-            It.IsAny<CancellationToken>()), Times.Once);
+        var workflow = new TestCaptureMemoryWorkflow { Current = new(CreatePolicySnapshot(true),
+            TestCaptureMemoryWorkflow.Operation(CaptureMemoryOperationKind.Reanalyze,
+                phase: CaptureMemoryOperationPhase.SchedulingCaptures), .5) };
+        using var vm = new CaptureMemoryHomeViewModel(new EnabledCaptureMemoryFeatureAvailability(), workflow: workflow);
+        await vm.LoadAsync(CancellationToken.None);
+        Assert.IsTrue(vm.ShowSearch, "Reanalysis must not hide usable search.");
+        Assert.IsTrue(vm.IsIndexing);
+        Assert.IsFalse(vm.CanChangeSetupOptions);
+        Assert.IsEmpty(workflow.Requests);
+        vm.Dispose();
+        Assert.IsEmpty(workflow.Cancellations);
     }
 
     [TestMethod]
@@ -561,11 +432,8 @@ public sealed class CaptureMemoryHomeViewModelTests
         ICaptureMemorySearchService searchService,
         ICaptureMemoryResultResolver? resolver = null,
         ICaptureAnalysisPolicyService? policyService = null,
-        ICaptureAnalysisPolicyCommandService? policyCommandService = null,
-        IUserInitiatedAnalysisCapabilityPreparationService? preparationService = null,
         ICaptureAssetRemovalService? assetRemovalService = null,
-        ICaptureAnalysisSettingsConfirmationDialogService? confirmationService = null,
-        ICaptureAnalysisBackfillService? backfillService = null)
+        ICaptureAnalysisSettingsConfirmationDialogService? confirmationService = null)
     {
         policyService ??= CreateAuthorizedPolicyService();
         resolver ??= CreateAvailableResolver();
@@ -574,12 +442,12 @@ public sealed class CaptureMemoryHomeViewModelTests
             featureAvailability: new EnabledCaptureMemoryFeatureAvailability(),
             searchService: searchService,
             resultResolver: resolver,
-            policyService: policyService,
-            policyCommandService: policyCommandService,
-            preparationService: preparationService,
+            workflow: new TestCaptureMemoryWorkflow
+            {
+                Read = async token => new(await policyService.GetCurrentAsync(token), null),
+            },
             assetRemovalService: assetRemovalService,
-            confirmationService: confirmationService,
-            backfillService: backfillService);
+            confirmationService: confirmationService);
     }
 
     private static Mock<ICaptureAnalysisSettingsConfirmationDialogService> CreateConfirmation(

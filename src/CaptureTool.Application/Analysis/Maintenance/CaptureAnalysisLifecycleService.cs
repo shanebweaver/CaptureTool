@@ -26,6 +26,7 @@ internal sealed class CaptureAnalysisLifecycleService :
     private readonly IUserInitiatedAnalysisCapabilityPreparationService _preparation;
     private readonly ICaptureAnalysisScheduler _scheduler;
     private readonly SemaphoreSlim _mutationGate = new(1, 1);
+    private readonly CaptureAnalysisEnrollmentGate _enrollmentGate;
 
     public CaptureAnalysisLifecycleService(
         ICaptureAnalysisControlStore controlStore,
@@ -33,7 +34,8 @@ internal sealed class CaptureAnalysisLifecycleService :
         ICaptureAnalysisCleanupCoordinator cleanup,
         ICaptureAnalysisProjectionMaintenance projectionMaintenance,
         IUserInitiatedAnalysisCapabilityPreparationService preparation,
-        ICaptureAnalysisScheduler scheduler)
+        ICaptureAnalysisScheduler scheduler,
+        CaptureAnalysisEnrollmentGate? enrollmentGate = null)
     {
         _controlStore = controlStore;
         _captureAssets = captureAssets;
@@ -41,6 +43,7 @@ internal sealed class CaptureAnalysisLifecycleService :
         _projectionMaintenance = projectionMaintenance;
         _preparation = preparation;
         _scheduler = scheduler;
+        _enrollmentGate = enrollmentGate ?? new();
     }
 
     public async ValueTask<CaptureAnalysisExclusionResult> ExcludeAsync(
@@ -511,7 +514,8 @@ internal sealed class CaptureAnalysisLifecycleService :
                         admission,
                         item.Recipe,
                         boundary,
-                        forceReanalysis: true),
+                        forceReanalysis: true,
+                        operationId: request.OperationId),
                     cancellationToken).ConfigureAwait(false);
                 if (result.Status is CaptureAnalysisScheduleStatus.Scheduled or
                     CaptureAnalysisScheduleStatus.AlreadyScheduled)
@@ -591,6 +595,7 @@ internal sealed class CaptureAnalysisLifecycleService :
                     current.State.Policy,
                     restored,
                     current.State.CaptureChangeCheckpoint);
+                using IDisposable enrollmentLease = await _enrollmentGate.EnterAsync(cancellationToken).ConfigureAwait(false);
                 CaptureAnalysisControlWriteResult write = await _controlStore.TryWriteAsync(
                     next,
                     current.DocumentRevision,

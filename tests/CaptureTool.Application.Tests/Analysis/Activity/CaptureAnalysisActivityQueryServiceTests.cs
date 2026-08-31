@@ -1,4 +1,5 @@
 using CaptureTool.Application.Abstractions.Analysis.Activity;
+using CaptureTool.Application.Abstractions.Analysis.Memory;
 using CaptureTool.Application.Abstractions.Analysis.Jobs;
 using CaptureTool.Application.Abstractions.Analysis.Policy;
 using CaptureTool.Application.Abstractions.Analysis.Preparation;
@@ -30,12 +31,12 @@ public sealed class CaptureAnalysisActivityQueryServiceTests
         jobStore
             .Setup(store => store.ReadAllAsync(It.IsAny<CancellationToken>()))
             .Returns(ToAsyncEnumerable(jobs));
-        var policyService = new Mock<ICaptureAnalysisPolicyService>(MockBehavior.Strict);
+        var policyService = new Mock<ICaptureMemoryWorkflow>(MockBehavior.Strict);
         policyService
             .Setup(service => service.GetCurrentAsync(It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new CaptureAnalysisPolicySnapshot(
+            .ReturnsAsync(new CaptureMemoryWorkflowSnapshot(new CaptureAnalysisPolicySnapshot(
                 CaptureAnalysisPolicySnapshotStatus.FeatureDisabled,
-                CaptureAnalysisConsentState.Unknown));
+                CaptureAnalysisConsentState.Unknown), null));
         var preparationQuery = new Mock<IAnalysisCapabilityPreparationActivityQueryService>(
             MockBehavior.Strict);
         preparationQuery
@@ -72,12 +73,12 @@ public sealed class CaptureAnalysisActivityQueryServiceTests
         jobStore
             .Setup(store => store.ReadAllAsync(It.IsAny<CancellationToken>()))
             .Throws(new IOException("Job diagnostics unavailable."));
-        var policyService = new Mock<ICaptureAnalysisPolicyService>(MockBehavior.Strict);
+        var policyService = new Mock<ICaptureMemoryWorkflow>(MockBehavior.Strict);
         policyService
             .Setup(service => service.GetCurrentAsync(It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new CaptureAnalysisPolicySnapshot(
+            .ReturnsAsync(new CaptureMemoryWorkflowSnapshot(new CaptureAnalysisPolicySnapshot(
                 CaptureAnalysisPolicySnapshotStatus.FeatureDisabled,
-                CaptureAnalysisConsentState.Unknown));
+                CaptureAnalysisConsentState.Unknown), null));
         var preparationQuery = new Mock<IAnalysisCapabilityPreparationActivityQueryService>(
             MockBehavior.Strict);
         preparationQuery

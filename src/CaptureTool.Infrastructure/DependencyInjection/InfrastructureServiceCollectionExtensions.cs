@@ -33,6 +33,7 @@ using CaptureTool.Infrastructure.Analysis.Persistence;
 using CaptureTool.Infrastructure.Analysis.Checkpoints;
 using CaptureTool.Infrastructure.Analysis.Jobs;
 using CaptureTool.Infrastructure.Analysis.Sources;
+using CaptureTool.Infrastructure.Analysis.Memory;
 using CaptureTool.Infrastructure.CaptureAssets;
 using CaptureTool.Infrastructure.Features;
 using CaptureTool.Infrastructure.Files;
@@ -70,6 +71,7 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddSingleton<ICancellationService, CancellationService>();
         services.AddSingleton<IAtomicFileWriter, AtomicFileWriter>();
         services.AddSingleton<ICaptureAnalysisControlStore, LocalCaptureAnalysisControlStore>();
+        services.AddSingleton<ICaptureMemoryOperationStore, LocalCaptureMemoryOperationStore>();
         services.AddSingleton<LocalCaptureAnalysisStore>();
         services.AddSingleton<ICaptureAnalysisStore>(provider =>
             provider.GetRequiredService<LocalCaptureAnalysisStore>());

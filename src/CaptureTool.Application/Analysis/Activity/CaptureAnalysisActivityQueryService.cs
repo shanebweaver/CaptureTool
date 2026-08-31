@@ -3,7 +3,7 @@ using CaptureTool.Application.Abstractions.Analysis.Jobs;
 using CaptureTool.Application.Abstractions.Analysis.Policy;
 using CaptureTool.Application.Abstractions.Analysis.Preparation;
 using CaptureTool.Domain;
-using CaptureTool.Domain.Analysis;
+using CaptureTool.Application.Abstractions.Analysis.Memory;
 
 namespace CaptureTool.Application.Analysis.Activity;
 
@@ -14,7 +14,7 @@ internal sealed class CaptureAnalysisActivityQueryService :
         TimeSpan.FromSeconds(2);
 
     private readonly ICaptureAnalysisJobStore _jobStore;
-    private readonly ICaptureAnalysisPolicyService _policyService;
+    private readonly ICaptureMemoryWorkflow _workflow;
     private readonly IAnalysisCapabilityPreparationActivityQueryService
         _preparationActivityQuery;
     private readonly object _preparationGate = new();
@@ -23,14 +23,15 @@ internal sealed class CaptureAnalysisActivityQueryService :
 
     public CaptureAnalysisActivityQueryService(
         ICaptureAnalysisJobStore jobStore,
-        ICaptureAnalysisPolicyService policyService,
+        ICaptureMemoryWorkflow workflow,
         IAnalysisCapabilityPreparationActivityQueryService preparationActivityQuery)
     {
         ArgumentNullException.ThrowIfNull(jobStore);
-        ArgumentNullException.ThrowIfNull(policyService);
+        ArgumentNullException.ThrowIfNull(workflow);
         ArgumentNullException.ThrowIfNull(preparationActivityQuery);
         _jobStore = jobStore;
-        _policyService = policyService;
+        _workflow = workflow;
+        _workflow.Changed += OnWorkflowChanged;
         _preparationActivityQuery = preparationActivityQuery;
         _preparationActivityQuery.ActivityChanged += OnPreparationActivityChanged;
     }
@@ -126,30 +127,19 @@ internal sealed class CaptureAnalysisActivityQueryService :
         ActivityChanged?.Invoke(this, EventArgs.Empty);
     }
 
+    private void OnWorkflowChanged(object? sender, EventArgs args) => ActivityChanged?.Invoke(this, EventArgs.Empty);
+
     private async ValueTask<(bool IsInProgress, double Fraction)>
         GetBackfillProgressAsync(CancellationToken cancellationToken)
     {
         try
         {
-            CaptureAnalysisPolicySnapshot snapshot = await _policyService
-                .GetCurrentAsync(cancellationToken)
-                .ConfigureAwait(false);
-            CaptureAnalysisPolicy? policy = snapshot.Policy;
-            bool isInProgress = snapshot.IsProcessingAuthorized &&
-                policy?.BackfillState is CaptureAnalysisBackfillState.Authorized or
-                    CaptureAnalysisBackfillState.InProgress;
-            if (!isInProgress || policy == null)
-            {
-                return (false, 0);
-            }
-
-            double fraction = policy.BackfillUpperSequence > 0
-                ? Math.Clamp(
-                    (double)policy.BackfillCheckpoint / policy.BackfillUpperSequence,
-                    0,
-                    1)
-                : 0;
-            return (true, fraction);
+            CaptureMemoryWorkflowSnapshot snapshot = await _workflow.GetCurrentAsync(cancellationToken).ConfigureAwait(false);
+            bool isInProgress = snapshot.Policy.IsProcessingAuthorized && snapshot.Operation is
+                { IsRunning: true, Phase: CaptureMemoryOperationPhase.SchedulingCaptures } operation &&
+                (operation.Request.Kind == CaptureMemoryOperationKind.IncludeExistingCaptures ||
+                 operation.Request is { Kind: CaptureMemoryOperationKind.Enable, IncludeExistingCaptures: true });
+            return (isInProgress, isInProgress ? snapshot.FractionComplete : 0);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {

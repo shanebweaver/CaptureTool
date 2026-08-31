@@ -21,6 +21,7 @@ internal sealed class CaptureAnalysisCleanupCoordinator : ICaptureAnalysisCleanu
     private readonly ICaptureAssetCatalog _captureAssets;
     private readonly IRecentCaptureCatalog _recentCaptures;
     private readonly IFileSystem _fileSystem;
+    private readonly CaptureAnalysisEnrollmentGate _enrollmentGate;
 
     public CaptureAnalysisCleanupCoordinator(
         ICaptureAnalysisControlStore controlStore,
@@ -31,7 +32,8 @@ internal sealed class CaptureAnalysisCleanupCoordinator : ICaptureAnalysisCleanu
         ICaptureAnalysisProjectionMaintenance projectionMaintenance,
         ICaptureAssetCatalog captureAssets,
         IRecentCaptureCatalog recentCaptures,
-        IFileSystem fileSystem)
+        IFileSystem fileSystem,
+        CaptureAnalysisEnrollmentGate? enrollmentGate = null)
     {
         _controlStore = controlStore;
         _jobStore = jobStore;
@@ -42,6 +44,7 @@ internal sealed class CaptureAnalysisCleanupCoordinator : ICaptureAnalysisCleanu
         _captureAssets = captureAssets;
         _recentCaptures = recentCaptures;
         _fileSystem = fileSystem;
+        _enrollmentGate = enrollmentGate ?? new();
     }
 
     public async ValueTask<bool> ReconcileAsync(CancellationToken cancellationToken = default)
@@ -116,6 +119,15 @@ internal sealed class CaptureAnalysisCleanupCoordinator : ICaptureAnalysisCleanu
     {
         try
         {
+            using IDisposable lease = await _enrollmentGate.EnterAsync(cancellationToken).ConfigureAwait(false);
+            // A queued cleanup may have observed a retired generation before restoration.
+            // Under the shared gate, only the current tombstone may remove derived data.
+            CaptureAnalysisControlSnapshot latest = await _controlStore.GetAsync(cancellationToken).ConfigureAwait(false);
+            CaptureAnalysisEnrollment? current = latest.State.Enrollments.FirstOrDefault(row => row.CaptureId == tombstone.CaptureId);
+            if (current != tombstone || latest.State.ControlGeneration != control.State.ControlGeneration)
+            {
+                return current?.State == CaptureAnalysisEnrollmentState.Enrolled;
+            }
             // The tombstone is already durable. Remove the disposable projection first so a
             // locked source or temporarily unavailable metadata envelope cannot keep private
             // content searchable while the remaining cleanup is retried.
