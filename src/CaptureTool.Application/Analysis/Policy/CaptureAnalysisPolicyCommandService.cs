@@ -82,7 +82,20 @@ internal sealed class CaptureAnalysisPolicyCommandService : ICaptureAnalysisPoli
         {
             // The authorization removal is already durable. Cleanup is idempotent and retried
             // during startup reconciliation, so caller cancellation must not interrupt it.
-            _ = await _cleanup.ReconcileAsync(CancellationToken.None).ConfigureAwait(false);
+            try
+            {
+                if (await _cleanup.ReconcileAsync(CancellationToken.None).ConfigureAwait(false))
+                {
+                    return result;
+                }
+            }
+            catch
+            {
+                // Revocation is already committed. Report pending cleanup without implying
+                // that consent remains enabled or that erasure successfully completed.
+            }
+
+            return new(CaptureAnalysisPolicyChangeStatus.ReconciliationRequired, result.Policy);
         }
 
         return result;

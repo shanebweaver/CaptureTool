@@ -359,7 +359,7 @@ internal sealed class CaptureAnalysisLifecycleService :
             }
 
             CaptureAnalysisEnrollment[] enrollments = control.State.Enrollments
-                .Where(enrollment => IsReanalyzable(enrollment) &&
+                .Where(enrollment => enrollment.CanReanalyze &&
                     (request.Scope == CaptureAnalysisReanalysisScope.AllEnrolledCaptures ||
                      request.CaptureIds.Contains(enrollment.CaptureId)))
                 .ToArray();
@@ -368,7 +368,7 @@ internal sealed class CaptureAnalysisLifecycleService :
                 return new(CaptureAnalysisMaintenanceStatus.Rejected);
             }
 
-            if (enrollments.Any(IsClearedEnrollment))
+            if (enrollments.Any(enrollment => enrollment.IsMemoryCleared))
             {
                 ReanalysisEnrollmentRestoreResult restored = await RestoreClearedEnrollmentsAsync(
                     request,
@@ -413,7 +413,7 @@ internal sealed class CaptureAnalysisLifecycleService :
                         capability.Requirement)))
                 .Distinct()
                 .ToArray();
-            ProcessingBoundary? boundary = null;
+            var readyBoundaries = new Dictionary<CaptureMediaKind, HashSet<ProcessingBoundary>>();
             bool preparationIncomplete = false;
             progress?.Report(new CaptureAnalysisMaintenanceProgress(
                 CaptureAnalysisMaintenancePhase.PreparingModels,
@@ -429,14 +429,27 @@ internal sealed class CaptureAnalysisLifecycleService :
                         progress.Report(new CaptureAnalysisMaintenanceProgress(
                             CaptureAnalysisMaintenancePhase.PreparingModels,
                             (capabilityStart + (value.FractionComplete * capabilityShare)) * 0.5)));
-                AnalysisCapabilityPreparationState prepared = await _preparation.PrepareAsync(
-                    new AnalysisCapabilityPreparationRequest(
-                        preparation.Capability,
-                        preparation.MediaKind,
-                        purpose,
-                        processingPolicy),
-                    capabilityProgress,
-                    cancellationToken).ConfigureAwait(false);
+                AnalysisCapabilityPreparationState prepared;
+                try
+                {
+                    prepared = await _preparation.PrepareAsync(
+                        new AnalysisCapabilityPreparationRequest(
+                            preparation.Capability,
+                            preparation.MediaKind,
+                            purpose,
+                            processingPolicy),
+                        capabilityProgress,
+                        cancellationToken).ConfigureAwait(false);
+                }
+                catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+                {
+                    throw;
+                }
+                catch
+                {
+                    prepared = AnalysisCapabilityPreparationState.Failed(new AnalysisFailure(
+                        AnalysisFailureCode.ProviderUnavailable, AnalysisFailureDisposition.Transient));
+                }
                 bool optionalUnavailable =
                     preparation.Requirement == RecipeCapabilityRequirement.Optional &&
                     prepared.Status is (AnalysisCapabilityPreparationStatus.Unsupported or
@@ -445,13 +458,18 @@ internal sealed class CaptureAnalysisLifecycleService :
                 if (!optionalUnavailable &&
                     (prepared.Status != AnalysisCapabilityPreparationStatus.Ready ||
                      prepared.ProcessingBoundary is not ProcessingBoundary preparedBoundary ||
-                     (boundary.HasValue && boundary.Value != preparedBoundary)))
+                     !processingPolicy.AllowedBoundaries.Contains(preparedBoundary)))
                 {
                     preparationIncomplete = true;
                 }
-                else if (prepared.ProcessingBoundary is ProcessingBoundary currentBoundary)
+                else if (prepared.Status == AnalysisCapabilityPreparationStatus.Ready &&
+                    prepared.ProcessingBoundary is ProcessingBoundary currentBoundary)
                 {
-                    boundary ??= currentBoundary;
+                    if (!readyBoundaries.TryGetValue(preparation.MediaKind, out var boundaries))
+                    {
+                        readyBoundaries[preparation.MediaKind] = boundaries = [];
+                    }
+                    boundaries.Add(currentBoundary);
                 }
 
                 progress?.Report(new CaptureAnalysisMaintenanceProgress(
@@ -459,7 +477,7 @@ internal sealed class CaptureAnalysisLifecycleService :
                     ((double)(index + 1) / preparations.Length) * 0.5));
             }
 
-            if (preparationIncomplete || !boundary.HasValue)
+            if (readyBoundaries.Count == 0)
             {
                 return new(CaptureAnalysisMaintenanceStatus.Incomplete);
             }
@@ -475,6 +493,15 @@ internal sealed class CaptureAnalysisLifecycleService :
             for (int index = 0; index < workItems.Length; index++)
             {
                 ReanalysisWorkItem item = workItems[index];
+                // Reanalysis uses the same per-capability durable pipeline as new captures.
+                // Missing speech support must not prevent OCR (or another media kind) running.
+                // Do not claim to queue a capture if none of its capabilities can run.
+                if (!readyBoundaries.TryGetValue(item.Recipe.MediaKind, out var boundaries))
+                {
+                    ReportSchedulingProgress(progress, index, workItems.Length);
+                    continue;
+                }
+                ProcessingBoundary boundary = processingPolicy.AllowedBoundaries.First(boundaries.Contains);
                 var admission = new CaptureAnalysisAdmissionRequest(
                     item.Finalization,
                     purpose,
@@ -483,7 +510,7 @@ internal sealed class CaptureAnalysisLifecycleService :
                     new CaptureAnalysisScheduleRequest(
                         admission,
                         item.Recipe,
-                        boundary!.Value,
+                        boundary,
                         forceReanalysis: true),
                     cancellationToken).ConfigureAwait(false);
                 if (result.Status is CaptureAnalysisScheduleStatus.Scheduled or
@@ -496,7 +523,7 @@ internal sealed class CaptureAnalysisLifecycleService :
             }
 
             return new(
-                scheduled == requestedCaptureCount
+                scheduled == requestedCaptureCount && !preparationIncomplete
                     ? CaptureAnalysisMaintenanceStatus.Succeeded
                     : CaptureAnalysisMaintenanceStatus.Incomplete,
                 scheduled);
@@ -528,7 +555,7 @@ internal sealed class CaptureAnalysisLifecycleService :
                 }
 
                 CaptureAnalysisEnrollment[] cleared = current.State.Enrollments
-                    .Where(enrollment => IsClearedEnrollment(enrollment) &&
+                    .Where(enrollment => enrollment.IsMemoryCleared &&
                         (request.Scope == CaptureAnalysisReanalysisScope.AllEnrolledCaptures ||
                          request.CaptureIds.Contains(enrollment.CaptureId)))
                     .ToArray();
@@ -697,21 +724,6 @@ internal sealed class CaptureAnalysisLifecycleService :
                 enrollment.AssetFinalizationSequence,
                 enrollment)
             : enrollment;
-    }
-
-    private static bool IsReanalyzable(CaptureAnalysisEnrollment enrollment)
-    {
-        return enrollment.State == CaptureAnalysisEnrollmentState.Enrolled ||
-            IsClearedEnrollment(enrollment);
-    }
-
-    private static bool IsClearedEnrollment(CaptureAnalysisEnrollment enrollment)
-    {
-        return enrollment is
-        {
-            State: CaptureAnalysisEnrollmentState.Excluded,
-            ExclusionReason: CaptureAnalysisExclusionReason.MemoryCleared,
-        };
     }
 
     private static CaptureAnalysisEnrollment RestoreEnrollment(

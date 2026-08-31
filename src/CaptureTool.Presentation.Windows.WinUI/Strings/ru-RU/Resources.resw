@@ -1969,4 +1969,10 @@ SOFTWARE.
   <data name="CaptureMemory_Settings_EnableExistingScheduling" xml:space="preserve"><value>Добавление существующих снимков в очередь на анализ…</value></data>
   <data name="CaptureMemory_Settings_EnableExistingIncomplete" xml:space="preserve"><value>Capture Memory включён, но не все существующие снимки удалось добавить в очередь. Вернитесь на главную страницу, чтобы продолжить. Исходные снимки не были изменены.</value></data>
   <data name="CaptureMemory_Settings_EnableExistingSucceeded" xml:space="preserve"><value>Существующие снимки добавлены в очередь на анализ. Результаты будут появляться по мере завершения анализа.</value></data>
+  <data name="CaptureMemory_Settings_ReanalyzeStatusUnavailable" xml:space="preserve"><value>Состояние Capture Memory недоступно. Оно обновится автоматически.</value></data>
+  <data name="CaptureMemory_Settings_ReanalyzeBusy" xml:space="preserve"><value>Дождитесь завершения текущего действия Memory или отмените его.</value></data>
+  <data name="CaptureMemory_Settings_ReanalyzeOff" xml:space="preserve"><value>Включите Capture Memory, чтобы повторно анализировать записи.</value></data>
+  <data name="CaptureMemory_Settings_ReanalyzeExcluded" xml:space="preserve"><value>Нет подходящих записей. Исключённые и забытые записи не участвуют в повторном анализе.</value></data>
+  <data name="CaptureMemory_Settings_ReanalyzeEmpty" xml:space="preserve"><value>Пока нет записей, включённых в анализ. Создайте новую запись или включите Memory с параметром «Включить существующие записи».</value></data>
+  <data name="CaptureMemory_Settings_ReanalyzePartial" xml:space="preserve"><value>Доступный анализ поставлен в очередь. Некоторые модели или исходные файлы недоступны; результаты появятся по мере завершения поддерживаемого анализа.</value></data>
 </root>

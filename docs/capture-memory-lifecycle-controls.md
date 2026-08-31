@@ -1,6 +1,6 @@
 # Capture Memory lifecycle controls
 
-Capture Memory lifecycle operations are exposed through a dedicated Settings child view model and remain behind `ICaptureMemoryFeatureAvailability`. The feature stays hidden when either the Capture Analysis platform flag or the Capture Memory search flag is off.
+Capture Memory lifecycle operations are exposed through a dedicated Settings child view model and remain behind `ICaptureMemoryFeatureAvailability`. The feature stays hidden when either the Capture Analysis platform flag or the Capture Memory search flag is off. See the [v1 architecture review and release gates](capture-memory-v1-readiness.md) for current hardening and acceptance criteria.
 
 ## Layering
 
@@ -32,7 +32,7 @@ Separately saved or exported copies are not deletion targets. Delete capture app
 
 Reanalysis reports two application-level phases: model preparation and capture scheduling. Cancellation flows through the maintenance port. Completed durable safety transitions remain effective even if UI cancellation arrives while idempotent cleanup is finishing.
 
-Conflict, rejection, unavailable-model/source, incomplete cleanup, and reconciliation-required states are rendered separately. The view model refreshes durable policy after every operation so the controls reflect the post-crash or post-cancellation state rather than optimistic UI state.
+Conflict, rejection, unavailable-model/source, incomplete cleanup, and reconciliation-required states are rendered separately. Both Home and Settings reconcile durable policy while visible, as well as after operations. The shared enrollment eligibility rule determines Reanalyze availability; disabled actions explain their reason. Progress is marshalled to the UI and scoped to the active operation. Reanalysis queues supported work even when another model is unavailable, and reports partial progress without claiming all recognition finished.
 
 ## Accessibility and localization
 

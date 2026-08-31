@@ -1969,4 +1969,10 @@ SOFTWARE.
   <data name="CaptureMemory_Settings_EnableExistingScheduling" xml:space="preserve"><value>Mise en file d’attente des captures existantes pour l’analyse…</value></data>
   <data name="CaptureMemory_Settings_EnableExistingIncomplete" xml:space="preserve"><value>Capture Memory est activé, mais certaines captures existantes n’ont pas pu être mises en file d’attente. Revenez à l’accueil pour reprendre. Les captures originales n’ont pas été modifiées.</value></data>
   <data name="CaptureMemory_Settings_EnableExistingSucceeded" xml:space="preserve"><value>Les captures existantes ont été mises en file d’attente pour l’analyse. Les résultats apparaîtront au fur et à mesure de l’analyse.</value></data>
+  <data name="CaptureMemory_Settings_ReanalyzeStatusUnavailable" xml:space="preserve"><value>L’état de Capture Memory est indisponible. Il sera actualisé automatiquement.</value></data>
+  <data name="CaptureMemory_Settings_ReanalyzeBusy" xml:space="preserve"><value>Attendez la fin de l’action Memory en cours ou annulez-la.</value></data>
+  <data name="CaptureMemory_Settings_ReanalyzeOff" xml:space="preserve"><value>Activez Capture Memory pour analyser à nouveau les captures.</value></data>
+  <data name="CaptureMemory_Settings_ReanalyzeExcluded" xml:space="preserve"><value>Aucune capture admissible. Les captures exclues ou oubliées restent exclues de la nouvelle analyse.</value></data>
+  <data name="CaptureMemory_Settings_ReanalyzeEmpty" xml:space="preserve"><value>Aucune capture n’est encore inscrite pour l’analyse. Créez une capture ou activez Memory avec Inclure les captures existantes.</value></data>
+  <data name="CaptureMemory_Settings_ReanalyzePartial" xml:space="preserve"><value>L’analyse disponible a été mise en file d’attente. Certains modèles ou fichiers de capture étaient indisponibles ; les résultats apparaîtront à mesure que l’analyse prise en charge se termine.</value></data>
 </root>

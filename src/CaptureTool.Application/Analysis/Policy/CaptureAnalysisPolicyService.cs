@@ -98,9 +98,7 @@ internal sealed class CaptureAnalysisPolicyService :
         CaptureAnalysisEnrollment? enrollment = state.Enrollments.FirstOrDefault(
             item => item.CaptureId == request.CaptureId);
         CaptureAnalysisPolicyDenialReason? enrollmentDenial = GetEnrollmentDenial(enrollment);
-        bool canRestoreCleared = enrollment is
-            { State: CaptureAnalysisEnrollmentState.Excluded,
-              ExclusionReason: CaptureAnalysisExclusionReason.MemoryCleared } &&
+        bool canRestoreCleared = enrollment?.IsMemoryCleared == true &&
             request.Kind == CaptureAnalysisAdmissionKind.ExistingCaptureBackfill &&
             enrollment.AssetFinalizationSequence == request.AssetFinalizationSequence &&
             policy.IsExistingCaptureBackfillEligible(request.AssetFinalizationSequence);

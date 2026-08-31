@@ -1963,4 +1963,10 @@ SOFTWARE.
   <data name="CaptureMemory_Settings_EnableExistingScheduling" xml:space="preserve"><value>Vorhandene Aufnahmen werden zur Analyse eingereiht…</value></data>
   <data name="CaptureMemory_Settings_EnableExistingIncomplete" xml:space="preserve"><value>Capture Memory ist eingeschaltet, aber nicht alle vorhandenen Aufnahmen konnten eingereiht werden. Kehren Sie zur Startseite zurück, um fortzufahren. Die Originalaufnahmen wurden nicht verändert.</value></data>
   <data name="CaptureMemory_Settings_EnableExistingSucceeded" xml:space="preserve"><value>Vorhandene Aufnahmen wurden zur Analyse eingereiht. Ergebnisse werden angezeigt, sobald die Analyse abgeschlossen ist.</value></data>
+  <data name="CaptureMemory_Settings_ReanalyzeStatusUnavailable" xml:space="preserve"><value>Der Status von Capture Memory ist nicht verfügbar. Er wird automatisch aktualisiert.</value></data>
+  <data name="CaptureMemory_Settings_ReanalyzeBusy" xml:space="preserve"><value>Warten Sie, bis die aktuelle Memory-Aktion abgeschlossen ist, oder brechen Sie sie ab.</value></data>
+  <data name="CaptureMemory_Settings_ReanalyzeOff" xml:space="preserve"><value>Aktivieren Sie Capture Memory, um Aufnahmen erneut zu analysieren.</value></data>
+  <data name="CaptureMemory_Settings_ReanalyzeExcluded" xml:space="preserve"><value>Keine geeigneten Aufnahmen. Ausgeschlossene und vergessene Aufnahmen bleiben von der erneuten Analyse ausgeschlossen.</value></data>
+  <data name="CaptureMemory_Settings_ReanalyzeEmpty" xml:space="preserve"><value>Noch keine Aufnahmen für die Analyse registriert. Erstellen Sie eine neue Aufnahme oder aktivieren Sie Memory mit „Vorhandene Aufnahmen einbeziehen“.</value></data>
+  <data name="CaptureMemory_Settings_ReanalyzePartial" xml:space="preserve"><value>Die verfügbare Analyse wurde eingereiht. Einige Modelle oder Aufnahmequellen waren nicht verfügbar. Ergebnisse erscheinen, sobald die unterstützte Analyse abgeschlossen ist.</value></data>
 </root>

@@ -493,6 +493,15 @@ public sealed record CaptureAnalysisPolicySnapshot
 
     public CaptureAnalysisPolicy? Policy => ControlSnapshot?.State.Policy;
 
+    public int ActiveCaptureCount => ControlSnapshot?.State.Enrollments.Count(enrollment =>
+        enrollment.State == CaptureAnalysisEnrollmentState.Enrolled) ?? 0;
+
+    public int ReanalyzableCaptureCount => ControlSnapshot?.State.Enrollments.Count(enrollment =>
+        enrollment.CanReanalyze) ?? 0;
+
+    public int ExcludedCaptureCount => ControlSnapshot?.State.Enrollments.Count(enrollment =>
+        !enrollment.CanReanalyze) ?? 0;
+
     public bool IsProcessingAuthorized =>
         Status == CaptureAnalysisPolicySnapshotStatus.Available &&
         SettingsConsentState == CaptureAnalysisConsentState.Granted &&

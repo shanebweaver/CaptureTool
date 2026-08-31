@@ -402,6 +402,23 @@ public sealed class CaptureAnalysisPolicyServiceTests
     }
 
     [TestMethod]
+    public async Task Revoke_WhenCleanupIsIncomplete_ShouldStayOffAndReportRecoveryRequired()
+    {
+        var store = new TestControlStore(CreateSnapshot(CreateGrantedPolicy(watermark: 10)));
+        var settings = new ConsentSettingsHarness(CaptureAnalysisConsentState.Granted);
+        using var policy = CreateService(store, settings, new TestFeatureAvailability(true), currentAssetSequence: 10);
+        var cleanup = new OrderingCleanupCoordinator([]) { Result = false };
+        var commands = new CaptureAnalysisPolicyCommandService(policy, cleanup);
+
+        CaptureAnalysisPolicyChangeResult result = await commands.RevokeAsync(1);
+
+        Assert.AreEqual(CaptureAnalysisPolicyChangeStatus.ReconciliationRequired, result.Status);
+        Assert.IsFalse(result.Policy.IsProcessingAuthorized);
+        Assert.AreEqual(CaptureAnalysisConsentState.Denied, settings.State);
+        Assert.IsFalse(store.Snapshot.State.Policy.IsProcessingAuthorized);
+    }
+
+    [TestMethod]
     public async Task Backfill_ShouldRequireItsOwnBoundedAuthorization()
     {
         CaptureAnalysisPolicy policy = CreateGrantedPolicy(watermark: 10);
@@ -1056,10 +1073,11 @@ public sealed class CaptureAnalysisPolicyServiceTests
     private sealed class OrderingCleanupCoordinator(List<string> ordering) :
         ICaptureAnalysisCleanupCoordinator
     {
+        public bool Result { get; init; } = true;
         public ValueTask<bool> ReconcileAsync(CancellationToken cancellationToken = default)
         {
             ordering.Add("cleanup");
-            return ValueTask.FromResult(true);
+            return ValueTask.FromResult(Result);
         }
 
         public ValueTask<bool> ReconcileCaptureAsync(

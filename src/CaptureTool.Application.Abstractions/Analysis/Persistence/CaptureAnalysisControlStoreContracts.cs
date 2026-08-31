@@ -110,6 +110,13 @@ public sealed record CaptureAnalysisEnrollment
 
     public CaptureAnalysisExclusionReason ExclusionReason { get; }
 
+    // Eligibility is shared by maintenance, admission, and UI read models. A global clear
+    // is recoverable with explicit consent; privacy/removal exclusions are not.
+    public bool IsMemoryCleared => State == CaptureAnalysisEnrollmentState.Excluded &&
+        ExclusionReason == CaptureAnalysisExclusionReason.MemoryCleared;
+
+    public bool CanReanalyze => State == CaptureAnalysisEnrollmentState.Enrolled || IsMemoryCleared;
+
     public long EnrollmentGeneration { get; }
 
     public long TombstoneGeneration { get; }

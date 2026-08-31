@@ -11,6 +11,7 @@ using CaptureTool.Application.Abstractions.Localization;
 using CaptureTool.Application.Abstractions.UseCases;
 using CaptureTool.Domain.Analysis;
 using CaptureTool.Presentation.ViewModels;
+using CaptureTool.Presentation.Features.CaptureMemory;
 using CommunityToolkit.Mvvm.Input;
 using System.Collections.ObjectModel;
 
@@ -32,7 +33,8 @@ public sealed class CaptureMemoryHomeViewModel : ViewModelBase
     private readonly ICaptureAnalysisSettingsConfirmationDialogService? _confirmationService;
     private readonly ILocalizationService? _localizationService;
     private CancellationTokenSource? _searchCancellation;
-    private CancellationTokenSource? _policyRefreshCancellation;
+    private readonly CaptureMemoryStateRefreshLoop _stateRefresh;
+    private long _policyReadGeneration;
     private Task _backfillCompletion = Task.CompletedTask;
     private Task _searchCompletion = Task.CompletedTask;
     private int _searchGeneration;
@@ -68,6 +70,7 @@ public sealed class CaptureMemoryHomeViewModel : ViewModelBase
         _assetRemovalService = assetRemovalService;
         _confirmationService = confirmationService;
         _localizationService = localizationService;
+        _stateRefresh = new CaptureMemoryStateRefreshLoop(RefreshPolicyAsync);
 
         EnableCaptureMemoryCommand = new AsyncRelayCommand(
             EnableAsync,
@@ -251,6 +254,10 @@ public sealed class CaptureMemoryHomeViewModel : ViewModelBase
         }
 
         await RefreshPolicyAsync(cancellationToken);
+        if (IsFeatureEnabled)
+        {
+            _stateRefresh.Start();
+        }
         _searchCompletion = QueueSearchAsync(SearchQuery, debounce: false);
         if (IsIndexing && _backfillService != null && _backfillCompletion.IsCompleted)
         {
@@ -268,7 +275,8 @@ public sealed class CaptureMemoryHomeViewModel : ViewModelBase
         _searchCancellation?.Cancel();
         _searchCancellation?.Dispose();
         _searchCancellation = null;
-        _policyRefreshCancellation?.Cancel();
+        _stateRefresh.Dispose();
+        _policyReadGeneration++;
         base.Dispose();
     }
 
@@ -287,6 +295,7 @@ public sealed class CaptureMemoryHomeViewModel : ViewModelBase
             return;
         }
 
+        _policyReadGeneration++;
         IsPreparing = true;
         PreparationProgress = 0;
         HasSetupFailure = false;
@@ -309,7 +318,7 @@ public sealed class CaptureMemoryHomeViewModel : ViewModelBase
                 return;
             }
 
-            IsAuthorized = consentChange.Policy.IsProcessingAuthorized;
+            ApplyPolicy(consentChange.Policy);
             CaptureAnalysisRecipe[] recipes =
             [
                 CaptureAnalysisRecipeDefaults.CreateCaptureMemoryImageRecipe(),
@@ -437,9 +446,15 @@ public sealed class CaptureMemoryHomeViewModel : ViewModelBase
             return;
         }
 
+        long generation = _policyReadGeneration;
         try
         {
-            ApplyPolicy(await _policyService.GetCurrentAsync(cancellationToken));
+            CaptureAnalysisPolicySnapshot snapshot = await _policyService.GetCurrentAsync(cancellationToken);
+            cancellationToken.ThrowIfCancellationRequested();
+            if (generation == _policyReadGeneration)
+            {
+                ApplyPolicy(snapshot);
+            }
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
@@ -447,19 +462,23 @@ public sealed class CaptureMemoryHomeViewModel : ViewModelBase
         }
         catch
         {
-            IsAuthorized = false;
-            HasSetupFailure = true;
+            if (generation == _policyReadGeneration)
+            {
+                IsAuthorized = false;
+                HasSetupFailure = true;
+            }
         }
     }
 
     private void ApplyPolicy(CaptureAnalysisPolicySnapshot snapshot)
     {
+        _policyReadGeneration++;
+        bool wasAuthorized = IsAuthorized;
         IsAuthorized = snapshot.IsProcessingAuthorized;
         UpdateIndexState(snapshot.Policy);
-        if (IsIndexing && _policyRefreshCancellation == null)
+        if (wasAuthorized != IsAuthorized)
         {
-            _policyRefreshCancellation = new CancellationTokenSource();
-            _ = PollPolicyAsync(_policyRefreshCancellation);
+            _searchCompletion = QueueSearchAsync(SearchQuery, debounce: false);
         }
     }
 
@@ -470,36 +489,6 @@ public sealed class CaptureMemoryHomeViewModel : ViewModelBase
         IndexProgress = policy?.BackfillUpperSequence > 0
             ? Math.Clamp((double)policy.BackfillCheckpoint / policy.BackfillUpperSequence, 0, 1)
             : policy?.BackfillState == CaptureAnalysisBackfillState.Completed ? 1 : 0;
-    }
-
-    private async Task PollPolicyAsync(CancellationTokenSource cancellation)
-    {
-        try
-        {
-            while (IsIndexing && _policyService != null)
-            {
-                await Task.Delay(TimeSpan.FromSeconds(1), cancellation.Token);
-                CaptureAnalysisPolicySnapshot snapshot = await _policyService.GetCurrentAsync(cancellation.Token);
-                IsAuthorized = snapshot.IsProcessingAuthorized;
-                UpdateIndexState(snapshot.Policy);
-            }
-        }
-        catch (OperationCanceledException) when (cancellation.IsCancellationRequested)
-        {
-        }
-        catch
-        {
-            // Index progress is advisory; partial search remains available.
-        }
-        finally
-        {
-            if (ReferenceEquals(_policyRefreshCancellation, cancellation))
-            {
-                _policyRefreshCancellation = null;
-            }
-
-            cancellation.Dispose();
-        }
     }
 
     private void OnSearchIndexChanged(object? sender, EventArgs e)
@@ -544,6 +533,9 @@ public sealed class CaptureMemoryHomeViewModel : ViewModelBase
 
         if (!ShowSearch || _searchService == null || _resultResolver == null)
         {
+            _results.Clear();
+            IsSearching = false;
+            RaiseDisplayStateChanged();
             return Task.CompletedTask;
         }
 

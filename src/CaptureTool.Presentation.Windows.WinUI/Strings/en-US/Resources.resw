@@ -2253,4 +2253,10 @@ SOFTWARE.
   <data name="CaptureMemory_Settings_EnableExistingScheduling" xml:space="preserve"><value>Queuing existing captures for analysis…</value></data>
   <data name="CaptureMemory_Settings_EnableExistingIncomplete" xml:space="preserve"><value>Capture Memory is on, but not all existing captures could be queued. Return to Home to resume. Original captures were not modified.</value></data>
   <data name="CaptureMemory_Settings_EnableExistingSucceeded" xml:space="preserve"><value>Existing captures were queued for analysis. Results will appear as analysis finishes.</value></data>
+  <data name="CaptureMemory_Settings_ReanalyzeStatusUnavailable" xml:space="preserve"><value>Capture Memory status is unavailable. It will refresh automatically.</value></data>
+  <data name="CaptureMemory_Settings_ReanalyzeBusy" xml:space="preserve"><value>Wait for the current Memory action to finish, or cancel it.</value></data>
+  <data name="CaptureMemory_Settings_ReanalyzeOff" xml:space="preserve"><value>Turn on Capture Memory to reanalyze captures.</value></data>
+  <data name="CaptureMemory_Settings_ReanalyzeExcluded" xml:space="preserve"><value>No eligible captures. Excluded and forgotten captures stay excluded from reanalysis.</value></data>
+  <data name="CaptureMemory_Settings_ReanalyzeEmpty" xml:space="preserve"><value>No captures are enrolled yet. Take a new capture, or enable Memory with Include existing captures.</value></data>
+  <data name="CaptureMemory_Settings_ReanalyzePartial" xml:space="preserve"><value>Available analysis was queued. Some models or capture sources were unavailable; results will appear as supported analysis finishes.</value></data>
 </root>

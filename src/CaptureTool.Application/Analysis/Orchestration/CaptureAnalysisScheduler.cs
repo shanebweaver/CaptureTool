@@ -271,9 +271,7 @@ internal sealed class CaptureAnalysisScheduler : ICaptureAnalysisScheduler
                 .ConfigureAwait(false);
             CaptureAnalysisEnrollment? retired = current.State.Enrollments.FirstOrDefault(
                 enrollment => enrollment.CaptureId == request.Admission.CaptureId);
-            bool canRestoreCleared = retired is
-                { State: CaptureAnalysisEnrollmentState.Excluded,
-                  ExclusionReason: CaptureAnalysisExclusionReason.MemoryCleared } &&
+            bool canRestoreCleared = retired?.IsMemoryCleared == true &&
                 request.Admission.Kind == CaptureAnalysisAdmissionKind.ExistingCaptureBackfill &&
                 retired.TombstoneGeneration == admission.TombstoneGeneration &&
                 retired.AssetFinalizationSequence == request.Admission.AssetFinalizationSequence &&

@@ -1969,4 +1969,10 @@ SOFTWARE.
   <data name="CaptureMemory_Settings_EnableExistingScheduling" xml:space="preserve"><value>Poniendo en cola las capturas existentes para su análisis…</value></data>
   <data name="CaptureMemory_Settings_EnableExistingIncomplete" xml:space="preserve"><value>Capture Memory está activado, pero no se pudieron poner en cola todas las capturas existentes. Vuelve a Inicio para continuar. Las capturas originales no se modificaron.</value></data>
   <data name="CaptureMemory_Settings_EnableExistingSucceeded" xml:space="preserve"><value>Las capturas existentes se pusieron en cola para su análisis. Los resultados aparecerán a medida que finalice el análisis.</value></data>
+  <data name="CaptureMemory_Settings_ReanalyzeStatusUnavailable" xml:space="preserve"><value>El estado de Capture Memory no está disponible. Se actualizará automáticamente.</value></data>
+  <data name="CaptureMemory_Settings_ReanalyzeBusy" xml:space="preserve"><value>Espere a que termine la acción actual de Memory o cancélela.</value></data>
+  <data name="CaptureMemory_Settings_ReanalyzeOff" xml:space="preserve"><value>Active Capture Memory para volver a analizar las capturas.</value></data>
+  <data name="CaptureMemory_Settings_ReanalyzeExcluded" xml:space="preserve"><value>No hay capturas aptas. Las capturas excluidas y olvidadas siguen excluidas del nuevo análisis.</value></data>
+  <data name="CaptureMemory_Settings_ReanalyzeEmpty" xml:space="preserve"><value>Aún no hay capturas registradas para el análisis. Cree una captura nueva o active Memory con Incluir capturas existentes.</value></data>
+  <data name="CaptureMemory_Settings_ReanalyzePartial" xml:space="preserve"><value>Se puso en cola el análisis disponible. Algunos modelos o archivos de captura no estaban disponibles; los resultados aparecerán a medida que termine el análisis compatible.</value></data>
 </root>

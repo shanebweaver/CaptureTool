@@ -9,6 +9,7 @@ using CaptureTool.Application.Abstractions.Analysis.Preparation;
 using CaptureTool.Application.Abstractions.Localization;
 using CaptureTool.Domain.Analysis;
 using CaptureTool.Presentation.ViewModels;
+using CaptureTool.Presentation.Features.CaptureMemory;
 using CommunityToolkit.Mvvm.Input;
 
 namespace CaptureTool.Presentation.Features.Settings;
@@ -24,6 +25,8 @@ public sealed class CaptureMemorySettingsViewModel : ViewModelBase
     private readonly IUserInitiatedAnalysisCapabilityPreparationService? _preparationService;
     private readonly ICaptureAnalysisBackfillService? _backfillService;
     private CancellationTokenSource? _operationCancellation;
+    private readonly CaptureMemoryStateRefreshLoop _stateRefresh;
+    private long _policyReadGeneration;
 
     public CaptureMemorySettingsViewModel(
         ICaptureMemoryFeatureAvailability? featureAvailability = null,
@@ -43,6 +46,7 @@ public sealed class CaptureMemorySettingsViewModel : ViewModelBase
         _localizationService = localizationService;
         _preparationService = preparationService;
         _backfillService = backfillService;
+        _stateRefresh = new CaptureMemoryStateRefreshLoop(RefreshAsync);
 
         EnableCaptureMemoryCommand = new AsyncRelayCommand(
             EnableCaptureMemoryAsync,
@@ -234,6 +238,22 @@ public sealed class CaptureMemorySettingsViewModel : ViewModelBase
 
     public bool IsModelUnavailable { get; private set => Set(ref field, value); }
 
+    public int ExcludedCaptureCount { get; private set => Set(ref field, value); }
+
+    public string ReanalyzeAvailabilityText => !IsPolicyAvailable || _maintenanceService == null
+        ? GetString("CaptureMemory_Settings_ReanalyzeStatusUnavailable", "Capture Memory status is unavailable. It will refresh automatically.")
+        : IsBusy
+            ? GetString("CaptureMemory_Settings_ReanalyzeBusy", "Wait for the current Memory action to finish, or cancel it.")
+            : !IsAuthorized
+                ? GetString("CaptureMemory_Settings_ReanalyzeOff", "Turn on Capture Memory to reanalyze captures.")
+                : ReanalyzableCaptureCount > 0
+                    ? string.Empty
+                    : ExcludedCaptureCount > 0
+                        ? GetString("CaptureMemory_Settings_ReanalyzeExcluded", "No eligible captures. Excluded and forgotten captures stay excluded from reanalysis.")
+                        : GetString("CaptureMemory_Settings_ReanalyzeEmpty", "No captures are enrolled yet. Take a new capture, or enable Memory with Include existing captures.");
+
+    public bool ShowReanalyzeAvailability => !string.IsNullOrEmpty(ReanalyzeAvailabilityText);
+
     public async Task LoadAsync(CancellationToken cancellationToken)
     {
         if (!IsVisible)
@@ -242,12 +262,15 @@ public sealed class CaptureMemorySettingsViewModel : ViewModelBase
         }
 
         await RefreshAsync(cancellationToken);
+        _stateRefresh.Start();
     }
 
     public override void Dispose()
     {
+        _stateRefresh.Dispose();
+        _policyReadGeneration++;
         _operationCancellation?.Cancel();
-        _operationCancellation?.Dispose();
+        // The running operation owns/disposes its token in EndOperation.
         base.Dispose();
     }
 
@@ -269,9 +292,15 @@ public sealed class CaptureMemorySettingsViewModel : ViewModelBase
             return;
         }
 
+        long generation = _policyReadGeneration;
         try
         {
-            ApplyPolicy(await _policyService.GetCurrentAsync(cancellationToken));
+            CaptureAnalysisPolicySnapshot snapshot = await _policyService.GetCurrentAsync(cancellationToken);
+            cancellationToken.ThrowIfCancellationRequested();
+            if (generation == _policyReadGeneration)
+            {
+                ApplyPolicy(snapshot);
+            }
         }
         catch (OperationCanceledException)
         {
@@ -279,7 +308,10 @@ public sealed class CaptureMemorySettingsViewModel : ViewModelBase
         }
         catch
         {
-            ApplyUnavailablePolicy();
+            if (generation == _policyReadGeneration)
+            {
+                ApplyUnavailablePolicy();
+            }
         }
     }
 
@@ -428,7 +460,7 @@ public sealed class CaptureMemorySettingsViewModel : ViewModelBase
         {
             double capabilityStart = (double)index / preparations.Length;
             double capabilityShare = 1d / preparations.Length;
-            var progress = new DelegateProgress<AnalysisCapabilityPreparationProgress>(value =>
+            var progress = CreateOperationProgress<AnalysisCapabilityPreparationProgress>(value =>
                 OperationProgress = capabilityStart +
                     (value.FractionComplete * capabilityShare));
             AnalysisCapabilityPreparationState prepared = await _preparationService!
@@ -541,7 +573,7 @@ public sealed class CaptureMemorySettingsViewModel : ViewModelBase
             "Preparing AI models for reanalysis…");
         try
         {
-            var progress = new DelegateProgress<CaptureAnalysisMaintenanceProgress>(ReportProgress);
+            var progress = CreateOperationProgress<CaptureAnalysisMaintenanceProgress>(ReportProgress);
             CaptureAnalysisMaintenanceResult result = await _maintenanceService!.ReanalyzeCapturesAsync(
                 new CaptureAnalysisReanalysisRequest(
                     CaptureAnalysisReanalysisScope.AllEnrolledCaptures),
@@ -556,6 +588,10 @@ public sealed class CaptureMemorySettingsViewModel : ViewModelBase
         catch (OperationCanceledException)
         {
             ApplyCancelled();
+        }
+        catch
+        {
+            ApplyUnavailableOperation();
         }
         finally
         {
@@ -640,6 +676,7 @@ public sealed class CaptureMemorySettingsViewModel : ViewModelBase
 
     private CancellationToken BeginOperation(string statusKey, string statusFallback)
     {
+        _policyReadGeneration++;
         _operationCancellation?.Dispose();
         _operationCancellation = new CancellationTokenSource();
         HasOperationFailure = false;
@@ -655,6 +692,7 @@ public sealed class CaptureMemorySettingsViewModel : ViewModelBase
 
     private void EndOperation()
     {
+        _policyReadGeneration++;
         IsBusy = false;
         IsPreparingModels = false;
         IsSchedulingCaptures = false;
@@ -684,19 +722,15 @@ public sealed class CaptureMemorySettingsViewModel : ViewModelBase
 
     private void ApplyPolicy(CaptureAnalysisPolicySnapshot snapshot)
     {
+        _policyReadGeneration++;
         IsPolicyAvailable = snapshot.Status == CaptureAnalysisPolicySnapshotStatus.Available;
         IsAuthorized = snapshot.IsProcessingAuthorized;
         IsAnalyzingNewCaptures = snapshot.IsProcessingAuthorized &&
             snapshot.Policy?.IsFutureCaptureAdmissionEnabled == true;
-        ActiveCaptureCount = snapshot.ControlSnapshot?.State.Enrollments.Count(enrollment =>
-            enrollment.State == CaptureAnalysisEnrollmentState.Enrolled) ?? 0;
-        ReanalyzableCaptureCount = snapshot.ControlSnapshot?.State.Enrollments.Count(enrollment =>
-            enrollment.State == CaptureAnalysisEnrollmentState.Enrolled ||
-            enrollment is
-            {
-                State: CaptureAnalysisEnrollmentState.Excluded,
-                ExclusionReason: CaptureAnalysisExclusionReason.MemoryCleared,
-            }) ?? 0;
+        ActiveCaptureCount = snapshot.ActiveCaptureCount;
+        ReanalyzableCaptureCount = snapshot.ReanalyzableCaptureCount;
+        ExcludedCaptureCount = snapshot.ExcludedCaptureCount;
+        RaiseCommandStates();
 
         PolicyStatusText = snapshot.Status switch
         {
@@ -721,11 +755,13 @@ public sealed class CaptureMemorySettingsViewModel : ViewModelBase
 
     private void ApplyUnavailablePolicy()
     {
+        _policyReadGeneration++;
         IsPolicyAvailable = false;
         IsAuthorized = false;
         IsAnalyzingNewCaptures = false;
         ActiveCaptureCount = 0;
         ReanalyzableCaptureCount = 0;
+        ExcludedCaptureCount = 0;
         PolicyStatusText = GetString(
             "CaptureMemory_Settings_StatusUnavailable",
             "Capture Memory status is unavailable.");
@@ -775,9 +811,12 @@ public sealed class CaptureMemorySettingsViewModel : ViewModelBase
             case CaptureAnalysisMaintenanceStatus.Incomplete when reanalysis:
                 HasOperationFailure = true;
                 IsModelUnavailable = true;
-                OperationStatusText = GetString(
-                    "CaptureMemory_Settings_ReanalyzeIncomplete",
-                    "A required AI model or capture source was unavailable. Nothing was changed in the original captures; retry when it is available.");
+                OperationStatusText = result.AffectedCaptureCount > 0
+                    ? GetString("CaptureMemory_Settings_ReanalyzePartial",
+                        "Available analysis was queued. Some models or capture sources were unavailable; results will appear as supported analysis finishes.")
+                    : GetString(
+                        "CaptureMemory_Settings_ReanalyzeIncomplete",
+                        "A required AI model or capture source was unavailable. Nothing was changed in the original captures; retry when it is available.");
                 break;
             case CaptureAnalysisMaintenanceStatus.Incomplete:
                 NeedsRecovery = true;
@@ -840,6 +879,8 @@ public sealed class CaptureMemorySettingsViewModel : ViewModelBase
 
     private void RaiseCommandStates()
     {
+        RaisePropertyChanged(nameof(ReanalyzeAvailabilityText));
+        RaisePropertyChanged(nameof(ShowReanalyzeAvailability));
         EnableCaptureMemoryCommand.NotifyCanExecuteChanged();
         StopAnalyzingNewCapturesCommand.NotifyCanExecuteChanged();
         ResumeAnalyzingNewCapturesCommand.NotifyCanExecuteChanged();
@@ -857,8 +898,18 @@ public sealed class CaptureMemorySettingsViewModel : ViewModelBase
         return string.IsNullOrWhiteSpace(value) || value == key ? fallback : value;
     }
 
-    private sealed class DelegateProgress<T>(Action<T> report) : IProgress<T>
+    private IProgress<T> CreateOperationProgress<T>(Action<T> report)
     {
-        public void Report(T value) => report(value);
+        CancellationTokenSource? operation = _operationCancellation;
+        // Progress captures the UI context. Delayed callbacks cannot overwrite completion,
+        // cancellation, or a newer operation's state.
+        return new Progress<T>(value =>
+        {
+            if (ReferenceEquals(operation, _operationCancellation) &&
+                operation?.IsCancellationRequested == false && IsBusy)
+            {
+                report(value);
+            }
+        });
     }
 }

@@ -1008,6 +1008,13 @@
                                             FontSize="12"
                                             Opacity=".75"
                                             TextWrapping="WrapWholeWords" />
+                                        <TextBlock
+                                            AutomationProperties.AutomationId="Settings_CaptureMemoryReanalyzeAvailability"
+                                            FontSize="12"
+                                            Opacity=".75"
+                                            Text="{x:Bind ViewModel.CaptureMemory.ReanalyzeAvailabilityText, Mode=OneWay}"
+                                            TextWrapping="WrapWholeWords"
+                                            Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.CaptureMemory.ShowReanalyzeAvailability), Mode=OneWay}" />
                                     </StackPanel>
                                     <Button
                                         x:Uid="CaptureMemory_Settings_ReanalyzeButton"

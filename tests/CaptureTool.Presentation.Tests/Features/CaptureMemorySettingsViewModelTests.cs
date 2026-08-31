@@ -17,6 +17,159 @@ namespace CaptureTool.Presentation.Tests.Features;
 public sealed class CaptureMemorySettingsViewModelTests
 {
     [TestMethod]
+    public async Task BackgroundEnrollment_ShouldEnableReanalyzeWithoutLeavingSettings()
+    {
+        CaptureAnalysisPolicySnapshot enrolled = CreateSnapshot(true, documentRevision: 2);
+        CaptureAnalysisPolicySnapshot current = new(CaptureAnalysisPolicySnapshotStatus.Available,
+            CaptureAnalysisConsentState.Granted, new CaptureAnalysisControlSnapshot(1,
+                new CaptureAnalysisControlState(enrolled.Policy!, [])));
+        var policy = new Mock<ICaptureAnalysisPolicyService>();
+        policy.Setup(value => value.GetCurrentAsync(It.IsAny<CancellationToken>())).ReturnsAsync(() => current);
+        using var viewModel = CreateViewModel(policy.Object,
+            maintenanceService: Mock.Of<ICaptureAnalysisMaintenanceService>());
+        await viewModel.LoadAsync(CancellationToken.None);
+        Assert.IsFalse(viewModel.ReanalyzeCapturesCommand.CanExecute(null));
+        StringAssert.Contains(viewModel.ReanalyzeAvailabilityText, "No captures are enrolled");
+        var refreshed = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        viewModel.PropertyChanged += (_, args) =>
+        {
+            if (args.PropertyName == nameof(viewModel.ReanalyzableCaptureCount) && viewModel.ReanalyzableCaptureCount == 1)
+            {
+                refreshed.TrySetResult();
+            }
+        };
+
+        current = enrolled;
+        await refreshed.Task.WaitAsync(TimeSpan.FromSeconds(5));
+
+        Assert.IsTrue(viewModel.ReanalyzeCapturesCommand.CanExecute(null));
+        Assert.IsFalse(viewModel.ShowReanalyzeAvailability);
+    }
+
+    [TestMethod]
+    public async Task StaleRefresh_ShouldNotOverwriteANewerTurnOffOperation()
+    {
+        CaptureAnalysisPolicySnapshot enrolled = CreateSnapshot(true);
+        CaptureAnalysisPolicySnapshot current = enrolled;
+        var delayed = new TaskCompletionSource<CaptureAnalysisPolicySnapshot>(TaskCreationOptions.RunContinuationsAsynchronously);
+        int reads = 0;
+        var policy = new Mock<ICaptureAnalysisPolicyService>();
+        policy.Setup(value => value.GetCurrentAsync(It.IsAny<CancellationToken>()))
+            .Returns(() => ++reads == 2 ? new ValueTask<CaptureAnalysisPolicySnapshot>(delayed.Task)
+                : ValueTask.FromResult(current));
+        var commands = new Mock<ICaptureAnalysisPolicyCommandService>();
+        commands.Setup(value => value.RevokeAsync(It.IsAny<long>(), It.IsAny<CancellationToken>()))
+            .Returns(() =>
+            {
+                current = CreateOffSnapshot(2);
+                return ValueTask.FromResult(new CaptureAnalysisPolicyChangeResult(
+                    CaptureAnalysisPolicyChangeStatus.Succeeded, current));
+            });
+        using var viewModel = CreateViewModel(policy.Object, commands.Object,
+            maintenanceService: Mock.Of<ICaptureAnalysisMaintenanceService>(),
+            confirmationService: CreateConfirmation(CaptureAnalysisSettingsAction.TurnOffAndErase).Object);
+        await viewModel.LoadAsync(CancellationToken.None);
+
+        Task refresh = viewModel.RefreshCommand.ExecuteAsync(null);
+        await viewModel.TurnOffAndEraseCommand.ExecuteAsync(null);
+        delayed.SetResult(enrolled);
+        await refresh;
+
+        Assert.IsFalse(viewModel.IsAuthorized);
+        Assert.IsFalse(viewModel.ReanalyzeCapturesCommand.CanExecute(null));
+        StringAssert.Contains(viewModel.ReanalyzeAvailabilityText, "Turn on");
+    }
+
+    [TestMethod]
+    public async Task ReanalysisProgress_FromWorkerAndAfterCompletion_ShouldNotCorruptUiState()
+    {
+        var context = new QueuedSynchronizationContext();
+        var maintenance = new Mock<ICaptureAnalysisMaintenanceService>();
+        maintenance.Setup(value => value.ReanalyzeCapturesAsync(
+                It.IsAny<CaptureAnalysisReanalysisRequest>(), It.IsAny<IProgress<CaptureAnalysisMaintenanceProgress>>(),
+                It.IsAny<CancellationToken>()))
+            .Returns<CaptureAnalysisReanalysisRequest, IProgress<CaptureAnalysisMaintenanceProgress>, CancellationToken>((_, progress, _) =>
+            {
+                Task.Run(() => progress.Report(new(CaptureAnalysisMaintenancePhase.PreparingModels, 0.25)))
+                    .GetAwaiter().GetResult();
+                return ValueTask.FromResult(new CaptureAnalysisMaintenanceResult(CaptureAnalysisMaintenanceStatus.Succeeded, 1));
+            });
+        using var viewModel = CreateViewModel(CreatePolicyService().Object, maintenanceService: maintenance.Object,
+            confirmationService: CreateConfirmation(CaptureAnalysisSettingsAction.ReanalyzeCaptures).Object);
+        await viewModel.LoadAsync(CancellationToken.None);
+        SynchronizationContext? previous = SynchronizationContext.Current;
+        Task operation;
+        try
+        {
+            SynchronizationContext.SetSynchronizationContext(context);
+            operation = viewModel.ReanalyzeCapturesCommand.ExecuteAsync(null);
+        }
+        finally
+        {
+            SynchronizationContext.SetSynchronizationContext(previous);
+        }
+        await operation;
+        Assert.IsGreaterThan(0, context.PendingCount);
+        context.Drain();
+
+        Assert.AreEqual(1, viewModel.OperationProgress);
+        Assert.IsFalse(viewModel.IsBusy);
+        Assert.IsFalse(viewModel.IsPreparingModels);
+        StringAssert.Contains(viewModel.OperationStatusText, "queued");
+        Assert.IsTrue(viewModel.ReanalyzeCapturesCommand.CanExecute(null));
+    }
+
+    [TestMethod]
+    public async Task ReanalysisFailure_ShouldUnlockControlsForRetry()
+    {
+        var maintenance = new Mock<ICaptureAnalysisMaintenanceService>();
+        maintenance.Setup(value => value.ReanalyzeCapturesAsync(It.IsAny<CaptureAnalysisReanalysisRequest>(),
+                It.IsAny<IProgress<CaptureAnalysisMaintenanceProgress>>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new IOException("Temporary failure"));
+        using var viewModel = CreateViewModel(CreatePolicyService().Object, maintenanceService: maintenance.Object,
+            confirmationService: CreateConfirmation(CaptureAnalysisSettingsAction.ReanalyzeCaptures).Object);
+        await viewModel.LoadAsync(CancellationToken.None);
+
+        await viewModel.ReanalyzeCapturesCommand.ExecuteAsync(null);
+
+        Assert.IsFalse(viewModel.IsBusy);
+        Assert.IsTrue(viewModel.HasOperationFailure);
+        Assert.IsTrue(viewModel.ReanalyzeCapturesCommand.CanExecute(null));
+    }
+
+    [TestMethod]
+    public async Task PartialReanalysis_ShouldReportQueuedWorkWithoutClaimingEverythingSucceeded()
+    {
+        var maintenance = new Mock<ICaptureAnalysisMaintenanceService>();
+        maintenance.Setup(value => value.ReanalyzeCapturesAsync(It.IsAny<CaptureAnalysisReanalysisRequest>(),
+                It.IsAny<IProgress<CaptureAnalysisMaintenanceProgress>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new CaptureAnalysisMaintenanceResult(CaptureAnalysisMaintenanceStatus.Incomplete, 1));
+        using var viewModel = CreateViewModel(CreatePolicyService().Object, maintenanceService: maintenance.Object,
+            confirmationService: CreateConfirmation(CaptureAnalysisSettingsAction.ReanalyzeCaptures).Object);
+        await viewModel.LoadAsync(CancellationToken.None);
+
+        await viewModel.ReanalyzeCapturesCommand.ExecuteAsync(null);
+
+        StringAssert.Contains(viewModel.OperationStatusText, "Available analysis was queued");
+        Assert.IsTrue(viewModel.IsModelUnavailable);
+        Assert.IsTrue(viewModel.ReanalyzeCapturesCommand.CanExecute(null));
+    }
+
+    private sealed class QueuedSynchronizationContext : SynchronizationContext
+    {
+        private readonly System.Collections.Concurrent.ConcurrentQueue<(SendOrPostCallback Callback, object? State)> _pending = new();
+        public int PendingCount => _pending.Count;
+        public override void Post(SendOrPostCallback callback, object? state) => _pending.Enqueue((callback, state));
+        public void Drain()
+        {
+            while (_pending.TryDequeue(out var pending))
+            {
+                pending.Callback(pending.State);
+            }
+        }
+    }
+
+    [TestMethod]
     public async Task LoadAsync_WhenFeatureIsDisabled_ShouldRemainHiddenWithoutReadingPolicy()
     {
         var policy = new Mock<ICaptureAnalysisPolicyService>(MockBehavior.Strict);

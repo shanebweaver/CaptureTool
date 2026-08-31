@@ -1969,4 +1969,10 @@ SOFTWARE.
   <data name="CaptureMemory_Settings_EnableExistingScheduling" xml:space="preserve"><value>正在将现有捕获加入分析队列…</value></data>
   <data name="CaptureMemory_Settings_EnableExistingIncomplete" xml:space="preserve"><value>Capture Memory 已打开，但未能将所有现有捕获加入队列。请返回主页以继续。原始捕获未被修改。</value></data>
   <data name="CaptureMemory_Settings_EnableExistingSucceeded" xml:space="preserve"><value>现有捕获已加入分析队列。分析完成后将显示结果。</value></data>
+  <data name="CaptureMemory_Settings_ReanalyzeStatusUnavailable" xml:space="preserve"><value>Capture Memory 状态不可用，将自动刷新。</value></data>
+  <data name="CaptureMemory_Settings_ReanalyzeBusy" xml:space="preserve"><value>请等待当前 Memory 操作完成，或将其取消。</value></data>
+  <data name="CaptureMemory_Settings_ReanalyzeOff" xml:space="preserve"><value>请开启 Capture Memory 以重新分析捕获内容。</value></data>
+  <data name="CaptureMemory_Settings_ReanalyzeExcluded" xml:space="preserve"><value>没有符合条件的捕获内容。已排除和已遗忘的内容仍不会被重新分析。</value></data>
+  <data name="CaptureMemory_Settings_ReanalyzeEmpty" xml:space="preserve"><value>尚无已加入分析的捕获内容。请创建新捕获，或开启 Memory 并选中“包括现有捕获”。</value></data>
+  <data name="CaptureMemory_Settings_ReanalyzePartial" xml:space="preserve"><value>可用的分析已加入队列。部分模型或捕获源文件不可用；结果将在受支持的分析完成后显示。</value></data>
 </root>
