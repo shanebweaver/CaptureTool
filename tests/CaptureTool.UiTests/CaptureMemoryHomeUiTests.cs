@@ -60,7 +60,7 @@ public sealed class CaptureMemoryHomeUiTests
                 "Capture Tool main window");
             window.Focus();
 
-            WaitForElement(app.ProcessId, automation, "Home_CaptureMemoryEnableExistingButton").Click();
+            EnableWithExistingCaptures(app.ProcessId, automation, "Home");
 
             AutomationElement searchBox = WaitForElement(
                 app.ProcessId,
@@ -156,11 +156,10 @@ public sealed class CaptureMemoryHomeUiTests
                 "Capture Tool main window");
             window.Focus();
 
-            WaitForElement(app.ProcessId, automation, "Home_CaptureMemoryEnableExistingButton").Click();
-            WaitForElement(app.ProcessId, automation, "Home_CaptureMemorySearchBox");
-
             WaitForElement(app.ProcessId, automation, "AppMenu_FileMenuItem").Click();
             WaitForElement(app.ProcessId, automation, "AppMenu_SettingsItem").Click();
+            EnableWithExistingCaptures(app.ProcessId, automation, "Settings");
+            WaitForMarker(temporaryDirectory, "capture-memory-backfilled.marker");
 
             AutomationElement clear = WaitForElement(
                 app.ProcessId,
@@ -231,6 +230,9 @@ public sealed class CaptureMemoryHomeUiTests
                 InteractionTimeout,
                 "Capture Memory to report that analysis is off");
 
+            Assert.IsFalse(WaitForElement(app.ProcessId, automation,
+                "Settings_CaptureMemoryIncludeExistingCheckBox").AsCheckBox().IsChecked,
+                "Including existing captures must reset after the previous setup.");
             FocusAndClick(WaitForElement(
                 app.ProcessId,
                 automation,
@@ -290,7 +292,7 @@ public sealed class CaptureMemoryHomeUiTests
                 "Capture Tool main window");
             window.Focus();
 
-            WaitForElement(app.ProcessId, automation, "Home_CaptureMemoryEnableExistingButton").Click();
+            EnableWithExistingCaptures(app.ProcessId, automation, "Home");
             AutomationElement searchBox = WaitFor(
                 () => FindElement(app.ProcessId, automation, "Home_CaptureMemorySearchBox"),
                 RealAnalysisTimeout,
@@ -329,6 +331,17 @@ public sealed class CaptureMemoryHomeUiTests
         {
             app.Close();
         }
+    }
+
+    private static void EnableWithExistingCaptures(int processId, UIA3Automation automation, string page)
+    {
+        CheckBox includeExisting = WaitForElement(processId, automation,
+            $"{page}_CaptureMemoryIncludeExistingCheckBox").AsCheckBox();
+        Assert.IsFalse(includeExisting.IsChecked,
+            "Existing captures must not be included without an explicit choice.");
+        includeExisting.IsChecked = true;
+        Assert.IsTrue(includeExisting.IsChecked);
+        FocusAndClick(WaitForElement(processId, automation, $"{page}_CaptureMemoryEnableButton"));
     }
 
     private static void FocusAndClick(AutomationElement element)

@@ -1816,8 +1816,7 @@ SOFTWARE.
   <data name="CaptureMemory_Setup_Title.Text" xml:space="preserve"><value>Находите снимки по их содержимому</value></data>
   <data name="CaptureMemory_Setup_Body.Text" xml:space="preserve"><value>Capture Tool может использовать модели ИИ на устройстве для создания закрытых метаданных поиска, которыми управляет приложение. Анализ начинается только после вашего согласия. Во время настройки могут быть скачаны некоторые пакеты моделей; содержимое ваших снимков не отправляется.</value></data>
   <data name="CaptureMemory_Setup_Disclosure.Text" xml:space="preserve"><value>Создаются свойства медиафайлов, распознанный текст, расшифровки речи и, если поддерживается, визуальные описания. Анализ можно остановить, а метаданные удалить в параметрах.</value></data>
-  <data name="CaptureMemory_Setup_FutureButton.Content" xml:space="preserve"><value>Анализировать новые снимки</value></data>
-  <data name="CaptureMemory_Setup_ExistingButton.Content" xml:space="preserve"><value>Включить существующие снимки</value></data>
+  <data name="CaptureMemory_IncludeExistingCaptures.Content" xml:space="preserve"><value>Включить существующие снимки</value></data>
   <data name="CaptureMemory_Setup_Preparing.Text" xml:space="preserve"><value>Подготовка моделей ИИ…</value></data>
   <data name="CaptureMemory_Setup_Failed.Text" xml:space="preserve"><value>Не удалось подготовить Capture Memory. Повторите попытку.</value></data>
   <data name="CaptureMemory_SearchBox.PlaceholderText" xml:space="preserve"><value>Поиск по снимкам</value></data>
@@ -1963,8 +1962,11 @@ SOFTWARE.
   <data name="BackgroundActivity_SpeechModelTitle" xml:space="preserve"><value>Подготовка распознавания речи</value></data>
   <data name="BackgroundActivity_VisualModelTitle" xml:space="preserve"><value>Подготовка визуального анализа</value></data>
   <data name="BackgroundActivity_GenericModelTitle" xml:space="preserve"><value>Подготовка анализа ИИ</value></data>
-  <data name="CaptureMemory_Settings_EnableButton.Content" xml:space="preserve"><value>Включить Capture Memory</value></data>
+  <data name="CaptureMemory_EnableButton.Content" xml:space="preserve"><value>Включить Capture Memory</value></data>
   <data name="CaptureMemory_Settings_EnablePreparing" xml:space="preserve"><value>Включение Capture Memory и подготовка локальных моделей ИИ…</value></data>
   <data name="CaptureMemory_Settings_EnableSucceeded" xml:space="preserve"><value>Capture Memory включён для новых снимков. Локальные модели ИИ готовы.</value></data>
   <data name="CaptureMemory_Settings_EnableLimited" xml:space="preserve"><value>Capture Memory включён. Некоторые модели ИИ ещё не готовы; поддерживаемые снимки будут анализироваться с помощью доступных локальных функций.</value></data>
+  <data name="CaptureMemory_Settings_EnableExistingScheduling" xml:space="preserve"><value>Добавление существующих снимков в очередь на анализ…</value></data>
+  <data name="CaptureMemory_Settings_EnableExistingIncomplete" xml:space="preserve"><value>Capture Memory включён, но не все существующие снимки удалось добавить в очередь. Вернитесь на главную страницу, чтобы продолжить. Исходные снимки не были изменены.</value></data>
+  <data name="CaptureMemory_Settings_EnableExistingSucceeded" xml:space="preserve"><value>Существующие снимки добавлены в очередь на анализ. Результаты будут появляться по мере завершения анализа.</value></data>
 </root>

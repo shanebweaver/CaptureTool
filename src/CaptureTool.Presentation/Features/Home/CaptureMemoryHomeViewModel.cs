@@ -65,12 +65,8 @@ public sealed class CaptureMemoryHomeViewModel : ViewModelBase
         _confirmationService = confirmationService;
         _localizationService = localizationService;
 
-        EnableForFutureCommand = new AsyncRelayCommand(
-            () => EnableAsync(includeExistingCaptures: false),
-            CanEnable,
-            AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
-        EnableForExistingCommand = new AsyncRelayCommand(
-            () => EnableAsync(includeExistingCaptures: true),
+        EnableCaptureMemoryCommand = new AsyncRelayCommand(
+            EnableAsync,
             CanEnable,
             AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
         ClearSearchCommand = new RelayCommand(
@@ -88,9 +84,11 @@ public sealed class CaptureMemoryHomeViewModel : ViewModelBase
             AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
     }
 
-    public IAsyncRelayCommand EnableForFutureCommand { get; }
+    public IAsyncRelayCommand EnableCaptureMemoryCommand { get; }
 
-    public IAsyncRelayCommand EnableForExistingCommand { get; }
+    public bool IncludeExistingCaptures { get; set => Set(ref field, value); }
+
+    public bool CanChangeSetupOptions => IsFeatureEnabled && !IsPreparing;
 
     public IRelayCommand ClearSearchCommand { get; }
 
@@ -161,8 +159,8 @@ public sealed class CaptureMemoryHomeViewModel : ViewModelBase
         {
             if (Set(ref field, value))
             {
-                EnableForFutureCommand.NotifyCanExecuteChanged();
-                EnableForExistingCommand.NotifyCanExecuteChanged();
+                EnableCaptureMemoryCommand.NotifyCanExecuteChanged();
+                RaisePropertyChanged(nameof(CanChangeSetupOptions));
                 RaisePropertyChanged(nameof(ShowSetup));
                 RaisePropertyChanged(nameof(ShowSearch));
             }
@@ -258,8 +256,10 @@ public sealed class CaptureMemoryHomeViewModel : ViewModelBase
 
     private bool CanEnable() => IsFeatureEnabled && !IsPreparing;
 
-    private async Task EnableAsync(bool includeExistingCaptures)
+    private async Task EnableAsync()
     {
+        // Snapshot this one-time opt-in before awaiting model preparation.
+        bool includeExistingCaptures = IncludeExistingCaptures;
         if (_policyService == null ||
             _policyCommandService == null ||
             _preparationService == null ||
@@ -336,8 +336,10 @@ public sealed class CaptureMemoryHomeViewModel : ViewModelBase
             CaptureAnalysisPolicySnapshot resultingPolicy = consentChange.Policy;
             if (includeExistingCaptures)
             {
+                // Captures can be enrolled while models prepare, advancing the control revision.
+                CaptureAnalysisPolicySnapshot latest = await _policyService.GetCurrentAsync(CancellationToken.None);
                 CaptureAnalysisPolicyChangeResult backfill = await _policyCommandService.AuthorizeExistingCaptureBackfillAsync(
-                    resultingPolicy.ControlDocumentRevision,
+                    latest.ControlDocumentRevision,
                     CancellationToken.None);
                 if (backfill.Status != CaptureAnalysisPolicyChangeStatus.Succeeded)
                 {
@@ -385,6 +387,10 @@ public sealed class CaptureMemoryHomeViewModel : ViewModelBase
                 CaptureAnalysisBackfillRunStatus.AlreadyCompleted))
             {
                 HasSetupFailure = true;
+            }
+            else
+            {
+                IncludeExistingCaptures = false;
             }
         }
         catch (OperationCanceledException)

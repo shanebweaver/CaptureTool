@@ -1810,8 +1810,7 @@ SOFTWARE.
   <data name="CaptureMemory_Setup_Title.Text" xml:space="preserve"><value>Aufnahmen nach Inhalt finden</value></data>
   <data name="CaptureMemory_Setup_Body.Text" xml:space="preserve"><value>Capture Tool kann KI-Modelle auf dem Gerät verwenden, um private, von der App verwaltete Metadaten für die Suche zu erstellen. Die Analyse beginnt erst nach Ihrer Zustimmung. Einige Modellpakete werden möglicherweise während der Einrichtung heruntergeladen; Ihre Aufnahmeinhalte werden nicht hochgeladen.</value></data>
   <data name="CaptureMemory_Setup_Disclosure.Text" xml:space="preserve"><value>Erstellt Medieneigenschaften, erkannten Text, Sprachtranskripte und – falls unterstützt – visuelle Beschreibungen. Sie können die Analyse jederzeit in den Einstellungen beenden oder diese Metadaten löschen.</value></data>
-  <data name="CaptureMemory_Setup_FutureButton.Content" xml:space="preserve"><value>Neue Aufnahmen analysieren</value></data>
-  <data name="CaptureMemory_Setup_ExistingButton.Content" xml:space="preserve"><value>Vorhandene Aufnahmen einbeziehen</value></data>
+  <data name="CaptureMemory_IncludeExistingCaptures.Content" xml:space="preserve"><value>Vorhandene Aufnahmen einbeziehen</value></data>
   <data name="CaptureMemory_Setup_Preparing.Text" xml:space="preserve"><value>KI-Modelle werden vorbereitet…</value></data>
   <data name="CaptureMemory_Setup_Failed.Text" xml:space="preserve"><value>Capture Memory konnte nicht vorbereitet werden. Versuchen Sie es erneut.</value></data>
   <data name="CaptureMemory_SearchBox.PlaceholderText" xml:space="preserve"><value>Aufnahmen durchsuchen</value></data>
@@ -1957,8 +1956,11 @@ SOFTWARE.
   <data name="BackgroundActivity_SpeechModelTitle" xml:space="preserve"><value>Spracherkennung wird vorbereitet</value></data>
   <data name="BackgroundActivity_VisualModelTitle" xml:space="preserve"><value>Visuelle Analyse wird vorbereitet</value></data>
   <data name="BackgroundActivity_GenericModelTitle" xml:space="preserve"><value>KI-Analyse wird vorbereitet</value></data>
-  <data name="CaptureMemory_Settings_EnableButton.Content" xml:space="preserve"><value>Capture Memory einschalten</value></data>
+  <data name="CaptureMemory_EnableButton.Content" xml:space="preserve"><value>Capture Memory einschalten</value></data>
   <data name="CaptureMemory_Settings_EnablePreparing" xml:space="preserve"><value>Capture Memory wird eingeschaltet und lokale KI-Modelle werden vorbereitet…</value></data>
   <data name="CaptureMemory_Settings_EnableSucceeded" xml:space="preserve"><value>Capture Memory ist für neue Aufnahmen eingeschaltet. Die lokalen KI-Modelle sind bereit.</value></data>
   <data name="CaptureMemory_Settings_EnableLimited" xml:space="preserve"><value>Capture Memory ist eingeschaltet. Einige KI-Modelle sind noch nicht bereit; unterstützte Aufnahmen werden mit den verfügbaren lokalen Funktionen analysiert.</value></data>
+  <data name="CaptureMemory_Settings_EnableExistingScheduling" xml:space="preserve"><value>Vorhandene Aufnahmen werden zur Analyse eingereiht…</value></data>
+  <data name="CaptureMemory_Settings_EnableExistingIncomplete" xml:space="preserve"><value>Capture Memory ist eingeschaltet, aber nicht alle vorhandenen Aufnahmen konnten eingereiht werden. Kehren Sie zur Startseite zurück, um fortzufahren. Die Originalaufnahmen wurden nicht verändert.</value></data>
+  <data name="CaptureMemory_Settings_EnableExistingSucceeded" xml:space="preserve"><value>Vorhandene Aufnahmen wurden zur Analyse eingereiht. Ergebnisse werden angezeigt, sobald die Analyse abgeschlossen ist.</value></data>
 </root>

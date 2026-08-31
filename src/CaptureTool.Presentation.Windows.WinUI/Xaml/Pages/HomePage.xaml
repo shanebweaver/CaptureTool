@@ -299,17 +299,19 @@
                                 Text="Creates media properties, text recognition, and—when supported—visual descriptions. You can stop analysis or erase this metadata at any time in Settings."
                                 TextWrapping="WrapWholeWords" />
                         </StackPanel>
-                        <StackPanel Orientation="Horizontal" Spacing="8">
+                        <StackPanel Spacing="8">
+                            <CheckBox
+                                x:Uid="CaptureMemory_IncludeExistingCaptures"
+                                AutomationProperties.AutomationId="Home_CaptureMemoryIncludeExistingCheckBox"
+                                Content="Include existing captures"
+                                IsChecked="{x:Bind ViewModel.CaptureMemory.IncludeExistingCaptures, Mode=TwoWay}"
+                                IsEnabled="{x:Bind ViewModel.CaptureMemory.CanChangeSetupOptions, Mode=OneWay}" />
                             <Button
-                                x:Uid="CaptureMemory_Setup_FutureButton"
-                                AutomationProperties.AutomationId="Home_CaptureMemoryEnableFutureButton"
-                                Command="{x:Bind ViewModel.CaptureMemory.EnableForFutureCommand}"
-                                Content="Analyze new captures" />
-                            <Button
-                                x:Uid="CaptureMemory_Setup_ExistingButton"
-                                AutomationProperties.AutomationId="Home_CaptureMemoryEnableExistingButton"
-                                Command="{x:Bind ViewModel.CaptureMemory.EnableForExistingCommand}"
-                                Content="Include existing captures" />
+                                x:Uid="CaptureMemory_EnableButton"
+                                HorizontalAlignment="Left"
+                                AutomationProperties.AutomationId="Home_CaptureMemoryEnableButton"
+                                Command="{x:Bind ViewModel.CaptureMemory.EnableCaptureMemoryCommand}"
+                                Content="Turn on Capture Memory" />
                         </StackPanel>
                         <StackPanel Spacing="6" Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.CaptureMemory.IsPreparing), Mode=OneWay}">
                             <StackPanel Orientation="Horizontal" Spacing="8">

@@ -1,4 +1,5 @@
 using CaptureTool.Application.Abstractions.Analysis.Consent;
+using CaptureTool.Application.Abstractions.Analysis.Intake;
 using CaptureTool.Application.Abstractions.Analysis.Activity;
 using CaptureTool.Application.Abstractions.Analysis.Memory;
 using CaptureTool.Application.Abstractions.Analysis.Maintenance;
@@ -18,6 +19,7 @@ internal sealed class UiTestCaptureMemoryService :
     ICaptureMemoryFeatureAvailability,
     ICaptureAnalysisPolicyService,
     ICaptureAnalysisPolicyCommandService,
+    ICaptureAnalysisBackfillService,
     ICaptureAnalysisActivityQueryService,
     IUserInitiatedAnalysisCapabilityPreparationService,
     ICaptureMemorySearchService,
@@ -106,6 +108,25 @@ internal sealed class UiTestCaptureMemoryService :
             backfillCheckpoint: 1);
         _documentRevision++;
         return Succeeded();
+    }
+
+    public Task<CaptureAnalysisBackfillRunResult> RunAsync(
+        IProgress<CaptureAnalysisBackfillProgress>? progress = null,
+        CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        if (_policy.BackfillState != CaptureAnalysisBackfillState.Completed)
+        {
+            return Task.FromResult(new CaptureAnalysisBackfillRunResult(
+                CaptureAnalysisBackfillRunStatus.NotAuthorized,
+                new CaptureAnalysisBackfillProgress(0, 0, 0)));
+        }
+
+        var completed = new CaptureAnalysisBackfillProgress(1, 1, 1);
+        progress?.Report(completed);
+        WriteMarker("capture-memory-backfilled.marker");
+        return Task.FromResult(new CaptureAnalysisBackfillRunResult(
+            CaptureAnalysisBackfillRunStatus.Completed, completed));
     }
 
     public Task<AnalysisCapabilityPreparationState> PrepareAsync(

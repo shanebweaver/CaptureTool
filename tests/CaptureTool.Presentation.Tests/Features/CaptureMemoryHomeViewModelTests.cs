@@ -186,11 +186,14 @@ public sealed class CaptureMemoryHomeViewModelTests
             preparationService: preparation.Object);
         await viewModel.LoadAsync(CancellationToken.None);
 
-        await viewModel.EnableForFutureCommand.ExecuteAsync(null);
+        Assert.IsFalse(viewModel.IncludeExistingCaptures);
+        await viewModel.EnableCaptureMemoryCommand.ExecuteAsync(null);
 
         Assert.IsTrue(viewModel.IsAuthorized);
         Assert.IsTrue(viewModel.HasLimitedModelCoverage);
         Assert.IsFalse(viewModel.HasSetupFailure);
+        commands.Verify(value => value.AuthorizeExistingCaptureBackfillAsync(
+            It.IsAny<long>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [TestMethod]
@@ -209,6 +212,7 @@ public sealed class CaptureMemoryHomeViewModelTests
         policy.SetupSequence(value => value.GetCurrentAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(initial)
             .ReturnsAsync(initial)
+            .ReturnsAsync(authorized)
             .ReturnsAsync(completed);
         var commands = new Mock<ICaptureAnalysisPolicyCommandService>();
         commands.Setup(value => value.ApplyConsentDecisionAsync(
@@ -256,7 +260,8 @@ public sealed class CaptureMemoryHomeViewModelTests
             backfillService: backfill.Object);
         await viewModel.LoadAsync(CancellationToken.None);
 
-        await viewModel.EnableForExistingCommand.ExecuteAsync(null);
+        viewModel.IncludeExistingCaptures = true;
+        await viewModel.EnableCaptureMemoryCommand.ExecuteAsync(null);
         await viewModel.BackfillCompletion;
 
         Assert.IsTrue(viewModel.IsAuthorized);
@@ -264,6 +269,7 @@ public sealed class CaptureMemoryHomeViewModelTests
         Assert.AreEqual(1, viewModel.IndexProgress);
         Assert.IsTrue(viewModel.HasLimitedModelCoverage);
         Assert.IsFalse(viewModel.HasSetupFailure);
+        Assert.IsFalse(viewModel.IncludeExistingCaptures);
         backfill.Verify(value => value.RunAsync(
             It.IsAny<IProgress<CaptureAnalysisBackfillProgress>>(),
             It.IsAny<CancellationToken>()), Times.Once);

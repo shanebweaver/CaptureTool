@@ -821,12 +821,22 @@
                                         Toggled="CaptureMemoryAnalysisToggleSwitch_Toggled" />
                                 </StackPanel>
 
-                                <Button
-                                    x:Uid="CaptureMemory_Settings_EnableButton"
-                                    HorizontalAlignment="Left"
-                                    AutomationProperties.AutomationId="Settings_CaptureMemoryEnableButton"
-                                    Command="{x:Bind ViewModel.CaptureMemory.EnableCaptureMemoryCommand, Mode=OneWay}"
-                                    Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.CaptureMemory.ShowEnableAction), Mode=OneWay}" />
+                                <StackPanel
+                                    Spacing="8"
+                                    Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.CaptureMemory.ShowEnableAction), Mode=OneWay}">
+                                    <CheckBox
+                                        x:Uid="CaptureMemory_IncludeExistingCaptures"
+                                        AutomationProperties.AutomationId="Settings_CaptureMemoryIncludeExistingCheckBox"
+                                        Content="Include existing captures"
+                                        IsChecked="{x:Bind ViewModel.CaptureMemory.IncludeExistingCaptures, Mode=TwoWay}"
+                                        IsEnabled="{x:Bind ViewModel.CaptureMemory.CanChangeSetupOptions, Mode=OneWay}" />
+                                    <Button
+                                        x:Uid="CaptureMemory_EnableButton"
+                                        HorizontalAlignment="Left"
+                                        AutomationProperties.AutomationId="Settings_CaptureMemoryEnableButton"
+                                        Command="{x:Bind ViewModel.CaptureMemory.EnableCaptureMemoryCommand, Mode=OneWay}"
+                                        Content="Turn on Capture Memory" />
+                                </StackPanel>
                             </StackPanel>
                         </Grid>
 

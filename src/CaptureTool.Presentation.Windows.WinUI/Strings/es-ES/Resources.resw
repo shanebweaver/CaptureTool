@@ -1816,8 +1816,7 @@ SOFTWARE.
   <data name="CaptureMemory_Setup_Title.Text" xml:space="preserve"><value>Encuentra capturas por su contenido</value></data>
   <data name="CaptureMemory_Setup_Body.Text" xml:space="preserve"><value>Capture Tool puede usar modelos de IA en el dispositivo para crear metadatos privados administrados por la aplicación para la búsqueda. El análisis solo comienza cuando aceptas. Es posible que se descarguen algunos paquetes de modelos durante la configuración; el contenido de tus capturas no se carga.</value></data>
   <data name="CaptureMemory_Setup_Disclosure.Text" xml:space="preserve"><value>Crea propiedades multimedia, texto reconocido, transcripciones de voz y, cuando sea compatible, descripciones visuales. Puedes detener el análisis o borrar estos metadatos en Configuración.</value></data>
-  <data name="CaptureMemory_Setup_FutureButton.Content" xml:space="preserve"><value>Analizar capturas nuevas</value></data>
-  <data name="CaptureMemory_Setup_ExistingButton.Content" xml:space="preserve"><value>Incluir capturas existentes</value></data>
+  <data name="CaptureMemory_IncludeExistingCaptures.Content" xml:space="preserve"><value>Incluir capturas existentes</value></data>
   <data name="CaptureMemory_Setup_Preparing.Text" xml:space="preserve"><value>Preparando modelos de IA…</value></data>
   <data name="CaptureMemory_Setup_Failed.Text" xml:space="preserve"><value>No se pudo preparar Capture Memory. Inténtalo de nuevo.</value></data>
   <data name="CaptureMemory_SearchBox.PlaceholderText" xml:space="preserve"><value>Buscar en tus capturas</value></data>
@@ -1963,8 +1962,11 @@ SOFTWARE.
   <data name="BackgroundActivity_SpeechModelTitle" xml:space="preserve"><value>Preparando el reconocimiento de voz</value></data>
   <data name="BackgroundActivity_VisualModelTitle" xml:space="preserve"><value>Preparando el análisis visual</value></data>
   <data name="BackgroundActivity_GenericModelTitle" xml:space="preserve"><value>Preparando el análisis de IA</value></data>
-  <data name="CaptureMemory_Settings_EnableButton.Content" xml:space="preserve"><value>Activar Capture Memory</value></data>
+  <data name="CaptureMemory_EnableButton.Content" xml:space="preserve"><value>Activar Capture Memory</value></data>
   <data name="CaptureMemory_Settings_EnablePreparing" xml:space="preserve"><value>Activando Capture Memory y preparando los modelos de IA del dispositivo…</value></data>
   <data name="CaptureMemory_Settings_EnableSucceeded" xml:space="preserve"><value>Capture Memory está activado para las capturas nuevas. Los modelos de IA del dispositivo están listos.</value></data>
   <data name="CaptureMemory_Settings_EnableLimited" xml:space="preserve"><value>Capture Memory está activado. Algunos modelos de IA aún no están listos; las capturas compatibles se analizarán con las funciones disponibles en el dispositivo.</value></data>
+  <data name="CaptureMemory_Settings_EnableExistingScheduling" xml:space="preserve"><value>Poniendo en cola las capturas existentes para su análisis…</value></data>
+  <data name="CaptureMemory_Settings_EnableExistingIncomplete" xml:space="preserve"><value>Capture Memory está activado, pero no se pudieron poner en cola todas las capturas existentes. Vuelve a Inicio para continuar. Las capturas originales no se modificaron.</value></data>
+  <data name="CaptureMemory_Settings_EnableExistingSucceeded" xml:space="preserve"><value>Las capturas existentes se pusieron en cola para su análisis. Los resultados aparecerán a medida que finalice el análisis.</value></data>
 </root>

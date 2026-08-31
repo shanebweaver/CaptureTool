@@ -1,4 +1,5 @@
 using CaptureTool.Application.Abstractions.Analysis.Consent;
+using CaptureTool.Application.Abstractions.Analysis.Intake;
 using CaptureTool.Application.Abstractions.Analysis.Maintenance;
 using CaptureTool.Application.Abstractions.Analysis.Memory;
 using CaptureTool.Application.Abstractions.Analysis.Orchestration;
@@ -320,6 +321,7 @@ public sealed class CaptureMemorySettingsViewModelTests
 
         Assert.IsTrue(viewModel.ShowEnableAction);
         Assert.IsTrue(viewModel.EnableCaptureMemoryCommand.CanExecute(null));
+        Assert.IsFalse(viewModel.IncludeExistingCaptures);
 
         await viewModel.EnableCaptureMemoryCommand.ExecuteAsync(null);
 
@@ -328,10 +330,207 @@ public sealed class CaptureMemorySettingsViewModelTests
         Assert.IsFalse(viewModel.ShowEnableAction);
         Assert.AreEqual(1, viewModel.OperationProgress);
         StringAssert.Contains(viewModel.OperationStatusText, "models are ready");
+        commands.Verify(value => value.AuthorizeExistingCaptureBackfillAsync(
+            It.IsAny<long>(), It.IsAny<CancellationToken>()), Times.Never);
         preparation.Verify(value => value.PrepareAsync(
             It.IsAny<AnalysisCapabilityPreparationRequest>(),
             It.IsAny<IProgress<AnalysisCapabilityPreparationProgress>>(),
             It.IsAny<CancellationToken>()), Times.AtLeastOnce);
+    }
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task EnableWithExistingCaptures_ShouldAuthorizeAndQueueAfterPreparation(
+        bool limitedCoverage)
+    {
+        using var fixture = new EnableFixture(limitedCoverage);
+        await fixture.ViewModel.LoadAsync(CancellationToken.None);
+        fixture.ViewModel.IncludeExistingCaptures = true;
+
+        await fixture.ViewModel.EnableCaptureMemoryCommand.ExecuteAsync(null);
+
+        Assert.IsTrue(fixture.ViewModel.IsAuthorized);
+        Assert.IsTrue(fixture.ViewModel.IsAnalyzingNewCaptures);
+        Assert.IsFalse(fixture.ViewModel.IsBusy);
+        Assert.IsTrue(fixture.ViewModel.CanChangeSetupOptions);
+        Assert.IsFalse(fixture.ViewModel.HasOperationFailure);
+        Assert.IsFalse(fixture.ViewModel.IncludeExistingCaptures);
+        Assert.AreEqual(1, fixture.ViewModel.OperationProgress);
+        StringAssert.Contains(fixture.ViewModel.OperationStatusText, "Existing captures were queued");
+        if (limitedCoverage)
+        {
+            StringAssert.Contains(fixture.ViewModel.OperationStatusText, "available on-device capabilities");
+        }
+
+        // Preparation advanced the control revision from 3 to 4. Backfill must use
+        // the current revision, not the stale revision returned by initial consent.
+        fixture.Commands.Verify(value => value.AuthorizeExistingCaptureBackfillAsync(
+            4, It.IsAny<CancellationToken>()), Times.Once);
+        fixture.Backfill.Verify(value => value.RunAsync(
+            It.IsAny<IProgress<CaptureAnalysisBackfillProgress>>(),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [TestMethod]
+    public async Task EnableWithExistingCaptures_WhenAuthorizationConflicts_ShouldNotRunBackfill()
+    {
+        using var fixture = new EnableFixture();
+        fixture.Commands.Setup(value => value.AuthorizeExistingCaptureBackfillAsync(
+                It.IsAny<long>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(() => new CaptureAnalysisPolicyChangeResult(
+                CaptureAnalysisPolicyChangeStatus.Conflict, fixture.Current));
+        await fixture.ViewModel.LoadAsync(CancellationToken.None);
+        fixture.ViewModel.IncludeExistingCaptures = true;
+
+        await fixture.ViewModel.EnableCaptureMemoryCommand.ExecuteAsync(null);
+
+        Assert.IsTrue(fixture.ViewModel.HasOperationFailure);
+        Assert.IsTrue(fixture.ViewModel.IsAuthorized);
+        Assert.IsFalse(fixture.ViewModel.IsBusy);
+        fixture.Backfill.Verify(value => value.RunAsync(
+            It.IsAny<IProgress<CaptureAnalysisBackfillProgress>>(),
+            It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [TestMethod]
+    [DataRow(CaptureAnalysisBackfillRunStatus.Unavailable)]
+    [DataRow(CaptureAnalysisBackfillRunStatus.Cancelled)]
+    public async Task EnableWithExistingCaptures_WhenBackfillDoesNotFinish_ShouldNotReportSuccess(
+        CaptureAnalysisBackfillRunStatus status)
+    {
+        using var fixture = new EnableFixture();
+        fixture.Backfill.Setup(value => value.RunAsync(
+                It.IsAny<IProgress<CaptureAnalysisBackfillProgress>>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new CaptureAnalysisBackfillRunResult(
+                status, new CaptureAnalysisBackfillProgress(0, 12, 0)));
+        await fixture.ViewModel.LoadAsync(CancellationToken.None);
+        fixture.ViewModel.IncludeExistingCaptures = true;
+
+        await fixture.ViewModel.EnableCaptureMemoryCommand.ExecuteAsync(null);
+
+        Assert.IsTrue(fixture.ViewModel.IsAuthorized);
+        Assert.IsFalse(fixture.ViewModel.IsBusy);
+        StringAssert.Contains(fixture.ViewModel.OperationStatusText,
+            status == CaptureAnalysisBackfillRunStatus.Cancelled ? "cancelled" : "not all existing captures");
+        Assert.AreEqual(status != CaptureAnalysisBackfillRunStatus.Cancelled,
+            fixture.ViewModel.HasOperationFailure);
+    }
+
+    [TestMethod]
+    public async Task EnableWithExistingCaptures_Cancel_ShouldCancelBackfillAndUnlockControls()
+    {
+        using var fixture = new EnableFixture();
+        var started = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var progressReported = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        fixture.ViewModel.PropertyChanged += (_, args) =>
+        {
+            if (args.PropertyName == nameof(CaptureMemorySettingsViewModel.OperationProgress) &&
+                fixture.ViewModel.OperationProgress == 0.5)
+            {
+                progressReported.TrySetResult();
+            }
+        };
+        fixture.Backfill.Setup(value => value.RunAsync(
+                It.IsAny<IProgress<CaptureAnalysisBackfillProgress>>(),
+                It.IsAny<CancellationToken>()))
+            .Returns(async (IProgress<CaptureAnalysisBackfillProgress> progress, CancellationToken token) =>
+            {
+                progress.Report(new CaptureAnalysisBackfillProgress(6, 12, 1));
+                started.SetResult();
+                await Task.Delay(Timeout.InfiniteTimeSpan, token);
+                throw new AssertFailedException("The backfill should have been cancelled.");
+            });
+        await fixture.ViewModel.LoadAsync(CancellationToken.None);
+        fixture.ViewModel.IncludeExistingCaptures = true;
+
+        Task operation = fixture.ViewModel.EnableCaptureMemoryCommand.ExecuteAsync(null);
+        await started.Task;
+        await progressReported.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        Assert.IsTrue(fixture.ViewModel.IsBusy);
+        Assert.IsTrue(fixture.ViewModel.IsSchedulingCaptures);
+        Assert.IsFalse(fixture.ViewModel.IsPreparingModels);
+        Assert.IsFalse(fixture.ViewModel.CanChangeSetupOptions);
+        Assert.AreEqual(0.5, fixture.ViewModel.OperationProgress);
+        fixture.ViewModel.CancelOperationCommand.Execute(null);
+        await operation;
+
+        Assert.IsFalse(fixture.ViewModel.IsBusy);
+        Assert.IsTrue(fixture.ViewModel.CanChangeSetupOptions);
+        Assert.IsTrue(fixture.ViewModel.IsAuthorized);
+        StringAssert.Contains(fixture.ViewModel.OperationStatusText, "cancelled");
+    }
+
+    private sealed class EnableFixture : IDisposable
+    {
+        public EnableFixture(bool limitedCoverage = false)
+        {
+            var policy = new Mock<ICaptureAnalysisPolicyService>();
+            policy.Setup(value => value.GetCurrentAsync(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(() => Current);
+            Commands.Setup(value => value.ApplyConsentDecisionAsync(
+                    It.IsAny<CaptureAnalysisConsentResponse>(), 2, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(() =>
+                {
+                    Current = CreateSnapshot(futureAdmission: true, documentRevision: 3);
+                    return new CaptureAnalysisPolicyChangeResult(
+                        CaptureAnalysisPolicyChangeStatus.Succeeded, Current);
+                });
+            var preparation = new Mock<IUserInitiatedAnalysisCapabilityPreparationService>();
+            ViewModel = CreateViewModel(policy.Object, Commands.Object,
+                preparationService: preparation.Object, backfillService: Backfill.Object);
+            preparation.Setup(value => value.PrepareAsync(
+                    It.IsAny<AnalysisCapabilityPreparationRequest>(),
+                    It.IsAny<IProgress<AnalysisCapabilityPreparationProgress>>(),
+                    It.IsAny<CancellationToken>()))
+                .ReturnsAsync(() =>
+                {
+                    // Simulate another capture being enrolled while models are preparing.
+                    Current = CreateSnapshot(futureAdmission: true, documentRevision: 4);
+                    Assert.IsFalse(ViewModel.CanChangeSetupOptions);
+                    return limitedCoverage
+                        ? AnalysisCapabilityPreparationState.Unsupported(new AnalysisFailure(
+                            AnalysisFailureCode.CapabilityUnavailable, AnalysisFailureDisposition.Terminal))
+                        : AnalysisCapabilityPreparationState.Ready(
+                            CreateAnalyzer("test"), ProcessingBoundary.OnDevice);
+                });
+            Commands.Setup(value => value.AuthorizeExistingCaptureBackfillAsync(
+                    4, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(() =>
+                {
+                    SetPolicy(Current.Policy!.AuthorizeExistingCaptureBackfill(currentSequence: 12), 5);
+                    return new CaptureAnalysisPolicyChangeResult(
+                        CaptureAnalysisPolicyChangeStatus.Succeeded, Current);
+                });
+            Backfill.Setup(value => value.RunAsync(
+                    It.IsAny<IProgress<CaptureAnalysisBackfillProgress>>(),
+                    It.IsAny<CancellationToken>()))
+                .ReturnsAsync(() =>
+                {
+                    SetPolicy(Current.Policy!.StartExistingCaptureBackfill()
+                        .AdvanceExistingCaptureBackfill(checkpoint: 12), 6);
+                    return new CaptureAnalysisBackfillRunResult(
+                        CaptureAnalysisBackfillRunStatus.Completed,
+                        new CaptureAnalysisBackfillProgress(12, 12, 1));
+                });
+        }
+
+        public CaptureAnalysisPolicySnapshot Current { get; private set; } = CreateOffSnapshot(2);
+        public Mock<ICaptureAnalysisPolicyCommandService> Commands { get; } = new(MockBehavior.Strict);
+        public Mock<ICaptureAnalysisBackfillService> Backfill { get; } = new(MockBehavior.Strict);
+        public CaptureMemorySettingsViewModel ViewModel { get; }
+
+        public void Dispose() => ViewModel.Dispose();
+
+        private void SetPolicy(CaptureAnalysisPolicy policy, long revision)
+        {
+            Current = new CaptureAnalysisPolicySnapshot(
+                CaptureAnalysisPolicySnapshotStatus.Available,
+                CaptureAnalysisConsentState.Granted,
+                new CaptureAnalysisControlSnapshot(revision,
+                    new CaptureAnalysisControlState(policy, Current.ControlSnapshot!.State.Enrollments)));
+        }
     }
 
     private static CaptureMemorySettingsViewModel CreateViewModel(
@@ -339,7 +538,8 @@ public sealed class CaptureMemorySettingsViewModelTests
         ICaptureAnalysisPolicyCommandService? policyCommandService = null,
         ICaptureAnalysisMaintenanceService? maintenanceService = null,
         ICaptureAnalysisSettingsConfirmationDialogService? confirmationService = null,
-        IUserInitiatedAnalysisCapabilityPreparationService? preparationService = null)
+        IUserInitiatedAnalysisCapabilityPreparationService? preparationService = null,
+        ICaptureAnalysisBackfillService? backfillService = null)
     {
         return new CaptureMemorySettingsViewModel(
             new TestFeatureAvailability(true),
@@ -348,7 +548,8 @@ public sealed class CaptureMemorySettingsViewModelTests
             maintenanceService,
             confirmationService,
             localizationService: null,
-            preparationService);
+            preparationService,
+            backfillService);
     }
 
     private static Mock<ICaptureAnalysisPolicyService> CreatePolicyService()

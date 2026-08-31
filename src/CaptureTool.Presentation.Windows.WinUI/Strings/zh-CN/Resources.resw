@@ -1816,8 +1816,7 @@ SOFTWARE.
   <data name="CaptureMemory_Setup_Title.Text" xml:space="preserve"><value>按内容查找捕获</value></data>
   <data name="CaptureMemory_Setup_Body.Text" xml:space="preserve"><value>Capture Tool 可以使用设备上的 AI 模型创建由应用管理的私密搜索元数据。只有在你选择加入后才会开始分析。设置期间可能会下载一些模型包；你的捕获内容不会被上传。</value></data>
   <data name="CaptureMemory_Setup_Disclosure.Text" xml:space="preserve"><value>将创建媒体属性、识别的文本、语音转写，以及在支持时创建视觉描述。你可以随时在“设置”中停止分析或清除此元数据。</value></data>
-  <data name="CaptureMemory_Setup_FutureButton.Content" xml:space="preserve"><value>分析新的捕获</value></data>
-  <data name="CaptureMemory_Setup_ExistingButton.Content" xml:space="preserve"><value>包括现有捕获</value></data>
+  <data name="CaptureMemory_IncludeExistingCaptures.Content" xml:space="preserve"><value>包括现有捕获</value></data>
   <data name="CaptureMemory_Setup_Preparing.Text" xml:space="preserve"><value>正在准备 AI 模型…</value></data>
   <data name="CaptureMemory_Setup_Failed.Text" xml:space="preserve"><value>无法准备 Capture Memory。请重试。</value></data>
   <data name="CaptureMemory_SearchBox.PlaceholderText" xml:space="preserve"><value>搜索你的捕获</value></data>
@@ -1963,8 +1962,11 @@ SOFTWARE.
   <data name="BackgroundActivity_SpeechModelTitle" xml:space="preserve"><value>正在准备语音识别</value></data>
   <data name="BackgroundActivity_VisualModelTitle" xml:space="preserve"><value>正在准备视觉分析</value></data>
   <data name="BackgroundActivity_GenericModelTitle" xml:space="preserve"><value>正在准备 AI 分析</value></data>
-  <data name="CaptureMemory_Settings_EnableButton.Content" xml:space="preserve"><value>打开 Capture Memory</value></data>
+  <data name="CaptureMemory_EnableButton.Content" xml:space="preserve"><value>打开 Capture Memory</value></data>
   <data name="CaptureMemory_Settings_EnablePreparing" xml:space="preserve"><value>正在打开 Capture Memory 并准备设备端 AI 模型…</value></data>
   <data name="CaptureMemory_Settings_EnableSucceeded" xml:space="preserve"><value>Capture Memory 已为新捕获打开。设备端 AI 模型已就绪。</value></data>
   <data name="CaptureMemory_Settings_EnableLimited" xml:space="preserve"><value>Capture Memory 已打开。部分 AI 模型尚未就绪；系统将使用设备上的可用功能分析受支持的捕获。</value></data>
+  <data name="CaptureMemory_Settings_EnableExistingScheduling" xml:space="preserve"><value>正在将现有捕获加入分析队列…</value></data>
+  <data name="CaptureMemory_Settings_EnableExistingIncomplete" xml:space="preserve"><value>Capture Memory 已打开，但未能将所有现有捕获加入队列。请返回主页以继续。原始捕获未被修改。</value></data>
+  <data name="CaptureMemory_Settings_EnableExistingSucceeded" xml:space="preserve"><value>现有捕获已加入分析队列。分析完成后将显示结果。</value></data>
 </root>

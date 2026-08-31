@@ -1,4 +1,5 @@
 using CaptureTool.Application.Abstractions.Analysis.Consent;
+using CaptureTool.Application.Abstractions.Analysis.Intake;
 using CaptureTool.Application.Abstractions.Analysis.Maintenance;
 using CaptureTool.Application.Abstractions.Analysis.Memory;
 using CaptureTool.Application.Abstractions.Analysis.Orchestration;
@@ -21,6 +22,7 @@ public sealed class CaptureMemorySettingsViewModel : ViewModelBase
     private readonly ICaptureAnalysisSettingsConfirmationDialogService? _confirmationService;
     private readonly ILocalizationService? _localizationService;
     private readonly IUserInitiatedAnalysisCapabilityPreparationService? _preparationService;
+    private readonly ICaptureAnalysisBackfillService? _backfillService;
     private CancellationTokenSource? _operationCancellation;
 
     public CaptureMemorySettingsViewModel(
@@ -30,7 +32,8 @@ public sealed class CaptureMemorySettingsViewModel : ViewModelBase
         ICaptureAnalysisMaintenanceService? maintenanceService = null,
         ICaptureAnalysisSettingsConfirmationDialogService? confirmationService = null,
         ILocalizationService? localizationService = null,
-        IUserInitiatedAnalysisCapabilityPreparationService? preparationService = null)
+        IUserInitiatedAnalysisCapabilityPreparationService? preparationService = null,
+        ICaptureAnalysisBackfillService? backfillService = null)
     {
         _featureAvailability = featureAvailability;
         _policyService = policyService;
@@ -39,6 +42,7 @@ public sealed class CaptureMemorySettingsViewModel : ViewModelBase
         _confirmationService = confirmationService;
         _localizationService = localizationService;
         _preparationService = preparationService;
+        _backfillService = backfillService;
 
         EnableCaptureMemoryCommand = new AsyncRelayCommand(
             EnableCaptureMemoryAsync,
@@ -86,6 +90,10 @@ public sealed class CaptureMemorySettingsViewModel : ViewModelBase
     public IAsyncRelayCommand StopAnalyzingNewCapturesCommand { get; }
 
     public IAsyncRelayCommand EnableCaptureMemoryCommand { get; }
+
+    public bool IncludeExistingCaptures { get; set => Set(ref field, value); }
+
+    public bool CanChangeSetupOptions => !IsBusy;
 
     public IAsyncRelayCommand ResumeAnalyzingNewCapturesCommand { get; }
 
@@ -188,6 +196,7 @@ public sealed class CaptureMemorySettingsViewModel : ViewModelBase
             if (Set(ref field, value))
             {
                 RaisePropertyChanged(nameof(ShowProgress));
+                RaisePropertyChanged(nameof(CanChangeSetupOptions));
                 RaisePropertyChanged(nameof(ShowEnableAction));
                 RaisePropertyChanged(nameof(CanChangeAnalysisState));
                 RaiseCommandStates();
@@ -276,6 +285,14 @@ public sealed class CaptureMemorySettingsViewModel : ViewModelBase
 
     private async Task EnableCaptureMemoryAsync()
     {
+        // The checkbox authorizes this enable operation, not a persistent library scan.
+        bool includeExistingCaptures = IncludeExistingCaptures;
+        if (includeExistingCaptures && _backfillService == null)
+        {
+            ApplyUnavailableOperation();
+            return;
+        }
+
         CancellationToken token = BeginOperation(
             "CaptureMemory_Settings_EnablePreparing",
             "Turning on Capture Memory and preparing on-device AI models…");
@@ -305,6 +322,58 @@ public sealed class CaptureMemorySettingsViewModel : ViewModelBase
             bool hasLimitedModelCoverage = await PrepareAuthorizedModelsAsync(
                 processingPolicy,
                 token);
+            if (includeExistingCaptures)
+            {
+                // Preparation may take time; use the current revision and let the policy
+                // service reject authorization if consent changed while models prepared.
+                CaptureAnalysisPolicySnapshot latest = await _policyService.GetCurrentAsync(token);
+                CaptureAnalysisPolicyChangeResult backfillAuthorization = await _policyCommandService
+                    .AuthorizeExistingCaptureBackfillAsync(latest.ControlDocumentRevision, token);
+                ApplyPolicy(backfillAuthorization.Policy);
+                if (backfillAuthorization.Status != CaptureAnalysisPolicyChangeStatus.Succeeded)
+                {
+                    ApplyPolicyChangeResult(
+                        backfillAuthorization,
+                        "CaptureMemory_Settings_EnableSucceeded",
+                        "Capture Memory is on for new captures.");
+                    return;
+                }
+
+                IsPreparingModels = false;
+                IsSchedulingCaptures = true;
+                OperationProgress = 0;
+                OperationStatusText = GetString(
+                    "CaptureMemory_Settings_EnableExistingScheduling",
+                    "Queuing existing captures for analysis…");
+                CancellationTokenSource? operation = _operationCancellation;
+                // Backfill reports from a worker thread. Marshal updates to the UI context
+                // and ignore delayed callbacks after this operation finishes or is replaced.
+                var progress = new Progress<CaptureAnalysisBackfillProgress>(value =>
+                {
+                    if (ReferenceEquals(operation, _operationCancellation) && IsSchedulingCaptures)
+                    {
+                        OperationProgress = value.Fraction;
+                    }
+                });
+                CaptureAnalysisBackfillRunResult backfill = await _backfillService!
+                    .RunAsync(progress, token);
+                if (backfill.Status == CaptureAnalysisBackfillRunStatus.Cancelled)
+                {
+                    ApplyCancelled();
+                    return;
+                }
+
+                if (backfill.Status is not (CaptureAnalysisBackfillRunStatus.Completed or
+                    CaptureAnalysisBackfillRunStatus.AlreadyCompleted))
+                {
+                    HasOperationFailure = true;
+                    OperationStatusText = GetString(
+                        "CaptureMemory_Settings_EnableExistingIncomplete",
+                        "Capture Memory is on, but not all existing captures could be queued. Return to Home to resume. Original captures were not modified.");
+                    return;
+                }
+            }
+
             OperationProgress = 1;
             OperationStatusText = hasLimitedModelCoverage
                 ? GetString(
@@ -313,6 +382,13 @@ public sealed class CaptureMemorySettingsViewModel : ViewModelBase
                 : GetString(
                     "CaptureMemory_Settings_EnableSucceeded",
                     "Capture Memory is on for new captures. On-device AI models are ready.");
+            if (includeExistingCaptures)
+            {
+                OperationStatusText += " " + GetString(
+                    "CaptureMemory_Settings_EnableExistingSucceeded",
+                    "Existing captures were queued for analysis. Results will appear as analysis finishes.");
+                IncludeExistingCaptures = false;
+            }
         }
         catch (OperationCanceledException)
         {
