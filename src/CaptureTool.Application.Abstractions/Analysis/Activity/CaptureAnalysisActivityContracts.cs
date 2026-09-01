@@ -8,7 +8,8 @@ public sealed record CaptureAnalysisModelPreparationActivity
         AnalyzerIdentity analyzer,
         CapabilityDefinition capability,
         CaptureMediaKind mediaKind,
-        double fractionComplete)
+        double fractionComplete,
+        bool hasReportedProgress = true)
     {
         ArgumentNullException.ThrowIfNull(analyzer);
         if (capability.Id.IsEmpty)
@@ -28,10 +29,18 @@ public sealed record CaptureAnalysisModelPreparationActivity
             throw new ArgumentOutOfRangeException(nameof(fractionComplete));
         }
 
+        if (!hasReportedProgress && fractionComplete != 0)
+        {
+            throw new ArgumentException(
+                "Unreported model progress must remain at its initial value.",
+                nameof(fractionComplete));
+        }
+
         Analyzer = analyzer;
         Capability = capability;
         MediaKind = mediaKind;
         FractionComplete = fractionComplete;
+        HasReportedProgress = hasReportedProgress;
     }
 
     public AnalyzerIdentity Analyzer { get; }
@@ -41,6 +50,8 @@ public sealed record CaptureAnalysisModelPreparationActivity
     public CaptureMediaKind MediaKind { get; }
 
     public double FractionComplete { get; }
+
+    public bool HasReportedProgress { get; }
 }
 
 public sealed record CaptureAnalysisActivitySnapshot
@@ -56,7 +67,9 @@ public sealed record CaptureAnalysisActivitySnapshot
         int retryCaptureCount = 0,
         int failedCaptureCount = 0,
         bool isBackfillInProgress = false,
-        double backfillFractionComplete = 0)
+        double backfillFractionComplete = 0,
+        bool hasMemoryOperationFailure = false,
+        bool needsMemoryRecovery = false)
     {
         ArgumentOutOfRangeException.ThrowIfNegative(runningCaptureCount);
         ArgumentOutOfRangeException.ThrowIfNegative(queuedCaptureCount);
@@ -68,6 +81,12 @@ public sealed record CaptureAnalysisActivitySnapshot
             !isBackfillInProgress && backfillFractionComplete != 0)
         {
             throw new ArgumentOutOfRangeException(nameof(backfillFractionComplete));
+        }
+
+        if (hasMemoryOperationFailure && needsMemoryRecovery)
+        {
+            throw new ArgumentException(
+                "A Capture Memory operation cannot be both failed and awaiting recovery.");
         }
 
         CaptureAnalysisModelPreparationActivity[] preparations =
@@ -87,6 +106,8 @@ public sealed record CaptureAnalysisActivitySnapshot
         FailedCaptureCount = failedCaptureCount;
         IsBackfillInProgress = isBackfillInProgress;
         BackfillFractionComplete = backfillFractionComplete;
+        HasMemoryOperationFailure = hasMemoryOperationFailure;
+        NeedsMemoryRecovery = needsMemoryRecovery;
     }
 
     public IReadOnlyList<CaptureAnalysisModelPreparationActivity> ModelPreparations =>
@@ -106,6 +127,10 @@ public sealed record CaptureAnalysisActivitySnapshot
 
     public double BackfillFractionComplete { get; }
 
+    public bool HasMemoryOperationFailure { get; }
+
+    public bool NeedsMemoryRecovery { get; }
+
     public bool HasActivity =>
         ModelPreparations.Count > 0 ||
         IsBackfillInProgress ||
@@ -113,7 +138,9 @@ public sealed record CaptureAnalysisActivitySnapshot
         QueuedCaptureCount > 0 ||
         WaitingCaptureCount > 0 ||
         RetryCaptureCount > 0 ||
-        FailedCaptureCount > 0;
+        FailedCaptureCount > 0 ||
+        HasMemoryOperationFailure ||
+        NeedsMemoryRecovery;
 }
 
 public interface ICaptureAnalysisActivityQueryService

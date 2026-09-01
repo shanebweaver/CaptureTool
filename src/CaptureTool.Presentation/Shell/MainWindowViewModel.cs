@@ -211,35 +211,41 @@ public sealed partial class MainWindowViewModel : ViewModelBase
         foreach (CaptureAnalysisModelPreparationActivity preparation in
             snapshot.ModelPreparations)
         {
+            bool isDeterminate = preparation.HasReportedProgress;
             items.Add(new BackgroundActivityItemViewModel(
                 GetModelPreparationTitle(preparation.Capability),
-                string.Format(
-                    CultureInfo.CurrentCulture,
-                    GetString(
-                        "BackgroundActivity_ModelPreparationDetail",
-                        "{0}% complete on this device"),
-                    Math.Round(preparation.FractionComplete * 100)),
+                isDeterminate
+                    ? string.Format(
+                        CultureInfo.CurrentCulture,
+                        GetString(
+                            "BackgroundActivity_ModelPreparationDetail",
+                            "{0}% complete on this device"),
+                        Math.Round(preparation.FractionComplete * 100))
+                    : GetBackgroundWorkDetail(),
                 isActive: true,
                 isAttention: false,
-                isDeterminate: true,
+                isDeterminate,
                 preparation.FractionComplete));
         }
 
         if (snapshot.IsBackfillInProgress)
         {
+            bool isDeterminate = snapshot.BackfillFractionComplete > 0;
             items.Add(new BackgroundActivityItemViewModel(
                 GetString(
                     "BackgroundActivity_BackfillTitle",
                     "Preparing existing captures"),
-                string.Format(
-                    CultureInfo.CurrentCulture,
-                    GetString(
-                        "BackgroundActivity_BackfillDetail",
-                        "{0}% scheduled for search"),
-                    Math.Round(snapshot.BackfillFractionComplete * 100)),
+                isDeterminate
+                    ? string.Format(
+                        CultureInfo.CurrentCulture,
+                        GetString(
+                            "BackgroundActivity_BackfillDetail",
+                            "{0}% scheduled for search"),
+                        Math.Round(snapshot.BackfillFractionComplete * 100))
+                    : GetBackgroundWorkDetail(),
                 isActive: true,
                 isAttention: false,
-                isDeterminate: true,
+                isDeterminate,
                 snapshot.BackfillFractionComplete));
         }
 
@@ -308,6 +314,31 @@ public sealed partial class MainWindowViewModel : ViewModelBase
                 isAttention: true));
         }
 
+        if (snapshot.NeedsMemoryRecovery)
+        {
+            items.Add(new BackgroundActivityItemViewModel(
+                GetString(
+                    "CaptureMemory_Settings_Recovery.Title",
+                    "Cleanup needs attention"),
+                GetString(
+                    "CaptureMemory_Settings_RecoveryRequired",
+                    "The safety change is saved, but app-managed cleanup is incomplete. Restart or retry after files are available."),
+                isActive: false,
+                isAttention: true));
+        }
+        else if (snapshot.HasMemoryOperationFailure)
+        {
+            items.Add(new BackgroundActivityItemViewModel(
+                GetString(
+                    "CaptureMemory_Settings_Failure.Title",
+                    "Capture Memory action failed"),
+                GetString(
+                    "CaptureMemory_Settings_OperationUnavailable",
+                    "Capture Memory could not complete this action. Try again."),
+                isActive: false,
+                isAttention: true));
+        }
+
         if (!BackgroundActivities.SequenceEqual(items))
         {
             BackgroundActivities.Clear();
@@ -331,6 +362,14 @@ public sealed partial class MainWindowViewModel : ViewModelBase
         {
             CaptureAnalysisModelPreparationActivity preparation =
                 snapshot.ModelPreparations[0];
+            if (!preparation.HasReportedProgress)
+            {
+                return (
+                    GetModelPreparationTitle(preparation.Capability),
+                    false,
+                    0);
+            }
+
             return (
                 string.Format(
                     CultureInfo.CurrentCulture,
@@ -357,6 +396,16 @@ public sealed partial class MainWindowViewModel : ViewModelBase
 
         if (snapshot.IsBackfillInProgress)
         {
+            if (snapshot.BackfillFractionComplete == 0)
+            {
+                return (
+                    GetString(
+                        "BackgroundActivity_BackfillTitle",
+                        "Preparing existing captures"),
+                    false,
+                    0);
+            }
+
             return (
                 string.Format(
                     CultureInfo.CurrentCulture,
@@ -426,6 +475,26 @@ public sealed partial class MainWindowViewModel : ViewModelBase
                 0);
         }
 
+        if (snapshot.NeedsMemoryRecovery)
+        {
+            return (
+                GetString(
+                    "CaptureMemory_Settings_Recovery.Title",
+                    "Cleanup needs attention"),
+                false,
+                0);
+        }
+
+        if (snapshot.HasMemoryOperationFailure)
+        {
+            return (
+                GetString(
+                    "CaptureMemory_Settings_Failure.Title",
+                    "Capture Memory action failed"),
+                false,
+                0);
+        }
+
         return (string.Empty, false, 0);
     }
 
@@ -457,6 +526,13 @@ public sealed partial class MainWindowViewModel : ViewModelBase
             CultureInfo.CurrentCulture,
             GetString(key, fallback),
             count);
+    }
+
+    private string GetBackgroundWorkDetail()
+    {
+        return GetString(
+            "BackgroundActivity_Subtitle.Text",
+            "Capture Tool keeps working while you use the app.");
     }
 
     private string GetString(string key, string fallback)

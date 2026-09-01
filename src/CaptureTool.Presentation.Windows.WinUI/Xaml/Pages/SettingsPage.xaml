@@ -804,13 +804,6 @@
                                             Opacity=".75"
                                             TextTrimming="WordEllipsis"
                                             TextWrapping="WrapWholeWords" />
-                                        <TextBlock
-                                            AutomationProperties.AutomationId="Settings_CaptureMemoryPolicyStatus"
-                                            AutomationProperties.LiveSetting="Polite"
-                                            FontSize="12"
-                                            Opacity=".75"
-                                            Text="{x:Bind ViewModel.CaptureMemory.PolicyStatusText, Mode=OneWay}"
-                                            TextWrapping="WrapWholeWords" />
                                     </StackPanel>
 
                                     <ToggleSwitch
@@ -889,38 +882,6 @@
                                         Command="{x:Bind ViewModel.CaptureMemory.TurnOffAndEraseCommand, Mode=OneWay}" />
                                 </Grid>
 
-                                <StackPanel
-                                    Spacing="6"
-                                    Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.CaptureMemory.ShowProgress), Mode=OneWay}">
-                                    <ProgressBar
-                                        AutomationProperties.AutomationId="Settings_CaptureMemoryOperationProgress"
-                                        Maximum="1"
-                                        Value="{x:Bind ViewModel.CaptureMemory.OperationProgress, Mode=OneWay}" />
-                                    <Button
-                                        x:Uid="CaptureMemory_Settings_CancelButton"
-                                        HorizontalAlignment="Left"
-                                        AutomationProperties.AutomationId="Settings_CaptureMemoryCancelButton"
-                                        Command="{x:Bind ViewModel.CaptureMemory.CancelOperationCommand, Mode=OneWay}" />
-                                </StackPanel>
-
-                                <TextBlock
-                                    AutomationProperties.AutomationId="Settings_CaptureMemoryOperationStatus"
-                                    AutomationProperties.LiveSetting="Polite"
-                                    Text="{x:Bind ViewModel.CaptureMemory.OperationStatusText, Mode=OneWay}"
-                                    TextWrapping="WrapWholeWords"
-                                    Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.CaptureMemory.HasOperationStatus), Mode=OneWay}" />
-                                <InfoBar
-                                    x:Uid="CaptureMemory_Settings_Failure"
-                                    IsClosable="False"
-                                    IsOpen="{x:Bind ViewModel.CaptureMemory.HasOperationFailure, Mode=OneWay}"
-                                    Message="{x:Bind ViewModel.CaptureMemory.OperationStatusText, Mode=OneWay}"
-                                    Severity="Error" />
-                                <InfoBar
-                                    x:Uid="CaptureMemory_Settings_Recovery"
-                                    IsClosable="False"
-                                    IsOpen="{x:Bind ViewModel.CaptureMemory.NeedsRecovery, Mode=OneWay}"
-                                    Message="{x:Bind ViewModel.CaptureMemory.OperationStatusText, Mode=OneWay}"
-                                    Severity="Warning" />
                                     </StackPanel>
                                 </Grid>
 
@@ -980,13 +941,6 @@
                                             FontSize="12"
                                             Opacity=".75"
                                             TextWrapping="WrapWholeWords" />
-                                        <TextBlock
-                                            AutomationProperties.AutomationId="Settings_CaptureMemoryReanalyzeAvailability"
-                                            FontSize="12"
-                                            Opacity=".75"
-                                            Text="{x:Bind ViewModel.CaptureMemory.ReanalyzeAvailabilityText, Mode=OneWay}"
-                                            TextWrapping="WrapWholeWords"
-                                            Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.CaptureMemory.ShowReanalyzeAvailability), Mode=OneWay}" />
                                     </StackPanel>
                                     <Button
                                         x:Uid="CaptureMemory_Settings_ReanalyzeButton"

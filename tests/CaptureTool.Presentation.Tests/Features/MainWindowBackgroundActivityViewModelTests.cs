@@ -73,6 +73,51 @@ public sealed class MainWindowBackgroundActivityViewModelTests
         Assert.AreEqual(string.Empty, viewModel.BackgroundActivitySummary);
     }
 
+    [TestMethod]
+    public async Task RefreshBackgroundActivity_BeforeProgressIsReported_ShouldUseIndeterminateActivity()
+    {
+        CaptureAnalysisActivitySnapshot active = new(
+            modelPreparations:
+            [
+                new CaptureAnalysisModelPreparationActivity(
+                    CreateAnalyzer(),
+                    AnalysisCapabilities.SpeechTranscriptV1,
+                    CaptureMediaKind.Audio,
+                    0,
+                    hasReportedProgress: false),
+            ]);
+        var activityQuery = new Mock<ICaptureAnalysisActivityQueryService>(MockBehavior.Strict);
+        activityQuery
+            .Setup(service => service.GetCurrentAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(active);
+        using MainWindowViewModel viewModel = CreateViewModel(activityQuery.Object);
+
+        await viewModel.RefreshBackgroundActivityAsync();
+
+        Assert.AreEqual("Preparing speech recognition", viewModel.BackgroundActivitySummary);
+        Assert.IsFalse(viewModel.IsPrimaryActivityDeterminate);
+        Assert.AreEqual(0, viewModel.PrimaryActivityProgress);
+        Assert.IsFalse(viewModel.BackgroundActivities[0].IsDeterminate);
+        Assert.IsTrue(viewModel.BackgroundActivities[0].IsIndeterminate);
+        Assert.DoesNotContain("0%", viewModel.BackgroundActivities[0].Detail);
+    }
+
+    [TestMethod]
+    public async Task RefreshBackgroundActivity_WhenMemoryActionFails_ShouldShowFloatingAttention()
+    {
+        var activityQuery = new Mock<ICaptureAnalysisActivityQueryService>(MockBehavior.Strict);
+        activityQuery
+            .Setup(service => service.GetCurrentAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new CaptureAnalysisActivitySnapshot(hasMemoryOperationFailure: true));
+        using MainWindowViewModel viewModel = CreateViewModel(activityQuery.Object);
+
+        await viewModel.RefreshBackgroundActivityAsync();
+
+        Assert.IsTrue(viewModel.HasBackgroundActivityAttention);
+        Assert.AreEqual("Capture Memory action failed", viewModel.BackgroundActivitySummary);
+        Assert.AreEqual("Capture Memory action failed", viewModel.BackgroundActivities[0].Title);
+    }
+
     private static MainWindowViewModel CreateViewModel(
         ICaptureAnalysisActivityQueryService activityQuery)
     {

@@ -83,8 +83,8 @@ internal sealed class CaptureAnalysisActivityQueryService :
         retry.ExceptWith(queued);
         retry.ExceptWith(waiting);
 
-        (bool isBackfillInProgress, double backfillFraction) =
-            await GetBackfillProgressAsync(cancellationToken).ConfigureAwait(false);
+        WorkflowActivityState workflowActivity =
+            await GetWorkflowActivityAsync(cancellationToken).ConfigureAwait(false);
         return new CaptureAnalysisActivitySnapshot(
             preparations,
             running.Count,
@@ -92,8 +92,10 @@ internal sealed class CaptureAnalysisActivityQueryService :
             waiting.Count,
             retry.Count,
             failed.Count,
-            isBackfillInProgress,
-            backfillFraction);
+            workflowActivity.IsBackfillInProgress,
+            workflowActivity.BackfillFraction,
+            workflowActivity.HasFailure,
+            workflowActivity.NeedsRecovery);
     }
 
     private IReadOnlyList<CaptureAnalysisModelPreparationActivity> GetVisiblePreparations()
@@ -129,8 +131,8 @@ internal sealed class CaptureAnalysisActivityQueryService :
 
     private void OnWorkflowChanged(object? sender, EventArgs args) => ActivityChanged?.Invoke(this, EventArgs.Empty);
 
-    private async ValueTask<(bool IsInProgress, double Fraction)>
-        GetBackfillProgressAsync(CancellationToken cancellationToken)
+    private async ValueTask<WorkflowActivityState> GetWorkflowActivityAsync(
+        CancellationToken cancellationToken)
     {
         try
         {
@@ -139,7 +141,14 @@ internal sealed class CaptureAnalysisActivityQueryService :
                 { IsRunning: true, Phase: CaptureMemoryOperationPhase.SchedulingCaptures } operation &&
                 (operation.Request.Kind == CaptureMemoryOperationKind.IncludeExistingCaptures ||
                  operation.Request is { Kind: CaptureMemoryOperationKind.Enable, IncludeExistingCaptures: true });
-            return (isInProgress, isInProgress ? snapshot.FractionComplete : 0);
+            CaptureMemoryOperationStatus? status = snapshot.Operation?.Status;
+            return new WorkflowActivityState(
+                isInProgress,
+                isInProgress ? snapshot.FractionComplete : 0,
+                status is CaptureMemoryOperationStatus.Failed or
+                    CaptureMemoryOperationStatus.Conflict or
+                    CaptureMemoryOperationStatus.Rejected,
+                status == CaptureMemoryOperationStatus.RecoveryRequired);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
@@ -148,7 +157,13 @@ internal sealed class CaptureAnalysisActivityQueryService :
         catch
         {
             // Job activity remains useful when advisory policy progress is unavailable.
-            return (false, 0);
+            return default;
         }
     }
+
+    private readonly record struct WorkflowActivityState(
+        bool IsBackfillInProgress,
+        double BackfillFraction,
+        bool HasFailure,
+        bool NeedsRecovery);
 }

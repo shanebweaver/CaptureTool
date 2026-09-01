@@ -103,6 +103,38 @@ public sealed class CaptureAnalysisActivityQueryServiceTests
         Assert.IsTrue(snapshot.HasActivity);
     }
 
+    [TestMethod]
+    public async Task GetCurrent_WhenMemoryOperationNeedsRecovery_ShouldExposeFloatingAttention()
+    {
+        var jobStore = new Mock<ICaptureAnalysisJobStore>(MockBehavior.Strict);
+        jobStore
+            .Setup(store => store.ReadAllAsync(It.IsAny<CancellationToken>()))
+            .Returns(ToAsyncEnumerable([]));
+        var workflow = new Mock<ICaptureMemoryWorkflow>(MockBehavior.Strict);
+        workflow
+            .Setup(service => service.GetCurrentAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new CaptureMemoryWorkflowSnapshot(
+                new CaptureAnalysisPolicySnapshot(
+                    CaptureAnalysisPolicySnapshotStatus.FeatureDisabled,
+                    CaptureAnalysisConsentState.Unknown),
+                CreateMemoryOperation(CaptureMemoryOperationStatus.RecoveryRequired)));
+        var preparationQuery = new Mock<IAnalysisCapabilityPreparationActivityQueryService>(
+            MockBehavior.Strict);
+        preparationQuery
+            .Setup(query => query.GetCurrentPreparations())
+            .Returns([]);
+        var service = new CaptureAnalysisActivityQueryService(
+            jobStore.Object,
+            workflow.Object,
+            preparationQuery.Object);
+
+        CaptureAnalysisActivitySnapshot snapshot = await service.GetCurrentAsync();
+
+        Assert.IsTrue(snapshot.NeedsMemoryRecovery);
+        Assert.IsFalse(snapshot.HasMemoryOperationFailure);
+        Assert.IsTrue(snapshot.HasActivity);
+    }
+
     private static CaptureAnalysisJobIntent CreateJob(
         CaptureId captureId,
         CapabilityDefinition capability,
@@ -120,6 +152,19 @@ public sealed class CaptureAnalysisActivityQueryServiceTests
             nextAttemptAtUtc: null,
             latestFailure: null,
             attempts: []);
+    }
+
+    private static CaptureMemoryOperation CreateMemoryOperation(
+        CaptureMemoryOperationStatus status)
+    {
+        return new CaptureMemoryOperation(
+            Guid.NewGuid(),
+            new CaptureMemoryOperationRequest(CaptureMemoryOperationKind.ClearMemory),
+            AnalysisTestData.GeneratedAtUtc,
+            controlGeneration: 1,
+            policyRevision: 1,
+            CaptureMemoryOperationPhase.Finished,
+            status);
     }
 
     private static async IAsyncEnumerable<CaptureAnalysisJobIntent> ToAsyncEnumerable(

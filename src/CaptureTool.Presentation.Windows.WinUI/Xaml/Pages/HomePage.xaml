@@ -307,30 +307,6 @@
                                 Command="{x:Bind ViewModel.CaptureMemory.EnableCaptureMemoryCommand}"
                                 Content="Turn on Capture Memory" />
                         </StackPanel>
-                        <StackPanel Spacing="6" Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.CaptureMemory.IsPreparing), Mode=OneWay}">
-                            <StackPanel Orientation="Horizontal" Spacing="8">
-                                <ProgressRing
-                                    Width="18"
-                                    Height="18"
-                                    IsActive="{x:Bind ViewModel.CaptureMemory.IsPreparing, Mode=OneWay}" />
-                                <TextBlock
-                                    x:Uid="CaptureMemory_Setup_Preparing"
-                                    VerticalAlignment="Center"
-                                    Text="Preparing AI models…" />
-                            </StackPanel>
-                            <ProgressBar Maximum="1" Value="{x:Bind ViewModel.CaptureMemory.PreparationProgress, Mode=OneWay}" />
-                        </StackPanel>
-                        <StackPanel
-                            Orientation="Horizontal"
-                            Spacing="8"
-                            Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.CaptureMemory.HasSetupFailure), Mode=OneWay}">
-                            <FontIcon Glyph="&#xE783;" />
-                            <TextBlock
-                                x:Uid="CaptureMemory_Setup_Failed"
-                                VerticalAlignment="Center"
-                                Text="Capture Memory could not be prepared. Try again."
-                                TextWrapping="WrapWholeWords" />
-                        </StackPanel>
                     </StackPanel>
                 </Border>
 
@@ -365,20 +341,6 @@
                             Text="Searching…" />
                     </StackPanel>
 
-                    <StackPanel
-                        Margin="0,14,0,0"
-                        Spacing="5"
-                        Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.CaptureMemory.IsIndexing), Mode=OneWay}">
-                        <TextBlock x:Uid="CaptureMemory_Indexing" Text="Preparing existing captures for search…" />
-                        <ProgressBar Maximum="1" Value="{x:Bind ViewModel.CaptureMemory.IndexProgress, Mode=OneWay}" />
-                    </StackPanel>
-
-                    <InfoBar
-                        x:Uid="CaptureMemory_PartialResults"
-                        IsClosable="False"
-                        IsOpen="{x:Bind ViewModel.CaptureMemory.ShowPartialResults, Mode=OneWay}"
-                        Message="These are partial results while existing captures are prepared."
-                        Severity="Informational" />
                     <InfoBar
                         x:Uid="CaptureMemory_SourceMissing"
                         IsClosable="False"

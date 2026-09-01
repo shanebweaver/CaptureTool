@@ -190,8 +190,10 @@ public sealed class CaptureMemoryHomeUiTests
                 280,
                 activityButton.BoundingRectangle.Width,
                 "The activity button should stretch across its compact card instead of shrinking around its text.");
+            Assert.IsNull(
+                FindElement(app.ProcessId, automation, "Settings_CaptureMemoryOperationStatus"),
+                "Capture Memory activity feedback should only appear in the floating activity UI.");
             WaitForMarker(temporaryDirectory, "capture-memory-reanalyzed.marker");
-            WaitForElement(app.ProcessId, automation, "Settings_CaptureMemoryOperationStatus");
 
             AutomationElement rebuild = WaitForElement(
                 app.ProcessId,
@@ -223,24 +225,18 @@ public sealed class CaptureMemoryHomeUiTests
             WaitForElementByName(app.ProcessId, automation, "Turn off and erase").Click();
             WaitForMarker(temporaryDirectory, "capture-memory-erased.marker");
 
-            _ = WaitForElement(
-                app.ProcessId,
-                automation,
-                "Settings_CaptureMemoryPolicyStatus");
             WaitFor(
-                () => FindElement(app.ProcessId, automation, "Settings_CaptureMemoryPolicyStatus")?
-                    .Name.Contains("off", StringComparison.OrdinalIgnoreCase) == true
+                () => GetToggleState(analysisToggle) == FlaUI.Core.Definitions.ToggleState.Off
                     ? new object()
                     : null,
                 InteractionTimeout,
-                "Capture Memory to report that analysis is off");
+                "Capture Memory toggle to turn off");
 
             Toggle(analysisToggle);
             WaitForElement(app.ProcessId, automation, "CaptureMemoryEnableDialog");
             WaitForElementByName(app.ProcessId, automation, "New captures only").Click();
             WaitFor(
-                () => FindElement(app.ProcessId, automation, "Settings_CaptureMemoryPolicyStatus")?
-                    .Name.Contains("on", StringComparison.OrdinalIgnoreCase) == true
+                () => GetToggleState(analysisToggle) == FlaUI.Core.Definitions.ToggleState.On
                     ? new object()
                     : null,
                 InteractionTimeout,
@@ -409,6 +405,13 @@ public sealed class CaptureMemoryHomeUiTests
     {
         Assert.IsTrue(element.Patterns.Toggle.IsSupported);
         element.Patterns.Toggle.Pattern.Toggle();
+    }
+
+    private static FlaUI.Core.Definitions.ToggleState GetToggleState(
+        AutomationElement element)
+    {
+        Assert.IsTrue(element.Patterns.Toggle.IsSupported);
+        return element.Patterns.Toggle.Pattern.ToggleState.Value;
     }
 
     private static void WaitForMarker(string directory, string filename)

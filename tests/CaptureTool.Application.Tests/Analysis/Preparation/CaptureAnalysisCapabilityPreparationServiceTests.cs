@@ -97,9 +97,15 @@ public sealed class CaptureAnalysisCapabilityPreparationServiceTests
 
         AnalysisCapabilityPreparationState query = await context.Service.GetStateAsync(CreateRequest());
         AnalysisCapabilityPreparationState second = await context.Service.PrepareAsync(CreateRequest());
+        IReadOnlyList<CaptureAnalysisModelPreparationActivity> activities =
+            context.Service.GetCurrentPreparations();
+        Assert.HasCount(1, activities);
+        CaptureAnalysisModelPreparationActivity activity = activities[0];
 
         Assert.AreEqual(AnalysisCapabilityPreparationStatus.Preparing, query.Status);
         Assert.AreEqual(AnalysisCapabilityPreparationStatus.Preparing, second.Status);
+        Assert.IsFalse(activity.HasReportedProgress);
+        Assert.AreEqual(0, activity.FractionComplete);
         Assert.AreEqual(1, analyzer.PrepareCallCount);
 
         AnalysisCapabilityPreparationState stillPreparing = await context.Service.GetStateAsync(CreateRequest());
@@ -141,6 +147,7 @@ public sealed class CaptureAnalysisCapabilityPreparationServiceTests
         Assert.AreEqual(AnalysisCapabilities.ImageDescriptionV1, activity.Capability);
         Assert.AreEqual(CaptureMediaKind.Image, activity.MediaKind);
         Assert.AreEqual(0.42, activity.FractionComplete);
+        Assert.IsTrue(activity.HasReportedProgress);
 
         release.SetResult();
         AnalysisCapabilityPreparationState completed = await preparation;

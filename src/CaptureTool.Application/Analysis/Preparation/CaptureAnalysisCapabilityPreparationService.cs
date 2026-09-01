@@ -308,12 +308,14 @@ public sealed class CaptureAnalysisCapabilityPreparationService :
         CaptureMediaKind mediaKind)
     {
         private long _fractionBits = BitConverter.DoubleToInt64Bits(0);
+        private int _hasReportedProgress;
 
         public void Update(double fractionComplete)
         {
             Interlocked.Exchange(
                 ref _fractionBits,
                 BitConverter.DoubleToInt64Bits(Math.Clamp(fractionComplete, 0, 1)));
+            Interlocked.Exchange(ref _hasReportedProgress, 1);
         }
 
         public CaptureAnalysisModelPreparationActivity CreateSnapshot()
@@ -324,7 +326,8 @@ public sealed class CaptureAnalysisCapabilityPreparationService :
                 analyzer,
                 capability,
                 mediaKind,
-                fraction);
+                fraction,
+                Volatile.Read(ref _hasReportedProgress) != 0);
         }
     }
 
