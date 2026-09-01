@@ -51,7 +51,6 @@ public sealed partial class MainWindow : Window
     private readonly CancellationTokenSource _backgroundActivityCancellation = new();
     private readonly UISettings _uiSettings = new();
     private Storyboard? _backgroundActivityVisibilityStoryboard;
-    private Storyboard? _backgroundActivityPulseStoryboard;
 
     public MainWindowViewModel ViewModel { get; } = ViewModelLocator.GetViewModel<MainWindowViewModel>();
     private bool _closeConfirmed;
@@ -289,12 +288,12 @@ public sealed partial class MainWindow : Window
 
         if (e.PropertyName == nameof(MainWindowViewModel.HasBackgroundActivity))
         {
-            AnimateBackgroundActivityVisibility(ViewModel.HasBackgroundActivity);
-        }
+            if (!ViewModel.HasBackgroundActivity)
+            {
+                BackgroundActivityFlyout.Hide();
+            }
 
-        if (e.PropertyName == nameof(MainWindowViewModel.HasActiveBackgroundActivity))
-        {
-            UpdateBackgroundActivityPulse();
+            AnimateBackgroundActivityVisibility(ViewModel.HasBackgroundActivity);
         }
     }
 
@@ -376,7 +375,6 @@ public sealed partial class MainWindow : Window
             BackgroundActivityTranslateTransform.Y = show ? 0 : 12;
             BackgroundActivityScaleTransform.ScaleX = show ? 1 : 0.96;
             BackgroundActivityScaleTransform.ScaleY = show ? 1 : 0.96;
-            UpdateBackgroundActivityPulse();
             return;
         }
 
@@ -430,7 +428,6 @@ public sealed partial class MainWindow : Window
         };
         _backgroundActivityVisibilityStoryboard = storyboard;
         storyboard.Begin();
-        UpdateBackgroundActivityPulse();
     }
 
     private static DoubleAnimation CreateAnimation(
@@ -452,34 +449,6 @@ public sealed partial class MainWindow : Window
         Storyboard.SetTarget(animation, target);
         Storyboard.SetTargetProperty(animation, targetProperty);
         return animation;
-    }
-
-    private void UpdateBackgroundActivityPulse()
-    {
-        _backgroundActivityPulseStoryboard?.Stop();
-        _backgroundActivityPulseStoryboard = null;
-        BackgroundActivityGlyph.Opacity = 1;
-        if (!ViewModel.HasActiveBackgroundActivity ||
-            !ViewModel.HasBackgroundActivity ||
-            !_uiSettings.AnimationsEnabled)
-        {
-            return;
-        }
-
-        var pulse = new DoubleAnimation
-        {
-            From = 0.38,
-            To = 1,
-            Duration = new Duration(TimeSpan.FromMilliseconds(850)),
-            AutoReverse = true,
-            RepeatBehavior = RepeatBehavior.Forever,
-        };
-        Storyboard.SetTarget(pulse, BackgroundActivityGlyph);
-        Storyboard.SetTargetProperty(pulse, "Opacity");
-        var storyboard = new Storyboard();
-        storyboard.Children.Add(pulse);
-        _backgroundActivityPulseStoryboard = storyboard;
-        storyboard.Begin();
     }
 
     private void OnActivated(object sender, WindowActivatedEventArgs args)
@@ -561,7 +530,6 @@ public sealed partial class MainWindow : Window
         _backgroundActivityCancellation.Cancel();
         _backgroundActivityCancellation.Dispose();
         _backgroundActivityVisibilityStoryboard?.Stop();
-        _backgroundActivityPulseStoryboard?.Stop();
 
         ViewModel.PropertyChanged -= OnViewModelPropertyChanged;
         ViewModel.BackgroundActivityRefreshRequested -=

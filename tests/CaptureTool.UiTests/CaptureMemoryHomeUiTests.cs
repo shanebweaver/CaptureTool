@@ -182,10 +182,14 @@ public sealed class CaptureMemoryHomeUiTests
             FocusAndClick(reanalyze);
             WaitForElement(app.ProcessId, automation, "CaptureMemoryConfirmationDialog");
             WaitForElementByName(app.ProcessId, automation, "Reanalyze captures").Click();
-            WaitForElement(
+            AutomationElement activityButton = WaitForElement(
                 app.ProcessId,
                 automation,
                 "MainWindow_BackgroundActivityButton");
+            Assert.IsGreaterThanOrEqualTo(
+                activityButton.BoundingRectangle.Width,
+                280,
+                "The activity button should stretch across its compact card instead of shrinking around its text.");
             WaitForMarker(temporaryDirectory, "capture-memory-reanalyzed.marker");
             WaitForElement(app.ProcessId, automation, "Settings_CaptureMemoryOperationStatus");
 
