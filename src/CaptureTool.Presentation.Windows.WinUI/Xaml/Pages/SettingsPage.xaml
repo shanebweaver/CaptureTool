@@ -777,84 +777,64 @@
                         Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.CaptureMemory.IsVisible), Mode=OneWay}">
                         <TextBlock x:Uid="CaptureMemory_Settings_Header" Margin="0,4" />
 
-                        <Grid
-                            Padding="16,12"
-                            Background="{ThemeResource CardBackgroundFillColorDefault}"
-                            BorderBrush="{ThemeResource CardStrokeColorDefault}"
-                            BorderThickness="1"
-                            ColumnSpacing="16"
-                            CornerRadius="4">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto" />
-                                <ColumnDefinition />
-                            </Grid.ColumnDefinitions>
+                        <Expander
+                            HorizontalAlignment="Stretch"
+                            HorizontalContentAlignment="Stretch"
+                            AutomationProperties.AutomationId="Settings_CaptureMemoryExpander"
+                            IsExpanded="True">
+                            <Expander.Header>
+                                <Grid Padding="0,12" ColumnSpacing="16">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
 
-                            <SymbolIcon Symbol="Find" />
+                                    <SymbolIcon Symbol="Find" />
 
-                            <StackPanel Grid.Column="1" Spacing="10">
-                                <StackPanel Spacing="2">
-                                    <TextBlock
-                                        x:Uid="CaptureMemory_Settings_AnalysisTitle"
-                                        FontWeight="SemiBold"
-                                        TextWrapping="WrapWholeWords" />
-                                    <TextBlock
-                                        x:Uid="CaptureMemory_Settings_AnalysisDescription"
-                                        FontSize="12"
-                                        Opacity=".75"
-                                        TextWrapping="WrapWholeWords" />
-                                    <TextBlock
-                                        AutomationProperties.AutomationId="Settings_CaptureMemoryPolicyStatus"
-                                        AutomationProperties.LiveSetting="Polite"
-                                        Text="{x:Bind ViewModel.CaptureMemory.PolicyStatusText, Mode=OneWay}"
-                                        TextWrapping="WrapWholeWords" />
-                                </StackPanel>
+                                    <StackPanel Grid.Column="1" Spacing="2">
+                                        <TextBlock
+                                            x:Uid="CaptureMemory_Settings_AnalysisTitle"
+                                            TextTrimming="WordEllipsis"
+                                            TextWrapping="WrapWholeWords" />
+                                        <TextBlock
+                                            x:Uid="CaptureMemory_Settings_AnalysisDescription"
+                                            FontSize="12"
+                                            MaxLines="2"
+                                            Opacity=".75"
+                                            TextTrimming="WordEllipsis"
+                                            TextWrapping="WrapWholeWords" />
+                                        <TextBlock
+                                            AutomationProperties.AutomationId="Settings_CaptureMemoryPolicyStatus"
+                                            AutomationProperties.LiveSetting="Polite"
+                                            FontSize="12"
+                                            Opacity=".75"
+                                            Text="{x:Bind ViewModel.CaptureMemory.PolicyStatusText, Mode=OneWay}"
+                                            TextWrapping="WrapWholeWords" />
+                                    </StackPanel>
 
-                                <StackPanel
-                                    Orientation="Horizontal"
-                                    Spacing="8"
-                                    Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.CaptureMemory.ShowAuthorizedControls), Mode=OneWay}">
                                     <ToggleSwitch
-                                        x:Uid="CaptureMemory_Settings_AnalyzeNewToggle"
+                                        x:Uid="CaptureMemory_Settings_AnalysisToggle"
+                                        Grid.Column="2"
+                                        MinWidth="0"
+                                        HorizontalAlignment="Right"
                                         AutomationProperties.AutomationId="Settings_CaptureMemoryAnalyzeNewToggle"
                                         IsEnabled="{x:Bind ViewModel.CaptureMemory.CanChangeAnalysisState, Mode=OneWay}"
                                         IsOn="{x:Bind ViewModel.CaptureMemory.IsAnalyzingNewCaptures, Mode=OneWay}"
                                         Toggled="CaptureMemoryAnalysisToggleSwitch_Toggled" />
-                                </StackPanel>
+                                </Grid>
+                            </Expander.Header>
 
-                                <StackPanel
-                                    Spacing="8"
-                                    Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.CaptureMemory.ShowEnableAction), Mode=OneWay}">
-                                    <CheckBox
-                                        x:Uid="CaptureMemory_IncludeExistingCaptures"
-                                        AutomationProperties.AutomationId="Settings_CaptureMemoryIncludeExistingCheckBox"
-                                        Content="Include existing captures"
-                                        IsChecked="{x:Bind ViewModel.CaptureMemory.IncludeExistingCaptures, Mode=TwoWay}"
-                                        IsEnabled="{x:Bind ViewModel.CaptureMemory.CanChangeSetupOptions, Mode=OneWay}" />
-                                    <Button
-                                        x:Uid="CaptureMemory_EnableButton"
-                                        HorizontalAlignment="Left"
-                                        AutomationProperties.AutomationId="Settings_CaptureMemoryEnableButton"
-                                        Command="{x:Bind ViewModel.CaptureMemory.EnableCaptureMemoryCommand, Mode=OneWay}"
-                                        Content="Turn on Capture Memory" />
-                                </StackPanel>
-                            </StackPanel>
-                        </Grid>
+                            <StackPanel Margin="4,0" Padding="0,0,0,8" Spacing="16">
+                                <Grid ColumnSpacing="16">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition />
+                                    </Grid.ColumnDefinitions>
 
-                        <Grid
-                            Padding="16,12"
-                            Background="{ThemeResource CardBackgroundFillColorDefault}"
-                            BorderBrush="{ThemeResource CardStrokeColorDefault}"
-                            BorderThickness="1"
-                            ColumnSpacing="16"
-                            CornerRadius="4">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto" />
-                                <ColumnDefinition />
-                            </Grid.ColumnDefinitions>
+                                    <SymbolIcon Symbol="Manage" />
 
-                            <SymbolIcon Symbol="Manage" />
-
-                            <StackPanel Grid.Column="1" Spacing="12">
+                                    <StackPanel Grid.Column="1" Spacing="12">
                                 <StackPanel Spacing="2">
                                     <TextBlock
                                         x:Uid="CaptureMemory_Settings_DataTitle"
@@ -941,18 +921,14 @@
                                     IsOpen="{x:Bind ViewModel.CaptureMemory.NeedsRecovery, Mode=OneWay}"
                                     Message="{x:Bind ViewModel.CaptureMemory.OperationStatusText, Mode=OneWay}"
                                     Severity="Warning" />
-                            </StackPanel>
-                        </Grid>
+                                    </StackPanel>
+                                </Grid>
 
-                        <Expander
-                            HorizontalAlignment="Stretch"
-                            VerticalAlignment="Top"
-                            HorizontalContentAlignment="Stretch"
-                            AutomationProperties.AutomationId="Settings_CaptureMemoryTroubleshootingExpander"
-                            AutomationProperties.LabeledBy="{x:Bind CaptureMemoryTroubleshootingHeaderTextBlock}"
-                            ExpandDirection="Down">
-                            <Expander.Header>
-                                <Grid Padding="0,12">
+                                <Grid
+                                    Padding="0,16,0,0"
+                                    BorderBrush="{ThemeResource SystemBaseLowColor}"
+                                    BorderThickness="0,1,0,0"
+                                    ColumnSpacing="16">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="Auto" />
                                         <ColumnDefinition />
@@ -960,23 +936,19 @@
 
                                     <SymbolIcon Symbol="Repair" />
 
-                                    <StackPanel Grid.Column="1" Padding="16,0,0,0">
-                                        <TextBlock
-                                            x:Name="CaptureMemoryTroubleshootingHeaderTextBlock"
-                                            x:Uid="CaptureMemory_Settings_TroubleshootingTitle"
-                                            TextTrimming="WordEllipsis"
-                                            TextWrapping="NoWrap" />
-                                        <TextBlock
-                                            x:Uid="CaptureMemory_Settings_TroubleshootingSubtitle"
-                                            FontSize="12"
-                                            Opacity=".75"
-                                            TextTrimming="WordEllipsis"
-                                            TextWrapping="NoWrap" />
-                                    </StackPanel>
-                                </Grid>
-                            </Expander.Header>
-                            <StackPanel Margin="4,0" Padding="0,0,0,8" Spacing="12">
-                                <Grid ColumnSpacing="12">
+                                    <StackPanel Grid.Column="1" Spacing="12">
+                                        <StackPanel Spacing="2">
+                                            <TextBlock
+                                                x:Uid="CaptureMemory_Settings_TroubleshootingTitle"
+                                                TextWrapping="WrapWholeWords" />
+                                            <TextBlock
+                                                x:Uid="CaptureMemory_Settings_TroubleshootingSubtitle"
+                                                FontSize="12"
+                                                Opacity=".75"
+                                                TextWrapping="WrapWholeWords" />
+                                        </StackPanel>
+
+                                        <Grid ColumnSpacing="12">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition />
                                         <ColumnDefinition Width="Auto" />
@@ -994,9 +966,9 @@
                                         Grid.Column="1"
                                         AutomationProperties.AutomationId="Settings_CaptureMemoryRebuildButton"
                                         Command="{x:Bind ViewModel.CaptureMemory.RebuildSearchIndexCommand, Mode=OneWay}" />
-                                </Grid>
+                                        </Grid>
 
-                                <Grid ColumnSpacing="12">
+                                        <Grid ColumnSpacing="12">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition />
                                         <ColumnDefinition Width="Auto" />
@@ -1021,6 +993,8 @@
                                         Grid.Column="1"
                                         AutomationProperties.AutomationId="Settings_CaptureMemoryReanalyzeButton"
                                         Command="{x:Bind ViewModel.CaptureMemory.ReanalyzeCapturesCommand, Mode=OneWay}" />
+                                        </Grid>
+                                    </StackPanel>
                                 </Grid>
                             </StackPanel>
                         </Expander>

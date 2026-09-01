@@ -1816,7 +1816,6 @@ SOFTWARE.
   <data name="CaptureMemory_Setup_Title.Text" xml:space="preserve"><value>按内容查找捕获</value></data>
   <data name="CaptureMemory_Setup_Body.Text" xml:space="preserve"><value>Capture Tool 可以使用设备上的 AI 模型创建由应用管理的私密搜索元数据。只有在你选择加入后才会开始分析。设置期间可能会下载一些模型包；你的捕获内容不会被上传。</value></data>
   <data name="CaptureMemory_Setup_Disclosure.Text" xml:space="preserve"><value>将创建媒体属性、识别的文本、语音转写，以及在支持时创建视觉描述。你可以随时在“设置”中停止分析或清除此元数据。</value></data>
-  <data name="CaptureMemory_IncludeExistingCaptures.Content" xml:space="preserve"><value>包括现有捕获</value></data>
   <data name="CaptureMemory_Setup_Preparing.Text" xml:space="preserve"><value>正在准备 AI 模型…</value></data>
   <data name="CaptureMemory_Setup_Failed.Text" xml:space="preserve"><value>无法准备 Capture Memory。请重试。</value></data>
   <data name="CaptureMemory_SearchBox.PlaceholderText" xml:space="preserve"><value>搜索你的捕获</value></data>
@@ -1824,7 +1823,6 @@ SOFTWARE.
   <data name="CaptureMemory_Searching.Text" xml:space="preserve"><value>正在搜索…</value></data>
   <data name="CaptureMemory_Indexing.Text" xml:space="preserve"><value>正在准备现有捕获以供搜索…</value></data>
   <data name="CaptureMemory_PartialResults.Message" xml:space="preserve"><value>在准备现有捕获期间，这些是部分结果。</value></data>
-  <data name="CaptureMemory_LimitedModelCoverage.Message" xml:space="preserve"><value>此设备上的部分 AI 模型不可用。Capture Memory 仍会分析受支持的媒体和元数据。</value></data>
   <data name="CaptureMemory_SourceMissing.Message" xml:space="preserve"><value>匹配的源文件已移动或不可用。你可以忘记由应用管理的相关历史记录。</value></data>
   <data name="CaptureMemory_SearchFailed.Message" xml:space="preserve"><value>Capture Memory 搜索失败。</value></data>
   <data name="CaptureMemory_CorruptProjection.Message" xml:space="preserve"><value>搜索数据已损坏。请重新生成由应用管理的搜索数据。</value></data>
@@ -1891,12 +1889,17 @@ SOFTWARE.
   <data name="CaptureMemory_Settings_Updating" xml:space="preserve"><value>正在更新捕获记忆…</value></data>
   <data name="CaptureMemory_Settings_RecoveryRequired" xml:space="preserve"><value>安全更改已保存，但应用管理的清理尚未完成。请在文件可用后重启或重试。</value></data>
   <data name="CaptureMemory_Settings_Conflict" xml:space="preserve"><value>捕获记忆已在其他位置更改。当前状态已刷新，请重试。</value></data>
-  <data name="CaptureMemory_Settings_ReanalyzeIncomplete" xml:space="preserve"><value>所需的 AI 模型或捕获源不可用。原始捕获未发生更改；请在其可用后重试。</value></data>
   <data name="CaptureMemory_Settings_Rejected" xml:space="preserve"><value>此操作不再适用于捕获记忆的当前状态。</value></data>
-  <data name="CaptureMemory_Settings_ReanalyzeUnavailable" xml:space="preserve"><value>捕获记忆或所需的 AI 模型不可用。原始捕获未发生更改。</value></data>
   <data name="CaptureMemory_Settings_OperationUnavailable" xml:space="preserve"><value>捕获记忆无法完成此操作。请重试。</value></data>
   <data name="CaptureMemory_Settings_Cancelled" xml:space="preserve"><value>操作已取消。已完成的安全更改仍然生效。</value></data>
   <data name="CaptureMemory_Confirmation_CancelButton" xml:space="preserve"><value>取消</value></data>
+  <data name="CaptureMemory_EnableDialog_Title" xml:space="preserve"><value>启用捕获记忆？</value></data>
+  <data name="CaptureMemory_EnableDialog_Content" xml:space="preserve"><value>请选择 Capture Tool 是同时分析库中符合条件的现有捕获，还是仅从新捕获开始。分析会保留在此设备上，并且不会修改原始捕获。</value></data>
+  <data name="CaptureMemory_EnableDialog_ExistingButton" xml:space="preserve"><value>扫描现有捕获</value></data>
+  <data name="CaptureMemory_EnableDialog_NewOnlyButton" xml:space="preserve"><value>仅新捕获</value></data>
+  <data name="CaptureMemory_Settings_AnalysisToggle.OnContent" xml:space="preserve"><value>开</value></data>
+  <data name="CaptureMemory_Settings_AnalysisToggle.OffContent" xml:space="preserve"><value>关</value></data>
+  <data name="CaptureMemory_Settings_AnalysisToggle.AutomationProperties.Name" xml:space="preserve"><value>捕获分析</value></data>
   <data name="CaptureMemory_Confirmation_BackfillTitle" xml:space="preserve"><value>分析现有捕获？</value></data>
   <data name="CaptureMemory_Confirmation_BackfillContent" xml:space="preserve"><value>Capture Tool 将读取符合条件的现有捕获源，并使用已授权的设备端 AI 模型。不会修改原始捕获。</value></data>
   <data name="CaptureMemory_Confirmation_BackfillButton" xml:space="preserve"><value>分析现有捕获</value></data>
@@ -1965,7 +1968,6 @@ SOFTWARE.
   <data name="CaptureMemory_EnableButton.Content" xml:space="preserve"><value>打开 Capture Memory</value></data>
   <data name="CaptureMemory_Settings_EnablePreparing" xml:space="preserve"><value>正在打开 Capture Memory 并准备设备端 AI 模型…</value></data>
   <data name="CaptureMemory_Settings_EnableSucceeded" xml:space="preserve"><value>Capture Memory 已为新捕获打开。设备端 AI 模型已就绪。</value></data>
-  <data name="CaptureMemory_Settings_EnableLimited" xml:space="preserve"><value>Capture Memory 已打开。部分 AI 模型尚未就绪；系统将使用设备上的可用功能分析受支持的捕获。</value></data>
   <data name="CaptureMemory_Settings_EnableExistingScheduling" xml:space="preserve"><value>正在将现有捕获加入分析队列…</value></data>
   <data name="CaptureMemory_Settings_EnableExistingIncomplete" xml:space="preserve"><value>Capture Memory 已打开，但未能将所有现有捕获加入队列。请返回主页以继续。原始捕获未被修改。</value></data>
   <data name="CaptureMemory_Settings_EnableExistingSucceeded" xml:space="preserve"><value>现有捕获已加入分析队列。分析完成后将显示结果。</value></data>
@@ -1973,6 +1975,6 @@ SOFTWARE.
   <data name="CaptureMemory_Settings_ReanalyzeBusy" xml:space="preserve"><value>请等待当前 Memory 操作完成，或将其取消。</value></data>
   <data name="CaptureMemory_Settings_ReanalyzeOff" xml:space="preserve"><value>请开启 Capture Memory 以重新分析捕获内容。</value></data>
   <data name="CaptureMemory_Settings_ReanalyzeExcluded" xml:space="preserve"><value>没有符合条件的捕获内容。已排除和已遗忘的内容仍不会被重新分析。</value></data>
-  <data name="CaptureMemory_Settings_ReanalyzeEmpty" xml:space="preserve"><value>尚无已加入分析的捕获内容。请创建新捕获，或开启 Memory 并选中“包括现有捕获”。</value></data>
-  <data name="CaptureMemory_Settings_ReanalyzePartial" xml:space="preserve"><value>可用的分析已加入队列。部分模型或捕获源文件不可用；结果将在受支持的分析完成后显示。</value></data>
+  <data name="CaptureMemory_Settings_ReanalyzeEmpty" xml:space="preserve"><value>尚无已加入分析的捕获。请创建新捕获以开始分析。</value></data>
+  <data name="CaptureMemory_Settings_ReanalyzePartial" xml:space="preserve"><value>捕获分析已加入队列。分析完成后，结果将陆续显示。</value></data>
 </root>

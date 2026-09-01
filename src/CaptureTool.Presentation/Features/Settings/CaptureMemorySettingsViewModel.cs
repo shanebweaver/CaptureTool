@@ -34,7 +34,10 @@ public sealed class CaptureMemorySettingsViewModel : ViewModelBase
         _confirmationService = confirmationService;
         _localizationService = localizationService;
         _refresh = new(RefreshAsync);
-        EnableCaptureMemoryCommand = Command(CaptureMemoryOperationKind.Enable, () => ShowEnableAction && !IsBusy);
+        EnableCaptureMemoryCommand = new AsyncRelayCommand(
+            EnableAsync,
+            () => _workflow != null && ShowEnableAction && !IsBusy,
+            AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
         StopAnalyzingNewCapturesCommand = Command(CaptureMemoryOperationKind.StopNewCaptures,
             () => CanMutate && IsAnalyzingNewCaptures, CaptureAnalysisSettingsAction.StopAnalyzingNewCaptures);
         ResumeAnalyzingNewCapturesCommand = Command(CaptureMemoryOperationKind.ResumeNewCaptures,
@@ -67,7 +70,6 @@ public sealed class CaptureMemorySettingsViewModel : ViewModelBase
     public IAsyncRelayCommand ReanalyzeCapturesCommand { get; }
     public IRelayCommand CancelOperationCommand { get; }
     public IAsyncRelayCommand RefreshCommand { get; }
-    public bool IncludeExistingCaptures { get; set => Set(ref field, value); }
     public bool IsVisible => _featureAvailability?.IsCaptureMemorySearchEnabled == true;
     public bool IsAuthorized { get; private set => Set(ref field, value); }
     public bool IsPolicyAvailable { get; private set => Set(ref field, value); }
@@ -77,8 +79,7 @@ public sealed class CaptureMemorySettingsViewModel : ViewModelBase
     public int ExcludedCaptureCount { get; private set => Set(ref field, value); }
     public bool IsBusy => _pendingCommands > 0 || _operation?.IsRunning == true;
     public bool ShowProgress => IsBusy;
-    public bool CanChangeSetupOptions => !IsBusy;
-    public bool CanChangeAnalysisState => CanMutate;
+    public bool CanChangeAnalysisState => IsVisible && IsPolicyAvailable && !IsBusy && _workflow != null;
     public bool ShowAuthorizedControls => IsAuthorized;
     public bool ShowEnableAction => IsVisible && IsPolicyAvailable && !IsAuthorized;
     public bool ShowStopAction => IsAuthorized && IsAnalyzingNewCaptures;
@@ -91,7 +92,6 @@ public sealed class CaptureMemorySettingsViewModel : ViewModelBase
     public bool HasOperationStatus => !string.IsNullOrWhiteSpace(OperationStatusText);
     public bool HasOperationFailure { get; private set => Set(ref field, value); }
     public bool NeedsRecovery { get; private set => Set(ref field, value); }
-    public bool IsModelUnavailable { get; private set => Set(ref field, value); }
     private bool CanMutate => IsVisible && IsPolicyAvailable && IsAuthorized && !IsBusy && _workflow != null;
 
     public string ReanalyzeAvailabilityText => !IsPolicyAvailable || _workflow == null
@@ -101,7 +101,7 @@ public sealed class CaptureMemorySettingsViewModel : ViewModelBase
         : ReanalyzableCaptureCount > 0 ? string.Empty
         : ExcludedCaptureCount > 0
             ? GetString("CaptureMemory_Settings_ReanalyzeExcluded", "No eligible captures. Excluded and forgotten captures stay excluded from reanalysis.")
-            : GetString("CaptureMemory_Settings_ReanalyzeEmpty", "No captures are enrolled yet. Take a new capture, or enable Memory with Include existing captures.");
+            : GetString("CaptureMemory_Settings_ReanalyzeEmpty", "No captures are enrolled yet. Take a new capture to begin analysis.");
     public bool ShowReanalyzeAvailability => !string.IsNullOrEmpty(ReanalyzeAvailabilityText);
 
     public async Task LoadAsync(CancellationToken cancellationToken)
@@ -128,39 +128,51 @@ public sealed class CaptureMemorySettingsViewModel : ViewModelBase
 
     public async Task SetAnalyzingNewCapturesAsync(bool shouldAnalyze)
     {
-        if (!CanChangeAnalysisState || shouldAnalyze == IsAnalyzingNewCaptures) { return; }
-        await (shouldAnalyze ? ResumeAnalyzingNewCapturesCommand : StopAnalyzingNewCapturesCommand).ExecuteAsync(null);
+        if (!CanChangeAnalysisState || (IsAuthorized && shouldAnalyze == IsAnalyzingNewCaptures)) { return; }
+        if (shouldAnalyze && !IsAuthorized)
+        {
+            await EnableCaptureMemoryCommand.ExecuteAsync(null);
+        }
+        else
+        {
+            await (shouldAnalyze ? ResumeAnalyzingNewCapturesCommand : StopAnalyzingNewCapturesCommand).ExecuteAsync(null);
+        }
         RaisePropertyChanged(nameof(IsAnalyzingNewCaptures));
+    }
+
+    private async Task EnableAsync()
+    {
+        if (_workflow == null || _confirmationService == null) { return; }
+        try
+        {
+            CaptureMemoryEnableScope scope = await _confirmationService.ChooseEnableScopeAsync(CancellationToken.None);
+            if (scope is not (CaptureMemoryEnableScope.NewCapturesOnly or CaptureMemoryEnableScope.IncludeExistingCaptures))
+            {
+                return;
+            }
+
+            await ExecuteOperationAsync(
+                CaptureMemoryOperationKind.Enable,
+                scope == CaptureMemoryEnableScope.IncludeExistingCaptures);
+        }
+        catch
+        {
+            HasOperationFailure = true;
+            OperationStatusText = GetString("CaptureMemory_Settings_OperationUnavailable", "Capture Memory could not complete this action. Try again.");
+            NotifyState();
+        }
     }
 
     private IAsyncRelayCommand Command(CaptureMemoryOperationKind kind, Func<bool> canExecute,
         CaptureAnalysisSettingsAction? confirmation = null) => new AsyncRelayCommand(async () =>
     {
         if (_workflow == null) { return; }
-        // Snapshot the checkbox before any asynchronous confirmation.
-        bool includeExisting = kind == CaptureMemoryOperationKind.Enable && IncludeExistingCaptures;
         try
         {
             if (confirmation.HasValue && (_confirmationService == null ||
                 await _confirmationService.ConfirmAsync(new(confirmation.Value), CancellationToken.None) !=
                     CaptureAnalysisConfirmationDecision.Confirmed)) { return; }
-            _pendingCommands++;
-            NotifyState();
-            try
-            {
-                CaptureMemoryOperation result = await _workflow.ExecuteAsync(new(kind, includeExisting), CancellationToken.None);
-                if (includeExisting && result.IsSchedulingComplete) { IncludeExistingCaptures = false; }
-                if (_observing)
-                {
-                    await RefreshAsync(CancellationToken.None);
-                    if (result.Status == CaptureMemoryOperationStatus.Conflict && result.Id != _operation?.Id)
-                    {
-                        OperationStatusText = Describe(result);
-                        HasOperationFailure = true;
-                    }
-                }
-            }
-            finally { _pendingCommands--; }
+            await ExecuteOperationAsync(kind, includeExisting: false);
         }
         catch
         {
@@ -169,6 +181,31 @@ public sealed class CaptureMemorySettingsViewModel : ViewModelBase
         }
         finally { NotifyState(); }
     }, () => _workflow != null && canExecute(), AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
+
+    private async Task ExecuteOperationAsync(CaptureMemoryOperationKind kind, bool includeExisting)
+    {
+        if (_workflow == null) { return; }
+        _pendingCommands++;
+        NotifyState();
+        try
+        {
+            CaptureMemoryOperation result = await _workflow.ExecuteAsync(new(kind, includeExisting), CancellationToken.None);
+            if (_observing)
+            {
+                await RefreshAsync(CancellationToken.None);
+                if (result.Status == CaptureMemoryOperationStatus.Conflict && result.Id != _operation?.Id)
+                {
+                    OperationStatusText = Describe(result);
+                    HasOperationFailure = true;
+                }
+            }
+        }
+        finally
+        {
+            _pendingCommands--;
+            NotifyState();
+        }
+    }
 
     private async Task RefreshAsync(CancellationToken cancellationToken)
     {
@@ -189,7 +226,6 @@ public sealed class CaptureMemorySettingsViewModel : ViewModelBase
             ExcludedCaptureCount = policy.ExcludedCaptureCount;
             OperationProgress = snapshot.FractionComplete;
             NeedsRecovery = _operation?.Status == CaptureMemoryOperationStatus.RecoveryRequired;
-            IsModelUnavailable = _operation?.HasLimitedModelCoverage == true || _operation?.Status == CaptureMemoryOperationStatus.Partial;
             HasOperationFailure = _operation?.Status is CaptureMemoryOperationStatus.Failed or CaptureMemoryOperationStatus.Conflict or CaptureMemoryOperationStatus.Rejected;
             OperationStatusText = _operation == null ? string.Empty : Describe(_operation);
             PolicyStatusText = policy.Status switch
@@ -238,7 +274,9 @@ public sealed class CaptureMemorySettingsViewModel : ViewModelBase
             CaptureMemoryOperationStatus.Conflict => GetString("CaptureMemory_Settings_Conflict", "Capture Memory changed elsewhere. Its current state has been refreshed; try again."),
             CaptureMemoryOperationStatus.Rejected => GetString("CaptureMemory_Settings_Rejected", "This action is no longer available for the current Capture Memory state."),
             CaptureMemoryOperationStatus.Failed => GetString("CaptureMemory_Settings_OperationUnavailable", "Capture Memory could not complete this action. Try again."),
-            CaptureMemoryOperationStatus.Partial => GetString("CaptureMemory_Settings_ReanalyzePartial", "Available analysis was queued. Some models or capture sources were unavailable; results will appear as supported analysis finishes."),
+            CaptureMemoryOperationStatus.Partial => GetString(
+                "CaptureMemory_Settings_ReanalyzePartial",
+                "Capture analysis was queued. Results will appear as analysis finishes."),
             _ => operation.Request.Kind switch
             {
                 CaptureMemoryOperationKind.TurnOffAndErase => GetString("CaptureMemory_Settings_EraseSucceeded", "Capture Memory is off and its app-managed metadata was erased. Original captures were not deleted."),
@@ -254,7 +292,7 @@ public sealed class CaptureMemorySettingsViewModel : ViewModelBase
 
     private void NotifyState()
     {
-        foreach (string name in new[] { nameof(IsBusy), nameof(ShowProgress), nameof(CanChangeSetupOptions),
+        foreach (string name in new[] { nameof(IsBusy), nameof(ShowProgress),
             nameof(CanChangeAnalysisState), nameof(ShowAuthorizedControls), nameof(ShowEnableAction), nameof(ShowStopAction),
             nameof(ShowResumeAction), nameof(IsPreparingModels), nameof(IsSchedulingCaptures), nameof(HasOperationStatus),
             nameof(ReanalyzeAvailabilityText), nameof(ShowReanalyzeAvailability) }) { RaisePropertyChanged(name); }

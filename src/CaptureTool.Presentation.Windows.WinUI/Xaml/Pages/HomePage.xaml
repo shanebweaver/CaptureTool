@@ -300,12 +300,6 @@
                                 TextWrapping="WrapWholeWords" />
                         </StackPanel>
                         <StackPanel Spacing="8">
-                            <CheckBox
-                                x:Uid="CaptureMemory_IncludeExistingCaptures"
-                                AutomationProperties.AutomationId="Home_CaptureMemoryIncludeExistingCheckBox"
-                                Content="Include existing captures"
-                                IsChecked="{x:Bind ViewModel.CaptureMemory.IncludeExistingCaptures, Mode=TwoWay}"
-                                IsEnabled="{x:Bind ViewModel.CaptureMemory.CanChangeSetupOptions, Mode=OneWay}" />
                             <Button
                                 x:Uid="CaptureMemory_EnableButton"
                                 HorizontalAlignment="Left"
@@ -384,12 +378,6 @@
                         IsClosable="False"
                         IsOpen="{x:Bind ViewModel.CaptureMemory.ShowPartialResults, Mode=OneWay}"
                         Message="These are partial results while existing captures are prepared."
-                        Severity="Informational" />
-                    <InfoBar
-                        x:Uid="CaptureMemory_LimitedModelCoverage"
-                        IsClosable="False"
-                        IsOpen="{x:Bind ViewModel.CaptureMemory.HasLimitedModelCoverage, Mode=OneWay}"
-                        Message="Some AI models are unavailable on this device. Capture Memory will still analyze supported media and metadata."
                         Severity="Informational" />
                     <InfoBar
                         x:Uid="CaptureMemory_SourceMissing"

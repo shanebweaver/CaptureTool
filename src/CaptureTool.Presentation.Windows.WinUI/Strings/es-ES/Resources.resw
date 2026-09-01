@@ -1816,7 +1816,6 @@ SOFTWARE.
   <data name="CaptureMemory_Setup_Title.Text" xml:space="preserve"><value>Encuentra capturas por su contenido</value></data>
   <data name="CaptureMemory_Setup_Body.Text" xml:space="preserve"><value>Capture Tool puede usar modelos de IA en el dispositivo para crear metadatos privados administrados por la aplicación para la búsqueda. El análisis solo comienza cuando aceptas. Es posible que se descarguen algunos paquetes de modelos durante la configuración; el contenido de tus capturas no se carga.</value></data>
   <data name="CaptureMemory_Setup_Disclosure.Text" xml:space="preserve"><value>Crea propiedades multimedia, texto reconocido, transcripciones de voz y, cuando sea compatible, descripciones visuales. Puedes detener el análisis o borrar estos metadatos en Configuración.</value></data>
-  <data name="CaptureMemory_IncludeExistingCaptures.Content" xml:space="preserve"><value>Incluir capturas existentes</value></data>
   <data name="CaptureMemory_Setup_Preparing.Text" xml:space="preserve"><value>Preparando modelos de IA…</value></data>
   <data name="CaptureMemory_Setup_Failed.Text" xml:space="preserve"><value>No se pudo preparar Capture Memory. Inténtalo de nuevo.</value></data>
   <data name="CaptureMemory_SearchBox.PlaceholderText" xml:space="preserve"><value>Buscar en tus capturas</value></data>
@@ -1824,7 +1823,6 @@ SOFTWARE.
   <data name="CaptureMemory_Searching.Text" xml:space="preserve"><value>Buscando…</value></data>
   <data name="CaptureMemory_Indexing.Text" xml:space="preserve"><value>Preparando capturas existentes para la búsqueda…</value></data>
   <data name="CaptureMemory_PartialResults.Message" xml:space="preserve"><value>Estos son resultados parciales mientras se preparan las capturas existentes.</value></data>
-  <data name="CaptureMemory_LimitedModelCoverage.Message" xml:space="preserve"><value>Algunos modelos de IA no están disponibles en este dispositivo. Capture Memory seguirá analizando los medios y metadatos compatibles.</value></data>
   <data name="CaptureMemory_SourceMissing.Message" xml:space="preserve"><value>Un archivo de origen coincidente se movió o no está disponible. Puedes olvidar su historial administrado por la aplicación.</value></data>
   <data name="CaptureMemory_SearchFailed.Message" xml:space="preserve"><value>La búsqueda de Capture Memory falló.</value></data>
   <data name="CaptureMemory_CorruptProjection.Message" xml:space="preserve"><value>Los datos de búsqueda están dañados. Vuelve a crear los datos administrados por la aplicación.</value></data>
@@ -1891,12 +1889,17 @@ SOFTWARE.
   <data name="CaptureMemory_Settings_Updating" xml:space="preserve"><value>Actualizando Memoria de capturas…</value></data>
   <data name="CaptureMemory_Settings_RecoveryRequired" xml:space="preserve"><value>El cambio de seguridad está guardado, pero la limpieza de la aplicación está incompleta. Reinicia o vuelve a intentarlo cuando los archivos estén disponibles.</value></data>
   <data name="CaptureMemory_Settings_Conflict" xml:space="preserve"><value>Memoria de capturas cambió en otro lugar. Se actualizó su estado; vuelve a intentarlo.</value></data>
-  <data name="CaptureMemory_Settings_ReanalyzeIncomplete" xml:space="preserve"><value>Un modelo de IA necesario o una fuente no estaba disponible. No se cambió nada en las capturas originales; vuelve a intentarlo cuando esté disponible.</value></data>
   <data name="CaptureMemory_Settings_Rejected" xml:space="preserve"><value>Esta acción ya no está disponible para el estado actual de Memoria de capturas.</value></data>
-  <data name="CaptureMemory_Settings_ReanalyzeUnavailable" xml:space="preserve"><value>Memoria de capturas o un modelo de IA necesario no está disponible. Las capturas originales no cambiaron.</value></data>
   <data name="CaptureMemory_Settings_OperationUnavailable" xml:space="preserve"><value>Memoria de capturas no pudo completar esta acción. Vuelve a intentarlo.</value></data>
   <data name="CaptureMemory_Settings_Cancelled" xml:space="preserve"><value>Se canceló la operación. Los cambios de seguridad ya completados siguen vigentes.</value></data>
   <data name="CaptureMemory_Confirmation_CancelButton" xml:space="preserve"><value>Cancelar</value></data>
+  <data name="CaptureMemory_EnableDialog_Title" xml:space="preserve"><value>¿Activar Memoria de capturas?</value></data>
+  <data name="CaptureMemory_EnableDialog_Content" xml:space="preserve"><value>Elige si Capture Tool también debe analizar las capturas aptas que ya están en tu biblioteca o empezar solo con las capturas nuevas. El análisis permanece en este dispositivo y no modifica las capturas originales.</value></data>
+  <data name="CaptureMemory_EnableDialog_ExistingButton" xml:space="preserve"><value>Examinar capturas existentes</value></data>
+  <data name="CaptureMemory_EnableDialog_NewOnlyButton" xml:space="preserve"><value>Solo capturas nuevas</value></data>
+  <data name="CaptureMemory_Settings_AnalysisToggle.OnContent" xml:space="preserve"><value>Activado</value></data>
+  <data name="CaptureMemory_Settings_AnalysisToggle.OffContent" xml:space="preserve"><value>Desactivado</value></data>
+  <data name="CaptureMemory_Settings_AnalysisToggle.AutomationProperties.Name" xml:space="preserve"><value>Análisis de capturas</value></data>
   <data name="CaptureMemory_Confirmation_BackfillTitle" xml:space="preserve"><value>¿Analizar capturas existentes?</value></data>
   <data name="CaptureMemory_Confirmation_BackfillContent" xml:space="preserve"><value>Capture Tool leerá fuentes existentes aptas y usará los modelos de IA autorizados del dispositivo. Las capturas originales no se modifican.</value></data>
   <data name="CaptureMemory_Confirmation_BackfillButton" xml:space="preserve"><value>Analizar capturas existentes</value></data>
@@ -1965,7 +1968,6 @@ SOFTWARE.
   <data name="CaptureMemory_EnableButton.Content" xml:space="preserve"><value>Activar Capture Memory</value></data>
   <data name="CaptureMemory_Settings_EnablePreparing" xml:space="preserve"><value>Activando Capture Memory y preparando los modelos de IA del dispositivo…</value></data>
   <data name="CaptureMemory_Settings_EnableSucceeded" xml:space="preserve"><value>Capture Memory está activado para las capturas nuevas. Los modelos de IA del dispositivo están listos.</value></data>
-  <data name="CaptureMemory_Settings_EnableLimited" xml:space="preserve"><value>Capture Memory está activado. Algunos modelos de IA aún no están listos; las capturas compatibles se analizarán con las funciones disponibles en el dispositivo.</value></data>
   <data name="CaptureMemory_Settings_EnableExistingScheduling" xml:space="preserve"><value>Poniendo en cola las capturas existentes para su análisis…</value></data>
   <data name="CaptureMemory_Settings_EnableExistingIncomplete" xml:space="preserve"><value>Capture Memory está activado, pero no se pudieron poner en cola todas las capturas existentes. Vuelve a Inicio para continuar. Las capturas originales no se modificaron.</value></data>
   <data name="CaptureMemory_Settings_EnableExistingSucceeded" xml:space="preserve"><value>Las capturas existentes se pusieron en cola para su análisis. Los resultados aparecerán a medida que finalice el análisis.</value></data>
@@ -1973,6 +1975,6 @@ SOFTWARE.
   <data name="CaptureMemory_Settings_ReanalyzeBusy" xml:space="preserve"><value>Espere a que termine la acción actual de Memory o cancélela.</value></data>
   <data name="CaptureMemory_Settings_ReanalyzeOff" xml:space="preserve"><value>Active Capture Memory para volver a analizar las capturas.</value></data>
   <data name="CaptureMemory_Settings_ReanalyzeExcluded" xml:space="preserve"><value>No hay capturas aptas. Las capturas excluidas y olvidadas siguen excluidas del nuevo análisis.</value></data>
-  <data name="CaptureMemory_Settings_ReanalyzeEmpty" xml:space="preserve"><value>Aún no hay capturas registradas para el análisis. Cree una captura nueva o active Memory con Incluir capturas existentes.</value></data>
-  <data name="CaptureMemory_Settings_ReanalyzePartial" xml:space="preserve"><value>Se puso en cola el análisis disponible. Algunos modelos o archivos de captura no estaban disponibles; los resultados aparecerán a medida que termine el análisis compatible.</value></data>
+  <data name="CaptureMemory_Settings_ReanalyzeEmpty" xml:space="preserve"><value>Aún no hay capturas registradas para el análisis. Cree una captura nueva para iniciar el análisis.</value></data>
+  <data name="CaptureMemory_Settings_ReanalyzePartial" xml:space="preserve"><value>El análisis de capturas se puso en cola. Los resultados aparecerán a medida que finalice el análisis.</value></data>
 </root>

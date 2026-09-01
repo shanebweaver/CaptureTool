@@ -14,6 +14,50 @@ internal sealed class CaptureMemoryConfirmationDialogService :
 
     public XamlRoot? XamlRoot { get; set; }
 
+    public async ValueTask<CaptureMemoryEnableScope> ChooseEnableScopeAsync(
+        CancellationToken cancellationToken = default)
+    {
+        if (XamlRoot == null || cancellationToken.IsCancellationRequested)
+        {
+            return CaptureMemoryEnableScope.Cancelled;
+        }
+
+        ContentDialog dialog = new()
+        {
+            XamlRoot = XamlRoot,
+            Title = GetString(
+                "CaptureMemory_EnableDialog_Title",
+                "Turn on Capture Memory?"),
+            Content = GetString(
+                "CaptureMemory_EnableDialog_Content",
+                "Choose whether Capture Tool should also analyze eligible captures already in your library or start with new captures only. Analysis stays on this device and original captures are not modified."),
+            PrimaryButtonText = GetString(
+                "CaptureMemory_EnableDialog_ExistingButton",
+                "Scan existing captures"),
+            SecondaryButtonText = GetString(
+                "CaptureMemory_EnableDialog_NewOnlyButton",
+                "New captures only"),
+            CloseButtonText = GetString(
+                "CaptureMemory_Confirmation_CancelButton",
+                "Cancel"),
+            DefaultButton = ContentDialogButton.Secondary,
+        };
+        AutomationProperties.SetAutomationId(dialog, "CaptureMemoryEnableDialog");
+
+        ContentDialogResult result = await dialog.ShowAsync();
+        if (cancellationToken.IsCancellationRequested)
+        {
+            return CaptureMemoryEnableScope.Cancelled;
+        }
+
+        return result switch
+        {
+            ContentDialogResult.Primary => CaptureMemoryEnableScope.IncludeExistingCaptures,
+            ContentDialogResult.Secondary => CaptureMemoryEnableScope.NewCapturesOnly,
+            _ => CaptureMemoryEnableScope.Cancelled,
+        };
+    }
+
     public async ValueTask<CaptureAnalysisConfirmationDecision> ConfirmAsync(
         CaptureAnalysisSettingsConfirmationRequest request,
         CancellationToken cancellationToken = default)

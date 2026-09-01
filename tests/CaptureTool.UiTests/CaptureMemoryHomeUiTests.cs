@@ -173,7 +173,7 @@ public sealed class CaptureMemoryHomeUiTests
             Expand(WaitForElement(
                 app.ProcessId,
                 automation,
-                "Settings_CaptureMemoryTroubleshootingExpander"));
+                "Settings_CaptureMemoryExpander"));
 
             AutomationElement reanalyze = WaitForElement(
                 app.ProcessId,
@@ -187,8 +187,8 @@ public sealed class CaptureMemoryHomeUiTests
                 automation,
                 "MainWindow_BackgroundActivityButton");
             Assert.IsGreaterThanOrEqualTo(
-                activityButton.BoundingRectangle.Width,
                 280,
+                activityButton.BoundingRectangle.Width,
                 "The activity button should stretch across its compact card instead of shrinking around its text.");
             WaitForMarker(temporaryDirectory, "capture-memory-reanalyzed.marker");
             WaitForElement(app.ProcessId, automation, "Settings_CaptureMemoryOperationStatus");
@@ -235,13 +235,9 @@ public sealed class CaptureMemoryHomeUiTests
                 InteractionTimeout,
                 "Capture Memory to report that analysis is off");
 
-            Assert.IsFalse(WaitForElement(app.ProcessId, automation,
-                "Settings_CaptureMemoryIncludeExistingCheckBox").AsCheckBox().IsChecked,
-                "Including existing captures must reset after the previous setup.");
-            FocusAndClick(WaitForElement(
-                app.ProcessId,
-                automation,
-                "Settings_CaptureMemoryEnableButton"));
+            Toggle(analysisToggle);
+            WaitForElement(app.ProcessId, automation, "CaptureMemoryEnableDialog");
+            WaitForElementByName(app.ProcessId, automation, "New captures only").Click();
             WaitFor(
                 () => FindElement(app.ProcessId, automation, "Settings_CaptureMemoryPolicyStatus")?
                     .Name.Contains("on", StringComparison.OrdinalIgnoreCase) == true
@@ -341,7 +337,7 @@ public sealed class CaptureMemoryHomeUiTests
             WaitForElement(app.ProcessId, automation, "CaptureMemoryConfirmationDialog");
             WaitForElementByName(app.ProcessId, automation, "Delete analyzed data").Click();
             AutomationElement expander = WaitForElement(
-                app.ProcessId, automation, "Settings_CaptureMemoryTroubleshootingExpander");
+                app.ProcessId, automation, "Settings_CaptureMemoryExpander");
             Expand(expander);
             AutomationElement reanalyze = WaitForElement(
                 app.ProcessId, automation, "Settings_CaptureMemoryReanalyzeButton");
@@ -376,13 +372,18 @@ public sealed class CaptureMemoryHomeUiTests
 
     private static void EnableWithExistingCaptures(int processId, UIA3Automation automation, string page)
     {
-        CheckBox includeExisting = WaitForElement(processId, automation,
-            $"{page}_CaptureMemoryIncludeExistingCheckBox").AsCheckBox();
-        Assert.IsFalse(includeExisting.IsChecked,
-            "Existing captures must not be included without an explicit choice.");
-        includeExisting.IsChecked = true;
-        Assert.IsTrue(includeExisting.IsChecked);
-        FocusAndClick(WaitForElement(processId, automation, $"{page}_CaptureMemoryEnableButton"));
+        if (page == "Settings")
+        {
+            Expand(WaitForElement(processId, automation, "Settings_CaptureMemoryExpander"));
+            Toggle(WaitForElement(processId, automation, "Settings_CaptureMemoryAnalyzeNewToggle"));
+        }
+        else
+        {
+            FocusAndClick(WaitForElement(processId, automation, "Home_CaptureMemoryEnableButton"));
+        }
+
+        WaitForElement(processId, automation, "CaptureMemoryEnableDialog");
+        WaitForElementByName(processId, automation, "Scan existing captures").Click();
     }
 
     private static void FocusAndClick(AutomationElement element)

@@ -2099,7 +2099,6 @@ SOFTWARE.
   <data name="CaptureMemory_Setup_Title.Text" xml:space="preserve"><value>Find captures by what is in them</value></data>
   <data name="CaptureMemory_Setup_Body.Text" xml:space="preserve"><value>Capture Tool can use on-device AI models to create private, app-managed metadata for search. Analysis starts only after you opt in. Some model packages may be downloaded during setup; your capture content is not uploaded.</value></data>
   <data name="CaptureMemory_Setup_Disclosure.Text" xml:space="preserve"><value>Creates media properties, recognized text, speech transcripts, and, when supported, visual descriptions. You can stop analysis or erase this metadata at any time in Settings.</value></data>
-  <data name="CaptureMemory_IncludeExistingCaptures.Content" xml:space="preserve"><value>Include existing captures</value></data>
   <data name="CaptureMemory_Setup_Preparing.Text" xml:space="preserve"><value>Preparing AI models…</value></data>
   <data name="CaptureMemory_Setup_Failed.Text" xml:space="preserve"><value>Capture Memory could not be prepared. Try again.</value></data>
   <data name="CaptureMemory_SearchBox.PlaceholderText" xml:space="preserve"><value>Search your captures</value></data>
@@ -2107,7 +2106,6 @@ SOFTWARE.
   <data name="CaptureMemory_Searching.Text" xml:space="preserve"><value>Searching…</value></data>
   <data name="CaptureMemory_Indexing.Text" xml:space="preserve"><value>Preparing existing captures for search…</value></data>
   <data name="CaptureMemory_PartialResults.Message" xml:space="preserve"><value>These are partial results while existing captures are prepared.</value></data>
-  <data name="CaptureMemory_LimitedModelCoverage.Message" xml:space="preserve"><value>Some AI models are unavailable on this device. Capture Memory will still analyze supported media and metadata.</value></data>
   <data name="CaptureMemory_SourceMissing.Message" xml:space="preserve"><value>A matching source file has moved or is unavailable. You can forget its app-managed history.</value></data>
   <data name="CaptureMemory_SearchFailed.Message" xml:space="preserve"><value>Capture Memory search failed.</value></data>
   <data name="CaptureMemory_CorruptProjection.Message" xml:space="preserve"><value>The search data is damaged. Rebuild the app-managed search data to continue.</value></data>
@@ -2175,12 +2173,17 @@ SOFTWARE.
   <data name="CaptureMemory_Settings_Updating" xml:space="preserve"><value>Updating Capture Memory…</value></data>
   <data name="CaptureMemory_Settings_RecoveryRequired" xml:space="preserve"><value>The safety change is saved, but app-managed cleanup is incomplete. Restart or retry after files are available.</value></data>
   <data name="CaptureMemory_Settings_Conflict" xml:space="preserve"><value>Capture Memory changed elsewhere. Its current state has been refreshed; try again.</value></data>
-  <data name="CaptureMemory_Settings_ReanalyzeIncomplete" xml:space="preserve"><value>A required AI model or capture source was unavailable. Nothing was changed in the original captures; retry when it is available.</value></data>
   <data name="CaptureMemory_Settings_Rejected" xml:space="preserve"><value>This action is no longer available for the current Capture Memory state.</value></data>
-  <data name="CaptureMemory_Settings_ReanalyzeUnavailable" xml:space="preserve"><value>Capture Memory or a required AI model is unavailable. Original captures were not changed.</value></data>
   <data name="CaptureMemory_Settings_OperationUnavailable" xml:space="preserve"><value>Capture Memory could not complete this action. Try again.</value></data>
   <data name="CaptureMemory_Settings_Cancelled" xml:space="preserve"><value>The operation was cancelled. Completed safety changes remain in effect.</value></data>
   <data name="CaptureMemory_Confirmation_CancelButton" xml:space="preserve"><value>Cancel</value></data>
+  <data name="CaptureMemory_EnableDialog_Title" xml:space="preserve"><value>Turn on Capture Memory?</value></data>
+  <data name="CaptureMemory_EnableDialog_Content" xml:space="preserve"><value>Choose whether Capture Tool should also analyze eligible captures already in your library or start with new captures only. Analysis stays on this device and original captures are not modified.</value></data>
+  <data name="CaptureMemory_EnableDialog_ExistingButton" xml:space="preserve"><value>Scan existing captures</value></data>
+  <data name="CaptureMemory_EnableDialog_NewOnlyButton" xml:space="preserve"><value>New captures only</value></data>
+  <data name="CaptureMemory_Settings_AnalysisToggle.OnContent" xml:space="preserve"><value>On</value></data>
+  <data name="CaptureMemory_Settings_AnalysisToggle.OffContent" xml:space="preserve"><value>Off</value></data>
+  <data name="CaptureMemory_Settings_AnalysisToggle.AutomationProperties.Name" xml:space="preserve"><value>Capture analysis</value></data>
   <data name="CaptureMemory_Confirmation_BackfillTitle" xml:space="preserve"><value>Analyze existing captures?</value></data>
   <data name="CaptureMemory_Confirmation_BackfillContent" xml:space="preserve"><value>Capture Tool will read eligible existing capture sources and use the authorized on-device AI models. Original captures are not modified.</value></data>
   <data name="CaptureMemory_Confirmation_BackfillButton" xml:space="preserve"><value>Analyze existing captures</value></data>
@@ -2249,7 +2252,6 @@ SOFTWARE.
   <data name="CaptureMemory_EnableButton.Content" xml:space="preserve"><value>Turn on Capture Memory</value></data>
   <data name="CaptureMemory_Settings_EnablePreparing" xml:space="preserve"><value>Turning on Capture Memory and preparing on-device AI models…</value></data>
   <data name="CaptureMemory_Settings_EnableSucceeded" xml:space="preserve"><value>Capture Memory is on for new captures. On-device AI models are ready.</value></data>
-  <data name="CaptureMemory_Settings_EnableLimited" xml:space="preserve"><value>Capture Memory is on. Some AI models are not ready yet, so supported captures will be analyzed with available on-device capabilities.</value></data>
   <data name="CaptureMemory_Settings_EnableExistingScheduling" xml:space="preserve"><value>Queuing existing captures for analysis…</value></data>
   <data name="CaptureMemory_Settings_EnableExistingIncomplete" xml:space="preserve"><value>Capture Memory is on, but not all existing captures could be queued. Return to Home to resume. Original captures were not modified.</value></data>
   <data name="CaptureMemory_Settings_EnableExistingSucceeded" xml:space="preserve"><value>Existing captures were queued for analysis. Results will appear as analysis finishes.</value></data>
@@ -2257,6 +2259,6 @@ SOFTWARE.
   <data name="CaptureMemory_Settings_ReanalyzeBusy" xml:space="preserve"><value>Wait for the current Memory action to finish, or cancel it.</value></data>
   <data name="CaptureMemory_Settings_ReanalyzeOff" xml:space="preserve"><value>Turn on Capture Memory to reanalyze captures.</value></data>
   <data name="CaptureMemory_Settings_ReanalyzeExcluded" xml:space="preserve"><value>No eligible captures. Excluded and forgotten captures stay excluded from reanalysis.</value></data>
-  <data name="CaptureMemory_Settings_ReanalyzeEmpty" xml:space="preserve"><value>No captures are enrolled yet. Take a new capture, or enable Memory with Include existing captures.</value></data>
-  <data name="CaptureMemory_Settings_ReanalyzePartial" xml:space="preserve"><value>Available analysis was queued. Some models or capture sources were unavailable; results will appear as supported analysis finishes.</value></data>
+  <data name="CaptureMemory_Settings_ReanalyzeEmpty" xml:space="preserve"><value>No captures are enrolled yet. Take a new capture to begin analysis.</value></data>
+  <data name="CaptureMemory_Settings_ReanalyzePartial" xml:space="preserve"><value>Capture analysis was queued. Results will appear as analysis finishes.</value></data>
 </root>

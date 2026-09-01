@@ -200,11 +200,16 @@ public sealed class CaptureMemoryHomeViewModelTests
         var search = new Mock<ICaptureMemorySearchService>();
         search.Setup(s => s.SearchAsync(It.IsAny<CaptureMemorySearchRequest>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync([]);
+        var confirmation = new Mock<ICaptureAnalysisSettingsConfirmationDialogService>();
+        confirmation.Setup(s => s.ChooseEnableScopeAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(includeExisting
+                ? CaptureMemoryEnableScope.IncludeExistingCaptures
+                : CaptureMemoryEnableScope.NewCapturesOnly);
         using var vm = new CaptureMemoryHomeViewModel(new EnabledCaptureMemoryFeatureAvailability(),
-            search.Object, CreateAvailableResolver(), workflow: workflow);
+            search.Object, CreateAvailableResolver(), workflow: workflow,
+            confirmationService: confirmation.Object);
         await vm.LoadAsync(CancellationToken.None);
         vm.SearchQuery = "recognized words";
-        vm.IncludeExistingCaptures = includeExisting;
         await vm.EnableCaptureMemoryCommand.ExecuteAsync(null);
         await vm.SearchCompletion;
         Assert.AreEqual(includeExisting, workflow.Requests.Single().IncludeExistingCaptures);

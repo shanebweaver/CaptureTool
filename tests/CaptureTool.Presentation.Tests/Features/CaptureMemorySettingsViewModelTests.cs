@@ -12,7 +12,7 @@ public sealed class CaptureMemorySettingsViewModelTests
     [TestMethod]
     [DataRow(false)]
     [DataRow(true)]
-    public async Task Enable_ShouldDelegateCheckboxToAppWorkflow(bool includeExisting)
+    public async Task Enable_ShouldDelegateChosenScopeToAppWorkflow(bool includeExisting)
     {
         var workflow = new TestCaptureMemoryWorkflow { Current = new(TestCaptureMemoryWorkflow.Policy(false), null) };
         workflow.Execute = request =>
@@ -22,16 +22,36 @@ public sealed class CaptureMemorySettingsViewModelTests
             workflow.Publish();
             return Task.FromResult(result);
         };
-        using var vm = Create(workflow);
+        var confirmation = new Mock<ICaptureAnalysisSettingsConfirmationDialogService>();
+        confirmation.Setup(s => s.ChooseEnableScopeAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(includeExisting
+                ? CaptureMemoryEnableScope.IncludeExistingCaptures
+                : CaptureMemoryEnableScope.NewCapturesOnly);
+        using var vm = Create(workflow, confirmation.Object);
         await vm.LoadAsync(CancellationToken.None);
         Assert.IsTrue(vm.ShowEnableAction);
-        vm.IncludeExistingCaptures = includeExisting;
         await vm.EnableCaptureMemoryCommand.ExecuteAsync(null);
         Assert.AreEqual(includeExisting, workflow.Requests.Single().IncludeExistingCaptures);
         Assert.IsFalse(vm.IsBusy);
         Assert.IsTrue(vm.IsAuthorized);
         Assert.IsFalse(vm.ShowEnableAction);
-        Assert.IsFalse(vm.IncludeExistingCaptures);
+    }
+
+    [TestMethod]
+    public async Task EnableToggle_CancelledScopeShouldRestoreOffState()
+    {
+        var workflow = new TestCaptureMemoryWorkflow { Current = new(TestCaptureMemoryWorkflow.Policy(false), null) };
+        var confirmation = new Mock<ICaptureAnalysisSettingsConfirmationDialogService>();
+        confirmation.Setup(s => s.ChooseEnableScopeAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(CaptureMemoryEnableScope.Cancelled);
+        using var vm = Create(workflow, confirmation.Object);
+        await vm.LoadAsync(CancellationToken.None);
+
+        Assert.IsTrue(vm.CanChangeAnalysisState);
+        await vm.SetAnalyzingNewCapturesAsync(true);
+
+        Assert.IsEmpty(workflow.Requests);
+        Assert.IsFalse(vm.IsAnalyzingNewCaptures);
     }
 
     [TestMethod]
@@ -159,6 +179,12 @@ public sealed class CaptureMemorySettingsViewModelTests
         Assert.AreEqual(failure, vm.HasOperationFailure);
         Assert.AreEqual(recovery, vm.NeedsRecovery);
         Assert.IsTrue(vm.HasOperationStatus);
+        if (status == CaptureMemoryOperationStatus.Partial)
+        {
+            Assert.AreEqual(
+                "Capture analysis was queued. Results will appear as analysis finishes.",
+                vm.OperationStatusText);
+        }
         Assert.IsTrue(vm.ReanalyzeCapturesCommand.CanExecute(null));
     }
 

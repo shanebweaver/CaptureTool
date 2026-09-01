@@ -1816,7 +1816,6 @@ SOFTWARE.
   <data name="CaptureMemory_Setup_Title.Text" xml:space="preserve"><value>Находите снимки по их содержимому</value></data>
   <data name="CaptureMemory_Setup_Body.Text" xml:space="preserve"><value>Capture Tool может использовать модели ИИ на устройстве для создания закрытых метаданных поиска, которыми управляет приложение. Анализ начинается только после вашего согласия. Во время настройки могут быть скачаны некоторые пакеты моделей; содержимое ваших снимков не отправляется.</value></data>
   <data name="CaptureMemory_Setup_Disclosure.Text" xml:space="preserve"><value>Создаются свойства медиафайлов, распознанный текст, расшифровки речи и, если поддерживается, визуальные описания. Анализ можно остановить, а метаданные удалить в параметрах.</value></data>
-  <data name="CaptureMemory_IncludeExistingCaptures.Content" xml:space="preserve"><value>Включить существующие снимки</value></data>
   <data name="CaptureMemory_Setup_Preparing.Text" xml:space="preserve"><value>Подготовка моделей ИИ…</value></data>
   <data name="CaptureMemory_Setup_Failed.Text" xml:space="preserve"><value>Не удалось подготовить Capture Memory. Повторите попытку.</value></data>
   <data name="CaptureMemory_SearchBox.PlaceholderText" xml:space="preserve"><value>Поиск по снимкам</value></data>
@@ -1824,7 +1823,6 @@ SOFTWARE.
   <data name="CaptureMemory_Searching.Text" xml:space="preserve"><value>Поиск…</value></data>
   <data name="CaptureMemory_Indexing.Text" xml:space="preserve"><value>Подготовка существующих снимков к поиску…</value></data>
   <data name="CaptureMemory_PartialResults.Message" xml:space="preserve"><value>Это частичные результаты, пока существующие снимки подготавливаются.</value></data>
-  <data name="CaptureMemory_LimitedModelCoverage.Message" xml:space="preserve"><value>Некоторые модели ИИ недоступны на этом устройстве. Capture Memory продолжит анализировать поддерживаемые медиафайлы и метаданные.</value></data>
   <data name="CaptureMemory_SourceMissing.Message" xml:space="preserve"><value>Подходящий исходный файл перемещен или недоступен. Можно забыть его историю, которой управляет приложение.</value></data>
   <data name="CaptureMemory_SearchFailed.Message" xml:space="preserve"><value>Сбой поиска Capture Memory.</value></data>
   <data name="CaptureMemory_CorruptProjection.Message" xml:space="preserve"><value>Данные поиска повреждены. Перестройте данные поиска, которыми управляет приложение.</value></data>
@@ -1891,12 +1889,17 @@ SOFTWARE.
   <data name="CaptureMemory_Settings_Updating" xml:space="preserve"><value>Обновление памяти снимков…</value></data>
   <data name="CaptureMemory_Settings_RecoveryRequired" xml:space="preserve"><value>Защитное изменение сохранено, но очистка данных приложения не завершена. Перезапустите приложение или повторите попытку, когда файлы станут доступны.</value></data>
   <data name="CaptureMemory_Settings_Conflict" xml:space="preserve"><value>Память снимков была изменена в другом месте. Текущее состояние обновлено; повторите попытку.</value></data>
-  <data name="CaptureMemory_Settings_ReanalyzeIncomplete" xml:space="preserve"><value>Необходимая модель ИИ или источник недоступны. Исходные снимки не изменены; повторите попытку, когда ресурс станет доступен.</value></data>
   <data name="CaptureMemory_Settings_Rejected" xml:space="preserve"><value>Это действие больше недоступно в текущем состоянии памяти снимков.</value></data>
-  <data name="CaptureMemory_Settings_ReanalyzeUnavailable" xml:space="preserve"><value>Память снимков или необходимая модель ИИ недоступны. Исходные снимки не изменены.</value></data>
   <data name="CaptureMemory_Settings_OperationUnavailable" xml:space="preserve"><value>Память снимков не смогла завершить это действие. Повторите попытку.</value></data>
   <data name="CaptureMemory_Settings_Cancelled" xml:space="preserve"><value>Операция отменена. Уже выполненные защитные изменения остаются в силе.</value></data>
   <data name="CaptureMemory_Confirmation_CancelButton" xml:space="preserve"><value>Отмена</value></data>
+  <data name="CaptureMemory_EnableDialog_Title" xml:space="preserve"><value>Включить память захватов?</value></data>
+  <data name="CaptureMemory_EnableDialog_Content" xml:space="preserve"><value>Выберите, должна ли Capture Tool также анализировать подходящие существующие захваты в библиотеке или начать только с новых. Анализ выполняется на этом устройстве и не изменяет оригиналы.</value></data>
+  <data name="CaptureMemory_EnableDialog_ExistingButton" xml:space="preserve"><value>Сканировать существующие захваты</value></data>
+  <data name="CaptureMemory_EnableDialog_NewOnlyButton" xml:space="preserve"><value>Только новые захваты</value></data>
+  <data name="CaptureMemory_Settings_AnalysisToggle.OnContent" xml:space="preserve"><value>Вкл.</value></data>
+  <data name="CaptureMemory_Settings_AnalysisToggle.OffContent" xml:space="preserve"><value>Выкл.</value></data>
+  <data name="CaptureMemory_Settings_AnalysisToggle.AutomationProperties.Name" xml:space="preserve"><value>Анализ захватов</value></data>
   <data name="CaptureMemory_Confirmation_BackfillTitle" xml:space="preserve"><value>Проанализировать существующие снимки?</value></data>
   <data name="CaptureMemory_Confirmation_BackfillContent" xml:space="preserve"><value>Capture Tool прочитает подходящие источники существующих снимков и использует разрешённые локальные модели ИИ. Оригиналы не изменяются.</value></data>
   <data name="CaptureMemory_Confirmation_BackfillButton" xml:space="preserve"><value>Анализировать существующие снимки</value></data>
@@ -1965,7 +1968,6 @@ SOFTWARE.
   <data name="CaptureMemory_EnableButton.Content" xml:space="preserve"><value>Включить Capture Memory</value></data>
   <data name="CaptureMemory_Settings_EnablePreparing" xml:space="preserve"><value>Включение Capture Memory и подготовка локальных моделей ИИ…</value></data>
   <data name="CaptureMemory_Settings_EnableSucceeded" xml:space="preserve"><value>Capture Memory включён для новых снимков. Локальные модели ИИ готовы.</value></data>
-  <data name="CaptureMemory_Settings_EnableLimited" xml:space="preserve"><value>Capture Memory включён. Некоторые модели ИИ ещё не готовы; поддерживаемые снимки будут анализироваться с помощью доступных локальных функций.</value></data>
   <data name="CaptureMemory_Settings_EnableExistingScheduling" xml:space="preserve"><value>Добавление существующих снимков в очередь на анализ…</value></data>
   <data name="CaptureMemory_Settings_EnableExistingIncomplete" xml:space="preserve"><value>Capture Memory включён, но не все существующие снимки удалось добавить в очередь. Вернитесь на главную страницу, чтобы продолжить. Исходные снимки не были изменены.</value></data>
   <data name="CaptureMemory_Settings_EnableExistingSucceeded" xml:space="preserve"><value>Существующие снимки добавлены в очередь на анализ. Результаты будут появляться по мере завершения анализа.</value></data>
@@ -1973,6 +1975,6 @@ SOFTWARE.
   <data name="CaptureMemory_Settings_ReanalyzeBusy" xml:space="preserve"><value>Дождитесь завершения текущего действия Memory или отмените его.</value></data>
   <data name="CaptureMemory_Settings_ReanalyzeOff" xml:space="preserve"><value>Включите Capture Memory, чтобы повторно анализировать записи.</value></data>
   <data name="CaptureMemory_Settings_ReanalyzeExcluded" xml:space="preserve"><value>Нет подходящих записей. Исключённые и забытые записи не участвуют в повторном анализе.</value></data>
-  <data name="CaptureMemory_Settings_ReanalyzeEmpty" xml:space="preserve"><value>Пока нет записей, включённых в анализ. Создайте новую запись или включите Memory с параметром «Включить существующие записи».</value></data>
-  <data name="CaptureMemory_Settings_ReanalyzePartial" xml:space="preserve"><value>Доступный анализ поставлен в очередь. Некоторые модели или исходные файлы недоступны; результаты появятся по мере завершения поддерживаемого анализа.</value></data>
+  <data name="CaptureMemory_Settings_ReanalyzeEmpty" xml:space="preserve"><value>Пока нет захватов, включённых в анализ. Создайте новый захват, чтобы начать анализ.</value></data>
+  <data name="CaptureMemory_Settings_ReanalyzePartial" xml:space="preserve"><value>Анализ снимков поставлен в очередь. Результаты появятся по мере завершения анализа.</value></data>
 </root>

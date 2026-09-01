@@ -78,8 +78,6 @@ public sealed class CaptureMemoryHomeViewModel : ViewModelBase
 
     public IAsyncRelayCommand EnableCaptureMemoryCommand { get; }
 
-    public bool IncludeExistingCaptures { get; set => Set(ref field, value); }
-
     public bool CanChangeSetupOptions => IsFeatureEnabled && !_workflowBusy && !_starting;
 
     public IRelayCommand ClearSearchCommand { get; }
@@ -185,8 +183,6 @@ public sealed class CaptureMemoryHomeViewModel : ViewModelBase
 
     public double IndexProgress { get; private set => Set(ref field, value); }
 
-    public bool HasLimitedModelCoverage { get; private set => Set(ref field, value); }
-
     public bool HasSetupFailure
     {
         get;
@@ -273,8 +269,24 @@ public sealed class CaptureMemoryHomeViewModel : ViewModelBase
 
     private async Task EnableAsync()
     {
-        if (_workflow == null) { return; }
-        bool includeExisting = IncludeExistingCaptures;
+        if (_workflow == null || _confirmationService == null) { return; }
+        CaptureMemoryEnableScope scope;
+        try
+        {
+            scope = await _confirmationService.ChooseEnableScopeAsync(CancellationToken.None);
+        }
+        catch
+        {
+            HasSetupFailure = true;
+            return;
+        }
+
+        if (scope is not (CaptureMemoryEnableScope.NewCapturesOnly or CaptureMemoryEnableScope.IncludeExistingCaptures))
+        {
+            return;
+        }
+
+        bool includeExisting = scope == CaptureMemoryEnableScope.IncludeExistingCaptures;
         _starting = true;
         IsPreparing = true;
         HasSetupFailure = false;
@@ -283,7 +295,6 @@ public sealed class CaptureMemoryHomeViewModel : ViewModelBase
         {
             CaptureMemoryOperation result = await _workflow.ExecuteAsync(
                 new(CaptureMemoryOperationKind.Enable, includeExisting), CancellationToken.None);
-            if (includeExisting && result.IsSchedulingComplete) { IncludeExistingCaptures = false; }
             HasSetupFailure = result.Status is not (CaptureMemoryOperationStatus.Succeeded or CaptureMemoryOperationStatus.Partial);
         }
         catch { HasSetupFailure = true; }
@@ -315,7 +326,6 @@ public sealed class CaptureMemoryHomeViewModel : ViewModelBase
             PreparationProgress = IndexProgress = snapshot.FractionComplete;
             if (operation?.Request.Kind == CaptureMemoryOperationKind.Enable)
             {
-                HasLimitedModelCoverage = operation.HasLimitedModelCoverage;
                 HasSetupFailure = operation.Status is CaptureMemoryOperationStatus.Failed or CaptureMemoryOperationStatus.Conflict or CaptureMemoryOperationStatus.Rejected;
             }
             NotifyWorkflowState();

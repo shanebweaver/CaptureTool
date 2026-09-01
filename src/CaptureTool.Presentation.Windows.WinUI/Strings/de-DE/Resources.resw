@@ -1810,7 +1810,6 @@ SOFTWARE.
   <data name="CaptureMemory_Setup_Title.Text" xml:space="preserve"><value>Aufnahmen nach Inhalt finden</value></data>
   <data name="CaptureMemory_Setup_Body.Text" xml:space="preserve"><value>Capture Tool kann KI-Modelle auf dem Gerät verwenden, um private, von der App verwaltete Metadaten für die Suche zu erstellen. Die Analyse beginnt erst nach Ihrer Zustimmung. Einige Modellpakete werden möglicherweise während der Einrichtung heruntergeladen; Ihre Aufnahmeinhalte werden nicht hochgeladen.</value></data>
   <data name="CaptureMemory_Setup_Disclosure.Text" xml:space="preserve"><value>Erstellt Medieneigenschaften, erkannten Text, Sprachtranskripte und – falls unterstützt – visuelle Beschreibungen. Sie können die Analyse jederzeit in den Einstellungen beenden oder diese Metadaten löschen.</value></data>
-  <data name="CaptureMemory_IncludeExistingCaptures.Content" xml:space="preserve"><value>Vorhandene Aufnahmen einbeziehen</value></data>
   <data name="CaptureMemory_Setup_Preparing.Text" xml:space="preserve"><value>KI-Modelle werden vorbereitet…</value></data>
   <data name="CaptureMemory_Setup_Failed.Text" xml:space="preserve"><value>Capture Memory konnte nicht vorbereitet werden. Versuchen Sie es erneut.</value></data>
   <data name="CaptureMemory_SearchBox.PlaceholderText" xml:space="preserve"><value>Aufnahmen durchsuchen</value></data>
@@ -1818,7 +1817,6 @@ SOFTWARE.
   <data name="CaptureMemory_Searching.Text" xml:space="preserve"><value>Suche läuft…</value></data>
   <data name="CaptureMemory_Indexing.Text" xml:space="preserve"><value>Vorhandene Aufnahmen werden für die Suche vorbereitet…</value></data>
   <data name="CaptureMemory_PartialResults.Message" xml:space="preserve"><value>Dies sind Teilergebnisse, während vorhandene Aufnahmen vorbereitet werden.</value></data>
-  <data name="CaptureMemory_LimitedModelCoverage.Message" xml:space="preserve"><value>Einige KI-Modelle sind auf diesem Gerät nicht verfügbar. Capture Memory analysiert weiterhin unterstützte Medien und Metadaten.</value></data>
   <data name="CaptureMemory_SourceMissing.Message" xml:space="preserve"><value>Eine passende Quelldatei wurde verschoben oder ist nicht verfügbar. Sie können den von der App verwalteten Verlauf vergessen.</value></data>
   <data name="CaptureMemory_SearchFailed.Message" xml:space="preserve"><value>Die Capture-Memory-Suche ist fehlgeschlagen.</value></data>
   <data name="CaptureMemory_CorruptProjection.Message" xml:space="preserve"><value>Die Suchdaten sind beschädigt. Erstellen Sie die von der App verwalteten Suchdaten neu.</value></data>
@@ -1885,12 +1883,17 @@ SOFTWARE.
   <data name="CaptureMemory_Settings_Updating" xml:space="preserve"><value>Capture Memory wird aktualisiert…</value></data>
   <data name="CaptureMemory_Settings_RecoveryRequired" xml:space="preserve"><value>Die Sicherheitsänderung ist gespeichert, aber die appverwaltete Bereinigung ist unvollständig. Starten Sie neu oder versuchen Sie es erneut, wenn die Dateien verfügbar sind.</value></data>
   <data name="CaptureMemory_Settings_Conflict" xml:space="preserve"><value>Capture Memory wurde an anderer Stelle geändert. Der aktuelle Status wurde aktualisiert; versuchen Sie es erneut.</value></data>
-  <data name="CaptureMemory_Settings_ReanalyzeIncomplete" xml:space="preserve"><value>Ein erforderliches KI-Modell oder eine Aufnahmequelle war nicht verfügbar. Die Originalaufnahmen wurden nicht verändert; versuchen Sie es erneut, wenn sie verfügbar sind.</value></data>
   <data name="CaptureMemory_Settings_Rejected" xml:space="preserve"><value>Diese Aktion ist für den aktuellen Capture Memory-Status nicht mehr verfügbar.</value></data>
-  <data name="CaptureMemory_Settings_ReanalyzeUnavailable" xml:space="preserve"><value>Capture Memory oder ein erforderliches KI-Modell ist nicht verfügbar. Originalaufnahmen wurden nicht verändert.</value></data>
   <data name="CaptureMemory_Settings_OperationUnavailable" xml:space="preserve"><value>Capture Memory konnte diese Aktion nicht abschließen. Versuchen Sie es erneut.</value></data>
   <data name="CaptureMemory_Settings_Cancelled" xml:space="preserve"><value>Der Vorgang wurde abgebrochen. Bereits abgeschlossene Sicherheitsänderungen bleiben wirksam.</value></data>
   <data name="CaptureMemory_Confirmation_CancelButton" xml:space="preserve"><value>Abbrechen</value></data>
+  <data name="CaptureMemory_EnableDialog_Title" xml:space="preserve"><value>Capture Memory aktivieren?</value></data>
+  <data name="CaptureMemory_EnableDialog_Content" xml:space="preserve"><value>Wählen Sie, ob Capture Tool auch geeignete vorhandene Aufnahmen analysieren oder nur mit neuen Aufnahmen beginnen soll. Die Analyse erfolgt auf diesem Gerät und Originalaufnahmen werden nicht verändert.</value></data>
+  <data name="CaptureMemory_EnableDialog_ExistingButton" xml:space="preserve"><value>Vorhandene Aufnahmen scannen</value></data>
+  <data name="CaptureMemory_EnableDialog_NewOnlyButton" xml:space="preserve"><value>Nur neue Aufnahmen</value></data>
+  <data name="CaptureMemory_Settings_AnalysisToggle.OnContent" xml:space="preserve"><value>Ein</value></data>
+  <data name="CaptureMemory_Settings_AnalysisToggle.OffContent" xml:space="preserve"><value>Aus</value></data>
+  <data name="CaptureMemory_Settings_AnalysisToggle.AutomationProperties.Name" xml:space="preserve"><value>Aufnahmeanalyse</value></data>
   <data name="CaptureMemory_Confirmation_BackfillTitle" xml:space="preserve"><value>Vorhandene Aufnahmen analysieren?</value></data>
   <data name="CaptureMemory_Confirmation_BackfillContent" xml:space="preserve"><value>Capture Tool liest geeignete vorhandene Aufnahmequellen und verwendet die autorisierten KI-Modelle auf dem Gerät. Originalaufnahmen werden nicht verändert.</value></data>
   <data name="CaptureMemory_Confirmation_BackfillButton" xml:space="preserve"><value>Vorhandene Aufnahmen analysieren</value></data>
@@ -1959,7 +1962,6 @@ SOFTWARE.
   <data name="CaptureMemory_EnableButton.Content" xml:space="preserve"><value>Capture Memory einschalten</value></data>
   <data name="CaptureMemory_Settings_EnablePreparing" xml:space="preserve"><value>Capture Memory wird eingeschaltet und lokale KI-Modelle werden vorbereitet…</value></data>
   <data name="CaptureMemory_Settings_EnableSucceeded" xml:space="preserve"><value>Capture Memory ist für neue Aufnahmen eingeschaltet. Die lokalen KI-Modelle sind bereit.</value></data>
-  <data name="CaptureMemory_Settings_EnableLimited" xml:space="preserve"><value>Capture Memory ist eingeschaltet. Einige KI-Modelle sind noch nicht bereit; unterstützte Aufnahmen werden mit den verfügbaren lokalen Funktionen analysiert.</value></data>
   <data name="CaptureMemory_Settings_EnableExistingScheduling" xml:space="preserve"><value>Vorhandene Aufnahmen werden zur Analyse eingereiht…</value></data>
   <data name="CaptureMemory_Settings_EnableExistingIncomplete" xml:space="preserve"><value>Capture Memory ist eingeschaltet, aber nicht alle vorhandenen Aufnahmen konnten eingereiht werden. Kehren Sie zur Startseite zurück, um fortzufahren. Die Originalaufnahmen wurden nicht verändert.</value></data>
   <data name="CaptureMemory_Settings_EnableExistingSucceeded" xml:space="preserve"><value>Vorhandene Aufnahmen wurden zur Analyse eingereiht. Ergebnisse werden angezeigt, sobald die Analyse abgeschlossen ist.</value></data>
@@ -1967,6 +1969,6 @@ SOFTWARE.
   <data name="CaptureMemory_Settings_ReanalyzeBusy" xml:space="preserve"><value>Warten Sie, bis die aktuelle Memory-Aktion abgeschlossen ist, oder brechen Sie sie ab.</value></data>
   <data name="CaptureMemory_Settings_ReanalyzeOff" xml:space="preserve"><value>Aktivieren Sie Capture Memory, um Aufnahmen erneut zu analysieren.</value></data>
   <data name="CaptureMemory_Settings_ReanalyzeExcluded" xml:space="preserve"><value>Keine geeigneten Aufnahmen. Ausgeschlossene und vergessene Aufnahmen bleiben von der erneuten Analyse ausgeschlossen.</value></data>
-  <data name="CaptureMemory_Settings_ReanalyzeEmpty" xml:space="preserve"><value>Noch keine Aufnahmen für die Analyse registriert. Erstellen Sie eine neue Aufnahme oder aktivieren Sie Memory mit „Vorhandene Aufnahmen einbeziehen“.</value></data>
-  <data name="CaptureMemory_Settings_ReanalyzePartial" xml:space="preserve"><value>Die verfügbare Analyse wurde eingereiht. Einige Modelle oder Aufnahmequellen waren nicht verfügbar. Ergebnisse erscheinen, sobald die unterstützte Analyse abgeschlossen ist.</value></data>
+  <data name="CaptureMemory_Settings_ReanalyzeEmpty" xml:space="preserve"><value>Noch keine Aufnahmen für die Analyse registriert. Erstellen Sie eine neue Aufnahme, um die Analyse zu starten.</value></data>
+  <data name="CaptureMemory_Settings_ReanalyzePartial" xml:space="preserve"><value>Die Aufnahmeanalyse wurde eingereiht. Ergebnisse erscheinen, sobald die Analyse abgeschlossen ist.</value></data>
 </root>

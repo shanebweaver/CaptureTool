@@ -91,6 +91,14 @@ public enum CaptureAnalysisConfirmationDecision
     Confirmed,
 }
 
+public enum CaptureMemoryEnableScope
+{
+    Unknown,
+    Cancelled,
+    NewCapturesOnly,
+    IncludeExistingCaptures,
+}
+
 public readonly record struct CaptureAnalysisSettingsConfirmationRequest
 {
     public CaptureAnalysisSettingsConfirmationRequest(CaptureAnalysisSettingsAction action)
@@ -108,6 +116,9 @@ public readonly record struct CaptureAnalysisSettingsConfirmationRequest
 
 public interface ICaptureAnalysisSettingsConfirmationDialogService
 {
+    ValueTask<CaptureMemoryEnableScope> ChooseEnableScopeAsync(
+        CancellationToken cancellationToken = default);
+
     ValueTask<CaptureAnalysisConfirmationDecision> ConfirmAsync(
         CaptureAnalysisSettingsConfirmationRequest request,
         CancellationToken cancellationToken = default);
