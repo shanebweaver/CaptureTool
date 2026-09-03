@@ -1,4 +1,8 @@
 using CaptureTool.Application.Abstractions.Files;
+using CaptureTool.Application.Abstractions.Edit;
+using CaptureTool.Application.Abstractions.Edit.Audio.OpenAudioEditPage;
+using CaptureTool.Application.Abstractions.Edit.Image.OpenImageEditPage;
+using CaptureTool.Application.Abstractions.Edit.Video.OpenVideoEditPage;
 using CaptureTool.Application.Abstractions.Library.RecentCaptures;
 using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Application.Abstractions.Shell.AppMenu.OpenFile;
@@ -68,15 +72,21 @@ internal sealed class OpenFileUseCase : IOpenFileUseCase
                             {
                                 CaptureFileType.Audio => await _navigationCoordinator.NavigateAsync(
                                     NavigationRoute.AudioEdit,
-                                    new AudioFile(workingFilePath),
+                                    new OpenAudioEditPageRequest(
+                                        new AudioFile(workingFilePath),
+                                        new CaptureEditorContext(file.FilePath)),
                                     cancellationToken: token),
                                 CaptureFileType.Image => await _navigationCoordinator.NavigateAsync(
                                     NavigationRoute.ImageEdit,
-                                    new ImageFile(workingFilePath, file.FilePath),
+                                    new OpenImageEditPageRequest(
+                                        new ImageFile(workingFilePath, file.FilePath),
+                                        new CaptureEditorContext(file.FilePath)),
                                     cancellationToken: token),
                                 CaptureFileType.Video => await _navigationCoordinator.NavigateAsync(
                                     NavigationRoute.VideoEdit,
-                                    new VideoFile(workingFilePath),
+                                    new OpenVideoEditPageRequest(
+                                        new VideoFile(workingFilePath),
+                                        new CaptureEditorContext(file.FilePath)),
                                     cancellationToken: token),
                                 _ => false
                             };

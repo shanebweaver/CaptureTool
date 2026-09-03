@@ -5,6 +5,7 @@ using CaptureTool.Application.Abstractions.Analysis.Policy;
 using CaptureTool.Application.Abstractions.Analysis.Intake;
 using CaptureTool.Application.Abstractions.Analysis.Jobs;
 using CaptureTool.Application.Abstractions.Analysis.Sources;
+using CaptureTool.Application.Abstractions.Edit.Metadata;
 using CaptureTool.Application.Abstractions.Analysis.Memory;
 using CaptureTool.Application.Abstractions.Analysis.Analyzers;
 using CaptureTool.Application.Abstractions.Capture.Assets;
@@ -74,6 +75,8 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddSingleton<ICaptureMemoryOperationStore, LocalCaptureMemoryOperationStore>();
         services.AddSingleton<LocalCaptureAnalysisStore>();
         services.AddSingleton<ICaptureAnalysisStore>(provider =>
+            provider.GetRequiredService<LocalCaptureAnalysisStore>());
+        services.AddSingleton<ICaptureAnalysisChangeNotifier>(provider =>
             provider.GetRequiredService<LocalCaptureAnalysisStore>());
         services.AddSingleton<ICaptureAnalysisJobStore, LocalCaptureAnalysisJobStore>();
         services.AddSingleton<ICaptureAnalysisCheckpointStore, LocalCaptureAnalysisCheckpointStore>();

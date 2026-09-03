@@ -67,11 +67,19 @@ public sealed class ImageEditTextExtractionUiTests
 
             WaitForElement(mainWindow, automation, "ImageEdit_CommandBar", AppLaunchTimeout);
 
+            WaitForElement(
+                mainWindow,
+                automation,
+                "ImageEdit_AnalyzedContentButton",
+                InteractionTimeout).Click();
             AutomationElement textExtractionButton = WaitForElement(
                 mainWindow,
                 automation,
-                "ImageEdit_TextExtractionButton",
+                "AnalyzedContent_ShowImageTextButton",
                 InteractionTimeout);
+            Assert.IsTrue(
+                mainWindow.BoundingRectangle.IntersectsWith(textExtractionButton.BoundingRectangle),
+                "The analyzed-content pane action should be visible inside the main window.");
             textExtractionButton.Click();
 
             WaitForElement(
@@ -129,7 +137,7 @@ public sealed class ImageEditTextExtractionUiTests
             AutomationElement copyAllTextButton = WaitForElement(
                 mainWindow,
                 automation,
-                "ImageEdit_TextExtractionCopyAllButton",
+                "AnalyzedContent_CopyAllButton",
                 InteractionTimeout);
             Assert.IsTrue(copyAllTextButton.IsEnabled, "Copy all text should be enabled after OCR completes.");
             WaitForElement(
@@ -207,6 +215,20 @@ public sealed class ImageEditTextExtractionUiTests
             appTempDirectory
         ];
 
+        string? appUserModelId = Environment.GetEnvironmentVariable(
+            "CAPTURETOOL_UI_TEST_APP_ID");
+        if (!string.IsNullOrWhiteSpace(appUserModelId))
+        {
+            var activationManager = (IApplicationActivationManager)new ApplicationActivationManager();
+            int result = activationManager.ActivateApplication(
+                appUserModelId,
+                string.Join(' ', appArguments.Select(QuoteArgument)),
+                ActivateOptions.NoErrorUI,
+                out uint processId);
+            Marshal.ThrowExceptionForHR(result);
+            return new LaunchedCaptureToolApp(Process.GetProcessById(checked((int)processId)));
+        }
+
         ProcessStartInfo startInfo = new(appExecutablePath)
         {
             UseShellExecute = false,
@@ -223,6 +245,9 @@ public sealed class ImageEditTextExtractionUiTests
 
         return new LaunchedCaptureToolApp(process);
     }
+
+    private static string QuoteArgument(string value) =>
+        $"\"{value.Replace("\"", "\\\"", StringComparison.Ordinal)}\"";
 
     private static Window WaitForMainWindow(
         LaunchedCaptureToolApp app,
@@ -614,5 +639,36 @@ public sealed class ImageEditTextExtractionUiTests
         }
 
         throw new DirectoryNotFoundException("Could not find repository root.");
+    }
+
+    [Flags]
+    private enum ActivateOptions : uint
+    {
+        NoErrorUI = 2,
+    }
+
+    [ComImport]
+    [Guid("2e941141-7f97-4756-ba1d-9decde894a3d")]
+    [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+    private interface IApplicationActivationManager
+    {
+        [PreserveSig]
+        int ActivateApplication(
+            [MarshalAs(UnmanagedType.LPWStr)] string appUserModelId,
+            [MarshalAs(UnmanagedType.LPWStr)] string arguments,
+            ActivateOptions options,
+            out uint processId);
+
+        [PreserveSig]
+        int ActivateForFile(IntPtr appUserModelId, IntPtr itemArray, IntPtr verb, out uint processId);
+
+        [PreserveSig]
+        int ActivateForProtocol(IntPtr appUserModelId, IntPtr itemArray, out uint processId);
+    }
+
+    [ComImport]
+    [Guid("45BA127D-10A8-46EA-8AB7-56EA9078943C")]
+    private class ApplicationActivationManager
+    {
     }
 }

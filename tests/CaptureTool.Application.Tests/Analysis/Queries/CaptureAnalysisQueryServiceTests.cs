@@ -1,8 +1,12 @@
 using CaptureTool.Application.Abstractions.Analysis.Persistence;
+using CaptureTool.Application.Abstractions.Capture.Assets;
+using CaptureTool.Application.Abstractions.Edit.Metadata;
 using CaptureTool.Application.Analysis.Queries;
 using CaptureTool.Domain;
 using CaptureTool.Domain.Analysis;
 using CaptureTool.Domain.Analysis.Payloads;
+using CaptureTool.Domain.Capture;
+using Moq;
 using System.Runtime.CompilerServices;
 
 namespace CaptureTool.Application.Tests.Analysis.Queries;
@@ -55,6 +59,36 @@ public sealed class CaptureAnalysisQueryServiceTests
         }
 
         CollectionAssert.AreEqual(new[] { first, second }, results);
+    }
+
+    [TestMethod]
+    public async Task MetadataViewAsync_ResolvesCanonicalPayloadByCaptureIdentityOrSourcePath()
+    {
+        CaptureAnalysisRecord record = CreateRecord();
+        string sourcePath = Path.Combine(Path.GetTempPath(), "metadata-view.png");
+        var asset = new CaptureAsset(
+            record.CaptureId,
+            CaptureFileType.Image,
+            sourcePath,
+            CaptureSourceOwnership.AppOwned,
+            record.CapturedAtUtc);
+        var catalog = new Mock<ICaptureAssetCatalog>();
+        catalog.Setup(value => value.Get(record.CaptureId)).Returns(asset);
+        catalog.Setup(value => value.FindByPath(sourcePath)).Returns(asset);
+        var service = new CaptureMetadataViewService(new FakeStore(record), catalog.Object);
+
+        CaptureMetadataViewSnapshot? byId = await service.GetAsync(
+            new CaptureMetadataViewRequest(CaptureMediaKind.Image, record.CaptureId));
+        CaptureMetadataViewSnapshot? byPath = await service.GetAsync(
+            new CaptureMetadataViewRequest(
+                CaptureMediaKind.Image,
+                persistentSourcePath: sourcePath));
+
+        Assert.IsNotNull(byId);
+        Assert.AreEqual(record.CaptureId, byId.CaptureId);
+        Assert.IsNotNull(byId.MediaProperties);
+        Assert.AreEqual(10, byId.MediaProperties.PixelSize?.Width);
+        Assert.AreEqual(byId, byPath);
     }
 
     private static CaptureAnalysisRecord CreateRecord()

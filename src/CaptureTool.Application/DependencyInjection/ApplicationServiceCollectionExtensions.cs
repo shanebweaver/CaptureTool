@@ -10,6 +10,7 @@ using CaptureTool.Application.Abstractions.Analysis.Preparation;
 using CaptureTool.Application.Abstractions.Analysis.Processing;
 using CaptureTool.Application.Abstractions.Analysis.Privacy;
 using CaptureTool.Application.Abstractions.Analysis.Queries;
+using CaptureTool.Application.Abstractions.Edit.Metadata;
 using CaptureTool.Application.Abstractions.Capture.Assets;
 using CaptureTool.Application.Abstractions.Edit.External;
 using CaptureTool.Application.Abstractions.EditSessions;
@@ -73,6 +74,7 @@ public static class ApplicationServiceCollectionExtensions
         services.AddSingleton<ICaptureAnalyzerResolutionPreference, CaptureAnalyzerResolutionPreference>();
         services.AddSingleton<ICaptureAnalyzerResolver, CaptureAnalyzerResolver>();
         services.AddSingleton<ICaptureAnalysisQueryService, CaptureAnalysisQueryService>();
+        services.AddSingleton<ICaptureMetadataViewService, CaptureMetadataViewService>();
         services.AddSingleton<CaptureAnalysisCapabilityPreparationService>();
         services.AddSingleton<IAnalysisCapabilityPreparationQueryService>(provider =>
             provider.GetRequiredService<CaptureAnalysisCapabilityPreparationService>());

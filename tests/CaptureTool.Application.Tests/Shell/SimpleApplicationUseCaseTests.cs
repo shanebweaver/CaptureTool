@@ -92,7 +92,14 @@ public sealed class SimpleApplicationUseCaseTests
         navigation.Verify(service => service.NavigateAsync(NavigationRoute.Store, null, false, It.IsAny<CancellationToken>()), Times.Once);
         navigation.Verify(service => service.NavigateAsync(NavigationRoute.Settings, null, false, It.IsAny<CancellationToken>()), Times.Once);
         navigation.Verify(service => service.NavigateAsync(NavigationRoute.AudioCapture, null, false, It.IsAny<CancellationToken>()), Times.Once);
-        navigation.Verify(service => service.NavigateAsync(NavigationRoute.ImageEdit, imageFile, false, It.IsAny<CancellationToken>()), Times.Once);
+        navigation.Verify(service => service.NavigateAsync(
+            NavigationRoute.ImageEdit,
+            It.Is<OpenImageEditPageRequest>(request =>
+                request.ImageFile.FilePath == imageFile.FilePath &&
+                request.EditorContext != null &&
+                request.EditorContext.PersistentSourcePath == Path.GetFullPath(imageFile.FilePath)),
+            false,
+            It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [TestMethod]
@@ -203,7 +210,7 @@ public sealed class SimpleApplicationUseCaseTests
         navigation.Verify(
             service => service.NavigateAsync(
                 NavigationRoute.AudioEdit,
-                audioFile,
+                It.Is<OpenAudioEditPageRequest>(request => request.AudioFile == audioFile),
                 false,
                 TestContext.CancellationToken),
             Times.Once);

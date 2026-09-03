@@ -1,4 +1,5 @@
 using CaptureTool.Application.Abstractions.Capture.Video.StopVideoCapture;
+using CaptureTool.Application.Abstractions.Edit.Video.OpenVideoEditPage;
 using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Application.Abstractions.UseCases;
 using CaptureTool.Application.UseCases;
@@ -39,7 +40,7 @@ internal sealed class StopVideoCaptureUseCase : IStopVideoCaptureUseCase
                 // so it intentionally bypasses user-initiated leave confirmation.
                 NavigationResult navigationResult = await _navigationService.NavigateAsync(
                     NavigationRoute.VideoEdit,
-                    pendingVideo,
+                    new OpenVideoEditPageRequest(pendingVideo),
                     cancellationToken: token);
                 return new StopVideoCaptureResponse(navigationResult == NavigationResult.Accepted);
             },

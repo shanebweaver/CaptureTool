@@ -1,6 +1,7 @@
 using CaptureTool.Application.Abstractions.Logging;
 using CaptureTool.Presentation.Features.Audio;
 using CaptureTool.Presentation.Features.AudioEdit;
+using CaptureTool.Presentation.Features.AnalyzedContent;
 using CaptureTool.Presentation.Features.Media;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
@@ -33,6 +34,7 @@ public sealed partial class AudioEditPage : AudioEditPageBase
     private DispatcherQueueTimer? _waveformTimer;
     private TimeSpan? _resumePosition;
     private bool _isMediaPlaybackSuspended;
+    private TimeSpan? _pendingAnalyzedContentSeek;
 
     public AudioEditPage()
     {
@@ -42,6 +44,7 @@ public sealed partial class AudioEditPage : AudioEditPageBase
         AudioPlayer.SetMediaPlayer(_mediaPlayer);
         AudioPlayer.Loaded += AudioPlayer_Loaded;
         AudioPlayer.Unloaded += AudioPlayer_Unloaded;
+        ViewModel.AnalyzedContent.SeekRequested += AnalyzedContent_SeekRequested;
     }
 
     private MediaPlayer CreateMediaPlayer()
@@ -216,6 +219,7 @@ public sealed partial class AudioEditPage : AudioEditPageBase
         {
             ViewModel.ReportMediaOpened();
             _audioDuration = sender.PlaybackSession.NaturalDuration;
+            ViewModel.AnalyzedContent.SetSeekRange(TimeSpan.Zero, _audioDuration);
             bool shouldScrollToResumePosition = _resumePosition is not null;
             if (_resumePosition is { } resumePosition)
             {
@@ -223,6 +227,13 @@ public sealed partial class AudioEditPage : AudioEditPageBase
                     ? resumePosition
                     : TimeSpan.Zero;
                 _resumePosition = null;
+            }
+
+            if (_pendingAnalyzedContentSeek is { } analyzedContentSeek)
+            {
+                sender.PlaybackSession.Position = analyzedContentSeek;
+                _pendingAnalyzedContentSeek = null;
+                shouldScrollToResumePosition = true;
             }
 
             AlignCapturedWaveformTimelineToDuration(_audioDuration);
@@ -256,7 +267,26 @@ public sealed partial class AudioEditPage : AudioEditPageBase
     private void PlaybackSession_PositionChanged(MediaPlaybackSession sender, object args)
     {
         DispatcherQueue.TryEnqueue(() =>
-            UpdateWaveformPlayhead(sender.Position, scrollIntoView: sender.PlaybackState == MediaPlaybackState.Playing));
+        {
+            ViewModel.AnalyzedContent.UpdatePlaybackPosition(sender.Position);
+            UpdateWaveformPlayhead(sender.Position, scrollIntoView: sender.PlaybackState == MediaPlaybackState.Playing);
+        });
+    }
+
+    private void AnalyzedContent_SeekRequested(object? sender, TimeSpan position)
+    {
+        DispatcherQueue.TryEnqueue(() =>
+        {
+            if (_mediaPlayer?.PlaybackSession.NaturalDuration > TimeSpan.Zero)
+            {
+                _mediaPlayer.PlaybackSession.Position = position;
+                UpdateWaveformPlayhead(position, scrollIntoView: true);
+            }
+            else
+            {
+                _pendingAnalyzedContentSeek = position;
+            }
+        });
     }
 
     private void PlaybackSession_PlaybackStateChanged(MediaPlaybackSession sender, object args)

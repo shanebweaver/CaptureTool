@@ -1,4 +1,5 @@
 using CaptureTool.Application.Abstractions.Capture.Audio.StopAudioCapture;
+using CaptureTool.Application.Abstractions.Edit.Audio.OpenAudioEditPage;
 using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Application.Abstractions.UseCases;
 using CaptureTool.Application.UseCases;
@@ -33,7 +34,7 @@ internal sealed class StopAudioCaptureUseCase : IStopAudioCaptureUseCase
                 // not an attempt to abandon it; the audio leave guard must not run.
                 NavigationResult navigationResult = await _navigationService.NavigateAsync(
                     NavigationRoute.AudioEdit,
-                    audioFile,
+                    new OpenAudioEditPageRequest(audioFile),
                     cancellationToken: token);
                 return new StopAudioCaptureResponse(navigationResult == NavigationResult.Accepted);
             },

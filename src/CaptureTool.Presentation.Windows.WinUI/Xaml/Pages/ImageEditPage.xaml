@@ -58,25 +58,12 @@
                 </AppBarToggleButton.Icon>
             </AppBarToggleButton>
             <AppBarToggleButton
-                x:Uid="ImageEdit_TextExtractionButton"
-                AutomationProperties.AutomationId="ImageEdit_TextExtractionButton"
-                Command="{x:Bind ViewModel.ToggleTextExtractionModeCommand}"
-                IsChecked="{x:Bind ViewModel.IsTextExtractionModeActive, Mode=OneWay}"
-                IsEnabled="{x:Bind ViewModel.CanToggleTextExtraction, Mode=OneWay}"
-                Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.IsTextExtractionAvailable), Mode=OneWay}">
+                x:Uid="AnalyzedContent_Open"
+                AutomationProperties.AutomationId="ImageEdit_AnalyzedContentButton"
+                Command="{x:Bind ViewModel.AnalyzedContent.TogglePaneCommand}"
+                IsChecked="{x:Bind ViewModel.AnalyzedContent.IsPaneOpen, Mode=OneWay}">
                 <AppBarToggleButton.Icon>
-                    <FontIcon Glyph="&#xE8D2;" />
-                </AppBarToggleButton.Icon>
-            </AppBarToggleButton>
-            <AppBarToggleButton
-                x:Uid="ImageEdit_ImageDescriptionButton"
-                AutomationProperties.AutomationId="ImageEdit_ImageDescriptionButton"
-                Command="{x:Bind ViewModel.ToggleImageDescriptionModeCommand}"
-                IsChecked="{x:Bind ViewModel.IsImageDescriptionModeActive, Mode=OneWay}"
-                IsEnabled="{x:Bind ViewModel.CanToggleImageDescription, Mode=OneWay}"
-                Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.IsImageDescriptionAvailable), Mode=OneWay}">
-                <AppBarToggleButton.Icon>
-                    <SymbolIcon Symbol="Comment" />
+                    <FontIcon Glyph="&#xE8A5;" />
                 </AppBarToggleButton.Icon>
             </AppBarToggleButton>
             <AppBarToggleButton
@@ -254,12 +241,21 @@
         </CommandBar>
 
         <!--  Canvas  -->
-        <Grid
-            x:Name="CanvasContainer"
-            Background="{ThemeResource ImageEditCanvasBackgroundBrush}"
-            BorderBrush="{ThemeResource SystemControlBackgroundBaseLowBrush}"
-            BorderThickness="0,1"
-            Row="2">
+        <SplitView
+            x:Name="AnalyzedContentSplitView"
+            Grid.Row="2"
+            DisplayMode="Overlay"
+            IsPaneOpen="{x:Bind ViewModel.AnalyzedContent.IsPaneOpen, Mode=TwoWay}"
+            OpenPaneLength="380"
+            PanePlacement="Right">
+            <SplitView.Pane>
+                <controls:AnalyzedContentPane ViewModel="{x:Bind ViewModel.AnalyzedContent}" />
+            </SplitView.Pane>
+            <Grid
+                x:Name="CanvasContainer"
+                Background="{ThemeResource ImageEditCanvasBackgroundBrush}"
+                BorderBrush="{ThemeResource SystemControlBackgroundBaseLowBrush}"
+                BorderThickness="0,1">
             <controls:ImageCanvas
                 x:Name="ImageCanvas"
                 AutomationProperties.AccessibilityView="Control"
@@ -517,7 +513,8 @@
                     </Border>
                 </StackPanel>
             </Grid>
-        </Grid>
+            </Grid>
+        </SplitView>
 
         <ProgressRing
             x:Uid="ImageEdit_LoadingProgressRing"
@@ -729,6 +726,18 @@
                         <AdaptiveTrigger MinWindowWidth="650" />
                     </VisualState.StateTriggers>
                     <VisualState.Setters>
+                        <Setter Target="DimensionsTextBlock.Visibility" Value="Visible" />
+                        <Setter Target="OffsetTextBlock.Visibility" Value="Visible" />
+                        <Setter Target="RotationTextBlock.Visibility" Value="Visible" />
+                        <Setter Target="MirroredTextBlock.Visibility" Value="Visible" />
+                    </VisualState.Setters>
+                </VisualState>
+                <VisualState x:Name="AnalyzedContentWideState">
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="1000" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="AnalyzedContentSplitView.DisplayMode" Value="Inline" />
                         <Setter Target="DimensionsTextBlock.Visibility" Value="Visible" />
                         <Setter Target="OffsetTextBlock.Visibility" Value="Visible" />
                         <Setter Target="RotationTextBlock.Visibility" Value="Visible" />

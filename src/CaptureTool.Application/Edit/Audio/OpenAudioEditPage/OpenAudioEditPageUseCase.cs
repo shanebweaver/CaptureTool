@@ -1,4 +1,5 @@
 using CaptureTool.Application.Abstractions.Edit.Audio.OpenAudioEditPage;
+using CaptureTool.Application.Abstractions.Edit;
 using CaptureTool.Application.Abstractions.Files;
 using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Application.Abstractions.UseCases;
@@ -38,7 +39,11 @@ internal sealed class OpenAudioEditPageUseCase : IOpenAudioEditPageUseCase
             {
                 bool navigated = await _navigationCoordinator.NavigateAsync(
                     NavigationRoute.AudioEdit,
-                    request.AudioFile,
+                    request with
+                    {
+                        EditorContext = request.EditorContext ?? new CaptureEditorContext(
+                            request.AudioFile.FilePath)
+                    },
                     cancellationToken: cancellationToken);
                 return new OpenAudioEditPageResponse(navigated);
             },

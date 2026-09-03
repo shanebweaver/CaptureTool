@@ -4,6 +4,7 @@ using CaptureTool.Application.Abstractions.Shutdown;
 using CaptureTool.Application.Abstractions.Themes;
 using CaptureTool.Application.Abstractions.Windowing;
 using CaptureTool.Domain.FileSystem;
+using CaptureTool.Application.Abstractions.Edit.Image.OpenImageEditPage;
 using CaptureTool.Presentation.Shell;
 using CaptureTool.Presentation.Windows.WinUI.AudioCapture;
 using CaptureTool.Presentation.Windows.WinUI.Capture;
@@ -184,7 +185,7 @@ public sealed partial class MainWindow : Window
                 INavigationService navigationService = App.Current.ServiceProvider.GetService<INavigationService>();
                 await navigationService.NavigateAsync(
                     NavigationRoute.ImageEdit,
-                    new ImageFile(options.ImageFilePath),
+                    new OpenImageEditPageRequest(new ImageFile(options.ImageFilePath)),
                     true);
             }
             catch (Exception ex)

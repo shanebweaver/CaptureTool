@@ -509,7 +509,7 @@ public sealed class CaptureMemoryHomeViewModel : ViewModelBase
         }
 
         UseCaseResponse<OpenCaptureMemoryResultResponse> response = await _openResultUseCase.ExecuteAsync(
-            new OpenCaptureMemoryResultRequest(model.CaptureId),
+            new OpenCaptureMemoryResultRequest(model.CaptureId, model.Evidence),
             CancellationToken.None);
         if (response.Value?.Status is OpenCaptureMemoryResultStatus.SourceMissing or OpenCaptureMemoryResultStatus.Forgotten)
         {

@@ -1,4 +1,5 @@
 using CaptureTool.Application.Abstractions.Capture.Assets;
+using CaptureTool.Application.Abstractions.Analysis.Memory;
 using CaptureTool.Application.Abstractions.Files;
 using CaptureTool.Application.Abstractions.Library.CaptureMemory;
 using CaptureTool.Application.Abstractions.Library.RecentCaptures.OpenRecentCapture;
@@ -116,15 +117,25 @@ public sealed class CaptureMemoryResultServiceTests
                 "current.png",
                 currentPath));
         var opener = new Mock<IOpenRecentCaptureUseCase>();
+        var evidence = new CaptureMemoryMatchEvidence(
+            CaptureMemoryMatchKind.OcrText,
+            "matching words",
+            new CaptureMemoryPixelBounds(1, 2, 10, 5, 100, 50));
         opener.Setup(value => value.ExecuteAsync(
-                It.Is<OpenRecentCaptureRequest>(request => request.FilePath == currentPath),
+                It.Is<OpenRecentCaptureRequest>(request =>
+                    request.FilePath == currentPath &&
+                    request.EditorContext != null &&
+                    request.EditorContext.CaptureId == captureId &&
+                    request.EditorContext.PersistentSourcePath == currentPath &&
+                    request.EditorContext.InitialMatch == evidence),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(CaptureTool.Application.Abstractions.UseCases.UseCaseResponse<OpenRecentCaptureResponse>
                 .Success(new OpenRecentCaptureResponse()));
         var executor = new UseCaseExecutor(Mock.Of<ILogService>(), Mock.Of<ITelemetryService>());
         var useCase = new OpenCaptureMemoryResultUseCase(resolver.Object, opener.Object, executor);
 
-        var result = await useCase.ExecuteAsync(new OpenCaptureMemoryResultRequest(captureId));
+        var result = await useCase.ExecuteAsync(
+            new OpenCaptureMemoryResultRequest(captureId, evidence));
 
         Assert.AreEqual(OpenCaptureMemoryResultStatus.Opened, result.Value?.Status);
         resolver.VerifyAll();

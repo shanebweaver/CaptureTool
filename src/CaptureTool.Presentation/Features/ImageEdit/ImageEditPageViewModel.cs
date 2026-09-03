@@ -1,8 +1,11 @@
 using CaptureTool.Application.Abstractions.Ai;
+using CaptureTool.Application.Abstractions.Edit.Metadata;
 using CaptureTool.Application.Abstractions.Cancellation;
 using CaptureTool.Application.Abstractions.Clipboard;
 using CaptureTool.Application.Abstractions.Edit.External;
 using CaptureTool.Application.Abstractions.Edit.Image;
+using CaptureTool.Application.Abstractions.Edit;
+using CaptureTool.Application.Abstractions.Edit.Image.OpenImageEditPage;
 using CaptureTool.Application.Abstractions.Edit.Image.Description;
 using CaptureTool.Application.Abstractions.Edit.Image.ForegroundExtraction;
 using CaptureTool.Application.Abstractions.Edit.Image.ObjectErase;
@@ -21,11 +24,14 @@ using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Application.Abstractions.Telemetry;
 using CaptureTool.Application.Abstractions.UseCases;
 using CaptureTool.Domain.Ai;
+using CaptureTool.Domain.Analysis;
+using CaptureTool.Domain.Analysis.Payloads;
 using CaptureTool.Domain.Edit;
 using CaptureTool.Domain.Edit.Drawable;
 using CaptureTool.Domain.Edit.Operations;
 using CaptureTool.Domain.FileSystem;
 using CaptureTool.Presentation.Notifications;
+using CaptureTool.Presentation.Features.AnalyzedContent;
 using CaptureTool.Presentation.ViewModels;
 using CommunityToolkit.Mvvm.Input;
 using System.Drawing;
@@ -33,7 +39,7 @@ using System.Numerics;
 
 namespace CaptureTool.Presentation.Features.ImageEdit;
 
-public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<ImageFile>, ISourceSaveableSession
+public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<OpenImageEditPageRequest>, ISourceSaveableSession
 {
     private enum CanvasUpdateMode
     {
@@ -142,6 +148,8 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     public TextToolViewModel TextTool { get; }
 
     public TextExtractionToolViewModel TextExtractionTool { get; }
+
+    public AnalyzedContentViewModel AnalyzedContent { get; }
 
     public bool HasUndoStack
     {
@@ -752,7 +760,8 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         IImageObjectExtractionFeatureAvailability? imageObjectExtractionFeatureAvailability = null,
         ITelemetryService? telemetryService = null,
         IScratchArtifactStore? scratchArtifactStore = null,
-        IFileSystem? fileSystem = null)
+        IFileSystem? fileSystem = null,
+        AnalyzedContentViewModel? analyzedContent = null)
     {
         _localizationService = localizationService;
         _cancellationService = cancellationService;
@@ -785,6 +794,8 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         _notificationService = notificationService;
         _clipboardService = clipboardService;
         _telemetryService = telemetryService;
+        AnalyzedContent = analyzedContent ?? new AnalyzedContentViewModel();
+        AnalyzedContent.MetadataChanged += AnalyzedContent_MetadataChanged;
 
         ChromaKeyTool = chromaKeyTool;
         ColorPickerTool = colorPickerTool;
@@ -867,6 +878,12 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         UpdateZoomPercentageCommand = new RelayCommand<int>(UpdateZoomPercentage);
         UpdateAutoZoomLockCommand = new RelayCommand<bool>(UpdateAutoZoomLock);
         ZoomAndCenterCommand = new RelayCommand(RequestZoomAndCenter);
+        AnalyzedContent.ConfigureImageActions(
+            ToggleTextExtractionModeCommand,
+            GenerateBriefImageDescriptionCommand,
+            GenerateDetailedImageDescriptionCommand,
+            GenerateDiagramImageDescriptionCommand,
+            GenerateAccessibleImageDescriptionCommand);
     }
 
     private void ChromaKeyTool_SettingsChanged(object? sender, EventArgs e)
@@ -902,12 +919,19 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         }
     }
 
-    public override async Task LoadAsync(ImageFile imageFile, CancellationToken cancellationToken)
+    public Task LoadAsync(ImageFile imageFile, CancellationToken cancellationToken)
+        => LoadAsync(new OpenImageEditPageRequest(imageFile), cancellationToken);
+
+    public override async Task LoadAsync(
+        OpenImageEditPageRequest request,
+        CancellationToken cancellationToken)
     {
+        ArgumentNullException.ThrowIfNull(request);
         ThrowIfNotReadyToLoad();
         StartLoading();
         ClearImageDescriptionResults();
 
+        ImageFile imageFile = request.ImageFile;
         imageFile = RestoreMissingWorkingCopy(imageFile);
 
         var cts = _cancellationService.GetLinkedCancellationTokenSource(cancellationToken);
@@ -936,7 +960,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
             cts.Dispose();
         }
 
-        await base.LoadAsync(imageFile, cancellationToken);
+        await base.LoadAsync(request, cancellationToken);
         UpdateSuperResolutionAvailability();
         UpdateCanToggleSuperResolution();
         UpdateTextExtractionAvailability();
@@ -950,6 +974,14 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         UpdateCanToggleObjectErase();
         UpdateObjectExtractionAvailability();
         UpdateCanToggleObjectExtraction();
+        CaptureEditorContext context = request.EditorContext ?? new CaptureEditorContext(
+            imageFile.PersistentFilePath ?? imageFile.FilePath);
+        AnalyzedContent.Load(
+            new CaptureMetadataViewRequest(
+                CaptureMediaKind.Image,
+                context.CaptureId,
+                context.PersistentSourcePath),
+            context.InitialMatch);
         TrackEditorOpened();
     }
 
@@ -981,6 +1013,8 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
     public override void Dispose()
     {
+        AnalyzedContent.MetadataChanged -= AnalyzedContent_MetadataChanged;
+        AnalyzedContent.Dispose();
         CancelSuperResolutionWork();
         CancelTextExtractionWork();
         CancelImageDescriptionWork();
@@ -1042,6 +1076,72 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         UpdateUndoRedoStackProperties();
         base.Dispose();
     }
+
+    private void AnalyzedContent_MetadataChanged(
+        object? sender,
+        CaptureMetadataViewSnapshot? snapshot)
+    {
+        if (snapshot?.ImageText is OcrDocumentV1 document &&
+            _editRevision == 0 &&
+            _textExtractionProcessedRevision == null)
+        {
+            List<RecognizedTextRegion> regions = [];
+            int lineIndex = 0;
+            foreach (OcrLineV1 line in document.Regions.SelectMany(region => region.Lines))
+            {
+                if (line.Words.Count > 0)
+                {
+                    int wordIndex = 0;
+                    foreach (OcrWordV1 word in line.Words)
+                    {
+                        regions.Add(new RecognizedTextRegion(
+                            word.Text,
+                            ToRectangle(word.Bounds),
+                            lineIndex,
+                            wordIndex++));
+                    }
+                }
+                else if (!string.IsNullOrWhiteSpace(line.Text))
+                {
+                    regions.Add(new RecognizedTextRegion(
+                        line.Text,
+                        ToRectangle(line.Bounds),
+                        lineIndex,
+                        0));
+                }
+
+                lineIndex++;
+            }
+
+            TextExtractionRegions = regions;
+            TextExtractionTool.SetText(document.FullText);
+            _textExtractionProcessedRevision = _editRevision;
+            InvalidateCanvasRequested?.Invoke(this, EventArgs.Empty);
+        }
+
+        if (snapshot?.ImageDescription is ImageDescriptionV1 description)
+        {
+            ImageDescriptionMode mode = description.Purpose switch
+            {
+                ImageDescriptionPurpose.Detailed => ImageDescriptionMode.Detailed,
+                ImageDescriptionPurpose.Diagram => ImageDescriptionMode.Diagram,
+                ImageDescriptionPurpose.Accessible => ImageDescriptionMode.Accessible,
+                _ => ImageDescriptionMode.Brief,
+            };
+            _imageDescriptionResults[mode] = description.Description;
+            if (IsImageDescriptionModeActive && !HasImageDescription)
+            {
+                ShowImageDescription(mode, description.Description);
+            }
+        }
+    }
+
+    private static RectangleF ToRectangle(PixelRect bounds)
+        => new(
+            (float)bounds.X,
+            (float)bounds.Y,
+            (float)bounds.Width,
+            (float)bounds.Height);
 
     private async Task CopyAsync()
     {
@@ -2385,6 +2485,16 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
             TextExtractionRegions = NormalizeTextExtractionRegions(result.Document.Regions, result.Document.ImageSize);
             TextExtractionQrCodes = NormalizeQrCodeRegions(result.Document.QrCodes, result.Document.ImageSize);
             TextExtractionTool.SetText(result.Document.Text);
+            AnalyzedContent.SetCurrentImageText(
+                result.Document.Text,
+                TextExtractionRegions.Select(region =>
+                    (
+                        region.Text,
+                        new PixelRect(
+                            region.Bounds.X,
+                            region.Bounds.Y,
+                            region.Bounds.Width,
+                            region.Bounds.Height))));
             _textExtractionProcessedRevision = processedRevision;
             InvalidateCanvasRequested?.Invoke(this, EventArgs.Empty);
             TrackEditTool("text_extraction");
@@ -2481,6 +2591,12 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
             return;
         }
 
+        if (!await EnsureAiFeatureConsentAsync(AiFeatureId.ImageDescription, CancellationToken.None))
+        {
+            TrackEditTool(GetImageDescriptionTelemetryTool(mode), TelemetryOutcomes.Canceled);
+            return;
+        }
+
         using ImageEditOperationCoordinator.OperationLease operation =
             _operationCoordinator.Start(ImageEditOperation.ImageDescription);
         _runningImageDescriptionMode = mode;
@@ -2536,10 +2652,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
             }
 
             _imageDescriptionResults[mode] = result.Description;
-            if (IsImageDescriptionModeActive)
-            {
-                ShowImageDescription(mode, result.Description);
-            }
+            ShowImageDescription(mode, result.Description);
             TrackEditTool(GetImageDescriptionTelemetryTool(mode));
         }
         catch (OperationCanceledException)
@@ -2852,7 +2965,6 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     private void UpdateCanGenerateImageDescription()
     {
         CanGenerateImageDescription = IsLoaded &&
-            IsImageDescriptionModeActive &&
             IsImageDescriptionAvailable;
     }
 
@@ -2935,6 +3047,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         _editRevision++;
         InvalidateTextExtractionResult();
         ClearImageDescriptionResults();
+        AnalyzedContent.ClearImageDerivedContent();
 
         if (IsTextExtractionModeActive)
         {
@@ -3018,6 +3131,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         ImageDescriptionStatusMessage = string.Empty;
         ImageDescription = description;
         SelectedImageDescriptionMode = mode;
+        AnalyzedContent.SetCurrentImageDescription(description);
         RaiseImageDescriptionSelectionProperties();
     }
 

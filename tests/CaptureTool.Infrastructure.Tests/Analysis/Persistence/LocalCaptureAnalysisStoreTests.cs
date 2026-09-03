@@ -224,6 +224,33 @@ public sealed class LocalCaptureAnalysisStoreTests
         Assert.IsNull(await store.GetAsync(record.CaptureId));
     }
 
+    [TestMethod]
+    public async Task SuccessfulMutations_ShouldNotifyAllListenersWithoutAffectingPersistence()
+    {
+        string root = AnalysisPersistenceTestData.CreateTestFolder();
+        CaptureAnalysisRecord record = AnalysisPersistenceTestData.CreateRecord();
+        using LocalCaptureAnalysisStore store = CreateStore(root);
+        var notifications = new List<(CaptureId CaptureId, bool WasDeleted)>();
+        store.AnalysisChanged += (_, _) => throw new InvalidOperationException("listener failure");
+        store.AnalysisChanged += (_, args) =>
+            notifications.Add((args.CaptureId, args.WasDeleted));
+
+        CaptureAnalysisStoreWriteResult written = await store.TryWriteAsync(record, null);
+        CaptureAnalysisStoreWriteResult deleted = await store.TryDeleteAsync(
+            record.CaptureId,
+            written.Snapshot!.DocumentRevision);
+
+        Assert.AreEqual(CaptureAnalysisStoreWriteStatus.Succeeded, written.Status);
+        Assert.AreEqual(CaptureAnalysisStoreWriteStatus.Succeeded, deleted.Status);
+        CollectionAssert.AreEqual(
+            new[]
+            {
+                (record.CaptureId, false),
+                (record.CaptureId, true),
+            },
+            notifications);
+    }
+
     private static LocalCaptureAnalysisStore CreateStore(
         string localCacheFolder,
         TestDataProtectionService? protector = null,

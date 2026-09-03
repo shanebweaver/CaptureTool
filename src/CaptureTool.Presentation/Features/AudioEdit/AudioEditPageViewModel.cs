@@ -1,3 +1,6 @@
+using CaptureTool.Application.Abstractions.Edit.Metadata;
+using CaptureTool.Application.Abstractions.Edit;
+using CaptureTool.Application.Abstractions.Edit.Audio.OpenAudioEditPage;
 using CaptureTool.Application.Abstractions.Edit.Audio.CopyAudioFile;
 using CaptureTool.Application.Abstractions.Edit.Audio.SaveAudioFile;
 using CaptureTool.Application.Abstractions.Edit.External;
@@ -7,6 +10,8 @@ using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Application.Abstractions.Telemetry;
 using CaptureTool.Application.Abstractions.UseCases;
 using CaptureTool.Domain.FileSystem;
+using CaptureTool.Domain.Analysis;
+using CaptureTool.Presentation.Features.AnalyzedContent;
 using CaptureTool.Presentation.Features.Audio;
 using CaptureTool.Presentation.Features.Media;
 using CaptureTool.Presentation.ViewModels;
@@ -15,7 +20,7 @@ using System.Collections.ObjectModel;
 
 namespace CaptureTool.Presentation.Features.AudioEdit;
 
-public sealed partial class AudioEditPageViewModel : LoadableViewModelBase<AudioFile>
+public sealed partial class AudioEditPageViewModel : LoadableViewModelBase<OpenAudioEditPageRequest>
 {
     private const double WaveformMinBarHeight = 0;
     private const double WaveformMaxBarHeight = 132;
@@ -25,6 +30,8 @@ public sealed partial class AudioEditPageViewModel : LoadableViewModelBase<Audio
     public IAsyncRelayCommand OpenInClipchampCommand { get; }
     public IAsyncRelayCommand OpenAudioFolderCommand { get; }
     public IRelayCommand RetryMediaCommand { get; }
+
+    public AnalyzedContentViewModel AnalyzedContent { get; }
 
     public string? AudioPath
     {
@@ -94,7 +101,8 @@ public sealed partial class AudioEditPageViewModel : LoadableViewModelBase<Audio
         IAudioWaveformHistory waveformHistory,
         ITelemetryService? telemetryService = null,
         ILocalizationService? localizationService = null,
-        IScratchArtifactStore? scratchArtifactStore = null)
+        IScratchArtifactStore? scratchArtifactStore = null,
+        AnalyzedContentViewModel? analyzedContent = null)
     {
         _saveAction = saveAction;
         _copyAction = copyAction;
@@ -104,6 +112,7 @@ public sealed partial class AudioEditPageViewModel : LoadableViewModelBase<Audio
         _telemetryService = telemetryService;
         _localizationService = localizationService;
         _scratchArtifactStore = scratchArtifactStore;
+        AnalyzedContent = analyzedContent ?? new AnalyzedContentViewModel();
 
         SaveCommand = new AsyncRelayCommand(SaveAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
         CopyCommand = new AsyncRelayCommand(CopyAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
@@ -126,20 +135,33 @@ public sealed partial class AudioEditPageViewModel : LoadableViewModelBase<Audio
         }
 
         AudioPath = null;
+        AnalyzedContent.Dispose();
         base.Dispose();
     }
 
-    public override void Load(AudioFile audio)
+    public void Load(AudioFile audio) => Load(new OpenAudioEditPageRequest(audio));
+
+    public override void Load(OpenAudioEditPageRequest request)
     {
+        ArgumentNullException.ThrowIfNull(request);
         ThrowIfNotReadyToLoad();
         StartLoading();
 
+        AudioFile audio = request.AudioFile;
         AudioPath = audio.FilePath;
         IsAudioReady = true;
         BeginMediaLoading();
         ResetWaveform();
 
-        base.Load(audio);
+        CaptureEditorContext context = request.EditorContext ?? new CaptureEditorContext(audio.FilePath);
+        AnalyzedContent.Load(
+            new CaptureMetadataViewRequest(
+                CaptureMediaKind.Audio,
+                context.CaptureId,
+                context.PersistentSourcePath),
+            context.InitialMatch);
+
+        base.Load(request);
         TrackEditorOpened();
     }
 

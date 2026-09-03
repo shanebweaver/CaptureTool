@@ -1977,4 +1977,30 @@ SOFTWARE.
   <data name="CaptureMemory_Settings_ReanalyzeExcluded" xml:space="preserve"><value>Нет подходящих записей. Исключённые и забытые записи не участвуют в повторном анализе.</value></data>
   <data name="CaptureMemory_Settings_ReanalyzeEmpty" xml:space="preserve"><value>Пока нет захватов, включённых в анализ. Создайте новый захват, чтобы начать анализ.</value></data>
   <data name="CaptureMemory_Settings_ReanalyzePartial" xml:space="preserve"><value>Анализ снимков поставлен в очередь. Результаты появятся по мере завершения анализа.</value></data>
+  <data name="AnalyzedContent_Open.Label" xml:space="preserve"><value>Распознанное содержимое</value></data>
+  <data name="AnalyzedContent_Open.AutomationProperties.Name" xml:space="preserve"><value>Показать распознанное содержимое</value></data>
+  <data name="AnalyzedContent_Open.ToolTipService.ToolTip" xml:space="preserve"><value>Показать текст, речь и описания, найденные в этом снимке</value></data>
+  <data name="AnalyzedContent_Title.Text" xml:space="preserve"><value>Распознанное содержимое</value></data>
+  <data name="AnalyzedContent_Close.AutomationProperties.Name" xml:space="preserve"><value>Закрыть распознанное содержимое</value></data>
+  <data name="AnalyzedContent_NoContent.Text" xml:space="preserve"><value>Для этого снимка нет распознанного содержимого.</value></data>
+  <data name="AnalyzedContent_CopyAll.Content" xml:space="preserve"><value>Копировать все</value></data>
+  <data name="AnalyzedContent_ShowImageText.Content" xml:space="preserve"><value>Показать текст на изображении</value></data>
+  <data name="AnalyzedContent_DescribeImage.Text" xml:space="preserve"><value>Описать изображение</value></data>
+  <data name="AnalyzedContent_DescribeBrief.Content" xml:space="preserve"><value>Кратко</value></data>
+  <data name="AnalyzedContent_DescribeDetailed.Content" xml:space="preserve"><value>Подробно</value></data>
+  <data name="AnalyzedContent_DescribeDiagram.Content" xml:space="preserve"><value>Диаграмма</value></data>
+  <data name="AnalyzedContent_DescribeAccessible.Content" xml:space="preserve"><value>Для специальных возможностей</value></data>
+  <data name="AnalyzedContent_NoContentMessage" xml:space="preserve"><value>Для этого снимка нет распознанного содержимого.</value></data>
+  <data name="AnalyzedContent_Copied" xml:space="preserve"><value>Распознанное содержимое скопировано.</value></data>
+  <data name="AnalyzedContent_CopyFailed" xml:space="preserve"><value>Не удалось скопировать распознанное содержимое.</value></data>
+  <data name="AnalyzedContent_Transcript" xml:space="preserve"><value>Расшифровка</value></data>
+  <data name="AnalyzedContent_Text" xml:space="preserve"><value>Текст</value></data>
+  <data name="AnalyzedContent_Description" xml:space="preserve"><value>Описание</value></data>
+  <data name="AnalyzedContent_OnScreenText" xml:space="preserve"><value>Текст на экране</value></data>
+  <data name="AnalyzedContent_VisualDescriptions" xml:space="preserve"><value>Визуальные описания</value></data>
+  <data name="AnalyzedContent_Properties" xml:space="preserve"><value>Свойства</value></data>
+  <data name="AnalyzedContent_NoSpeech" xml:space="preserve"><value>Речь не обнаружена.</value></data>
+  <data name="AnalyzedContent_NoText" xml:space="preserve"><value>Текст не обнаружен.</value></data>
+  <data name="AnalyzedContent_NoDescription" xml:space="preserve"><value>Описание не создано.</value></data>
+  <data name="AnalyzedContent_NoProperties" xml:space="preserve"><value>Свойства мультимедиа недоступны.</value></data>
 </root>

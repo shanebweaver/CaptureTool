@@ -1,4 +1,5 @@
 using CaptureTool.Application.Abstractions.Analysis.Persistence;
+using CaptureTool.Application.Abstractions.Edit.Metadata;
 using CaptureTool.Application.Abstractions.Logging;
 using CaptureTool.Application.Abstractions.Security;
 using CaptureTool.Application.Abstractions.Storage;
@@ -12,7 +13,10 @@ using System.Text.Json;
 
 namespace CaptureTool.Infrastructure.Analysis.Persistence;
 
-internal sealed class LocalCaptureAnalysisStore : ICaptureAnalysisStore, IDisposable
+internal sealed class LocalCaptureAnalysisStore :
+    ICaptureAnalysisStore,
+    ICaptureAnalysisChangeNotifier,
+    IDisposable
 {
     internal const string AnalysisDirectoryName = "CaptureAnalysis";
     internal const string MetadataVersionDirectoryName = "metadata-v1";
@@ -28,6 +32,8 @@ internal sealed class LocalCaptureAnalysisStore : ICaptureAnalysisStore, IDispos
     private readonly IAtomicFileWriter _atomicFileWriter;
     private readonly ILogService _logService;
     private readonly SemaphoreSlim _gate = new(1, 1);
+
+    public event EventHandler<CaptureAnalysisChangedEventArgs>? AnalysisChanged;
 
     public LocalCaptureAnalysisStore(
         IApplicationLocalCachePathProvider localCachePathProvider,
@@ -111,6 +117,7 @@ internal sealed class LocalCaptureAnalysisStore : ICaptureAnalysisStore, IDispos
             throw new ArgumentOutOfRangeException(nameof(expectedDocumentRevision));
         }
 
+        bool notifyChanged = false;
         await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
@@ -176,11 +183,16 @@ internal sealed class LocalCaptureAnalysisStore : ICaptureAnalysisStore, IDispos
             }
 
             var committed = new CaptureAnalysisStoreSnapshot(nextRevision, record);
+            notifyChanged = true;
             return new(CaptureAnalysisStoreWriteStatus.Succeeded, committed);
         }
         finally
         {
             _gate.Release();
+            if (notifyChanged)
+            {
+                NotifyAnalysisChanged(record.CaptureId, wasDeleted: false);
+            }
         }
     }
 
@@ -201,6 +213,7 @@ internal sealed class LocalCaptureAnalysisStore : ICaptureAnalysisStore, IDispos
             throw new ArgumentOutOfRangeException(nameof(expectedDocumentRevision));
         }
 
+        bool notifyChanged = false;
         await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
@@ -231,6 +244,7 @@ internal sealed class LocalCaptureAnalysisStore : ICaptureAnalysisStore, IDispos
             try
             {
                 File.Delete(filePath);
+                notifyChanged = true;
                 return new(CaptureAnalysisStoreWriteStatus.Succeeded, current);
             }
             catch (Exception ex)
@@ -242,6 +256,32 @@ internal sealed class LocalCaptureAnalysisStore : ICaptureAnalysisStore, IDispos
         finally
         {
             _gate.Release();
+            if (notifyChanged)
+            {
+                NotifyAnalysisChanged(captureId, wasDeleted: true);
+            }
+        }
+    }
+
+    private void NotifyAnalysisChanged(CaptureId captureId, bool wasDeleted)
+    {
+        EventHandler<CaptureAnalysisChangedEventArgs>? handlers = AnalysisChanged;
+        if (handlers == null)
+        {
+            return;
+        }
+
+        var args = new CaptureAnalysisChangedEventArgs(captureId, wasDeleted);
+        foreach (EventHandler<CaptureAnalysisChangedEventArgs> handler in handlers.GetInvocationList())
+        {
+            try
+            {
+                handler(this, args);
+            }
+            catch (Exception ex)
+            {
+                _logService.LogException(ex, "A capture analysis change listener failed.");
+            }
         }
     }
 

@@ -23,6 +23,7 @@ public sealed class CaptureMemorySearchResultViewModel : ViewModelBase
         }
 
         CaptureId = result.CaptureId;
+        Evidence = result.Evidence;
         MediaKind = result.MediaKind;
         CapturedAtUtc = result.CapturedAtUtc;
         FileName = location.DisplayFileName;
@@ -77,6 +78,8 @@ public sealed class CaptureMemorySearchResultViewModel : ViewModelBase
     }
 
     public CaptureId CaptureId { get; }
+
+    public CaptureMemoryMatchEvidence Evidence { get; }
 
     public CaptureMediaKind MediaKind { get; }
 

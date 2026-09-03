@@ -1,5 +1,8 @@
 using CaptureTool.Application.Abstractions.Ai;
+using CaptureTool.Application.Abstractions.Edit.Metadata;
+using CaptureTool.Application.Abstractions.Edit;
 using CaptureTool.Application.Abstractions.Edit.External;
+using CaptureTool.Application.Abstractions.Edit.Video.OpenVideoEditPage;
 using CaptureTool.Application.Abstractions.Edit.Video.CopyVideoFile;
 using CaptureTool.Application.Abstractions.Edit.Video.SaveVideoFile;
 using CaptureTool.Application.Abstractions.Edit.Video.SuperResolution;
@@ -11,16 +14,18 @@ using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Application.Abstractions.Telemetry;
 using CaptureTool.Application.Abstractions.UseCases;
 using CaptureTool.Domain.Ai;
+using CaptureTool.Domain.Analysis;
 using CaptureTool.Domain.Capture;
 using CaptureTool.Domain.FileSystem;
 using CaptureTool.Presentation.Features.Media;
+using CaptureTool.Presentation.Features.AnalyzedContent;
 using CaptureTool.Presentation.Notifications;
 using CaptureTool.Presentation.ViewModels;
 using CommunityToolkit.Mvvm.Input;
 
 namespace CaptureTool.Presentation.Features.VideoEdit;
 
-public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<VideoFile>, IEditableSession
+public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<OpenVideoEditPageRequest>, IEditableSession
 {
     private const double TrimComparisonToleranceSeconds = 0.01;
 
@@ -60,6 +65,8 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
     public IAsyncRelayCommand ToggleVideoSuperResolutionCommand { get; }
     public IRelayCommand ToggleTrimModeCommand { get; }
     public IRelayCommand RetryMediaCommand { get; }
+
+    public AnalyzedContentViewModel AnalyzedContent { get; }
 
     public string? VideoPath
     {
@@ -230,7 +237,8 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
         ILocalizationService? localizationService = null,
         IAppNotificationService? notificationService = null,
         ITelemetryService? telemetryService = null,
-        IScratchArtifactStore? scratchArtifactStore = null)
+        IScratchArtifactStore? scratchArtifactStore = null,
+        AnalyzedContentViewModel? analyzedContent = null)
     {
         _saveAction = saveAction;
         _copyAction = copyAction;
@@ -246,6 +254,7 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
         _notificationService = notificationService ?? new NullAppNotificationService();
         _telemetryService = telemetryService;
         _scratchArtifactStore = scratchArtifactStore;
+        AnalyzedContent = analyzedContent ?? new AnalyzedContentViewModel();
 
         SaveCommand = new AsyncRelayCommand(SaveCommandAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
         CopyCommand = new AsyncRelayCommand(CopyAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
@@ -270,11 +279,15 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
         VideoSuperResolutionStatusMessage = string.Empty;
     }
 
-    public override void Load(VideoFile video)
+    public void Load(VideoFile video) => Load(new OpenVideoEditPageRequest(video));
+
+    public override void Load(OpenVideoEditPageRequest request)
     {
+        ArgumentNullException.ThrowIfNull(request);
         ThrowIfNotReadyToLoad();
         StartLoading();
 
+        VideoFile video = request.VideoFile;
         _originalVideoPath = video.FilePath;
         TrackScratchArtifact(video.FilePath);
         _superResolutionVideoPath = null;
@@ -303,7 +316,15 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
         }
 
         UpdateVideoSuperResolutionAvailability();
-        base.Load(video);
+        CaptureEditorContext context = request.EditorContext ?? new CaptureEditorContext(video.FilePath);
+        AnalyzedContent.Load(
+            new CaptureMetadataViewRequest(
+                CaptureMediaKind.Video,
+                context.CaptureId,
+                context.PersistentSourcePath),
+            context.InitialMatch);
+
+        base.Load(request);
         TrackEditorOpened();
     }
 
@@ -381,6 +402,7 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
         }
 
         ResetTrimRange(durationSeconds);
+        UpdateAnalyzedContentSeekRange();
     }
 
     public void UpdateTrimStart(double seconds)
@@ -389,6 +411,7 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
         KeepPlayheadInTrimRange();
         RaisePropertyChanged(nameof(IsTrimmed));
         OnTrimChanged();
+        UpdateAnalyzedContentSeekRange();
     }
 
     public void UpdateTrimEnd(double seconds)
@@ -397,17 +420,20 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
         KeepPlayheadInTrimRange();
         RaisePropertyChanged(nameof(IsTrimmed));
         OnTrimChanged();
+        UpdateAnalyzedContentSeekRange();
     }
 
     public void UpdatePlayhead(double seconds)
     {
         PlayheadSeconds = ClampToTrimRange(seconds);
+        AnalyzedContent.UpdatePlaybackPosition(TimeSpan.FromSeconds(PlayheadSeconds));
     }
 
     private void ToggleTrimMode()
     {
         IsInTrimMode = !IsInTrimMode;
         KeepPlayheadInTrimRange();
+        UpdateAnalyzedContentSeekRange();
         TrackEditTool("trim_mode", TelemetryOutcomes.Succeeded, IsInTrimMode);
     }
 
@@ -417,6 +443,7 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
         TrimStartSeconds = 0;
         TrimEndSeconds = durationSeconds;
         PlayheadSeconds = 0;
+        AnalyzedContent.UpdatePlaybackPosition(TimeSpan.Zero);
         RaisePropertyChanged(nameof(IsTrimmed));
         UpdateHasUnsavedChanges();
     }
@@ -424,6 +451,15 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
     private void KeepPlayheadInTrimRange()
     {
         PlayheadSeconds = ClampToTrimRange(PlayheadSeconds);
+    }
+
+    private void UpdateAnalyzedContentSeekRange()
+    {
+        AnalyzedContent.SetSeekRange(
+            IsInTrimMode ? TimeSpan.FromSeconds(TrimStartSeconds) : TimeSpan.Zero,
+            VideoDurationSeconds > 0
+                ? TimeSpan.FromSeconds(IsInTrimMode ? TrimEndSeconds : VideoDurationSeconds)
+                : null);
     }
 
     private double ClampToTrimRange(double seconds)
@@ -621,6 +657,7 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
         _originalVideoPath = null;
         _superResolutionVideoPath = null;
         VideoPath = null;
+        AnalyzedContent.Dispose();
         base.Dispose();
     }
 

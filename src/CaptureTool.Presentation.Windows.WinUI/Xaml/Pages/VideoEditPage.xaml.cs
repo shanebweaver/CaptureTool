@@ -3,6 +3,7 @@ using CaptureTool.Application.Abstractions.Media;
 using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Presentation.Features.Media;
 using CaptureTool.Presentation.Features.VideoEdit;
+using CaptureTool.Presentation.Features.AnalyzedContent;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Navigation;
 using System.ComponentModel;
@@ -14,6 +15,7 @@ namespace CaptureTool.Presentation.Windows.WinUI.Xaml.Pages;
 
 public sealed partial class VideoEditPage : VideoEditPageBase
 {
+    private TimeSpan? _pendingAnalyzedContentSeek;
     private readonly DispatcherTimer _boundedPlaybackTimer;
     private readonly ILogService _logService;
     private readonly IScratchArtifactStore _scratchArtifactStore;
@@ -52,6 +54,7 @@ public sealed partial class VideoEditPage : VideoEditPageBase
             Interval = TimeSpan.FromMilliseconds(50),
         };
         _boundedPlaybackTimer.Tick += BoundedPlaybackTimer_Tick;
+        ViewModel.AnalyzedContent.SeekRequested += AnalyzedContent_SeekRequested;
     }
 
     private MediaPlayer CreateMediaPlayer()
@@ -238,6 +241,11 @@ public sealed partial class VideoEditPage : VideoEditPageBase
             {
                 ViewModel.ReportMediaOpened();
             }
+            if (sender == _originalMediaPlayer && _pendingAnalyzedContentSeek is { } analyzedContentSeek)
+            {
+                ViewModel.UpdatePlayhead(analyzedContentSeek.TotalSeconds);
+                _pendingAnalyzedContentSeek = null;
+            }
             SyncMediaPositionToPlayhead();
         });
     }
@@ -322,6 +330,21 @@ public sealed partial class VideoEditPage : VideoEditPageBase
             }
 
             UpdatePlayheadFromMedia(currentSeconds);
+        });
+    }
+
+    private void AnalyzedContent_SeekRequested(object? sender, TimeSpan position)
+    {
+        DispatcherQueue.TryEnqueue(() =>
+        {
+            if (ViewModel.VideoDurationSeconds > 0)
+            {
+                ViewModel.UpdatePlayhead(position.TotalSeconds);
+            }
+            else
+            {
+                _pendingAnalyzedContentSeek = position;
+            }
         });
     }
 

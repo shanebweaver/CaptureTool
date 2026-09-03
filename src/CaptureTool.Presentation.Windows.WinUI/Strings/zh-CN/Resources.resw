@@ -1977,4 +1977,30 @@ SOFTWARE.
   <data name="CaptureMemory_Settings_ReanalyzeExcluded" xml:space="preserve"><value>没有符合条件的捕获内容。已排除和已遗忘的内容仍不会被重新分析。</value></data>
   <data name="CaptureMemory_Settings_ReanalyzeEmpty" xml:space="preserve"><value>尚无已加入分析的捕获。请创建新捕获以开始分析。</value></data>
   <data name="CaptureMemory_Settings_ReanalyzePartial" xml:space="preserve"><value>捕获分析已加入队列。分析完成后，结果将陆续显示。</value></data>
+  <data name="AnalyzedContent_Open.Label" xml:space="preserve"><value>分析内容</value></data>
+  <data name="AnalyzedContent_Open.AutomationProperties.Name" xml:space="preserve"><value>显示分析内容</value></data>
+  <data name="AnalyzedContent_Open.ToolTipService.ToolTip" xml:space="preserve"><value>显示此捕获中识别的文本、语音和描述</value></data>
+  <data name="AnalyzedContent_Title.Text" xml:space="preserve"><value>分析内容</value></data>
+  <data name="AnalyzedContent_Close.AutomationProperties.Name" xml:space="preserve"><value>关闭分析内容</value></data>
+  <data name="AnalyzedContent_NoContent.Text" xml:space="preserve"><value>此捕获没有可用的分析内容。</value></data>
+  <data name="AnalyzedContent_CopyAll.Content" xml:space="preserve"><value>全部复制</value></data>
+  <data name="AnalyzedContent_ShowImageText.Content" xml:space="preserve"><value>在图像上显示文本</value></data>
+  <data name="AnalyzedContent_DescribeImage.Text" xml:space="preserve"><value>描述图像</value></data>
+  <data name="AnalyzedContent_DescribeBrief.Content" xml:space="preserve"><value>简要</value></data>
+  <data name="AnalyzedContent_DescribeDetailed.Content" xml:space="preserve"><value>详细</value></data>
+  <data name="AnalyzedContent_DescribeDiagram.Content" xml:space="preserve"><value>图表</value></data>
+  <data name="AnalyzedContent_DescribeAccessible.Content" xml:space="preserve"><value>无障碍</value></data>
+  <data name="AnalyzedContent_NoContentMessage" xml:space="preserve"><value>此捕获没有可用的分析内容。</value></data>
+  <data name="AnalyzedContent_Copied" xml:space="preserve"><value>已复制分析内容。</value></data>
+  <data name="AnalyzedContent_CopyFailed" xml:space="preserve"><value>无法复制分析内容。</value></data>
+  <data name="AnalyzedContent_Transcript" xml:space="preserve"><value>转录</value></data>
+  <data name="AnalyzedContent_Text" xml:space="preserve"><value>文本</value></data>
+  <data name="AnalyzedContent_Description" xml:space="preserve"><value>描述</value></data>
+  <data name="AnalyzedContent_OnScreenText" xml:space="preserve"><value>屏幕文本</value></data>
+  <data name="AnalyzedContent_VisualDescriptions" xml:space="preserve"><value>视觉描述</value></data>
+  <data name="AnalyzedContent_Properties" xml:space="preserve"><value>属性</value></data>
+  <data name="AnalyzedContent_NoSpeech" xml:space="preserve"><value>未检测到语音。</value></data>
+  <data name="AnalyzedContent_NoText" xml:space="preserve"><value>未检测到文本。</value></data>
+  <data name="AnalyzedContent_NoDescription" xml:space="preserve"><value>未生成描述。</value></data>
+  <data name="AnalyzedContent_NoProperties" xml:space="preserve"><value>没有可用的媒体属性。</value></data>
 </root>

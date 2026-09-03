@@ -1,4 +1,5 @@
 using CaptureTool.Application.Abstractions.Capture.Assets;
+using CaptureTool.Application.Abstractions.Edit;
 using CaptureTool.Application.Abstractions.Files;
 using CaptureTool.Application.Abstractions.Library.CaptureMemory;
 using CaptureTool.Application.Abstractions.Library.RecentCaptures.OpenRecentCapture;
@@ -150,7 +151,12 @@ internal sealed class OpenCaptureMemoryResultUseCase : IOpenCaptureMemoryResultU
 
                 UseCaseResponse<OpenRecentCaptureResponse> opened = await _openRecentCapture
                     .ExecuteAsync(
-                        new OpenRecentCaptureRequest(location.CurrentFilePath!),
+                        new OpenRecentCaptureRequest(
+                            location.CurrentFilePath!,
+                            new CaptureEditorContext(
+                                location.CurrentFilePath!,
+                                request.CaptureId,
+                                request.Evidence)),
                         token).ConfigureAwait(false);
                 return new OpenCaptureMemoryResultResponse(opened.Value?.Opened == true
                     ? OpenCaptureMemoryResultStatus.Opened

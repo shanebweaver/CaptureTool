@@ -1,4 +1,5 @@
 using CaptureTool.Application.Abstractions.UseCases;
+using CaptureTool.Application.Abstractions.Analysis.Memory;
 using CaptureTool.Domain;
 
 namespace CaptureTool.Application.Abstractions.Library.CaptureMemory;
@@ -86,7 +87,9 @@ public interface ICaptureMemoryResultResolver
 
 public sealed record OpenCaptureMemoryResultRequest
 {
-    public OpenCaptureMemoryResultRequest(CaptureId captureId)
+    public OpenCaptureMemoryResultRequest(
+        CaptureId captureId,
+        CaptureMemoryMatchEvidence? evidence = null)
     {
         if (captureId.IsEmpty)
         {
@@ -94,9 +97,12 @@ public sealed record OpenCaptureMemoryResultRequest
         }
 
         CaptureId = captureId;
+        Evidence = evidence;
     }
 
     public CaptureId CaptureId { get; }
+
+    public CaptureMemoryMatchEvidence? Evidence { get; }
 }
 
 public enum OpenCaptureMemoryResultStatus

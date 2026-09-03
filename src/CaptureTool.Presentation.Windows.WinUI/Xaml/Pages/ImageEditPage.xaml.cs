@@ -1,5 +1,6 @@
 using CaptureTool.Domain.Edit.Drawable;
 using CaptureTool.Domain.Edit.Operations;
+using CaptureTool.Domain.Analysis.Payloads;
 using CaptureTool.Presentation.Loading;
 using CaptureTool.Presentation.Windows.WinUI.Xaml.Controls;
 using Microsoft.UI.Xaml;
@@ -23,6 +24,7 @@ public sealed partial class ImageEditPage : ImageEditPageBase
     private MenuFlyoutItem? _undoMenuItem;
     private MenuFlyoutItem? _redoMenuItem;
     private readonly Dictionary<FrameworkElement, Storyboard> _toolbarAnimations = [];
+    private PixelRect? _pendingAnalyzedContentBounds;
 
     private const int ToolbarFadeDurationMilliseconds = 130;
     private const int ToolbarSlideDurationMilliseconds = 160;
@@ -42,6 +44,7 @@ public sealed partial class ImageEditPage : ImageEditPageBase
         ImageCanvas.ZoomFactorChanged += ImageCanvas_ZoomFactorChanged;
         ImageCanvas.ImageContextMenuRequested += ImageCanvas_ImageContextMenuRequested;
         ImageCanvas.ShapeContextMenuRequested += ImageCanvas_ShapeContextMenuRequested;
+        ViewModel.AnalyzedContent.ImageBoundsFocusRequested += AnalyzedContent_ImageBoundsFocusRequested;
     }
 
     ~ImageEditPage()
@@ -58,6 +61,7 @@ public sealed partial class ImageEditPage : ImageEditPageBase
         ImageCanvas.ShapeModified -= ImageCanvas_ShapeModified;
         ImageCanvas.ImageContextMenuRequested -= ImageCanvas_ImageContextMenuRequested;
         ImageCanvas.ShapeContextMenuRequested -= ImageCanvas_ShapeContextMenuRequested;
+        ViewModel.AnalyzedContent.ImageBoundsFocusRequested -= AnalyzedContent_ImageBoundsFocusRequested;
     }
 
     private void InitializeContextMenus()
@@ -107,8 +111,6 @@ public sealed partial class ImageEditPage : ImageEditPageBase
         SetToolbarHostState(ShapeToolbarHost, ViewModel.IsShapesModeActive);
         SetToolbarHostState(TextToolbarHost, ViewModel.IsTextModeActive);
         SetToolbarHostState(ColorPickerToolbarHost, ViewModel.IsColorPickerModeActive);
-        SetToolbarHostState(TextExtractionToolbarHost, ViewModel.IsTextExtractionModeActive);
-        SetToolbarHostState(ImageDescriptionToolbarHost, ViewModel.IsImageDescriptionModeActive);
         SetToolbarHostState(ForegroundExtractionToolbarHost, ViewModel.IsForegroundExtractionModeActive);
         SetToolbarHostState(ObjectEraseToolbarHost, ViewModel.IsObjectEraseModeActive);
         SetToolbarHostState(ObjectExtractionToolbarHost, ViewModel.IsObjectExtractionModeActive);
@@ -116,6 +118,11 @@ public sealed partial class ImageEditPage : ImageEditPageBase
 
     private void ViewModel_PropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
+        if (e.PropertyName == nameof(ViewModel.TextExtractionRegions))
+        {
+            TryFocusAnalyzedContentBounds();
+        }
+
         switch (e.PropertyName)
         {
             case nameof(ViewModel.IsChromaKeyModeActive):
@@ -130,12 +137,6 @@ public sealed partial class ImageEditPage : ImageEditPageBase
             case nameof(ViewModel.IsColorPickerModeActive):
                 AnimateToolbarHost(ColorPickerToolbarHost, ViewModel.IsColorPickerModeActive);
                 break;
-            case nameof(ViewModel.IsTextExtractionModeActive):
-                AnimateToolbarHost(TextExtractionToolbarHost, ViewModel.IsTextExtractionModeActive);
-                break;
-            case nameof(ViewModel.IsImageDescriptionModeActive):
-                AnimateToolbarHost(ImageDescriptionToolbarHost, ViewModel.IsImageDescriptionModeActive);
-                break;
             case nameof(ViewModel.IsForegroundExtractionModeActive):
                 AnimateToolbarHost(ForegroundExtractionToolbarHost, ViewModel.IsForegroundExtractionModeActive);
                 break;
@@ -145,6 +146,41 @@ public sealed partial class ImageEditPage : ImageEditPageBase
             case nameof(ViewModel.IsObjectExtractionModeActive):
                 AnimateToolbarHost(ObjectExtractionToolbarHost, ViewModel.IsObjectExtractionModeActive);
                 break;
+        }
+    }
+
+    private void AnalyzedContent_ImageBoundsFocusRequested(object? sender, PixelRect? bounds)
+    {
+        if (bounds is not PixelRect value)
+        {
+            return;
+        }
+
+        _pendingAnalyzedContentBounds = value;
+        if (!ViewModel.IsTextExtractionModeActive)
+        {
+            _ = ViewModel.ToggleTextExtractionModeCommand.ExecuteAsync(null);
+        }
+
+        DispatcherQueue.TryEnqueue(TryFocusAnalyzedContentBounds);
+    }
+
+    private void TryFocusAnalyzedContentBounds()
+    {
+        if (_pendingAnalyzedContentBounds is not PixelRect bounds ||
+            ViewModel.TextExtractionRegions.Count == 0)
+        {
+            return;
+        }
+
+        ImageCanvas.IsTextExtractionOverlayEnabled = true;
+        if (ImageCanvas.FocusExtractedText(new RectangleF(
+            (float)bounds.X,
+            (float)bounds.Y,
+            (float)bounds.Width,
+            (float)bounds.Height)))
+        {
+            _pendingAnalyzedContentBounds = null;
         }
     }
 

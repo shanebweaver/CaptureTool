@@ -1977,4 +1977,30 @@ SOFTWARE.
   <data name="CaptureMemory_Settings_ReanalyzeExcluded" xml:space="preserve"><value>No hay capturas aptas. Las capturas excluidas y olvidadas siguen excluidas del nuevo análisis.</value></data>
   <data name="CaptureMemory_Settings_ReanalyzeEmpty" xml:space="preserve"><value>Aún no hay capturas registradas para el análisis. Cree una captura nueva para iniciar el análisis.</value></data>
   <data name="CaptureMemory_Settings_ReanalyzePartial" xml:space="preserve"><value>El análisis de capturas se puso en cola. Los resultados aparecerán a medida que finalice el análisis.</value></data>
+  <data name="AnalyzedContent_Open.Label" xml:space="preserve"><value>Contenido analizado</value></data>
+  <data name="AnalyzedContent_Open.AutomationProperties.Name" xml:space="preserve"><value>Mostrar contenido analizado</value></data>
+  <data name="AnalyzedContent_Open.ToolTipService.ToolTip" xml:space="preserve"><value>Mostrar texto, voz y descripciones encontrados en esta captura</value></data>
+  <data name="AnalyzedContent_Title.Text" xml:space="preserve"><value>Contenido analizado</value></data>
+  <data name="AnalyzedContent_Close.AutomationProperties.Name" xml:space="preserve"><value>Cerrar contenido analizado</value></data>
+  <data name="AnalyzedContent_NoContent.Text" xml:space="preserve"><value>No hay contenido analizado disponible para esta captura.</value></data>
+  <data name="AnalyzedContent_CopyAll.Content" xml:space="preserve"><value>Copiar todo</value></data>
+  <data name="AnalyzedContent_ShowImageText.Content" xml:space="preserve"><value>Mostrar texto en la imagen</value></data>
+  <data name="AnalyzedContent_DescribeImage.Text" xml:space="preserve"><value>Describir imagen</value></data>
+  <data name="AnalyzedContent_DescribeBrief.Content" xml:space="preserve"><value>Breve</value></data>
+  <data name="AnalyzedContent_DescribeDetailed.Content" xml:space="preserve"><value>Detallada</value></data>
+  <data name="AnalyzedContent_DescribeDiagram.Content" xml:space="preserve"><value>Diagrama</value></data>
+  <data name="AnalyzedContent_DescribeAccessible.Content" xml:space="preserve"><value>Accesible</value></data>
+  <data name="AnalyzedContent_NoContentMessage" xml:space="preserve"><value>No hay contenido analizado disponible para esta captura.</value></data>
+  <data name="AnalyzedContent_Copied" xml:space="preserve"><value>Contenido analizado copiado.</value></data>
+  <data name="AnalyzedContent_CopyFailed" xml:space="preserve"><value>No se pudo copiar el contenido analizado.</value></data>
+  <data name="AnalyzedContent_Transcript" xml:space="preserve"><value>Transcripción</value></data>
+  <data name="AnalyzedContent_Text" xml:space="preserve"><value>Texto</value></data>
+  <data name="AnalyzedContent_Description" xml:space="preserve"><value>Descripción</value></data>
+  <data name="AnalyzedContent_OnScreenText" xml:space="preserve"><value>Texto en pantalla</value></data>
+  <data name="AnalyzedContent_VisualDescriptions" xml:space="preserve"><value>Descripciones visuales</value></data>
+  <data name="AnalyzedContent_Properties" xml:space="preserve"><value>Propiedades</value></data>
+  <data name="AnalyzedContent_NoSpeech" xml:space="preserve"><value>No se detectó voz.</value></data>
+  <data name="AnalyzedContent_NoText" xml:space="preserve"><value>No se detectó texto.</value></data>
+  <data name="AnalyzedContent_NoDescription" xml:space="preserve"><value>No se generó ninguna descripción.</value></data>
+  <data name="AnalyzedContent_NoProperties" xml:space="preserve"><value>No hay propiedades multimedia disponibles.</value></data>
 </root>
