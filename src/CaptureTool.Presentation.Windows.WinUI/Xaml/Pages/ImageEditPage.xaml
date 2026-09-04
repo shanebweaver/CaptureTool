@@ -278,7 +278,7 @@
                 IsObjectExtractionModeEnabled="{x:Bind ViewModel.IsObjectExtractionModeActive, Mode=OneWay}"
                 IsShapesModeEnabled="{x:Bind ViewModel.IsShapesModeActive, Mode=OneWay}"
                 IsTextModeEnabled="{x:Bind ViewModel.IsTextModeActive, Mode=OneWay}"
-                IsTextExtractionOverlayEnabled="{x:Bind ViewModel.IsTextExtractionModeActive, Mode=OneWay}"
+                IsTextExtractionOverlayEnabled="{x:Bind ViewModel.IsAnalyzedContentTextOverlayVisible, Mode=OneWay}"
                 Orientation="{x:Bind ViewModel.Orientation, Mode=OneWay}"
                 SelectedShapeType="{x:Bind ViewModel.ShapeTool.SelectedShapeType, Mode=OneWay}"
                 ShapeDeleted="ImageCanvas_ShapeDeleted"
@@ -290,8 +290,7 @@
                 ShapeStrokeWidth="{x:Bind ViewModel.ShapeTool.ShapeStrokeWidth, Mode=OneWay}"
                 TextBackgroundColor="{x:Bind ViewModel.TextTool.TextBackgroundColor, Mode=OneWay}"
                 TextBoxDrawn="ImageCanvas_TextBoxDrawn"
-                TextExtractionRegions="{x:Bind ViewModel.TextExtractionRegions, Mode=OneWay}"
-                TextExtractionQrCodes="{x:Bind ViewModel.TextExtractionQrCodes, Mode=OneWay}"
+                TextExtractionRegions="{x:Bind ViewModel.AnalyzedContentTextRegions, Mode=OneWay}"
                 TextDrawableSelected="ImageCanvas_TextDrawableSelected"
                 TextFontFamily="{x:Bind ViewModel.TextTool.TextFontFamily, Mode=OneWay}"
                 TextFontSize="{x:Bind ViewModel.TextTool.TextFontSize, Mode=OneWay}"
@@ -309,7 +308,7 @@
                 IsEnabled="False"
                 IsTabStop="False"
                 Opacity=".01"
-                Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.IsTextExtractionOverlayVisible), Mode=OneWay}" />
+                Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.IsAnalyzedContentTextOverlayVisible), Mode=OneWay}" />
 
             <Grid
                 x:Name="FloatingToolbarLayer"
@@ -405,18 +404,6 @@
                     </controls:ColorPickerToolbar.RenderTransform>
                 </controls:ColorPickerToolbar>
 
-                <!--  Text extraction options  -->
-                <controls:TextExtractionToolbar
-                    x:Name="TextExtractionToolbarHost"
-                    HorizontalAlignment="Center"
-                    CopyAllTextCommand="{x:Bind ViewModel.TextExtractionTool.CopyAllTextCommand, Mode=OneWay}"
-                    Opacity="0"
-                    Visibility="Collapsed">
-                    <controls:TextExtractionToolbar.RenderTransform>
-                        <TranslateTransform Y="-8" />
-                    </controls:TextExtractionToolbar.RenderTransform>
-                </controls:TextExtractionToolbar>
-
                 <!--  Foreground extraction instructions  -->
                 <controls:ForegroundExtractionToolbar
                     x:Name="ForegroundExtractionToolbarHost"
@@ -450,68 +437,6 @@
                     </controls:ObjectExtractionToolbar.RenderTransform>
                 </controls:ObjectExtractionToolbar>
 
-                <!--  Image description options and output  -->
-                <StackPanel
-                    x:Name="ImageDescriptionToolbarHost"
-                    HorizontalAlignment="Center"
-                    Opacity="0"
-                    Spacing="8"
-                    Visibility="Collapsed">
-                    <StackPanel.RenderTransform>
-                        <TranslateTransform Y="-8" />
-                    </StackPanel.RenderTransform>
-                    <controls:ImageDescriptionToolbar
-                        AccessibleCommand="{x:Bind ViewModel.GenerateAccessibleImageDescriptionCommand, Mode=OneWay}"
-                        BriefCommand="{x:Bind ViewModel.GenerateBriefImageDescriptionCommand, Mode=OneWay}"
-                        DetailedCommand="{x:Bind ViewModel.GenerateDetailedImageDescriptionCommand, Mode=OneWay}"
-                        DiagramCommand="{x:Bind ViewModel.GenerateDiagramImageDescriptionCommand, Mode=OneWay}"
-                        HorizontalAlignment="Center"
-                        IsAccessibleSelected="{x:Bind ViewModel.IsAccessibleImageDescriptionSelected, Mode=OneWay}"
-                        IsBriefSelected="{x:Bind ViewModel.IsBriefImageDescriptionSelected, Mode=OneWay}"
-                        IsDetailedSelected="{x:Bind ViewModel.IsDetailedImageDescriptionSelected, Mode=OneWay}"
-                        IsDiagramSelected="{x:Bind ViewModel.IsDiagramImageDescriptionSelected, Mode=OneWay}" />
-                    <Border
-                        x:Uid="ImageDescriptionPanel"
-                        MaxWidth="640"
-                        Padding="16,12"
-                        AutomationProperties.LiveSetting="Polite"
-                        Background="{ThemeResource AcrylicBackgroundFillColorBaseBrush}"
-                        BorderBrush="{ThemeResource SystemControlBackgroundBaseLowBrush}"
-                        BorderThickness="1"
-                        CornerRadius="8"
-                        Translation="0,0,16"
-                        Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.HasImageDescription), Mode=OneWay}">
-                        <Border.Shadow>
-                            <ThemeShadow />
-                        </Border.Shadow>
-                        <StackPanel Spacing="6">
-                            <Grid ColumnSpacing="12">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="Auto" />
-                                </Grid.ColumnDefinitions>
-                                <TextBlock
-                                    x:Uid="ImageDescriptionPanel_Title"
-                                    VerticalAlignment="Center"
-                                    FontWeight="SemiBold" />
-                                <Button
-                                    x:Uid="ImageDescriptionPanel_CopyButton"
-                                    Grid.Column="1"
-                                    Padding="8,4"
-                                    AutomationProperties.AutomationId="ImageEdit_ImageDescriptionCopyButton"
-                                    Command="{x:Bind ViewModel.CopyImageDescriptionCommand, Mode=OneWay}"
-                                    Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.HasImageDescription), Mode=OneWay}">
-                                    <SymbolIcon Symbol="Copy" />
-                                </Button>
-                            </Grid>
-                            <TextBlock
-                                AutomationProperties.AutomationId="ImageEdit_ImageDescriptionOutput"
-                                IsTextSelectionEnabled="True"
-                                Text="{x:Bind ViewModel.ImageDescription, Mode=OneWay}"
-                                TextWrapping="WrapWholeWords" />
-                        </StackPanel>
-                    </Border>
-                </StackPanel>
             </Grid>
             </Grid>
         </SplitView>
@@ -534,24 +459,6 @@
             VerticalAlignment="Center"
             IsActive="{x:Bind ViewModel.IsSuperResolutionGenerating, Mode=OneWay}"
             Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.IsSuperResolutionGenerating), Mode=OneWay}" />
-
-        <controls:AiLoadingIndicator
-            x:Uid="ImageEdit_TextExtractionProgressRing"
-            Grid.Row="2"
-            AutomationProperties.AutomationId="ImageEdit_TextExtractionProgressRing"
-            HorizontalAlignment="Center"
-            VerticalAlignment="Center"
-            IsActive="{x:Bind ViewModel.IsTextExtractionRunning, Mode=OneWay}"
-            Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.IsTextExtractionRunning), Mode=OneWay}" />
-
-        <controls:AiLoadingIndicator
-            x:Uid="ImageEdit_ImageDescriptionProgressRing"
-            Grid.Row="2"
-            AutomationProperties.AutomationId="ImageEdit_ImageDescriptionProgressRing"
-            HorizontalAlignment="Center"
-            VerticalAlignment="Center"
-            IsActive="{x:Bind ViewModel.IsImageDescriptionRunning, Mode=OneWay}"
-            Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.IsImageDescriptionRunning), Mode=OneWay}" />
 
         <controls:AiLoadingIndicator
             x:Uid="ImageEdit_ForegroundExtractionProgressRing"

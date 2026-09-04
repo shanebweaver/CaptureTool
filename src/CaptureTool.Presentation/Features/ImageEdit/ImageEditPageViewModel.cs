@@ -99,6 +99,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     private bool _hasUserEditsSinceSuperResolutionActivated;
     private int _editRevision;
     private int? _textExtractionProcessedRevision;
+    private bool _isAnalyzedContentTextOverlayRequested;
 
     public event EventHandler? InvalidateCanvasRequested;
     public event EventHandler? RedrawCanvasRequested;
@@ -586,6 +587,21 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     public bool IsTextExtractionOverlayVisible =>
         IsTextExtractionModeActive && (HasTextExtractionRegions || TextExtractionQrCodes.Count > 0);
 
+    public IReadOnlyList<RecognizedTextRegion> AnalyzedContentTextRegions
+    {
+        get;
+        private set
+        {
+            if (Set(ref field, value))
+            {
+                RaisePropertyChanged(nameof(IsAnalyzedContentTextOverlayVisible));
+            }
+        }
+    } = [];
+
+    public bool IsAnalyzedContentTextOverlayVisible =>
+        _isAnalyzedContentTextOverlayRequested && AnalyzedContentTextRegions.Count > 0;
+
     public bool IsImageDescriptionFeatureEnabled
     {
         get;
@@ -878,12 +894,6 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         UpdateZoomPercentageCommand = new RelayCommand<int>(UpdateZoomPercentage);
         UpdateAutoZoomLockCommand = new RelayCommand<bool>(UpdateAutoZoomLock);
         ZoomAndCenterCommand = new RelayCommand(RequestZoomAndCenter);
-        AnalyzedContent.ConfigureImageActions(
-            ToggleTextExtractionModeCommand,
-            GenerateBriefImageDescriptionCommand,
-            GenerateDetailedImageDescriptionCommand,
-            GenerateDiagramImageDescriptionCommand,
-            GenerateAccessibleImageDescriptionCommand);
     }
 
     private void ChromaKeyTool_SettingsChanged(object? sender, EventArgs e)
@@ -1046,6 +1056,9 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         TextExtractionStatusMessage = string.Empty;
         TextExtractionRegions = [];
         TextExtractionQrCodes = [];
+        AnalyzedContentTextRegions = [];
+        _isAnalyzedContentTextOverlayRequested = false;
+        RaisePropertyChanged(nameof(IsAnalyzedContentTextOverlayVisible));
         TextExtractionTool.Reset();
         IsImageDescriptionFeatureEnabled = _imageDescriptionFeatureAvailability.IsImageDescriptionEnabled;
         IsImageDescriptionAvailable = false;
@@ -1081,11 +1094,9 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         object? sender,
         CaptureMetadataViewSnapshot? snapshot)
     {
-        if (snapshot?.ImageText is OcrDocumentV1 document &&
-            _editRevision == 0 &&
-            _textExtractionProcessedRevision == null)
+        List<RecognizedTextRegion> regions = [];
+        if (snapshot?.ImageText is OcrDocumentV1 document)
         {
-            List<RecognizedTextRegion> regions = [];
             int lineIndex = 0;
             foreach (OcrLineV1 line in document.Regions.SelectMany(region => region.Lines))
             {
@@ -1112,28 +1123,22 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
                 lineIndex++;
             }
-
-            TextExtractionRegions = regions;
-            TextExtractionTool.SetText(document.FullText);
-            _textExtractionProcessedRevision = _editRevision;
-            InvalidateCanvasRequested?.Invoke(this, EventArgs.Empty);
         }
 
-        if (snapshot?.ImageDescription is ImageDescriptionV1 description)
+        AnalyzedContentTextRegions = regions;
+        InvalidateCanvasRequested?.Invoke(this, EventArgs.Empty);
+    }
+
+    public void SetAnalyzedContentTextOverlayVisible(bool isVisible)
+    {
+        if (_isAnalyzedContentTextOverlayRequested == isVisible)
         {
-            ImageDescriptionMode mode = description.Purpose switch
-            {
-                ImageDescriptionPurpose.Detailed => ImageDescriptionMode.Detailed,
-                ImageDescriptionPurpose.Diagram => ImageDescriptionMode.Diagram,
-                ImageDescriptionPurpose.Accessible => ImageDescriptionMode.Accessible,
-                _ => ImageDescriptionMode.Brief,
-            };
-            _imageDescriptionResults[mode] = description.Description;
-            if (IsImageDescriptionModeActive && !HasImageDescription)
-            {
-                ShowImageDescription(mode, description.Description);
-            }
+            return;
         }
+
+        _isAnalyzedContentTextOverlayRequested = isVisible;
+        RaisePropertyChanged(nameof(IsAnalyzedContentTextOverlayVisible));
+        InvalidateCanvasRequested?.Invoke(this, EventArgs.Empty);
     }
 
     private static RectangleF ToRectangle(PixelRect bounds)
@@ -2485,16 +2490,6 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
             TextExtractionRegions = NormalizeTextExtractionRegions(result.Document.Regions, result.Document.ImageSize);
             TextExtractionQrCodes = NormalizeQrCodeRegions(result.Document.QrCodes, result.Document.ImageSize);
             TextExtractionTool.SetText(result.Document.Text);
-            AnalyzedContent.SetCurrentImageText(
-                result.Document.Text,
-                TextExtractionRegions.Select(region =>
-                    (
-                        region.Text,
-                        new PixelRect(
-                            region.Bounds.X,
-                            region.Bounds.Y,
-                            region.Bounds.Width,
-                            region.Bounds.Height))));
             _textExtractionProcessedRevision = processedRevision;
             InvalidateCanvasRequested?.Invoke(this, EventArgs.Empty);
             TrackEditTool("text_extraction");
@@ -3047,7 +3042,6 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         _editRevision++;
         InvalidateTextExtractionResult();
         ClearImageDescriptionResults();
-        AnalyzedContent.ClearImageDerivedContent();
 
         if (IsTextExtractionModeActive)
         {
@@ -3131,7 +3125,6 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         ImageDescriptionStatusMessage = string.Empty;
         ImageDescription = description;
         SelectedImageDescriptionMode = mode;
-        AnalyzedContent.SetCurrentImageDescription(description);
         RaiseImageDescriptionSelectionProperties();
     }
 

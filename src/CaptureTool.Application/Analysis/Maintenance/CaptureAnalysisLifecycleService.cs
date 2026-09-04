@@ -402,6 +402,9 @@ internal sealed class CaptureAnalysisLifecycleService :
                 .Select(TryCreateReanalysisWorkItem)
                 .Where(item => item != null)
                 .Cast<ReanalysisWorkItem>()
+                .Where(item => request.CapabilityIds.Count == 0 ||
+                    request.CapabilityIds.All(capabilityId =>
+                        item.Recipe.TryGetCapability(capabilityId, out _)))
                 .ToArray();
             if (workItems.Length == 0)
             {
@@ -409,7 +412,10 @@ internal sealed class CaptureAnalysisLifecycleService :
             }
 
             RecipePreparation[] preparations = workItems
-                .SelectMany(item => item.Recipe.Capabilities.Select(capability =>
+                .SelectMany(item => item.Recipe.Capabilities
+                    .Where(capability => request.CapabilityIds.Count == 0 ||
+                        request.CapabilityIds.Contains(capability.Capability.Id))
+                    .Select(capability =>
                     new RecipePreparation(
                         item.Recipe.MediaKind,
                         capability.Capability,
@@ -512,7 +518,8 @@ internal sealed class CaptureAnalysisLifecycleService :
                         item.Recipe,
                         boundary,
                         forceReanalysis: true,
-                        operationId: request.OperationId),
+                        operationId: request.OperationId,
+                        capabilityIds: request.CapabilityIds),
                     cancellationToken).ConfigureAwait(false);
                 if (result.Status is CaptureAnalysisScheduleStatus.Scheduled or
                     CaptureAnalysisScheduleStatus.AlreadyScheduled)

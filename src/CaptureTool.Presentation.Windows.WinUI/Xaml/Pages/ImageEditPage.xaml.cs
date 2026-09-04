@@ -45,6 +45,7 @@ public sealed partial class ImageEditPage : ImageEditPageBase
         ImageCanvas.ImageContextMenuRequested += ImageCanvas_ImageContextMenuRequested;
         ImageCanvas.ShapeContextMenuRequested += ImageCanvas_ShapeContextMenuRequested;
         ViewModel.AnalyzedContent.ImageBoundsFocusRequested += AnalyzedContent_ImageBoundsFocusRequested;
+        ViewModel.AnalyzedContent.ImageTextVisibilityRequested += AnalyzedContent_ImageTextVisibilityRequested;
     }
 
     ~ImageEditPage()
@@ -62,6 +63,7 @@ public sealed partial class ImageEditPage : ImageEditPageBase
         ImageCanvas.ImageContextMenuRequested -= ImageCanvas_ImageContextMenuRequested;
         ImageCanvas.ShapeContextMenuRequested -= ImageCanvas_ShapeContextMenuRequested;
         ViewModel.AnalyzedContent.ImageBoundsFocusRequested -= AnalyzedContent_ImageBoundsFocusRequested;
+        ViewModel.AnalyzedContent.ImageTextVisibilityRequested -= AnalyzedContent_ImageTextVisibilityRequested;
     }
 
     private void InitializeContextMenus()
@@ -157,18 +159,19 @@ public sealed partial class ImageEditPage : ImageEditPageBase
         }
 
         _pendingAnalyzedContentBounds = value;
-        if (!ViewModel.IsTextExtractionModeActive)
-        {
-            _ = ViewModel.ToggleTextExtractionModeCommand.ExecuteAsync(null);
-        }
-
+        ViewModel.SetAnalyzedContentTextOverlayVisible(true);
         DispatcherQueue.TryEnqueue(TryFocusAnalyzedContentBounds);
+    }
+
+    private void AnalyzedContent_ImageTextVisibilityRequested(object? sender, bool isVisible)
+    {
+        ViewModel.SetAnalyzedContentTextOverlayVisible(isVisible);
     }
 
     private void TryFocusAnalyzedContentBounds()
     {
         if (_pendingAnalyzedContentBounds is not PixelRect bounds ||
-            ViewModel.TextExtractionRegions.Count == 0)
+            ViewModel.AnalyzedContentTextRegions.Count == 0)
         {
             return;
         }

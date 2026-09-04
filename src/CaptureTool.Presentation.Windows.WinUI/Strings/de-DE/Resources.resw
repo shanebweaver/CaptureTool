@@ -1978,18 +1978,17 @@ SOFTWARE.
   <data name="AnalyzedContent_Close.AutomationProperties.Name" xml:space="preserve"><value>Analysierte Inhalte schließen</value></data>
   <data name="AnalyzedContent_NoContent.Text" xml:space="preserve"><value>Für diese Aufnahme sind keine analysierten Inhalte verfügbar.</value></data>
   <data name="AnalyzedContent_CopyAll.Content" xml:space="preserve"><value>Alles kopieren</value></data>
-  <data name="AnalyzedContent_ShowImageText.Content" xml:space="preserve"><value>Text im Bild anzeigen</value></data>
-  <data name="AnalyzedContent_DescribeImage.Text" xml:space="preserve"><value>Bild beschreiben</value></data>
-  <data name="AnalyzedContent_DescribeBrief.Content" xml:space="preserve"><value>Kurz</value></data>
-  <data name="AnalyzedContent_DescribeDetailed.Content" xml:space="preserve"><value>Detailliert</value></data>
-  <data name="AnalyzedContent_DescribeDiagram.Content" xml:space="preserve"><value>Diagramm</value></data>
-  <data name="AnalyzedContent_DescribeAccessible.Content" xml:space="preserve"><value>Barrierefrei</value></data>
   <data name="AnalyzedContent_NoContentMessage" xml:space="preserve"><value>Für diese Aufnahme sind keine analysierten Inhalte verfügbar.</value></data>
   <data name="AnalyzedContent_Copied" xml:space="preserve"><value>Analysierte Inhalte wurden kopiert.</value></data>
   <data name="AnalyzedContent_CopyFailed" xml:space="preserve"><value>Analysierte Inhalte konnten nicht kopiert werden.</value></data>
   <data name="AnalyzedContent_Transcript" xml:space="preserve"><value>Transkript</value></data>
   <data name="AnalyzedContent_Text" xml:space="preserve"><value>Text</value></data>
-  <data name="AnalyzedContent_Description" xml:space="preserve"><value>Beschreibung</value></data>
+  <data name="AnalyzedContent_ImageDescription" xml:space="preserve"><value>Bildbeschreibung</value></data>
+  <data name="AnalyzedContent_ReanalyzeAll.Content" xml:space="preserve"><value>Alle erneut analysieren</value></data>
+  <data name="AnalyzedContent_ReanalyzeTab.Content" xml:space="preserve"><value>Erneut analysieren</value></data>
+  <data name="AnalyzedContent_ReanalyzeAllQueued" xml:space="preserve"><value>Die erneute Analyse wurde eingereiht.</value></data>
+  <data name="AnalyzedContent_ReanalyzeTabQueued" xml:space="preserve"><value>Diese Analyse wurde eingereiht.</value></data>
+  <data name="AnalyzedContent_ReanalyzeFailed" xml:space="preserve"><value>Diese Aufnahme konnte nicht zur Analyse eingereiht werden.</value></data>
   <data name="AnalyzedContent_OnScreenText" xml:space="preserve"><value>Bildschirmtext</value></data>
   <data name="AnalyzedContent_VisualDescriptions" xml:space="preserve"><value>Visuelle Beschreibungen</value></data>
   <data name="AnalyzedContent_Properties" xml:space="preserve"><value>Eigenschaften</value></data>

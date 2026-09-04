@@ -116,6 +116,74 @@ public sealed class CaptureAnalysisSchedulerTests
     }
 
     [TestMethod]
+    public async Task Schedule_WithCapabilitySelection_ShouldOnlyPersistTheSelectedIntent()
+    {
+        CaptureId captureId = CaptureId.New();
+        string path = Path.GetFullPath(Path.Combine(Path.GetTempPath(), $"{captureId}.png"));
+        var asset = new CaptureAsset(
+            captureId,
+            CaptureFileType.Image,
+            path,
+            CaptureSourceOwnership.AppOwned,
+            CapturedAtUtc);
+        var finalization = new CaptureAssetChange(
+            sequence: 11,
+            captureId,
+            lifecycleRevision: 1,
+            CaptureAssetChangeType.Finalized,
+            CapturedAtUtc.AddSeconds(1));
+        CaptureAnalysisAuthorizationScope scope = CaptureAnalysisPolicyDefaults.CreateAuthorizationScope();
+        CaptureAnalysisPolicy policy = CaptureAnalysisPolicy.Unknown.GrantFutureCaptures(scope, currentSequence: 10);
+        CaptureAnalysisRecipe recipe = CaptureAnalysisRecipeDefaults.CreateCaptureMemoryImageRecipe();
+        var enrollment = new CaptureAnalysisEnrollment(
+            captureId,
+            CaptureAnalysisEnrollmentState.Enrolled,
+            CaptureAnalysisExclusionReason.None,
+            enrollmentGeneration: 1,
+            tombstoneGeneration: 0,
+            assetFinalizationSequence: finalization.Sequence,
+            recipe.Id,
+            recipe.Version);
+        var control = new CaptureAnalysisControlSnapshot(
+            documentRevision: 1,
+            new CaptureAnalysisControlState(policy, [enrollment]));
+        var assets = new StubCaptureAssetCatalog(asset, finalization);
+        var sourceVerifier = new StubSourceVerifier(new StubVerifiedSource(captureId));
+        var metadata = new StubMetadataStore();
+        var mutation = new StubMutationCoordinator(metadata, asset, recipe);
+        var jobs = new RecordingJobStore();
+        var scheduler = new CaptureAnalysisScheduler(
+            new StubPolicyService(control, scope),
+            new StubControlStore(control),
+            sourceVerifier,
+            mutation,
+            metadata,
+            jobs,
+            new RecordingWakeSignal(jobs, expectedIntentCount: 1),
+            new StubFeatureAvailability(),
+            new CaptureAnalyzerCatalog([]),
+            assets,
+            new StubClock(CapturedAtUtc.AddMinutes(1)));
+        var request = new CaptureAnalysisScheduleRequest(
+            new CaptureAnalysisAdmissionRequest(
+                finalization,
+                CaptureAnalysisPolicyDefaults.CaptureMemorySearchPurpose,
+                CaptureAnalysisAdmissionKind.FutureCapture),
+            recipe,
+            ProcessingBoundary.OnDevice,
+            forceReanalysis: true,
+            operationId: Guid.NewGuid(),
+            capabilityIds: [AnalysisCapabilities.OcrDocumentV1.Id]);
+
+        CaptureAnalysisScheduleResult result = await scheduler.ScheduleAsync(request);
+
+        Assert.AreEqual(CaptureAnalysisScheduleStatus.Scheduled, result.Status);
+        Assert.AreEqual(1, result.DurableIntentCount);
+        Assert.HasCount(1, jobs.OperationKeys);
+        Assert.AreEqual(AnalysisCapabilities.OcrDocumentV1, jobs.OperationKeys[0].Capability);
+    }
+
+    [TestMethod]
     public async Task Schedule_ShouldRequeueCompletedIntentWhenProducerRevisionIsStale()
     {
         CaptureId captureId = CaptureId.New();
@@ -497,10 +565,18 @@ public sealed class CaptureAnalysisSchedulerTests
     private sealed class RecordingJobStore : ICaptureAnalysisJobStore
     {
         public ValueTask<CaptureAnalysisJobEnqueueResult> TryScheduleOperationAsync(
-            CaptureAnalysisJobKey key, DateTimeOffset enqueuedAtUtc, Guid operationId, CancellationToken cancellationToken = default) =>
-            TryRequeueAsync(key, enqueuedAtUtc, cancellationToken);
+            CaptureAnalysisJobKey key,
+            DateTimeOffset enqueuedAtUtc,
+            Guid operationId,
+            CancellationToken cancellationToken = default)
+        {
+            OperationKeys.Add(key);
+            return TryRequeueAsync(key, enqueuedAtUtc, cancellationToken);
+        }
 
         public List<CaptureAnalysisJobKey> Keys { get; } = [];
+
+        public List<CaptureAnalysisJobKey> OperationKeys { get; } = [];
 
         public List<DateTimeOffset> EnqueuedAtUtc { get; } = [];
 

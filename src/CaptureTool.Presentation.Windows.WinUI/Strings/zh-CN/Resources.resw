@@ -1984,18 +1984,17 @@ SOFTWARE.
   <data name="AnalyzedContent_Close.AutomationProperties.Name" xml:space="preserve"><value>关闭分析内容</value></data>
   <data name="AnalyzedContent_NoContent.Text" xml:space="preserve"><value>此捕获没有可用的分析内容。</value></data>
   <data name="AnalyzedContent_CopyAll.Content" xml:space="preserve"><value>全部复制</value></data>
-  <data name="AnalyzedContent_ShowImageText.Content" xml:space="preserve"><value>在图像上显示文本</value></data>
-  <data name="AnalyzedContent_DescribeImage.Text" xml:space="preserve"><value>描述图像</value></data>
-  <data name="AnalyzedContent_DescribeBrief.Content" xml:space="preserve"><value>简要</value></data>
-  <data name="AnalyzedContent_DescribeDetailed.Content" xml:space="preserve"><value>详细</value></data>
-  <data name="AnalyzedContent_DescribeDiagram.Content" xml:space="preserve"><value>图表</value></data>
-  <data name="AnalyzedContent_DescribeAccessible.Content" xml:space="preserve"><value>无障碍</value></data>
   <data name="AnalyzedContent_NoContentMessage" xml:space="preserve"><value>此捕获没有可用的分析内容。</value></data>
   <data name="AnalyzedContent_Copied" xml:space="preserve"><value>已复制分析内容。</value></data>
   <data name="AnalyzedContent_CopyFailed" xml:space="preserve"><value>无法复制分析内容。</value></data>
   <data name="AnalyzedContent_Transcript" xml:space="preserve"><value>转录</value></data>
   <data name="AnalyzedContent_Text" xml:space="preserve"><value>文本</value></data>
-  <data name="AnalyzedContent_Description" xml:space="preserve"><value>描述</value></data>
+  <data name="AnalyzedContent_ImageDescription" xml:space="preserve"><value>图像描述</value></data>
+  <data name="AnalyzedContent_ReanalyzeAll.Content" xml:space="preserve"><value>全部重新分析</value></data>
+  <data name="AnalyzedContent_ReanalyzeTab.Content" xml:space="preserve"><value>重新分析</value></data>
+  <data name="AnalyzedContent_ReanalyzeAllQueued" xml:space="preserve"><value>重新分析已加入队列。</value></data>
+  <data name="AnalyzedContent_ReanalyzeTabQueued" xml:space="preserve"><value>此分析已加入队列。</value></data>
+  <data name="AnalyzedContent_ReanalyzeFailed" xml:space="preserve"><value>无法将此捕获加入分析队列。</value></data>
   <data name="AnalyzedContent_OnScreenText" xml:space="preserve"><value>屏幕文本</value></data>
   <data name="AnalyzedContent_VisualDescriptions" xml:space="preserve"><value>视觉描述</value></data>
   <data name="AnalyzedContent_Properties" xml:space="preserve"><value>属性</value></data>

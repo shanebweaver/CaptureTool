@@ -241,8 +241,21 @@ public sealed class CaptureAnalysisConsentAndMaintenanceContractTests
         mutableIds.Clear();
         var all = new CaptureAnalysisReanalysisRequest(
             CaptureAnalysisReanalysisScope.AllEnrolledCaptures);
+        var mutableCapabilities = new List<AnalysisCapabilityId>
+        {
+            AnalysisCapabilities.OcrDocumentV1.Id,
+        };
+        var selectedCapability = new CaptureAnalysisReanalysisRequest(
+            CaptureAnalysisReanalysisScope.SelectedCaptures,
+            [AnalysisTestData.CaptureId],
+            capabilityIds: mutableCapabilities);
+        mutableCapabilities.Clear();
 
         Assert.HasCount(1, selected.CaptureIds);
+        Assert.HasCount(1, selectedCapability.CapabilityIds);
+        Assert.AreEqual(
+            AnalysisCapabilities.OcrDocumentV1.Id,
+            selectedCapability.CapabilityIds[0]);
         Assert.AreEqual(CaptureAnalysisReanalysisScope.SelectedCaptures, selected.Scope);
         Assert.IsEmpty(all.CaptureIds);
         Assert.ThrowsExactly<ArgumentOutOfRangeException>(() =>
@@ -258,6 +271,18 @@ public sealed class CaptureAnalysisConsentAndMaintenanceContractTests
         Assert.ThrowsExactly<ArgumentException>(() => new CaptureAnalysisReanalysisRequest(
             CaptureAnalysisReanalysisScope.SelectedCaptures,
             [default(CaptureId)]));
+        Assert.ThrowsExactly<ArgumentException>(() => new CaptureAnalysisReanalysisRequest(
+            CaptureAnalysisReanalysisScope.SelectedCaptures,
+            [AnalysisTestData.CaptureId],
+            capabilityIds: [default(AnalysisCapabilityId)]));
+        Assert.ThrowsExactly<ArgumentException>(() => new CaptureAnalysisReanalysisRequest(
+            CaptureAnalysisReanalysisScope.SelectedCaptures,
+            [AnalysisTestData.CaptureId],
+            capabilityIds:
+            [
+                AnalysisCapabilities.OcrDocumentV1.Id,
+                AnalysisCapabilities.OcrDocumentV1.Id,
+            ]));
     }
 
     [TestMethod]

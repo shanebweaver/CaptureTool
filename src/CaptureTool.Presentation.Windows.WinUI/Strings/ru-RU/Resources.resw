@@ -1984,18 +1984,17 @@ SOFTWARE.
   <data name="AnalyzedContent_Close.AutomationProperties.Name" xml:space="preserve"><value>Закрыть распознанное содержимое</value></data>
   <data name="AnalyzedContent_NoContent.Text" xml:space="preserve"><value>Для этого снимка нет распознанного содержимого.</value></data>
   <data name="AnalyzedContent_CopyAll.Content" xml:space="preserve"><value>Копировать все</value></data>
-  <data name="AnalyzedContent_ShowImageText.Content" xml:space="preserve"><value>Показать текст на изображении</value></data>
-  <data name="AnalyzedContent_DescribeImage.Text" xml:space="preserve"><value>Описать изображение</value></data>
-  <data name="AnalyzedContent_DescribeBrief.Content" xml:space="preserve"><value>Кратко</value></data>
-  <data name="AnalyzedContent_DescribeDetailed.Content" xml:space="preserve"><value>Подробно</value></data>
-  <data name="AnalyzedContent_DescribeDiagram.Content" xml:space="preserve"><value>Диаграмма</value></data>
-  <data name="AnalyzedContent_DescribeAccessible.Content" xml:space="preserve"><value>Для специальных возможностей</value></data>
   <data name="AnalyzedContent_NoContentMessage" xml:space="preserve"><value>Для этого снимка нет распознанного содержимого.</value></data>
   <data name="AnalyzedContent_Copied" xml:space="preserve"><value>Распознанное содержимое скопировано.</value></data>
   <data name="AnalyzedContent_CopyFailed" xml:space="preserve"><value>Не удалось скопировать распознанное содержимое.</value></data>
   <data name="AnalyzedContent_Transcript" xml:space="preserve"><value>Расшифровка</value></data>
   <data name="AnalyzedContent_Text" xml:space="preserve"><value>Текст</value></data>
-  <data name="AnalyzedContent_Description" xml:space="preserve"><value>Описание</value></data>
+  <data name="AnalyzedContent_ImageDescription" xml:space="preserve"><value>Описание изображения</value></data>
+  <data name="AnalyzedContent_ReanalyzeAll.Content" xml:space="preserve"><value>Повторить весь анализ</value></data>
+  <data name="AnalyzedContent_ReanalyzeTab.Content" xml:space="preserve"><value>Повторить анализ</value></data>
+  <data name="AnalyzedContent_ReanalyzeAllQueued" xml:space="preserve"><value>Повторный анализ поставлен в очередь.</value></data>
+  <data name="AnalyzedContent_ReanalyzeTabQueued" xml:space="preserve"><value>Этот анализ поставлен в очередь.</value></data>
+  <data name="AnalyzedContent_ReanalyzeFailed" xml:space="preserve"><value>Не удалось поставить этот снимок в очередь на анализ.</value></data>
   <data name="AnalyzedContent_OnScreenText" xml:space="preserve"><value>Текст на экране</value></data>
   <data name="AnalyzedContent_VisualDescriptions" xml:space="preserve"><value>Визуальные описания</value></data>
   <data name="AnalyzedContent_Properties" xml:space="preserve"><value>Свойства</value></data>

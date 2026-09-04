@@ -22,7 +22,7 @@ public sealed class ImageEditTextExtractionUiTests
 
     [TestMethod]
     [TestCategory("UI")]
-    public void TextExtractionMode_ShouldShowOverlayAndCaptureScreenshot()
+    public void AnalyzedContentPanel_ShouldNotExposeEditorLocalOcrAction()
     {
         if (!ShouldRunUiTests())
         {
@@ -44,7 +44,6 @@ public sealed class ImageEditTextExtractionUiTests
         string appDataDirectory = Path.Combine(artifactDirectory, "app-data");
         string appTempDirectory = Path.Combine(artifactDirectory, "app-temp");
         string screenshotDirectory = Path.Combine(repoRoot, "tests", "CaptureTool.UiTests", "TestResults", "artifacts");
-        string loadingScreenshotPath = Path.Combine(screenshotDirectory, "text-extraction-loading.png");
         string screenshotPath = Path.Combine(screenshotDirectory, "text-extraction-overlay.png");
 
         CreateOcrFixtureImage(fixtureImagePath);
@@ -72,118 +71,35 @@ public sealed class ImageEditTextExtractionUiTests
                 automation,
                 "ImageEdit_AnalyzedContentButton",
                 InteractionTimeout).Click();
-            AutomationElement textExtractionButton = WaitForElement(
+            AutomationElement reanalyzeAllButton = WaitForElement(
                 mainWindow,
                 automation,
-                "AnalyzedContent_ShowImageTextButton",
+                "AnalyzedContent_ReanalyzeAllButton",
                 InteractionTimeout);
             Assert.IsTrue(
-                mainWindow.BoundingRectangle.IntersectsWith(textExtractionButton.BoundingRectangle),
-                "The analyzed-content pane action should be visible inside the main window.");
-            textExtractionButton.Click();
-
-            WaitForElement(
-                mainWindow,
-                automation,
-                "AiFeatureConsentDialog",
-                InteractionTimeout);
-            AutomationElement allowButton = WaitForElementByName(
-                mainWindow,
-                automation,
-                "Allow",
-                InteractionTimeout);
-            allowButton.Click();
-
-            WaitForElement(
-                mainWindow,
-                automation,
-                "ImageEdit_TextExtractionProgressRing",
-                InteractionTimeout);
-
-            Assert.IsTrue(
-                textExtractionButton.IsEnabled,
-                "The Text Extraction button should remain enabled while OCR is running.");
-            textExtractionButton.Click();
-            WaitForElementRemoved(
-                mainWindow,
-                automation,
-                "ImageEdit_TextExtractionProgressRing",
-                InteractionTimeout);
-
-            textExtractionButton.Click();
-            WaitForElement(
-                mainWindow,
-                automation,
-                "ImageEdit_TextExtractionProgressRing",
-                InteractionTimeout);
-
-            CaptureWindowScreenshot(app.ProcessId, mainWindow, loadingScreenshotPath);
-            Assert.IsTrue(File.Exists(loadingScreenshotPath), "The OCR loading screenshot should exist.");
-            Assert.IsGreaterThan(0L, new FileInfo(loadingScreenshotPath).Length, "The OCR loading screenshot should not be empty.");
-            TestContext.AddResultFile(loadingScreenshotPath);
-            TestContext.WriteLine($"Text Extraction loading screenshot: {loadingScreenshotPath}");
-
-            WaitForElementRemoved(
-                mainWindow,
-                automation,
-                "ImageEdit_TextExtractionProgressRing",
-                InteractionTimeout);
-
-            WaitForElement(
-                mainWindow,
-                automation,
-                "ImageEdit_TextExtractionOverlayMarker",
-                InteractionTimeout);
-            AutomationElement copyAllTextButton = WaitForElement(
-                mainWindow,
-                automation,
-                "AnalyzedContent_CopyAllButton",
-                InteractionTimeout);
-            Assert.IsTrue(copyAllTextButton.IsEnabled, "Copy all text should be enabled after OCR completes.");
-            WaitForElement(
-                mainWindow,
-                automation,
-                "ImageCanvas_QrCodeCopyButton_0",
-                InteractionTimeout);
-            WaitForElement(
-                mainWindow,
-                automation,
-                "ImageCanvas_QrCodeOpenButton_0",
-                InteractionTimeout);
+                mainWindow.BoundingRectangle.IntersectsWith(reanalyzeAllButton.BoundingRectangle),
+                "The panel-level reanalyze action should be visible inside the main window.");
+            Assert.IsNull(
+                mainWindow.FindFirstDescendant(
+                    automation.ConditionFactory.ByAutomationId("ImageEdit_TextExtractionButton")),
+                "The image toolbar should not expose a dedicated OCR action.");
+            Assert.IsNull(
+                mainWindow.FindFirstDescendant(
+                    automation.ConditionFactory.ByAutomationId("ImageEdit_ImageDescriptionButton")),
+                "The image toolbar should not expose a dedicated image-description action.");
+            Assert.IsNull(
+                mainWindow.FindFirstDescendant(
+                    automation.ConditionFactory.ByAutomationId("AnalyzedContent_ShowImageTextButton")),
+                "The analyzed-content panel should not expose an editor-local OCR action.");
 
             Thread.Sleep(500);
             File.Delete(screenshotPath);
             CaptureWindowScreenshot(app.ProcessId, mainWindow, screenshotPath);
 
-            Assert.IsTrue(File.Exists(screenshotPath), "The OCR overlay screenshot should exist.");
-            Assert.IsGreaterThan(0L, new FileInfo(screenshotPath).Length, "The OCR overlay screenshot should not be empty.");
+            Assert.IsTrue(File.Exists(screenshotPath), "The analyzed-content screenshot should exist.");
+            Assert.IsGreaterThan(0L, new FileInfo(screenshotPath).Length, "The analyzed-content screenshot should not be empty.");
             TestContext.AddResultFile(screenshotPath);
-            TestContext.WriteLine($"Text Extraction overlay screenshot: {screenshotPath}");
-
-            textExtractionButton.Click();
-            WaitForElementRemoved(
-                mainWindow,
-                automation,
-                "ImageEdit_TextExtractionOverlayMarker",
-                InteractionTimeout);
-
-            textExtractionButton.Click();
-            Assert.IsNull(
-                mainWindow.FindFirstDescendant(
-                    automation.ConditionFactory.ByAutomationId("ImageEdit_TextExtractionProgressRing")),
-                "Reopening OCR for an unchanged image should reuse its cached result without showing the loader.");
-            WaitForElement(
-                mainWindow,
-                automation,
-                "ImageEdit_TextExtractionOverlayMarker",
-                InteractionTimeout);
-
-            textExtractionButton.Click();
-            WaitForElementRemoved(
-                mainWindow,
-                automation,
-                "ImageEdit_TextExtractionOverlayMarker",
-                InteractionTimeout);
+            TestContext.WriteLine($"Analyzed content screenshot: {screenshotPath}");
         }
         finally
         {

@@ -1,4 +1,5 @@
 using CaptureTool.Application.Abstractions.Analysis.Memory;
+using CaptureTool.Application.Abstractions.Analysis.Maintenance;
 using CaptureTool.Application.Abstractions.Edit.Metadata;
 using CaptureTool.Domain;
 using CaptureTool.Domain.Analysis;
@@ -66,23 +67,90 @@ public sealed class AnalyzedContentViewModelTests
     }
 
     [TestMethod]
-    public void CurrentImageResults_ReplaceCanonicalSectionsAndCanBeInvalidated()
+    public async Task ImageTextTab_ControlsOverlayVisibilityWithoutRunningAnAnalyzer()
     {
-        var viewModel = new AnalyzedContentViewModel();
+        CaptureId captureId = CaptureId.New();
+        var snapshot = new CaptureMetadataViewSnapshot(
+            captureId,
+            CaptureMediaKind.Image,
+            1,
+            null,
+            new OcrDocumentV1(new PixelSize(100, 100), "hello world", [], []),
+            new ImageDescriptionV1("A sample image.", ImageDescriptionPurpose.Brief),
+            null,
+            null,
+            null);
+        var viewModel = new AnalyzedContentViewModel(new StubMetadataViewService(snapshot));
+        List<bool> requests = [];
+        viewModel.ImageTextVisibilityRequested += (_, isVisible) => requests.Add(isVisible);
 
-        viewModel.SetCurrentImageText(
-            "hello world",
-            [("hello world", new PixelRect(1, 2, 30, 10))]);
-        viewModel.SetCurrentImageDescription("A sample image.");
+        viewModel.Load(new CaptureMetadataViewRequest(CaptureMediaKind.Image, captureId));
+        await viewModel.RefreshCompletion;
+        viewModel.IsPaneOpen = true;
 
-        Assert.HasCount(2, viewModel.Sections);
-        Assert.AreEqual("hello world", viewModel.Sections[0].FullText);
-        Assert.AreEqual("A sample image.", viewModel.Sections[1].FullText);
+        Assert.AreEqual(AnalyzedContentSectionKind.ImageText, viewModel.SelectedSection.Kind);
+        Assert.IsTrue(requests[^1]);
 
-        viewModel.ClearImageDerivedContent();
+        viewModel.SelectedSection = viewModel.Sections.Single(
+            section => section.Kind == AnalyzedContentSectionKind.ImageDescription);
+        Assert.IsFalse(requests[^1]);
+    }
 
-        Assert.IsFalse(viewModel.HasContent);
-        Assert.IsEmpty(viewModel.Sections);
+    [TestMethod]
+    public async Task Load_OnlyAddsTabsForMetadataWithDisplayableResults()
+    {
+        CaptureId captureId = CaptureId.New();
+        var snapshot = new CaptureMetadataViewSnapshot(
+            captureId,
+            CaptureMediaKind.Image,
+            1,
+            new MediaPropertiesV1(CaptureMediaKind.Image),
+            new OcrDocumentV1(new PixelSize(100, 100), string.Empty, [], []),
+            new ImageDescriptionV1(
+                "A lighthouse beside the ocean.",
+                ImageDescriptionPurpose.Brief),
+            null,
+            null,
+            null);
+        var viewModel = new AnalyzedContentViewModel(new StubMetadataViewService(snapshot));
+
+        viewModel.Load(new CaptureMetadataViewRequest(CaptureMediaKind.Image, captureId));
+        await viewModel.RefreshCompletion;
+
+        Assert.HasCount(1, viewModel.Sections);
+        Assert.AreEqual(AnalyzedContentSectionKind.ImageDescription, viewModel.Sections[0].Kind);
+        Assert.AreEqual("Image description", viewModel.Sections[0].Title);
+    }
+
+    [TestMethod]
+    public async Task ReanalyzeCommands_ScheduleTheSelectedCapabilityOrTheFullRecipe()
+    {
+        CaptureId captureId = CaptureId.New();
+        var snapshot = new CaptureMetadataViewSnapshot(
+            captureId,
+            CaptureMediaKind.Image,
+            1,
+            null,
+            new OcrDocumentV1(new PixelSize(100, 100), "hello world", [], []),
+            null,
+            null,
+            null,
+            null);
+        var maintenance = new StubMaintenanceService();
+        var viewModel = new AnalyzedContentViewModel(
+            new StubMetadataViewService(snapshot),
+            maintenance: maintenance);
+        viewModel.Load(new CaptureMetadataViewRequest(CaptureMediaKind.Image, captureId));
+        await viewModel.RefreshCompletion;
+
+        await viewModel.ReanalyzeSelectedCommand.ExecuteAsync(null);
+        await viewModel.ReanalyzeAllCommand.ExecuteAsync(null);
+
+        Assert.HasCount(2, maintenance.Requests);
+        CollectionAssert.AreEqual(
+            new[] { AnalysisCapabilities.OcrDocumentV1.Id },
+            maintenance.Requests[0].CapabilityIds.ToArray());
+        Assert.IsEmpty(maintenance.Requests[1].CapabilityIds);
     }
 
     [TestMethod]
@@ -147,5 +215,34 @@ public sealed class AnalyzedContentViewModelTests
                 this,
                 new CaptureAnalysisChangedEventArgs(captureId, wasDeleted: false));
         }
+    }
+
+    private sealed class StubMaintenanceService : ICaptureAnalysisMaintenanceService
+    {
+        public List<CaptureAnalysisReanalysisRequest> Requests { get; } = [];
+
+        public ValueTask<CaptureAnalysisMaintenanceResult> ClearMemoryAsync(
+            CancellationToken cancellationToken = default)
+            => throw new NotSupportedException();
+
+        public ValueTask<CaptureAnalysisMaintenanceResult> RebuildSearchIndexAsync(
+            CancellationToken cancellationToken = default)
+            => throw new NotSupportedException();
+
+        public ValueTask<CaptureAnalysisMaintenanceResult> ReanalyzeCapturesAsync(
+            CaptureAnalysisReanalysisRequest request,
+            CancellationToken cancellationToken = default)
+        {
+            Requests.Add(request);
+            return ValueTask.FromResult(new CaptureAnalysisMaintenanceResult(
+                CaptureAnalysisMaintenanceStatus.Succeeded,
+                1));
+        }
+
+        public ValueTask<CaptureAnalysisMaintenanceResult> ReanalyzeCapturesAsync(
+            CaptureAnalysisReanalysisRequest request,
+            IProgress<CaptureAnalysisMaintenanceProgress> progress,
+            CancellationToken cancellationToken = default)
+            => ReanalyzeCapturesAsync(request, cancellationToken);
     }
 }

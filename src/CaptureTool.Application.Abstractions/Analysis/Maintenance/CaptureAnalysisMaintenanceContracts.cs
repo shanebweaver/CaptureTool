@@ -1,4 +1,5 @@
 using CaptureTool.Domain;
+using CaptureTool.Domain.Analysis;
 
 namespace CaptureTool.Application.Abstractions.Analysis.Maintenance;
 
@@ -88,12 +89,15 @@ public enum CaptureAnalysisReanalysisScope
 public sealed record CaptureAnalysisReanalysisRequest
 {
     private const int MaximumSelectedCaptureCount = 10_000;
+    private const int MaximumSelectedCapabilityCount = 64;
     private readonly IReadOnlyList<CaptureId> _captureIds;
+    private readonly IReadOnlyList<AnalysisCapabilityId> _capabilityIds;
 
     public CaptureAnalysisReanalysisRequest(
         CaptureAnalysisReanalysisScope scope,
         IEnumerable<CaptureId>? captureIds = null,
-        Guid? operationId = null)
+        Guid? operationId = null,
+        IEnumerable<AnalysisCapabilityId>? capabilityIds = null)
     {
         if (!Enum.IsDefined(scope) || scope == CaptureAnalysisReanalysisScope.Unknown)
         {
@@ -118,10 +122,21 @@ public sealed record CaptureAnalysisReanalysisRequest
                 nameof(captureIds));
         }
 
+        AnalysisCapabilityId[] copiedCapabilityIds = [.. capabilityIds ?? []];
+        if (copiedCapabilityIds.Any(capabilityId => capabilityId.IsEmpty) ||
+            copiedCapabilityIds.Distinct().Count() != copiedCapabilityIds.Length ||
+            copiedCapabilityIds.Length > MaximumSelectedCapabilityCount)
+        {
+            throw new ArgumentException(
+                "Selected capabilities must contain distinct, non-empty IDs within the supported bound.",
+                nameof(capabilityIds));
+        }
+
         Scope = scope;
         if (operationId == Guid.Empty) { throw new ArgumentException("Operation identity must be nonempty.", nameof(operationId)); }
         OperationId = operationId;
         _captureIds = Array.AsReadOnly(copiedCaptureIds);
+        _capabilityIds = Array.AsReadOnly(copiedCapabilityIds);
     }
 
     public CaptureAnalysisReanalysisScope Scope { get; }
@@ -129,6 +144,8 @@ public sealed record CaptureAnalysisReanalysisRequest
     public Guid? OperationId { get; }
 
     public IReadOnlyList<CaptureId> CaptureIds => _captureIds;
+
+    public IReadOnlyList<AnalysisCapabilityId> CapabilityIds => _capabilityIds;
 }
 
 public interface ICaptureAnalysisMaintenanceService

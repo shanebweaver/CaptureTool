@@ -171,6 +171,62 @@ public sealed class CaptureAnalysisLifecycleServiceTests
     }
 
     [TestMethod]
+    public async Task ReanalyzeCapturesAsync_WithCapabilitySelection_ShouldOnlyPrepareAndScheduleThatCapability()
+    {
+        CaptureAnalysisEnrollment enrolled = CreateEnrollment(2);
+        var store = new TestControlStore(CreateControl(enrolled));
+        Mock<ICaptureAssetCatalog> assets = CreateAssetCatalog(enrolled.CaptureId, 2);
+        assets.Setup(catalog => catalog.Get(enrolled.CaptureId)).Returns(
+            CreateAsset(enrolled.CaptureId, CaptureSourceOwnership.AppOwned));
+        List<AnalysisCapabilityId> prepared = [];
+        var preparation = new Mock<IUserInitiatedAnalysisCapabilityPreparationService>(
+            MockBehavior.Strict);
+        preparation.Setup(service => service.PrepareAsync(
+                It.IsAny<AnalysisCapabilityPreparationRequest>(),
+                null,
+                It.IsAny<CancellationToken>()))
+            .Callback<AnalysisCapabilityPreparationRequest, IProgress<AnalysisCapabilityPreparationProgress>?, CancellationToken>(
+                (request, _, _) => prepared.Add(request.Capability.Id))
+            .ReturnsAsync(AnalysisCapabilityPreparationState.Ready(
+                AnalysisTestData.CreateAnalyzer(),
+                ProcessingBoundary.OnDevice));
+        CaptureAnalysisScheduleRequest? scheduledRequest = null;
+        var scheduler = new Mock<ICaptureAnalysisScheduler>(MockBehavior.Strict);
+        scheduler.Setup(service => service.ScheduleAsync(
+                It.IsAny<CaptureAnalysisScheduleRequest>(),
+                It.IsAny<CancellationToken>()))
+            .Callback<CaptureAnalysisScheduleRequest, CancellationToken>((request, _) =>
+                scheduledRequest = request)
+            .ReturnsAsync(new CaptureAnalysisScheduleResult(
+                CaptureAnalysisScheduleStatus.Scheduled,
+                durableIntentCount: 1));
+        using CaptureAnalysisLifecycleService service = new(
+            store,
+            assets.Object,
+            new TestCleanupCoordinator(),
+            Mock.Of<ICaptureAnalysisProjectionMaintenance>(),
+            preparation.Object,
+            scheduler.Object);
+
+        CaptureAnalysisMaintenanceResult result = await service.ReanalyzeCapturesAsync(
+            new CaptureAnalysisReanalysisRequest(
+                CaptureAnalysisReanalysisScope.SelectedCaptures,
+                [enrolled.CaptureId],
+                capabilityIds: [AnalysisCapabilities.OcrDocumentV1.Id]));
+
+        Assert.AreEqual(CaptureAnalysisMaintenanceStatus.Succeeded, result.Status);
+        CollectionAssert.AreEqual(
+            new[] { AnalysisCapabilities.OcrDocumentV1.Id },
+            prepared.ToArray());
+        Assert.IsNotNull(scheduledRequest);
+        CollectionAssert.AreEqual(
+            new[] { AnalysisCapabilities.OcrDocumentV1.Id },
+            scheduledRequest.Capabilities.Select(capability => capability.Capability.Id).ToArray());
+        Assert.HasCount(3, scheduledRequest.Recipe.Capabilities);
+        scheduler.VerifyAll();
+    }
+
+    [TestMethod]
     public async Task ClearThenReanalyze_ShouldRestoreOnlyClearedEnrollmentsAfterCleanup()
     {
         CaptureAnalysisEnrollment enrolled = CreateEnrollment(2);

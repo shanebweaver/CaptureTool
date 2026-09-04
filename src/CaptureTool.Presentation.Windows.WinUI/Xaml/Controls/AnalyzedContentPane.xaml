@@ -19,13 +19,13 @@
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
                 <RowDefinition />
             </Grid.RowDefinitions>
 
             <Grid ColumnSpacing="8">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition />
+                    <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
                 <TextBlock
@@ -35,8 +35,15 @@
                     FontWeight="SemiBold"
                     Text="Analyzed content" />
                 <Button
-                    x:Uid="AnalyzedContent_Close"
+                    x:Uid="AnalyzedContent_ReanalyzeAll"
                     Grid.Column="1"
+                    AutomationProperties.AutomationId="AnalyzedContent_ReanalyzeAllButton"
+                    Command="{x:Bind ViewModel.ReanalyzeAllCommand}"
+                    Content="Reanalyze all"
+                    Style="{StaticResource SubtleButtonStyle}" />
+                <Button
+                    x:Uid="AnalyzedContent_Close"
+                    Grid.Column="2"
                     AutomationProperties.Name="Close analyzed content"
                     Command="{x:Bind ViewModel.ClosePaneCommand}"
                     Style="{StaticResource SubtleButtonStyle}">
@@ -78,44 +85,14 @@
                 </ListView.ItemTemplate>
             </ListView>
 
-            <StackPanel
+            <Grid
                 Grid.Row="2"
                 Margin="0,0,0,8"
-                Spacing="6"
-                Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.HasImageActions), Mode=OneWay}">
-                <Button
-                    x:Uid="AnalyzedContent_ShowImageText"
-                    HorizontalAlignment="Stretch"
-                    AutomationProperties.AutomationId="AnalyzedContent_ShowImageTextButton"
-                    Command="{x:Bind ViewModel.ShowImageTextCommand, Mode=OneWay}"
-                    Content="Show text on image" />
-                <TextBlock
-                    x:Uid="AnalyzedContent_DescribeImage"
-                    Margin="0,4,0,0"
-                    FontWeight="SemiBold"
-                    Text="Describe image" />
-                <Grid ColumnSpacing="6" RowSpacing="6">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition />
-                        <ColumnDefinition />
-                    </Grid.ColumnDefinitions>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                    </Grid.RowDefinitions>
-                    <Button x:Uid="AnalyzedContent_DescribeBrief" HorizontalAlignment="Stretch" Command="{x:Bind ViewModel.GenerateBriefImageDescriptionCommand, Mode=OneWay}" Content="Brief" />
-                    <Button x:Uid="AnalyzedContent_DescribeDetailed" Grid.Column="1" HorizontalAlignment="Stretch" Command="{x:Bind ViewModel.GenerateDetailedImageDescriptionCommand, Mode=OneWay}" Content="Detailed" />
-                    <Button x:Uid="AnalyzedContent_DescribeDiagram" Grid.Row="1" HorizontalAlignment="Stretch" Command="{x:Bind ViewModel.GenerateDiagramImageDescriptionCommand, Mode=OneWay}" Content="Diagram" />
-                    <Button x:Uid="AnalyzedContent_DescribeAccessible" Grid.Row="1" Grid.Column="1" HorizontalAlignment="Stretch" Command="{x:Bind ViewModel.GenerateAccessibleImageDescriptionCommand, Mode=OneWay}" Content="Accessible" />
-                </Grid>
-            </StackPanel>
-
-            <Grid
-                Grid.Row="3"
-                Margin="0,0,0,8"
+                ColumnSpacing="4"
                 Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.HasContent), Mode=OneWay}">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition />
+                    <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
                 <TextBlock
@@ -124,15 +101,22 @@
                     FontWeight="SemiBold"
                     Text="{x:Bind ViewModel.SelectedSection.Title, Mode=OneWay}" />
                 <Button
-                    x:Uid="AnalyzedContent_CopyAll"
+                    x:Uid="AnalyzedContent_ReanalyzeTab"
                     Grid.Column="1"
+                    AutomationProperties.AutomationId="AnalyzedContent_ReanalyzeTabButton"
+                    Command="{x:Bind ViewModel.ReanalyzeSelectedCommand, Mode=OneWay}"
+                    Content="Reanalyze"
+                    Style="{StaticResource SubtleButtonStyle}" />
+                <Button
+                    x:Uid="AnalyzedContent_CopyAll"
+                    Grid.Column="2"
                     AutomationProperties.AutomationId="AnalyzedContent_CopyAllButton"
                     Command="{x:Bind ViewModel.SelectedSection.CopyAllCommand, Mode=OneWay}"
                     Content="Copy all"
                     Style="{StaticResource SubtleButtonStyle}" />
             </Grid>
 
-            <Grid Grid.Row="4" Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.HasContent), Mode=OneWay}">
+            <Grid Grid.Row="3" Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.HasContent), Mode=OneWay}">
                 <ListView
                     HorizontalContentAlignment="Stretch"
                     ItemsSource="{x:Bind ViewModel.SelectedSection.Items, Mode=OneWay}"

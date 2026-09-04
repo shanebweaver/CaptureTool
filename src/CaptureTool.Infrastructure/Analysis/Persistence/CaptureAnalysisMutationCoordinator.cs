@@ -87,7 +87,7 @@ internal sealed class CaptureAnalysisMutationCoordinator : ICaptureAnalysisMutat
                     _ = record.ApplyRecipe(registration.Recipe);
                     bool producersUnchanged = ReconcileProducerRevisions(
                         record,
-                        registration.Recipe,
+                        registration.Capabilities,
                         verified.Boundary);
                     if (sourceUnchanged && recipeUnchanged && producersUnchanged)
                     {
@@ -323,7 +323,7 @@ internal sealed class CaptureAnalysisMutationCoordinator : ICaptureAnalysisMutat
         CaptureAnalysisSourceRegistration registration,
         CancellationToken cancellationToken)
     {
-        RecipeCapability capability = registration.Recipe.Capabilities[0];
+        RecipeCapability capability = registration.Capabilities[0];
         CaptureAnalysisPolicySnapshot snapshot = await _policyService
             .GetCurrentAsync(cancellationToken)
             .ConfigureAwait(false);
@@ -375,11 +375,11 @@ internal sealed class CaptureAnalysisMutationCoordinator : ICaptureAnalysisMutat
 
     private bool ReconcileProducerRevisions(
         CaptureAnalysisRecord record,
-        CaptureAnalysisRecipe recipe,
+        IEnumerable<RecipeCapability> capabilities,
         ProcessingBoundary boundary)
     {
         bool unchanged = true;
-        foreach (RecipeCapability requested in recipe.Capabilities)
+        foreach (RecipeCapability requested in capabilities)
         {
             AnalyzerRevision[] currentRevisions = _analyzers.Analyzers
                 .Where(analyzer =>

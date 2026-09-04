@@ -1,4 +1,5 @@
 using CaptureTool.Application.Abstractions.Analysis.Memory;
+using CaptureTool.Application.Abstractions.Analysis.Maintenance;
 using CaptureTool.Application.Abstractions.Edit.Metadata;
 using CaptureTool.Application.Abstractions.Clipboard;
 using CaptureTool.Application.Abstractions.Localization;
@@ -154,6 +155,8 @@ public sealed class AnalyzedContentSectionViewModel : ViewModelBase
 
     public bool HasText => !string.IsNullOrWhiteSpace(FullText);
 
+    public bool HasResult => HasItems || HasText;
+
     public bool ShowFullText => !HasItems && HasText;
 
     public bool ShowEmpty => !HasItems && !HasText;
@@ -166,6 +169,7 @@ public sealed class AnalyzedContentViewModel : ViewModelBase
     private readonly IClipboardService? _clipboard;
     private readonly ILocalizationService? _localization;
     private readonly IAppNotificationService? _notifications;
+    private readonly ICaptureAnalysisMaintenanceService? _maintenance;
     private readonly ObservableCollection<AnalyzedContentSectionViewModel> _sections = [];
     private CancellationTokenSource? _refreshCancellation;
     private CaptureMetadataViewRequest? _request;
@@ -181,22 +185,34 @@ public sealed class AnalyzedContentViewModel : ViewModelBase
         ICaptureAnalysisChangeNotifier? changeNotifier = null,
         IClipboardService? clipboard = null,
         ILocalizationService? localization = null,
-        IAppNotificationService? notifications = null)
+        IAppNotificationService? notifications = null,
+        ICaptureAnalysisMaintenanceService? maintenance = null)
     {
         _metadata = metadata;
         _changeNotifier = changeNotifier;
         _clipboard = clipboard;
         _localization = localization;
         _notifications = notifications;
+        _maintenance = maintenance;
         Sections = new ReadOnlyObservableCollection<AnalyzedContentSectionViewModel>(_sections);
         TogglePaneCommand = new RelayCommand(() => IsPaneOpen = !IsPaneOpen);
         ClosePaneCommand = new RelayCommand(() => IsPaneOpen = false);
+        ReanalyzeAllCommand = new AsyncRelayCommand(
+            () => ReanalyzeAsync(selectedSectionOnly: false),
+            CanReanalyzeAll,
+            AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
+        ReanalyzeSelectedCommand = new AsyncRelayCommand(
+            () => ReanalyzeAsync(selectedSectionOnly: true),
+            CanReanalyzeSelected,
+            AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
         SelectedSection = CreateEmptySection();
     }
 
     public event EventHandler<TimeSpan>? SeekRequested;
 
     public event EventHandler<PixelRect?>? ImageBoundsFocusRequested;
+
+    public event EventHandler<bool>? ImageTextVisibilityRequested;
 
     public event EventHandler<CaptureMetadataViewSnapshot?>? MetadataChanged;
 
@@ -208,52 +224,39 @@ public sealed class AnalyzedContentViewModel : ViewModelBase
 
     public IRelayCommand ClosePaneCommand { get; }
 
+    public IAsyncRelayCommand ReanalyzeAllCommand { get; }
+
+    public IAsyncRelayCommand ReanalyzeSelectedCommand { get; }
+
     public bool IsPaneOpen
     {
         get;
-        set => Set(ref field, value);
-    }
-
-    public IAsyncRelayCommand? ShowImageTextCommand
-    {
-        get;
-        private set => Set(ref field, value);
-    }
-
-    public IAsyncRelayCommand? GenerateBriefImageDescriptionCommand
-    {
-        get;
-        private set => Set(ref field, value);
-    }
-
-    public IAsyncRelayCommand? GenerateDetailedImageDescriptionCommand
-    {
-        get;
-        private set => Set(ref field, value);
-    }
-
-    public IAsyncRelayCommand? GenerateDiagramImageDescriptionCommand
-    {
-        get;
-        private set => Set(ref field, value);
-    }
-
-    public IAsyncRelayCommand? GenerateAccessibleImageDescriptionCommand
-    {
-        get;
-        private set => Set(ref field, value);
-    }
-
-    public bool HasImageActions
-    {
-        get;
-        private set => Set(ref field, value);
+        set
+        {
+            if (Set(ref field, value))
+            {
+                RequestImageTextVisibility();
+            }
+        }
     }
 
     public bool HasContent
     {
         get;
         private set => Set(ref field, value);
+    }
+
+    public bool IsReanalyzing
+    {
+        get;
+        private set
+        {
+            if (Set(ref field, value))
+            {
+                ReanalyzeAllCommand.NotifyCanExecuteChanged();
+                ReanalyzeSelectedCommand.NotifyCanExecuteChanged();
+            }
+        }
     }
 
     public AnalyzedContentSectionViewModel SelectedSection
@@ -266,8 +269,8 @@ public sealed class AnalyzedContentViewModel : ViewModelBase
                 RaisePropertyChanged(nameof(HasSelectedItems));
                 RaisePropertyChanged(nameof(ShowSelectedFullText));
                 RaisePropertyChanged(nameof(ShowSelectedEmpty));
-                RaisePropertyChanged(nameof(IsImageTextSelected));
-                RaisePropertyChanged(nameof(IsImageDescriptionSelected));
+                ReanalyzeSelectedCommand.NotifyCanExecuteChanged();
+                RequestImageTextVisibility();
             }
         }
     }
@@ -277,12 +280,6 @@ public sealed class AnalyzedContentViewModel : ViewModelBase
     public bool ShowSelectedFullText => SelectedSection.ShowFullText;
 
     public bool ShowSelectedEmpty => SelectedSection.ShowEmpty;
-
-    public bool IsImageTextSelected =>
-        SelectedSection.Kind == AnalyzedContentSectionKind.ImageText;
-
-    public bool IsImageDescriptionSelected =>
-        SelectedSection.Kind == AnalyzedContentSectionKind.ImageDescription;
 
     public string EmptyMessage => GetString(
         "AnalyzedContent_NoContentMessage",
@@ -307,70 +304,10 @@ public sealed class AnalyzedContentViewModel : ViewModelBase
             IsPaneOpen = true;
         }
 
+        ReanalyzeAllCommand.NotifyCanExecuteChanged();
+        ReanalyzeSelectedCommand.NotifyCanExecuteChanged();
+
         RefreshCompletion = RefreshAsync();
-    }
-
-    public void ConfigureImageActions(
-        IAsyncRelayCommand showImageTextCommand,
-        IAsyncRelayCommand generateBriefImageDescriptionCommand,
-        IAsyncRelayCommand generateDetailedImageDescriptionCommand,
-        IAsyncRelayCommand generateDiagramImageDescriptionCommand,
-        IAsyncRelayCommand generateAccessibleImageDescriptionCommand)
-    {
-        ShowImageTextCommand = showImageTextCommand;
-        GenerateBriefImageDescriptionCommand = generateBriefImageDescriptionCommand;
-        GenerateDetailedImageDescriptionCommand = generateDetailedImageDescriptionCommand;
-        GenerateDiagramImageDescriptionCommand = generateDiagramImageDescriptionCommand;
-        GenerateAccessibleImageDescriptionCommand = generateAccessibleImageDescriptionCommand;
-        HasImageActions = true;
-    }
-
-    public void SetCurrentImageText(
-        string fullText,
-        IEnumerable<(string Text, PixelRect Bounds)> lines)
-    {
-        AnalyzedContentItemViewModel[] items = lines
-            .Where(line => !string.IsNullOrWhiteSpace(line.Text))
-            .Select(line => new AnalyzedContentItemViewModel(
-                line.Text,
-                ActivateItem,
-                imageBounds: line.Bounds))
-            .ToArray();
-        ReplaceSection(CreateSection(
-            AnalyzedContentSectionKind.ImageText,
-            GetString("AnalyzedContent_Text", "Text"),
-            fullText,
-            items,
-            GetString("AnalyzedContent_NoText", "No text was detected.")));
-    }
-
-    public void SetCurrentImageDescription(string description)
-    {
-        ReplaceSection(CreateTextSection(
-            AnalyzedContentSectionKind.ImageDescription,
-            GetString("AnalyzedContent_Description", "Description"),
-            description,
-            GetString("AnalyzedContent_NoDescription", "No description was generated.")));
-    }
-
-    public void ClearImageDerivedContent()
-    {
-        AnalyzedContentSectionKind selectedKind = SelectedSection.Kind;
-        for (int index = _sections.Count - 1; index >= 0; index--)
-        {
-            if (_sections[index].Kind is AnalyzedContentSectionKind.ImageText or
-                AnalyzedContentSectionKind.ImageDescription)
-            {
-                _sections.RemoveAt(index);
-            }
-        }
-
-        HasContent = _sections.Count > 0;
-        if (selectedKind is AnalyzedContentSectionKind.ImageText or
-            AnalyzedContentSectionKind.ImageDescription)
-        {
-            SelectedSection = _sections.FirstOrDefault() ?? CreateEmptySection();
-        }
     }
 
     public void UpdatePlaybackPosition(TimeSpan position)
@@ -442,7 +379,10 @@ public sealed class AnalyzedContentViewModel : ViewModelBase
 
     private void ApplySnapshot(CaptureMetadataViewSnapshot? snapshot)
     {
+        AnalyzedContentSectionKind selectedKind = SelectedSection.Kind;
         _resolvedCaptureId = snapshot?.CaptureId;
+        ReanalyzeAllCommand.NotifyCanExecuteChanged();
+        ReanalyzeSelectedCommand.NotifyCanExecuteChanged();
         _sections.Clear();
         if (snapshot != null)
         {
@@ -450,7 +390,9 @@ public sealed class AnalyzedContentViewModel : ViewModelBase
         }
 
         HasContent = _sections.Count > 0;
-        SelectedSection = _sections.FirstOrDefault() ?? CreateEmptySection();
+        SelectedSection = _sections.FirstOrDefault(section => section.Kind == selectedKind) ??
+            _sections.FirstOrDefault() ??
+            CreateEmptySection();
         MetadataChanged?.Invoke(this, snapshot);
         ApplyInitialMatch();
         UpdateSeekAvailability();
@@ -460,36 +402,36 @@ public sealed class AnalyzedContentViewModel : ViewModelBase
     {
         if (snapshot.SpeechTranscript is SpeechTranscriptV1 transcript)
         {
-            _sections.Add(CreateTranscriptSection(transcript));
+            AddSectionIfResult(CreateTranscriptSection(transcript));
         }
 
         if (snapshot.ImageText is OcrDocumentV1 imageText)
         {
-            _sections.Add(CreateImageTextSection(imageText));
+            AddSectionIfResult(CreateImageTextSection(imageText));
         }
 
         if (snapshot.ImageDescription is ImageDescriptionV1 imageDescription)
         {
-            _sections.Add(CreateTextSection(
+            AddSectionIfResult(CreateTextSection(
                 AnalyzedContentSectionKind.ImageDescription,
-                GetString("AnalyzedContent_Description", "Description"),
+                GetString("AnalyzedContent_ImageDescription", "Image description"),
                 imageDescription.Description,
                 GetString("AnalyzedContent_NoDescription", "No description was generated.")));
         }
 
         if (snapshot.VideoText is VideoOcrTrackV1 videoText)
         {
-            _sections.Add(CreateVideoTextSection(videoText));
+            AddSectionIfResult(CreateVideoTextSection(videoText));
         }
 
         if (snapshot.VideoDescription is VideoDescriptionTrackV1 videoDescription)
         {
-            _sections.Add(CreateVideoDescriptionSection(videoDescription));
+            AddSectionIfResult(CreateVideoDescriptionSection(videoDescription));
         }
 
         if (snapshot.MediaProperties is MediaPropertiesV1 properties)
         {
-            _sections.Add(CreatePropertiesSection(properties));
+            AddSectionIfResult(CreatePropertiesSection(properties));
         }
     }
 
@@ -604,6 +546,26 @@ public sealed class AnalyzedContentViewModel : ViewModelBase
             values.Add(properties.AudioCodec);
         }
 
+        if (properties.AudioChannelCount is int audioChannelCount)
+        {
+            values.Add($"{audioChannelCount} ch");
+        }
+
+        if (properties.SampleRateHz is int sampleRateHz)
+        {
+            values.Add($"{sampleRateHz.ToString("N0", CultureInfo.CurrentCulture)} Hz");
+        }
+
+        if (properties.BitRate is long bitRate)
+        {
+            values.Add($"{bitRate.ToString("N0", CultureInfo.CurrentCulture)} bps");
+        }
+
+        if (properties.FrameRate is double frameRate)
+        {
+            values.Add($"{frameRate.ToString("0.##", CultureInfo.CurrentCulture)} fps");
+        }
+
         return CreateTextSection(
             AnalyzedContentSectionKind.Properties,
             GetString("AnalyzedContent_Properties", "Properties"),
@@ -630,28 +592,11 @@ public sealed class AnalyzedContentViewModel : ViewModelBase
         return new(kind, title, fullText, items, emptyMessage, CopySectionAsync);
     }
 
-    private void ReplaceSection(AnalyzedContentSectionViewModel replacement)
+    private void AddSectionIfResult(AnalyzedContentSectionViewModel section)
     {
-        bool wasSelected = SelectedSection.Kind == replacement.Kind;
-        int index = _sections
-            .Select((section, sectionIndex) => (section, sectionIndex))
-            .Where(value => value.section.Kind == replacement.Kind)
-            .Select(value => value.sectionIndex)
-            .DefaultIfEmpty(-1)
-            .First();
-        if (index >= 0)
+        if (section.HasResult)
         {
-            _sections[index] = replacement;
-        }
-        else
-        {
-            _sections.Add(replacement);
-        }
-
-        HasContent = true;
-        if (wasSelected || SelectedSection.Kind == AnalyzedContentSectionKind.None)
-        {
-            SelectedSection = replacement;
+            _sections.Add(section);
         }
     }
 
@@ -737,6 +682,98 @@ public sealed class AnalyzedContentViewModel : ViewModelBase
                 (!_minimumSeekTime.HasValue || start >= _minimumSeekTime.Value) &&
                 (!_maximumSeekTime.HasValue || start <= _maximumSeekTime.Value);
         }
+    }
+
+    private bool CanReanalyzeAll()
+    {
+        return !IsReanalyzing &&
+            _maintenance != null &&
+            GetCaptureId().HasValue;
+    }
+
+    private bool CanReanalyzeSelected()
+    {
+        return CanReanalyzeAll() && GetCapability(SelectedSection.Kind).HasValue;
+    }
+
+    private async Task ReanalyzeAsync(bool selectedSectionOnly)
+    {
+        CaptureId? captureId = GetCaptureId();
+        AnalysisCapabilityId? capabilityId = selectedSectionOnly
+            ? GetCapability(SelectedSection.Kind)
+            : null;
+        if (_maintenance == null ||
+            !captureId.HasValue ||
+            selectedSectionOnly && !capabilityId.HasValue)
+        {
+            return;
+        }
+
+        IsReanalyzing = true;
+        try
+        {
+            CaptureAnalysisMaintenanceResult result = await _maintenance
+                .ReanalyzeCapturesAsync(
+                    new CaptureAnalysisReanalysisRequest(
+                        CaptureAnalysisReanalysisScope.SelectedCaptures,
+                        [captureId.Value],
+                        operationId: Guid.NewGuid(),
+                        capabilityIds: capabilityId.HasValue ? [capabilityId.Value] : null),
+                    CancellationToken.None)
+                .ConfigureAwait(true);
+            if (result.AffectedCaptureCount > 0)
+            {
+                _notifications?.ShowInfo(GetString(
+                    selectedSectionOnly
+                        ? "AnalyzedContent_ReanalyzeTabQueued"
+                        : "AnalyzedContent_ReanalyzeAllQueued",
+                    selectedSectionOnly
+                        ? "This analysis was queued."
+                        : "Capture reanalysis was queued."));
+            }
+            else
+            {
+                _notifications?.ShowError(GetString(
+                    "AnalyzedContent_ReanalyzeFailed",
+                    "This capture could not be queued for analysis."));
+            }
+        }
+        catch
+        {
+            _notifications?.ShowError(GetString(
+                "AnalyzedContent_ReanalyzeFailed",
+                "This capture could not be queued for analysis."));
+        }
+        finally
+        {
+            IsReanalyzing = false;
+        }
+    }
+
+    private CaptureId? GetCaptureId()
+    {
+        return _resolvedCaptureId ?? _request?.CaptureId;
+    }
+
+    private static AnalysisCapabilityId? GetCapability(AnalyzedContentSectionKind kind)
+    {
+        return kind switch
+        {
+            AnalyzedContentSectionKind.Transcript => AnalysisCapabilities.SpeechTranscriptV1.Id,
+            AnalyzedContentSectionKind.ImageText => AnalysisCapabilities.OcrDocumentV1.Id,
+            AnalyzedContentSectionKind.ImageDescription => AnalysisCapabilities.ImageDescriptionV1.Id,
+            AnalyzedContentSectionKind.VideoText => AnalysisCapabilities.VideoOcrTrackV1.Id,
+            AnalyzedContentSectionKind.VideoDescription => AnalysisCapabilities.VideoDescriptionTrackV1.Id,
+            AnalyzedContentSectionKind.Properties => AnalysisCapabilities.MediaPropertiesV1.Id,
+            _ => null,
+        };
+    }
+
+    private void RequestImageTextVisibility()
+    {
+        ImageTextVisibilityRequested?.Invoke(
+            this,
+            IsPaneOpen && SelectedSection.Kind == AnalyzedContentSectionKind.ImageText);
     }
 
     private async Task CopySectionAsync(AnalyzedContentSectionViewModel section)

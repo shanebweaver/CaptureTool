@@ -2268,18 +2268,17 @@ SOFTWARE.
   <data name="AnalyzedContent_Close.AutomationProperties.Name" xml:space="preserve"><value>Close analyzed content</value></data>
   <data name="AnalyzedContent_NoContent.Text" xml:space="preserve"><value>No analyzed content is available for this capture.</value></data>
   <data name="AnalyzedContent_CopyAll.Content" xml:space="preserve"><value>Copy all</value></data>
-  <data name="AnalyzedContent_ShowImageText.Content" xml:space="preserve"><value>Show text on image</value></data>
-  <data name="AnalyzedContent_DescribeImage.Text" xml:space="preserve"><value>Describe image</value></data>
-  <data name="AnalyzedContent_DescribeBrief.Content" xml:space="preserve"><value>Brief</value></data>
-  <data name="AnalyzedContent_DescribeDetailed.Content" xml:space="preserve"><value>Detailed</value></data>
-  <data name="AnalyzedContent_DescribeDiagram.Content" xml:space="preserve"><value>Diagram</value></data>
-  <data name="AnalyzedContent_DescribeAccessible.Content" xml:space="preserve"><value>Accessible</value></data>
   <data name="AnalyzedContent_NoContentMessage" xml:space="preserve"><value>No analyzed content is available for this capture.</value></data>
   <data name="AnalyzedContent_Copied" xml:space="preserve"><value>Analyzed content copied.</value></data>
   <data name="AnalyzedContent_CopyFailed" xml:space="preserve"><value>Analyzed content could not be copied.</value></data>
   <data name="AnalyzedContent_Transcript" xml:space="preserve"><value>Transcript</value></data>
   <data name="AnalyzedContent_Text" xml:space="preserve"><value>Text</value></data>
-  <data name="AnalyzedContent_Description" xml:space="preserve"><value>Description</value></data>
+  <data name="AnalyzedContent_ImageDescription" xml:space="preserve"><value>Image description</value></data>
+  <data name="AnalyzedContent_ReanalyzeAll.Content" xml:space="preserve"><value>Reanalyze all</value></data>
+  <data name="AnalyzedContent_ReanalyzeTab.Content" xml:space="preserve"><value>Reanalyze</value></data>
+  <data name="AnalyzedContent_ReanalyzeAllQueued" xml:space="preserve"><value>Capture reanalysis was queued.</value></data>
+  <data name="AnalyzedContent_ReanalyzeTabQueued" xml:space="preserve"><value>This analysis was queued.</value></data>
+  <data name="AnalyzedContent_ReanalyzeFailed" xml:space="preserve"><value>This capture could not be queued for analysis.</value></data>
   <data name="AnalyzedContent_OnScreenText" xml:space="preserve"><value>On-screen text</value></data>
   <data name="AnalyzedContent_VisualDescriptions" xml:space="preserve"><value>Visual descriptions</value></data>
   <data name="AnalyzedContent_Properties" xml:space="preserve"><value>Properties</value></data>

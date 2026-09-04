@@ -85,7 +85,7 @@ internal sealed class CaptureAnalysisScheduler : ICaptureAnalysisScheduler
         }
 
         List<CaptureAnalysisAuthorizationDecision> sourceAuthorizations = [];
-        foreach (RecipeCapability recipeCapability in request.Recipe.Capabilities)
+        foreach (RecipeCapability recipeCapability in request.Capabilities)
         {
             AnalyzerIdentity? analyzer = GetBoundaryIdentity(
                 recipeCapability.Capability,
@@ -161,7 +161,8 @@ internal sealed class CaptureAnalysisScheduler : ICaptureAnalysisScheduler
                 preconditions,
                 source.MediaKind,
                 asset.CapturedAtUtc,
-                request.Recipe);
+                request.Recipe,
+                request.Capabilities.Select(capability => capability.Capability.Id));
             CaptureAnalysisStoreWriteResult registrationResult = await _mutationCoordinator
                 .TryRegisterSourceAsync(
                     registration,
@@ -181,7 +182,12 @@ internal sealed class CaptureAnalysisScheduler : ICaptureAnalysisScheduler
             int alreadyExists = 0;
             DateTimeOffset enqueuedAtUtc = GetUtcNow();
             long executionOrder = 0;
-            foreach (RecipeCapability capability in request.Recipe.GetExecutionOrder())
+            HashSet<AnalysisCapabilityId> selectedCapabilityIds = request.Capabilities
+                .Select(capability => capability.Capability.Id)
+                .ToHashSet();
+            foreach (RecipeCapability capability in request.Recipe
+                .GetExecutionOrder()
+                .Where(capability => selectedCapabilityIds.Contains(capability.Capability.Id)))
             {
                 DateTimeOffset capabilityEnqueuedAtUtc = enqueuedAtUtc.AddTicks(executionOrder);
                 executionOrder++;
