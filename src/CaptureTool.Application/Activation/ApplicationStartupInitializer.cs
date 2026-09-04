@@ -6,6 +6,10 @@ using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Application.Abstractions.Settings;
 using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Application.Abstractions.Telemetry;
+using CaptureTool.Application.Capture.Assets;
+using CaptureTool.Application.Analysis.Intake;
+using CaptureTool.Application.Analysis.Processing;
+using CaptureTool.Application.Abstractions.Analysis.Memory;
 
 namespace CaptureTool.Application.Activation;
 
@@ -22,8 +26,12 @@ internal sealed class ApplicationStartupInitializer : IApplicationStartupInitial
     private readonly INavigationService _navigationService;
     private readonly IStorageService _storageService;
     private readonly IScratchArtifactStore _scratchArtifactStore;
+    private readonly ICaptureAssetBootstrapper _captureAssetBootstrapper;
     private readonly ITelemetryService? _telemetryService;
     private readonly ITelemetryConsentService? _telemetryConsentService;
+    private readonly CaptureAnalysisWorkerHost? _captureAnalysisWorkerHost;
+    private readonly ICaptureAnalysisReconciler? _captureAnalysisReconciler;
+    private readonly ICaptureMemoryWorkflow? _captureMemoryWorkflow;
     private readonly SemaphoreSlim _semaphore = new(1, 1);
 
     private bool _isInitialized;
@@ -38,8 +46,12 @@ internal sealed class ApplicationStartupInitializer : IApplicationStartupInitial
         INavigationService navigationService,
         IStorageService storageService,
         IScratchArtifactStore scratchArtifactStore,
+        ICaptureAssetBootstrapper captureAssetBootstrapper,
         ITelemetryService? telemetryService = null,
-        ITelemetryConsentService? telemetryConsentService = null)
+        ITelemetryConsentService? telemetryConsentService = null,
+        CaptureAnalysisWorkerHost? captureAnalysisWorkerHost = null,
+        ICaptureAnalysisReconciler? captureAnalysisReconciler = null,
+        ICaptureMemoryWorkflow? captureMemoryWorkflow = null)
     {
         _cancellationService = cancellationService;
         _settingsService = settingsService;
@@ -50,8 +62,12 @@ internal sealed class ApplicationStartupInitializer : IApplicationStartupInitial
         _navigationService = navigationService;
         _storageService = storageService;
         _scratchArtifactStore = scratchArtifactStore;
+        _captureAssetBootstrapper = captureAssetBootstrapper;
         _telemetryService = telemetryService;
         _telemetryConsentService = telemetryConsentService;
+        _captureAnalysisWorkerHost = captureAnalysisWorkerHost;
+        _captureAnalysisReconciler = captureAnalysisReconciler;
+        _captureMemoryWorkflow = captureMemoryWorkflow;
     }
 
     public async Task InitializeAsync(CancellationToken cancellationToken = default)
@@ -78,6 +94,15 @@ internal sealed class ApplicationStartupInitializer : IApplicationStartupInitial
             }
 
             ScavengeScratchArtifacts();
+            await InitializeCaptureAssetsAsync(cancellationTokenSource.Token);
+            await ReconcileCaptureAnalysisAsync(cancellationTokenSource.Token);
+            _captureAnalysisWorkerHost?.Start();
+            if (_captureMemoryWorkflow != null)
+            {
+                try { await _captureMemoryWorkflow.ResumeAsync(cancellationTokenSource.Token); }
+                catch (OperationCanceledException) when (cancellationTokenSource.IsCancellationRequested) { throw; }
+                catch (Exception ex) { _logService.LogException(ex, "Failed to resume Capture Memory work."); }
+            }
 
             string languageOverride = _settingsService.Get(CaptureToolSettings.Settings_LanguageOverride);
             _localizationService.Initialize(languageOverride);
@@ -102,6 +127,43 @@ internal sealed class ApplicationStartupInitializer : IApplicationStartupInitial
         catch (Exception ex)
         {
             _logService.LogException(ex, "Failed to scavenge stale scratch artifacts.");
+        }
+    }
+
+    private async Task InitializeCaptureAssetsAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            await _captureAssetBootstrapper.InitializeAsync(cancellationToken);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            _logService.LogException(ex, "Failed to initialize capture assets.");
+        }
+    }
+
+    private async Task ReconcileCaptureAnalysisAsync(CancellationToken cancellationToken)
+    {
+        if (_captureAnalysisReconciler == null)
+        {
+            return;
+        }
+
+        try
+        {
+            await _captureAnalysisReconciler.ReconcileStartupAsync(cancellationToken);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            _logService.LogException(ex, "Failed to reconcile Capture Analysis intake.");
         }
     }
 

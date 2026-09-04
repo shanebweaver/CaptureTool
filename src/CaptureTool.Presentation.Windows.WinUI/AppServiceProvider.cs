@@ -3,10 +3,16 @@ using CaptureTool.FeatureManagement.DependencyInjection;
 using CaptureTool.Infrastructure.Capture.Windows.DependencyInjection;
 using CaptureTool.Infrastructure.DependencyInjection;
 using CaptureTool.Infrastructure.Edit.Windows.DependencyInjection;
+using CaptureTool.Infrastructure.Analysis.Windows.DependencyInjection;
+using CaptureTool.Infrastructure.Analysis.FoundryLocal.DependencyInjection;
 using CaptureTool.Infrastructure.Windows.DependencyInjection;
 using CaptureTool.Presentation.DependencyInjection;
 using CaptureTool.Presentation.Windows.WinUI.DependencyInjection;
 using CaptureTool.Presentation.Windows.WinUI.UiTests;
+using CaptureTool.FeatureManagement;
+#if DEBUG
+using CaptureTool.Presentation.Windows.WinUI.Debugging;
+#endif
 using Microsoft.Extensions.DependencyInjection;
 
 namespace CaptureTool.Presentation.Windows.WinUI;
@@ -21,6 +27,9 @@ public partial class AppServiceProvider : IServiceProvider, IDisposable
 
         // Feature management
         collection.AddFeatureManagementServices();
+#if DEBUG
+        collection.AddSingleton<IFeatureManager, DeveloperCaptureAnalysisFeatureManager>();
+#endif
 
         // Generic services
         collection.AddGenericServices();
@@ -30,10 +39,15 @@ public partial class AppServiceProvider : IServiceProvider, IDisposable
 
         // Windows domains
         collection.AddWindowsCaptureDomains();
+        collection.AddWindowsAnalysisDomains();
+        collection.AddFoundryLocalAnalysisProvider();
         collection.AddWindowsEditDomains();
 
         // Application layer
         collection.AddApplicationServices();
+#if DEBUG
+        collection.AddDeveloperCaptureAnalyzerSelection();
+#endif
 
         // ViewModels
         collection.AddViewModels();
@@ -50,6 +64,8 @@ public partial class AppServiceProvider : IServiceProvider, IDisposable
     }
 
     public T GetService<T>() where T : notnull => _serviceProvider.GetRequiredService<T>();
+    public IEnumerable<T> GetServices<T>() where T : notnull =>
+        _serviceProvider.GetServices<T>();
     public object GetService(Type t) => _serviceProvider.GetRequiredService(t);
 
     public void Dispose()

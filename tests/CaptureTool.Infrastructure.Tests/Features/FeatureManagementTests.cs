@@ -18,6 +18,17 @@ public sealed class FeatureManagementTests
     }
 
     [TestMethod]
+    public void CaptureAnalysisConfiguredFlags_ShouldEnableSearchAndNemotron()
+    {
+        var manager = new MicrosoftFeatureManager();
+
+        Assert.IsTrue(manager.IsEnabled(AppFeatures.Feature_CaptureAnalysis_Platform));
+        Assert.IsTrue(manager.IsEnabled(AppFeatures.Feature_CaptureMemory_Search));
+        Assert.IsTrue(manager.IsEnabled(
+            AppFeatures.Feature_CaptureAnalysis_NemotronMultilingualSpeech));
+    }
+
+    [TestMethod]
     public void AddFeatureManagementServices_ShouldRegisterFeatureManager()
     {
         var services = new ServiceCollection();

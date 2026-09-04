@@ -4,9 +4,11 @@ using CaptureTool.Application.Abstractions.Shutdown;
 using CaptureTool.Application.Abstractions.Themes;
 using CaptureTool.Application.Abstractions.Windowing;
 using CaptureTool.Domain.FileSystem;
+using CaptureTool.Application.Abstractions.Edit.Image.OpenImageEditPage;
 using CaptureTool.Presentation.Shell;
 using CaptureTool.Presentation.Windows.WinUI.AudioCapture;
 using CaptureTool.Presentation.Windows.WinUI.Capture;
+using CaptureTool.Presentation.Windows.WinUI.CaptureMemory;
 using CaptureTool.Presentation.Windows.WinUI.Edit;
 using CaptureTool.Presentation.Windows.WinUI.EditSessions;
 using CaptureTool.Presentation.Windows.WinUI.Telemetry;
@@ -18,11 +20,13 @@ using Microsoft.UI.Dispatching;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Media;
+using Microsoft.UI.Xaml.Media.Animation;
 using System.Runtime.InteropServices;
 using Windows.ApplicationModel;
 using Windows.Foundation;
 using Windows.Graphics;
 using Windows.UI;
+using Windows.UI.ViewManagement;
 
 namespace CaptureTool.Presentation.Windows.WinUI.Xaml.Windows;
 
@@ -38,11 +42,16 @@ public sealed partial class MainWindow : Window
     private readonly IShutdownHandler _shutdownHandler;
     private readonly WinUIAudioCaptureNavigationConfirmationService _audioCaptureNavigationConfirmationService;
     private readonly WinUICaptureDiscardConfirmationService _captureDiscardConfirmationService;
+    private readonly CaptureMemoryConfirmationDialogService _captureMemoryConfirmationDialogService;
     private readonly WinUIEditSessionConfirmationService _editSessionConfirmationService;
     private readonly AiFeatureConsentDialogService _aiFeatureConsentDialogService;
     private readonly ImageSuperResolutionPreparationConsentService _imageSuperResolutionPreparationConsentService;
     private readonly TelemetryConsentDialogService _telemetryConsentDialogService;
     private readonly DispatcherQueueTimer _notificationTimer;
+    private readonly DispatcherQueueTimer _backgroundActivityTimer;
+    private readonly CancellationTokenSource _backgroundActivityCancellation = new();
+    private readonly UISettings _uiSettings = new();
+    private Storyboard? _backgroundActivityVisibilityStoryboard;
 
     public MainWindowViewModel ViewModel { get; } = ViewModelLocator.GetViewModel<MainWindowViewModel>();
     private bool _closeConfirmed;
@@ -58,6 +67,7 @@ public sealed partial class MainWindow : Window
         _shutdownHandler = App.Current.ServiceProvider.GetService<IShutdownHandler>();
         _audioCaptureNavigationConfirmationService = App.Current.ServiceProvider.GetService<WinUIAudioCaptureNavigationConfirmationService>();
         _captureDiscardConfirmationService = App.Current.ServiceProvider.GetService<WinUICaptureDiscardConfirmationService>();
+        _captureMemoryConfirmationDialogService = App.Current.ServiceProvider.GetService<CaptureMemoryConfirmationDialogService>();
         _editSessionConfirmationService = App.Current.ServiceProvider.GetService<WinUIEditSessionConfirmationService>();
         _aiFeatureConsentDialogService = App.Current.ServiceProvider.GetService<AiFeatureConsentDialogService>();
         _imageSuperResolutionPreparationConsentService = App.Current.ServiceProvider.GetService<ImageSuperResolutionPreparationConsentService>();
@@ -73,6 +83,9 @@ public sealed partial class MainWindow : Window
         _notificationTimer = DispatcherQueue.CreateTimer();
         _notificationTimer.Interval = TimeSpan.FromSeconds(6);
         _notificationTimer.Tick += NotificationTimer_Tick;
+        _backgroundActivityTimer = DispatcherQueue.CreateTimer();
+        _backgroundActivityTimer.Interval = TimeSpan.FromSeconds(1);
+        _backgroundActivityTimer.Tick += BackgroundActivityTimer_Tick;
         RootGrid.Loaded += RootGrid_Loaded;
 
         AppTitleBar.Loaded += AppTitleBar_Loaded;
@@ -85,6 +98,8 @@ public sealed partial class MainWindow : Window
         AppWindow.Closing += OnAppWindowClosing;
         Closed += OnClosed;
         ViewModel.PropertyChanged += OnViewModelPropertyChanged;
+        ViewModel.BackgroundActivityRefreshRequested +=
+            OnBackgroundActivityRefreshRequested;
 
         UpdateRequestedAppTheme();
         UpdateTitleBarColors();
@@ -96,6 +111,7 @@ public sealed partial class MainWindow : Window
         _editSessionConfirmationService.XamlRoot = RootGrid.XamlRoot;
         _audioCaptureNavigationConfirmationService.XamlRoot = RootGrid.XamlRoot;
         _captureDiscardConfirmationService.XamlRoot = RootGrid.XamlRoot;
+        _captureMemoryConfirmationDialogService.XamlRoot = RootGrid.XamlRoot;
         _aiFeatureConsentDialogService.XamlRoot = RootGrid.XamlRoot;
         _imageSuperResolutionPreparationConsentService.XamlRoot = RootGrid.XamlRoot;
         _telemetryConsentDialogService.XamlRoot = RootGrid.XamlRoot;
@@ -104,6 +120,7 @@ public sealed partial class MainWindow : Window
         if (_isShown)
         {
             RequestTelemetryConsentIfNeeded();
+            StartBackgroundActivityMonitoring();
         }
     }
 
@@ -116,6 +133,8 @@ public sealed partial class MainWindow : Window
         {
             RequestTelemetryConsentIfNeeded();
         }
+
+        StartBackgroundActivityMonitoring();
     }
 
     internal void NotifyHidden()
@@ -123,6 +142,7 @@ public sealed partial class MainWindow : Window
         _isShown = false;
         _mainWindowActivationService.SetActive(false);
         _telemetryConsentDialogService.SuppressPrompt();
+        _backgroundActivityTimer.Stop();
 
         if (NavigationFrame.Content is HomePage homePage)
         {
@@ -165,7 +185,7 @@ public sealed partial class MainWindow : Window
                 INavigationService navigationService = App.Current.ServiceProvider.GetService<INavigationService>();
                 await navigationService.NavigateAsync(
                     NavigationRoute.ImageEdit,
-                    new ImageFile(options.ImageFilePath),
+                    new OpenImageEditPageRequest(new ImageFile(options.ImageFilePath)),
                     true);
             }
             catch (Exception ex)
@@ -265,6 +285,17 @@ public sealed partial class MainWindow : Window
         {
             RestartNotificationTimer();
         }
+
+
+        if (e.PropertyName == nameof(MainWindowViewModel.HasBackgroundActivity))
+        {
+            if (!ViewModel.HasBackgroundActivity)
+            {
+                BackgroundActivityFlyout.Hide();
+            }
+
+            AnimateBackgroundActivityVisibility(ViewModel.HasBackgroundActivity);
+        }
     }
 
     private void RestartNotificationTimer()
@@ -281,6 +312,144 @@ public sealed partial class MainWindow : Window
     {
         _notificationTimer.Stop();
         ViewModel.DismissNotificationCommand.Execute(null);
+    }
+
+    private void StartBackgroundActivityMonitoring()
+    {
+        if (!ViewModel.CanMonitorBackgroundActivity ||
+            _backgroundActivityCancellation.IsCancellationRequested)
+        {
+            return;
+        }
+
+        _backgroundActivityTimer.Start();
+        _ = RefreshBackgroundActivityAsync();
+    }
+
+    private void OnBackgroundActivityRefreshRequested(object? sender, EventArgs e)
+    {
+        if (!_isShown || _backgroundActivityCancellation.IsCancellationRequested)
+        {
+            return;
+        }
+
+        _ = DispatcherQueue.TryEnqueue(() => _ = RefreshBackgroundActivityAsync());
+    }
+
+    private async void BackgroundActivityTimer_Tick(
+        DispatcherQueueTimer sender,
+        object args)
+    {
+        await RefreshBackgroundActivityAsync();
+    }
+
+    private async Task RefreshBackgroundActivityAsync()
+    {
+        try
+        {
+            await ViewModel.RefreshBackgroundActivityAsync(
+                _backgroundActivityCancellation.Token);
+        }
+        catch (OperationCanceledException) when (
+            _backgroundActivityCancellation.IsCancellationRequested)
+        {
+        }
+        catch (Exception exception)
+        {
+            _logService.LogException(
+                exception,
+                "Failed to refresh the main-window background activity indicator.");
+        }
+    }
+
+    private void AnimateBackgroundActivityVisibility(bool show)
+    {
+        _backgroundActivityVisibilityStoryboard?.Stop();
+        _backgroundActivityVisibilityStoryboard = null;
+
+        if (!_uiSettings.AnimationsEnabled)
+        {
+            BackgroundActivityHost.Visibility = show
+                ? Visibility.Visible
+                : Visibility.Collapsed;
+            BackgroundActivityHost.Opacity = show ? 1 : 0;
+            BackgroundActivityTranslateTransform.Y = show ? 0 : 12;
+            BackgroundActivityScaleTransform.ScaleX = show ? 1 : 0.96;
+            BackgroundActivityScaleTransform.ScaleY = show ? 1 : 0.96;
+            return;
+        }
+
+        if (show)
+        {
+            BackgroundActivityHost.Visibility = Visibility.Visible;
+        }
+
+        var duration = new Duration(show
+            ? TimeSpan.FromMilliseconds(240)
+            : TimeSpan.FromMilliseconds(170));
+        var easing = new CubicEase
+        {
+            EasingMode = show ? EasingMode.EaseOut : EasingMode.EaseIn,
+        };
+        var storyboard = new Storyboard();
+        storyboard.Children.Add(CreateAnimation(
+            BackgroundActivityHost,
+            "Opacity",
+            BackgroundActivityHost.Opacity,
+            show ? 1 : 0,
+            duration,
+            easing));
+        storyboard.Children.Add(CreateAnimation(
+            BackgroundActivityTranslateTransform,
+            "Y",
+            BackgroundActivityTranslateTransform.Y,
+            show ? 0 : 12,
+            duration,
+            easing));
+        storyboard.Children.Add(CreateAnimation(
+            BackgroundActivityScaleTransform,
+            "ScaleX",
+            BackgroundActivityScaleTransform.ScaleX,
+            show ? 1 : 0.96,
+            duration,
+            easing));
+        storyboard.Children.Add(CreateAnimation(
+            BackgroundActivityScaleTransform,
+            "ScaleY",
+            BackgroundActivityScaleTransform.ScaleY,
+            show ? 1 : 0.96,
+            duration,
+            easing));
+        storyboard.Completed += (_, _) =>
+        {
+            if (!ViewModel.HasBackgroundActivity)
+            {
+                BackgroundActivityHost.Visibility = Visibility.Collapsed;
+            }
+        };
+        _backgroundActivityVisibilityStoryboard = storyboard;
+        storyboard.Begin();
+    }
+
+    private static DoubleAnimation CreateAnimation(
+        DependencyObject target,
+        string targetProperty,
+        double from,
+        double to,
+        Duration duration,
+        EasingFunctionBase easing)
+    {
+        var animation = new DoubleAnimation
+        {
+            From = from,
+            To = to,
+            Duration = duration,
+            EasingFunction = easing,
+            EnableDependentAnimation = true,
+        };
+        Storyboard.SetTarget(animation, target);
+        Storyboard.SetTargetProperty(animation, targetProperty);
+        return animation;
     }
 
     private void OnActivated(object sender, WindowActivatedEventArgs args)
@@ -357,8 +526,15 @@ public sealed partial class MainWindow : Window
         AppTitleBar.SizeChanged -= AppTitleBar_SizeChanged;
         _notificationTimer.Stop();
         _notificationTimer.Tick -= NotificationTimer_Tick;
+        _backgroundActivityTimer.Stop();
+        _backgroundActivityTimer.Tick -= BackgroundActivityTimer_Tick;
+        _backgroundActivityCancellation.Cancel();
+        _backgroundActivityCancellation.Dispose();
+        _backgroundActivityVisibilityStoryboard?.Stop();
 
         ViewModel.PropertyChanged -= OnViewModelPropertyChanged;
+        ViewModel.BackgroundActivityRefreshRequested -=
+            OnBackgroundActivityRefreshRequested;
 
         ViewModel.Dispose();
 

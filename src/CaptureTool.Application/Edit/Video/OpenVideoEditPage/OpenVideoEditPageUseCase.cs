@@ -1,4 +1,5 @@
 using CaptureTool.Application.Abstractions.Edit.Video.OpenVideoEditPage;
+using CaptureTool.Application.Abstractions.Edit;
 using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Application.Abstractions.UseCases;
 using CaptureTool.Application.UseCases;
@@ -28,7 +29,11 @@ internal sealed class OpenVideoEditPageUseCase : IOpenVideoEditPageUseCase
             {
                 bool navigated = await _navigationCoordinator.NavigateAsync(
                     NavigationRoute.VideoEdit,
-                    request.VideoFile,
+                    request with
+                    {
+                        EditorContext = request.EditorContext ?? new CaptureEditorContext(
+                            request.VideoFile.FilePath)
+                    },
                     cancellationToken: cancellationToken);
                 return new OpenVideoEditPageResponse(navigated);
             },

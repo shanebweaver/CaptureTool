@@ -94,8 +94,16 @@ public sealed class MediaEditUseCaseTests
         await audioUseCase.ExecuteAsync(new OpenAudioEditPageRequest(audioFile), TestContext.CancellationToken);
         await videoUseCase.ExecuteAsync(new OpenVideoEditPageRequest(videoFile), TestContext.CancellationToken);
 
-        navigation.Verify(service => service.NavigateAsync(NavigationRoute.AudioEdit, audioFile, false, It.IsAny<CancellationToken>()), Times.Once);
-        navigation.Verify(service => service.NavigateAsync(NavigationRoute.VideoEdit, videoFile, false, It.IsAny<CancellationToken>()), Times.Once);
+        navigation.Verify(service => service.NavigateAsync(
+            NavigationRoute.AudioEdit,
+            It.Is<OpenAudioEditPageRequest>(request => request.AudioFile == audioFile),
+            false,
+            It.IsAny<CancellationToken>()), Times.Once);
+        navigation.Verify(service => service.NavigateAsync(
+            NavigationRoute.VideoEdit,
+            It.Is<OpenVideoEditPageRequest>(request => request.VideoFile == videoFile),
+            false,
+            It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [TestMethod]

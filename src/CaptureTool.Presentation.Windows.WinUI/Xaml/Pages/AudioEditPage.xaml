@@ -5,6 +5,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:audio="using:CaptureTool.Presentation.Features.Audio"
     xmlns:audioedit="using:CaptureTool.Presentation.Features.AudioEdit"
+    xmlns:controls="using:CaptureTool.Presentation.Windows.WinUI.Xaml.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="using:CaptureTool.Presentation.Windows.WinUI.Xaml.Pages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -60,9 +61,30 @@
                 x:Uid="AudioEdit_OpenAudioFolderButton"
                 Command="{x:Bind ViewModel.OpenAudioFolderCommand}"
                 Icon="Folder" />
+
+            <AppBarSeparator />
+            <AppBarToggleButton
+                x:Uid="AnalyzedContent_Open"
+                AutomationProperties.AutomationId="AudioEdit_AnalyzedContentButton"
+                Command="{x:Bind ViewModel.AnalyzedContent.TogglePaneCommand}"
+                IsChecked="{x:Bind ViewModel.AnalyzedContent.IsPaneOpen, Mode=OneWay}">
+                <AppBarToggleButton.Icon>
+                    <FontIcon Glyph="&#xE8A5;" />
+                </AppBarToggleButton.Icon>
+            </AppBarToggleButton>
         </CommandBar>
 
-        <Grid Grid.Row="1" Padding="0">
+        <SplitView
+            x:Name="AnalyzedContentSplitView"
+            Grid.Row="1"
+            DisplayMode="Overlay"
+            IsPaneOpen="{x:Bind ViewModel.AnalyzedContent.IsPaneOpen, Mode=TwoWay}"
+            OpenPaneLength="380"
+            PanePlacement="Right">
+            <SplitView.Pane>
+                <controls:AnalyzedContentPane ViewModel="{x:Bind ViewModel.AnalyzedContent}" />
+            </SplitView.Pane>
+            <Grid Padding="0">
             <Grid.RowDefinitions>
                 <RowDefinition />
                 <RowDefinition Height="Auto" />
@@ -189,7 +211,21 @@
                     </StackPanel>
                 </StackPanel>
             </Grid>
-        </Grid>
+            </Grid>
+        </SplitView>
+
+        <VisualStateManager.VisualStateGroups>
+            <VisualStateGroup>
+                <VisualState>
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="1000" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="AnalyzedContentSplitView.DisplayMode" Value="Inline" />
+                    </VisualState.Setters>
+                </VisualState>
+            </VisualStateGroup>
+        </VisualStateManager.VisualStateGroups>
     </Grid>
 
 </local:AudioEditPageBase>

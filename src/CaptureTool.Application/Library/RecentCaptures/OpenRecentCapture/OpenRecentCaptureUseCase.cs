@@ -1,4 +1,5 @@
 using CaptureTool.Application.Abstractions.Edit.Audio.OpenAudioEditPage;
+using CaptureTool.Application.Abstractions.Edit;
 using CaptureTool.Application.Abstractions.Edit.Image.OpenImageEditPage;
 using CaptureTool.Application.Abstractions.Edit.Video.OpenVideoEditPage;
 using CaptureTool.Application.Abstractions.Files;
@@ -75,16 +76,20 @@ internal sealed class OpenRecentCaptureUseCase : IOpenRecentCaptureUseCase
                         bool navigated;
                         try
                         {
+                            CaptureEditorContext editorContext = request.EditorContext ??
+                                new CaptureEditorContext(request.FilePath);
                             navigated = fileType switch
                             {
                                 CaptureFileType.Audio => (await _goToAudioEdit.ExecuteAsync(
-                                    new OpenAudioEditPageRequest(new AudioFile(workingFilePath)),
+                                    new OpenAudioEditPageRequest(new AudioFile(workingFilePath), editorContext),
                                     token)).Value?.Succeeded == true,
                                 CaptureFileType.Image => (await _goToImageEdit.ExecuteAsync(
-                                    new OpenImageEditPageRequest(new ImageFile(workingFilePath, request.FilePath)),
+                                    new OpenImageEditPageRequest(
+                                        new ImageFile(workingFilePath, request.FilePath),
+                                        editorContext),
                                     token)).Value?.Succeeded == true,
                                 CaptureFileType.Video => (await _goToVideoEdit.ExecuteAsync(
-                                    new OpenVideoEditPageRequest(new VideoFile(workingFilePath)),
+                                    new OpenVideoEditPageRequest(new VideoFile(workingFilePath), editorContext),
                                     token)).Value?.Succeeded == true,
                                 _ => false
                             };

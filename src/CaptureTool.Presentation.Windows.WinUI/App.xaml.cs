@@ -1,6 +1,7 @@
 using CaptureTool.Application.Abstractions.Activation;
 using CaptureTool.Application.Abstractions.Logging;
 using CaptureTool.Application.Abstractions.Themes;
+using CaptureTool.Infrastructure.Analysis.FoundryLocal;
 using CaptureTool.Presentation.Activation;
 using CaptureTool.Presentation.Windows.WinUI.Activation;
 using CaptureTool.Presentation.Windows.WinUI.UiTests;
@@ -29,6 +30,8 @@ public partial class App : Microsoft.UI.Xaml.Application
         UnhandledException += App_UnhandledException;
         DispatcherQueue = DispatcherQueue.GetForCurrentThread();
         ServiceProvider = new();
+        global::Windows.System.MemoryManager.AppMemoryUsageIncreased +=
+            MemoryManager_AppMemoryUsageIncreased;
         InitializeComponent();
         RestoreAppTheme();
     }
@@ -36,6 +39,37 @@ public partial class App : Microsoft.UI.Xaml.Application
     private void App_UnhandledException(object sender, Microsoft.UI.Xaml.UnhandledExceptionEventArgs e)
     {
         ServiceProvider.GetService<ILogService>().LogException(e.Exception, "Unhandled exception occurred.");
+    }
+
+    private async void MemoryManager_AppMemoryUsageIncreased(object? sender, object e)
+    {
+        if (global::Windows.System.MemoryManager.AppMemoryUsageLevel is not (
+            global::Windows.System.AppMemoryUsageLevel.High or
+            global::Windows.System.AppMemoryUsageLevel.OverLimit))
+        {
+            return;
+        }
+
+        try
+        {
+            IEnumerable<IFoundryLocalSpeechTranscriptionService> transcriptionServices =
+                ServiceProvider.GetServices<IFoundryLocalSpeechTranscriptionService>();
+            foreach (IFoundryLocalSpeechTranscriptionService transcriptionService in
+                transcriptionServices)
+            {
+                await transcriptionService.ReleaseModelAsync();
+            }
+        }
+        catch (ObjectDisposedException)
+        {
+            // Application teardown won the race with a late memory-pressure event.
+        }
+        catch (Exception exception)
+        {
+            ServiceProvider.GetService<ILogService>().LogException(
+                exception,
+                "Failed to release the Foundry Local model under memory pressure.");
+        }
     }
 
     private void RestoreAppTheme()

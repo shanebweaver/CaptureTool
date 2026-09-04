@@ -1644,6 +1644,43 @@ public sealed partial class ImageCanvas : UserControlBase
         ExtractedTextSelectionChanged?.Invoke(this, selection.Text);
     }
 
+    public bool FocusExtractedText(RectangleF bounds)
+    {
+        if (_textExtractionLayout.ReadingOrder.Count == 0 ||
+            bounds.Width <= 0 || bounds.Height <= 0)
+        {
+            return false;
+        }
+
+        int bestIndex = -1;
+        float bestOverlap = 0;
+        for (int index = 0; index < _textExtractionLayout.ReadingOrder.Count; index++)
+        {
+            RectangleF candidate = _textExtractionLayout.ReadingOrder[index].Bounds;
+            RectangleF intersection = RectangleF.Intersect(candidate, bounds);
+            float overlap = intersection.Width * intersection.Height;
+            if (overlap > bestOverlap)
+            {
+                bestOverlap = overlap;
+                bestIndex = index;
+            }
+        }
+
+        if (bestIndex < 0)
+        {
+            PointF center = new(bounds.Left + bounds.Width / 2, bounds.Top + bounds.Height / 2);
+            bestIndex = _textExtractionLayout.HitTest(center, allowNearest: true) ?? -1;
+        }
+
+        if (bestIndex < 0)
+        {
+            return false;
+        }
+
+        SetExtractedTextSelection(_textExtractionLayout.Select(bestIndex, bestIndex));
+        return true;
+    }
+
     private void ClearExtractedTextSelection()
     {
         _textSelectionAnchor = null;

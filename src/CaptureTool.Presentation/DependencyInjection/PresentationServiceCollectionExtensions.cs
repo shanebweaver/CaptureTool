@@ -3,6 +3,7 @@ using CaptureTool.Application.Abstractions.Themes;
 using CaptureTool.Domain.Capture;
 using CaptureTool.Presentation.Factories;
 using CaptureTool.Presentation.Features.About;
+using CaptureTool.Presentation.Features.AnalyzedContent;
 using CaptureTool.Presentation.Features.Audio;
 using CaptureTool.Presentation.Features.AudioCapture;
 using CaptureTool.Presentation.Features.AudioEdit;
@@ -38,6 +39,8 @@ public static class PresentationServiceCollectionExtensions
         services.AddTransient<AboutPageViewModel>();
         services.AddTransient<StorePageViewModel>();
         services.AddTransient<HomePageViewModel>();
+        services.AddTransient<CaptureMemoryHomeViewModel>();
+        services.AddTransient<CaptureMemorySettingsViewModel>();
         services.AddTransient<SettingsPageViewModel>();
         services.AddTransient<LoadingPageViewModel>();
         services.AddTransient<ChromaKeyToolViewModel>();
@@ -45,6 +48,7 @@ public static class PresentationServiceCollectionExtensions
         services.AddTransient<ShapeToolViewModel>();
         services.AddTransient<TextToolViewModel>();
         services.AddTransient<TextExtractionToolViewModel>();
+        services.AddTransient<AnalyzedContentViewModel>();
         services.AddTransient<ImageEditPageViewModel>();
         services.AddTransient<VideoEditPageViewModel>();
         services.AddTransient<AudioCapturePageViewModel>();

@@ -83,10 +83,31 @@
                 x:Uid="VideoEdit_OpenVideosFolderButton"
                 Command="{x:Bind ViewModel.OpenVideosFolderCommand}"
                 Icon="Folder" />
+
+            <AppBarSeparator />
+            <AppBarToggleButton
+                x:Uid="AnalyzedContent_Open"
+                AutomationProperties.AutomationId="VideoEdit_AnalyzedContentButton"
+                Command="{x:Bind ViewModel.AnalyzedContent.TogglePaneCommand}"
+                IsChecked="{x:Bind ViewModel.AnalyzedContent.IsPaneOpen, Mode=OneWay}">
+                <AppBarToggleButton.Icon>
+                    <FontIcon Glyph="&#xE8A5;" />
+                </AppBarToggleButton.Icon>
+            </AppBarToggleButton>
         </CommandBar>
 
         <!--  Content  -->
-        <Grid Grid.Row="1" Padding="8,0,8,8">
+        <SplitView
+            x:Name="AnalyzedContentSplitView"
+            Grid.Row="1"
+            DisplayMode="Overlay"
+            IsPaneOpen="{x:Bind ViewModel.AnalyzedContent.IsPaneOpen, Mode=TwoWay}"
+            OpenPaneLength="380"
+            PanePlacement="Right">
+            <SplitView.Pane>
+                <controls:AnalyzedContentPane ViewModel="{x:Bind ViewModel.AnalyzedContent}" />
+            </SplitView.Pane>
+            <Grid Padding="8,0,8,8">
             <MediaPlayerElement
                 x:Name="OriginalVideoPlayer"
                 AreTransportControlsEnabled="{x:Bind ViewModel.AreTransportControlsVisible, Mode=OneWay}"
@@ -202,7 +223,8 @@
                     </StackPanel>
                 </StackPanel>
             </Grid>
-        </Grid>
+            </Grid>
+        </SplitView>
 
         <Grid
             Grid.Row="2"
@@ -294,5 +316,18 @@
                     TextAlignment="Left" />
             </Grid>
         </Grid>
+
+        <VisualStateManager.VisualStateGroups>
+            <VisualStateGroup>
+                <VisualState>
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="1000" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="AnalyzedContentSplitView.DisplayMode" Value="Inline" />
+                    </VisualState.Setters>
+                </VisualState>
+            </VisualStateGroup>
+        </VisualStateManager.VisualStateGroups>
     </Grid>
 </local:VideoEditPageBase>

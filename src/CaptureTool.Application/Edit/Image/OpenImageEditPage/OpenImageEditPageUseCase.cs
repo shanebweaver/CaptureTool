@@ -1,4 +1,5 @@
 using CaptureTool.Application.Abstractions.Edit.Image.OpenImageEditPage;
+using CaptureTool.Application.Abstractions.Edit;
 using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Application.Abstractions.UseCases;
 using CaptureTool.Application.UseCases;
@@ -33,7 +34,11 @@ internal sealed class OpenImageEditPageUseCase : IOpenImageEditPageUseCase
             {
                 bool navigated = await _navigationCoordinator.NavigateAsync(
                     NavigationRoute.ImageEdit,
-                    request.ImageFile,
+                    request with
+                    {
+                        EditorContext = request.EditorContext ?? new CaptureEditorContext(
+                            request.ImageFile.PersistentFilePath ?? request.ImageFile.FilePath)
+                    },
                     cancellationToken: cancellationToken);
                 return new OpenImageEditPageResponse(navigated);
             },

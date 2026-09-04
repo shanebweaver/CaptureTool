@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "processingBoundary": "on-device",
+  "providers": [
+    {
+      "providerId": "microsoft-foundry-local",
+      "featureFlag": "CaptureAnalysis_Provider_MicrosoftFoundryLocal",
+      "analyzers": [
+        {
+          "analyzerId": "foundry-local-speech-transcript",
+          "capability": "speech-transcript/v1",
+          "featureFlag": "CaptureAnalysis_Analyzer_FoundryLocalSpeechTranscript"
+        },
+        {
+          "analyzerId": "foundry-local-nemotron-multilingual-speech-transcript",
+          "capability": "speech-transcript/v1",
+          "featureFlag": "CaptureAnalysis_NemotronMultilingualSpeech"
+        }
+      ]
+    }
+  ]
+}

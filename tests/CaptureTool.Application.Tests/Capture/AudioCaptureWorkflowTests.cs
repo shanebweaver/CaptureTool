@@ -2,12 +2,12 @@ using CaptureTool.Application.Abstractions.Capture;
 using CaptureTool.Application.Abstractions.Clipboard;
 using CaptureTool.Application.Abstractions.Files;
 using CaptureTool.Application.Abstractions.Logging;
-using CaptureTool.Application.Abstractions.Library.RecentCaptures;
 using CaptureTool.Application.Abstractions.Settings;
 using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Application.Abstractions.TaskEnvironment;
 using CaptureTool.Application.Capture;
 using CaptureTool.Application.Capture.Audio;
+using CaptureTool.Domain;
 using CaptureTool.Domain.Capture;
 using CaptureTool.Domain.FileSystem;
 using FluentAssertions;
@@ -201,23 +201,26 @@ public sealed class AudioCaptureWorkflowTests
     }
 
     [TestMethod]
-    public void StopCapture_WhenPostProcessingFails_PublishesTerminalPostProcessingFailure()
+    public void StopCapture_WhenCaptureAssetFinalizationFails_RemainsSuccessful()
     {
-        var postProcessingException = new InvalidOperationException("Recent capture catalog failed.");
+        var postProcessingException = new InvalidOperationException("Capture asset lifecycle failed.");
         var recorder = new Mock<IAudioRecorder>();
         var audioFile = new AudioFile(@"C:\Temp\capture.wav");
         recorder.Setup(service => service.StopCapture()).Returns(audioFile);
-        var recentCaptureCatalog = new Mock<IRecentCaptureCatalog>();
-        recentCaptureCatalog
-            .Setup(catalog => catalog.RecordCaptured(audioFile.FilePath, CaptureFileType.Audio))
-            .Throws(postProcessingException);
+        var lifecycle = new RecordingCaptureAssetLifecycleService
+        {
+            FinalizationException = postProcessingException,
+        };
         AudioCaptureWorkflow workflow = CreateWorkflow(
             recorder,
-            recentCaptureCatalog: recentCaptureCatalog);
+            lifecycle: lifecycle);
         AudioCaptureStateChange? terminalState = null;
         AudioFile? raisedFile = null;
+        bool? captureEventWasRaisedBeforeFinalization = null;
         int terminalStateCount = 0;
         workflow.NewAudioCaptured += (_, file) => raisedFile = file;
+        lifecycle.Finalizing = () =>
+            captureEventWasRaisedBeforeFinalization = ReferenceEquals(raisedFile, audioFile);
         workflow.StartCapture();
         workflow.CaptureStateChanged += (_, change) =>
         {
@@ -225,18 +228,19 @@ public sealed class AudioCaptureWorkflowTests
             terminalState = change;
         };
 
-        workflow.Invoking(service => service.StopCapture()).Should().Throw<InvalidOperationException>()
-            .Which.Should().BeSameAs(postProcessingException);
+        AudioFile stoppedFile = workflow.StopCapture();
 
         workflow.CaptureState.Should().Be(AudioCaptureState.Stopped);
         workflow.IsRecording.Should().BeFalse();
+        stoppedFile.Should().BeSameAs(audioFile);
         raisedFile.Should().BeSameAs(audioFile);
         terminalState.Should().NotBeNull();
         terminalState!.State.Should().Be(AudioCaptureState.Stopped);
         terminalStateCount.Should().Be(1);
-        terminalState.Failure.Should().Be(new AudioCaptureFailure(
-            AudioCaptureFailureStage.PostProcessing,
-            postProcessingException.Message));
+        terminalState.Failure.Should().BeNull();
+        captureEventWasRaisedBeforeFinalization.Should().BeTrue();
+        lifecycle.Finalizations.Should().ContainSingle()
+            .Which.Should().Be((audioFile.FilePath, CaptureFileType.Audio));
     }
 
     [TestMethod]
@@ -272,7 +276,11 @@ public sealed class AudioCaptureWorkflowTests
         Mock<ISettingsService> settings = CreateSettings(autoSave: true, autoCopy: true, audioFolder: @"C:\Audio");
         var fileSystem = new Mock<IFileSystem>();
         var clipboard = new Mock<IClipboardService>();
-        var recentCaptureCatalog = new Mock<IRecentCaptureCatalog>();
+        CaptureId captureId = CaptureId.New();
+        var lifecycle = new RecordingCaptureAssetLifecycleService
+        {
+            FinalizedCaptureId = captureId,
+        };
         TaskCompletionSource<object?> copied = new(TaskCreationOptions.RunContinuationsAsynchronously);
         clipboard
             .Setup(service => service.CopyFileAsync(It.Is<ClipboardFile>(file => file.FilePath == audioFile.FilePath)))
@@ -283,7 +291,7 @@ public sealed class AudioCaptureWorkflowTests
             settings: settings,
             fileSystem: fileSystem,
             clipboard: clipboard,
-            recentCaptureCatalog: recentCaptureCatalog);
+            lifecycle: lifecycle);
 
         workflow.StartCapture();
         workflow.StopCapture();
@@ -295,14 +303,16 @@ public sealed class AudioCaptureWorkflowTests
                 false),
             Times.Once);
         await copied.Task.WaitAsync(TimeSpan.FromSeconds(1), CancellationToken.None);
-        recentCaptureCatalog.Verify(
-            catalog => catalog.RecordCaptured(audioFile.FilePath, CaptureFileType.Audio),
-            Times.Once);
-        recentCaptureCatalog.Verify(
-            catalog => catalog.ReplacePath(
-                audioFile.FilePath,
-                It.Is<string>(path => path.StartsWith(@"C:\Audio", StringComparison.OrdinalIgnoreCase) && path.EndsWith(".wav"))),
-            Times.Once);
+        Assert.HasCount(1, lifecycle.Finalizations);
+        Assert.AreEqual((audioFile.FilePath, CaptureFileType.Audio), lifecycle.Finalizations[0]);
+        Assert.HasCount(1, lifecycle.PreferredOpenPathChanges);
+        var preferredPathChange = lifecycle.PreferredOpenPathChanges[0];
+        preferredPathChange.CaptureId.Should().Be(captureId);
+        preferredPathChange.RetainedSourcePath.Should().Be(audioFile.FilePath);
+        preferredPathChange.PreferredOpenPath.StartsWith(@"C:\Audio", StringComparison.OrdinalIgnoreCase)
+            .Should().BeTrue();
+        preferredPathChange.PreferredOpenPath.EndsWith(".wav", StringComparison.Ordinal)
+            .Should().BeTrue();
     }
 
     [TestMethod]
@@ -461,7 +471,7 @@ public sealed class AudioCaptureWorkflowTests
         Mock<IStorageService>? storage = null,
         Mock<IFileSystem>? fileSystem = null,
         Mock<IClipboardService>? clipboard = null,
-        Mock<IRecentCaptureCatalog>? recentCaptureCatalog = null)
+        RecordingCaptureAssetLifecycleService? lifecycle = null)
     {
         settings ??= CreateSettings();
         fileSystem ??= new Mock<IFileSystem>();
@@ -486,7 +496,7 @@ public sealed class AudioCaptureWorkflowTests
             taskEnvironment.Object,
             Mock.Of<ILogService>(),
             fileNameGenerator,
-            recentCaptureCatalog?.Object ?? Mock.Of<IRecentCaptureCatalog>());
+            lifecycle ?? new RecordingCaptureAssetLifecycleService());
 
         return new AudioCaptureWorkflow(
             recorder.Object,

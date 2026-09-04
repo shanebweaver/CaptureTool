@@ -3,10 +3,12 @@
     x:Class="CaptureTool.Presentation.Windows.WinUI.Xaml.Windows.MainWindow"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:CaptureTool.Presentation.Windows.WinUI.Xaml.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="using:CaptureTool.Presentation.Windows.WinUI.Xaml.Windows"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:pages="using:CaptureTool.Presentation.Windows.WinUI.Xaml.Pages"
+    xmlns:shell="using:CaptureTool.Presentation.Shell"
     xmlns:utils="using:CaptureTool.Presentation.Windows.WinUI.Utils"
     xmlns:views="using:CaptureTool.Presentation.Windows.WinUI.Xaml.Views"
     mc:Ignorable="d">
@@ -115,6 +117,210 @@
                         <FontIcon FontSize="12" Glyph="{StaticResource Cancel}" />
                     </Button>
                 </Grid>
+            </Border>
+
+            <Border
+                x:Name="BackgroundActivityHost"
+                MaxWidth="420"
+                MinWidth="300"
+                Margin="12"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Bottom"
+                Background="{ThemeResource AcrylicBackgroundFillColorBaseBrush}"
+                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                BorderThickness="1"
+                Canvas.ZIndex="99"
+                CornerRadius="12"
+                AutomationProperties.AutomationId="MainWindow_BackgroundActivityHost"
+                Opacity="0"
+                Translation="0,0,24"
+                Visibility="Collapsed">
+                <Border.Shadow>
+                    <ThemeShadow />
+                </Border.Shadow>
+                <Border.RenderTransform>
+                    <TransformGroup>
+                        <ScaleTransform
+                            x:Name="BackgroundActivityScaleTransform"
+                            ScaleX="0.96"
+                            ScaleY="0.96" />
+                        <TranslateTransform
+                            x:Name="BackgroundActivityTranslateTransform"
+                            Y="12" />
+                    </TransformGroup>
+                </Border.RenderTransform>
+
+                <Button
+                    x:Uid="BackgroundActivity_Button"
+                    Padding="10,8"
+                    HorizontalAlignment="Stretch"
+                    HorizontalContentAlignment="Stretch"
+                    VerticalAlignment="Stretch"
+                    VerticalContentAlignment="Stretch"
+                    AutomationProperties.AutomationId="MainWindow_BackgroundActivityButton"
+                    AutomationProperties.LiveSetting="Polite"
+                    Background="Transparent"
+                    BorderBrush="Transparent"
+                    CornerRadius="11">
+                    <Button.Flyout>
+                        <Flyout
+                            x:Name="BackgroundActivityFlyout"
+                            Placement="TopEdgeAlignedRight">
+                            <StackPanel Width="360" Spacing="12">
+                                <StackPanel Spacing="3">
+                                    <TextBlock
+                                        x:Uid="BackgroundActivity_Header"
+                                        FontSize="18"
+                                        FontWeight="SemiBold"
+                                        TextWrapping="WrapWholeWords" />
+                                    <TextBlock
+                                        x:Uid="BackgroundActivity_Subtitle"
+                                        FontSize="12"
+                                        Opacity=".72"
+                                        TextWrapping="WrapWholeWords" />
+                                </StackPanel>
+
+                                <ItemsControl ItemsSource="{x:Bind ViewModel.BackgroundActivities, Mode=OneWay}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="shell:BackgroundActivityItemViewModel">
+                                            <Border
+                                                Margin="0,2"
+                                                Padding="10"
+                                                Background="{ThemeResource CardBackgroundFillColorDefault}"
+                                                BorderBrush="{ThemeResource CardStrokeColorDefault}"
+                                                BorderThickness="1"
+                                                CornerRadius="8">
+                                                <Grid ColumnSpacing="12">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="32" />
+                                                        <ColumnDefinition Width="*" />
+                                                    </Grid.ColumnDefinitions>
+                                                    <Grid.RowDefinitions>
+                                                        <RowDefinition Height="Auto" />
+                                                        <RowDefinition Height="Auto" />
+                                                    </Grid.RowDefinitions>
+
+                                                    <Grid
+                                                        Grid.RowSpan="2"
+                                                        Width="32"
+                                                        Height="32"
+                                                        VerticalAlignment="Top">
+                                                        <Border
+                                                            Background="{ThemeResource ControlFillColorSecondaryBrush}"
+                                                            CornerRadius="16"
+                                                            Visibility="{x:Bind utils:VisibilityUtility.InverseBoolToVisibility(IsActive)}" />
+                                                        <SymbolIcon
+                                                            Symbol="Clock"
+                                                            Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(IsWaiting)}" />
+                                                        <SymbolIcon
+                                                            Foreground="{ThemeResource SystemFillColorCriticalBrush}"
+                                                            Symbol="Important"
+                                                            Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(IsAttention)}" />
+                                                        <controls:AiLoadingIndicator
+                                                            Width="32"
+                                                            Height="32"
+                                                            IsActive="{x:Bind IsActive}"
+                                                            Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(IsActive)}" />
+                                                    </Grid>
+
+                                                    <StackPanel Grid.Column="1" Spacing="2">
+                                                        <TextBlock
+                                                            FontWeight="SemiBold"
+                                                            Text="{x:Bind Title}"
+                                                            TextWrapping="WrapWholeWords" />
+                                                        <TextBlock
+                                                            FontSize="12"
+                                                            Opacity=".72"
+                                                            Text="{x:Bind Detail}"
+                                                            TextWrapping="WrapWholeWords" />
+                                                    </StackPanel>
+
+                                                    <ProgressBar
+                                                        Grid.Row="1"
+                                                        Grid.Column="1"
+                                                        Height="4"
+                                                        Margin="0,8,0,0"
+                                                        Maximum="1"
+                                                        Value="{x:Bind Progress}"
+                                                        Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(IsDeterminate)}" />
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+
+                                <Button
+                                    x:Uid="BackgroundActivity_OpenSettingsButton"
+                                    HorizontalAlignment="Left"
+                                    Command="{x:Bind ViewModel.OpenBackgroundActivitySettingsCommand}" />
+                            </StackPanel>
+                        </Flyout>
+                    </Button.Flyout>
+
+                    <Grid
+                        MinWidth="278"
+                        HorizontalAlignment="Stretch"
+                        ColumnSpacing="10"
+                        RowSpacing="5">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="32" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="24" />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <Grid
+                            Grid.RowSpan="2"
+                            Width="32"
+                            Height="32"
+                            VerticalAlignment="Center">
+                            <Border
+                                Background="{ThemeResource ControlFillColorSecondaryBrush}"
+                                CornerRadius="16"
+                                Visibility="{x:Bind utils:VisibilityUtility.InverseBoolToVisibility(ViewModel.HasActiveBackgroundActivity), Mode=OneWay}" />
+                            <SymbolIcon
+                                Symbol="Clock"
+                                Visibility="{x:Bind utils:VisibilityUtility.InverseBoolToVisibility(ViewModel.HasActiveBackgroundActivity), Mode=OneWay}" />
+                            <SymbolIcon
+                                Foreground="{ThemeResource SystemFillColorCriticalBrush}"
+                                Symbol="Important"
+                                Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.HasBackgroundActivityAttention), Mode=OneWay}" />
+                            <controls:AiLoadingIndicator
+                                Width="32"
+                                Height="32"
+                                AutomationProperties.AutomationId="MainWindow_BackgroundActivityAiIndicator"
+                                IsActive="{x:Bind ViewModel.HasActiveBackgroundActivity, Mode=OneWay}"
+                                Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.HasActiveBackgroundActivity), Mode=OneWay}" />
+                        </Grid>
+
+                        <TextBlock
+                            Grid.Column="1"
+                            VerticalAlignment="Center"
+                            AutomationProperties.LiveSetting="Polite"
+                            FontWeight="SemiBold"
+                            Text="{x:Bind ViewModel.BackgroundActivitySummary, Mode=OneWay}"
+                            TextTrimming="CharacterEllipsis"
+                            TextWrapping="NoWrap" />
+
+                        <SymbolIcon
+                            Grid.Column="2"
+                            VerticalAlignment="Center"
+                            Symbol="Up" />
+
+                        <ProgressBar
+                            Grid.Row="1"
+                            Grid.Column="1"
+                            Grid.ColumnSpan="2"
+                            Height="4"
+                            IsIndeterminate="False"
+                            Maximum="1"
+                            Value="{x:Bind ViewModel.PrimaryActivityProgress, Mode=OneWay}"
+                            Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.IsPrimaryActivityDeterminate), Mode=OneWay}" />
+                    </Grid>
+                </Button>
             </Border>
         </Grid>
     </Grid>

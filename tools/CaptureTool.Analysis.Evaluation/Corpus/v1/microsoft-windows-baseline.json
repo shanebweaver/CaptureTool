@@ -1,0 +1,183 @@
+{
+  "schemaVersion": 1,
+  "runId": "microsoft-windows-synthetic-baseline-v2",
+  "corpusId": "capture-memory-synthetic",
+  "corpusVersion": "1.0.0",
+  "querySetVersion": "1.0.0",
+  "providerId": "microsoft-windows",
+  "modelId": "windows-built-in-analysis-set",
+  "modelVersion": "see-analyzers",
+  "adapterId": "capture-analysis-windows-adapters",
+  "adapterVersion": "2.0.0",
+  "configurationFingerprint": "sha256:1fdd330b677acffe784cb22bc95aa9cc0e2860db170493063ae414a76150f406",
+  "processingBoundary": "on-device",
+  "deviceClass": "synthetic-reference-x64-arm64",
+  "runMode": "warm",
+  "searchIndexItemCount": 1000,
+  "protectedStorageBytes": 41943040,
+  "analyzers": [
+    {
+      "capability": "media-properties/v1",
+      "analyzerId": "windows-image-media-properties",
+      "providerId": "microsoft-windows",
+      "modelId": null,
+      "modelVersion": null,
+      "adapterVersion": "1.1.0",
+      "runtimeId": "windows-graphics-imaging",
+      "runtimeVersion": "1",
+      "packageVersion": null,
+      "configurationFingerprint": null,
+      "processingBoundary": "on-device"
+    },
+    {
+      "capability": "ocr-document/v1",
+      "analyzerId": "windows-ai-ocr-document",
+      "providerId": "microsoft-windows",
+      "modelId": "windows-app-sdk-text-recognizer",
+      "modelVersion": null,
+      "adapterVersion": "1.1.0",
+      "runtimeId": "windows-app-sdk-ai",
+      "runtimeVersion": null,
+      "packageVersion": "2.3.4",
+      "configurationFingerprint": null,
+      "processingBoundary": "on-device"
+    },
+    {
+      "capability": "image-description/v1",
+      "analyzerId": "windows-image-description",
+      "providerId": "microsoft-windows",
+      "modelId": "windows-app-sdk-image-description",
+      "modelVersion": null,
+      "adapterVersion": "1.0.0",
+      "runtimeId": "windows-app-sdk-ai",
+      "runtimeVersion": null,
+      "packageVersion": "2.3.4",
+      "configurationFingerprint": null,
+      "processingBoundary": "on-device"
+    },
+    {
+      "capability": "video-ocr-track/v1",
+      "analyzerId": "windows-ai-video-frame-ocr",
+      "providerId": "microsoft-windows",
+      "modelId": "windows-app-sdk-text-recognizer",
+      "modelVersion": null,
+      "adapterVersion": "1.3.0",
+      "runtimeId": "windows-app-sdk-ai",
+      "runtimeVersion": null,
+      "packageVersion": "2.3.4",
+      "configurationFingerprint": "sha256:6616ca9b2bd6ca025cdaba2f0e1073faf95cf40bb78bbadb37cdf4297490c2d8",
+      "processingBoundary": "on-device"
+    },
+    {
+      "capability": "video-description-track/v1",
+      "analyzerId": "windows-video-frame-description",
+      "providerId": "microsoft-windows",
+      "modelId": "windows-app-sdk-image-description",
+      "modelVersion": null,
+      "adapterVersion": "1.0.0",
+      "runtimeId": "windows-app-sdk-ai",
+      "runtimeVersion": null,
+      "packageVersion": "2.3.4",
+      "configurationFingerprint": "sha256:4237dba27df096c71c4a629af896982185912969dafb7228315c64fd5db257cc",
+      "processingBoundary": "on-device"
+    }
+  ],
+  "fixtures": [
+    {
+      "captureId": "settings-panel",
+      "status": "succeeded",
+      "ocrText": "Advanced settings Privacy and security",
+      "description": "A settings panel with privacy and security options.",
+      "preparationMilliseconds": 20,
+      "analysisMilliseconds": 40,
+      "peakWorkingSetBytes": 104857600,
+      "cpuMilliseconds": 22,
+      "gpuMilliseconds": 4,
+      "npuMilliseconds": 8,
+      "outputBytes": 1024
+    },
+    {
+      "captureId": "project-atlas",
+      "status": "succeeded",
+      "ocrText": "Project Atlas launch checklist",
+      "description": "A project checklist titled Project Atlas.",
+      "preparationMilliseconds": 0,
+      "analysisMilliseconds": 35,
+      "peakWorkingSetBytes": 102760448,
+      "cpuMilliseconds": 20,
+      "gpuMilliseconds": 3,
+      "npuMilliseconds": 7,
+      "outputBytes": 900
+    },
+    {
+      "captureId": "mountain-lake",
+      "status": "succeeded",
+      "ocrText": "",
+      "description": "A calm mountain lake beneath snow-covered peaks.",
+      "preparationMilliseconds": 0,
+      "analysisMilliseconds": 52,
+      "peakWorkingSetBytes": 110100480,
+      "cpuMilliseconds": 25,
+      "gpuMilliseconds": 6,
+      "npuMilliseconds": 12,
+      "outputBytes": 720
+    },
+    {
+      "captureId": "red-bicycle",
+      "status": "succeeded",
+      "ocrText": "",
+      "description": "A red bicycle leaning against a brick wall.",
+      "preparationMilliseconds": 0,
+      "analysisMilliseconds": 48,
+      "peakWorkingSetBytes": 108003328,
+      "cpuMilliseconds": 24,
+      "gpuMilliseconds": 5,
+      "npuMilliseconds": 10,
+      "outputBytes": 680
+    },
+    {
+      "captureId": "invoice-total",
+      "status": "succeeded",
+      "ocrText": "Invoice 1042 Total $86.40",
+      "description": "An invoice showing a total of 86 dollars and 40 cents.",
+      "preparationMilliseconds": 0,
+      "analysisMilliseconds": 44,
+      "peakWorkingSetBytes": 105906176,
+      "cpuMilliseconds": 23,
+      "gpuMilliseconds": 4,
+      "npuMilliseconds": 9,
+      "outputBytes": 1100
+    }
+  ],
+  "queries": [
+    {
+      "queryId": "exact-settings",
+      "latencyMilliseconds": 18,
+      "orderedCaptureIds": ["settings-panel", "project-atlas"]
+    },
+    {
+      "queryId": "exact-atlas",
+      "latencyMilliseconds": 20,
+      "orderedCaptureIds": ["project-atlas", "settings-panel"]
+    },
+    {
+      "queryId": "descriptive-lake",
+      "latencyMilliseconds": 24,
+      "orderedCaptureIds": ["mountain-lake", "red-bicycle"]
+    },
+    {
+      "queryId": "descriptive-bicycle",
+      "latencyMilliseconds": 22,
+      "orderedCaptureIds": ["red-bicycle", "mountain-lake"]
+    },
+    {
+      "queryId": "no-match-spacecraft",
+      "latencyMilliseconds": 19,
+      "orderedCaptureIds": []
+    }
+  ],
+  "packagedAotSmoke": [
+    { "architecture": "x64", "passed": true },
+    { "architecture": "arm64", "passed": true }
+  ]
+}

@@ -1,4 +1,14 @@
 using CaptureTool.Application.Abstractions.Ai;
+using CaptureTool.Application.Abstractions.Analysis.Persistence;
+using CaptureTool.Application.Abstractions.Analysis.Checkpoints;
+using CaptureTool.Application.Abstractions.Analysis.Policy;
+using CaptureTool.Application.Abstractions.Analysis.Intake;
+using CaptureTool.Application.Abstractions.Analysis.Jobs;
+using CaptureTool.Application.Abstractions.Analysis.Sources;
+using CaptureTool.Application.Abstractions.Edit.Metadata;
+using CaptureTool.Application.Abstractions.Analysis.Memory;
+using CaptureTool.Application.Abstractions.Analysis.Analyzers;
+using CaptureTool.Application.Abstractions.Capture.Assets;
 using CaptureTool.Application.Abstractions.Cancellation;
 using CaptureTool.Application.Abstractions.Edit.Image.ChromaKey;
 using CaptureTool.Application.Abstractions.Edit.Image.Description;
@@ -20,6 +30,12 @@ using CaptureTool.Application.Abstractions.TaskEnvironment;
 using CaptureTool.Application.Abstractions.Telemetry;
 using CaptureTool.Application.Abstractions.Time;
 using CaptureTool.Infrastructure.Cancellation;
+using CaptureTool.Infrastructure.Analysis.Persistence;
+using CaptureTool.Infrastructure.Analysis.Checkpoints;
+using CaptureTool.Infrastructure.Analysis.Jobs;
+using CaptureTool.Infrastructure.Analysis.Sources;
+using CaptureTool.Infrastructure.Analysis.Memory;
+using CaptureTool.Infrastructure.CaptureAssets;
 using CaptureTool.Infrastructure.Features;
 using CaptureTool.Infrastructure.Files;
 using CaptureTool.Infrastructure.Globalization;
@@ -32,14 +48,50 @@ using CaptureTool.Infrastructure.TaskEnvironment;
 using CaptureTool.Infrastructure.Telemetry;
 using CaptureTool.Infrastructure.Time;
 using Microsoft.Extensions.DependencyInjection;
+#if DEBUG
+using Microsoft.Extensions.DependencyInjection.Extensions;
+#endif
 
 namespace CaptureTool.Infrastructure.DependencyInjection;
 
 public static class InfrastructureServiceCollectionExtensions
 {
+#if DEBUG
+    public static IServiceCollection AddDeveloperCaptureAnalyzerSelection(
+        this IServiceCollection services)
+    {
+        services.RemoveAll<ICaptureAnalyzerSelectionService>();
+        services.AddSingleton<ICaptureAnalyzerSelectionService,
+            LocalDeveloperCaptureAnalyzerSelectionService>();
+        return services;
+    }
+#endif
+
     public static IServiceCollection AddGenericServices(this IServiceCollection services)
     {
         services.AddSingleton<ICancellationService, CancellationService>();
+        services.AddSingleton<IAtomicFileWriter, AtomicFileWriter>();
+        services.AddSingleton<ICaptureAnalysisControlStore, LocalCaptureAnalysisControlStore>();
+        services.AddSingleton<ICaptureMemoryOperationStore, LocalCaptureMemoryOperationStore>();
+        services.AddSingleton<LocalCaptureAnalysisStore>();
+        services.AddSingleton<ICaptureAnalysisStore>(provider =>
+            provider.GetRequiredService<LocalCaptureAnalysisStore>());
+        services.AddSingleton<ICaptureAnalysisChangeNotifier>(provider =>
+            provider.GetRequiredService<LocalCaptureAnalysisStore>());
+        services.AddSingleton<ICaptureAnalysisJobStore, LocalCaptureAnalysisJobStore>();
+        services.AddSingleton<ICaptureAnalysisCheckpointStore, LocalCaptureAnalysisCheckpointStore>();
+        services.AddSingleton<ICaptureAnalysisSourceVerifier, LocalCaptureAnalysisSourceVerifier>();
+        services.AddSingleton<ICaptureAnalysisMutationCoordinator, CaptureAnalysisMutationCoordinator>();
+        services.AddSingleton<ICaptureAssetCatalog, LocalCaptureAssetCatalog>();
+        services.AddSingleton<CaptureAnalysisWakeChannel>();
+        services.AddSingleton<ICaptureAssetChangeSignal>(provider =>
+            provider.GetRequiredService<CaptureAnalysisWakeChannel>());
+        services.AddSingleton<ICaptureAnalysisWakeSignal>(provider =>
+            provider.GetRequiredService<CaptureAnalysisWakeChannel>());
+        services.AddSingleton<ICaptureAnalysisWakeWaiter>(provider =>
+            provider.GetRequiredService<CaptureAnalysisWakeChannel>());
+        services.AddSingleton<ICaptureAnalysisFeatureAvailability, CaptureAnalysisFeatureAvailability>();
+        services.AddSingleton<ICaptureMemoryFeatureAvailability, CaptureMemoryFeatureAvailability>();
         services.AddSingleton<IAiConsentSettingsFeatureAvailability, AiConsentSettingsFeatureAvailability>();
         services.AddSingleton<IStoreFeatureAvailability, StoreFeatureAvailability>();
         services.AddSingleton<IChromaKeyFeatureAvailability, ChromaKeyFeatureAvailability>();

@@ -1,8 +1,6 @@
 using CaptureTool.Application.Abstractions.Edit.Image.TextExtraction;
-using Microsoft.Graphics.Imaging;
-using Microsoft.Windows.AI;
-using Microsoft.Windows.AI.Imaging;
 using System.Drawing;
+using System.Runtime.InteropServices;
 using Windows.Graphics.Imaging;
 using Windows.Media.Ocr;
 using Windows.Storage.Streams;
@@ -10,248 +8,169 @@ using WinRect = global::Windows.Foundation.Rect;
 
 namespace CaptureTool.Infrastructure.Edit.Windows;
 
-public sealed class WindowsTextExtractionService : ITextExtractionService
+public sealed class WindowsTextExtractionService :
+    ITextExtractionService,
+    ITextExtractionAnalysisService
 {
+    private static readonly TextExtractionModelDescriptor Descriptor = new(
+        ProducerId: "microsoft-windows",
+        ModelId: "windows-media-ocr",
+        ModelVersion: null,
+        RuntimeId: "windows-media-ocr",
+        RuntimeVersion: null);
+
+    public TextExtractionModelDescriptor ModelDescriptor => Descriptor;
+
     public TextExtractionReadyState GetReadyState()
     {
         try
         {
-            return GetCombinedReadyState(
-                TextRecognizer.GetReadyState(),
-                IsLegacyOcrAvailable());
+            return OcrEngine.TryCreateFromUserProfileLanguages() is null
+                ? TextExtractionReadyState.NotSupported
+                : TextExtractionReadyState.Ready;
         }
         catch
         {
-            // The Windows AI runtime can be absent even when the app package contains its projections.
-            return IsLegacyOcrAvailable()
-                ? TextExtractionReadyState.Ready
-                : TextExtractionReadyState.Unknown;
+            return TextExtractionReadyState.Unknown;
         }
     }
 
-    public async Task<TextExtractionPreparationResult> EnsureReadyAsync(
-        CancellationToken cancellationToken = default)
+    public Task<TextExtractionPreparationResult> EnsureReadyAsync(CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        try
-        {
-            AIFeatureReadyState readyState = TextRecognizer.GetReadyState();
-            if (readyState == AIFeatureReadyState.Ready)
-            {
-                return TextExtractionPreparationResult.Success;
-            }
-
-            if (readyState == AIFeatureReadyState.NotReady)
-            {
-                AIFeatureReadyResult result = await TextRecognizer
-                    .EnsureReadyAsync()
-                    .AsTask(cancellationToken);
-                if (result.Status == AIFeatureReadyResultState.Success || IsLegacyOcrAvailable())
-                {
-                    return TextExtractionPreparationResult.Success;
-                }
-
-                return TextExtractionPreparationResult.Failed(GetErrorMessage(result));
-            }
-
-            return IsLegacyOcrAvailable()
-                ? TextExtractionPreparationResult.Success
-                : TextExtractionPreparationResult.NotSupported;
-        }
-        catch (OperationCanceledException)
-        {
-            return TextExtractionPreparationResult.Cancelled;
-        }
-        catch (Exception ex)
-        {
-            return IsLegacyOcrAvailable()
-                ? TextExtractionPreparationResult.Success
-                : TextExtractionPreparationResult.Failed(ex.Message);
-        }
+        return Task.FromResult(GetReadyState() == TextExtractionReadyState.Ready
+            ? TextExtractionPreparationResult.Success
+            : TextExtractionPreparationResult.NotSupported);
     }
 
     public async Task<TextExtractionResult> ExtractAsync(
         TextExtractionRequest request,
         CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(request);
         cancellationToken.ThrowIfCancellationRequested();
 
-        try
+        WindowsTextExtractionAttempt attempt = await RecognizeAsync(
+            request.SourceImage,
+            detectQrCodes: true,
+            cancellationToken).ConfigureAwait(false);
+
+        return attempt.Result.Status switch
         {
-            using SoftwareBitmap sourceBitmap = await LoadSoftwareBitmapAsync(request.SourceImage);
-
-            cancellationToken.ThrowIfCancellationRequested();
-
-            IReadOnlyList<RecognizedQrCodeRegion> qrCodes = QrCodeDetector.Detect(sourceBitmap);
-            cancellationToken.ThrowIfCancellationRequested();
-
-            TextExtractionResult? aiResult = await TryExtractWithWindowsAiAsync(
-                sourceBitmap,
-                request,
-                qrCodes,
-                cancellationToken);
-            if (aiResult is not null)
-            {
-                return aiResult;
-            }
-
-            return await ExtractWithLegacyOcrAsync(
-                sourceBitmap,
-                request,
-                qrCodes,
-                cancellationToken);
-        }
-        catch (OperationCanceledException)
-        {
-            return TextExtractionResult.Cancelled;
-        }
-        catch (Exception ex)
-        {
-            return TextExtractionResult.Failed(ex.Message);
-        }
-    }
-
-    internal static TextExtractionReadyState GetCombinedReadyState(
-        AIFeatureReadyState aiReadyState,
-        bool isLegacyOcrAvailable)
-    {
-        return aiReadyState switch
-        {
-            AIFeatureReadyState.Ready => TextExtractionReadyState.Ready,
-            AIFeatureReadyState.NotReady => TextExtractionReadyState.PreparationNeeded,
-            AIFeatureReadyState.NotSupportedOnCurrentSystem when isLegacyOcrAvailable => TextExtractionReadyState.Ready,
-            AIFeatureReadyState.DisabledByUser when isLegacyOcrAvailable => TextExtractionReadyState.Ready,
-            AIFeatureReadyState.NotSupportedOnCurrentSystem => TextExtractionReadyState.NotSupported,
-            AIFeatureReadyState.DisabledByUser => TextExtractionReadyState.Disabled,
-            _ when isLegacyOcrAvailable => TextExtractionReadyState.Ready,
-            _ => TextExtractionReadyState.Unknown
+            TextExtractionAnalysisStatus.Succeeded => CreateInteractiveResult(
+                attempt,
+                request.SourceSize),
+            TextExtractionAnalysisStatus.Unavailable => TextExtractionResult.NotReady,
+            TextExtractionAnalysisStatus.Cancelled => TextExtractionResult.Cancelled,
+            TextExtractionAnalysisStatus.TransientFailure or
+                TextExtractionAnalysisStatus.TerminalFailure =>
+                    TextExtractionResult.Failed(attempt.ErrorMessage),
+            _ => TextExtractionResult.Failed(attempt.ErrorMessage),
         };
     }
 
-    internal static RectangleF ToRectangleF(RecognizedTextBoundingBox bounds)
+    public async Task<TextExtractionAnalysisResult> ExtractAnalysisAsync(
+        Stream sourceImage,
+        CancellationToken cancellationToken = default)
     {
-        float left = (float)Math.Min(
-            Math.Min(bounds.TopLeft.X, bounds.TopRight.X),
-            Math.Min(bounds.BottomLeft.X, bounds.BottomRight.X));
-        float top = (float)Math.Min(
-            Math.Min(bounds.TopLeft.Y, bounds.TopRight.Y),
-            Math.Min(bounds.BottomLeft.Y, bounds.BottomRight.Y));
-        float right = (float)Math.Max(
-            Math.Max(bounds.TopLeft.X, bounds.TopRight.X),
-            Math.Max(bounds.BottomLeft.X, bounds.BottomRight.X));
-        float bottom = (float)Math.Max(
-            Math.Max(bounds.TopLeft.Y, bounds.TopRight.Y),
-            Math.Max(bounds.BottomLeft.Y, bounds.BottomRight.Y));
+        ArgumentNullException.ThrowIfNull(sourceImage);
+        cancellationToken.ThrowIfCancellationRequested();
 
-        return RectangleF.FromLTRB(left, top, right, bottom);
+        WindowsTextExtractionAttempt attempt = await RecognizeAsync(
+            sourceImage,
+            detectQrCodes: false,
+            cancellationToken).ConfigureAwait(false);
+        return attempt.Result;
     }
 
-    private static async Task<TextExtractionResult?> TryExtractWithWindowsAiAsync(
-        SoftwareBitmap sourceBitmap,
-        TextExtractionRequest request,
-        IReadOnlyList<RecognizedQrCodeRegion> qrCodes,
+    private static async Task<WindowsTextExtractionAttempt> RecognizeAsync(
+        Stream sourceImage,
+        bool detectQrCodes,
         CancellationToken cancellationToken)
     {
+        OcrEngine? engine;
         try
         {
-            if (TextRecognizer.GetReadyState() != AIFeatureReadyState.Ready)
-            {
-                return null;
-            }
+            engine = OcrEngine.TryCreateFromUserProfileLanguages();
+        }
+        catch (COMException exception)
+        {
+            return WindowsTextExtractionAttempt.TransientFailure(exception.Message);
+        }
 
-            using ImageBuffer imageBuffer = ImageBuffer.CreateForSoftwareBitmap(sourceBitmap);
-            using TextRecognizer recognizer = await TextRecognizer
-                .CreateAsync()
-                .AsTask(cancellationToken);
-            Microsoft.Windows.AI.Imaging.RecognizedText recognizedText = await recognizer
-                .RecognizeTextFromImageAsync(imageBuffer)
-                .AsTask(cancellationToken);
+        if (engine is null)
+        {
+            return WindowsTextExtractionAttempt.Unavailable;
+        }
+
+        try
+        {
+            using SoftwareBitmap sourceBitmap = await LoadSoftwareBitmapAsync(sourceImage)
+                .ConfigureAwait(false);
             cancellationToken.ThrowIfCancellationRequested();
 
-            List<RecognizedTextRegion> regions = [];
-            List<string> recognizedLines = [];
-            int lineIndex = 0;
-            foreach (RecognizedLine line in recognizedText.Lines)
-            {
-                List<string> recognizedWords = [];
-                int wordIndex = 0;
-                foreach (RecognizedWord word in line.Words)
-                {
-                    RectangleF bounds = ToRectangleF(word.BoundingBox);
-                    if (!string.IsNullOrWhiteSpace(word.Text) &&
-                        bounds.Width > 0 &&
-                        bounds.Height > 0 &&
-                        !QrCodeDetector.ShouldExcludeText(bounds, qrCodes))
-                    {
-                        regions.Add(new RecognizedTextRegion(word.Text, bounds, lineIndex, wordIndex));
-                        recognizedWords.Add(word.Text);
-                    }
+            OcrResult ocrResult = await engine.RecognizeAsync(sourceBitmap);
+            cancellationToken.ThrowIfCancellationRequested();
 
-                    wordIndex++;
-                }
+            TextExtractionAnalysisDocument document = CreateAnalysisDocument(
+                engine,
+                ocrResult,
+                sourceBitmap);
+            IReadOnlyList<RecognizedQrCodeRegion> qrCodes = detectQrCodes
+                ? QrCodeDetector.Detect(sourceBitmap)
+                : [];
+            cancellationToken.ThrowIfCancellationRequested();
 
-                if (recognizedWords.Count > 0)
-                {
-                    recognizedLines.Add(string.Join(' ', recognizedWords));
-                }
-
-                lineIndex++;
-            }
-
-            string documentText = CombineRecognizedValues(
-                string.Join(Environment.NewLine, recognizedLines),
-                qrCodes);
-            return TextExtractionResult.Success(new RecognizedTextDocument(
-                documentText,
-                request.SourceSize,
-                regions,
-                qrCodes));
+            return WindowsTextExtractionAttempt.Succeeded(document, qrCodes);
         }
         catch (OperationCanceledException)
         {
-            throw;
+            return WindowsTextExtractionAttempt.Cancelled;
         }
-        catch
+        catch (COMException exception)
         {
-            // Initialization and recognition failures fall back to the broadly supported Windows OCR engine.
-            return null;
+            return WindowsTextExtractionAttempt.TransientFailure(exception.Message);
+        }
+        catch (Exception exception) when (exception is
+            IOException or UnauthorizedAccessException or ArgumentException)
+        {
+            return WindowsTextExtractionAttempt.TerminalFailure(exception.Message);
+        }
+        catch (Exception exception)
+        {
+            return WindowsTextExtractionAttempt.TerminalFailure(exception.Message);
         }
     }
 
-    private static async Task<TextExtractionResult> ExtractWithLegacyOcrAsync(
-        SoftwareBitmap sourceBitmap,
-        TextExtractionRequest request,
-        IReadOnlyList<RecognizedQrCodeRegion> qrCodes,
-        CancellationToken cancellationToken)
+    private static TextExtractionResult CreateInteractiveResult(
+        WindowsTextExtractionAttempt attempt,
+        Size sourceSize)
     {
-        OcrEngine? engine = OcrEngine.TryCreateFromUserProfileLanguages();
-        if (engine is null)
+        TextExtractionAnalysisDocument? document = attempt.Result.Document;
+        if (document is null)
         {
-            return TextExtractionResult.NotReady;
+            return TextExtractionResult.Failed(attempt.ErrorMessage);
         }
-
-        OcrResult ocrResult = await engine
-            .RecognizeAsync(sourceBitmap)
-            .AsTask(cancellationToken);
-        cancellationToken.ThrowIfCancellationRequested();
 
         List<RecognizedTextRegion> regions = [];
         List<string> recognizedLines = [];
-        for (int lineIndex = 0; lineIndex < ocrResult.Lines.Count; lineIndex++)
+        foreach (TextExtractionAnalysisLine line in document.Regions.SelectMany(region => region.Lines))
         {
-            OcrLine line = ocrResult.Lines[lineIndex];
             List<string> recognizedWords = [];
-            for (int wordIndex = 0; wordIndex < line.Words.Count; wordIndex++)
+            foreach (TextExtractionAnalysisWord word in line.Words)
             {
-                OcrWord word = line.Words[wordIndex];
-                RectangleF bounds = ToRectangleF(word.BoundingRect);
+                RectangleF bounds = ToRectangleF(word.Bounds);
                 if (!string.IsNullOrWhiteSpace(word.Text) &&
                     bounds.Width > 0 &&
                     bounds.Height > 0 &&
-                    !QrCodeDetector.ShouldExcludeText(bounds, qrCodes))
+                    !QrCodeDetector.ShouldExcludeText(bounds, attempt.QrCodes))
                 {
-                    regions.Add(new RecognizedTextRegion(word.Text, bounds, lineIndex, wordIndex));
+                    regions.Add(new RecognizedTextRegion(
+                        word.Text,
+                        bounds,
+                        line.Order,
+                        word.Order));
                     recognizedWords.Add(word.Text);
                 }
             }
@@ -264,12 +183,75 @@ public sealed class WindowsTextExtractionService : ITextExtractionService
 
         string documentText = CombineRecognizedValues(
             string.Join(Environment.NewLine, recognizedLines),
-            qrCodes);
+            attempt.QrCodes);
         return TextExtractionResult.Success(new RecognizedTextDocument(
             documentText,
-            request.SourceSize,
+            sourceSize,
             regions,
-            qrCodes));
+            attempt.QrCodes));
+    }
+
+    private static TextExtractionAnalysisDocument CreateAnalysisDocument(
+        OcrEngine engine,
+        OcrResult ocrResult,
+        SoftwareBitmap sourceBitmap)
+    {
+        List<TextExtractionAnalysisLine> lines = [];
+        for (int lineIndex = 0; lineIndex < ocrResult.Lines.Count; lineIndex++)
+        {
+            OcrLine line = ocrResult.Lines[lineIndex];
+            List<TextExtractionAnalysisWord> words = [];
+            for (int wordIndex = 0; wordIndex < line.Words.Count; wordIndex++)
+            {
+                OcrWord word = line.Words[wordIndex];
+                if (!string.IsNullOrWhiteSpace(word.Text) &&
+                    TryToPixelBounds(
+                        word.BoundingRect,
+                        sourceBitmap.PixelWidth,
+                        sourceBitmap.PixelHeight,
+                        out TextExtractionPixelBounds bounds))
+                {
+                    words.Add(new TextExtractionAnalysisWord(
+                        word.Text,
+                        bounds,
+                        wordIndex));
+                }
+            }
+
+            if (words.Count == 0)
+            {
+                continue;
+            }
+
+            TextExtractionPixelBounds lineBounds = Union(words.Select(word => word.Bounds));
+            string lineText = string.IsNullOrWhiteSpace(line.Text)
+                ? string.Join(' ', words.Select(word => word.Text))
+                : line.Text;
+            lines.Add(new TextExtractionAnalysisLine(
+                lineText,
+                lineBounds,
+                lineIndex,
+                words));
+        }
+
+        IReadOnlyList<TextExtractionAnalysisRegion> regions = lines.Count == 0
+            ? []
+            : [new TextExtractionAnalysisRegion(
+                Union(lines.Select(line => line.Bounds)),
+                Order: 0,
+                lines)];
+
+        string? languageTag = engine.RecognizerLanguage?.LanguageTag;
+        IReadOnlyList<TextExtractionLanguageCandidate> languages =
+            string.IsNullOrWhiteSpace(languageTag)
+                ? []
+                : [new TextExtractionLanguageCandidate(languageTag, Order: 0)];
+
+        return new TextExtractionAnalysisDocument(
+            new TextExtractionRasterSize(sourceBitmap.PixelWidth, sourceBitmap.PixelHeight),
+            ocrResult.Text ?? string.Empty,
+            languages,
+            regions);
     }
 
     private static async Task<SoftwareBitmap> LoadSoftwareBitmapAsync(Stream sourceStream)
@@ -281,35 +263,62 @@ public sealed class WindowsTextExtractionService : ITextExtractionService
 
         using IRandomAccessStream randomAccessStream = sourceStream.AsRandomAccessStream();
         BitmapDecoder decoder = await BitmapDecoder.CreateAsync(randomAccessStream);
-        return await decoder.GetSoftwareBitmapAsync(BitmapPixelFormat.Bgra8, BitmapAlphaMode.Premultiplied);
+        return await decoder.GetSoftwareBitmapAsync(
+            BitmapPixelFormat.Bgra8,
+            BitmapAlphaMode.Premultiplied,
+            new BitmapTransform(),
+            ExifOrientationMode.RespectExifOrientation,
+            ColorManagementMode.DoNotColorManage);
     }
 
-    private static RectangleF ToRectangleF(WinRect rect)
+    private static bool TryToPixelBounds(
+        WinRect rect,
+        int rasterWidth,
+        int rasterHeight,
+        out TextExtractionPixelBounds bounds)
     {
-        return new(
-            (float)rect.X,
-            (float)rect.Y,
-            (float)rect.Width,
-            (float)rect.Height);
-    }
-
-    private static bool IsLegacyOcrAvailable()
-    {
-        try
+        double right = rect.X + rect.Width;
+        double bottom = rect.Y + rect.Height;
+        if (!double.IsFinite(rect.X) ||
+            !double.IsFinite(rect.Y) ||
+            !double.IsFinite(right) ||
+            !double.IsFinite(bottom))
         {
-            return OcrEngine.TryCreateFromUserProfileLanguages() is not null;
-        }
-        catch
-        {
+            bounds = default;
             return false;
         }
+
+        double x = Math.Clamp(rect.X, 0, rasterWidth);
+        double y = Math.Clamp(rect.Y, 0, rasterHeight);
+        right = Math.Clamp(right, 0, rasterWidth);
+        bottom = Math.Clamp(bottom, 0, rasterHeight);
+        if (right <= x || bottom <= y)
+        {
+            bounds = default;
+            return false;
+        }
+
+        bounds = new TextExtractionPixelBounds(x, y, right - x, bottom - y);
+        return true;
     }
 
-    private static string? GetErrorMessage(AIFeatureReadyResult result)
+    private static TextExtractionPixelBounds Union(IEnumerable<TextExtractionPixelBounds> values)
     {
-        return !string.IsNullOrWhiteSpace(result.ErrorDisplayText)
-            ? result.ErrorDisplayText
-            : result.ExtendedError.Message;
+        TextExtractionPixelBounds[] bounds = [.. values];
+        double x = bounds.Min(value => value.X);
+        double y = bounds.Min(value => value.Y);
+        double right = bounds.Max(value => value.X + value.Width);
+        double bottom = bounds.Max(value => value.Y + value.Height);
+        return new TextExtractionPixelBounds(x, y, right - x, bottom - y);
+    }
+
+    private static RectangleF ToRectangleF(TextExtractionPixelBounds bounds)
+    {
+        return new(
+            (float)bounds.X,
+            (float)bounds.Y,
+            (float)bounds.Width,
+            (float)bounds.Height);
     }
 
     private static string CombineRecognizedValues(
@@ -324,5 +333,37 @@ public sealed class WindowsTextExtractionService : ITextExtractionService
 
         return string.Join(Environment.NewLine, values);
     }
-}
 
+    private sealed record WindowsTextExtractionAttempt(
+        TextExtractionAnalysisResult Result,
+        IReadOnlyList<RecognizedQrCodeRegion> QrCodes,
+        string? ErrorMessage)
+    {
+        public static WindowsTextExtractionAttempt Succeeded(
+            TextExtractionAnalysisDocument document,
+            IReadOnlyList<RecognizedQrCodeRegion> qrCodes)
+        {
+            return new(TextExtractionAnalysisResult.Succeeded(document), qrCodes, null);
+        }
+
+        public static WindowsTextExtractionAttempt Unavailable { get; } = new(
+            TextExtractionAnalysisResult.Unavailable,
+            [],
+            null);
+
+        public static WindowsTextExtractionAttempt Cancelled { get; } = new(
+            TextExtractionAnalysisResult.Cancelled,
+            [],
+            null);
+
+        public static WindowsTextExtractionAttempt TransientFailure(string? errorMessage)
+        {
+            return new(TextExtractionAnalysisResult.TransientFailure, [], errorMessage);
+        }
+
+        public static WindowsTextExtractionAttempt TerminalFailure(string? errorMessage)
+        {
+            return new(TextExtractionAnalysisResult.TerminalFailure, [], errorMessage);
+        }
+    }
+}

@@ -5,6 +5,7 @@ using CaptureTool.Application.Abstractions.Capture.Overlay.OpenCaptureOverlay;
 using CaptureTool.Application.Abstractions.Capture.Overlay.OpenSelectionOverlay;
 using CaptureTool.Application.Abstractions.Capture.Video.CancelVideoCapture;
 using CaptureTool.Application.Abstractions.Capture.Video.StopVideoCapture;
+using CaptureTool.Application.Abstractions.Edit.Video.OpenVideoEditPage;
 using CaptureTool.Application.Abstractions.Capture.Video.ToggleVideoCaptureDesktopAudio;
 using CaptureTool.Application.Abstractions.Capture.Video.ToggleVideoCapturePauseResume;
 using CaptureTool.Application.Abstractions.EditSessions;
@@ -172,7 +173,7 @@ public sealed class CaptureOverlayNavigationUseCaseTests
         navigation.Verify(
             service => service.NavigateAsync(
                 NavigationRoute.VideoEdit,
-                pendingVideo,
+                It.Is<OpenVideoEditPageRequest>(request => request.VideoFile == pendingVideo),
                 false,
                 TestContext.CancellationToken),
             Times.Once);

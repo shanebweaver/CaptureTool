@@ -1,4 +1,7 @@
 using CaptureTool.Application.Abstractions.Navigation;
+using CaptureTool.Application.Abstractions.Edit.Audio.OpenAudioEditPage;
+using CaptureTool.Application.Abstractions.Edit.Image.OpenImageEditPage;
+using CaptureTool.Application.Abstractions.Edit.Video.OpenVideoEditPage;
 using CaptureTool.Application.Abstractions.EditSessions;
 using CaptureTool.Application.Abstractions.Library.RecentCaptures;
 using CaptureTool.Application.Abstractions.Shell.AppMenu.OpenFile;
@@ -86,9 +89,11 @@ public class OpenFileUseCaseTests
         navigationService.Verify(
             service => service.NavigateAsync(
                 NavigationRoute.ImageEdit,
-                It.Is<ImageFile>(file =>
-                    file.FilePath == copiedPath &&
-                    file.PersistentFilePath == sourcePath),
+                It.Is<OpenImageEditPageRequest>(request =>
+                    request.ImageFile.FilePath == copiedPath &&
+                    request.ImageFile.PersistentFilePath == sourcePath &&
+                    request.EditorContext != null &&
+                    request.EditorContext.PersistentSourcePath == sourcePath),
                 false,
                 It.IsAny<CancellationToken>()),
             Times.Once);
@@ -134,7 +139,10 @@ public class OpenFileUseCaseTests
         navigationService.Verify(
             service => service.NavigateAsync(
                 NavigationRoute.AudioEdit,
-                It.Is<AudioFile>(file => file.FilePath == copiedPath),
+                It.Is<OpenAudioEditPageRequest>(request =>
+                    request.AudioFile.FilePath == copiedPath &&
+                    request.EditorContext != null &&
+                    request.EditorContext.PersistentSourcePath == sourcePath),
                 false,
                 It.IsAny<CancellationToken>()),
             Times.Once);
@@ -180,7 +188,10 @@ public class OpenFileUseCaseTests
         navigationService.Verify(
             service => service.NavigateAsync(
                 NavigationRoute.VideoEdit,
-                It.Is<VideoFile>(file => file.FilePath == copiedPath),
+                It.Is<OpenVideoEditPageRequest>(request =>
+                    request.VideoFile.FilePath == copiedPath &&
+                    request.EditorContext != null &&
+                    request.EditorContext.PersistentSourcePath == sourcePath),
                 false,
                 It.IsAny<CancellationToken>()),
             Times.Once);
@@ -225,9 +236,11 @@ public class OpenFileUseCaseTests
         navigationService.Verify(
             service => service.NavigateAsync(
                 NavigationRoute.ImageEdit,
-                It.Is<ImageFile>(file =>
-                    file.FilePath == copiedPath &&
-                    file.PersistentFilePath == sourcePath),
+                It.Is<OpenImageEditPageRequest>(request =>
+                    request.ImageFile.FilePath == copiedPath &&
+                    request.ImageFile.PersistentFilePath == sourcePath &&
+                    request.EditorContext != null &&
+                    request.EditorContext.PersistentSourcePath == sourcePath),
                 false,
                 It.IsAny<CancellationToken>()),
             Times.Once);

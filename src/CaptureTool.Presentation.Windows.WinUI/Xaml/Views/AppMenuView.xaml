@@ -11,9 +11,11 @@
     Background="{ThemeResource LayerOnMicaBaseAltFillColorDefault}"
     mc:Ignorable="d">
 
-    <MenuBar>
+    <MenuBar x:Name="MainMenuBar">
         <!--  File  -->
-        <MenuBarItem x:Uid="AppMenu_FileMenuItem">
+        <MenuBarItem
+            x:Uid="AppMenu_FileMenuItem"
+            AutomationProperties.AutomationId="AppMenu_FileMenuItem">
             <!--  Home  -->
             <MenuFlyoutItem
                 x:Uid="AppMenu_HomeItem"
@@ -86,6 +88,7 @@
             <!--  Settings  -->
             <MenuFlyoutItem
                 x:Uid="AppMenu_SettingsItem"
+                AutomationProperties.AutomationId="AppMenu_SettingsItem"
                 Command="{x:Bind ViewModel.NavigateToSettingsCommand}"
                 Icon="Setting" />
 

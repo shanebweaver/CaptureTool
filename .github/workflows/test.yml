@@ -35,6 +35,45 @@ jobs:
       run: |
         dotnet build CaptureTool.slnx --configuration Release -p:Platform=x64
 
+    - name: Build packaged Capture Analysis provider smoke bundle
+      run: |
+        $project = "src\CaptureTool.Presentation.Windows.WinUI\CaptureTool.Presentation.Windows.WinUI.csproj"
+        $solutionDir = "${{ github.workspace }}\"
+        msbuild $project `
+          /restore `
+          /p:Configuration=Release `
+          /p:Platform=x64 `
+          /p:SolutionDir="$solutionDir" `
+          /p:GenerateAppxPackageOnBuild=true `
+          /p:UapAppxPackageBuildMode=StoreUpload `
+          /p:AppxBundle=Always `
+          /p:AppxBundlePlatforms="x64|arm64" `
+          /p:AppxPackageDir="${{ runner.temp }}\capture-analysis-smoke\" `
+          /p:GenerateTemporaryStoreCertificate=false
+      shell: pwsh
+
+    - name: Verify packaged Capture Analysis providers
+      run: |
+        .\.github\scripts\verify-capture-analysis-provider-smoke.ps1 `
+          -PackageRoot "${{ runner.temp }}\capture-analysis-smoke" `
+          -AppBinRoot "${{ github.workspace }}\src\CaptureTool.Presentation.Windows.WinUI\bin" `
+          -RunManifest "tools\CaptureTool.Analysis.Evaluation\Corpus\v1\microsoft-windows-baseline.json"
+      shell: pwsh
+
+    - name: Run Capture Analysis model release gates
+      run: |
+        $evaluationOutput = Join-Path "${{ runner.temp }}" "capture-analysis-evaluation"
+        dotnet run `
+          --project tools\CaptureTool.Analysis.Evaluation\CaptureTool.Analysis.Evaluation.csproj `
+          --configuration Release `
+          -p:Platform=x64 `
+          -- evaluate `
+          --corpus tools\CaptureTool.Analysis.Evaluation\Corpus\v1\corpus.json `
+          --run tools\CaptureTool.Analysis.Evaluation\Corpus\v1\microsoft-windows-baseline.json `
+          --output $evaluationOutput `
+          --retention-days 7
+      shell: pwsh
+
     - name: Install coverage tools
       run: |
         dotnet tool install --global dotnet-coverage

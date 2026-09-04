@@ -17,8 +17,13 @@ internal sealed class TestFileSystem : IFileSystem
     public IEnumerable<string> EnumerateFiles(string folderPath, string searchPattern) =>
         Directory.EnumerateFiles(folderPath, searchPattern);
 
+    public IEnumerable<string> EnumerateFilesRecursively(string folderPath, string searchPattern) =>
+        Directory.EnumerateFiles(folderPath, searchPattern, SearchOption.AllDirectories);
+
     public IEnumerable<string> EnumerateFileSystemEntries(string folderPath) =>
         Directory.EnumerateFileSystemEntries(folderPath);
+
+    public long GetFileLength(string filePath) => new FileInfo(filePath).Length;
 
     public DateTime GetLastWriteTimeUtc(string filePath) => File.GetLastWriteTimeUtc(filePath);
 

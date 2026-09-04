@@ -24,11 +24,16 @@ public sealed class ScratchArtifactStoreTests
         Directory.CreateDirectory(folders.RetainedPath);
         await File.WriteAllTextAsync(retainedCapturePath, "capture", TestContext.CancellationToken);
 
-        store.ClearUnleasedArtifacts();
+        ScratchArtifactCleanupResult result = store.ClearUnleasedArtifacts();
 
         Assert.IsTrue(File.Exists(activePath));
         Assert.IsFalse(Directory.Exists(Path.GetDirectoryName(unleasedPath)));
         Assert.IsTrue(File.Exists(retainedCapturePath));
+        Assert.AreEqual(1, result.DeletedItemCount);
+        Assert.AreEqual("clipboard"u8.Length, result.DeletedByteCount);
+        Assert.AreEqual(1, result.ActiveItemCount);
+        Assert.AreEqual("active"u8.Length, result.ActiveByteCount);
+        Assert.AreEqual(0, result.FailedItemCount);
     }
 
     [TestMethod]

@@ -109,6 +109,19 @@ public sealed partial class SettingsPage : SettingsPageBase
         }
     }
 
+    private async void CaptureMemoryAnalysisToggleSwitch_Toggled(
+        object sender,
+        RoutedEventArgs e)
+    {
+        if (sender is not ToggleSwitch toggleSwitch)
+        {
+            return;
+        }
+
+        await ViewModel.CaptureMemory.SetAnalyzingNewCapturesAsync(toggleSwitch.IsOn);
+        toggleSwitch.IsOn = ViewModel.CaptureMemory.IsAnalyzingNewCaptures;
+    }
+
     private void OptionalUsageDataToggleSwitch_Toggled(object sender, RoutedEventArgs e)
     {
         if (sender is ToggleSwitch toggleSwitch)
