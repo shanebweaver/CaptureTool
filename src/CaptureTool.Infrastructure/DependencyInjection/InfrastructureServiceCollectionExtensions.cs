@@ -1,4 +1,6 @@
 using CaptureTool.Application.Abstractions.Ai;
+using CaptureTool.Application.Abstractions.Analysis;
+using CaptureTool.Application.Abstractions.Capture.Assets;
 using CaptureTool.Application.Abstractions.Cancellation;
 using CaptureTool.Application.Abstractions.Edit.Image.ChromaKey;
 using CaptureTool.Application.Abstractions.Edit.Image.Description;
@@ -20,6 +22,8 @@ using CaptureTool.Application.Abstractions.TaskEnvironment;
 using CaptureTool.Application.Abstractions.Telemetry;
 using CaptureTool.Application.Abstractions.Time;
 using CaptureTool.Infrastructure.Cancellation;
+using CaptureTool.Infrastructure.Analysis.Persistence;
+using CaptureTool.Infrastructure.CaptureAssets;
 using CaptureTool.Infrastructure.Features;
 using CaptureTool.Infrastructure.Files;
 using CaptureTool.Infrastructure.Globalization;
@@ -56,6 +60,10 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddSingleton<ISettingsService, LocalSettingsService>();
         services.AddSingleton<IAppMetricsService, LocalAppMetricsService>();
         services.AddSingleton<IRecentCaptureCatalog, LocalRecentCaptureCatalog>();
+        services.AddSingleton<ICaptureAssetCatalog, LocalCaptureAssetCatalog>();
+        services.AddSingleton<LocalCaptureAnalysisStore>();
+        services.AddSingleton<ICaptureAnalysisStore>(provider => provider.GetRequiredService<LocalCaptureAnalysisStore>());
+        services.AddSingleton<ICaptureMetadataReader>(provider => provider.GetRequiredService<LocalCaptureAnalysisStore>());
         services.AddSingleton<IBackgroundTaskRunner, BackgroundTaskRunner>();
         services.AddSingleton<ITelemetryConsentService, TelemetryConsentService>();
         services.AddSingleton<ITelemetryEventSink, NullTelemetryService>();

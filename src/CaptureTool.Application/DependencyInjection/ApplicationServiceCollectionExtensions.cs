@@ -4,6 +4,7 @@ using CaptureTool.Application.Abstractions.EditSessions;
 using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Application.Ai;
+using CaptureTool.Application.Analysis;
 using CaptureTool.Application.Capture;
 using CaptureTool.Application.Edit.External;
 using CaptureTool.Application.EditSessions;
@@ -43,6 +44,7 @@ public static class ApplicationServiceCollectionExtensions
     {
         services.AddTransient<IUseCaseExecutor, UseCaseExecutor>();
         services.AddSingleton<IAiFeatureConsentService, AiFeatureConsentService>();
+        services.AddSingleton(CaptureAnalysisConfiguration.CreateDefault());
         services.AddTransient<IOpenExternalEditorUseCase, OpenExternalEditorUseCase>();
         services.AddSingleton<IActiveEditSessionService, ActiveEditSessionService>();
         services.AddSingleton<IEditSessionGuard, EditSessionGuard>();

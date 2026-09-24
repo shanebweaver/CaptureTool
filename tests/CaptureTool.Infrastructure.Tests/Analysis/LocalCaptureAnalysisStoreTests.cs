@@ -1,0 +1,316 @@
+using CaptureTool.Application.Abstractions.Analysis;
+using CaptureTool.Domain;
+using CaptureTool.Domain.Analysis;
+using CaptureTool.Domain.Analysis.Payloads;
+using CaptureTool.Infrastructure.Analysis.Persistence;
+using System.Security.Cryptography;
+using System.Text;
+using System.Text.Json.Nodes;
+
+namespace CaptureTool.Infrastructure.Tests.Analysis;
+
+[TestClass]
+public sealed class LocalCaptureAnalysisStoreTests
+{
+    public TestContext TestContext { get; set; } = null!;
+    private CancellationToken Cancellation => TestContext.CancellationToken;
+
+    [TestMethod]
+    public async Task TypedResultsAndActualProvenanceSurviveReloadWithoutPlaintextFiles()
+    {
+        using var environment = new AnalysisTestEnvironment();
+        using LocalCaptureAnalysisStore store = environment.CreateStore();
+        CaptureId id = CaptureId.New();
+        AnalysisWriteToken token = await store.BeginRunAsync(id, AnalysisMediaKind.Video, AnalysisTestEnvironment.Revision(), "v1", Cancellation);
+        var timestamp = TimeSpan.FromSeconds(3);
+        AnalysisResult text = new(new TextRecognitionMetadata([
+            new("private OCR", new(0.1, 0.2, 0.3, 0.4), timestamp)]), AnalysisTestEnvironment.Producer(), DateTimeOffset.UtcNow, "v1");
+        AnalysisResult transcript = new(new TranscriptMetadata("fr", [new("private speech", timestamp, TimeSpan.FromSeconds(4))]),
+            AnalysisTestEnvironment.Producer(), DateTimeOffset.UtcNow, "v1");
+        Assert.IsTrue(await store.TryWriteAsync(token, text, Cancellation));
+        Assert.IsTrue(await store.TryWriteAsync(token, AnalysisTestEnvironment.Description(), Cancellation));
+        Assert.IsTrue(await store.TryWriteAsync(token, transcript, Cancellation));
+
+        using LocalCaptureAnalysisStore reopened = environment.CreateStore();
+        CaptureAnalysisRecord record = (await reopened.GetAsync(id, cancellationToken: Cancellation))!;
+        Assert.AreEqual(id, record.CaptureId);
+        Assert.HasCount(3, record.Results);
+        AnalysisResult loadedText = record.Results.Single(result => result.Payload is TextRecognitionMetadata);
+        Assert.AreEqual(text.Producer, loadedText.Producer);
+        Assert.AreEqual(text.GeneratedAt, loadedText.GeneratedAt);
+        Assert.AreEqual("v1", loadedText.PlanVersion);
+        RecognizedText region = ((TextRecognitionMetadata)loadedText.Payload).Regions.Single();
+        Assert.AreEqual("private OCR", region.Text);
+        Assert.AreEqual(timestamp, region.Timestamp);
+        Assert.AreEqual(new NormalizedBounds(0.1, 0.2, 0.3, 0.4), region.Bounds);
+        TranscriptMetadata speech = (TranscriptMetadata)record.Results.Single(result => result.Payload is TranscriptMetadata).Payload;
+        Assert.AreEqual("fr", speech.Language);
+        Assert.AreEqual(TimeSpan.FromSeconds(4), speech.Segments.Single().End);
+        Assert.AreEqual("private description", ((DescriptionMetadata)record.Results.Single(result => result.Payload is DescriptionMetadata).Payload).Descriptions.Single().Text);
+        Assert.HasCount(1, await reopened.ReadAllAsync(Cancellation));
+        foreach (byte[] bytes in environment.Files.PublishedBytes)
+        {
+            string stored = Encoding.UTF8.GetString(bytes);
+            Assert.DoesNotContain("private", stored);
+            Assert.DoesNotContain("actual-model", stored);
+        }
+        Assert.IsEmpty(Directory.GetFiles(environment.Root, "*.tmp", SearchOption.AllDirectories));
+    }
+
+    [TestMethod]
+    public async Task RefreshKeepsExistingSuccessButSupersedesOldRunWrites()
+    {
+        using var environment = new AnalysisTestEnvironment();
+        using LocalCaptureAnalysisStore store = environment.CreateStore();
+        CaptureId id = CaptureId.New();
+        AnalysisWriteToken old = await store.BeginRunAsync(id, AnalysisMediaKind.Image, AnalysisTestEnvironment.Revision(), "v1", Cancellation);
+        await store.TryWriteAsync(old, AnalysisTestEnvironment.Description("old"), Cancellation);
+        AnalysisWriteToken fresh = await store.BeginRunAsync(id, AnalysisMediaKind.Image, AnalysisTestEnvironment.Revision(), "v2", Cancellation);
+        Assert.IsFalse(await store.TryWriteAsync(old, AnalysisTestEnvironment.Description("late"), Cancellation));
+        CaptureAnalysisRecord refreshing = (await store.GetAsync(id, cancellationToken: Cancellation))!;
+        Assert.AreEqual("v1", refreshing.Results.Single().PlanVersion);
+        Assert.AreEqual("v2", refreshing.PlanVersion);
+        Assert.IsTrue(await store.TryWriteAsync(fresh, AnalysisTestEnvironment.Description("new", "v2"), Cancellation));
+        Assert.AreEqual("new", DescriptionText((await store.GetAsync(id, cancellationToken: Cancellation))!));
+    }
+
+    [TestMethod]
+    public async Task ChangedSourceInvalidatesResultsAndRejectsOldTokens()
+    {
+        using var environment = new AnalysisTestEnvironment();
+        using LocalCaptureAnalysisStore store = environment.CreateStore();
+        CaptureId id = CaptureId.New();
+        AnalysisWriteToken old = await store.BeginRunAsync(id, AnalysisMediaKind.Image, AnalysisTestEnvironment.Revision(), "v1", Cancellation);
+        await store.TryWriteAsync(old, AnalysisTestEnvironment.Description(), Cancellation);
+        AnalysisWriteToken fresh = await store.BeginRunAsync(id, AnalysisMediaKind.Image, AnalysisTestEnvironment.Revision('b'), "v1", Cancellation);
+        Assert.IsNull(await store.GetAsync(id, AnalysisTestEnvironment.Revision(), Cancellation));
+        Assert.IsEmpty((await store.GetAsync(id, AnalysisTestEnvironment.Revision('b'), Cancellation))!.Results);
+        Assert.IsFalse(await store.TryWriteAsync(old, AnalysisTestEnvironment.Description(), Cancellation));
+        Assert.IsTrue(await store.TryWriteAsync(fresh, AnalysisTestEnvironment.Description("updated source"), Cancellation));
+    }
+
+    [TestMethod]
+    public async Task ProtectionOrPublicationFailurePreservesLastCommittedRecord()
+    {
+        using var environment = new AnalysisTestEnvironment();
+        using LocalCaptureAnalysisStore store = environment.CreateStore();
+        CaptureId id = CaptureId.New();
+        AnalysisWriteToken token = await store.BeginRunAsync(id, AnalysisMediaKind.Image, AnalysisTestEnvironment.Revision(), "v1", Cancellation);
+        await store.TryWriteAsync(token, AnalysisTestEnvironment.Description("committed"), Cancellation);
+        byte[] original = await File.ReadAllBytesAsync(environment.MetadataPaths.Single(), Cancellation);
+        environment.Protector.FailProtection = true;
+        await Assert.ThrowsExactlyAsync<CryptographicException>(() => store.TryWriteAsync(token, AnalysisTestEnvironment.Description("uncommitted"), Cancellation));
+        environment.Protector.FailProtection = false;
+        environment.Files.BeforeWrite = (_, _) => throw new IOException("Injected publication failure.");
+        await Assert.ThrowsExactlyAsync<IOException>(() => store.TryWriteAsync(token, AnalysisTestEnvironment.Description("uncommitted"), Cancellation));
+        CollectionAssert.AreEqual(original, await File.ReadAllBytesAsync(environment.MetadataPaths.Single(), Cancellation));
+        using LocalCaptureAnalysisStore reopened = environment.CreateStore();
+        Assert.AreEqual("committed", DescriptionText((await reopened.GetAsync(id, cancellationToken: Cancellation))!));
+    }
+
+    [TestMethod]
+    public async Task ClearFencesLateWritesEvenWhenCleanupFailsAndRestartRetriesCleanup()
+    {
+        using var environment = new AnalysisTestEnvironment();
+        using LocalCaptureAnalysisStore store = environment.CreateStore();
+        CaptureId id = CaptureId.New();
+        AnalysisWriteToken token = await store.BeginRunAsync(id, AnalysisMediaKind.Image, AnalysisTestEnvironment.Revision(), "v1", Cancellation);
+        await store.TryWriteAsync(token, AnalysisTestEnvironment.Description(), Cancellation);
+        environment.Files.FailCleanup = true;
+        AnalysisCleanupResult cleared = await store.ClearAsync(Cancellation);
+        Assert.IsFalse(cleared.Completed);
+        Assert.AreEqual(1, cleared.RemainingGenerations);
+        Assert.HasCount(1, environment.MetadataPaths); // Physically retained but inaccessible.
+        Assert.IsNull(await store.GetAsync(id, cancellationToken: Cancellation));
+        Assert.IsFalse(await store.TryWriteAsync(token, AnalysisTestEnvironment.Description("late"), Cancellation));
+
+        using LocalCaptureAnalysisStore reopened = environment.CreateStore();
+        Assert.IsNull(await reopened.GetAsync(id, cancellationToken: Cancellation));
+        environment.Files.FailCleanup = false;
+        Assert.IsTrue((await reopened.InitializeAsync(Cancellation)).Completed);
+        Assert.IsEmpty(environment.MetadataPaths);
+        Assert.IsFalse(await reopened.TryWriteAsync(token, AnalysisTestEnvironment.Description("late after restart"), Cancellation));
+    }
+
+    [TestMethod]
+    public async Task RetriedCleanupPreservesNewerGenerationResults()
+    {
+        using var environment = new AnalysisTestEnvironment();
+        using LocalCaptureAnalysisStore store = environment.CreateStore();
+        CaptureId id = CaptureId.New();
+        AnalysisWriteToken old = await store.BeginRunAsync(id, AnalysisMediaKind.Image, AnalysisTestEnvironment.Revision(), "v1", Cancellation);
+        await store.TryWriteAsync(old, AnalysisTestEnvironment.Description("old"), Cancellation);
+        environment.Files.FailCleanup = true;
+        await store.ClearAsync(Cancellation);
+        AnalysisWriteToken fresh = await store.BeginRunAsync(id, AnalysisMediaKind.Image, AnalysisTestEnvironment.Revision(), "v1", Cancellation);
+        await store.TryWriteAsync(fresh, AnalysisTestEnvironment.Description("new"), Cancellation);
+        environment.Files.FailCleanup = false;
+        Assert.IsTrue((await store.InitializeAsync(Cancellation)).Completed);
+        Assert.HasCount(1, environment.MetadataPaths);
+        Assert.AreEqual("new", DescriptionText((await store.GetAsync(id, cancellationToken: Cancellation))!));
+    }
+
+    [TestMethod]
+    public async Task ClearAndInFlightPublicationAreSerializedWithoutResurrection()
+    {
+        using var environment = new AnalysisTestEnvironment();
+        using LocalCaptureAnalysisStore store = environment.CreateStore();
+        CaptureId id = CaptureId.New();
+        AnalysisWriteToken token = await store.BeginRunAsync(id, AnalysisMediaKind.Image, AnalysisTestEnvironment.Revision(), "v1", Cancellation);
+        var entered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var release = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        environment.Files.BeforeWrite = async (path, ct) =>
+        {
+            if (!path.EndsWith(".analysis", StringComparison.Ordinal)) return;
+            entered.SetResult();
+            await release.Task.WaitAsync(ct);
+        };
+        Task<bool> write = store.TryWriteAsync(token, AnalysisTestEnvironment.Description(), Cancellation);
+        await entered.Task.WaitAsync(TimeSpan.FromSeconds(10), Cancellation);
+        Task<AnalysisCleanupResult> clear = store.ClearAsync(Cancellation);
+        Assert.IsFalse(clear.IsCompleted);
+        release.SetResult();
+        Assert.IsTrue(await write);
+        Assert.IsTrue((await clear).Completed);
+        Assert.IsNull(await store.GetAsync(id, cancellationToken: Cancellation));
+        Assert.IsFalse(await store.TryWriteAsync(token, AnalysisTestEnvironment.Description(), Cancellation));
+    }
+
+    [TestMethod]
+    public async Task FailedClearPublicationDoesNotInvalidateCommittedData()
+    {
+        using var environment = new AnalysisTestEnvironment();
+        using LocalCaptureAnalysisStore store = environment.CreateStore();
+        CaptureId id = CaptureId.New();
+        AnalysisWriteToken token = await store.BeginRunAsync(id, AnalysisMediaKind.Image, AnalysisTestEnvironment.Revision(), "v1", Cancellation);
+        await store.TryWriteAsync(token, AnalysisTestEnvironment.Description("retained"), Cancellation);
+        environment.Files.BeforeWrite = (path, _) => path == environment.ControlPath
+            ? throw new IOException("Injected control publication failure.") : Task.CompletedTask;
+        await Assert.ThrowsExactlyAsync<IOException>(() => store.ClearAsync(Cancellation));
+        Assert.AreEqual("retained", DescriptionText((await store.GetAsync(id, cancellationToken: Cancellation))!));
+        Assert.IsTrue(await store.TryWriteAsync(token, AnalysisTestEnvironment.Description("still authorized"), Cancellation));
+    }
+
+    [TestMethod]
+    public async Task CancellationBeforePublicationLeavesPreviousRecordAndNoTemporaryFiles()
+    {
+        using var environment = new AnalysisTestEnvironment();
+        using LocalCaptureAnalysisStore store = environment.CreateStore();
+        CaptureId id = CaptureId.New();
+        AnalysisWriteToken token = await store.BeginRunAsync(id, AnalysisMediaKind.Image, AnalysisTestEnvironment.Revision(), "v1", Cancellation);
+        await store.TryWriteAsync(token, AnalysisTestEnvironment.Description("retained"), Cancellation);
+        using var cancelled = CancellationTokenSource.CreateLinkedTokenSource(Cancellation);
+        environment.Files.BeforeWrite = (_, _) => { cancelled.Cancel(); return Task.CompletedTask; };
+        await Assert.ThrowsAsync<OperationCanceledException>(() => store.TryWriteAsync(token, AnalysisTestEnvironment.Description("cancelled"), cancelled.Token));
+        Assert.AreEqual("retained", DescriptionText((await store.GetAsync(id, cancellationToken: Cancellation))!));
+        Assert.IsEmpty(Directory.GetFiles(environment.Root, "*.tmp", SearchOption.AllDirectories));
+    }
+
+    [TestMethod]
+    public async Task UnknownSchemaAndMismatchedIdentityAreNotOverwritten()
+    {
+        using var environment = new AnalysisTestEnvironment();
+        using LocalCaptureAnalysisStore store = environment.CreateStore();
+        CaptureId id = CaptureId.New();
+        AnalysisWriteToken token = await store.BeginRunAsync(id, AnalysisMediaKind.Image, AnalysisTestEnvironment.Revision(), "v1", Cancellation);
+        await store.TryWriteAsync(token, AnalysisTestEnvironment.Description(), Cancellation);
+        string path = environment.MetadataPaths.Single();
+        await MutateDocument(environment, path, node => node["Version"] = 99);
+        byte[] unknown = await File.ReadAllBytesAsync(path, Cancellation);
+        await Assert.ThrowsExactlyAsync<InvalidDataException>(() => store.GetAsync(id, cancellationToken: Cancellation));
+        await Assert.ThrowsExactlyAsync<InvalidDataException>(() => store.BeginRunAsync(id, AnalysisMediaKind.Image, AnalysisTestEnvironment.Revision(), "v1", Cancellation));
+        CollectionAssert.AreEqual(unknown, await File.ReadAllBytesAsync(path, Cancellation));
+
+        await MutateDocument(environment, path, node => { node["Version"] = 1; node["CaptureId"] = Guid.NewGuid().ToString(); });
+        await Assert.ThrowsExactlyAsync<InvalidDataException>(() => store.GetAsync(id, cancellationToken: Cancellation));
+    }
+
+    [TestMethod]
+    public async Task TamperedOrMissingControlCannotSilentlyCreateFreshStorage()
+    {
+        using var environment = new AnalysisTestEnvironment();
+        using LocalCaptureAnalysisStore store = environment.CreateStore();
+        await store.BeginRunAsync(CaptureId.New(), AnalysisMediaKind.Image, AnalysisTestEnvironment.Revision(), "v1", Cancellation);
+        byte[] bytes = await File.ReadAllBytesAsync(environment.ControlPath, Cancellation);
+        bytes[^1] ^= 1;
+        await File.WriteAllBytesAsync(environment.ControlPath, bytes, Cancellation);
+        await Assert.ThrowsAsync<CryptographicException>(() => store.InitializeAsync(Cancellation));
+        CollectionAssert.AreEqual(bytes, await File.ReadAllBytesAsync(environment.ControlPath, Cancellation));
+        File.Delete(environment.ControlPath);
+        await Assert.ThrowsExactlyAsync<InvalidDataException>(() => store.InitializeAsync(Cancellation));
+        await Assert.ThrowsExactlyAsync<InvalidDataException>(() => store.ClearAsync(Cancellation));
+        Assert.IsFalse(File.Exists(environment.ControlPath));
+    }
+
+    [TestMethod]
+    public async Task UnknownPayloadSchemaIsPreservedAndExplicitClearStillWorks()
+    {
+        using var environment = new AnalysisTestEnvironment();
+        using LocalCaptureAnalysisStore store = environment.CreateStore();
+        CaptureId id = CaptureId.New();
+        AnalysisWriteToken token = await store.BeginRunAsync(id, AnalysisMediaKind.Image, AnalysisTestEnvironment.Revision(), "v1", Cancellation);
+        await store.TryWriteAsync(token, AnalysisTestEnvironment.Description(), Cancellation);
+        await MutateDocument(environment, environment.MetadataPaths.Single(), node => node["Results"]![0]!["SchemaVersion"] = 99);
+        await Assert.ThrowsExactlyAsync<InvalidDataException>(() => store.TryWriteAsync(token, AnalysisTestEnvironment.Description(), Cancellation));
+        Assert.IsTrue((await store.ClearAsync(Cancellation)).Completed);
+        Assert.IsEmpty(environment.MetadataPaths);
+    }
+
+    private async Task MutateDocument(AnalysisTestEnvironment environment, string path, Action<JsonNode> change)
+    {
+        byte[] ciphertext = await File.ReadAllBytesAsync(path, Cancellation);
+        JsonNode node = JsonNode.Parse(environment.Protector.Unprotect(ciphertext))!;
+        change(node);
+        await File.WriteAllBytesAsync(path, environment.Protector.Protect(Encoding.UTF8.GetBytes(node.ToJsonString())), Cancellation);
+    }
+
+    private static string DescriptionText(CaptureAnalysisRecord record) =>
+        ((DescriptionMetadata)record.Results.Single().Payload).Descriptions.Single().Text;
+
+    [TestMethod]
+    public async Task LockedDestinationFailsAtomicReplacementWithoutLosingPreviousMetadata()
+    {
+        if (!OperatingSystem.IsWindows()) Assert.Inconclusive("Exercises Windows file-sharing behavior.");
+        using var environment = new AnalysisTestEnvironment();
+        using LocalCaptureAnalysisStore store = environment.CreateStore();
+        CaptureId id = CaptureId.New();
+        AnalysisWriteToken token = await store.BeginRunAsync(id, AnalysisMediaKind.Image, AnalysisTestEnvironment.Revision(), "v1", Cancellation);
+        await store.TryWriteAsync(token, AnalysisTestEnvironment.Description("committed"), Cancellation);
+        string path = environment.MetadataPaths.Single();
+        using (var locked = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
+        {
+            await Assert.ThrowsAsync<IOException>(() => store.TryWriteAsync(token, AnalysisTestEnvironment.Description("not committed"), Cancellation));
+        }
+        Assert.AreEqual("committed", DescriptionText((await store.GetAsync(id, cancellationToken: Cancellation))!));
+        Assert.IsEmpty(Directory.GetFiles(environment.Root, "*.tmp", SearchOption.AllDirectories));
+    }
+
+    [TestMethod]
+    public async Task MissingRequiredFieldsCannotSilentlyBecomeDefaultMetadata()
+    {
+        using var environment = new AnalysisTestEnvironment();
+        using LocalCaptureAnalysisStore store = environment.CreateStore();
+        CaptureId id = CaptureId.New();
+        await store.BeginRunAsync(id, AnalysisMediaKind.Video, AnalysisTestEnvironment.Revision(), "v1", Cancellation);
+        string path = environment.MetadataPaths.Single();
+        await MutateDocument(environment, path, node => node.AsObject().Remove("MediaKind"));
+        byte[] incomplete = await File.ReadAllBytesAsync(path, Cancellation);
+        await Assert.ThrowsExactlyAsync<InvalidDataException>(() => store.GetAsync(id, cancellationToken: Cancellation));
+        CollectionAssert.AreEqual(incomplete, await File.ReadAllBytesAsync(path, Cancellation));
+    }
+
+    [TestMethod]
+    public async Task InterruptedFirstControlWriteCanInitializeWithoutResettingAnyCommittedData()
+    {
+        using var environment = new AnalysisTestEnvironment();
+        Directory.CreateDirectory(Path.GetDirectoryName(environment.ControlPath)!);
+        string interrupted = environment.ControlPath + "." + Guid.NewGuid().ToString("N") + ".tmp";
+        await File.WriteAllBytesAsync(interrupted, [1, 2, 3], Cancellation); // Incomplete, unpublished ciphertext.
+        using LocalCaptureAnalysisStore store = environment.CreateStore();
+        Assert.IsTrue((await store.InitializeAsync(Cancellation)).Completed);
+        Assert.IsFalse(File.Exists(interrupted));
+        CaptureId id = CaptureId.New();
+        AnalysisWriteToken token = await store.BeginRunAsync(id, AnalysisMediaKind.Image, AnalysisTestEnvironment.Revision(), "v1", Cancellation);
+        Assert.IsTrue(await store.TryWriteAsync(token, AnalysisTestEnvironment.Description(), Cancellation));
+    }
+}

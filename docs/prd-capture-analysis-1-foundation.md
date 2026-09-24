@@ -1,6 +1,8 @@
 # PRD: Capture Analysis — Slice 1, Foundation
 
-Status: Planned. Feature branch: `codex/capture-analysis-core`.
+Status: Implemented on `codex/capture-analysis-foundation`, awaiting review.
+Feature branch: `codex/capture-analysis-core`.
+See the [implementation and verification notes](capture-analysis-foundation-review.md).
 
 ## Purpose
 
@@ -43,7 +45,7 @@ checkpoint, or search frameworks.
 3. Analyzer contracts expose availability, preparation, execution, cancellation,
    progress, and typed outcomes. Keep valid empty output distinct from failure.
    Availability checks must not download models or read capture content.
-4. A durable capture catalog assigns stable identity independently of recent
+4. A durable capture catalog persists explicitly assigned identity independently of recent
    history. Auto-save changes the preferred location without changing the retained
    source or identity. Registration is idempotent; conflicting identity/location
    changes are rejected. Catalog operations never delete media.
@@ -83,6 +85,8 @@ captures are enrolled explicitly in slice 3; do not crawl arbitrary folders.
 - Catalog identity survives reload and auto-save; conflicts cannot corrupt it.
 - All payloads and provenance round-trip through protected persistence.
 - Failed protection/publication leaves the last committed record intact.
+- A crash before the first control publication recovers unpublished temporary
+  files without treating missing control over existing committed data as a fresh store.
 - Successful results survive a failed refresh of the same source; changed sources
   and superseded runs reject stale writes.
 - Clear races cannot resurrect metadata. Restart completes interrupted cleanup;
