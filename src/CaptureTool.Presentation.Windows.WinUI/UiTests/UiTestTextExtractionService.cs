@@ -25,6 +25,8 @@ internal sealed class UiTestTextExtractionService : ITextExtractionService
     {
         cancellationToken.ThrowIfCancellationRequested();
         if (request.ExistingText == null) await Task.Delay(SimulatedInferenceDelay, cancellationToken);
+        if (request.ExistingText is { HasQrCodeResults: true } complete)
+            return TextExtractionResult.Success(complete);
 
         Size sourceSize = request.SourceSize.Width > 0 && request.SourceSize.Height > 0
             ? request.SourceSize

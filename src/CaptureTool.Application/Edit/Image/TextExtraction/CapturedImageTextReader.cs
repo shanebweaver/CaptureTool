@@ -52,7 +52,13 @@ internal sealed class CapturedImageTextReader(ICaptureAssetCatalog catalog, ICap
                 ? layout.Select(0, layout.ReadingOrder.Count - 1).Text
                 : string.Join(" ", text.Regions.Select(region => region.Text));
             // Empty OCR is a valid cached success and must not trigger another model run.
-            return new(content, source.ImageSize, regions);
+            var qr = record.Results.SingleOrDefault(result => result.Payload is QrCodeMetadata)?.Payload as QrCodeMetadata;
+            RecognizedQrCodeRegion[]? codes = qr?.Codes.Where(code => code.Timestamp == null)
+                .Select(code => new RecognizedQrCodeRegion(code.Value, new RectangleF(
+                    (float)(code.Bounds.X * source.ImageSize.Width), (float)(code.Bounds.Y * source.ImageSize.Height),
+                    (float)(code.Bounds.Width * source.ImageSize.Width), (float)(code.Bounds.Height * source.ImageSize.Height))))
+                .ToArray();
+            return new(content, source.ImageSize, regions, codes);
         }
         catch (Exception ex) when (CacheUnavailable(ex)) { return null; }
     }

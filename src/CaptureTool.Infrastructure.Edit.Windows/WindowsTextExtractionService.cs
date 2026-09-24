@@ -77,6 +77,9 @@ public sealed class WindowsTextExtractionService : ITextExtractionService
     {
         cancellationToken.ThrowIfCancellationRequested();
 
+        if (request.ExistingText is { HasQrCodeResults: true } complete)
+            return TextExtractionResult.Success(complete);
+
         try
         {
             using SoftwareBitmap sourceBitmap = await LoadSoftwareBitmapAsync(request.SourceImage);

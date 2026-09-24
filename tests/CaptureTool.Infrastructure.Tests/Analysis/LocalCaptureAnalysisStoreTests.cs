@@ -16,6 +16,30 @@ public sealed class LocalCaptureAnalysisStoreTests
     private CancellationToken Cancellation => TestContext.CancellationToken;
 
     [TestMethod]
+    public async Task QrMetadataRoundTripsProtectedWithBoundsTimesAndEmptySuccessAndDeletesNormally()
+    {
+        using var environment = new AnalysisTestEnvironment();
+        using var store = environment.CreateStore();
+        var id = CaptureId.New();
+        var token = await store.BeginRunAsync(id, AnalysisMediaKind.Video, AnalysisTestEnvironment.Revision(), "video-v3", Cancellation);
+        var code = new DecodedQrCode("private QR payload", new(.1, .2, .3, .4), TimeSpan.FromSeconds(5));
+        var result = new AnalysisResult(new QrCodeMetadata([code]), AnalysisTestEnvironment.Producer(), DateTimeOffset.UtcNow, "video-v3");
+        Assert.IsTrue(await store.TryWriteAsync(token, result, Cancellation));
+        using var reopened = environment.CreateStore();
+        var record = (await reopened.GetAsync(id, cancellationToken: Cancellation))!;
+        Assert.AreEqual(code, ((QrCodeMetadata)record.Results.Single().Payload).Codes.Single());
+        Assert.AreEqual(result.Producer, record.Results.Single().Producer);
+        foreach (byte[] bytes in environment.Files.PublishedBytes)
+            Assert.DoesNotContain("private QR payload", Encoding.UTF8.GetString(bytes));
+        var empty = new AnalysisResult(new QrCodeMetadata([]), result.Producer, DateTimeOffset.UtcNow, "video-v3");
+        Assert.IsTrue(await store.TryWriteAsync(token, empty, Cancellation));
+        Assert.HasCount(0, ((QrCodeMetadata)(await reopened.GetAsync(id, cancellationToken: Cancellation))!.Results.Single().Payload).Codes);
+        await store.ClearAsync(Cancellation);
+        Assert.IsNull(await reopened.GetAsync(id, cancellationToken: Cancellation));
+        Assert.IsFalse(await store.TryWriteAsync(token, result, Cancellation));
+    }
+
+    [TestMethod]
     public async Task TypedResultsAndActualProvenanceSurviveReloadWithoutPlaintextFiles()
     {
         using var environment = new AnalysisTestEnvironment();

@@ -24,6 +24,10 @@ The Windows text extraction service accepts optional existing text. That path
 still decodes the current image to detect QR codes, but does not prepare or run
 an OCR model. Reading saved text does not require permission to run new inference.
 
+The [QR metadata follow-up](qr-code-metadata.md) additionally stores QR results.
+When both saved OCR and QR results exist, the editor reuses both; older OCR-only
+metadata keeps the ad-hoc QR fallback described above.
+
 ## One protected consent
 
 The application-owned capture memory service persists the single consent in the

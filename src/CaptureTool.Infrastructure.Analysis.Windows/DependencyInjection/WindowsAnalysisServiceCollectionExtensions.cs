@@ -12,6 +12,10 @@ public static class WindowsAnalysisServiceCollectionExtensions
     {
         services.AddSingleton<WindowsAnalysisMedia>();
         services.AddSingleton<FoundryRuntime>();
+        services.AddSingleton<IMediaAnalyzer>(provider => new QrCodeAnalyzer("zxing-image-qr", AnalysisMediaKind.Image,
+            provider.GetRequiredService<WindowsAnalysisMedia>()));
+        services.AddSingleton<IMediaAnalyzer>(provider => new QrCodeAnalyzer("zxing-video-frame-qr", AnalysisMediaKind.Video,
+            provider.GetRequiredService<WindowsAnalysisMedia>()));
         AddImage("windows-ai-ocr-document", WindowsImageModel.Ocr, AnalysisMediaKind.Image);
         AddImage("windows-ocr-document", WindowsImageModel.LegacyOcr, AnalysisMediaKind.Image);
         AddImage("windows-image-description", WindowsImageModel.Description, AnalysisMediaKind.Image);

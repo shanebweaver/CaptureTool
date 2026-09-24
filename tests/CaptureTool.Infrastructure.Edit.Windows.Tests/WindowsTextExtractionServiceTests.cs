@@ -10,6 +10,18 @@ namespace CaptureTool.Infrastructure.Edit.Windows.Tests;
 public sealed class WindowsTextExtractionServiceTests
 {
     [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task CompleteStoredResultsSkipImageDecodingAndQrScanningEvenWhenNoCodesWereFound(bool empty)
+    {
+        var existing = new RecognizedTextDocument("saved", new(240, 240), [],
+            empty ? [] : [new("https://example.com", new(10, 10, 100, 100))]);
+        var result = await new WindowsTextExtractionService().ExtractAsync(new(Stream.Null, existing.ImageSize, existing));
+        Assert.AreEqual(TextExtractionStatus.Success, result.Status);
+        Assert.AreSame(existing, result.Document);
+    }
+
+    [TestMethod]
     public async Task ExistingOcrKeepsItsTextAndWordBoxesAndStillDetectsQrCodes()
     {
         var writer = new ZXing.BarcodeWriterPixelData

@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace CaptureTool.Infrastructure.Analysis.Persistence.Serialization;
 
 internal sealed record AnalysisControlDocument(int Version, Guid Generation, long QueueOrder = 0, long ReconciliationBoundary = 0);
@@ -7,7 +9,8 @@ internal sealed record AnalysisDocument(int Version, Guid CaptureId, int MediaKi
 
 internal sealed record ResultDocument(string Capability, int SchemaVersion, ProducerDocument Producer,
     DateTimeOffset GeneratedAt, string PlanVersion, TextDocument[]? Text, DescriptionDocument[]? Descriptions,
-    TranscriptDocument? Transcript, Guid? ProducingRunId = null);
+    TranscriptDocument? Transcript, Guid? ProducingRunId = null,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] QrCodeDocument[]? QrCodes = null);
 
 internal sealed record RunDocument(Guid Id, Guid AuthorizationId, long QueueOrder, string PlanVersion,
     string SourcePath, string? Language, string? SourceSha256, int Status, CapabilityDocument[] Steps,
@@ -20,6 +23,7 @@ internal sealed record ProducerDocument(string AnalyzerId, string ProviderId, st
 
 internal sealed record BoundsDocument(double X, double Y, double Width, double Height);
 internal sealed record TextDocument(string Text, BoundsDocument? Bounds, long? TimestampTicks);
+internal sealed record QrCodeDocument(string Value, BoundsDocument Bounds, long? TimestampTicks);
 internal sealed record DescriptionDocument(string Text, long? TimestampTicks);
 internal sealed record TranscriptDocument(string? Language, SegmentDocument[] Segments);
 internal sealed record SegmentDocument(string Text, long StartTicks, long EndTicks);

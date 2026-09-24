@@ -46,6 +46,7 @@ public sealed class CapturedImageTextReaderTests
         var document = await reader.ReadAsync(source!, Ct);
         Assert.IsNotNull(document);
         Assert.AreEqual("Hello world", document.Text);
+        Assert.IsFalse(document.HasQrCodeResults, "Older OCR metadata must still allow QR detection.");
         Assert.AreEqual(new RectangleF(80, 20, 40, 10), document.Regions[0].Bounds);
         _metadata.Verify(x => x.GetAsync(_asset.Id, Revision, Ct), Times.Once);
         _lease.Verify(x => x.VerifyAsync(Ct), Times.Once);
@@ -109,8 +110,21 @@ public sealed class CapturedImageTextReaderTests
     }
 
     private CapturedImageTextReader Reader() => new(_catalog.Object, _metadata.Object, _files.Object);
-    private void SetRecord(RecognizedText[] regions, SourceRevision? revision = null) =>
+    private void SetRecord(RecognizedText[] regions, SourceRevision? revision = null, DecodedQrCode[]? codes = null) =>
         _metadata.Setup(x => x.GetAsync(_asset.Id, Revision, It.IsAny<CancellationToken>())).ReturnsAsync(
             new CaptureAnalysisRecord(_asset.Id, AnalysisMediaKind.Image, revision ?? Revision, "v1", Guid.NewGuid(),
-                [new(new TextRecognitionMetadata(regions), new("ocr", "local", "ocr", "v1"), DateTimeOffset.UtcNow, "v1")]));
+                new[] { new AnalysisResult(new TextRecognitionMetadata(regions), new("ocr", "local", "ocr", "v1"), DateTimeOffset.UtcNow, "v1") }
+                    .Concat(codes == null ? [] : new[] { new AnalysisResult(new QrCodeMetadata(codes), new("qr", "local", "qr", "v1"), DateTimeOffset.UtcNow, "v1") })));
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task SavedQrResultsMapToPixelsAndEmptyScanRemainsDistinctFromMissingData(bool empty)
+    {
+        SetRecord([], codes: empty ? [] : [new("https://example.com", new(.1, .2, .3, .4))]);
+        var document = await Reader().ReadAsync(new(PathName, null, Revision, new(200, 100)), Ct);
+        Assert.IsTrue(document!.HasQrCodeResults);
+        Assert.HasCount(empty ? 0 : 1, document.QrCodes);
+        if (!empty) Assert.AreEqual(new RectangleF(20, 20, 60, 40), document.QrCodes.Single().Bounds);
+    }
 }

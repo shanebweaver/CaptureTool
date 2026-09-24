@@ -34,6 +34,11 @@ internal static class AnalysisDocumentMapper
             result.GeneratedAt, result.PlanVersion, null, null, null, result.ProducingRunId);
         return result.Payload switch
         {
+            QrCodeMetadata qr => document with
+            {
+                QrCodes = qr.Codes.Select(code => new QrCodeDocument(code.Value,
+                    new(code.Bounds.X, code.Bounds.Y, code.Bounds.Width, code.Bounds.Height), code.Timestamp?.Ticks)).ToArray(),
+            },
             TextRecognitionMetadata text => document with
             {
                 Text = text.Regions.Select(region => new TextDocument(region.Text,
@@ -60,11 +65,13 @@ internal static class AnalysisDocumentMapper
             throw new InvalidDataException("Unsupported or invalid analysis result.");
         AnalysisPayload payload = document switch
         {
-            { Capability: "text-recognition", Text: not null, Descriptions: null, Transcript: null } =>
+            { Capability: "qr-code-detection", QrCodes: not null, Text: null, Descriptions: null, Transcript: null } =>
+                new QrCodeMetadata(document.QrCodes.Select(ToQrCode)),
+            { Capability: "text-recognition", Text: not null, Descriptions: null, Transcript: null, QrCodes: null } =>
                 new TextRecognitionMetadata(document.Text.Select(ToText)),
-            { Capability: "description", Descriptions: not null, Text: null, Transcript: null } =>
+            { Capability: "description", Descriptions: not null, Text: null, Transcript: null, QrCodes: null } =>
                 new DescriptionMetadata(document.Descriptions.Select(ToDescription)),
-            { Capability: "transcription", Transcript.Segments: not null, Text: null, Descriptions: null } =>
+            { Capability: "transcription", Transcript.Segments: not null, Text: null, Descriptions: null, QrCodes: null } =>
                 new TranscriptMetadata(document.Transcript.Language, document.Transcript.Segments.Select(ToSegment)),
             _ => throw new InvalidDataException("Unsupported or ambiguous metadata payload."),
         };
@@ -78,6 +85,14 @@ internal static class AnalysisDocumentMapper
         if (document == null) throw new InvalidDataException("Missing text region.");
         BoundsDocument? bounds = document.Bounds;
         return new(document.Text, bounds == null ? null : new(bounds.X, bounds.Y, bounds.Width, bounds.Height),
+            document.TimestampTicks is { } ticks ? TimeSpan.FromTicks(ticks) : null);
+    }
+
+    private static DecodedQrCode ToQrCode(QrCodeDocument document)
+    {
+        if (document?.Bounds == null) throw new InvalidDataException("Missing QR code bounds.");
+        BoundsDocument bounds = document.Bounds;
+        return new(document.Value, new(bounds.X, bounds.Y, bounds.Width, bounds.Height),
             document.TimestampTicks is { } ticks ? TimeSpan.FromTicks(ticks) : null);
     }
 

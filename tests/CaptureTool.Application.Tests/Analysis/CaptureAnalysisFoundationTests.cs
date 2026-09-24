@@ -43,14 +43,17 @@ public sealed class CaptureAnalysisFoundationTests
         CaptureAnalysisConfiguration configuration = CaptureAnalysisConfiguration.CreateDefault();
         Assert.HasCount(3, configuration.Plans);
         MediaAnalysisPlan video = configuration.Plans.Single(plan => plan.MediaKind == AnalysisMediaKind.Video);
-        CollectionAssert.AreEqual(new[] { AnalysisCapability.TextRecognition, AnalysisCapability.Transcription, AnalysisCapability.Description },
+        CollectionAssert.AreEqual(new[] { AnalysisCapability.QrCodeDetection, AnalysisCapability.TextRecognition, AnalysisCapability.Transcription, AnalysisCapability.Description },
             video.Steps.Select(step => step.Capability).ToArray());
-        CollectionAssert.AreEqual(new[] { "windows-ai-video-frame-ocr", "windows-video-frame-ocr" }, video.Steps[0].Candidates.ToArray());
-        CollectionAssert.AreEqual(new[] { "windows-video-frame-description", "foundry-local-image-description" }, video.Steps[2].Candidates.ToArray());
+        CollectionAssert.AreEqual(new[] { "zxing-video-frame-qr" }, video.Steps[0].Candidates.ToArray());
+        CollectionAssert.AreEqual(new[] { "windows-ai-video-frame-ocr", "windows-video-frame-ocr" }, video.Steps[1].Candidates.ToArray());
+        CollectionAssert.AreEqual(new[] { "windows-video-frame-description", "foundry-local-image-description" }, video.Steps[3].Candidates.ToArray());
         MediaAnalysisPlan image = configuration.Plans.Single(plan => plan.MediaKind == AnalysisMediaKind.Image);
         CollectionAssert.AreEqual(new[] { "windows-image-description", "foundry-local-image-description" }, image.Steps.Single(step => step.Capability == AnalysisCapability.Description).Candidates.ToArray());
-        Assert.AreEqual("image-v2", image.Version);
-        Assert.AreEqual("video-v2", video.Version);
+        Assert.AreEqual(AnalysisCapability.QrCodeDetection, image.Steps[0].Capability);
+        Assert.AreEqual("zxing-image-qr", image.Steps[0].Candidates.Single());
+        Assert.AreEqual("image-v3", image.Version);
+        Assert.AreEqual("video-v3", video.Version);
     }
 
     [TestMethod]
@@ -133,6 +136,23 @@ public sealed class CaptureAnalysisFoundationTests
         ]));
         Assert.ThrowsExactly<ArgumentException>(() => new CaptureAnalysisRecord(CaptureId.New(), AnalysisMediaKind.Image,
             Revision('a'), "v1", Guid.NewGuid(), [new(new TranscriptMetadata("en", []), Producer(), DateTimeOffset.UtcNow, "v1")]));
+    }
+
+    [TestMethod]
+    public void QrMetadataPreservesValuesAndRejectsInvalidBoundsTimesAndMedia()
+    {
+        var code = new DecodedQrCode("WIFI:T:WPA;S:fixture;P:private;;", new(.1, .2, .3, .4));
+        DecodedQrCode[] codes = [code];
+        var metadata = new QrCodeMetadata(codes);
+        codes[0] = new("changed", code.Bounds);
+        Assert.AreEqual(code, metadata.Codes.Single());
+        Assert.IsTrue(metadata.Supports(AnalysisMediaKind.Image));
+        Assert.IsTrue(metadata.Supports(AnalysisMediaKind.Video));
+        Assert.IsFalse(metadata.Supports(AnalysisMediaKind.Audio));
+        Assert.ThrowsExactly<ArgumentException>(() => new DecodedQrCode("", code.Bounds));
+        Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => new DecodedQrCode("qr", new(0, 0, 0, .5)));
+        Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => new DecodedQrCode("qr", code.Bounds, TimeSpan.FromSeconds(-1)));
+        Assert.ThrowsExactly<NotSupportedException>(() => ((IList<DecodedQrCode>)metadata.Codes).Add(code));
     }
 
     private static AnalysisStep Step(AnalysisCapability capability, string[] candidates) =>

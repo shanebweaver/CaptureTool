@@ -14,6 +14,7 @@ public sealed record RecognizedTextDocument
         ImageSize = imageSize;
         Regions = regions;
         QrCodes = qrCodes ?? [];
+        HasQrCodeResults = qrCodes != null;
     }
 
     public string Text { get; }
@@ -23,5 +24,8 @@ public sealed record RecognizedTextDocument
     public IReadOnlyList<RecognizedTextRegion> Regions { get; }
 
     public IReadOnlyList<RecognizedQrCodeRegion> QrCodes { get; }
+
+    /// <summary>Distinguishes a completed empty QR scan from metadata that predates QR scanning.</summary>
+    public bool HasQrCodeResults { get; }
 }
 

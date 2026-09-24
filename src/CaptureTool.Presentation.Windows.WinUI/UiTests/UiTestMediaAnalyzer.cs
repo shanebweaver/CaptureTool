@@ -15,6 +15,8 @@ internal sealed class UiTestMediaAnalyzer(MediaAnalyzerDescriptor descriptor) : 
     public async Task<AnalyzerOutcome> AnalyzeAsync(AnalysisInput input, IProgress<AnalysisProgress>? progress, CancellationToken ct)
     {
         await Task.Delay(TimeSpan.FromSeconds(3), ct);
+        if (descriptor.Capability == AnalysisCapability.QrCodeDetection)
+            return AnalyzerOutcome.Success(new QrCodeMetadata([]), new(descriptor.Id, "ui-test", "fixture", "1"));
         if (descriptor.Capability == AnalysisCapability.TextRecognition)
             return AnalyzerOutcome.Success(new TextRecognitionMetadata([]), new(descriptor.Id, "ui-test", "fixture", "1"));
         if (descriptor.Capability == AnalysisCapability.Description)
