@@ -49,7 +49,10 @@ using CaptureTool.Application.Store.LeaveStorePage;
 using CaptureTool.Application.Store.OpenStorePage;
 using CaptureTool.Application.Store.PurchaseChromaKeyAddOn;
 using CaptureTool.Application.Tests.Capture.Audio;
+using CaptureTool.Application.Tests.Capture;
+using CaptureTool.Application.Capture.Assets;
 using CaptureTool.Application.UseCases;
+using CaptureTool.Domain.Capture;
 using CaptureTool.Domain.FileSystem;
 using Moq;
 
@@ -68,6 +71,7 @@ public sealed class SimpleApplicationUseCaseTests
             .Setup(service => service.CanLeaveCurrentSessionAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
         var imageFile = new ImageFile("capture.png");
+        var assetLifecycle = new RecordingCaptureAssetLifecycleService();
         var audioCaptureNavigationGuard = new AllowAudioCaptureNavigationGuard();
         INavigationCoordinator coordinator = TestNavigationCoordinator.Create(
             navigation.Object,
@@ -84,7 +88,10 @@ public sealed class SimpleApplicationUseCaseTests
             .ExecuteAsync(new OpenSettingsPageRequest(), TestContext.CancellationToken);
         await new OpenAudioCapturePageUseCase(coordinator, TestUseCaseExecutor.Instance)
             .ExecuteAsync(new OpenAudioCapturePageRequest(), TestContext.CancellationToken);
-        await new OpenImageEditPageUseCase(coordinator, TestUseCaseExecutor.Instance)
+        await new OpenImageEditPageUseCase(
+            coordinator,
+            TestUseCaseExecutor.Instance,
+            assetLifecycle)
             .ExecuteAsync(new OpenImageEditPageRequest(imageFile), TestContext.CancellationToken);
 
         navigation.Verify(service => service.NavigateAsync(NavigationRoute.About, null, false, It.IsAny<CancellationToken>()), Times.Once);
@@ -100,6 +107,9 @@ public sealed class SimpleApplicationUseCaseTests
                 request.EditorContext.PersistentSourcePath == Path.GetFullPath(imageFile.FilePath)),
             false,
             It.IsAny<CancellationToken>()), Times.Once);
+        CollectionAssert.AreEqual(
+            new[] { (Path.GetFullPath(imageFile.FilePath), CaptureFileType.Image) },
+            assetLifecycle.OpenedMedia.ToArray());
     }
 
     [TestMethod]

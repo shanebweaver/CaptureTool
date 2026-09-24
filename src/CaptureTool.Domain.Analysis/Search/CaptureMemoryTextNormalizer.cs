@@ -1,12 +1,93 @@
 using System.Globalization;
 using System.Text;
 
-namespace CaptureTool.Application.Analysis.Memory;
+namespace CaptureTool.Domain.Analysis;
 
-internal static class CaptureMemoryTextNormalizer
+public static class CaptureMemoryTextNormalizer
 {
     private const int MinimumPrefixRuneCount = 3;
     private const int MinimumSubstringRuneCount = 4;
+
+    /// <summary>Uses the same token rules for retrieval and highlighting original UTF-16 text.</summary>
+    public static CaptureTextMatch FindMatches(string text, string query, bool includePartialHighlights = false)
+    {
+        ArgumentNullException.ThrowIfNull(text);
+        ArgumentNullException.ThrowIfNull(query);
+        CaptureMemoryNormalizedText normalized;
+        CaptureMemoryNormalizedText normalizedQuery;
+        try
+        {
+            normalized = Normalize(text);
+            normalizedQuery = Normalize(query);
+        }
+        catch (ArgumentException)
+        {
+            return new(CaptureMemoryTokenMatch.None, []);
+        }
+
+        CaptureMemoryTokenMatch match = MatchTokens(normalizedQuery.Tokens, normalized.TokenSet, normalized.Tokens);
+        if (match == CaptureMemoryTokenMatch.None && !includePartialHighlights)
+        {
+            return new(match, []);
+        }
+
+        // Text elements preserve combining marks, surrogate pairs and compatibility ligatures.
+        // A prefix or typo highlights the actual matching word, never the query's spelling.
+        var tokens = new List<(string Value, CaptureTextRange Range)>();
+        var token = new StringBuilder();
+        int start = 0;
+        int end = 0;
+        TextElementEnumerator elements = StringInfo.GetTextElementEnumerator(text);
+        while (elements.MoveNext())
+        {
+            string element = elements.GetTextElement();
+            foreach (Rune rune in element.Normalize(NormalizationForm.FormKC).EnumerateRunes())
+            {
+                UnicodeCategory category = Rune.GetUnicodeCategory(rune);
+                bool content = Rune.IsLetterOrDigit(rune) || category is UnicodeCategory.NonSpacingMark or
+                    UnicodeCategory.SpacingCombiningMark or UnicodeCategory.EnclosingMark;
+                if (content)
+                {
+                    if (token.Length == 0) { start = elements.ElementIndex; }
+                    end = elements.ElementIndex + element.Length;
+                    token.Append(Rune.ToLowerInvariant(rune).ToString());
+                }
+                else if (token.Length > 0)
+                {
+                    tokens.Add((token.ToString(), new(start, end - start)));
+                    token.Clear();
+                }
+            }
+        }
+        if (token.Length > 0) { tokens.Add((token.ToString(), new(start, end - start))); }
+
+        var ranges = new List<CaptureTextRange>();
+        foreach (string queryToken in normalizedQuery.Tokens)
+        {
+            CaptureMemoryTokenMatch required = MatchTokens([queryToken], normalized.TokenSet, normalized.Tokens);
+            if (required == CaptureMemoryTokenMatch.None) { continue; }
+            foreach (var candidate in tokens)
+            {
+                if (MatchTokens([queryToken], new HashSet<string>([candidate.Value], StringComparer.Ordinal),
+                    [candidate.Value]) == required)
+                {
+                    ranges.Add(candidate.Range);
+                }
+            }
+        }
+
+        var merged = new List<CaptureTextRange>();
+        foreach (CaptureTextRange range in ranges.Distinct().OrderBy(range => range.Start))
+        {
+            if (merged.Count > 0 && range.Start <= merged[^1].Start + merged[^1].Length)
+            {
+                CaptureTextRange previous = merged[^1];
+                merged[^1] = new(previous.Start, Math.Max(previous.Start + previous.Length, range.Start + range.Length) - previous.Start);
+            }
+            else { merged.Add(range); }
+        }
+        return new(match, merged.AsReadOnly());
+    }
 
     public static CaptureMemoryNormalizedText Normalize(string text)
     {
@@ -137,14 +218,13 @@ internal static class CaptureMemoryTextNormalizer
         return weakestMatch;
     }
 
-    public static string CreateSafeSnippet(string source, string query)
+    public static string CreateSafeSnippet(string source, string query, int maximumLength = 1024)
     {
         ArgumentNullException.ThrowIfNull(source);
         ArgumentNullException.ThrowIfNull(query);
 
-        var builder = new StringBuilder(Math.Min(
-            source.Length,
-            Application.Abstractions.Analysis.Memory.CaptureMemoryMatchEvidence.MaximumSnippetLength));
+        ArgumentOutOfRangeException.ThrowIfLessThan(maximumLength, 16);
+        var builder = new StringBuilder(Math.Min(source.Length, maximumLength));
         bool pendingSpace = false;
         foreach (Rune rune in source.EnumerateRunes())
         {
@@ -164,14 +244,17 @@ internal static class CaptureMemoryTextNormalizer
         }
 
         string collapsed = builder.ToString().Trim();
-        const int MaximumLength =
-            Application.Abstractions.Analysis.Memory.CaptureMemoryMatchEvidence.MaximumSnippetLength;
+        int MaximumLength = maximumLength;
         if (collapsed.Length <= MaximumLength)
         {
             return collapsed;
         }
 
         int match = collapsed.IndexOf(query.Trim(), StringComparison.OrdinalIgnoreCase);
+        if (match < 0 && FindMatches(collapsed, query).Ranges.FirstOrDefault() is { Length: > 0 } firstMatch)
+        {
+            match = firstMatch.Start;
+        }
         if (match < 0)
         {
             try
@@ -213,18 +296,11 @@ internal static class CaptureMemoryTextNormalizer
             length--;
         }
 
-        string snippet = collapsed.Substring(start, length);
-        if (start > 0)
-        {
-            snippet = '…' + snippet[1..];
-        }
-
-        if (start + length < collapsed.Length)
-        {
-            snippet = snippet[..^1] + '…';
-        }
-
-        return snippet;
+        bool hasPrefix = start > 0;
+        bool hasSuffix = start + length < collapsed.Length;
+        length = Math.Min(length, MaximumLength - (hasPrefix ? 1 : 0) - (hasSuffix ? 1 : 0));
+        if (length > 0 && char.IsHighSurrogate(collapsed[start + length - 1])) { length--; }
+        return (hasPrefix ? "…" : string.Empty) + collapsed.Substring(start, length) + (hasSuffix ? "…" : string.Empty);
     }
 
     private static int CountRunes(string value)
@@ -312,16 +388,25 @@ internal static class CaptureMemoryTextNormalizer
     }
 }
 
-internal sealed record CaptureMemoryNormalizedText(string Value, string[] Tokens)
+public sealed record CaptureMemoryNormalizedText(string Value, string[] Tokens)
 {
     public IReadOnlySet<string> TokenSet { get; } = Tokens.ToHashSet(StringComparer.Ordinal);
 }
 
-internal enum CaptureMemoryTokenMatch
+public enum CaptureMemoryTokenMatch
 {
     None,
     Exact,
     SingleTypo,
     Prefix,
     Substring,
+}
+
+public readonly record struct CaptureTextRange(int Start, int Length);
+
+public sealed record CaptureTextMatch(CaptureMemoryTokenMatch Kind, IReadOnlyList<CaptureTextRange> Ranges)
+{
+    public bool IsMatch => Kind != CaptureMemoryTokenMatch.None;
+
+    public bool IsApproximate => Kind == CaptureMemoryTokenMatch.SingleTypo;
 }

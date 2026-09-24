@@ -89,7 +89,8 @@ public sealed record OpenCaptureMemoryResultRequest
 {
     public OpenCaptureMemoryResultRequest(
         CaptureId captureId,
-        CaptureMemoryMatchEvidence? evidence = null)
+        CaptureMemoryMatchEvidence? evidence = null,
+        CaptureMemorySearchContext? searchContext = null)
     {
         if (captureId.IsEmpty)
         {
@@ -98,11 +99,14 @@ public sealed record OpenCaptureMemoryResultRequest
 
         CaptureId = captureId;
         Evidence = evidence;
+        SearchContext = searchContext;
     }
 
     public CaptureId CaptureId { get; }
 
     public CaptureMemoryMatchEvidence? Evidence { get; }
+
+    public CaptureMemorySearchContext? SearchContext { get; }
 }
 
 public enum OpenCaptureMemoryResultStatus

@@ -83,8 +83,9 @@ public sealed class CaptureMemoryHomeUiTests
                     element.Name.Contains("PURPLE COMET", StringComparison.OrdinalIgnoreCase)),
                 "The result should explain that recognized text matched the query.");
             Assert.IsNotNull(
-                FindElement(app.ProcessId, automation, "Home_CaptureMemoryDeleteButton"),
-                "An app-owned retained source should expose the Delete capture action.");
+                FindElement(app.ProcessId, automation, "Home_CaptureMemoryMoreButton"),
+                "Secondary capture actions should be grouped in a More menu.");
+            SaveScreenshot(app.ProcessId, window, "capture-memory-results.png");
 
             openButton.Click();
             WaitFor(
@@ -94,6 +95,26 @@ public sealed class CaptureMemoryHomeUiTests
                 InteractionTimeout,
                 "the selected Memory result to open");
 
+            WaitForElement(app.ProcessId, automation, "AnalyzedContentPane");
+            Assert.AreEqual("purple comet", WaitForElement(app.ProcessId, automation, "AnalyzedContent_SearchBox").AsTextBox().Text);
+            Assert.IsNotNull(FindElement(app.ProcessId, automation, "Analysis_MatchCount"));
+            SaveScreenshot(app.ProcessId, window, "capture-memory-analysis.png");
+            window.Patterns.Transform.Pattern.Resize(1200, 720);
+            Thread.Sleep(300);
+            if (FindElement(app.ProcessId, automation, "AnalyzedContent_SearchBox") == null)
+            {
+                Toggle(WaitForElement(app.ProcessId, automation, "ImageEdit_AnalyzedContentButton"));
+            }
+            Assert.AreEqual("purple comet", WaitForElement(app.ProcessId, automation, "AnalyzedContent_SearchBox").AsTextBox().Text);
+            Invoke(WaitForElementByName(app.ProcessId, automation, "Next match"));
+            WaitFor(() => FindElement(app.ProcessId, automation, "Analysis_MatchCount")?.Name.Contains("2 of 2", StringComparison.Ordinal) == true
+                ? new object() : null, InteractionTimeout, "the next analysis match to be selected");
+            Thread.Sleep(500);
+            SaveScreenshot(app.ProcessId, window, "capture-memory-analysis-wide.png");
+            Invoke(WaitForElement(app.ProcessId, automation, "Analysis_BackToResults"));
+            Assert.AreEqual("purple comet", WaitForElement(app.ProcessId, automation, "Home_CaptureMemorySearchBox").AsTextBox().Text);
+            WaitForElement(app.ProcessId, automation, "Home_CaptureMemoryMoreButton").Click();
+            Assert.IsNotNull(FindElement(app.ProcessId, automation, "Home_CaptureMemoryDeleteButton"));
             WaitForElement(app.ProcessId, automation, "Home_CaptureMemoryRemoveButton").Click();
             WaitForElement(app.ProcessId, automation, "CaptureMemoryConfirmationDialog");
             WaitForElementByName(app.ProcessId, automation, "Remove from Memory").Click();
@@ -160,6 +181,11 @@ public sealed class CaptureMemoryHomeUiTests
             Invoke(WaitForElement(app.ProcessId, automation, "AppMenu_SettingsItem"));
             EnableWithExistingCaptures(app.ProcessId, automation, "Settings");
             WaitForMarker(temporaryDirectory, "capture-memory-backfilled.marker");
+            ScrollToElement(app.ProcessId, automation, WaitForElement(app.ProcessId, automation, "Settings_CaptureMemoryAnalyzeNewToggle"));
+            Thread.Sleep(300);
+            SaveScreenshot(app.ProcessId, window, "capture-memory-settings.png");
+
+            Expand(WaitForElement(app.ProcessId, automation, "Settings_CaptureMemoryDataControls"));
 
             AutomationElement clear = WaitForElement(
                 app.ProcessId,
@@ -174,6 +200,7 @@ public sealed class CaptureMemoryHomeUiTests
                 app.ProcessId,
                 automation,
                 "Settings_CaptureMemoryExpander"));
+            Expand(WaitForElement(app.ProcessId, automation, "Settings_CaptureMemoryTroubleshooting"));
 
             AutomationElement reanalyze = WaitForElement(
                 app.ProcessId,
@@ -190,9 +217,9 @@ public sealed class CaptureMemoryHomeUiTests
                 280,
                 activityButton.BoundingRectangle.Width,
                 "The activity button should stretch across its compact card instead of shrinking around its text.");
-            Assert.IsNull(
+            Assert.IsNotNull(
                 FindElement(app.ProcessId, automation, "Settings_CaptureMemoryOperationStatus"),
-                "Capture Memory activity feedback should only appear in the floating activity UI.");
+                "Settings should explain the current Memory operation inline.");
             WaitForMarker(temporaryDirectory, "capture-memory-reanalyzed.marker");
 
             AutomationElement rebuild = WaitForElement(
@@ -627,6 +654,37 @@ public sealed class CaptureMemoryHomeUiTests
 
         Assert.Fail($"Timed out waiting for {description}.");
         throw new UnreachableException();
+    }
+
+    private static void ScrollToElement(int processId, UIA3Automation automation, AutomationElement target)
+    {
+        AutomationElement scrollArea = GetTopLevelElements(processId, automation)
+            .SelectMany(element => element.FindAllDescendants())
+            .First(element => element.Patterns.Scroll.IsSupported && element.Patterns.Scroll.Pattern.VerticallyScrollable.Value);
+        var scroll = scrollArea.Patterns.Scroll.Pattern;
+        for (int attempt = 0; attempt < 20; attempt++)
+        {
+            Rectangle targetBounds = target.BoundingRectangle;
+            if (targetBounds.Height > 0 && scrollArea.BoundingRectangle.IntersectsWith(targetBounds)) { break; }
+            scroll.Scroll(FlaUI.Core.Definitions.ScrollAmount.NoAmount, FlaUI.Core.Definitions.ScrollAmount.LargeIncrement);
+            Thread.Sleep(100);
+        }
+        double viewportHeight = scrollArea.BoundingRectangle.Height;
+        double scrollRange = viewportHeight * (100 / scroll.VerticalViewSize.Value - 1);
+        double offset = target.BoundingRectangle.Top - scrollArea.BoundingRectangle.Top - 24;
+        if (scrollRange > 0)
+        {
+            scroll.SetScrollPercent(-1, Math.Clamp(scroll.VerticalScrollPercent.Value + offset / scrollRange * 100, 0, 100));
+        }
+    }
+
+    private void SaveScreenshot(int processId, Window window, string name)
+    {
+        string directory = Path.Combine(FindRepositoryRoot(), "tests", "CaptureTool.UiTests", "TestResults", "artifacts");
+        Directory.CreateDirectory(directory);
+        string path = Path.Combine(directory, name);
+        ImageEditTextExtractionUiTests.CaptureWindowScreenshot(processId, window, path);
+        TestContext.AddResultFile(path);
     }
 
     private static string ResolveAppExecutablePath(string repoRoot)

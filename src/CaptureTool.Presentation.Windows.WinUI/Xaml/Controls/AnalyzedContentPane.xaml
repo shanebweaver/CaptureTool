@@ -1,174 +1,119 @@
-<?xml version="1.0" encoding="utf-8" ?>
 <local:UserControlBase
     x:Class="CaptureTool.Presentation.Windows.WinUI.Xaml.Controls.AnalyzedContentPane"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:analyzed="using:CaptureTool.Presentation.Features.AnalyzedContent"
-    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="using:CaptureTool.Presentation.Windows.WinUI.Xaml.Controls"
-    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:utils="using:CaptureTool.Presentation.Windows.WinUI.Utils"
-    mc:Ignorable="d">
-
-    <Border
-        Background="{ThemeResource LayerFillColorDefaultBrush}"
-        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
-        BorderThickness="1,0,0,0">
-        <Grid Padding="16">
+    x:Uid="Analysis_Pane" AutomationProperties.AutomationId="AnalyzedContentPane" AutomationProperties.Name="Analysis">
+    <Border Background="{ThemeResource LayerFillColorDefaultBrush}"
+        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1,0,0,0">
+        <Grid Padding="16" RowSpacing="12">
             <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" /><RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" /><RowDefinition Height="*" />
                 <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
-                <RowDefinition />
             </Grid.RowDefinitions>
-
-            <Grid ColumnSpacing="8">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition />
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
-                <TextBlock
-                    x:Uid="AnalyzedContent_Title"
-                    VerticalAlignment="Center"
-                    FontSize="20"
-                    FontWeight="SemiBold"
-                    Text="Analyzed content" />
-                <Button
-                    x:Uid="AnalyzedContent_ReanalyzeAll"
-                    Grid.Column="1"
-                    AutomationProperties.AutomationId="AnalyzedContent_ReanalyzeAllButton"
-                    Command="{x:Bind ViewModel.ReanalyzeAllCommand}"
-                    Content="Reanalyze all"
-                    Style="{StaticResource SubtleButtonStyle}" />
-                <Button
-                    x:Uid="AnalyzedContent_Close"
-                    Grid.Column="2"
-                    AutomationProperties.Name="Close analyzed content"
-                    Command="{x:Bind ViewModel.ClosePaneCommand}"
-                    Style="{StaticResource SubtleButtonStyle}">
+            <Grid>
+                <Grid.ColumnDefinitions><ColumnDefinition /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                <TextBlock x:Uid="Analysis_Title" Text="Analysis" FontSize="20" FontWeight="SemiBold" VerticalAlignment="Center" />
+                <Button x:Uid="AnalyzedContent_Close" Grid.Column="1" Command="{x:Bind ViewModel.ClosePaneCommand, Mode=OneWay}"
+                    Style="{StaticResource SubtleButtonStyle}" AutomationProperties.Name="Close analysis">
                     <FontIcon Glyph="&#xE711;" />
                 </Button>
             </Grid>
-
-            <TextBlock
-                x:Uid="AnalyzedContent_NoContent"
-                Grid.Row="1"
-                Margin="0,20,0,0"
-                Opacity="0.7"
-                Text="No analyzed content is available for this capture."
-                TextWrapping="Wrap"
-                Visibility="{x:Bind utils:VisibilityUtility.InverseBoolToVisibility(ViewModel.HasContent), Mode=OneWay}" />
-
-            <ListView
-                x:Name="SectionList"
-                Grid.Row="1"
-                Margin="0,12,0,8"
-                HorizontalContentAlignment="Stretch"
-                ItemsSource="{x:Bind ViewModel.Sections}"
-                ScrollViewer.HorizontalScrollBarVisibility="Auto"
-                ScrollViewer.HorizontalScrollMode="Enabled"
-                ScrollViewer.VerticalScrollBarVisibility="Disabled"
-                ScrollViewer.VerticalScrollMode="Disabled"
-                SelectedItem="{x:Bind ViewModel.SelectedSection, Mode=TwoWay}"
-                SelectionMode="Single"
-                Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.HasContent), Mode=OneWay}">
-                <ListView.ItemsPanel>
-                    <ItemsPanelTemplate>
-                        <ItemsStackPanel Orientation="Horizontal" />
-                    </ItemsPanelTemplate>
-                </ListView.ItemsPanel>
-                <ListView.ItemTemplate>
-                    <DataTemplate x:DataType="analyzed:AnalyzedContentSectionViewModel">
-                        <TextBlock Text="{x:Bind Title}" />
-                    </DataTemplate>
-                </ListView.ItemTemplate>
-            </ListView>
-
-            <Grid
-                Grid.Row="2"
-                Margin="0,0,0,8"
-                ColumnSpacing="4"
-                Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.HasContent), Mode=OneWay}">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition />
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
-                <TextBlock
-                    VerticalAlignment="Center"
-                    FontSize="16"
-                    FontWeight="SemiBold"
-                    Text="{x:Bind ViewModel.SelectedSection.Title, Mode=OneWay}" />
-                <Button
-                    x:Uid="AnalyzedContent_ReanalyzeTab"
-                    Grid.Column="1"
-                    AutomationProperties.AutomationId="AnalyzedContent_ReanalyzeTabButton"
-                    Command="{x:Bind ViewModel.ReanalyzeSelectedCommand, Mode=OneWay}"
-                    Content="Reanalyze"
-                    Style="{StaticResource SubtleButtonStyle}" />
-                <Button
-                    x:Uid="AnalyzedContent_CopyAll"
-                    Grid.Column="2"
-                    AutomationProperties.AutomationId="AnalyzedContent_CopyAllButton"
-                    Command="{x:Bind ViewModel.SelectedSection.CopyAllCommand, Mode=OneWay}"
-                    Content="Copy all"
-                    Style="{StaticResource SubtleButtonStyle}" />
+            <StackPanel Grid.Row="1" Spacing="8">
+                <TextBlock Text="{x:Bind ViewModel.StatusText, Mode=OneWay}" TextWrapping="Wrap"
+                    Foreground="{ThemeResource TextFillColorSecondaryBrush}" AutomationProperties.LiveSetting="Polite" />
+                <TextBlock Text="{x:Bind ViewModel.NavigationMessage, Mode=OneWay}" TextWrapping="Wrap"
+                    Visibility="{x:Bind utils:VisibilityUtility.StringToVisibility(ViewModel.NavigationMessage), Mode=OneWay}" />
+                <ProgressBar IsIndeterminate="True" Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.IsMetadataLoading), Mode=OneWay}" />
+                <Button x:Uid="CaptureMemory_Retry" Content="Retry" Command="{x:Bind ViewModel.RetryCommand, Mode=OneWay}"
+                    Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.HasLoadFailure), Mode=OneWay}" />
+                <Grid ColumnSpacing="4">
+                    <Grid.ColumnDefinitions><ColumnDefinition /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                    <TextBox x:Uid="AnalyzedContent_SearchBox" AutomationProperties.AutomationId="AnalyzedContent_SearchBox"
+                        AutomationProperties.Name="Find in this capture" PlaceholderText="Find in this capture" MaxLength="1024"
+                        Text="{x:Bind ViewModel.SearchQuery, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                    <Button x:Uid="Analysis_ClearSearch" Grid.Column="1" Command="{x:Bind ViewModel.ClearSearchCommand, Mode=OneWay}"
+                        Style="{StaticResource SubtleButtonStyle}" AutomationProperties.Name="Clear analysis search"><FontIcon Glyph="&#xE711;" /></Button>
+                </Grid>
+                <StackPanel Orientation="Horizontal" Spacing="4">
+                    <ToggleButton x:Uid="Analysis_Matches" Content="Matches" IsChecked="{x:Bind ViewModel.IsMatchesView, Mode=OneWay}"
+                        Command="{x:Bind ViewModel.ShowMatchesCommand, Mode=OneWay}" />
+                    <ToggleButton x:Uid="Analysis_AllContent" Content="All content" IsChecked="{x:Bind ViewModel.IsAllContentView, Mode=OneWay}"
+                        Command="{x:Bind ViewModel.ShowAllContentCommand, Mode=OneWay}" />
+                </StackPanel>
+                <ComboBox x:Uid="Analysis_Source" x:Name="SectionList" HorizontalAlignment="Stretch"
+                    AutomationProperties.Name="Analysis source" ItemsSource="{x:Bind ViewModel.SourceOptions, Mode=OneWay}"
+                    SelectedItem="{x:Bind ViewModel.SelectedSection, Mode=TwoWay}"
+                    Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.ShowSourceSelector), Mode=OneWay}">
+                    <ComboBox.ItemTemplate><DataTemplate x:DataType="analyzed:AnalyzedContentSectionViewModel">
+                        <TextBlock Text="{x:Bind Title}" TextWrapping="Wrap" />
+                    </DataTemplate></ComboBox.ItemTemplate>
+                </ComboBox>
+            </StackPanel>
+            <Grid Grid.Row="2" ColumnSpacing="8">
+                <Grid.ColumnDefinitions><ColumnDefinition /><ColumnDefinition Width="Auto" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                <TextBlock Text="{x:Bind ViewModel.MatchCountLabel, Mode=OneWay}" VerticalAlignment="Center" TextWrapping="Wrap"
+                    AutomationProperties.LiveSetting="Polite" AutomationProperties.AutomationId="Analysis_MatchCount" />
+                <Button x:Uid="Analysis_PreviousMatch" Grid.Column="1" Command="{x:Bind ViewModel.PreviousMatchCommand, Mode=OneWay}"
+                    AutomationProperties.Name="Previous match"><FontIcon Glyph="&#xE70E;" /></Button>
+                <Button x:Uid="Analysis_NextMatch" Grid.Column="2" Command="{x:Bind ViewModel.NextMatchCommand, Mode=OneWay}"
+                    AutomationProperties.Name="Next match"><FontIcon Glyph="&#xE70D;" /></Button>
             </Grid>
-
-            <Grid Grid.Row="3" Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.HasContent), Mode=OneWay}">
-                <ListView
-                    HorizontalContentAlignment="Stretch"
-                    ItemsSource="{x:Bind ViewModel.SelectedSection.Items, Mode=OneWay}"
-                    SelectionMode="None"
-                    Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.HasSelectedItems), Mode=OneWay}">
+            <Grid Grid.Row="3">
+                <ListView x:Name="PassageList" ItemsSource="{x:Bind ViewModel.FilteredItems, Mode=OneWay}"
+                    HorizontalContentAlignment="Stretch" SelectionMode="None" IsItemClickEnabled="False"
+                    AutomationProperties.AutomationId="Analysis_Passages"
+                    KeyDown="PassageList_KeyDown" Loaded="PassageList_Loaded">
                     <ListView.ItemTemplate>
                         <DataTemplate x:DataType="analyzed:AnalyzedContentItemViewModel">
-                            <ToggleButton
-                                HorizontalAlignment="Stretch"
-                                HorizontalContentAlignment="Stretch"
-                                 Command="{x:Bind ActivateCommand}"
-                                 IsChecked="{x:Bind IsHighlighted, Mode=OneWay}"
-                                 IsEnabled="{x:Bind CanActivate, Mode=OneWay}">
-                                <Grid ColumnSpacing="10">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto" />
-                                        <ColumnDefinition />
-                                    </Grid.ColumnDefinitions>
-                                    <TextBlock
-                                        MinWidth="42"
-                                        FontFamily="Consolas"
-                                        Opacity="0.7"
-                                        Text="{x:Bind TimecodeLabel}"
-                                        Visibility="{x:Bind HasTimecode}" />
-                                    <StackPanel Grid.Column="1" Spacing="2">
-                                        <TextBlock Text="{x:Bind Text}" TextWrapping="Wrap" />
-                                        <TextBlock
-                                            FontSize="12"
-                                            Opacity="0.7"
-                                            Text="{x:Bind SecondaryLabel}"
-                                            Visibility="{x:Bind HasSecondaryLabel}" />
-                                    </StackPanel>
-                                </Grid>
-                            </ToggleButton>
+                            <Grid Margin="0,2" Padding="10,8" ColumnSpacing="8">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="3" /><ColumnDefinition /></Grid.ColumnDefinitions>
+                                <Border Background="{ThemeResource AccentFillColorDefaultBrush}" CornerRadius="2"
+                                    Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(IsSelected), Mode=OneWay}" />
+                                <StackPanel Grid.Column="1" Spacing="5">
+                                    <Button Command="{x:Bind ActivateCommand}" Padding="0,4" HorizontalAlignment="Stretch"
+                                        HorizontalContentAlignment="Left" Style="{StaticResource SubtleButtonStyle}" AutomationProperties.Name="{x:Bind AutomationName, Mode=OneWay}">
+                                        <StackPanel Orientation="Horizontal" Spacing="8">
+                                            <FontIcon Glyph="{x:Bind SourceGlyph}" FontSize="14" />
+                                            <TextBlock Text="{x:Bind SourceLabel}" />
+                                            <TextBlock Text="{x:Bind TimecodeLabel}" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}"
+                                                Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(HasTimecode)}" />
+                                        </StackPanel>
+                                    </Button>
+                                    <local:HighlightedTextBlock Text="{x:Bind Text}" Highlights="{x:Bind Highlights, Mode=OneWay}" IsTextSelectionEnabled="True" />
+                                    <TextBlock Text="{x:Bind ContextText, Mode=OneWay}" TextWrapping="Wrap" Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                        Visibility="{x:Bind utils:VisibilityUtility.StringToVisibility(ContextText), Mode=OneWay}" />
+                                    <TextBlock Text="{x:Bind SecondaryLabel}" TextWrapping="Wrap" Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                        Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(HasSecondaryLabel)}" />
+                                    <TextBlock Text="{x:Bind LocationMessage, Mode=OneWay}" TextWrapping="Wrap" Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                        Visibility="{x:Bind utils:VisibilityUtility.StringToVisibility(LocationMessage), Mode=OneWay}" />
+                                    <TextBlock x:Uid="Analysis_Playing" Text="Playing" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}"
+                                        Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(IsActive), Mode=OneWay}" />
+                                </StackPanel>
+                            </Grid>
                         </DataTemplate>
                     </ListView.ItemTemplate>
                 </ListView>
-
-                <TextBox
-                    AcceptsReturn="True"
-                    IsReadOnly="True"
-                    Text="{x:Bind ViewModel.SelectedSection.FullText, Mode=OneWay}"
-                    TextWrapping="Wrap"
-                    Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.ShowSelectedFullText), Mode=OneWay}" />
-
-                <TextBlock
-                    Margin="0,8,0,0"
-                    Opacity="0.7"
-                    Text="{x:Bind ViewModel.SelectedSection.EmptyMessage, Mode=OneWay}"
-                    TextWrapping="Wrap"
+                <TextBlock Text="{x:Bind ViewModel.SelectedEmptyMessage, Mode=OneWay}" TextWrapping="Wrap" Margin="0,8"
                     Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.ShowSelectedEmpty), Mode=OneWay}" />
             </Grid>
+            <StackPanel Grid.Row="4" Spacing="8">
+                <CheckBox x:Uid="Analysis_FollowPlayback" Content="Follow playback" IsChecked="{x:Bind ViewModel.FollowPlayback, Mode=TwoWay}"
+                    Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.HasTimedContent), Mode=OneWay}" />
+                <Grid>
+                    <Grid.ColumnDefinitions><ColumnDefinition /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                    <Button AutomationProperties.AutomationId="AnalyzedContent_CopyAllButton" Content="{x:Bind ViewModel.CopyActionLabel, Mode=OneWay}"
+                        Command="{x:Bind ViewModel.CopyCommand, Mode=OneWay}" Style="{StaticResource SubtleButtonStyle}" />
+                    <TextBlock Grid.Column="1" Text="{x:Bind ViewModel.CopyStatusText, Mode=OneWay}" VerticalAlignment="Center" AutomationProperties.LiveSetting="Polite" />
+                </Grid>
+                <Expander x:Uid="Analysis_FileDetails" Header="File details" HorizontalAlignment="Stretch"
+                    HorizontalContentAlignment="Stretch" Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.HasDetails), Mode=OneWay}">
+                    <TextBlock Text="{x:Bind ViewModel.DetailsText, Mode=OneWay}" TextWrapping="Wrap" IsTextSelectionEnabled="True" />
+                </Expander>
+            </StackPanel>
         </Grid>
     </Border>
 </local:UserControlBase>

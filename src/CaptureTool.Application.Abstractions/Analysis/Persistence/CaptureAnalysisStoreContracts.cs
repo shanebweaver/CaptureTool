@@ -60,14 +60,11 @@ public sealed record CaptureAnalysisStoreWriteResult
 
 public sealed record CaptureAnalysisSourceRegistration
 {
-    private readonly IReadOnlyList<RecipeCapability> _capabilities;
-
     public CaptureAnalysisSourceRegistration(
         AnalysisCommitPreconditions preconditions,
         CaptureMediaKind mediaKind,
         DateTimeOffset capturedAtUtc,
-        CaptureAnalysisRecipe recipe,
-        IEnumerable<AnalysisCapabilityId>? capabilityIds = null)
+        CaptureAnalysisRecipe recipe)
     {
         if (preconditions.CaptureId.IsEmpty)
         {
@@ -96,30 +93,6 @@ public sealed record CaptureAnalysisSourceRegistration
         CapturedAtUtc = capturedAtUtc;
         Recipe = recipe;
 
-        AnalysisCapabilityId[] selectedCapabilityIds = [.. capabilityIds ?? []];
-        if (selectedCapabilityIds.Any(capabilityId => capabilityId.IsEmpty) ||
-            selectedCapabilityIds.Distinct().Count() != selectedCapabilityIds.Length)
-        {
-            throw new ArgumentException(
-                "Selected capabilities must contain distinct, non-empty IDs.",
-                nameof(capabilityIds));
-        }
-
-        RecipeCapability[] selectedCapabilities = selectedCapabilityIds.Length == 0
-            ? [.. recipe.Capabilities]
-            : recipe.Capabilities
-                .Where(capability => selectedCapabilityIds.Contains(capability.Capability.Id))
-                .ToArray();
-        if (selectedCapabilities.Length == 0 ||
-            selectedCapabilityIds.Length > 0 &&
-            selectedCapabilities.Length != selectedCapabilityIds.Length)
-        {
-            throw new ArgumentException(
-                "Every selected capability must belong to the analysis recipe.",
-                nameof(capabilityIds));
-        }
-
-        _capabilities = Array.AsReadOnly(selectedCapabilities);
     }
 
     public AnalysisCommitPreconditions Preconditions { get; }
@@ -129,8 +102,6 @@ public sealed record CaptureAnalysisSourceRegistration
     public DateTimeOffset CapturedAtUtc { get; }
 
     public CaptureAnalysisRecipe Recipe { get; }
-
-    public IReadOnlyList<RecipeCapability> Capabilities => _capabilities;
 }
 
 public readonly record struct CaptureAnalysisDeletionToken

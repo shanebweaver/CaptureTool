@@ -98,7 +98,12 @@ public sealed record CaptureMemoryMatchEvidence
         CaptureMemoryMatchKind matchKind,
         string snippet,
         CaptureMemoryPixelBounds? pixelBounds = null,
-        TimeSpan? timecode = null)
+        TimeSpan? timecode = null,
+        string? evidenceId = null,
+        TimeSpan? endTime = null,
+        IReadOnlyList<CaptureTextRange>? highlights = null,
+        bool isApproximate = false,
+        bool isCombinedMatch = false)
     {
         if (!Enum.IsDefined(matchKind) || matchKind == CaptureMemoryMatchKind.Unknown)
         {
@@ -119,10 +124,30 @@ public sealed record CaptureMemoryMatchEvidence
             throw new ArgumentOutOfRangeException(nameof(timecode));
         }
 
+        if (endTime.HasValue && (!timecode.HasValue || endTime < timecode))
+        {
+            throw new ArgumentOutOfRangeException(nameof(endTime));
+        }
+        if (evidenceId is { Length: > 128 } || evidenceId is { Length: 0 })
+        {
+            throw new ArgumentException("An evidence identity must be bounded and nonempty.", nameof(evidenceId));
+        }
+        CaptureTextRange[] ranges = [.. highlights ?? []];
+        if (ranges.Any(range => range.Start < 0 || range.Length <= 0 ||
+            (long)range.Start + range.Length > normalizedSnippet.Length))
+        {
+            throw new ArgumentException("Highlights must fit inside the snippet.", nameof(highlights));
+        }
+
         MatchKind = matchKind;
         Snippet = normalizedSnippet;
         PixelBounds = pixelBounds;
         Timecode = timecode;
+        EvidenceId = evidenceId;
+        EndTime = endTime;
+        Highlights = Array.AsReadOnly(ranges);
+        IsApproximate = isApproximate;
+        IsCombinedMatch = isCombinedMatch;
     }
 
     public CaptureMemoryMatchKind MatchKind { get; }
@@ -132,17 +157,34 @@ public sealed record CaptureMemoryMatchEvidence
     public CaptureMemoryPixelBounds? PixelBounds { get; }
 
     public TimeSpan? Timecode { get; }
+
+    public string? EvidenceId { get; }
+
+    public TimeSpan? EndTime { get; }
+
+    public IReadOnlyList<CaptureTextRange> Highlights { get; }
+
+    public bool IsApproximate { get; }
+
+    public bool IsCombinedMatch { get; }
 }
 
 public sealed record CaptureMemorySearchResult
 {
+    public const int MaximumEvidenceCount = 200;
+
     public CaptureMemorySearchResult(
         CaptureId captureId,
         CaptureMediaKind mediaKind,
         DateTimeOffset capturedAtUtc,
         double score,
         int rank,
-        CaptureMemoryMatchEvidence evidence)
+        CaptureMemoryMatchEvidence evidence,
+        IReadOnlyList<CaptureMemoryMatchEvidence>? matches = null,
+        int? totalMatchCount = null,
+        long? documentRevision = null,
+        SourceRevision? sourceRevision = null,
+        TimeSpan? duration = null)
     {
         if (captureId.IsEmpty)
         {
@@ -170,6 +212,16 @@ public sealed record CaptureMemorySearchResult
         }
 
         ArgumentNullException.ThrowIfNull(evidence);
+        CaptureMemoryMatchEvidence[] evidenceItems = [.. matches ?? [evidence]];
+        if (evidenceItems.Length is 0 or > MaximumEvidenceCount || !evidenceItems.Contains(evidence))
+        {
+            throw new ArgumentException("Evidence must include the primary match and fit within the result limit.", nameof(matches));
+        }
+        if (totalMatchCount < evidenceItems.Length || documentRevision <= 0 || duration < TimeSpan.Zero ||
+            sourceRevision is { IsEmpty: true })
+        {
+            throw new ArgumentOutOfRangeException(nameof(totalMatchCount));
+        }
 
         CaptureId = captureId;
         MediaKind = mediaKind;
@@ -177,6 +229,11 @@ public sealed record CaptureMemorySearchResult
         Score = score;
         Rank = rank;
         Evidence = evidence;
+        Matches = Array.AsReadOnly(evidenceItems);
+        TotalMatchCount = totalMatchCount ?? evidenceItems.Length;
+        DocumentRevision = documentRevision;
+        SourceRevision = sourceRevision;
+        Duration = duration;
     }
 
     public CaptureId CaptureId { get; }
@@ -190,6 +247,39 @@ public sealed record CaptureMemorySearchResult
     public int Rank { get; }
 
     public CaptureMemoryMatchEvidence Evidence { get; }
+
+    public IReadOnlyList<CaptureMemoryMatchEvidence> Matches { get; }
+
+    public int TotalMatchCount { get; }
+
+    public long? DocumentRevision { get; }
+
+    public SourceRevision? SourceRevision { get; }
+
+    public TimeSpan? Duration { get; }
+}
+
+/// <summary>Transient search context; never persisted with metadata or sent to diagnostics.</summary>
+public sealed record CaptureMemorySearchContext
+{
+    public CaptureMemorySearchContext(string query, long? documentRevision = null, SourceRevision? sourceRevision = null)
+    {
+        ArgumentNullException.ThrowIfNull(query);
+        if (query.Length > CaptureMemorySearchRequest.MaximumQueryLength || documentRevision <= 0 ||
+            sourceRevision is { IsEmpty: true })
+        {
+            throw new ArgumentOutOfRangeException(nameof(query));
+        }
+        Query = query.Trim();
+        DocumentRevision = documentRevision;
+        SourceRevision = sourceRevision;
+    }
+
+    public string Query { get; }
+
+    public long? DocumentRevision { get; }
+
+    public SourceRevision? SourceRevision { get; }
 }
 
 public interface ICaptureMemorySearchService

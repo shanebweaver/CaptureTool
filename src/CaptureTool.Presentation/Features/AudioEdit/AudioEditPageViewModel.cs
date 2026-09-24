@@ -159,7 +159,7 @@ public sealed partial class AudioEditPageViewModel : LoadableViewModelBase<OpenA
                 CaptureMediaKind.Audio,
                 context.CaptureId,
                 context.PersistentSourcePath),
-            context.InitialMatch);
+            context.InitialMatch, context.SearchContext);
 
         base.Load(request);
         TrackEditorOpened();

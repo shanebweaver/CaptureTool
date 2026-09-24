@@ -8,7 +8,8 @@ public sealed record CaptureEditorContext
     public CaptureEditorContext(
         string persistentSourcePath,
         CaptureId? captureId = null,
-        CaptureMemoryMatchEvidence? initialMatch = null)
+        CaptureMemoryMatchEvidence? initialMatch = null,
+        CaptureMemorySearchContext? searchContext = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(persistentSourcePath);
         if (captureId is { IsEmpty: true })
@@ -19,6 +20,7 @@ public sealed record CaptureEditorContext
         PersistentSourcePath = Path.GetFullPath(persistentSourcePath);
         CaptureId = captureId;
         InitialMatch = initialMatch;
+        SearchContext = searchContext;
     }
 
     public string PersistentSourcePath { get; }
@@ -26,4 +28,6 @@ public sealed record CaptureEditorContext
     public CaptureId? CaptureId { get; }
 
     public CaptureMemoryMatchEvidence? InitialMatch { get; }
+
+    public CaptureMemorySearchContext? SearchContext { get; }
 }

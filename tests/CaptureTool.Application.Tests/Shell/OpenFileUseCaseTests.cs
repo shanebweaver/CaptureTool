@@ -7,6 +7,8 @@ using CaptureTool.Application.Abstractions.Library.RecentCaptures;
 using CaptureTool.Application.Abstractions.Shell.AppMenu.OpenFile;
 using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Application.Capture.Audio;
+using CaptureTool.Application.Capture.Assets;
+using CaptureTool.Application.Tests.Capture;
 using CaptureTool.Application.Shell.AppMenu.OpenFile;
 using CaptureTool.Domain.Capture;
 using CaptureTool.Domain.FileSystem;
@@ -61,6 +63,7 @@ public class OpenFileUseCaseTests
         TestNavigationService.AcceptAll(navigationService);
         Mock<IScratchArtifactStore> scratchArtifactStore = new();
         Mock<IRecentCaptureCatalog> recentCaptureCatalog = new();
+        var assetLifecycle = new RecordingCaptureAssetLifecycleService();
         string tempFolder = CreateTestFolder();
         string sourceFolder = CreateTestFolder();
         string sourcePath = Path.Combine(sourceFolder, "source.png");
@@ -81,7 +84,8 @@ public class OpenFileUseCaseTests
             scratchArtifactStore.Object,
             TestFileSystem.Instance,
             recentCaptureCatalog.Object,
-            TestUseCaseExecutor.Instance);
+            TestUseCaseExecutor.Instance,
+            assetLifecycle);
 
         await useCase.ExecuteAsync(new OpenFileRequest(), TestContext.CancellationToken);
 
@@ -101,6 +105,9 @@ public class OpenFileUseCaseTests
         recentCaptureCatalog.Verify(
             catalog => catalog.RecordOpened(sourcePath, CaptureFileType.Image),
             Times.Once);
+        CollectionAssert.AreEqual(
+            new[] { (sourcePath, CaptureFileType.Image) },
+            assetLifecycle.OpenedMedia.ToArray());
     }
 
     [TestMethod]

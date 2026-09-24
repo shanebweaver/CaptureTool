@@ -364,7 +364,10 @@ internal sealed class CaptureAnalysisIntakeService :
         CaptureAnalysisAdmissionKind admissionKind,
         CancellationToken cancellationToken)
     {
-        if (!TryGetCaptureMemoryRecipe(asset, out CaptureAnalysisRecipe recipe))
+        if (!TryGetCaptureMemoryRecipe(
+            asset,
+            allowExternalSource: admissionKind == CaptureAnalysisAdmissionKind.FutureCapture,
+            out CaptureAnalysisRecipe recipe))
         {
             return ChangeProcessingResult.Processed;
         }
@@ -382,7 +385,10 @@ internal sealed class CaptureAnalysisIntakeService :
         CaptureAsset? asset,
         CancellationToken cancellationToken)
     {
-        if (!TryGetCaptureMemoryRecipe(asset, out CaptureAnalysisRecipe recipe))
+        if (!TryGetCaptureMemoryRecipe(
+            asset,
+            allowExternalSource: true,
+            out CaptureAnalysisRecipe recipe))
         {
             return ChangeProcessingResult.Processed;
         }
@@ -560,7 +566,10 @@ internal sealed class CaptureAnalysisIntakeService :
                 continue;
             }
 
-            if (!TryGetCaptureMemoryRecipe(asset, out CaptureAnalysisRecipe recipe))
+            if (!TryGetCaptureMemoryRecipe(
+                asset,
+                allowExternalSource: true,
+                out CaptureAnalysisRecipe recipe))
             {
                 continue;
             }
@@ -646,6 +655,7 @@ internal sealed class CaptureAnalysisIntakeService :
                 !enrollments.Any(enrollment => enrollment.CaptureId == change.CaptureId) &&
                 TryGetCaptureMemoryRecipe(
                     _captureAssets.Get(change.CaptureId),
+                    allowExternalSource: true,
                     out CaptureAnalysisRecipe recipe))
             {
                 enrollments.Add(new CaptureAnalysisEnrollment(
@@ -774,13 +784,15 @@ internal sealed class CaptureAnalysisIntakeService :
 
     private static bool TryGetCaptureMemoryRecipe(
         CaptureAsset? asset,
+        bool allowExternalSource,
         out CaptureAnalysisRecipe recipe)
     {
         if (asset is not
             {
                 LifecycleState: CaptureAssetLifecycleState.Active,
-                SourceOwnership: CaptureSourceOwnership.AppOwned,
-            })
+            } ||
+            (asset.SourceOwnership != CaptureSourceOwnership.AppOwned &&
+             (!allowExternalSource || asset.SourceOwnership != CaptureSourceOwnership.LegacyExternal)))
         {
             recipe = null!;
             return false;

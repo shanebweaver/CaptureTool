@@ -15,6 +15,9 @@ namespace CaptureTool.Presentation.Windows.WinUI.Xaml.Pages;
 
 public sealed partial class VideoEditPage : VideoEditPageBase
 {
+    private void AnalyzedContentSplitView_SizeChanged(object sender, SizeChangedEventArgs args) =>
+        Utils.AnalysisPaneLayout.Update(sender, args);
+
     private TimeSpan? _pendingAnalyzedContentSeek;
     private readonly DispatcherTimer _boundedPlaybackTimer;
     private readonly ILogService _logService;
@@ -243,6 +246,7 @@ public sealed partial class VideoEditPage : VideoEditPageBase
             }
             if (sender == _originalMediaPlayer && _pendingAnalyzedContentSeek is { } analyzedContentSeek)
             {
+                PauseTrimPreview();
                 ViewModel.UpdatePlayhead(analyzedContentSeek.TotalSeconds);
                 _pendingAnalyzedContentSeek = null;
             }
@@ -337,6 +341,7 @@ public sealed partial class VideoEditPage : VideoEditPageBase
     {
         DispatcherQueue.TryEnqueue(() =>
         {
+            PauseTrimPreview();
             if (ViewModel.VideoDurationSeconds > 0)
             {
                 ViewModel.UpdatePlayhead(position.TotalSeconds);

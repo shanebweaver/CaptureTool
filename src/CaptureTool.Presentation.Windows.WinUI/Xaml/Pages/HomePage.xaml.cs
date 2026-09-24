@@ -29,17 +29,25 @@ public sealed partial class HomePage : HomePageBase
     private ContentDialog? _activeStoreReviewDialog;
     private bool _storeReviewPromptPending;
     private int _storeReviewPromptGeneration;
+    private bool _restoreSearchPending;
+    private bool _restoreSearchFocus;
+    private bool _searchEventsAttached;
 
     public HomePage()
     {
         InitializeComponent();
         Loaded += HomePage_Loaded;
+        Unloaded += (_, _) => DetachSearchEvents();
         ViewModel.StoreReviewPromptRequested += ViewModel_StoreReviewPromptRequested;
     }
 
     private void HomePage_Loaded(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
     {
         AmbientMotionStoryboard.Begin();
+        AttachSearchEvents();
+        _restoreSearchPending = ViewModel.CaptureMemory.SearchSession.SelectedCaptureId.HasValue;
+        _restoreSearchFocus = _restoreSearchPending;
+        RestoreSearchPosition();
         DispatcherQueue.TryEnqueue(() => UpdateRecentCaptureGridItemSize(RecentCapturesGridView.ActualWidth));
 
         if (!_storeReviewPromptPending)
@@ -80,6 +88,11 @@ public sealed partial class HomePage : HomePageBase
     private void HomeScrollViewer_ViewChanged(object? sender, ScrollViewerViewChangedEventArgs e)
     {
         const double LoadMoreThreshold = 520;
+
+        if (IsLoaded && !_restoreSearchPending && !string.IsNullOrWhiteSpace(ViewModel.CaptureMemory.SearchQuery))
+        {
+            ViewModel.CaptureMemory.SearchSession.VerticalOffset = HomeScrollViewer.VerticalOffset;
+        }
 
         if (e.IsIntermediate || HomeScrollViewer.ScrollableHeight <= 0)
         {
@@ -211,6 +224,8 @@ public sealed partial class HomePage : HomePageBase
 
     private void CaptureMemoryResultsList_KeyDown(object sender, KeyRoutedEventArgs e)
     {
+        // Nested evidence buttons handle Enter themselves; the list shortcut opens only a focused row.
+        if (FocusManager.GetFocusedElement(XamlRoot) is Button) { return; }
         if (e.Key == VirtualKey.Enter &&
             CaptureMemoryResultsList.SelectedItem is CaptureMemorySearchResultViewModel result)
         {
@@ -241,9 +256,17 @@ public sealed partial class HomePage : HomePageBase
         }
     }
 
+    private void OpenCaptureMemoryResultMenuItem_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is MenuFlyoutItem { CommandParameter: CaptureMemorySearchResultViewModel result })
+        {
+            _ = ViewModel.CaptureMemory.OpenResultCommand.ExecuteAsync(result);
+        }
+    }
+
     private void RemoveCaptureMemoryResultButton_Click(object sender, RoutedEventArgs e)
     {
-        if (sender is Button { CommandParameter: CaptureMemorySearchResultViewModel result })
+        if (sender is MenuFlyoutItem { CommandParameter: CaptureMemorySearchResultViewModel result })
         {
             _ = ViewModel.CaptureMemory.RemoveResultCommand.ExecuteAsync(result);
         }
@@ -251,10 +274,56 @@ public sealed partial class HomePage : HomePageBase
 
     private void DeleteCaptureMemoryResultButton_Click(object sender, RoutedEventArgs e)
     {
-        if (sender is Button { CommandParameter: CaptureMemorySearchResultViewModel result })
+        if (sender is MenuFlyoutItem { CommandParameter: CaptureMemorySearchResultViewModel result })
         {
             _ = ViewModel.CaptureMemory.DeleteResultCommand.ExecuteAsync(result);
         }
+    }
+
+    private void AttachSearchEvents()
+    {
+        if (_searchEventsAttached) { return; }
+        ViewModel.CaptureMemory.ResultsUpdating += CaptureMemory_ResultsUpdating;
+        ViewModel.CaptureMemory.ResultsUpdated += CaptureMemory_ResultsUpdated;
+        _searchEventsAttached = true;
+    }
+
+    private void DetachSearchEvents()
+    {
+        ViewModel.CaptureMemory.ResultsUpdating -= CaptureMemory_ResultsUpdating;
+        ViewModel.CaptureMemory.ResultsUpdated -= CaptureMemory_ResultsUpdated;
+        _searchEventsAttached = false;
+    }
+
+    private void CaptureMemory_ResultsUpdating(object? sender, EventArgs e)
+    {
+        for (DependencyObject? focused = FocusManager.GetFocusedElement(XamlRoot) as DependencyObject;
+            focused != null; focused = VisualTreeHelper.GetParent(focused))
+        {
+            if (focused == CaptureMemoryResultsList) { _restoreSearchFocus = true; break; }
+        }
+        _restoreSearchPending = true;
+    }
+
+    private void CaptureMemory_ResultsUpdated(object? sender, EventArgs e) => RestoreSearchPosition();
+
+    private void RestoreSearchPosition()
+    {
+        if (!_restoreSearchPending || ViewModel.CaptureMemory.Results.Count == 0) { return; }
+        DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low, () =>
+        {
+            if (!IsLoaded) { return; }
+            CaptureMemoryResultsList.UpdateLayout();
+            if (_restoreSearchFocus && ViewModel.CaptureMemory.SelectedResult is { } selected)
+            {
+                CaptureMemoryResultsList.ScrollIntoView(selected);
+                CaptureMemoryResultsList.UpdateLayout();
+                (CaptureMemoryResultsList.ContainerFromItem(selected) as Control)?.Focus(FocusState.Keyboard);
+            }
+            HomeScrollViewer.ChangeView(null, ViewModel.CaptureMemory.SearchSession.VerticalOffset, null, true);
+            _restoreSearchPending = false;
+            _restoreSearchFocus = false;
+        });
     }
 
     private void CaptureMemoryResultsList_ContainerContentChanging(

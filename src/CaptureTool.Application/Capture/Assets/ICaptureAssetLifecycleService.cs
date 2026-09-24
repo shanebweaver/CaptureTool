@@ -7,6 +7,8 @@ internal interface ICaptureAssetLifecycleService
 {
     CaptureId? TryFinalize(string retainedSourcePath, CaptureFileType mediaType);
 
+    CaptureId? TryRegisterOpened(string sourcePath, CaptureFileType mediaType);
+
     void TrySetPreferredOpenPath(
         CaptureId? captureId,
         string retainedSourcePath,

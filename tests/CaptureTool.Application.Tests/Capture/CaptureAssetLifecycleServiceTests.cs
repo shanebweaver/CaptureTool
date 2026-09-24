@@ -138,6 +138,50 @@ public sealed class CaptureAssetLifecycleServiceTests
     }
 
     [TestMethod]
+    public void TryRegisterOpened_ShouldCommitExternalIdentityAndSignalAnalysisIntake()
+    {
+        LifecycleFixture fixture = new();
+        string sourcePath = @"D:\Pictures\opened.png";
+        fixture.AssetCatalog
+            .Setup(catalog => catalog.TryAdd(It.IsAny<CaptureAsset>()))
+            .Returns<CaptureAsset>(asset => CaptureAssetCatalogWriteResult.Committed(asset, 14));
+
+        CaptureId? captureId = fixture.Service.TryRegisterOpened(
+            sourcePath,
+            CaptureFileType.Image);
+
+        Assert.IsNotNull(captureId);
+        fixture.AssetCatalog.Verify(catalog => catalog.TryAdd(It.Is<CaptureAsset>(asset =>
+            asset.Id == captureId &&
+            asset.RetainedSourcePath == sourcePath &&
+            asset.SourceOwnership == CaptureSourceOwnership.LegacyExternal &&
+            asset.CapturedAtUtc == new DateTimeOffset(UtcNow))), Times.Once);
+        fixture.ChangeSignal.Verify(signal => signal.TrySignal(), Times.Once);
+        fixture.RecentCatalog.VerifyNoOtherCalls();
+    }
+
+    [TestMethod]
+    public void TryRegisterOpened_WhenIdentityExists_ShouldReuseItWithoutAnotherFinalization()
+    {
+        LifecycleFixture fixture = new();
+        string sourcePath = @"D:\Pictures\opened.png";
+        CaptureAsset existing = CaptureAsset.Create(
+            CaptureFileType.Image,
+            sourcePath,
+            CaptureSourceOwnership.LegacyExternal,
+            new DateTimeOffset(UtcNow));
+        fixture.AssetCatalog.Setup(catalog => catalog.FindByPath(sourcePath)).Returns(existing);
+
+        CaptureId? captureId = fixture.Service.TryRegisterOpened(
+            sourcePath,
+            CaptureFileType.Image);
+
+        Assert.AreEqual(existing.Id, captureId);
+        fixture.AssetCatalog.Verify(catalog => catalog.TryAdd(It.IsAny<CaptureAsset>()), Times.Never);
+        fixture.ChangeSignal.Verify(signal => signal.TrySignal(), Times.Never);
+    }
+
+    [TestMethod]
     public void TrySetPreferredOpenPath_ShouldPreserveIdentityAndRetainedSource()
     {
         LifecycleFixture fixture = new();

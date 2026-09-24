@@ -322,7 +322,7 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<OpenV
                 CaptureMediaKind.Video,
                 context.CaptureId,
                 context.PersistentSourcePath),
-            context.InitialMatch);
+            context.InitialMatch, context.SearchContext);
 
         base.Load(request);
         TrackEditorOpened();

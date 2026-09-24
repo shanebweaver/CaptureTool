@@ -101,77 +101,6 @@ public sealed class CaptureAnalysisMutationCoordinatorTests
     }
 
     [TestMethod]
-    public async Task Register_WithCapabilitySelection_ShouldPreserveOtherCapabilityResults()
-    {
-        AnalyzerIdentity currentPropertiesProducer = CreateAnalyzerIdentity("2");
-        AnalyzerIdentity currentOcrProducer = new(
-            "windows-ocr",
-            "windows",
-            modelId: null,
-            modelVersion: null,
-            adapterVersion: "1",
-            runtimeId: null,
-            runtimeVersion: null,
-            packageVersion: null,
-            configurationFingerprint: null);
-        var recipe = new CaptureAnalysisRecipe(
-            new AnalysisRecipeId("capture-memory-image"),
-            new AnalysisRecipeVersion(1),
-            CaptureMediaKind.Image,
-            [
-                new RecipeCapability(
-                    AnalysisCapabilities.MediaPropertiesV1,
-                    RecipeCapabilityRequirement.Required),
-                new RecipeCapability(
-                    AnalysisCapabilities.OcrDocumentV1,
-                    RecipeCapabilityRequirement.Optional),
-            ]);
-        TestContext context = CreateContext(
-            authorizedCalls: int.MaxValue,
-            sourceGeneration: 7,
-            analyzers:
-            [
-                new StubAnalyzer(CreateDescriptor(
-                    AnalysisCapabilities.MediaPropertiesV1,
-                    currentPropertiesProducer)),
-                new StubAnalyzer(CreateDescriptor(
-                    AnalysisCapabilities.OcrDocumentV1,
-                    currentOcrProducer)),
-            ],
-            recipe,
-            capabilityIds: [AnalysisCapabilities.OcrDocumentV1.Id]);
-        AnalyzerIdentity oldPropertiesProducer = CreateAnalyzerIdentity("1");
-        var canonical = new CanonicalCapabilityResult(
-            context.Registration.Preconditions.CaptureId,
-            context.Registration.Preconditions.SourceRevision,
-            new MediaPropertiesV1(CaptureMediaKind.Image, new PixelSize(100, 100)),
-            oldPropertiesProducer,
-            ProcessingBoundary.OnDevice,
-            CapturedAtUtc.AddMinutes(1));
-        var record = new CaptureAnalysisRecord(
-            context.Registration.Preconditions.CaptureId,
-            CaptureMediaKind.Image,
-            CapturedAtUtc,
-            context.Registration.Preconditions.SourceRevision,
-            context.Registration.Recipe,
-            [new CapabilityAnalysis(AnalysisCapabilities.MediaPropertiesV1, canonical, null)]);
-        CaptureAnalysisStoreWriteResult initial = await context.MetadataStore.TryWriteAsync(
-            record,
-            expectedDocumentRevision: null);
-
-        CaptureAnalysisStoreWriteResult result = await context.Coordinator.TryRegisterSourceAsync(
-            context.Registration,
-            initial.Snapshot!.DocumentRevision);
-
-        Assert.AreEqual(CaptureAnalysisStoreWriteStatus.Succeeded, result.Status);
-        Assert.IsTrue(result.Snapshot!.Record.TryGetAnalysis(
-            AnalysisCapabilities.MediaPropertiesV1.Id,
-            out CapabilityAnalysis? preserved));
-        Assert.IsTrue(preserved!.CanonicalResult!.IsEquivalentTo(canonical));
-        context.MetadataStore.Dispose();
-    }
-
-    [TestMethod]
     public async Task CommitResult_ShouldPersistThenRecognizeAlreadyCurrentPayload()
     {
         AnalyzerIdentity producer = CreateAnalyzerIdentity("2");
@@ -304,13 +233,8 @@ public sealed class CaptureAnalysisMutationCoordinatorTests
         missingMetadata.MetadataStore.Dispose();
     }
 
-    private static CaptureAnalyzerDescriptor CreateDescriptor(AnalyzerIdentity producer) =>
-        CreateDescriptor(AnalysisCapabilities.MediaPropertiesV1, producer);
-
-    private static CaptureAnalyzerDescriptor CreateDescriptor(
-        CapabilityDefinition capability,
-        AnalyzerIdentity producer) => new(
-        capability,
+    private static CaptureAnalyzerDescriptor CreateDescriptor(AnalyzerIdentity producer) => new(
+        AnalysisCapabilities.MediaPropertiesV1,
         producer,
         [CaptureMediaKind.Image],
         ProcessingBoundary.OnDevice,
@@ -323,9 +247,7 @@ public sealed class CaptureAnalysisMutationCoordinatorTests
     private static TestContext CreateContext(
         int authorizedCalls,
         long sourceGeneration,
-        IEnumerable<ICaptureAnalyzer>? analyzers = null,
-        CaptureAnalysisRecipe? recipe = null,
-        IEnumerable<AnalysisCapabilityId>? capabilityIds = null)
+        IEnumerable<ICaptureAnalyzer>? analyzers = null)
     {
         CaptureId captureId = CaptureId.New();
         string path = Path.GetFullPath(Path.Combine(Path.GetTempPath(), $"{captureId}.png"));
@@ -337,7 +259,7 @@ public sealed class CaptureAnalysisMutationCoordinatorTests
             CapturedAtUtc);
         CaptureAnalysisAuthorizationScope scope = CaptureAnalysisPolicyDefaults.CreateAuthorizationScope();
         CaptureAnalysisPolicy policy = CaptureAnalysisPolicy.Unknown.GrantFutureCaptures(scope, 0);
-        recipe ??= new CaptureAnalysisRecipe(
+        var recipe = new CaptureAnalysisRecipe(
             new AnalysisRecipeId("capture-memory-image"),
             new AnalysisRecipeVersion(1),
             CaptureMediaKind.Image,
@@ -378,8 +300,7 @@ public sealed class CaptureAnalysisMutationCoordinatorTests
             preconditions,
             CaptureMediaKind.Image,
             CapturedAtUtc,
-            recipe,
-            capabilityIds);
+            recipe);
         var source = new StubVerifiedSource(captureId, sourceGeneration, sourceRevision);
         var sourceVerifier = new RecordingSourceVerifier(source);
         var metadata = new LocalCaptureAnalysisStore(

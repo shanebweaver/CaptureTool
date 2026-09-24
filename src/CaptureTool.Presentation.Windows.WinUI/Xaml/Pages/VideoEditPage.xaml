@@ -85,6 +85,9 @@
                 Icon="Folder" />
 
             <AppBarSeparator />
+            <AppBarButton AutomationProperties.AutomationId="Analysis_BackToResults" x:Uid="Analysis_BackToResults" Label="Back to results" Icon="Back"
+                Command="{x:Bind ViewModel.AnalyzedContent.BackToResultsCommand}"
+                Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.AnalyzedContent.HasSearchContext), Mode=OneWay}" />
             <AppBarToggleButton
                 x:Uid="AnalyzedContent_Open"
                 AutomationProperties.AutomationId="VideoEdit_AnalyzedContentButton"
@@ -99,6 +102,7 @@
         <!--  Content  -->
         <SplitView
             x:Name="AnalyzedContentSplitView"
+            SizeChanged="AnalyzedContentSplitView_SizeChanged"
             Grid.Row="1"
             DisplayMode="Overlay"
             IsPaneOpen="{x:Bind ViewModel.AnalyzedContent.IsPaneOpen, Mode=TwoWay}"

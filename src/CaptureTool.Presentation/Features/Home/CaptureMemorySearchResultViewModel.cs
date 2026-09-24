@@ -5,6 +5,8 @@ using CaptureTool.Domain;
 using CaptureTool.Domain.Analysis;
 using CaptureTool.Presentation.ViewModels;
 using System.Globalization;
+using System.Collections.ObjectModel;
+using CaptureTool.Presentation.Features.CaptureMemory;
 
 namespace CaptureTool.Presentation.Features.Home;
 
@@ -13,7 +15,9 @@ public sealed class CaptureMemorySearchResultViewModel : ViewModelBase
     public CaptureMemorySearchResultViewModel(
         CaptureMemorySearchResult result,
         CaptureMemoryResultLocation location,
-        ILocalizationService? localizationService = null)
+        ILocalizationService? localizationService = null,
+        Func<CaptureMemorySearchResultViewModel, CaptureMemoryMatchEvidence, Task>? openEvidence = null,
+        string query = "")
     {
         ArgumentNullException.ThrowIfNull(result);
         ArgumentNullException.ThrowIfNull(location);
@@ -23,6 +27,14 @@ public sealed class CaptureMemorySearchResultViewModel : ViewModelBase
         }
 
         CaptureId = result.CaptureId;
+        SearchContext = new(query, result.DocumentRevision, result.SourceRevision);
+        TotalMatchCount = result.TotalMatchCount;
+        EvidencePreviews = new(new ObservableCollection<CaptureMemoryEvidenceViewModel>(result.Matches.Take(2).Select(evidence => new CaptureMemoryEvidenceViewModel(
+            evidence, () => openEvidence?.Invoke(this, evidence) ?? Task.CompletedTask, localizationService))));
+        ViewAllMatchesLabel = string.Format(CultureInfo.CurrentCulture,
+            GetString(localizationService, "CaptureMemory_ViewAllMatches", "View all {0} matches"), TotalMatchCount);
+        DurationLabel = result.Duration is TimeSpan duration ? FormatTimecode(duration) : string.Empty;
+        FilenameHighlights = CaptureMemoryTextNormalizer.FindMatches(location.DisplayFileName, query).Ranges;
         Evidence = result.Evidence;
         MediaKind = result.MediaKind;
         CapturedAtUtc = result.CapturedAtUtc;
@@ -32,26 +44,7 @@ public sealed class CaptureMemorySearchResultViewModel : ViewModelBase
         MatchKind = result.Evidence.MatchKind;
         CapturedAtLabel = result.CapturedAtUtc.ToLocalTime().ToString("g", CultureInfo.CurrentCulture);
         CaptureTypeLabel = GetString(localizationService, $"CaptureMemory_MediaKind_{result.MediaKind}", result.MediaKind.ToString());
-        ExplanationLabel = GetString(
-            localizationService,
-            result.Evidence.MatchKind switch
-            {
-                CaptureMemoryMatchKind.OcrText => "CaptureMemory_Match_Text",
-                CaptureMemoryMatchKind.VideoOcrText => "CaptureMemory_Match_Text",
-                CaptureMemoryMatchKind.ImageDescription => "CaptureMemory_Match_Visual",
-                CaptureMemoryMatchKind.VideoDescription => "CaptureMemory_Match_Visual",
-                CaptureMemoryMatchKind.SpeechTranscript => "CaptureMemory_Match_Transcript",
-                _ => "CaptureMemory_Match_Filename",
-            },
-            result.Evidence.MatchKind switch
-            {
-                CaptureMemoryMatchKind.OcrText => "Text match",
-                CaptureMemoryMatchKind.VideoOcrText => "Text match",
-                CaptureMemoryMatchKind.ImageDescription => "Visual match",
-                CaptureMemoryMatchKind.VideoDescription => "Visual match",
-                CaptureMemoryMatchKind.SpeechTranscript => "Transcript match",
-                _ => "Filename match",
-            });
+        ExplanationLabel = CaptureMemoryEvidenceViewModel.SourceName(result.Evidence.MatchKind, localizationService);
 
         TimeSpan? timecode = result.Evidence.Timecode;
         HasTimecode = timecode.HasValue;
@@ -78,6 +71,15 @@ public sealed class CaptureMemorySearchResultViewModel : ViewModelBase
     }
 
     public CaptureId CaptureId { get; }
+
+    public CaptureMemorySearchContext SearchContext { get; }
+    public ReadOnlyObservableCollection<CaptureMemoryEvidenceViewModel> EvidencePreviews { get; }
+    public IReadOnlyList<CaptureTextRange> FilenameHighlights { get; }
+    public int TotalMatchCount { get; }
+    public bool HasMoreMatches => TotalMatchCount > EvidencePreviews.Count;
+    public string ViewAllMatchesLabel { get; }
+    public string DurationLabel { get; }
+    public bool HasDuration => DurationLabel.Length > 0;
 
     public CaptureMemoryMatchEvidence Evidence { get; }
 

@@ -71,14 +71,22 @@ public sealed class ImageEditTextExtractionUiTests
                 automation,
                 "ImageEdit_AnalyzedContentButton",
                 InteractionTimeout).Click();
-            AutomationElement reanalyzeAllButton = WaitForElement(
+            AutomationElement analyzedContentPane = WaitForElement(
                 mainWindow,
                 automation,
-                "AnalyzedContent_ReanalyzeAllButton",
+                "AnalyzedContentPane",
                 InteractionTimeout);
             Assert.IsTrue(
-                mainWindow.BoundingRectangle.IntersectsWith(reanalyzeAllButton.BoundingRectangle),
-                "The panel-level reanalyze action should be visible inside the main window.");
+                mainWindow.BoundingRectangle.IntersectsWith(analyzedContentPane.BoundingRectangle),
+                "The analyzed-content panel should be visible inside the main window.");
+            Assert.IsNull(
+                mainWindow.FindFirstDescendant(
+                    automation.ConditionFactory.ByAutomationId("AnalyzedContent_ReanalyzeAllButton")),
+                "The analyzed-content panel should not expose a reanalyze-all action.");
+            Assert.IsNull(
+                mainWindow.FindFirstDescendant(
+                    automation.ConditionFactory.ByAutomationId("AnalyzedContent_ReanalyzeTabButton")),
+                "Analyzed-content tabs should not expose reanalyze actions.");
             Assert.IsNull(
                 mainWindow.FindFirstDescendant(
                     automation.ConditionFactory.ByAutomationId("ImageEdit_TextExtractionButton")),
@@ -292,19 +300,28 @@ public sealed class ImageEditTextExtractionUiTests
         throw new UnreachableException();
     }
 
-    private static void CaptureWindowScreenshot(
+    internal static void CaptureWindowScreenshot(
         int processId,
         AutomationElement fallbackElement,
         string filePath)
     {
-        Rectangle bounds = GetMainWindowBounds(processId) ?? GetElementBounds(fallbackElement);
-        Assert.IsGreaterThan(0, bounds.Width, "The captured window width should be greater than zero.");
-        Assert.IsGreaterThan(0, bounds.Height, "The captured window height should be greater than zero.");
+        // Keep the window rectangle and screen copy in the same physical-pixel coordinate space.
+        nint previousDpiContext = SetThreadDpiAwarenessContext(new nint(-4));
+        try
+        {
+            Rectangle bounds = GetMainWindowBounds(processId) ?? GetElementBounds(fallbackElement);
+            Assert.IsGreaterThan(0, bounds.Width, "The captured window width should be greater than zero.");
+            Assert.IsGreaterThan(0, bounds.Height, "The captured window height should be greater than zero.");
 
-        using Bitmap bitmap = new(bounds.Width, bounds.Height);
-        using Graphics graphics = Graphics.FromImage(bitmap);
-        graphics.CopyFromScreen(bounds.Left, bounds.Top, 0, 0, bounds.Size);
-        bitmap.Save(filePath, ImageFormat.Png);
+            using Bitmap bitmap = new(bounds.Width, bounds.Height);
+            using Graphics graphics = Graphics.FromImage(bitmap);
+            graphics.CopyFromScreen(bounds.Left, bounds.Top, 0, 0, bounds.Size);
+            bitmap.Save(filePath, ImageFormat.Png);
+        }
+        finally
+        {
+            if (previousDpiContext != 0) { SetThreadDpiAwarenessContext(previousDpiContext); }
+        }
     }
 
     private static Rectangle? GetMainWindowBounds(int processId)
@@ -346,6 +363,9 @@ public sealed class ImageEditTextExtractionUiTests
 
     [DllImport("user32.dll")]
     private static extern bool GetWindowRect(nint hWnd, out WindowRect rect);
+
+    [DllImport("user32.dll")]
+    private static extern nint SetThreadDpiAwarenessContext(nint dpiContext);
 
     [StructLayout(LayoutKind.Sequential)]
     private readonly struct WindowRect

@@ -12,6 +12,11 @@ using CaptureTool.Application.Abstractions.Library.CaptureMemory;
 using CaptureTool.Application.Abstractions.UseCases;
 using CaptureTool.Domain;
 using CaptureTool.Domain.Analysis;
+using CaptureTool.Domain.Analysis.Payloads;
+using CaptureTool.Application.Abstractions.Edit.Metadata;
+using CaptureTool.Application.Abstractions.Edit.Image.OpenImageEditPage;
+using CaptureTool.Application.Abstractions.Edit;
+using CaptureTool.Domain.FileSystem;
 
 namespace CaptureTool.Presentation.Windows.WinUI.UiTests;
 
@@ -26,7 +31,9 @@ internal sealed class UiTestCaptureMemoryService :
     ICaptureMemoryResultResolver,
     IOpenCaptureMemoryResultUseCase,
     ICaptureAssetRemovalService,
-    ICaptureAnalysisMaintenanceService
+    ICaptureAnalysisMaintenanceService,
+    ICaptureMetadataViewService,
+    IAnalysisCapabilityPreparationQueryService
 {
     private readonly CaptureId _captureId = CaptureId.New();
     private readonly string _capturePath;
@@ -36,14 +43,16 @@ internal sealed class UiTestCaptureMemoryService :
     private bool _forgotten;
     private bool _memoryCleared;
     private CaptureAnalysisActivitySnapshot _activity = new();
+    private readonly Func<IOpenImageEditPageUseCase>? _openEditor;
 
     public event EventHandler? ActivityChanged;
 
-    public UiTestCaptureMemoryService(UiTestLaunchOptions options)
+    public UiTestCaptureMemoryService(UiTestLaunchOptions options, Func<IOpenImageEditPageUseCase>? openEditor = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(options.CaptureMemoryImageFilePath);
         _capturePath = Path.GetFullPath(options.CaptureMemoryImageFilePath);
         _markerDirectory = Path.GetFullPath(options.TemporaryFolderPath ?? Path.GetTempPath());
+        _openEditor = openEditor;
     }
 
     public bool IsCaptureMemorySearchEnabled => true;
@@ -162,6 +171,11 @@ internal sealed class UiTestCaptureMemoryService :
             return ValueTask.FromResult<IReadOnlyList<CaptureMemorySearchResult>>([]);
         }
 
+        var text = new CaptureMemoryMatchEvidence(CaptureMemoryMatchKind.OcrText, "PURPLE COMET",
+            new CaptureMemoryPixelBounds(40, 60, 500, 70, 800, 600), evidenceId: "ocr:0",
+            highlights: CaptureMemoryTextNormalizer.FindMatches("PURPLE COMET", request.Query).Ranges);
+        var description = new CaptureMemoryMatchEvidence(CaptureMemoryMatchKind.ImageDescription, "A purple comet project launch checklist on a dark background.",
+            evidenceId: "description:0", highlights: CaptureMemoryTextNormalizer.FindMatches("A purple comet project launch checklist on a dark background.", request.Query).Ranges);
         return ValueTask.FromResult<IReadOnlyList<CaptureMemorySearchResult>>([
             new CaptureMemorySearchResult(
                 _captureId,
@@ -169,12 +183,25 @@ internal sealed class UiTestCaptureMemoryService :
                 DateTimeOffset.UtcNow,
                 1,
                 1,
-                new CaptureMemoryMatchEvidence(
-                    CaptureMemoryMatchKind.OcrText,
-                    "PURPLE COMET project launch checklist",
-                    new CaptureMemoryPixelBounds(40, 60, 360, 70, 800, 600)))
+                text, matches: [text, description], documentRevision: 1)
         ]);
     }
+
+    public ValueTask<CaptureMetadataViewSnapshot?> GetAsync(CaptureMetadataViewRequest request, CancellationToken cancellationToken = default)
+    {
+        var bounds = new PixelRect(40, 60, 500, 70);
+        return ValueTask.FromResult<CaptureMetadataViewSnapshot?>(new(_captureId, CaptureMediaKind.Image, 1,
+            new MediaPropertiesV1(CaptureMediaKind.Image, new PixelSize(800, 600)),
+            new OcrDocumentV1(new PixelSize(800, 600), "PURPLE COMET", [], [new(bounds, [new("PURPLE COMET", bounds, [])])]),
+            new ImageDescriptionV1("A purple comet project launch checklist on a dark background.", ImageDescriptionPurpose.Brief), null, null, null)
+        {
+            Passages = [new(CaptureMemoryMatchKind.OcrText, "ocr:0", "PURPLE COMET", PixelBounds: new(40, 60, 500, 70, 800, 600)),
+                new(CaptureMemoryMatchKind.ImageDescription, "description:0", "A purple comet project launch checklist on a dark background.")],
+        });
+    }
+
+    public async ValueTask<AnalysisCapabilityPreparationState> GetStateAsync(AnalysisCapabilityPreparationRequest request,
+        CancellationToken cancellationToken = default) => await PrepareAsync(request, cancellationToken: cancellationToken);
 
     public ValueTask<CaptureMemoryResultLocation> ResolveAsync(
         CaptureId captureId,
@@ -196,21 +223,26 @@ internal sealed class UiTestCaptureMemoryService :
         return request != null && !_forgotten && request.CaptureId == _captureId;
     }
 
-    public Task<UseCaseResponse<OpenCaptureMemoryResultResponse>> ExecuteAsync(
+    public async Task<UseCaseResponse<OpenCaptureMemoryResultResponse>> ExecuteAsync(
         OpenCaptureMemoryResultRequest request,
         CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
         if (!CanExecute(request))
         {
-            return Task.FromResult(UseCaseResponse<OpenCaptureMemoryResultResponse>.Success(
-                new OpenCaptureMemoryResultResponse(OpenCaptureMemoryResultStatus.Forgotten)));
+            return UseCaseResponse<OpenCaptureMemoryResultResponse>.Success(
+                new OpenCaptureMemoryResultResponse(OpenCaptureMemoryResultStatus.Forgotten));
         }
 
         Directory.CreateDirectory(_markerDirectory);
         File.WriteAllText(Path.Combine(_markerDirectory, "capture-memory-opened.marker"), _captureId.ToString());
-        return Task.FromResult(UseCaseResponse<OpenCaptureMemoryResultResponse>.Success(
-            new OpenCaptureMemoryResultResponse(OpenCaptureMemoryResultStatus.Opened)));
+        if (_openEditor != null)
+        {
+            await _openEditor().ExecuteAsync(new(new ImageFile(_capturePath, _capturePath),
+                new CaptureEditorContext(_capturePath, _captureId, request.Evidence, request.SearchContext)), cancellationToken);
+        }
+        return UseCaseResponse<OpenCaptureMemoryResultResponse>.Success(
+            new OpenCaptureMemoryResultResponse(OpenCaptureMemoryResultStatus.Opened));
     }
 
     public ValueTask<CaptureAssetRemovalResult> RemoveAsync(

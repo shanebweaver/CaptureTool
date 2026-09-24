@@ -127,7 +127,7 @@ internal sealed class CaptureMemoryConfirmationDialogService :
                     "Delete analyzed capture data?"),
                 GetString(
                     "CaptureMemory_Confirmation_ClearContent",
-                    "This erases app-managed AI metadata and search data for enrolled captures. Future analysis remains on, and an explicit reanalysis can recreate the data from retained captures. Original files are not deleted."),
+                    "This erases app-managed AI metadata and search data for enrolled captures without changing your setting for analyzing new captures. Reanalysis can recreate the data from retained captures. Original files are not deleted."),
                 GetString(
                     "CaptureMemory_Confirmation_ClearButton",
                     "Delete analyzed data")),

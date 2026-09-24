@@ -156,7 +156,8 @@ internal sealed class OpenCaptureMemoryResultUseCase : IOpenCaptureMemoryResultU
                             new CaptureEditorContext(
                                 location.CurrentFilePath!,
                                 request.CaptureId,
-                                request.Evidence)),
+                                request.Evidence,
+                                request.SearchContext)),
                         token).ConfigureAwait(false);
                 return new OpenCaptureMemoryResultResponse(opened.Value?.Opened == true
                     ? OpenCaptureMemoryResultStatus.Opened

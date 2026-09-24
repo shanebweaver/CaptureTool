@@ -10,6 +10,7 @@ using CaptureTool.Presentation.Features.AudioEdit;
 using CaptureTool.Presentation.Features.CaptureOverlay;
 using CaptureTool.Presentation.Features.Diagnostics;
 using CaptureTool.Presentation.Features.Home;
+using CaptureTool.Presentation.Features.CaptureMemory;
 using CaptureTool.Presentation.Features.ImageEdit;
 using CaptureTool.Presentation.Features.RecentCaptures;
 using CaptureTool.Presentation.Features.RecentCaptures.Factories;
@@ -40,6 +41,7 @@ public static class PresentationServiceCollectionExtensions
         services.AddTransient<StorePageViewModel>();
         services.AddTransient<HomePageViewModel>();
         services.AddTransient<CaptureMemoryHomeViewModel>();
+        services.AddSingleton<CaptureMemorySearchSession>();
         services.AddTransient<CaptureMemorySettingsViewModel>();
         services.AddTransient<SettingsPageViewModel>();
         services.AddTransient<LoadingPageViewModel>();

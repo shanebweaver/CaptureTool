@@ -3,6 +3,8 @@ using CaptureTool.Application.Abstractions.Edit;
 using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Application.Abstractions.UseCases;
 using CaptureTool.Application.UseCases;
+using CaptureTool.Application.Capture.Assets;
+using CaptureTool.Domain.Capture;
 
 namespace CaptureTool.Application.Edit.Video.OpenVideoEditPage;
 
@@ -12,13 +14,16 @@ internal sealed class OpenVideoEditPageUseCase : IOpenVideoEditPageUseCase
 
     private readonly INavigationCoordinator _navigationCoordinator;
     private readonly IUseCaseExecutor _useCaseExecutor;
+    private readonly ICaptureAssetLifecycleService? _captureAssetLifecycleService;
 
     public OpenVideoEditPageUseCase(
         INavigationCoordinator navigationCoordinator,
-        IUseCaseExecutor useCaseExecutor)
+        IUseCaseExecutor useCaseExecutor,
+        ICaptureAssetLifecycleService? captureAssetLifecycleService = null)
     {
         _navigationCoordinator = navigationCoordinator;
         _useCaseExecutor = useCaseExecutor;
+        _captureAssetLifecycleService = captureAssetLifecycleService;
     }
 
     public Task<UseCaseResponse<OpenVideoEditPageResponse>> ExecuteAsync(OpenVideoEditPageRequest request, CancellationToken cancellationToken = default)
@@ -27,14 +32,19 @@ internal sealed class OpenVideoEditPageUseCase : IOpenVideoEditPageUseCase
             activityId: ActivityId,
             useCase: async _ =>
             {
+                CaptureEditorContext editorContext = request.EditorContext ?? new CaptureEditorContext(
+                    request.VideoFile.FilePath);
                 bool navigated = await _navigationCoordinator.NavigateAsync(
                     NavigationRoute.VideoEdit,
-                    request with
-                    {
-                        EditorContext = request.EditorContext ?? new CaptureEditorContext(
-                            request.VideoFile.FilePath)
-                    },
+                    request with { EditorContext = editorContext },
                     cancellationToken: cancellationToken);
+                if (navigated && !editorContext.CaptureId.HasValue)
+                {
+                    _captureAssetLifecycleService?.TryRegisterOpened(
+                        editorContext.PersistentSourcePath,
+                        CaptureFileType.Video);
+                }
+
                 return new OpenVideoEditPageResponse(navigated);
             },
             cancellationToken: cancellationToken);

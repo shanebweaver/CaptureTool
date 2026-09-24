@@ -4,6 +4,8 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:controls="using:CaptureTool.Presentation.Windows.WinUI.Xaml.Controls"
+    xmlns:memory="using:CaptureTool.Presentation.Features.CaptureMemory"
     xmlns:home="using:CaptureTool.Presentation.Features.Home"
     xmlns:local="using:CaptureTool.Presentation.Windows.WinUI.Xaml.Pages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -310,13 +312,20 @@
                     </StackPanel>
                 </Border>
 
+                <TextBlock x:Uid="CaptureMemory_Setup_Failed" Text="Capture Memory could not be prepared. Try again." TextWrapping="Wrap"
+                    Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.CaptureMemory.HasSetupFailure), Mode=OneWay}" />
+
                 <StackPanel x:Name="CaptureMemoryPanel" Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.CaptureMemory.ShowSearch), Mode=OneWay}">
+                    <TextBlock x:Uid="Analysis_Home_Progress" Text="Analysis is in progress. More matches will appear as captures are analyzed."
+                        Margin="0,0,0,8" TextWrapping="Wrap" AutomationProperties.LiveSetting="Polite"
+                        Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.CaptureMemory.IsIndexing), Mode=OneWay}" />
                     <TextBox
                         x:Name="CaptureMemorySearchBox"
                         x:Uid="CaptureMemory_SearchBox"
                         AutomationProperties.AutomationId="Home_CaptureMemorySearchBox"
                         KeyDown="CaptureMemorySearchBox_KeyDown"
                         PlaceholderText="Search your captures"
+                        MaxLength="1024"
                         Text="{x:Bind ViewModel.CaptureMemory.SearchQuery, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
                         <TextBox.KeyboardAccelerators>
                             <KeyboardAccelerator
@@ -398,128 +407,93 @@
                         <TextBlock x:Uid="CaptureMemory_NoMatches" Text="No matching captures" />
                     </StackPanel>
 
-                    <ListView
-                        x:Name="CaptureMemoryResultsList"
-                        Margin="0,14,0,0"
+                    <TextBlock Text="{x:Bind ViewModel.CaptureMemory.ResultsCountLabel, Mode=OneWay}"
+                        Margin="0,12,0,0" AutomationProperties.LiveSetting="Polite"
+                        Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.CaptureMemory.ShowResults), Mode=OneWay}" />
+                    <TextBlock x:Uid="CaptureMemory_ResultLimit" Text="Showing the first 50 captures. Refine your search to narrow the results."
+                        TextWrapping="Wrap" Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                        Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.CaptureMemory.IsResultLimitReached), Mode=OneWay}" />
+                    <ListView x:Name="CaptureMemoryResultsList" Margin="0,12,0,0"
                         AutomationProperties.AutomationId="Home_CaptureMemoryResults"
                         ContainerContentChanging="CaptureMemoryResultsList_ContainerContentChanging"
-                        IsItemClickEnabled="True"
-                        ItemClick="CaptureMemoryResultsList_ItemClick"
+                        IsItemClickEnabled="True" ItemClick="CaptureMemoryResultsList_ItemClick"
                         ItemsSource="{x:Bind ViewModel.CaptureMemory.Results, Mode=OneWay}"
-                        KeyDown="CaptureMemoryResultsList_KeyDown"
-                        SelectionMode="Single"
+                        SelectedItem="{x:Bind ViewModel.CaptureMemory.SelectedResult, Mode=TwoWay}"
+                        HorizontalContentAlignment="Stretch" KeyDown="CaptureMemoryResultsList_KeyDown" SelectionMode="Single"
                         Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.CaptureMemory.ShowResults), Mode=OneWay}">
                         <ListView.ItemTemplate>
                             <DataTemplate x:DataType="home:CaptureMemorySearchResultViewModel">
-                                <Border
-                                    Margin="0,0,0,8"
-                                    Padding="12"
-                                    AutomationProperties.Name="{x:Bind AutomationName}"
-                                    Background="{ThemeResource HomeTileBackgroundBrush}"
-                                    BorderBrush="{ThemeResource HomeGlassStrokeBrush}"
-                                    BorderThickness="1"
-                                    CornerRadius="8">
-                                    <Grid ColumnSpacing="14">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="160" />
-                                            <ColumnDefinition Width="*" />
-                                            <ColumnDefinition Width="Auto" />
-                                        </Grid.ColumnDefinitions>
-                                        <Border
-                                            Width="160"
-                                            Height="96"
-                                            Background="{ThemeResource HomePreviewBackgroundBrush}"
-                                            CornerRadius="6">
+                                <Border Margin="0,0,0,8" Padding="14" AutomationProperties.Name="{x:Bind AutomationName}"
+                                    Background="{ThemeResource HomeTileBackgroundBrush}" BorderBrush="{ThemeResource HomeGlassStrokeBrush}"
+                                    BorderThickness="1" CornerRadius="8">
+                                    <Grid ColumnSpacing="14" RowSpacing="10">
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="112" /><ColumnDefinition /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+                                        <Border Width="112" Height="72" Background="{ThemeResource HomePreviewBackgroundBrush}" CornerRadius="6">
                                             <Grid>
-                                                <Image
-                                                    x:Name="CaptureMemoryPreviewImage"
-                                                    Opacity="0"
-                                                    Stretch="UniformToFill" />
+                                                <Image x:Name="CaptureMemoryPreviewImage" Opacity="0" Stretch="Uniform" />
                                                 <Grid x:Name="CaptureMemoryPreviewFallback">
-                                                    <SymbolIcon
-                                                        Symbol="Pictures"
-                                                        Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(IsImage)}" />
-                                                    <SymbolIcon
-                                                        Symbol="Audio"
-                                                        Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(IsAudio)}" />
-                                                    <SymbolIcon
-                                                        Symbol="Video"
-                                                        Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(IsVideo)}" />
+                                                    <SymbolIcon Symbol="Pictures" Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(IsImage)}" />
+                                                    <SymbolIcon Symbol="Audio" Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(IsAudio)}" />
+                                                    <SymbolIcon Symbol="Video" Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(IsVideo)}" />
                                                 </Grid>
-                                                <Viewbox Stretch="UniformToFill">
-                                                    <Canvas Width="{x:Bind RasterWidth}" Height="{x:Bind RasterHeight}">
-                                                        <Border
-                                                            Canvas.Left="{x:Bind OcrX}"
-                                                            Canvas.Top="{x:Bind OcrY}"
-                                                            Width="{x:Bind OcrWidth}"
-                                                            Height="{x:Bind OcrHeight}"
-                                                            BorderBrush="{ThemeResource SystemAccentColor}"
-                                                            BorderThickness="3"
-                                                            CornerRadius="2"
-                                                            Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(HasOcrBounds)}" />
-                                                    </Canvas>
-                                                </Viewbox>
+
                                             </Grid>
                                         </Border>
-                                        <StackPanel
-                                            Grid.Column="1"
-                                            VerticalAlignment="Center"
-                                            Spacing="4">
-                                            <TextBlock
-                                                FontWeight="SemiBold"
-                                                Text="{x:Bind FileName}"
-                                                TextTrimming="CharacterEllipsis" />
+                                        <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="4">
+                                            <controls:HighlightedTextBlock Text="{x:Bind FileName}" Highlights="{x:Bind FilenameHighlights}" FontWeight="SemiBold" />
+                                            <TextBlock Text="{x:Bind CapturedAtLabel}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" />
                                             <StackPanel Orientation="Horizontal" Spacing="8">
-                                                <TextBlock Opacity=".68" Text="{x:Bind CapturedAtLabel}" />
-                                                <TextBlock Opacity=".68" Text="{x:Bind CaptureTypeLabel}" />
-                                                <TextBlock FontWeight="SemiBold" Text="{x:Bind ExplanationLabel}" />
+                                                <TextBlock Text="{x:Bind CaptureTypeLabel}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                                <TextBlock Text="{x:Bind DurationLabel}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
                                             </StackPanel>
-                                            <TextBlock
-                                                MaxLines="2"
-                                                Text="{x:Bind Snippet}"
-                                                TextTrimming="CharacterEllipsis"
-                                                TextWrapping="Wrap" />
-                                            <TextBlock
-                                                FontWeight="SemiBold"
-                                                Opacity=".76"
-                                                Text="{x:Bind TimecodeLabel}"
-                                                Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(HasTimecode)}" />
-                                            <TextBlock
-                                                x:Uid="CaptureMemory_ResultSourceMissing"
-                                                Text="Source file unavailable"
-                                                Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(IsSourceMissing), Mode=OneWay}" />
-                                            <TextBlock
-                                                x:Uid="CaptureMemory_ResultFailedLabel"
-                                                Text="Result unavailable"
-                                                Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(IsResolutionFailed), Mode=OneWay}" />
                                         </StackPanel>
-                                        <StackPanel
-                                            Grid.Column="2"
-                                            VerticalAlignment="Center"
-                                            Spacing="6">
-                                            <Button
-                                                x:Uid="CaptureMemory_ResultOpen"
-                                                AutomationProperties.AutomationId="Home_CaptureMemoryOpenButton"
-                                                AutomationProperties.Name="Open capture"
-                                                Click="OpenCaptureMemoryResultButton_Click"
-                                                CommandParameter="{x:Bind}"
-                                                Content="Open"
-                                                IsEnabled="{x:Bind CanOpen, Mode=OneWay}" />
-                                            <Button
-                                                x:Uid="CaptureMemory_ResultRemove"
-                                                AutomationProperties.AutomationId="Home_CaptureMemoryRemoveButton"
-                                                AutomationProperties.Name="Remove from Memory"
-                                                Click="RemoveCaptureMemoryResultButton_Click"
-                                                CommandParameter="{x:Bind}"
-                                                Content="Remove from Memory" />
-                                            <Button
-                                                x:Uid="CaptureMemory_ResultDelete"
-                                                AutomationProperties.AutomationId="Home_CaptureMemoryDeleteButton"
-                                                AutomationProperties.Name="Delete capture"
-                                                Click="DeleteCaptureMemoryResultButton_Click"
-                                                CommandParameter="{x:Bind}"
-                                                Content="Delete capture"
-                                                Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(CanDeleteCapture), Mode=OneWay}" />
+                                        <Button Grid.Column="2" x:Uid="CaptureMemory_ResultMore" AutomationProperties.Name="More capture actions" AutomationProperties.AutomationId="Home_CaptureMemoryMoreButton"
+                                            VerticalAlignment="Top" Style="{StaticResource SubtleButtonStyle}">
+                                            <FontIcon Glyph="&#xE712;" />
+                                            <Button.Flyout>
+                                                <MenuFlyout>
+                                                    <MenuFlyoutItem x:Uid="CaptureMemory_ResultOpenMenu" Text="Open capture" Icon="OpenFile"
+                                                        Click="OpenCaptureMemoryResultMenuItem_Click" CommandParameter="{x:Bind}" IsEnabled="{x:Bind CanOpen, Mode=OneWay}" />
+                                                    <MenuFlyoutItem x:Uid="CaptureMemory_ResultRemoveMenu" Text="Remove from Memory" Icon="Remove"
+                                                        AutomationProperties.AutomationId="Home_CaptureMemoryRemoveButton"
+                                                        Click="RemoveCaptureMemoryResultButton_Click" CommandParameter="{x:Bind}" />
+                                                    <MenuFlyoutItem x:Uid="CaptureMemory_ResultDeleteMenu" Text="Delete capture" Icon="Delete"
+                                                        AutomationProperties.AutomationId="Home_CaptureMemoryDeleteButton"
+                                                        Click="DeleteCaptureMemoryResultButton_Click" CommandParameter="{x:Bind}"
+                                                        Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(CanDeleteCapture)}" />
+                                                </MenuFlyout>
+                                            </Button.Flyout>
+                                        </Button>
+                                        <ItemsControl Grid.Row="1" Grid.ColumnSpan="3" ItemsSource="{x:Bind EvidencePreviews}" IsEnabled="{x:Bind CanOpen, Mode=OneWay}">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate x:DataType="memory:CaptureMemoryEvidenceViewModel">
+                                                    <Button Margin="0,2" Padding="10,8" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch"
+                                                        Command="{x:Bind OpenCommand}" AutomationProperties.Name="{x:Bind AutomationName}" AutomationProperties.AutomationId="Home_CaptureMemoryOpenButton"
+                                                        Style="{StaticResource SubtleButtonStyle}">
+                                                        <StackPanel Spacing="5">
+                                                            <Grid ColumnSpacing="8">
+                                                                <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                                                                <FontIcon Glyph="{x:Bind SourceGlyph}" FontSize="14" />
+                                                                <TextBlock Grid.Column="1" Text="{x:Bind SourceLabel}" FontWeight="SemiBold" TextWrapping="Wrap" />
+                                                                <TextBlock Grid.Column="2" Text="{x:Bind TimecodeLabel}" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
+                                                            </Grid>
+                                                            <controls:HighlightedTextBlock Text="{x:Bind Text}" Highlights="{x:Bind Highlights}" />
+                                                            <TextBlock Text="{x:Bind DetailLabel}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap"
+                                                                Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(HasDetailLabel)}" />
+                                                        </StackPanel>
+                                                    </Button>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                        <StackPanel Grid.Row="2" Grid.ColumnSpan="3" Spacing="4">
+                                            <Button Content="{x:Bind ViewAllMatchesLabel}" Click="OpenCaptureMemoryResultButton_Click" CommandParameter="{x:Bind}"
+                                                AutomationProperties.AutomationId="Home_CaptureMemoryOpenButton" Style="{StaticResource SubtleButtonStyle}"
+                                                IsEnabled="{x:Bind CanOpen, Mode=OneWay}" Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(HasMoreMatches)}" />
+                                            <TextBlock x:Uid="CaptureMemory_ResultSourceMissing" Text="Source file unavailable"
+                                                Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(IsSourceMissing), Mode=OneWay}" />
+                                            <TextBlock x:Uid="CaptureMemory_ResultFailedLabel" Text="Result unavailable"
+                                                Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(IsResolutionFailed), Mode=OneWay}" />
                                         </StackPanel>
                                     </Grid>
                                 </Border>

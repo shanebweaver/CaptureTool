@@ -6,15 +6,12 @@ namespace CaptureTool.Application.Abstractions.Analysis.Orchestration;
 
 public sealed record CaptureAnalysisScheduleRequest
 {
-    private readonly IReadOnlyList<RecipeCapability> _capabilities;
-
     public CaptureAnalysisScheduleRequest(
         CaptureAnalysisAdmissionRequest admission,
         CaptureAnalysisRecipe recipe,
         ProcessingBoundary processingBoundary,
         bool forceReanalysis = false,
-        Guid? operationId = null,
-        IEnumerable<AnalysisCapabilityId>? capabilityIds = null)
+        Guid? operationId = null)
     {
         ArgumentNullException.ThrowIfNull(admission);
         ArgumentNullException.ThrowIfNull(recipe);
@@ -33,30 +30,6 @@ public sealed record CaptureAnalysisScheduleRequest
         }
         OperationId = operationId;
 
-        AnalysisCapabilityId[] selectedCapabilityIds = [.. capabilityIds ?? []];
-        if (selectedCapabilityIds.Any(capabilityId => capabilityId.IsEmpty) ||
-            selectedCapabilityIds.Distinct().Count() != selectedCapabilityIds.Length)
-        {
-            throw new ArgumentException(
-                "Selected capabilities must contain distinct, non-empty IDs.",
-                nameof(capabilityIds));
-        }
-
-        RecipeCapability[] selectedCapabilities = selectedCapabilityIds.Length == 0
-            ? [.. recipe.Capabilities]
-            : recipe.Capabilities
-                .Where(capability => selectedCapabilityIds.Contains(capability.Capability.Id))
-                .ToArray();
-        if (selectedCapabilities.Length == 0 ||
-            selectedCapabilityIds.Length > 0 &&
-            selectedCapabilities.Length != selectedCapabilityIds.Length)
-        {
-            throw new ArgumentException(
-                "Every selected capability must belong to the analysis recipe.",
-                nameof(capabilityIds));
-        }
-
-        _capabilities = Array.AsReadOnly(selectedCapabilities);
     }
 
     public CaptureAnalysisAdmissionRequest Admission { get; }
@@ -68,8 +41,6 @@ public sealed record CaptureAnalysisScheduleRequest
     public bool ForceReanalysis { get; }
 
     public Guid? OperationId { get; }
-
-    public IReadOnlyList<RecipeCapability> Capabilities => _capabilities;
 }
 
 public enum CaptureAnalysisScheduleStatus

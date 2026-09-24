@@ -53,8 +53,9 @@ public sealed class CaptureMemorySearchProjectionTests
             new CaptureMemorySearchRequest("advanced settings", 10));
 
         Assert.AreEqual(filename, atlas[0].CaptureId);
-        Assert.AreEqual(CaptureMemoryMatchKind.Filename, atlas[0].Evidence.MatchKind);
-        Assert.AreEqual("Project-Atlas.png", atlas[0].Evidence.Snippet);
+        Assert.AreEqual(CaptureMemoryMatchKind.ImageDescription, atlas[0].Evidence.MatchKind);
+        Assert.AreEqual("A whiteboard for Project Atlas", atlas[0].Evidence.Snippet);
+        Assert.AreEqual(1, atlas[0].TotalMatchCount, "The filename is highlighted separately in the card header.");
         Assert.IsFalse(atlas[0].Evidence.Snippet.Contains(@"C:\", StringComparison.Ordinal));
 
         CollectionAssert.AreEqual(
@@ -463,6 +464,56 @@ public sealed class CaptureMemorySearchProjectionTests
     private static string ResultIdentity(CaptureMemorySearchResult result)
     {
         return $"{result.Rank}|{result.CaptureId}|{result.Score:R}|{result.Evidence.MatchKind}";
+    }
+
+    [TestMethod]
+    public async Task Search_ReturnsBoundedDistinctPassages_WithCanonicalIdsAndHighlightRanges()
+    {
+        var fixture = new SearchFixture();
+        CaptureId id = fixture.AddAudioCapture(101, "meeting.wav", "Budget discussion",
+            Enumerable.Range(0, 210).Select(index => new SpeechTranscriptSegmentV1("Budget discussion",
+                TimeSpan.FromSeconds(index * 2), TimeSpan.FromSeconds(index * 2 + 1))).ToArray());
+        using var service = fixture.CreateService();
+        var result = (await service.SearchAsync(new("budget", 10))).Single();
+        Assert.AreEqual(id, result.CaptureId);
+        Assert.HasCount(200, result.Matches);
+        Assert.AreEqual(210, result.TotalMatchCount);
+        Assert.HasCount(200, result.Matches.Select(match => match.EvidenceId).Distinct());
+        Assert.IsNotNull(result.SourceRevision);
+        Assert.AreEqual(1, result.DocumentRevision);
+        Assert.IsTrue(result.Matches.All(match => match.EndTime > match.Timecode && match.Highlights.Count == 1));
+    }
+
+    [TestMethod]
+    public async Task Search_MultiPassageMatch_HasNoInventedTimestamp()
+    {
+        var fixture = new SearchFixture();
+        fixture.AddAudioCapture(102, "meeting.wav", "Alpha decision. Beta launch.",
+            [new("Alpha decision.", TimeSpan.Zero, TimeSpan.FromSeconds(1)),
+             new("Beta launch.", TimeSpan.FromSeconds(20), TimeSpan.FromSeconds(22))]);
+        using var service = fixture.CreateService();
+        var evidence = (await service.SearchAsync(new("alpha beta", 10))).Single().Evidence;
+        Assert.IsTrue(evidence.IsCombinedMatch);
+        Assert.IsNull(evidence.Timecode);
+        Assert.IsNull(evidence.EndTime);
+        Assert.HasCount(2, evidence.Highlights);
+    }
+
+    [TestMethod]
+    public async Task Search_VideoPreviewsExposeDifferentSources_AndCoalesceAdjacentIdenticalFrames()
+    {
+        var fixture = new SearchFixture();
+        fixture.AddVideoCapture(103, "meeting.mp4", "Budget board",
+            [new("Budget board", TimeSpan.Zero, TimeSpan.FromSeconds(2)),
+             new("Budget board", TimeSpan.FromSeconds(2), TimeSpan.FromSeconds(4))],
+            "Budget review", [new("Budget review", TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(7))]);
+        using var service = fixture.CreateService();
+        var result = (await service.SearchAsync(new("budget", 10))).Single();
+        Assert.AreEqual(2, result.TotalMatchCount);
+        Assert.HasCount(2, result.Matches.Select(match => match.MatchKind).Distinct());
+        var text = result.Matches.Single(match => match.MatchKind == CaptureMemoryMatchKind.VideoOcrText);
+        Assert.AreEqual(TimeSpan.Zero, text.Timecode);
+        Assert.AreEqual(TimeSpan.FromSeconds(4), text.EndTime);
     }
 
     private sealed class SearchFixture

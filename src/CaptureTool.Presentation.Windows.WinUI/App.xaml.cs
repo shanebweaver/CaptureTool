@@ -30,8 +30,12 @@ public partial class App : Microsoft.UI.Xaml.Application
         UnhandledException += App_UnhandledException;
         DispatcherQueue = DispatcherQueue.GetForCurrentThread();
         ServiceProvider = new();
-        global::Windows.System.MemoryManager.AppMemoryUsageIncreased +=
-            MemoryManager_AppMemoryUsageIncreased;
+        // The isolated UI-test host is unpackaged; this event requires package identity.
+        if (!UiTestLaunchOptions.Current.IsEnabled)
+        {
+            global::Windows.System.MemoryManager.AppMemoryUsageIncreased +=
+                MemoryManager_AppMemoryUsageIncreased;
+        }
         InitializeComponent();
         RestoreAppTheme();
     }

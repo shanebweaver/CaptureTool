@@ -110,6 +110,32 @@ public sealed class CaptureAnalysisIntakeServiceTests
     }
 
     [TestMethod]
+    public async Task OpenedExternalFinalization_ShouldScheduleAsFutureMedia()
+    {
+        CaptureAsset opened = CreateAsset(
+            CaptureFileType.Image,
+            CaptureSourceOwnership.LegacyExternal);
+        CaptureAssetChange finalized = CreateChange(
+            1,
+            opened,
+            CaptureAssetChangeType.Finalized);
+        var context = new TestContext(
+            featureEnabled: true,
+            GrantFutureCaptures(currentSequence: 0),
+            [opened],
+            [finalized]);
+
+        await context.Service.ConsumePendingChangesAsync();
+
+        Assert.HasCount(1, context.Scheduler.Requests);
+        Assert.AreEqual(opened.Id, context.Scheduler.Requests[0].Admission.CaptureId);
+        Assert.AreEqual(
+            CaptureAnalysisAdmissionKind.FutureCapture,
+            context.Scheduler.Requests[0].Admission.Kind);
+        Assert.AreEqual(1, context.Control.Snapshot.State.CaptureChangeCheckpoint);
+    }
+
+    [TestMethod]
     public async Task ReenabledFeature_ShouldAuditContentFreeEnrollmentsWithoutReplayingPreWatermarkAssets()
     {
         CaptureAsset beforeWatermark = CreateAsset(CaptureFileType.Image);

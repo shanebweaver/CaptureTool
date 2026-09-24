@@ -10,6 +10,8 @@ using CaptureTool.Application.Abstractions.Media;
 using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Application.Capture.Audio;
+using CaptureTool.Application.Capture.Assets;
+using CaptureTool.Application.Tests.Capture;
 using CaptureTool.Application.Edit.Audio.CopyAudioFile;
 using CaptureTool.Application.Edit.Audio.OpenAudioEditPage;
 using CaptureTool.Application.Edit.Audio.SaveAudioFile;
@@ -18,6 +20,7 @@ using CaptureTool.Application.Edit.Video.CopyVideoFile;
 using CaptureTool.Application.Edit.Video.OpenVideoEditPage;
 using CaptureTool.Application.Edit.Video.SaveVideoFile;
 using CaptureTool.Domain.FileSystem;
+using CaptureTool.Domain.Capture;
 using Moq;
 
 namespace CaptureTool.Application.Tests.Edit;
@@ -81,14 +84,17 @@ public sealed class MediaEditUseCaseTests
         INavigationCoordinator coordinator = TestNavigationCoordinator.Create(
             navigation.Object,
             audioCaptureNavigationGuard: audioCaptureNavigationGuard);
+        var assetLifecycle = new RecordingCaptureAssetLifecycleService();
 
         var audioUseCase = new OpenAudioEditPageUseCase(
             coordinator,
             TestFileSystem.Instance,
-            TestUseCaseExecutor.Instance);
+            TestUseCaseExecutor.Instance,
+            assetLifecycle);
         var videoUseCase = new OpenVideoEditPageUseCase(
             coordinator,
-            TestUseCaseExecutor.Instance);
+            TestUseCaseExecutor.Instance,
+            assetLifecycle);
 
         Assert.IsTrue(audioUseCase.CanExecute(new OpenAudioEditPageRequest(audioFile)));
         await audioUseCase.ExecuteAsync(new OpenAudioEditPageRequest(audioFile), TestContext.CancellationToken);
@@ -99,6 +105,13 @@ public sealed class MediaEditUseCaseTests
             It.Is<OpenAudioEditPageRequest>(request => request.AudioFile == audioFile),
             false,
             It.IsAny<CancellationToken>()), Times.Once);
+        CollectionAssert.AreEqual(
+            new[]
+            {
+                (audioPath, CaptureFileType.Audio),
+                (videoFile.FilePath, CaptureFileType.Video),
+            },
+            assetLifecycle.OpenedMedia.ToArray());
         navigation.Verify(service => service.NavigateAsync(
             NavigationRoute.VideoEdit,
             It.Is<OpenVideoEditPageRequest>(request => request.VideoFile == videoFile),

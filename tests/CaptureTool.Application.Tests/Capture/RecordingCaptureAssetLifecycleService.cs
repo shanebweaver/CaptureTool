@@ -14,6 +14,8 @@ internal sealed class RecordingCaptureAssetLifecycleService : ICaptureAssetLifec
 
     public List<(string RetainedSourcePath, CaptureFileType MediaType)> Finalizations { get; } = [];
 
+    public List<(string SourcePath, CaptureFileType MediaType)> OpenedMedia { get; } = [];
+
     public List<(CaptureId? CaptureId, string RetainedSourcePath, string PreferredOpenPath)>
         PreferredOpenPathChanges { get; } = [];
 
@@ -27,6 +29,12 @@ internal sealed class RecordingCaptureAssetLifecycleService : ICaptureAssetLifec
             throw FinalizationException;
         }
 
+        return FinalizedCaptureId;
+    }
+
+    public CaptureId? TryRegisterOpened(string sourcePath, CaptureFileType mediaType)
+    {
+        OpenedMedia.Add((sourcePath, mediaType));
         return FinalizedCaptureId;
     }
 

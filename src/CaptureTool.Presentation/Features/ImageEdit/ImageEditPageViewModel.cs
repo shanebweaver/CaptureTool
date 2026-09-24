@@ -100,6 +100,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     private int _editRevision;
     private int? _textExtractionProcessedRevision;
     private bool _isAnalyzedContentTextOverlayRequested;
+    private bool _hasRebasedAnalyzedSource;
 
     public event EventHandler? InvalidateCanvasRequested;
     public event EventHandler? RedrawCanvasRequested;
@@ -986,12 +987,13 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         UpdateCanToggleObjectExtraction();
         CaptureEditorContext context = request.EditorContext ?? new CaptureEditorContext(
             imageFile.PersistentFilePath ?? imageFile.FilePath);
+        UpdateAnalyzedContentLocationAvailability();
         AnalyzedContent.Load(
             new CaptureMetadataViewRequest(
                 CaptureMediaKind.Image,
                 context.CaptureId,
                 context.PersistentSourcePath),
-            context.InitialMatch);
+            context.InitialMatch, context.SearchContext);
         TrackEditorOpened();
     }
 
@@ -1058,6 +1060,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         TextExtractionQrCodes = [];
         AnalyzedContentTextRegions = [];
         _isAnalyzedContentTextOverlayRequested = false;
+        _hasRebasedAnalyzedSource = false;
         RaisePropertyChanged(nameof(IsAnalyzedContentTextOverlayVisible));
         TextExtractionTool.Reset();
         IsImageDescriptionFeatureEnabled = _imageDescriptionFeatureAvailability.IsImageDescriptionEnabled;
@@ -1615,6 +1618,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
     private void RebaseToSavedSource(Size savedImageSize)
     {
+        _hasRebasedAnalyzedSource = true;
         if (_originalImageFile is null)
         {
             return;
@@ -1914,6 +1918,15 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         Orientation = _editSession.Orientation;
         MirroredDisplayName = GetMirroredDisplayName(Orientation);
         RotationDisplayName = GetRotationDisplayName(Orientation);
+        UpdateAnalyzedContentLocationAvailability();
+    }
+
+    private void UpdateAnalyzedContentLocationAvailability()
+    {
+        bool sourceUnchanged = !_hasRebasedAnalyzedSource && _originalImageFile != null &&
+            string.Equals(_imageDrawable?.File.FilePath, _originalImageFile.FilePath, StringComparison.OrdinalIgnoreCase);
+        AnalyzedContent.SetImageLocationAvailability(sourceUnchanged && ImageSize == _originalImageSize &&
+            Orientation == ImageOrientation.RotateNoneFlipNone && CropRect == new Rectangle(Point.Empty, ImageSize));
     }
 
     private void SyncDrawablesFromSession()
@@ -3040,6 +3053,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     private void IncrementEditRevision(bool preservePointSelectionAiMode = false)
     {
         _editRevision++;
+        UpdateAnalyzedContentLocationAvailability();
         InvalidateTextExtractionResult();
         ClearImageDescriptionResults();
 

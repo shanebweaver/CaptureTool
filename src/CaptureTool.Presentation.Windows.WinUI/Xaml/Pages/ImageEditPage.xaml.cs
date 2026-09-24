@@ -16,6 +16,9 @@ namespace CaptureTool.Presentation.Windows.WinUI.Xaml.Pages;
 
 public sealed partial class ImageEditPage : ImageEditPageBase
 {
+    private void AnalyzedContentSplitView_SizeChanged(object sender, SizeChangedEventArgs args) =>
+        Utils.AnalysisPaneLayout.Update(sender, args);
+
     private MenuFlyout? _imageContextMenu;
     private MenuFlyout? _shapeContextMenu;
     private MenuFlyoutItem? _saveMenuItem;
@@ -165,6 +168,7 @@ public sealed partial class ImageEditPage : ImageEditPageBase
 
     private void AnalyzedContent_ImageTextVisibilityRequested(object? sender, bool isVisible)
     {
+        if (!isVisible) { _pendingAnalyzedContentBounds = null; }
         ViewModel.SetAnalyzedContentTextOverlayVisible(isVisible);
     }
 

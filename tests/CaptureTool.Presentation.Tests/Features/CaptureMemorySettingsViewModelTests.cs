@@ -60,6 +60,7 @@ public sealed class CaptureMemorySettingsViewModelTests
     [DataRow(CaptureAnalysisSettingsAction.ReanalyzeCaptures, CaptureMemoryOperationKind.Reanalyze)]
     [DataRow(CaptureAnalysisSettingsAction.RebuildSearchIndex, CaptureMemoryOperationKind.RebuildSearch)]
     [DataRow(CaptureAnalysisSettingsAction.StopAnalyzingNewCaptures, CaptureMemoryOperationKind.StopNewCaptures)]
+    [DataRow(CaptureAnalysisSettingsAction.AuthorizeExistingCaptureBackfill, CaptureMemoryOperationKind.IncludeExistingCaptures)]
     public async Task Maintenance_ShouldConfirmAndDelegate(CaptureAnalysisSettingsAction action, CaptureMemoryOperationKind kind)
     {
         var workflow = new TestCaptureMemoryWorkflow();
@@ -194,6 +195,7 @@ public sealed class CaptureMemorySettingsViewModelTests
         CaptureMemoryOperationKind.TurnOffAndErase => vm.TurnOffAndEraseCommand,
         CaptureMemoryOperationKind.RebuildSearch => vm.RebuildSearchIndexCommand,
         CaptureMemoryOperationKind.Reanalyze => vm.ReanalyzeCapturesCommand,
+        CaptureMemoryOperationKind.IncludeExistingCaptures => vm.IncludeExistingCapturesCommand,
         _ => vm.StopAnalyzingNewCapturesCommand,
     };
     private static CaptureMemorySettingsViewModel Create(TestCaptureMemoryWorkflow workflow,

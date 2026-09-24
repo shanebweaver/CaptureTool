@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -1841,8 +1841,8 @@ SOFTWARE.
   <data name="CaptureMemory_ResultDelete.Content" xml:space="preserve"><value>Aufnahme löschen</value></data>
   <data name="CaptureMemory_ResultDelete.AutomationProperties.Name" xml:space="preserve"><value>App-eigene Aufnahme löschen</value></data>
   <data name="CaptureMemory_Settings_Header.Text" xml:space="preserve"><value>Capture Memory</value></data>
-  <data name="CaptureMemory_Settings_AnalysisTitle.Text" xml:space="preserve"><value>Aufnahmeanalyse</value></data>
-  <data name="CaptureMemory_Settings_AnalysisDescription.Text" xml:space="preserve"><value>Steuert, ob autorisierte KI-Modelle auf dem Gerät Aufnahmen analysieren. Capture Tool speichert nur appverwaltete Metadaten und verändert Originalaufnahmen nie.</value></data>
+  <data name="CaptureMemory_Settings_AnalysisTitle.Text" xml:space="preserve"><value>Neue Aufnahmen analysieren</value></data>
+  <data name="CaptureMemory_Settings_AnalysisDescription.Text" xml:space="preserve"><value>Neue Aufnahmen auf diesem Gerät analysieren. Beim Pausieren bleiben vorhandene Metadaten durchsuchbar.</value></data>
   <data name="CaptureMemory_Settings_StopButton.Content" xml:space="preserve"><value>Analyse neuer Aufnahmen beenden</value></data>
   <data name="CaptureMemory_Settings_ResumeButton.Content" xml:space="preserve"><value>Analyse neuer Aufnahmen fortsetzen</value></data>
   <data name="CaptureMemory_Settings_AnalyzeNewToggle.Header" xml:space="preserve"><value>Neue Aufnahmen analysieren</value></data>
@@ -1852,7 +1852,7 @@ SOFTWARE.
   <data name="CaptureMemory_Settings_DataTitle.Text" xml:space="preserve"><value>Memory-Daten</value></data>
   <data name="CaptureMemory_Settings_DataDescription.Text" xml:space="preserve"><value>Von der App erstellte Metadaten getrennt von den Originaldateien verwalten.</value></data>
   <data name="CaptureMemory_Settings_ClearTitle.Text" xml:space="preserve"><value>Analysierte Aufnahmedaten löschen</value></data>
-  <data name="CaptureMemory_Settings_ClearDescription.Text" xml:space="preserve"><value>KI-Metadaten und Suchdaten löschen, während die zukünftige Analyse aktiviert bleibt. Eine erneute Analyse kann diese Daten aus aufbewahrten Aufnahmen wiederherstellen.</value></data>
+  <data name="CaptureMemory_Settings_ClearDescription.Text" xml:space="preserve"><value>KI-Metadaten und Suchdaten löschen, ohne die Einstellung zur Analyse neuer Aufnahmen zu ändern. Eine erneute Analyse kann diese Daten aus aufbewahrten Aufnahmen wiederherstellen.</value></data>
   <data name="CaptureMemory_Settings_ClearButton.Content" xml:space="preserve"><value>Analysierte Daten löschen</value></data>
   <data name="CaptureMemory_Settings_TurnOffTitle.Text" xml:space="preserve"><value>Capture Memory deaktivieren</value></data>
   <data name="CaptureMemory_Settings_TurnOffDescription.Text" xml:space="preserve"><value>Alle Capture Memory-Analysen beenden und abgeleitete Daten löschen. Originalaufnahmen und gespeicherte Exporte bleiben erhalten.</value></data>
@@ -1875,7 +1875,7 @@ SOFTWARE.
   <data name="CaptureMemory_Settings_StopSucceeded" xml:space="preserve"><value>Neue Aufnahmen werden nicht analysiert. Vorhandene Memory-Metadaten bleiben durchsuchbar.</value></data>
   <data name="CaptureMemory_Settings_ResumeSucceeded" xml:space="preserve"><value>Capture Memory analysiert neue Aufnahmen auf diesem Gerät. Originalaufnahmen werden nicht verändert.</value></data>
   <data name="CaptureMemory_Settings_EraseSucceeded" xml:space="preserve"><value>Capture Memory ist deaktiviert und seine appverwalteten Metadaten wurden gelöscht. Originalaufnahmen wurden nicht gelöscht.</value></data>
-  <data name="CaptureMemory_Settings_ClearSucceeded" xml:space="preserve"><value>Metadaten und Suchdaten von Capture Memory wurden gelöscht. Die Analyse neuer Aufnahmen bleibt aktiviert.</value></data>
+  <data name="CaptureMemory_Settings_ClearSucceeded" xml:space="preserve"><value>Capture Memory-Metadaten und Suchdaten wurden gelöscht. Ihre Einstellung zur Analyse neuer Aufnahmen wurde nicht geändert.</value></data>
   <data name="CaptureMemory_Settings_RebuildSucceeded" xml:space="preserve"><value>Der appverwaltete Suchindex wurde ohne KI-Modelle oder Lesen von Aufnahmequellen neu erstellt.</value></data>
   <data name="CaptureMemory_Settings_ReanalyzePreparing" xml:space="preserve"><value>KI-Modelle für die erneute Analyse werden vorbereitet…</value></data>
   <data name="CaptureMemory_Settings_ReanalyzeScheduling" xml:space="preserve"><value>Autorisierte Aufnahmen werden zur erneuten Analyse eingereiht…</value></data>
@@ -1893,7 +1893,7 @@ SOFTWARE.
   <data name="CaptureMemory_EnableDialog_NewOnlyButton" xml:space="preserve"><value>Nur neue Aufnahmen</value></data>
   <data name="CaptureMemory_Settings_AnalysisToggle.OnContent" xml:space="preserve"><value>Ein</value></data>
   <data name="CaptureMemory_Settings_AnalysisToggle.OffContent" xml:space="preserve"><value>Aus</value></data>
-  <data name="CaptureMemory_Settings_AnalysisToggle.AutomationProperties.Name" xml:space="preserve"><value>Aufnahmeanalyse</value></data>
+  <data name="CaptureMemory_Settings_AnalysisToggle.AutomationProperties.Name" xml:space="preserve"><value>Neue Aufnahmen analysieren</value></data>
   <data name="CaptureMemory_Confirmation_BackfillTitle" xml:space="preserve"><value>Vorhandene Aufnahmen analysieren?</value></data>
   <data name="CaptureMemory_Confirmation_BackfillContent" xml:space="preserve"><value>Capture Tool liest geeignete vorhandene Aufnahmequellen und verwendet die autorisierten KI-Modelle auf dem Gerät. Originalaufnahmen werden nicht verändert.</value></data>
   <data name="CaptureMemory_Confirmation_BackfillButton" xml:space="preserve"><value>Vorhandene Aufnahmen analysieren</value></data>
@@ -1904,7 +1904,7 @@ SOFTWARE.
   <data name="CaptureMemory_Confirmation_EraseContent" xml:space="preserve"><value>Dies beendet alle Capture Memory-Analysen und löscht appverwaltete Metadaten, Aufträge und Suchdaten. Originaldateien und separat gespeicherte Exporte werden nicht gelöscht.</value></data>
   <data name="CaptureMemory_Confirmation_EraseButton" xml:space="preserve"><value>Deaktivieren und löschen</value></data>
   <data name="CaptureMemory_Confirmation_ClearTitle" xml:space="preserve"><value>Analysierte Aufnahmedaten löschen?</value></data>
-  <data name="CaptureMemory_Confirmation_ClearContent" xml:space="preserve"><value>Appverwaltete KI-Metadaten und Suchdaten registrierter Aufnahmen werden gelöscht. Die zukünftige Analyse bleibt aktiviert; eine ausdrücklich gestartete erneute Analyse kann die Daten aus aufbewahrten Aufnahmen wiederherstellen. Originaldateien werden nicht gelöscht.</value></data>
+  <data name="CaptureMemory_Confirmation_ClearContent" xml:space="preserve"><value>Dadurch werden appverwaltete KI-Metadaten und Suchdaten für einbezogene Aufnahmen gelöscht. Ihre Einstellung zur Analyse neuer Aufnahmen bleibt unverändert. Eine erneute Analyse kann die Daten aus aufbewahrten Aufnahmen wiederherstellen. Originaldateien werden nicht gelöscht.</value></data>
   <data name="CaptureMemory_Confirmation_ClearButton" xml:space="preserve"><value>Analysierte Daten löschen</value></data>
   <data name="CaptureMemory_Confirmation_RebuildTitle" xml:space="preserve"><value>Suchindex neu erstellen?</value></data>
   <data name="CaptureMemory_Confirmation_RebuildContent" xml:space="preserve"><value>Dies erstellt entbehrliche Suchdaten aus vorhandenen appverwalteten Metadaten neu. KI-Modelle und Aufnahmequellen werden nicht verwendet, Originaldateien nicht verändert.</value></data>
@@ -1961,7 +1961,7 @@ SOFTWARE.
   <data name="BackgroundActivity_GenericModelTitle" xml:space="preserve"><value>KI-Analyse wird vorbereitet</value></data>
   <data name="CaptureMemory_EnableButton.Content" xml:space="preserve"><value>Capture Memory einschalten</value></data>
   <data name="CaptureMemory_Settings_EnablePreparing" xml:space="preserve"><value>Capture Memory wird eingeschaltet und lokale KI-Modelle werden vorbereitet…</value></data>
-  <data name="CaptureMemory_Settings_EnableSucceeded" xml:space="preserve"><value>Capture Memory ist für neue Aufnahmen eingeschaltet. Die lokalen KI-Modelle sind bereit.</value></data>
+  <data name="CaptureMemory_Settings_EnableSucceeded" xml:space="preserve"><value>Capture Memory ist für neue Aufnahmen aktiviert. Die Originalaufnahmen wurden nicht verändert.</value></data>
   <data name="CaptureMemory_Settings_EnableExistingScheduling" xml:space="preserve"><value>Vorhandene Aufnahmen werden zur Analyse eingereiht…</value></data>
   <data name="CaptureMemory_Settings_EnableExistingIncomplete" xml:space="preserve"><value>Capture Memory ist eingeschaltet, aber nicht alle vorhandenen Aufnahmen konnten eingereiht werden. Kehren Sie zur Startseite zurück, um fortzufahren. Die Originalaufnahmen wurden nicht verändert.</value></data>
   <data name="CaptureMemory_Settings_EnableExistingSucceeded" xml:space="preserve"><value>Vorhandene Aufnahmen wurden zur Analyse eingereiht. Ergebnisse werden angezeigt, sobald die Analyse abgeschlossen ist.</value></data>
@@ -1971,24 +1971,22 @@ SOFTWARE.
   <data name="CaptureMemory_Settings_ReanalyzeExcluded" xml:space="preserve"><value>Keine geeigneten Aufnahmen. Ausgeschlossene und vergessene Aufnahmen bleiben von der erneuten Analyse ausgeschlossen.</value></data>
   <data name="CaptureMemory_Settings_ReanalyzeEmpty" xml:space="preserve"><value>Noch keine Aufnahmen für die Analyse registriert. Erstellen Sie eine neue Aufnahme, um die Analyse zu starten.</value></data>
   <data name="CaptureMemory_Settings_ReanalyzePartial" xml:space="preserve"><value>Die Aufnahmeanalyse wurde eingereiht. Ergebnisse erscheinen, sobald die Analyse abgeschlossen ist.</value></data>
-  <data name="AnalyzedContent_Open.Label" xml:space="preserve"><value>Analysierte Inhalte</value></data>
-  <data name="AnalyzedContent_Open.AutomationProperties.Name" xml:space="preserve"><value>Analysierte Inhalte anzeigen</value></data>
+  <data name="AnalyzedContent_Open.Label" xml:space="preserve"><value>Analyse</value></data>
+  <data name="AnalyzedContent_Open.AutomationProperties.Name" xml:space="preserve"><value>Analyse anzeigen</value></data>
   <data name="AnalyzedContent_Open.ToolTipService.ToolTip" xml:space="preserve"><value>In dieser Aufnahme erkannten Text, Sprache und Beschreibungen anzeigen</value></data>
   <data name="AnalyzedContent_Title.Text" xml:space="preserve"><value>Analysierte Inhalte</value></data>
-  <data name="AnalyzedContent_Close.AutomationProperties.Name" xml:space="preserve"><value>Analysierte Inhalte schließen</value></data>
+  <data name="AnalyzedContent_Close.AutomationProperties.Name" xml:space="preserve"><value>Analyse schließen</value></data>
   <data name="AnalyzedContent_NoContent.Text" xml:space="preserve"><value>Für diese Aufnahme sind keine analysierten Inhalte verfügbar.</value></data>
   <data name="AnalyzedContent_CopyAll.Content" xml:space="preserve"><value>Alles kopieren</value></data>
+  <data name="AnalyzedContent_SearchBox.PlaceholderText" xml:space="preserve"><value>In dieser Aufnahme suchen</value></data>
+  <data name="AnalyzedContent_SearchBox.AutomationProperties.Name" xml:space="preserve"><value>In dieser Aufnahme suchen</value></data>
   <data name="AnalyzedContent_NoContentMessage" xml:space="preserve"><value>Für diese Aufnahme sind keine analysierten Inhalte verfügbar.</value></data>
+  <data name="AnalyzedContent_NoSearchResults" xml:space="preserve"><value>Keine übereinstimmenden Ergebnisse.</value></data>
   <data name="AnalyzedContent_Copied" xml:space="preserve"><value>Analysierte Inhalte wurden kopiert.</value></data>
   <data name="AnalyzedContent_CopyFailed" xml:space="preserve"><value>Analysierte Inhalte konnten nicht kopiert werden.</value></data>
   <data name="AnalyzedContent_Transcript" xml:space="preserve"><value>Transkript</value></data>
   <data name="AnalyzedContent_Text" xml:space="preserve"><value>Text</value></data>
   <data name="AnalyzedContent_ImageDescription" xml:space="preserve"><value>Bildbeschreibung</value></data>
-  <data name="AnalyzedContent_ReanalyzeAll.Content" xml:space="preserve"><value>Alle erneut analysieren</value></data>
-  <data name="AnalyzedContent_ReanalyzeTab.Content" xml:space="preserve"><value>Erneut analysieren</value></data>
-  <data name="AnalyzedContent_ReanalyzeAllQueued" xml:space="preserve"><value>Die erneute Analyse wurde eingereiht.</value></data>
-  <data name="AnalyzedContent_ReanalyzeTabQueued" xml:space="preserve"><value>Diese Analyse wurde eingereiht.</value></data>
-  <data name="AnalyzedContent_ReanalyzeFailed" xml:space="preserve"><value>Diese Aufnahme konnte nicht zur Analyse eingereiht werden.</value></data>
   <data name="AnalyzedContent_OnScreenText" xml:space="preserve"><value>Bildschirmtext</value></data>
   <data name="AnalyzedContent_VisualDescriptions" xml:space="preserve"><value>Visuelle Beschreibungen</value></data>
   <data name="AnalyzedContent_Properties" xml:space="preserve"><value>Eigenschaften</value></data>
@@ -1996,4 +1994,261 @@ SOFTWARE.
   <data name="AnalyzedContent_NoText" xml:space="preserve"><value>Es wurde kein Text erkannt.</value></data>
   <data name="AnalyzedContent_NoDescription" xml:space="preserve"><value>Es wurde keine Beschreibung erstellt.</value></data>
   <data name="AnalyzedContent_NoProperties" xml:space="preserve"><value>Es sind keine Medieneigenschaften verfügbar.</value></data>
+  <data name="Analysis_MatchPosition" xml:space="preserve">
+    <value>Treffer {0} von {1}</value>
+  </data>
+  <data name="Analysis_MatchCount" xml:space="preserve">
+    <value>Treffer: {0}</value>
+  </data>
+  <data name="Analysis_PassageCount" xml:space="preserve">
+    <value>Textstellen: {0}</value>
+  </data>
+  <data name="Analysis_CopyMatches" xml:space="preserve">
+    <value>Treffer kopieren</value>
+  </data>
+  <data name="Analysis_CopyTranscript" xml:space="preserve">
+    <value>Transkript kopieren</value>
+  </data>
+  <data name="Analysis_CopyText" xml:space="preserve">
+    <value>Text kopieren</value>
+  </data>
+  <data name="Analysis_CopyDescription" xml:space="preserve">
+    <value>Beschreibung kopieren</value>
+  </data>
+  <data name="Analysis_CopyAll" xml:space="preserve">
+    <value>Analysetext kopieren</value>
+  </data>
+  <data name="Analysis_LoadFailed" xml:space="preserve">
+    <value>Die Analyse konnte nicht geladen werden. Versuchen Sie es erneut.</value>
+  </data>
+  <data name="Analysis_Excluded" xml:space="preserve">
+    <value>Diese Aufnahme wurde aus Memory entfernt.</value>
+  </data>
+  <data name="Analysis_NotEnrolled" xml:space="preserve">
+    <value>Diese Aufnahme ist nicht in Capture Memory enthalten.</value>
+  </data>
+  <data name="Analysis_SourceChanged" xml:space="preserve">
+    <value>Diese Mediendatei unterscheidet sich von der analysierten Quelle. Die Navigation zu Textstellen und Bereichen ist nicht verfügbar.</value>
+  </data>
+  <data name="Analysis_Processing" xml:space="preserve">
+    <value>Die Analyse läuft. Verfügbare Inhalte können bereits durchsucht werden.</value>
+  </data>
+  <data name="Analysis_PartialFailure" xml:space="preserve">
+    <value>Ein Teil der Analyse ist fehlgeschlagen. Verfügbare Inhalte bleiben durchsuchbar.</value>
+  </data>
+  <data name="Analysis_PartlyAvailable" xml:space="preserve">
+    <value>Ein Teil der Analyse ist auf diesem Gerät nicht verfügbar.</value>
+  </data>
+  <data name="Analysis_Ready" xml:space="preserve">
+    <value>Analyse bereit · auf diesem Gerät erstellt</value>
+  </data>
+  <data name="Analysis_MatchAcrossPassages" xml:space="preserve">
+    <value>Über mehrere Textstellen verteilt</value>
+  </data>
+  <data name="Analysis_MatchChanged" xml:space="preserve">
+    <value>Die Analyse hat sich seit der Suche geändert. Aktuelle Treffer werden unten angezeigt.</value>
+  </data>
+  <data name="Analysis_EditedLocation" xml:space="preserve">
+    <value>Die Bereichsnavigation ist bei den aktuellen Bearbeitungen nicht verfügbar</value>
+  </data>
+  <data name="Analysis_LocationUnavailable" xml:space="preserve">
+    <value>Position für diese Mediendatei nicht verfügbar</value>
+  </data>
+  <data name="Analysis_OutsideTrim" xml:space="preserve">
+    <value>Außerhalb des aktuellen Wiedergabebereichs</value>
+  </data>
+  <data name="Analysis_Copied" xml:space="preserve">
+    <value>Kopiert</value>
+  </data>
+  <data name="Analysis_AllSources" xml:space="preserve">
+    <value>Alle Quellen</value>
+  </data>
+  <data name="Analysis_Queued" xml:space="preserve">
+    <value>Zur Analyse vorgemerkt.</value>
+  </data>
+  <data name="Analysis_Analyzing" xml:space="preserve">
+    <value>Diese Aufnahme wird analysiert…</value>
+  </data>
+  <data name="Analysis_Waiting" xml:space="preserve">
+    <value>Warten auf ein verfügbares Modell.</value>
+  </data>
+  <data name="Analysis_Unsupported" xml:space="preserve">
+    <value>Diese Analyse ist auf diesem Gerät nicht verfügbar.</value>
+  </data>
+  <data name="Analysis_Failed" xml:space="preserve">
+    <value>Diese Analyse ist fehlgeschlagen. Sie können sie in den Capture Memory-Einstellungen erneut starten.</value>
+  </data>
+  <data name="Analysis_NotAnalyzed" xml:space="preserve">
+    <value>Dieser Inhalt wurde noch nicht analysiert.</value>
+  </data>
+  <data name="Analysis_SimilarText" xml:space="preserve">
+    <value>Ähnlicher Text</value>
+  </data>
+  <data name="Analysis_Source_ImageText" xml:space="preserve">
+    <value>Text im Bild</value>
+  </data>
+  <data name="Analysis_Source_ScreenText" xml:space="preserve">
+    <value>Bildschirmtext</value>
+  </data>
+  <data name="Analysis_Source_Transcript" xml:space="preserve">
+    <value>Transkript</value>
+  </data>
+  <data name="Analysis_Source_Description" xml:space="preserve">
+    <value>KI-Beschreibung</value>
+  </data>
+  <data name="Analysis_Source_Filename" xml:space="preserve">
+    <value>Dateiname</value>
+  </data>
+  <data name="CaptureMemory_ResultCount" xml:space="preserve">
+    <value>Aufnahmen: {0}</value>
+  </data>
+  <data name="CaptureMemory_ViewAllMatches" xml:space="preserve">
+    <value>Alle {0} Treffer anzeigen</value>
+  </data>
+  <data name="CaptureMemory_Settings_Scope" xml:space="preserve">
+    <value>Einbezogene Aufnahmen: {0} · Ausgeschlossen: {1}</value>
+  </data>
+  <data name="Analysis_Settings_Preparing" xml:space="preserve">
+    <value>Modelle werden vorbereitet</value>
+  </data>
+  <data name="Analysis_Settings_RunningCount" xml:space="preserve">
+    <value>{0} werden analysiert</value>
+  </data>
+  <data name="Analysis_Settings_QueuedCount" xml:space="preserve">
+    <value>{0} vorgemerkt</value>
+  </data>
+  <data name="Analysis_Settings_WaitingCount" xml:space="preserve">
+    <value>{0} warten auf Modelle</value>
+  </data>
+  <data name="Analysis_Settings_RetryCount" xml:space="preserve">
+    <value>{0} werden erneut versucht</value>
+  </data>
+  <data name="Analysis_Settings_FailedCount" xml:space="preserve">
+    <value>{0} fehlgeschlagen</value>
+  </data>
+  <data name="Analysis_Settings_Idle" xml:space="preserve">
+    <value>Keine Analyse vorgemerkt.</value>
+  </data>
+  <data name="Analysis_Settings_ActivityUnavailable" xml:space="preserve">
+    <value>Der Analysefortschritt ist nicht verfügbar. Er wird automatisch aktualisiert.</value>
+  </data>
+  <data name="Analysis_Settings_ImageText" xml:space="preserve">
+    <value>Text in Bildern</value>
+  </data>
+  <data name="Analysis_Settings_ImageDescription" xml:space="preserve">
+    <value>Bildbeschreibungen</value>
+  </data>
+  <data name="Analysis_Settings_AudioTranscript" xml:space="preserve">
+    <value>Audiotranskripte</value>
+  </data>
+  <data name="Analysis_Settings_VideoTranscript" xml:space="preserve">
+    <value>Videotranskripte</value>
+  </data>
+  <data name="Analysis_Settings_ScreenText" xml:space="preserve">
+    <value>Bildschirmtext in Videos</value>
+  </data>
+  <data name="Analysis_Settings_VideoDescription" xml:space="preserve">
+    <value>Videobeschreibungen</value>
+  </data>
+  <data name="Analysis_Settings_Ready" xml:space="preserve">
+    <value>Bereit</value>
+  </data>
+  <data name="Analysis_Settings_ModelNeeded" xml:space="preserve">
+    <value>Modellvorbereitung erforderlich</value>
+  </data>
+  <data name="Analysis_Settings_Unsupported" xml:space="preserve">
+    <value>Auf diesem Gerät nicht verfügbar</value>
+  </data>
+  <data name="Analysis_Settings_Disabled" xml:space="preserve">
+    <value>Deaktiviert</value>
+  </data>
+  <data name="Analysis_Settings_ModelFailed" xml:space="preserve">
+    <value>Modellvorbereitung fehlgeschlagen</value>
+  </data>
+  <data name="Analysis_Settings_ModelCancelled" xml:space="preserve">
+    <value>Modellvorbereitung abgebrochen</value>
+  </data>
+  <data name="Analysis_Settings_StatusUnavailable" xml:space="preserve">
+    <value>Status nicht verfügbar</value>
+  </data>
+  <data name="Analysis_Settings_ExistingQueued" xml:space="preserve">
+    <value>Geeignete vorhandene Aufnahmen wurden vorgemerkt. Ergebnisse erscheinen nach Abschluss der Analyse.</value>
+  </data>
+  <data name="Analysis_Title.Text" xml:space="preserve">
+    <value>Analyse</value>
+  </data>
+  <data name="Analysis_ClearSearch.AutomationProperties.Name" xml:space="preserve">
+    <value>Analysesuche löschen</value>
+  </data>
+  <data name="Analysis_Matches.Content" xml:space="preserve">
+    <value>Treffer</value>
+  </data>
+  <data name="Analysis_AllContent.Content" xml:space="preserve">
+    <value>Alle Inhalte</value>
+  </data>
+  <data name="Analysis_Source.AutomationProperties.Name" xml:space="preserve">
+    <value>Analysequelle</value>
+  </data>
+  <data name="Analysis_PreviousMatch.AutomationProperties.Name" xml:space="preserve">
+    <value>Vorheriger Treffer</value>
+  </data>
+  <data name="Analysis_NextMatch.AutomationProperties.Name" xml:space="preserve">
+    <value>Nächster Treffer</value>
+  </data>
+  <data name="Analysis_Playing.Text" xml:space="preserve">
+    <value>Wiedergabe</value>
+  </data>
+  <data name="Analysis_FollowPlayback.Content" xml:space="preserve">
+    <value>Wiedergabe folgen</value>
+  </data>
+  <data name="Analysis_FileDetails.Header" xml:space="preserve">
+    <value>Dateidetails</value>
+  </data>
+  <data name="Analysis_BackToResults.Label" xml:space="preserve">
+    <value>Zurück zu den Ergebnissen</value>
+  </data>
+  <data name="CaptureMemory_ResultLimit.Text" xml:space="preserve">
+    <value>Die ersten 50 Aufnahmen werden angezeigt. Präzisieren Sie Ihre Suche, um die Ergebnisse einzugrenzen.</value>
+  </data>
+  <data name="CaptureMemory_ResultMore.AutomationProperties.Name" xml:space="preserve">
+    <value>Weitere Aufnahmeaktionen</value>
+  </data>
+  <data name="CaptureMemory_ResultOpenMenu.Text" xml:space="preserve">
+    <value>Aufnahme öffnen</value>
+  </data>
+  <data name="CaptureMemory_ResultRemoveMenu.Text" xml:space="preserve">
+    <value>Aus Memory entfernen</value>
+  </data>
+  <data name="CaptureMemory_ResultDeleteMenu.Text" xml:space="preserve">
+    <value>Aufnahme löschen</value>
+  </data>
+  <data name="Analysis_Settings_ExistingDescription.Text" xml:space="preserve">
+    <value>Geeignete Aufnahmen aus Ihrer Bibliothek einbeziehen. Entfernte und ausgeschlossene Aufnahmen bleiben ausgeschlossen.</value>
+  </data>
+  <data name="Analysis_Settings_IncludeExisting.Content" xml:space="preserve">
+    <value>Vorhandene Aufnahmen einbeziehen</value>
+  </data>
+  <data name="Analysis_Settings_ProgressTitle.Text" xml:space="preserve">
+    <value>Analysefortschritt</value>
+  </data>
+  <data name="Analysis_Settings_CancelOperation.Content" xml:space="preserve">
+    <value>Aktuelle Aktion abbrechen</value>
+  </data>
+  <data name="Analysis_Settings_Refresh.Content" xml:space="preserve">
+    <value>Status aktualisieren</value>
+  </data>
+  <data name="Analysis_Settings_Availability.Header" xml:space="preserve">
+    <value>Auf diesem Gerät verfügbar</value>
+  </data>
+  <data name="Analysis_Settings_AvailabilityDescription.Text" xml:space="preserve">
+    <value>Die Verfügbarkeit hängt vom Gerät und den installierten Modellen ab. Die Modellvorbereitung bedeutet nicht, dass die Aufnahmeanalyse abgeschlossen ist.</value>
+  </data>
+  <data name="Analysis_Settings_Troubleshooting.Header" xml:space="preserve">
+    <value>Problembehandlung</value>
+  </data>
+  <data name="Analysis_Settings_DataControls.Header" xml:space="preserve">
+    <value>Datenverwaltung</value>
+  </data>
+  <data name="Analysis_Home_Progress.Text" xml:space="preserve"><value>Die Analyse läuft. Weitere Treffer erscheinen, sobald Aufnahmen analysiert wurden.</value></data>
+  <data name="Analysis_Pane.AutomationProperties.Name" xml:space="preserve"><value>Analyse</value></data>
 </root>

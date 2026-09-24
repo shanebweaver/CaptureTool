@@ -6,6 +6,8 @@ using CaptureTool.Domain;
 using CaptureTool.Domain.Analysis;
 using CaptureTool.Domain.Analysis.Payloads;
 using CaptureTool.Domain.Capture;
+using CaptureTool.Application.Abstractions.Edit.Metadata;
+using CaptureTool.Application.Analysis.Queries;
 
 namespace CaptureTool.Application.Analysis.Memory;
 
@@ -108,13 +110,20 @@ internal sealed class CaptureMemorySearchProjection :
         for (int index = 0; index < ranked.Length; index++)
         {
             SearchMatch match = ranked[index];
+            IReadOnlyList<CaptureMemoryMatchEvidence> evidence = CollectEvidence(match.Entry, request.Query, match.Evidence);
+            CaptureMemoryMatchEvidence primary = evidence.First();
             results[index] = new CaptureMemorySearchResult(
                 match.Entry.CaptureId,
                 match.Entry.MediaKind,
                 match.Entry.CapturedAtUtc,
                 match.Score,
                 index + 1,
-                match.Evidence);
+                primary,
+                evidence.Take(CaptureMemorySearchResult.MaximumEvidenceCount).ToArray(),
+                evidence.Count,
+                match.Entry.DocumentRevision,
+                match.Entry.SourceRevision,
+                match.Entry.Duration);
         }
 
         return results;
@@ -269,7 +278,7 @@ internal sealed class CaptureMemorySearchProjection :
             CaptureAsset? asset = GetActiveAsset(captureId);
             ProjectionEntry? entry = asset == null
                 ? null
-                : TryBuildEntry(snapshot.Record, asset);
+                : TryBuildEntry(snapshot, asset);
             if (entry != null)
             {
                 rebuilt[captureId] = entry;
@@ -317,7 +326,7 @@ internal sealed class CaptureMemorySearchProjection :
 
         CaptureAnalysisStoreSnapshot? metadata = await _metadataStore
             .GetAsync(captureId, cancellationToken).ConfigureAwait(false);
-        return metadata == null ? null : TryBuildEntry(metadata.Record, asset);
+        return metadata == null ? null : TryBuildEntry(metadata, asset);
     }
 
     private CaptureAsset? GetActiveAsset(CaptureId captureId)
@@ -337,9 +346,10 @@ internal sealed class CaptureMemorySearchProjection :
     }
 
     private static ProjectionEntry? TryBuildEntry(
-        CaptureAnalysisRecord record,
+        CaptureAnalysisStoreSnapshot snapshot,
         CaptureAsset asset)
     {
+        CaptureAnalysisRecord record = snapshot.Record;
         if (record.CaptureId != asset.Id)
         {
             return null;
@@ -446,7 +456,12 @@ internal sealed class CaptureMemorySearchProjection :
                 normalizedDescription,
                 transcript?.FullText,
                 normalizedTranscript,
-                transcriptSegments);
+                transcriptSegments,
+                snapshot.DocumentRevision,
+                record.SourceRevision,
+                GetPayload<MediaPropertiesV1>(record, AnalysisCapabilities.MediaPropertiesV1)?.Duration,
+                CaptureMetadataPassageReader.Read(record),
+                CaptureMetadataPassageReader.Read(record, fullText: true));
         }
         catch (Exception ex) when (ex is ArgumentException or OverflowException)
         {
@@ -836,6 +851,42 @@ internal sealed class CaptureMemorySearchProjection :
                 timecode));
     }
 
+    private static IReadOnlyList<CaptureMemoryMatchEvidence> CollectEvidence(
+        ProjectionEntry entry, string query, CaptureMemoryMatchEvidence rankedEvidence)
+    {
+        var matches = new List<CaptureMemoryMatchEvidence>();
+        foreach (CaptureAnalyzedPassage passage in entry.Passages)
+        {
+            Add(passage);
+        }
+        // A multi-term query may span passages. It remains searchable without inventing a time/region.
+        foreach (CaptureAnalyzedPassage passage in entry.FullPassages)
+        {
+            if (!matches.Any(match => match.MatchKind == passage.MatchKind)) { Add(passage); }
+        }
+        // The filename is highlighted in the card header. When there is analyzed evidence,
+        // reserve passage previews/counts for the content the editor can show and navigate.
+        if (matches.Count == 0) { Add(new(CaptureMemoryMatchKind.Filename, "filename", entry.Filename)); }
+        if (matches.Count == 0) { return [rankedEvidence]; }
+
+        CaptureMemoryMatchEvidence primary = matches.FirstOrDefault(candidate =>
+            candidate.MatchKind == rankedEvidence.MatchKind && candidate.Timecode == rankedEvidence.Timecode) ?? matches[0];
+        return new[] { primary }.Concat(matches.Where(match => !ReferenceEquals(match, primary))
+            .OrderBy(match => match.MatchKind == primary.MatchKind)
+            .ThenBy(match => match.Timecode ?? TimeSpan.MaxValue)
+            .ThenBy(match => match.MatchKind)).ToArray();
+
+        void Add(CaptureAnalyzedPassage passage)
+        {
+            CaptureTextMatch textMatch = CaptureMemoryTextNormalizer.FindMatches(passage.Text, query);
+            if (!textMatch.IsMatch) { return; }
+            string snippet = CaptureMemoryTextNormalizer.CreateSafeSnippet(passage.Text, query, maximumLength: 240);
+            CaptureTextMatch snippetMatch = CaptureMemoryTextNormalizer.FindMatches(snippet, query, includePartialHighlights: true);
+            matches.Add(new(passage.MatchKind, snippet, passage.PixelBounds, passage.StartTime,
+                passage.EvidenceId, passage.EndTime, snippetMatch.Ranges, textMatch.IsApproximate, passage.IsCombinedMatch));
+        }
+    }
+
     private static double GetTokenMatchPenalty(CaptureMemoryTokenMatch match)
     {
         return match switch
@@ -866,7 +917,12 @@ internal sealed class CaptureMemorySearchProjection :
         CaptureMemoryNormalizedText? DescriptionNormalized,
         string? TranscriptText,
         CaptureMemoryNormalizedText? TranscriptNormalized,
-        IReadOnlyList<TranscriptEvidenceEntry> TranscriptSegments);
+        IReadOnlyList<TranscriptEvidenceEntry> TranscriptSegments,
+        long DocumentRevision,
+        SourceRevision SourceRevision,
+        TimeSpan? Duration,
+        IReadOnlyList<CaptureAnalyzedPassage> Passages,
+        IReadOnlyList<CaptureAnalyzedPassage> FullPassages);
 
     private sealed record OcrEvidenceEntry(
         string Text,

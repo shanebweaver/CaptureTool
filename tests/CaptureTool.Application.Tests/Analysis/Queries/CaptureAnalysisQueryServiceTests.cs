@@ -1,6 +1,7 @@
 using CaptureTool.Application.Abstractions.Analysis.Persistence;
 using CaptureTool.Application.Abstractions.Capture.Assets;
 using CaptureTool.Application.Abstractions.Edit.Metadata;
+using CaptureTool.Application.Abstractions.Files;
 using CaptureTool.Application.Analysis.Queries;
 using CaptureTool.Domain;
 using CaptureTool.Domain.Analysis;
@@ -88,7 +89,46 @@ public sealed class CaptureAnalysisQueryServiceTests
         Assert.AreEqual(record.CaptureId, byId.CaptureId);
         Assert.IsNotNull(byId.MediaProperties);
         Assert.AreEqual(10, byId.MediaProperties.PixelSize?.Width);
-        Assert.AreEqual(byId, byPath);
+        Assert.IsNotNull(byPath);
+        Assert.AreEqual(byId.CaptureId, byPath.CaptureId);
+        Assert.AreEqual(byId.DocumentRevision, byPath.DocumentRevision);
+        Assert.AreEqual(byId.MediaProperties, byPath.MediaProperties);
+        CollectionAssert.AreEqual(byId.CapabilityStates.ToArray(), byPath.CapabilityStates.ToArray());
+    }
+
+    [TestMethod]
+    public async Task MetadataView_UnreadableOrEditedSource_PreservesMetadataAndDisablesLocations()
+    {
+        var record = CreateRecord();
+        string path = Path.GetFullPath("source.png");
+        var asset = new CaptureAsset(record.CaptureId, CaptureFileType.Image, path, CaptureSourceOwnership.AppOwned, record.CapturedAtUtc);
+        var catalog = new Mock<ICaptureAssetCatalog>();
+        catalog.Setup(c => c.Get(record.CaptureId)).Returns(asset);
+        var files = new Mock<IFileSystem>();
+        files.Setup(f => f.FileExists(path)).Returns(true);
+        files.Setup(f => f.GetFileLength(path)).Throws(new IOException("Unavailable"));
+        var service = new CaptureMetadataViewService(new FakeStore(record), catalog.Object, fileSystem: files.Object);
+        foreach (string source in new[] { path, Path.GetFullPath("edited.png") })
+        {
+            var snapshot = await service.GetAsync(new(CaptureMediaKind.Image, record.CaptureId, source));
+            Assert.IsNotNull(snapshot);
+            Assert.IsNotNull(snapshot.MediaProperties);
+            Assert.IsFalse(snapshot.IsLocationCurrent);
+        }
+    }
+
+    [TestMethod]
+    public async Task MetadataView_WithoutCanonicalResults_ReportsNotAnalyzedInsteadOfReadyEmpty()
+    {
+        var id = CaptureId.New();
+        var catalog = new Mock<ICaptureAssetCatalog>();
+        catalog.Setup(c => c.Get(id)).Returns(new CaptureAsset(id, CaptureFileType.Audio, Path.GetFullPath("speech.wav"),
+            CaptureSourceOwnership.AppOwned, DateTimeOffset.UtcNow));
+        var service = new CaptureMetadataViewService(new FakeStore(), catalog.Object);
+        var snapshot = await service.GetAsync(new(CaptureMediaKind.Audio, id));
+        Assert.IsNotNull(snapshot);
+        Assert.AreEqual(CaptureMetadataProcessingState.NotAnalyzed, snapshot.CapabilityStates.Single().State);
+        Assert.AreEqual(0, snapshot.DocumentRevision);
     }
 
     private static CaptureAnalysisRecord CreateRecord()

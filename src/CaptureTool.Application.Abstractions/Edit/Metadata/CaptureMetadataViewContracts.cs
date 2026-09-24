@@ -1,6 +1,7 @@
 using CaptureTool.Domain;
 using CaptureTool.Domain.Analysis;
 using CaptureTool.Domain.Analysis.Payloads;
+using CaptureTool.Application.Abstractions.Analysis.Memory;
 
 namespace CaptureTool.Application.Abstractions.Edit.Metadata;
 
@@ -51,7 +52,43 @@ public sealed record CaptureMetadataViewSnapshot(
     ImageDescriptionV1? ImageDescription,
     SpeechTranscriptV1? SpeechTranscript,
     VideoOcrTrackV1? VideoText,
-    VideoDescriptionTrackV1? VideoDescription);
+    VideoDescriptionTrackV1? VideoDescription)
+{
+    public SourceRevision? SourceRevision { get; init; }
+
+    public IReadOnlyList<CaptureAnalyzedPassage>? Passages { get; init; }
+
+    public IReadOnlyList<CaptureMetadataCapabilityState> CapabilityStates { get; init; } = [];
+
+    public bool IsExcluded { get; init; }
+
+    public bool IsEnrolled { get; init; } = true;
+
+    public bool IsLocationCurrent { get; init; } = true;
+}
+
+public enum CaptureMetadataProcessingState
+{
+    NotAnalyzed,
+    Queued,
+    Analyzing,
+    WaitingForModel,
+    Ready,
+    Unsupported,
+    Failed,
+}
+
+public sealed record CaptureMetadataCapabilityState(CaptureMemoryMatchKind MatchKind, CaptureMetadataProcessingState State);
+
+public sealed record CaptureAnalyzedPassage(
+    CaptureMemoryMatchKind MatchKind,
+    string EvidenceId,
+    string Text,
+    TimeSpan? StartTime = null,
+    TimeSpan? EndTime = null,
+    CaptureMemoryPixelBounds? PixelBounds = null,
+    string? SecondaryLabel = null,
+    bool IsCombinedMatch = false);
 
 public interface ICaptureMetadataViewService
 {

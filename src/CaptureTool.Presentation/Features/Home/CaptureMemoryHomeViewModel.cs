@@ -9,6 +9,8 @@ using CaptureTool.Presentation.ViewModels;
 using CaptureTool.Presentation.Features.CaptureMemory;
 using CommunityToolkit.Mvvm.Input;
 using System.Collections.ObjectModel;
+using System.Globalization;
+using CaptureTool.Application.Abstractions.Analysis.Activity;
 
 namespace CaptureTool.Presentation.Features.Home;
 
@@ -35,6 +37,9 @@ public sealed class CaptureMemoryHomeViewModel : ViewModelBase
     private readonly ICaptureMemorySearchChangeNotifier? _searchChangeNotifier;
     private SynchronizationContext? _searchUiContext;
     private bool _searchChangesSubscribed;
+    private readonly CaptureMemorySearchSession _session;
+    private readonly ICaptureAnalysisActivityQueryService? _activity;
+    private const int SearchResultLimit = 50;
 
     public CaptureMemoryHomeViewModel(
         ICaptureMemoryFeatureAvailability? featureAvailability = null,
@@ -44,7 +49,9 @@ public sealed class CaptureMemoryHomeViewModel : ViewModelBase
         ICaptureMemoryWorkflow? workflow = null,
         ICaptureAssetRemovalService? assetRemovalService = null,
         ILocalizationService? localizationService = null,
-        ICaptureAnalysisSettingsConfirmationDialogService? confirmationService = null)
+        ICaptureAnalysisSettingsConfirmationDialogService? confirmationService = null,
+        CaptureMemorySearchSession? searchSession = null,
+        ICaptureAnalysisActivityQueryService? activity = null)
     {
         _featureAvailability = featureAvailability;
         _searchService = searchService;
@@ -55,6 +62,9 @@ public sealed class CaptureMemoryHomeViewModel : ViewModelBase
         _assetRemovalService = assetRemovalService;
         _confirmationService = confirmationService;
         _localizationService = localizationService;
+        _session = searchSession ?? new();
+        _searchQuery = _session.Query;
+        _activity = activity;
         _stateRefresh = new CaptureMemoryStateRefreshLoop(RefreshPolicyAsync);
 
         EnableCaptureMemoryCommand = new AsyncRelayCommand(
@@ -94,11 +104,26 @@ public sealed class CaptureMemoryHomeViewModel : ViewModelBase
 
     public Task SearchCompletion => _searchCompletion;
 
+    public event EventHandler? ResultsUpdated;
+    public event EventHandler? ResultsUpdating;
+    public CaptureMemorySearchSession SearchSession => _session;
+    public CaptureMemorySearchResultViewModel? SelectedResult
+    {
+        get;
+        set
+        {
+            if (Set(ref field, value) && value != null) { _session.SelectedCaptureId = value.CaptureId; }
+        }
+    }
+    public bool IsResultLimitReached => Results.Count >= SearchResultLimit;
+    public string ResultsCountLabel => string.Format(CultureInfo.CurrentCulture,
+        CaptureMemoryEvidenceViewModel.GetString(_localizationService, "CaptureMemory_ResultCount", "Captures: {0}"), Results.Count);
+
     public bool IsFeatureEnabled => _featureAvailability?.IsCaptureMemorySearchEnabled == true;
 
-    public bool ShowSetup => IsFeatureEnabled && (!IsAuthorized || IsPreparing || HasSetupFailure);
+    public bool ShowSetup => IsFeatureEnabled && !IsAuthorized;
 
-    public bool ShowSearch => IsFeatureEnabled && IsAuthorized && !IsPreparing;
+    public bool ShowSearch => IsFeatureEnabled && IsAuthorized;
 
     public bool ShowRecentGallery => string.IsNullOrWhiteSpace(SearchQuery);
 
@@ -119,6 +144,10 @@ public sealed class CaptureMemoryHomeViewModel : ViewModelBase
             {
                 return;
             }
+
+            _session.Query = value;
+            _session.SelectedCaptureId = null;
+            _session.VerticalOffset = 0;
 
             RaiseDisplayStateChanged();
             _searchCompletion = QueueSearchAsync(value);
@@ -323,6 +352,18 @@ public sealed class CaptureMemoryHomeViewModel : ViewModelBase
             IsPreparing = _starting || operation is { IsRunning: true, Request.Kind: CaptureMemoryOperationKind.Enable,
                 Phase: CaptureMemoryOperationPhase.Accepted or CaptureMemoryOperationPhase.Authorizing or CaptureMemoryOperationPhase.PreparingModels };
             IsIndexing = operation is { IsRunning: true, Phase: CaptureMemoryOperationPhase.SchedulingCaptures };
+            if (_activity != null)
+            {
+                try
+                {
+                    CaptureAnalysisActivitySnapshot activity = await _activity.GetCurrentAsync(cancellationToken);
+                    if (generation != _policyReadGeneration) { return; }
+                    IsIndexing |= activity.RunningCaptureCount > 0 || activity.QueuedCaptureCount > 0 ||
+                        activity.WaitingCaptureCount > 0 || activity.RetryCaptureCount > 0 || activity.ModelPreparations.Count > 0;
+                }
+                catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { throw; }
+                catch { /* Progress availability must not hide authorized search results. */ }
+            }
             PreparationProgress = IndexProgress = snapshot.FractionComplete;
             if (operation?.Request.Kind == CaptureMemoryOperationKind.Enable)
             {
@@ -417,7 +458,7 @@ public sealed class CaptureMemoryHomeViewModel : ViewModelBase
             HasCorruptProjection = false;
             HasFailedResults = false;
             IReadOnlyList<CaptureMemorySearchResult> results = await _searchService!.SearchAsync(
-                new CaptureMemorySearchRequest(query, 50),
+                new CaptureMemorySearchRequest(query, SearchResultLimit),
                 cancellationToken);
             var resolved = new List<CaptureMemorySearchResultViewModel>(results.Count);
             bool hasSourceMissing = false;
@@ -432,7 +473,7 @@ public sealed class CaptureMemoryHomeViewModel : ViewModelBase
                     continue;
                 }
 
-                var model = new CaptureMemorySearchResultViewModel(result, location, _localizationService);
+                var model = new CaptureMemorySearchResultViewModel(result, location, _localizationService, OpenEvidenceAsync, query);
                 hasSourceMissing |= model.IsSourceMissing;
                 hasFailedResults |= model.IsResolutionFailed;
                 resolved.Add(model);
@@ -443,15 +484,19 @@ public sealed class CaptureMemoryHomeViewModel : ViewModelBase
                 return;
             }
 
+            ResultsUpdating?.Invoke(this, EventArgs.Empty);
             _results.Clear();
             foreach (CaptureMemorySearchResultViewModel result in resolved)
             {
                 _results.Add(result);
             }
 
+            SelectedResult = _results.FirstOrDefault(result => result.CaptureId == _session.SelectedCaptureId);
+
             HasSourceMissingResults = hasSourceMissing;
             HasFailedResults = hasFailedResults;
             RaiseDisplayStateChanged();
+            ResultsUpdated?.Invoke(this, EventArgs.Empty);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
@@ -501,15 +546,19 @@ public sealed class CaptureMemoryHomeViewModel : ViewModelBase
         await SearchCompletion;
     }
 
-    private async Task OpenResultAsync(CaptureMemorySearchResultViewModel? model)
+    private Task OpenResultAsync(CaptureMemorySearchResultViewModel? model) =>
+        model == null ? Task.CompletedTask : OpenEvidenceAsync(model, model.Evidence);
+
+    public async Task OpenEvidenceAsync(CaptureMemorySearchResultViewModel model, CaptureMemoryMatchEvidence evidence)
     {
-        if (model == null || _openResultUseCase == null)
+        if (model == null || !model.CanOpen || _openResultUseCase == null)
         {
             return;
         }
 
+        SelectedResult = model;
         UseCaseResponse<OpenCaptureMemoryResultResponse> response = await _openResultUseCase.ExecuteAsync(
-            new OpenCaptureMemoryResultRequest(model.CaptureId, model.Evidence),
+            new OpenCaptureMemoryResultRequest(model.CaptureId, evidence, model.SearchContext),
             CancellationToken.None);
         if (response.Value?.Status is OpenCaptureMemoryResultStatus.SourceMissing or OpenCaptureMemoryResultStatus.Forgotten)
         {
@@ -588,5 +637,7 @@ public sealed class CaptureMemoryHomeViewModel : ViewModelBase
         RaisePropertyChanged(nameof(ShowResults));
         RaisePropertyChanged(nameof(ShowNoMatches));
         RaisePropertyChanged(nameof(ShowPartialResults));
+        RaisePropertyChanged(nameof(ResultsCountLabel));
+        RaisePropertyChanged(nameof(IsResultLimitReached));
     }
 }

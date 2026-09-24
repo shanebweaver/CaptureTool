@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -1847,8 +1847,8 @@ SOFTWARE.
   <data name="CaptureMemory_ResultDelete.Content" xml:space="preserve"><value>删除捕获</value></data>
   <data name="CaptureMemory_ResultDelete.AutomationProperties.Name" xml:space="preserve"><value>删除应用拥有的捕获</value></data>
   <data name="CaptureMemory_Settings_Header.Text" xml:space="preserve"><value>捕获记忆</value></data>
-  <data name="CaptureMemory_Settings_AnalysisTitle.Text" xml:space="preserve"><value>捕获分析</value></data>
-  <data name="CaptureMemory_Settings_AnalysisDescription.Text" xml:space="preserve"><value>控制已授权的设备端 AI 模型是否分析捕获。Capture Tool 仅存储应用管理的元数据，绝不会修改原始捕获。</value></data>
+  <data name="CaptureMemory_Settings_AnalysisTitle.Text" xml:space="preserve"><value>分析新捕获</value></data>
+  <data name="CaptureMemory_Settings_AnalysisDescription.Text" xml:space="preserve"><value>在此设备上分析新捕获。暂停后仍可搜索已有元数据。</value></data>
   <data name="CaptureMemory_Settings_StopButton.Content" xml:space="preserve"><value>停止分析新捕获</value></data>
   <data name="CaptureMemory_Settings_ResumeButton.Content" xml:space="preserve"><value>恢复分析新捕获</value></data>
   <data name="CaptureMemory_Settings_AnalyzeNewToggle.Header" xml:space="preserve"><value>分析新捕获</value></data>
@@ -1858,7 +1858,7 @@ SOFTWARE.
   <data name="CaptureMemory_Settings_DataTitle.Text" xml:space="preserve"><value>记忆数据</value></data>
   <data name="CaptureMemory_Settings_DataDescription.Text" xml:space="preserve"><value>将应用创建的元数据与原始捕获文件分开管理。</value></data>
   <data name="CaptureMemory_Settings_ClearTitle.Text" xml:space="preserve"><value>删除已分析的捕获数据</value></data>
-  <data name="CaptureMemory_Settings_ClearDescription.Text" xml:space="preserve"><value>擦除 AI 元数据和搜索数据，同时继续分析未来的捕获。重新分析可从保留的捕获中再次生成这些数据。</value></data>
+  <data name="CaptureMemory_Settings_ClearDescription.Text" xml:space="preserve"><value>清除 AI 元数据和搜索数据，但不更改分析新捕获内容的设置。重新分析可以从保留的捕获内容中重新生成这些数据。</value></data>
   <data name="CaptureMemory_Settings_ClearButton.Content" xml:space="preserve"><value>删除分析数据</value></data>
   <data name="CaptureMemory_Settings_TurnOffTitle.Text" xml:space="preserve"><value>关闭捕获记忆</value></data>
   <data name="CaptureMemory_Settings_TurnOffDescription.Text" xml:space="preserve"><value>停止所有捕获记忆分析并擦除派生数据。原始捕获和已保存的导出会保留。</value></data>
@@ -1881,7 +1881,7 @@ SOFTWARE.
   <data name="CaptureMemory_Settings_StopSucceeded" xml:space="preserve"><value>不会再分析新捕获。现有记忆元数据仍可搜索。</value></data>
   <data name="CaptureMemory_Settings_ResumeSucceeded" xml:space="preserve"><value>捕获记忆将在此设备上分析新捕获。不会修改原始捕获。</value></data>
   <data name="CaptureMemory_Settings_EraseSucceeded" xml:space="preserve"><value>捕获记忆已关闭，其应用管理元数据已擦除。未删除原始捕获。</value></data>
-  <data name="CaptureMemory_Settings_ClearSucceeded" xml:space="preserve"><value>捕获记忆元数据和搜索数据已清除。仍会分析新捕获。</value></data>
+  <data name="CaptureMemory_Settings_ClearSucceeded" xml:space="preserve"><value>已清除 Capture Memory 元数据和搜索数据。分析新捕获内容的设置未更改。</value></data>
   <data name="CaptureMemory_Settings_RebuildSucceeded" xml:space="preserve"><value>已重建应用管理的搜索索引，未运行 AI 模型或读取捕获源。</value></data>
   <data name="CaptureMemory_Settings_ReanalyzePreparing" xml:space="preserve"><value>正在为重新分析准备 AI 模型…</value></data>
   <data name="CaptureMemory_Settings_ReanalyzeScheduling" xml:space="preserve"><value>正在将已授权的捕获加入重新分析队列…</value></data>
@@ -1899,7 +1899,7 @@ SOFTWARE.
   <data name="CaptureMemory_EnableDialog_NewOnlyButton" xml:space="preserve"><value>仅新捕获</value></data>
   <data name="CaptureMemory_Settings_AnalysisToggle.OnContent" xml:space="preserve"><value>开</value></data>
   <data name="CaptureMemory_Settings_AnalysisToggle.OffContent" xml:space="preserve"><value>关</value></data>
-  <data name="CaptureMemory_Settings_AnalysisToggle.AutomationProperties.Name" xml:space="preserve"><value>捕获分析</value></data>
+  <data name="CaptureMemory_Settings_AnalysisToggle.AutomationProperties.Name" xml:space="preserve"><value>分析新捕获</value></data>
   <data name="CaptureMemory_Confirmation_BackfillTitle" xml:space="preserve"><value>分析现有捕获？</value></data>
   <data name="CaptureMemory_Confirmation_BackfillContent" xml:space="preserve"><value>Capture Tool 将读取符合条件的现有捕获源，并使用已授权的设备端 AI 模型。不会修改原始捕获。</value></data>
   <data name="CaptureMemory_Confirmation_BackfillButton" xml:space="preserve"><value>分析现有捕获</value></data>
@@ -1910,7 +1910,7 @@ SOFTWARE.
   <data name="CaptureMemory_Confirmation_EraseContent" xml:space="preserve"><value>这将停止所有捕获记忆分析，并擦除应用管理的元数据、任务和搜索数据。不会删除原始文件或单独保存的导出文件。</value></data>
   <data name="CaptureMemory_Confirmation_EraseButton" xml:space="preserve"><value>关闭并擦除</value></data>
   <data name="CaptureMemory_Confirmation_ClearTitle" xml:space="preserve"><value>删除已分析的捕获数据？</value></data>
-  <data name="CaptureMemory_Confirmation_ClearContent" xml:space="preserve"><value>这将擦除已登记捕获的应用管理 AI 元数据和搜索数据。未来分析仍会开启，明确启动重新分析后可从保留的捕获中再次生成数据。不会删除原始文件。</value></data>
+  <data name="CaptureMemory_Confirmation_ClearContent" xml:space="preserve"><value>这将清除已纳入捕获内容的应用管理 AI 元数据和搜索数据，但不更改分析新捕获内容的设置。重新分析可以从保留的捕获内容中重新生成数据。不会删除原始文件。</value></data>
   <data name="CaptureMemory_Confirmation_ClearButton" xml:space="preserve"><value>删除分析数据</value></data>
   <data name="CaptureMemory_Confirmation_RebuildTitle" xml:space="preserve"><value>重建搜索索引？</value></data>
   <data name="CaptureMemory_Confirmation_RebuildContent" xml:space="preserve"><value>这将从现有的应用管理元数据重新创建可丢弃的搜索数据。不会运行 AI 模型、读取捕获源或修改原始文件。</value></data>
@@ -1967,7 +1967,7 @@ SOFTWARE.
   <data name="BackgroundActivity_GenericModelTitle" xml:space="preserve"><value>正在准备 AI 分析</value></data>
   <data name="CaptureMemory_EnableButton.Content" xml:space="preserve"><value>打开 Capture Memory</value></data>
   <data name="CaptureMemory_Settings_EnablePreparing" xml:space="preserve"><value>正在打开 Capture Memory 并准备设备端 AI 模型…</value></data>
-  <data name="CaptureMemory_Settings_EnableSucceeded" xml:space="preserve"><value>Capture Memory 已为新捕获打开。设备端 AI 模型已就绪。</value></data>
+  <data name="CaptureMemory_Settings_EnableSucceeded" xml:space="preserve"><value>已为新捕获内容开启 Capture Memory。原始捕获内容未被修改。</value></data>
   <data name="CaptureMemory_Settings_EnableExistingScheduling" xml:space="preserve"><value>正在将现有捕获加入分析队列…</value></data>
   <data name="CaptureMemory_Settings_EnableExistingIncomplete" xml:space="preserve"><value>Capture Memory 已打开，但未能将所有现有捕获加入队列。请返回主页以继续。原始捕获未被修改。</value></data>
   <data name="CaptureMemory_Settings_EnableExistingSucceeded" xml:space="preserve"><value>现有捕获已加入分析队列。分析完成后将显示结果。</value></data>
@@ -1977,24 +1977,22 @@ SOFTWARE.
   <data name="CaptureMemory_Settings_ReanalyzeExcluded" xml:space="preserve"><value>没有符合条件的捕获内容。已排除和已遗忘的内容仍不会被重新分析。</value></data>
   <data name="CaptureMemory_Settings_ReanalyzeEmpty" xml:space="preserve"><value>尚无已加入分析的捕获。请创建新捕获以开始分析。</value></data>
   <data name="CaptureMemory_Settings_ReanalyzePartial" xml:space="preserve"><value>捕获分析已加入队列。分析完成后，结果将陆续显示。</value></data>
-  <data name="AnalyzedContent_Open.Label" xml:space="preserve"><value>分析内容</value></data>
-  <data name="AnalyzedContent_Open.AutomationProperties.Name" xml:space="preserve"><value>显示分析内容</value></data>
+  <data name="AnalyzedContent_Open.Label" xml:space="preserve"><value>分析</value></data>
+  <data name="AnalyzedContent_Open.AutomationProperties.Name" xml:space="preserve"><value>显示分析</value></data>
   <data name="AnalyzedContent_Open.ToolTipService.ToolTip" xml:space="preserve"><value>显示此捕获中识别的文本、语音和描述</value></data>
   <data name="AnalyzedContent_Title.Text" xml:space="preserve"><value>分析内容</value></data>
-  <data name="AnalyzedContent_Close.AutomationProperties.Name" xml:space="preserve"><value>关闭分析内容</value></data>
+  <data name="AnalyzedContent_Close.AutomationProperties.Name" xml:space="preserve"><value>关闭分析</value></data>
   <data name="AnalyzedContent_NoContent.Text" xml:space="preserve"><value>此捕获没有可用的分析内容。</value></data>
   <data name="AnalyzedContent_CopyAll.Content" xml:space="preserve"><value>全部复制</value></data>
+  <data name="AnalyzedContent_SearchBox.PlaceholderText" xml:space="preserve"><value>在此捕获中查找</value></data>
+  <data name="AnalyzedContent_SearchBox.AutomationProperties.Name" xml:space="preserve"><value>在此捕获中查找</value></data>
   <data name="AnalyzedContent_NoContentMessage" xml:space="preserve"><value>此捕获没有可用的分析内容。</value></data>
+  <data name="AnalyzedContent_NoSearchResults" xml:space="preserve"><value>没有匹配的结果。</value></data>
   <data name="AnalyzedContent_Copied" xml:space="preserve"><value>已复制分析内容。</value></data>
   <data name="AnalyzedContent_CopyFailed" xml:space="preserve"><value>无法复制分析内容。</value></data>
   <data name="AnalyzedContent_Transcript" xml:space="preserve"><value>转录</value></data>
   <data name="AnalyzedContent_Text" xml:space="preserve"><value>文本</value></data>
   <data name="AnalyzedContent_ImageDescription" xml:space="preserve"><value>图像描述</value></data>
-  <data name="AnalyzedContent_ReanalyzeAll.Content" xml:space="preserve"><value>全部重新分析</value></data>
-  <data name="AnalyzedContent_ReanalyzeTab.Content" xml:space="preserve"><value>重新分析</value></data>
-  <data name="AnalyzedContent_ReanalyzeAllQueued" xml:space="preserve"><value>重新分析已加入队列。</value></data>
-  <data name="AnalyzedContent_ReanalyzeTabQueued" xml:space="preserve"><value>此分析已加入队列。</value></data>
-  <data name="AnalyzedContent_ReanalyzeFailed" xml:space="preserve"><value>无法将此捕获加入分析队列。</value></data>
   <data name="AnalyzedContent_OnScreenText" xml:space="preserve"><value>屏幕文本</value></data>
   <data name="AnalyzedContent_VisualDescriptions" xml:space="preserve"><value>视觉描述</value></data>
   <data name="AnalyzedContent_Properties" xml:space="preserve"><value>属性</value></data>
@@ -2002,4 +2000,261 @@ SOFTWARE.
   <data name="AnalyzedContent_NoText" xml:space="preserve"><value>未检测到文本。</value></data>
   <data name="AnalyzedContent_NoDescription" xml:space="preserve"><value>未生成描述。</value></data>
   <data name="AnalyzedContent_NoProperties" xml:space="preserve"><value>没有可用的媒体属性。</value></data>
+  <data name="Analysis_MatchPosition" xml:space="preserve">
+    <value>第 {0} 个匹配项，共 {1} 个</value>
+  </data>
+  <data name="Analysis_MatchCount" xml:space="preserve">
+    <value>匹配项：{0}</value>
+  </data>
+  <data name="Analysis_PassageCount" xml:space="preserve">
+    <value>段落：{0}</value>
+  </data>
+  <data name="Analysis_CopyMatches" xml:space="preserve">
+    <value>复制匹配项</value>
+  </data>
+  <data name="Analysis_CopyTranscript" xml:space="preserve">
+    <value>复制转录文本</value>
+  </data>
+  <data name="Analysis_CopyText" xml:space="preserve">
+    <value>复制文本</value>
+  </data>
+  <data name="Analysis_CopyDescription" xml:space="preserve">
+    <value>复制描述</value>
+  </data>
+  <data name="Analysis_CopyAll" xml:space="preserve">
+    <value>复制分析文本</value>
+  </data>
+  <data name="Analysis_LoadFailed" xml:space="preserve">
+    <value>无法加载分析。请重试。</value>
+  </data>
+  <data name="Analysis_Excluded" xml:space="preserve">
+    <value>此捕获已从 Memory 中移除。</value>
+  </data>
+  <data name="Analysis_NotEnrolled" xml:space="preserve">
+    <value>此捕获未包含在 Capture Memory 中。</value>
+  </data>
+  <data name="Analysis_SourceChanged" xml:space="preserve">
+    <value>此媒体与已分析的源文件不同。无法跳转到片段或区域。</value>
+  </data>
+  <data name="Analysis_Processing" xml:space="preserve">
+    <value>正在分析。现在即可搜索已有内容。</value>
+  </data>
+  <data name="Analysis_PartialFailure" xml:space="preserve">
+    <value>部分分析失败。仍可搜索已有内容。</value>
+  </data>
+  <data name="Analysis_PartlyAvailable" xml:space="preserve">
+    <value>此设备不支持部分分析功能。</value>
+  </data>
+  <data name="Analysis_Ready" xml:space="preserve">
+    <value>分析就绪 · 在此设备上生成</value>
+  </data>
+  <data name="Analysis_MatchAcrossPassages" xml:space="preserve">
+    <value>跨多个片段</value>
+  </data>
+  <data name="Analysis_MatchChanged" xml:space="preserve">
+    <value>分析在搜索后已更改。当前匹配项显示在下方。</value>
+  </data>
+  <data name="Analysis_EditedLocation" xml:space="preserve">
+    <value>当前编辑状态下无法跳转到区域</value>
+  </data>
+  <data name="Analysis_LocationUnavailable" xml:space="preserve">
+    <value>此媒体的位置信息不可用</value>
+  </data>
+  <data name="Analysis_OutsideTrim" xml:space="preserve">
+    <value>超出当前播放范围</value>
+  </data>
+  <data name="Analysis_Copied" xml:space="preserve">
+    <value>已复制</value>
+  </data>
+  <data name="Analysis_AllSources" xml:space="preserve">
+    <value>所有来源</value>
+  </data>
+  <data name="Analysis_Queued" xml:space="preserve">
+    <value>已加入分析队列。</value>
+  </data>
+  <data name="Analysis_Analyzing" xml:space="preserve">
+    <value>正在分析此捕获…</value>
+  </data>
+  <data name="Analysis_Waiting" xml:space="preserve">
+    <value>正在等待模型可用。</value>
+  </data>
+  <data name="Analysis_Unsupported" xml:space="preserve">
+    <value>此设备不支持此分析功能。</value>
+  </data>
+  <data name="Analysis_Failed" xml:space="preserve">
+    <value>此分析失败。可在 Capture Memory 设置中重新分析。</value>
+  </data>
+  <data name="Analysis_NotAnalyzed" xml:space="preserve">
+    <value>尚未分析此内容。</value>
+  </data>
+  <data name="Analysis_SimilarText" xml:space="preserve">
+    <value>相似文本</value>
+  </data>
+  <data name="Analysis_Source_ImageText" xml:space="preserve">
+    <value>图像中的文本</value>
+  </data>
+  <data name="Analysis_Source_ScreenText" xml:space="preserve">
+    <value>屏幕文本</value>
+  </data>
+  <data name="Analysis_Source_Transcript" xml:space="preserve">
+    <value>转录文本</value>
+  </data>
+  <data name="Analysis_Source_Description" xml:space="preserve">
+    <value>AI 描述</value>
+  </data>
+  <data name="Analysis_Source_Filename" xml:space="preserve">
+    <value>文件名</value>
+  </data>
+  <data name="CaptureMemory_ResultCount" xml:space="preserve">
+    <value>捕获内容：{0}</value>
+  </data>
+  <data name="CaptureMemory_ViewAllMatches" xml:space="preserve">
+    <value>查看全部 {0} 个匹配项</value>
+  </data>
+  <data name="CaptureMemory_Settings_Scope" xml:space="preserve">
+    <value>已纳入捕获内容：{0} · 已排除：{1}</value>
+  </data>
+  <data name="Analysis_Settings_Preparing" xml:space="preserve">
+    <value>正在准备模型</value>
+  </data>
+  <data name="Analysis_Settings_RunningCount" xml:space="preserve">
+    <value>正在分析 {0} 个</value>
+  </data>
+  <data name="Analysis_Settings_QueuedCount" xml:space="preserve">
+    <value>队列中有 {0} 个</value>
+  </data>
+  <data name="Analysis_Settings_WaitingCount" xml:space="preserve">
+    <value>{0} 个正在等待模型</value>
+  </data>
+  <data name="Analysis_Settings_RetryCount" xml:space="preserve">
+    <value>正在重试 {0} 个</value>
+  </data>
+  <data name="Analysis_Settings_FailedCount" xml:space="preserve">
+    <value>{0} 个失败</value>
+  </data>
+  <data name="Analysis_Settings_Idle" xml:space="preserve">
+    <value>没有待分析任务。</value>
+  </data>
+  <data name="Analysis_Settings_ActivityUnavailable" xml:space="preserve">
+    <value>分析进度不可用。将自动刷新。</value>
+  </data>
+  <data name="Analysis_Settings_ImageText" xml:space="preserve">
+    <value>图像中的文本</value>
+  </data>
+  <data name="Analysis_Settings_ImageDescription" xml:space="preserve">
+    <value>图像描述</value>
+  </data>
+  <data name="Analysis_Settings_AudioTranscript" xml:space="preserve">
+    <value>音频转录</value>
+  </data>
+  <data name="Analysis_Settings_VideoTranscript" xml:space="preserve">
+    <value>视频转录</value>
+  </data>
+  <data name="Analysis_Settings_ScreenText" xml:space="preserve">
+    <value>视频中的屏幕文本</value>
+  </data>
+  <data name="Analysis_Settings_VideoDescription" xml:space="preserve">
+    <value>视频描述</value>
+  </data>
+  <data name="Analysis_Settings_Ready" xml:space="preserve">
+    <value>就绪</value>
+  </data>
+  <data name="Analysis_Settings_ModelNeeded" xml:space="preserve">
+    <value>需要准备模型</value>
+  </data>
+  <data name="Analysis_Settings_Unsupported" xml:space="preserve">
+    <value>此设备不支持</value>
+  </data>
+  <data name="Analysis_Settings_Disabled" xml:space="preserve">
+    <value>已禁用</value>
+  </data>
+  <data name="Analysis_Settings_ModelFailed" xml:space="preserve">
+    <value>模型准备失败</value>
+  </data>
+  <data name="Analysis_Settings_ModelCancelled" xml:space="preserve">
+    <value>已取消模型准备</value>
+  </data>
+  <data name="Analysis_Settings_StatusUnavailable" xml:space="preserve">
+    <value>状态不可用</value>
+  </data>
+  <data name="Analysis_Settings_ExistingQueued" xml:space="preserve">
+    <value>符合条件的现有捕获已加入队列。分析完成后将显示结果。</value>
+  </data>
+  <data name="Analysis_Title.Text" xml:space="preserve">
+    <value>分析</value>
+  </data>
+  <data name="Analysis_ClearSearch.AutomationProperties.Name" xml:space="preserve">
+    <value>清除分析搜索</value>
+  </data>
+  <data name="Analysis_Matches.Content" xml:space="preserve">
+    <value>匹配项</value>
+  </data>
+  <data name="Analysis_AllContent.Content" xml:space="preserve">
+    <value>所有内容</value>
+  </data>
+  <data name="Analysis_Source.AutomationProperties.Name" xml:space="preserve">
+    <value>分析来源</value>
+  </data>
+  <data name="Analysis_PreviousMatch.AutomationProperties.Name" xml:space="preserve">
+    <value>上一个匹配项</value>
+  </data>
+  <data name="Analysis_NextMatch.AutomationProperties.Name" xml:space="preserve">
+    <value>下一个匹配项</value>
+  </data>
+  <data name="Analysis_Playing.Text" xml:space="preserve">
+    <value>播放中</value>
+  </data>
+  <data name="Analysis_FollowPlayback.Content" xml:space="preserve">
+    <value>跟随播放</value>
+  </data>
+  <data name="Analysis_FileDetails.Header" xml:space="preserve">
+    <value>文件详情</value>
+  </data>
+  <data name="Analysis_BackToResults.Label" xml:space="preserve">
+    <value>返回结果</value>
+  </data>
+  <data name="CaptureMemory_ResultLimit.Text" xml:space="preserve">
+    <value>显示前 50 个捕获。请细化搜索以缩小结果范围。</value>
+  </data>
+  <data name="CaptureMemory_ResultMore.AutomationProperties.Name" xml:space="preserve">
+    <value>更多捕获操作</value>
+  </data>
+  <data name="CaptureMemory_ResultOpenMenu.Text" xml:space="preserve">
+    <value>打开捕获</value>
+  </data>
+  <data name="CaptureMemory_ResultRemoveMenu.Text" xml:space="preserve">
+    <value>从 Memory 中移除</value>
+  </data>
+  <data name="CaptureMemory_ResultDeleteMenu.Text" xml:space="preserve">
+    <value>删除捕获</value>
+  </data>
+  <data name="Analysis_Settings_ExistingDescription.Text" xml:space="preserve">
+    <value>包含库中符合条件的捕获。已移除和已排除的捕获仍将被排除。</value>
+  </data>
+  <data name="Analysis_Settings_IncludeExisting.Content" xml:space="preserve">
+    <value>包含现有捕获</value>
+  </data>
+  <data name="Analysis_Settings_ProgressTitle.Text" xml:space="preserve">
+    <value>分析进度</value>
+  </data>
+  <data name="Analysis_Settings_CancelOperation.Content" xml:space="preserve">
+    <value>取消当前操作</value>
+  </data>
+  <data name="Analysis_Settings_Refresh.Content" xml:space="preserve">
+    <value>刷新状态</value>
+  </data>
+  <data name="Analysis_Settings_Availability.Header" xml:space="preserve">
+    <value>此设备可用功能</value>
+  </data>
+  <data name="Analysis_Settings_AvailabilityDescription.Text" xml:space="preserve">
+    <value>可用性取决于设备和已安装的模型。模型准备完成并不表示捕获分析已完成。</value>
+  </data>
+  <data name="Analysis_Settings_Troubleshooting.Header" xml:space="preserve">
+    <value>故障排除</value>
+  </data>
+  <data name="Analysis_Settings_DataControls.Header" xml:space="preserve">
+    <value>数据控制</value>
+  </data>
+  <data name="Analysis_Home_Progress.Text" xml:space="preserve"><value>正在分析。随着捕获分析完成，将显示更多匹配项。</value></data>
+  <data name="Analysis_Pane.AutomationProperties.Name" xml:space="preserve"><value>分析</value></data>
 </root>

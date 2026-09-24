@@ -1652,32 +1652,33 @@ public sealed partial class ImageCanvas : UserControlBase
             return false;
         }
 
-        int bestIndex = -1;
-        float bestOverlap = 0;
+        int firstIndex = -1;
+        int lastIndex = -1;
         for (int index = 0; index < _textExtractionLayout.ReadingOrder.Count; index++)
         {
             RectangleF candidate = _textExtractionLayout.ReadingOrder[index].Bounds;
             RectangleF intersection = RectangleF.Intersect(candidate, bounds);
             float overlap = intersection.Width * intersection.Height;
-            if (overlap > bestOverlap)
+            if (overlap > 0)
             {
-                bestOverlap = overlap;
-                bestIndex = index;
+                if (firstIndex < 0) { firstIndex = index; }
+                lastIndex = index;
             }
         }
 
-        if (bestIndex < 0)
-        {
-            PointF center = new(bounds.Left + bounds.Width / 2, bounds.Top + bounds.Height / 2);
-            bestIndex = _textExtractionLayout.HitTest(center, allowNearest: true) ?? -1;
-        }
-
-        if (bestIndex < 0)
+        if (firstIndex < 0)
         {
             return false;
         }
 
-        SetExtractedTextSelection(_textExtractionLayout.Select(bestIndex, bestIndex));
+        SetExtractedTextSelection(_textExtractionLayout.Select(firstIndex, lastIndex));
+        CanvasContainer.StartBringIntoView(new BringIntoViewOptions
+        {
+            TargetRect = new global::Windows.Foundation.Rect(bounds.X, bounds.Y, bounds.Width, bounds.Height),
+            HorizontalAlignmentRatio = 0.5,
+            VerticalAlignmentRatio = 0.5,
+            AnimationDesired = false,
+        });
         return true;
     }
 

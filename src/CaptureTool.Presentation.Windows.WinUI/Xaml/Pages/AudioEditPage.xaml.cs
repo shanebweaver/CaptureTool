@@ -18,6 +18,9 @@ namespace CaptureTool.Presentation.Windows.WinUI.Xaml.Pages;
 
 public sealed partial class AudioEditPage : AudioEditPageBase
 {
+    private void AnalyzedContentSplitView_SizeChanged(object sender, SizeChangedEventArgs args) =>
+        Utils.AnalysisPaneLayout.Update(sender, args);
+
     private const double WaveformBarDefaultSpacing = 4;
     private const double WaveformBarMinWidth = 2;
     private const double WaveformBarMinSpacing = 1;
@@ -231,6 +234,7 @@ public sealed partial class AudioEditPage : AudioEditPageBase
 
             if (_pendingAnalyzedContentSeek is { } analyzedContentSeek)
             {
+                sender.Pause();
                 sender.PlaybackSession.Position = analyzedContentSeek;
                 _pendingAnalyzedContentSeek = null;
                 shouldScrollToResumePosition = true;
@@ -279,6 +283,7 @@ public sealed partial class AudioEditPage : AudioEditPageBase
         {
             if (_mediaPlayer?.PlaybackSession.NaturalDuration > TimeSpan.Zero)
             {
+                _mediaPlayer.Pause();
                 _mediaPlayer.PlaybackSession.Position = position;
                 UpdateWaveformPlayhead(position, scrollIntoView: true);
             }

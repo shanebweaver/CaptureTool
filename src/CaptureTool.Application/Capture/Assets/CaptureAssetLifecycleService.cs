@@ -49,6 +49,37 @@ internal sealed class CaptureAssetLifecycleService : ICaptureAssetLifecycleServi
         return result.Asset.Id;
     }
 
+    public CaptureId? TryRegisterOpened(string sourcePath, CaptureFileType mediaType)
+    {
+        try
+        {
+            CaptureAsset? existing = _captureAssetCatalog.FindByPath(sourcePath);
+            if (existing is { LifecycleState: CaptureAssetLifecycleState.Active })
+            {
+                return existing.MediaType == mediaType ? existing.Id : null;
+            }
+
+            CaptureAsset asset = CaptureAsset.Create(
+                mediaType,
+                sourcePath,
+                CaptureSourceOwnership.LegacyExternal,
+                GetUtcNow());
+            CaptureAssetCatalogWriteResult result = _captureAssetCatalog.TryAdd(asset);
+            if (!result.Succeeded || result.Asset is null)
+            {
+                return null;
+            }
+
+            TrySignal();
+            return result.Asset.Id;
+        }
+        catch (Exception ex)
+        {
+            _logService.LogException(ex, "Failed to persist opened media identity.");
+            return null;
+        }
+    }
+
     public void TrySetPreferredOpenPath(
         CaptureId? captureId,
         string retainedSourcePath,

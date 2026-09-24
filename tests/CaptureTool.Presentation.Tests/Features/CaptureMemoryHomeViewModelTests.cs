@@ -21,6 +21,7 @@ using CaptureTool.Domain;
 using CaptureTool.Domain.Analysis;
 using CaptureTool.Presentation.Factories;
 using CaptureTool.Presentation.Features.Home;
+using CaptureTool.Presentation.Features.CaptureMemory;
 using CaptureTool.Presentation.Features.RecentCaptures;
 using Moq;
 
@@ -124,9 +125,9 @@ public sealed class CaptureMemoryHomeViewModelTests
         await staleSearch;
 
         Assert.HasCount(3, viewModel.Results);
-        Assert.AreEqual("Text match", viewModel.Results[0].ExplanationLabel);
-        Assert.AreEqual("Visual match", viewModel.Results[1].ExplanationLabel);
-        Assert.AreEqual("Filename match", viewModel.Results[2].ExplanationLabel);
+        Assert.AreEqual("Text in image", viewModel.Results[0].ExplanationLabel);
+        Assert.AreEqual("AI description", viewModel.Results[1].ExplanationLabel);
+        Assert.AreEqual("Filename", viewModel.Results[2].ExplanationLabel);
         Assert.IsTrue(viewModel.Results[1].IsSourceMissing);
         Assert.IsTrue(viewModel.HasSourceMissingResults);
         Assert.IsFalse(viewModel.Results.Any(result => result.CaptureId == staleId));
@@ -357,7 +358,7 @@ public sealed class CaptureMemoryHomeViewModelTests
         Assert.IsFalse(result.CanLoadThumbnail);
         Assert.AreEqual("1:12", result.TimecodeLabel);
         Assert.IsTrue(result.HasTimecode);
-        Assert.AreEqual("Transcript match", result.ExplanationLabel);
+        Assert.AreEqual("Transcript", result.ExplanationLabel);
         StringAssert.Contains(result.AutomationName, "1:12");
     }
 
@@ -393,7 +394,7 @@ public sealed class CaptureMemoryHomeViewModelTests
         Assert.IsTrue(result.IsVideo);
         Assert.IsTrue(result.CanLoadThumbnail);
         Assert.AreEqual("0:03", result.TimecodeLabel);
-        Assert.AreEqual("Text match", result.ExplanationLabel);
+        Assert.AreEqual("On-screen text", result.ExplanationLabel);
         Assert.IsFalse(result.HasOcrBounds);
     }
 
@@ -429,8 +430,48 @@ public sealed class CaptureMemoryHomeViewModelTests
         Assert.IsTrue(result.IsVideo);
         Assert.IsTrue(result.CanLoadThumbnail);
         Assert.AreEqual("0:30", result.TimecodeLabel);
-        Assert.AreEqual("Visual match", result.ExplanationLabel);
+        Assert.AreEqual("AI description", result.ExplanationLabel);
         Assert.AreEqual(CaptureMemoryMatchKind.VideoDescription, result.MatchKind);
+    }
+
+    [TestMethod]
+    public async Task EvidenceClick_PassesQueryAndExactPassage_AndRestoresSessionAfterNavigation()
+    {
+        var id = CaptureId.New();
+        var first = new CaptureMemoryMatchEvidence(CaptureMemoryMatchKind.SpeechTranscript, "budget first", timecode: TimeSpan.Zero, evidenceId: "speech:0");
+        var second = new CaptureMemoryMatchEvidence(CaptureMemoryMatchKind.SpeechTranscript, "budget second", timecode: TimeSpan.FromSeconds(12), evidenceId: "speech:1");
+        var search = new Mock<ICaptureMemorySearchService>();
+        search.Setup(s => s.SearchAsync(It.IsAny<CaptureMemorySearchRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync([new CaptureMemorySearchResult(id, CaptureMediaKind.Audio, DateTimeOffset.UtcNow, 1, 1,
+                first, matches: [first, second], documentRevision: 3)]);
+        var open = new Mock<IOpenCaptureMemoryResultUseCase>();
+        OpenCaptureMemoryResultRequest? opened = null;
+        open.Setup(s => s.ExecuteAsync(It.IsAny<OpenCaptureMemoryResultRequest>(), It.IsAny<CancellationToken>()))
+            .Callback<OpenCaptureMemoryResultRequest, CancellationToken>((request, _) => opened = request)
+            .ReturnsAsync(UseCaseResponse<OpenCaptureMemoryResultResponse>.Success(new(OpenCaptureMemoryResultStatus.Opened)));
+        var session = new CaptureMemorySearchSession();
+        using (var vm = new CaptureMemoryHomeViewModel(new EnabledCaptureMemoryFeatureAvailability(), search.Object,
+            CreateAvailableResolver(), open.Object, new TestCaptureMemoryWorkflow(), searchSession: session))
+        {
+            await vm.LoadAsync(CancellationToken.None);
+            vm.SearchQuery = "budget";
+            await vm.SearchCompletion;
+            session.VerticalOffset = 450;
+            await vm.Results.Single().EvidencePreviews[1].OpenCommand.ExecuteAsync(null);
+            Assert.AreSame(second, opened?.Evidence);
+            Assert.AreEqual("budget", opened?.SearchContext?.Query);
+            Assert.AreEqual(3, opened?.SearchContext?.DocumentRevision);
+        }
+        using var returned = new CaptureMemoryHomeViewModel(new EnabledCaptureMemoryFeatureAvailability(), search.Object,
+            CreateAvailableResolver(), open.Object, new TestCaptureMemoryWorkflow(), searchSession: session);
+        await returned.LoadAsync(CancellationToken.None);
+        await returned.SearchCompletion;
+        Assert.AreEqual("budget", returned.SearchQuery);
+        Assert.AreEqual(id, returned.SelectedResult?.CaptureId);
+        Assert.AreEqual(450, session.VerticalOffset);
+        returned.ClearSearchCommand.Execute(null);
+        Assert.IsNull(session.SelectedCaptureId);
+        Assert.AreEqual(0, session.VerticalOffset);
     }
 
     private static CaptureMemoryHomeViewModel CreateViewModel(

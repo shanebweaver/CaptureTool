@@ -1,4 +1,6 @@
 using CaptureTool.Application.Abstractions.Edit.Image.Rendering;
+using CaptureTool.Application.Abstractions.Edit.Metadata;
+using CaptureTool.Application.Abstractions.Edit.Image.OpenImageEditPage;
 using CaptureTool.Application.Abstractions.Analysis.Memory;
 using CaptureTool.Application.Abstractions.Analysis.Intake;
 using CaptureTool.Application.Abstractions.Analysis.Activity;
@@ -40,18 +42,21 @@ internal static class UiTestServiceCollectionExtensions
 
         if (options.IsCaptureMemoryEnabled)
         {
-            var captureMemory = new UiTestCaptureMemoryService(options);
-            services.AddSingleton<ICaptureMemoryFeatureAvailability>(captureMemory);
-            services.AddSingleton<ICaptureAnalysisPolicyService>(captureMemory);
-            services.AddSingleton<ICaptureAnalysisPolicyCommandService>(captureMemory);
-            services.AddSingleton<ICaptureAnalysisBackfillService>(captureMemory);
-            services.AddSingleton<ICaptureAnalysisActivityQueryService>(captureMemory);
-            services.AddSingleton<IUserInitiatedAnalysisCapabilityPreparationService>(captureMemory);
-            services.AddSingleton<ICaptureMemorySearchService>(captureMemory);
-            services.AddSingleton<ICaptureMemoryResultResolver>(captureMemory);
-            services.AddSingleton<IOpenCaptureMemoryResultUseCase>(captureMemory);
-            services.AddSingleton<ICaptureAssetRemovalService>(captureMemory);
-            services.AddSingleton<ICaptureAnalysisMaintenanceService>(captureMemory);
+            services.AddSingleton(provider => new UiTestCaptureMemoryService(options,
+                () => provider.GetRequiredService<IOpenImageEditPageUseCase>()));
+            services.AddSingleton<ICaptureMemoryFeatureAvailability>(provider => provider.GetRequiredService<UiTestCaptureMemoryService>());
+            services.AddSingleton<ICaptureAnalysisPolicyService>(provider => provider.GetRequiredService<UiTestCaptureMemoryService>());
+            services.AddSingleton<ICaptureAnalysisPolicyCommandService>(provider => provider.GetRequiredService<UiTestCaptureMemoryService>());
+            services.AddSingleton<ICaptureAnalysisBackfillService>(provider => provider.GetRequiredService<UiTestCaptureMemoryService>());
+            services.AddSingleton<ICaptureAnalysisActivityQueryService>(provider => provider.GetRequiredService<UiTestCaptureMemoryService>());
+            services.AddSingleton<IUserInitiatedAnalysisCapabilityPreparationService>(provider => provider.GetRequiredService<UiTestCaptureMemoryService>());
+            services.AddSingleton<ICaptureMemorySearchService>(provider => provider.GetRequiredService<UiTestCaptureMemoryService>());
+            services.AddSingleton<ICaptureMemoryResultResolver>(provider => provider.GetRequiredService<UiTestCaptureMemoryService>());
+            services.AddSingleton<IOpenCaptureMemoryResultUseCase>(provider => provider.GetRequiredService<UiTestCaptureMemoryService>());
+            services.AddSingleton<ICaptureAssetRemovalService>(provider => provider.GetRequiredService<UiTestCaptureMemoryService>());
+            services.AddSingleton<ICaptureMetadataViewService>(provider => provider.GetRequiredService<UiTestCaptureMemoryService>());
+            services.AddSingleton<IAnalysisCapabilityPreparationQueryService>(provider => provider.GetRequiredService<UiTestCaptureMemoryService>());
+            services.AddSingleton<ICaptureAnalysisMaintenanceService>(provider => provider.GetRequiredService<UiTestCaptureMemoryService>());
         }
 
         return services;

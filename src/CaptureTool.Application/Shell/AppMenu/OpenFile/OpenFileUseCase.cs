@@ -9,6 +9,7 @@ using CaptureTool.Application.Abstractions.Shell.AppMenu.OpenFile;
 using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Application.Abstractions.UseCases;
 using CaptureTool.Application.UseCases;
+using CaptureTool.Application.Capture.Assets;
 using CaptureTool.Domain.Capture;
 using CaptureTool.Domain.FileSystem;
 
@@ -24,6 +25,7 @@ internal sealed class OpenFileUseCase : IOpenFileUseCase
     private readonly IScratchArtifactStore _scratchArtifactStore;
     private readonly IFileSystem _fileSystem;
     private readonly IRecentCaptureCatalog _recentCaptureCatalog;
+    private readonly ICaptureAssetLifecycleService? _captureAssetLifecycleService;
 
     public OpenFileUseCase(
         IFilePickerService filePickerService,
@@ -31,7 +33,8 @@ internal sealed class OpenFileUseCase : IOpenFileUseCase
         IScratchArtifactStore scratchArtifactStore,
         IFileSystem fileSystem,
         IRecentCaptureCatalog recentCaptureCatalog,
-        IUseCaseExecutor useCaseExecutor)
+        IUseCaseExecutor useCaseExecutor,
+        ICaptureAssetLifecycleService? captureAssetLifecycleService = null)
     {
         _useCaseExecutor = useCaseExecutor;
         _filePickerService = filePickerService;
@@ -39,6 +42,7 @@ internal sealed class OpenFileUseCase : IOpenFileUseCase
         _scratchArtifactStore = scratchArtifactStore;
         _fileSystem = fileSystem;
         _recentCaptureCatalog = recentCaptureCatalog;
+        _captureAssetLifecycleService = captureAssetLifecycleService;
     }
 
     public Task<UseCaseResponse<OpenFileResponse>> ExecuteAsync(OpenFileRequest request, CancellationToken cancellationToken = default)
@@ -105,6 +109,9 @@ internal sealed class OpenFileUseCase : IOpenFileUseCase
                         if (navigated)
                         {
                             _recentCaptureCatalog.RecordOpened(file.FilePath, fileType);
+                            _captureAssetLifecycleService?.TryRegisterOpened(
+                                file.FilePath,
+                                fileType);
                         }
 
                         return navigated;

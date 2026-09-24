@@ -4,6 +4,9 @@ namespace CaptureTool.Presentation.Windows.WinUI.Utils;
 
 internal static partial class VisibilityUtility
 {
+    public static Visibility StringToVisibility(string? value) =>
+        string.IsNullOrWhiteSpace(value) ? Visibility.Collapsed : Visibility.Visible;
+
     public static Visibility BoolToVisibility(bool? value)
     {
         return value == true ? Visibility.Visible : Visibility.Collapsed;
