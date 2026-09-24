@@ -27,6 +27,10 @@ public interface ICaptureAnalysisStore : ICaptureMetadataReader
     /// <summary>False means the token was superseded. IO/protection/schema errors are not successful commits.</summary>
     Task<bool> TryWriteAsync(AnalysisWriteToken token, AnalysisResult result, CancellationToken cancellationToken = default);
 
-    /// <summary>Invalidates previous tokens before cleanup. Incomplete cleanup remains retryable at initialization.</summary>
+    /// <summary>
+    /// Explicit deletion, including recovery from missing, corrupt, or unsupported control metadata.
+    /// Publishes a protected generation to invalidate previous tokens before cleanup; publication failure leaves existing data intact.
+    /// Incomplete cleanup remains retryable at initialization. Never call as automatic recovery from a read/initialization failure.
+    /// </summary>
     Task<AnalysisCleanupResult> ClearAsync(CancellationToken cancellationToken = default);
 }

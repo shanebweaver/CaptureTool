@@ -127,8 +127,8 @@ internal sealed class LocalCaptureAnalysisStore : ICaptureAnalysisStore, IDispos
         await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
-            // Validate existing control before changing it, including unknown versions.
-            _ = await ReadControlAsync(true, cancellationToken).ConfigureAwait(false);
+            // Explicit deletion must also recover unreadable or missing control. Ordinary access still fails closed.
+            // Publish a protected generation before touching existing analysis files, even during recovery.
             var next = new AnalysisControlDocument(1, Guid.NewGuid());
             await _documents.WriteAsync(_controlPath, next, AnalysisJsonContext.Default.AnalysisControlDocument, cancellationToken).ConfigureAwait(false);
             // After publication, deletion is committed even if cleanup is interrupted. Do not roll back the generation.

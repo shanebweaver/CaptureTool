@@ -46,11 +46,15 @@ outside this deletion boundary.
 
 Protection, publication, corrupt-document, and unsupported-schema failures never
 become successful empty writes. An interrupted first control write can recover
-its recognized unpublished temporary file; missing control alongside an existing
-record directory fails closed. Atomic writes protect against process interruption,
-not loss of the underlying disk. Stores assume the app's existing single process.
+its recognized unpublished temporary file; ordinary access to missing control
+alongside an existing record directory fails closed. Explicit user-requested clear
+can replace missing, corrupt, or unsupported control without reading it, but must
+publish a fresh protected generation before deleting any old analysis files. It
+must never be used as automatic error recovery. Atomic writes protect against
+process interruption, not loss of the underlying disk. Stores assume the app's
+existing single process.
 
-## Verification
+## Initial foundation verification
 
 The repository's managed regression script passed **848 tests**, with zero failures
 or skips: Application 332; Capture Windows 21; Edit Windows 50; Infrastructure 159;
@@ -78,6 +82,43 @@ fix was recompiled and verified by the complete regression/coverage run. Coverag
 for the repository's configured modules is **93.24%**, above the **90%** gate. The
 new Analysis domain is included in that gate (96.43% line coverage). The generated
 report is in the ignored `artifacts/capture-analysis-foundation` directory.
+
+## Review follow-up
+
+Deletion recovery is fixed without adding another store or reset framework.
+Normal initialization, reads, and writes still reject invalid control and preserve
+the files. Explicit clear uses the existing publication gate and generation cleanup;
+failed protection, publication, or cancellation before commit preserves the previous
+files, while interrupted cleanup remains retryable. Capture files and the catalog
+remain outside the deletion boundary. Slice 3 now explicitly keeps deletion available
+for unreadable data and pending cleanup.
+
+The three missing/corrupt/unsupported-control recovery cases reproduced the original
+failure before the fix. Afterward, the affected graph rebuilt in Release and all
+**512 tests passed**, with zero failures or skips: Application **332**,
+Infrastructure **169**, Windows Infrastructure **11**. Ten added cases bring
+foundation coverage to **43 test cases**, including ordinary-access rejection,
+recovery across restart, stale-token rejection, failed recovery publication,
+cleanup interruption, and capture/catalog preservation.
+
+Commands run for this follow-up:
+
+```powershell
+dotnet test tests/CaptureTool.Infrastructure.Tests/CaptureTool.Infrastructure.Tests.csproj --configuration Release -p:Platform=x64 --nologo
+dotnet test tests/CaptureTool.Application.Tests/CaptureTool.Application.Tests.csproj --configuration Release -p:Platform=x64 --nologo
+dotnet test tests/CaptureTool.Infrastructure.Windows.Tests/CaptureTool.Infrastructure.Windows.Tests.csproj --configuration Release -p:Platform=x64 --nologo
+```
+
+The slice 2 PRD now specifies stable request/run identity, idempotent admission,
+atomic result/step completion, retained-result provenance, restart behavior, and
+generation checks for queued work. Cancellation and deletion cannot become fresh
+requests during recovery. These are implementation requirements for slice 2; its
+worker and persistence extensions have not started.
+
+Second review: no remaining foundation blockers. The deletion change preserves
+the existing synchronization and cleanup boundary, and the slice 2 contract covers
+the crash windows without a separate checkpoint service. Ready to begin slice 2
+after this handoff.
 
 ## Slice boundary
 

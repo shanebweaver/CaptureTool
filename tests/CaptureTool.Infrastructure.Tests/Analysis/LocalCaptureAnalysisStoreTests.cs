@@ -109,13 +109,16 @@ public sealed class LocalCaptureAnalysisStoreTests
     }
 
     [TestMethod]
-    public async Task ClearFencesLateWritesEvenWhenCleanupFailsAndRestartRetriesCleanup()
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task ClearFencesLateWritesEvenWhenCleanupFailsAndRestartRetriesCleanup(bool corruptControl)
     {
         using var environment = new AnalysisTestEnvironment();
         using LocalCaptureAnalysisStore store = environment.CreateStore();
         CaptureId id = CaptureId.New();
         AnalysisWriteToken token = await store.BeginRunAsync(id, AnalysisMediaKind.Image, AnalysisTestEnvironment.Revision(), "v1", Cancellation);
         await store.TryWriteAsync(token, AnalysisTestEnvironment.Description(), Cancellation);
+        if (corruptControl) await DamageControl(environment, "corrupt");
         environment.Files.FailCleanup = true;
         AnalysisCleanupResult cleared = await store.ClearAsync(Cancellation);
         Assert.IsFalse(cleared.Completed);
@@ -226,20 +229,110 @@ public sealed class LocalCaptureAnalysisStoreTests
     }
 
     [TestMethod]
-    public async Task TamperedOrMissingControlCannotSilentlyCreateFreshStorage()
+    [DataRow("missing")]
+    [DataRow("corrupt")]
+    [DataRow("unsupported")]
+    public async Task InvalidControlCannotSilentlyCreateFreshStorage(string damage)
     {
         using var environment = new AnalysisTestEnvironment();
         using LocalCaptureAnalysisStore store = environment.CreateStore();
-        await store.BeginRunAsync(CaptureId.New(), AnalysisMediaKind.Image, AnalysisTestEnvironment.Revision(), "v1", Cancellation);
-        byte[] bytes = await File.ReadAllBytesAsync(environment.ControlPath, Cancellation);
-        bytes[^1] ^= 1;
-        await File.WriteAllBytesAsync(environment.ControlPath, bytes, Cancellation);
-        await Assert.ThrowsAsync<CryptographicException>(() => store.InitializeAsync(Cancellation));
-        CollectionAssert.AreEqual(bytes, await File.ReadAllBytesAsync(environment.ControlPath, Cancellation));
-        File.Delete(environment.ControlPath);
-        await Assert.ThrowsExactlyAsync<InvalidDataException>(() => store.InitializeAsync(Cancellation));
-        await Assert.ThrowsExactlyAsync<InvalidDataException>(() => store.ClearAsync(Cancellation));
-        Assert.IsFalse(File.Exists(environment.ControlPath));
+        CaptureId id = CaptureId.New();
+        AnalysisWriteToken token = await store.BeginRunAsync(id, AnalysisMediaKind.Image, AnalysisTestEnvironment.Revision(), "v1", Cancellation);
+        await store.TryWriteAsync(token, AnalysisTestEnvironment.Description(), Cancellation);
+        await DamageControl(environment, damage);
+        byte[]? control = File.Exists(environment.ControlPath) ? await File.ReadAllBytesAsync(environment.ControlPath, Cancellation) : null;
+        string path = environment.MetadataPaths.Single();
+        byte[] metadata = await File.ReadAllBytesAsync(path, Cancellation);
+
+        Func<Task>[] operations = [
+            () => store.InitializeAsync(Cancellation),
+            () => store.GetAsync(id, cancellationToken: Cancellation),
+            () => store.ReadAllAsync(Cancellation),
+            () => store.BeginRunAsync(id, AnalysisMediaKind.Image, AnalysisTestEnvironment.Revision(), "v1", Cancellation),
+            () => store.TryWriteAsync(token, AnalysisTestEnvironment.Description(), Cancellation),
+        ];
+        foreach (Func<Task> operation in operations)
+        {
+            if (damage == "corrupt") await Assert.ThrowsAsync<CryptographicException>(operation);
+            else await Assert.ThrowsExactlyAsync<InvalidDataException>(operation);
+        }
+
+        if (control == null) Assert.IsFalse(File.Exists(environment.ControlPath));
+        else CollectionAssert.AreEqual(control, await File.ReadAllBytesAsync(environment.ControlPath, Cancellation));
+        CollectionAssert.AreEqual(metadata, await File.ReadAllBytesAsync(path, Cancellation));
+    }
+
+    [TestMethod]
+    [DataRow("missing")]
+    [DataRow("corrupt")]
+    [DataRow("unsupported")]
+    public async Task ExplicitClearRecoversInvalidControlAndFencesOldWritesAcrossRestart(string damage)
+    {
+        using var environment = new AnalysisTestEnvironment();
+        using LocalCaptureAnalysisStore store = environment.CreateStore();
+        CaptureId id = CaptureId.New();
+        AnalysisWriteToken old = await store.BeginRunAsync(id, AnalysisMediaKind.Image, AnalysisTestEnvironment.Revision(), "v1", Cancellation);
+        await store.TryWriteAsync(old, AnalysisTestEnvironment.Description(), Cancellation);
+        await DamageControl(environment, damage);
+
+        Assert.IsTrue((await store.ClearAsync(Cancellation)).Completed);
+        Assert.IsEmpty(environment.MetadataPaths);
+        Assert.IsEmpty(await store.ReadAllAsync(Cancellation));
+        Assert.IsFalse(await store.TryWriteAsync(old, AnalysisTestEnvironment.Description("late"), Cancellation));
+
+        using LocalCaptureAnalysisStore reopened = environment.CreateStore();
+        Assert.IsTrue((await reopened.InitializeAsync(Cancellation)).Completed);
+        Assert.IsNull(await reopened.GetAsync(id, cancellationToken: Cancellation));
+        AnalysisWriteToken fresh = await reopened.BeginRunAsync(id, AnalysisMediaKind.Image, AnalysisTestEnvironment.Revision(), "v1", Cancellation);
+        Assert.AreNotEqual(old.Generation, fresh.Generation);
+        Assert.IsTrue(await reopened.TryWriteAsync(fresh, AnalysisTestEnvironment.Description("new"), Cancellation));
+        Assert.IsFalse(await reopened.TryWriteAsync(old, AnalysisTestEnvironment.Description("late after restart"), Cancellation));
+        Assert.AreEqual("new", DescriptionText((await reopened.GetAsync(id, cancellationToken: Cancellation))!));
+    }
+
+    [TestMethod]
+    [DataRow("protection")]
+    [DataRow("publication")]
+    [DataRow("cancellation")]
+    public async Task FailedRecoveryPublicationPreservesUnreadableStorageForRetry(string failure)
+    {
+        using var environment = new AnalysisTestEnvironment();
+        using LocalCaptureAnalysisStore store = environment.CreateStore();
+        CaptureId id = CaptureId.New();
+        AnalysisWriteToken old = await store.BeginRunAsync(id, AnalysisMediaKind.Image, AnalysisTestEnvironment.Revision(), "v1", Cancellation);
+        await store.TryWriteAsync(old, AnalysisTestEnvironment.Description(), Cancellation);
+        await DamageControl(environment, "corrupt");
+        byte[] control = await File.ReadAllBytesAsync(environment.ControlPath, Cancellation);
+        string path = environment.MetadataPaths.Single();
+        byte[] metadata = await File.ReadAllBytesAsync(path, Cancellation);
+
+        using var cancelled = CancellationTokenSource.CreateLinkedTokenSource(Cancellation);
+        switch (failure)
+        {
+            case "protection":
+                environment.Protector.FailProtection = true;
+                await Assert.ThrowsExactlyAsync<CryptographicException>(() => store.ClearAsync(Cancellation));
+                break;
+            case "publication":
+                environment.Files.BeforeWrite = (_, _) => throw new IOException("Injected publication failure.");
+                await Assert.ThrowsExactlyAsync<IOException>(() => store.ClearAsync(Cancellation));
+                break;
+            case "cancellation":
+                environment.Files.BeforeWrite = (_, _) => { cancelled.Cancel(); return Task.CompletedTask; };
+                await Assert.ThrowsAsync<OperationCanceledException>(() => store.ClearAsync(cancelled.Token));
+                break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(failure));
+        }
+
+        CollectionAssert.AreEqual(control, await File.ReadAllBytesAsync(environment.ControlPath, Cancellation));
+        CollectionAssert.AreEqual(metadata, await File.ReadAllBytesAsync(path, Cancellation));
+        Assert.IsEmpty(Directory.GetFiles(environment.Root, "*.tmp", SearchOption.AllDirectories));
+        environment.Protector.FailProtection = false;
+        environment.Files.BeforeWrite = null;
+        Assert.IsTrue((await store.ClearAsync(Cancellation)).Completed);
+        Assert.IsEmpty(environment.MetadataPaths);
+        Assert.IsFalse(await store.TryWriteAsync(old, AnalysisTestEnvironment.Description("late"), Cancellation));
     }
 
     [TestMethod]
@@ -262,6 +355,26 @@ public sealed class LocalCaptureAnalysisStoreTests
         JsonNode node = JsonNode.Parse(environment.Protector.Unprotect(ciphertext))!;
         change(node);
         await File.WriteAllBytesAsync(path, environment.Protector.Protect(Encoding.UTF8.GetBytes(node.ToJsonString())), Cancellation);
+    }
+
+    private async Task DamageControl(AnalysisTestEnvironment environment, string damage)
+    {
+        switch (damage)
+        {
+            case "missing":
+                File.Delete(environment.ControlPath);
+                break;
+            case "corrupt":
+                byte[] bytes = await File.ReadAllBytesAsync(environment.ControlPath, Cancellation);
+                bytes[^1] ^= 1;
+                await File.WriteAllBytesAsync(environment.ControlPath, bytes, Cancellation);
+                break;
+            case "unsupported":
+                await MutateDocument(environment, environment.ControlPath, node => node["Version"] = 99);
+                break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(damage));
+        }
     }
 
     private static string DescriptionText(CaptureAnalysisRecord record) =>

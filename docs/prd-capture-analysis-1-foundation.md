@@ -1,6 +1,6 @@
 # PRD: Capture Analysis — Slice 1, Foundation
 
-Status: Implemented on `codex/capture-analysis-foundation`, awaiting review.
+Status: Implemented and reviewed on `codex/capture-analysis-foundation`; ready for slice 2.
 Feature branch: `codex/capture-analysis-core`.
 See the [implementation and verification notes](capture-analysis-foundation-review.md).
 
@@ -63,8 +63,13 @@ checkpoint, or search frameworks.
    tokens are rejected, old generations are unreadable, and interrupted cleanup
    is retried on initialization. Cleanup failure remains visible and retryable.
    Do not delete capture files or the capture catalog.
-9. Corrupt, unsupported, missing-control-with-existing-data, and protection-failure
-   cases fail closed. Do not silently reset storage or overwrite unknown schemas.
+9. Ordinary reads, initialization, and analysis writes fail closed for corrupt,
+   unsupported, missing-control-with-existing-data, and protection-failure cases.
+   Never silently reset storage or overwrite unknown schemas. Explicit user-requested
+   deletion is the exception: publish a fresh protected generation without requiring
+   the old control to be readable, then clean up analysis generations using the same
+   bounded deletion path. Failed publication leaves existing files intact; incomplete
+   cleanup remains visible and retryable. Never invoke deletion as automatic recovery.
 10. Keep source-generated serialization compatible with trimming/Native AOT.
     Services may be registered now but must not start analysis or alter capture/UI
     behavior. Capture finalization, content hashing, consent, scheduling, and
@@ -92,6 +97,10 @@ captures are enrolled explicitly in slice 3; do not crawl arbitrary folders.
 - Clear races cannot resurrect metadata. Restart completes interrupted cleanup;
   a delayed cleanup cannot erase a newer generation.
 - Corrupt/unknown records remain intact and do not silently become empty data.
+- Explicit deletion recovers missing, corrupt, and unsupported control metadata;
+  old tokens remain invalid after restart. Failed protection/publication or cancellation
+  before publication preserves existing files. Interrupted cleanup is retried without
+  touching capture media or the catalog.
 - Use real Windows protection for an integration round-trip/tamper check, alongside
   deterministic failure injection for storage tests.
 - Run affected application, infrastructure, and Windows infrastructure tests and

@@ -74,7 +74,9 @@ public sealed class LocalCaptureAssetCatalogTests
     }
 
     [TestMethod]
-    public async Task ClearingAnalysisPreservesCaptureCatalogAndMedia()
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task ClearingAnalysisPreservesCaptureCatalogAndMedia(bool missingControl)
     {
         using var environment = new AnalysisTestEnvironment();
         using LocalCaptureAssetCatalog catalog = environment.CreateCatalog();
@@ -85,6 +87,7 @@ public sealed class LocalCaptureAssetCatalogTests
         await catalog.RegisterAsync(asset, Cancellation);
         AnalysisWriteToken token = await metadata.BeginRunAsync(asset.Id, AnalysisMediaKind.Image, AnalysisTestEnvironment.Revision(), "v1", Cancellation);
         await metadata.TryWriteAsync(token, AnalysisTestEnvironment.Description(), Cancellation);
+        if (missingControl) File.Delete(environment.ControlPath);
         await metadata.ClearAsync(Cancellation);
         using LocalCaptureAssetCatalog reopened = environment.CreateCatalog();
         Assert.AreEqual(asset, await reopened.GetAsync(asset.Id, Cancellation));

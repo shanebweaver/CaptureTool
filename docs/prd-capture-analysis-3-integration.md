@@ -41,6 +41,10 @@ practical and persist successful transitions before showing success. Storage
 failure leaves the UI truthful and retryable. Serialize conflicting commands;
 disable/revoke/delete must be able to stop existing work promptly.
 
+Deletion remains available when analysis files exist but cannot be read, or cleanup
+is pending. Do not require successful metadata deserialization to enable or execute
+explicit deletion. A read/initialization failure alone never authorizes a reset.
+
 ## Progress UX
 
 Use the prototype's snackbar styling and existing AI loading indicator. Show one
