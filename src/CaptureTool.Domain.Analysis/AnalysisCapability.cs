@@ -15,6 +15,7 @@ public sealed record AnalysisCapability
         SchemaVersion = schemaVersion;
     }
 
+    public static AnalysisCapability FileDetails { get; } = new("file-details", 1);
     public static AnalysisCapability TextRecognition { get; } = new("text-recognition", 1);
     public static AnalysisCapability QrCodeDetection { get; } = new("qr-code-detection", 1);
     public static AnalysisCapability Description { get; } = new("description", 1);

@@ -10,7 +10,8 @@ internal sealed record AnalysisDocument(int Version, Guid CaptureId, int MediaKi
 internal sealed record ResultDocument(string Capability, int SchemaVersion, ProducerDocument Producer,
     DateTimeOffset GeneratedAt, string PlanVersion, TextDocument[]? Text, DescriptionDocument[]? Descriptions,
     TranscriptDocument? Transcript, Guid? ProducingRunId = null,
-    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] QrCodeDocument[]? QrCodes = null);
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] QrCodeDocument[]? QrCodes = null,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] FileDetailsDocument? FileDetails = null);
 
 internal sealed record RunDocument(Guid Id, Guid AuthorizationId, long QueueOrder, string PlanVersion,
     string SourcePath, string? Language, string? SourceSha256, int Status, CapabilityDocument[] Steps,
@@ -27,3 +28,11 @@ internal sealed record QrCodeDocument(string Value, BoundsDocument Bounds, long?
 internal sealed record DescriptionDocument(string Text, long? TimestampTicks);
 internal sealed record TranscriptDocument(string? Language, SegmentDocument[] Segments);
 internal sealed record SegmentDocument(string Text, long StartTicks, long EndTicks);
+
+internal sealed record FileDetailsDocument(int MediaKind, string FileName, long SizeBytes, string? ContentType,
+    DateTimeOffset FileCreatedAt, DateTimeOffset FileModifiedAt, DateTimeOffset? CapturedAt, long? DurationTicks,
+    ImageFileDocument? Image, VideoFileDocument? Video, AudioFileDocument? Audio);
+internal sealed record DimensionsDocument(uint Width, uint Height);
+internal sealed record ImageFileDocument(DimensionsDocument Dimensions, double? DpiX, double? DpiY);
+internal sealed record VideoFileDocument(DimensionsDocument Dimensions, double? FrameRate, uint? Bitrate, string? Codec);
+internal sealed record AudioFileDocument(uint? Channels, uint? SampleRate, uint? Bitrate, string? Codec);

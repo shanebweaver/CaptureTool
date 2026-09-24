@@ -510,7 +510,7 @@ public sealed class CaptureMemoryIntegrationTests
             Authorization = new(new LocalCaptureMemoryPolicyStore(environment, environment.Protector, environment.Files));
             var configuration = new CaptureAnalysisConfiguration([new(AnalysisMediaKind.Image, "test-v1",
                 [new(AnalysisCapability.Description, ["test"], TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(5))])]);
-            Worker = new(Store, Authorization, new LocalAnalysisSource(), configuration, [Analyzer]);
+            Worker = new(Store, Authorization, new LocalAnalysisSource(), configuration, [Analyzer], Catalog);
             Memory = new(Authorization, Catalog, Store, Worker, Prompts, Recents, new LocalFileSystem());
         }
         public CaptureAsset Asset()

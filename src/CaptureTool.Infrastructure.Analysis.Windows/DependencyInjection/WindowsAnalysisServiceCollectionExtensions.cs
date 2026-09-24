@@ -12,6 +12,7 @@ public static class WindowsAnalysisServiceCollectionExtensions
     {
         services.AddSingleton<WindowsAnalysisMedia>();
         services.AddSingleton<FoundryRuntime>();
+        services.AddSingleton<IMediaAnalyzer, FileDetailsAnalyzer>();
         services.AddSingleton<IMediaAnalyzer>(provider => new QrCodeAnalyzer("zxing-image-qr", AnalysisMediaKind.Image,
             provider.GetRequiredService<WindowsAnalysisMedia>()));
         services.AddSingleton<IMediaAnalyzer>(provider => new QrCodeAnalyzer("zxing-video-frame-qr", AnalysisMediaKind.Video,

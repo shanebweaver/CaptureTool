@@ -14,6 +14,9 @@ internal sealed class UiTestMediaAnalyzer(MediaAnalyzerDescriptor descriptor) : 
         Task.FromResult(AnalyzerAvailability.Ready);
     public async Task<AnalyzerOutcome> AnalyzeAsync(AnalysisInput input, IProgress<AnalysisProgress>? progress, CancellationToken ct)
     {
+        if (descriptor.Capability == AnalysisCapability.FileDetails)
+            return AnalyzerOutcome.Success(new FileDetailsMetadata(input.MediaKind, "fixture.png", 123, "image/png",
+                DateTimeOffset.UtcNow, DateTimeOffset.UtcNow, input.CapturedAt), new(descriptor.Id, "ui-test", "fixture", "1"));
         await Task.Delay(TimeSpan.FromSeconds(3), ct);
         if (descriptor.Capability == AnalysisCapability.QrCodeDetection)
             return AnalyzerOutcome.Success(new QrCodeMetadata([]), new(descriptor.Id, "ui-test", "fixture", "1"));

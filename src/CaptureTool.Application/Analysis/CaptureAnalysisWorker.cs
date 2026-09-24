@@ -1,4 +1,5 @@
 using CaptureTool.Application.Abstractions.Analysis;
+using CaptureTool.Application.Abstractions.Capture.Assets;
 using CaptureTool.Domain;
 using CaptureTool.Domain.Analysis;
 
@@ -9,6 +10,7 @@ public sealed class CaptureAnalysisWorker : ICaptureAnalysisWorker, IDisposable
     private readonly IAnalysisExecutionStore _store;
     private readonly IAnalysisAuthorization _authorization;
     private readonly IAnalysisSource _source;
+    private readonly ICaptureAssetCatalog _catalog;
     private readonly CaptureAnalysisConfiguration _configuration;
     private readonly IReadOnlyDictionary<string, IMediaAnalyzer> _analyzers;
     private readonly SemaphoreSlim _signal = new(0, 1);
@@ -24,11 +26,12 @@ public sealed class CaptureAnalysisWorker : ICaptureAnalysisWorker, IDisposable
     private AnalysisActivitySnapshot _progress = new(AnalysisActivity.Idle);
 
     public CaptureAnalysisWorker(IAnalysisExecutionStore store, IAnalysisAuthorization authorization, IAnalysisSource source,
-        CaptureAnalysisConfiguration configuration, IEnumerable<IMediaAnalyzer> analyzers)
+        CaptureAnalysisConfiguration configuration, IEnumerable<IMediaAnalyzer> analyzers, ICaptureAssetCatalog catalog)
     {
         _store = store;
         _authorization = authorization;
         _source = source;
+        _catalog = catalog;
         _configuration = configuration;
         IMediaAnalyzer[] adapters = analyzers.ToArray();
         configuration.ValidateAnalyzers(adapters.Select(analyzer => analyzer.Descriptor));
@@ -198,12 +201,14 @@ public sealed class CaptureAnalysisWorker : ICaptureAnalysisWorker, IDisposable
             {
                 if (!Permits(grant, work) || !await _store.BindSourceAsync(work.Token, source.Revision, ct).ConfigureAwait(false)) return;
             }
+            DateTimeOffset? capturedAt = (await _catalog.GetAsync(work.Token.CaptureId, ct).ConfigureAwait(false))?.CapturedAt;
+            var input = new AnalysisInput(work.Token.CaptureId, work.MediaKind, source.Revision, source.Path, work.Language, capturedAt);
             for (int index = work.Run.CompletedSteps.Count; index < plan.Steps.Count; index++)
             {
                 ct.ThrowIfCancellationRequested();
                 AnalysisWorkItem? current = await _store.GetWorkAsync(work.Token.CaptureId, ct).ConfigureAwait(false);
                 if (current?.Token != work.Token || !current.Run.IsPending) return;
-                AnalyzerOutcome outcome = await ExecuteStepAsync(plan.Steps[index], work, source, remaining, index, plan.Steps.Count, ct).ConfigureAwait(false);
+                AnalyzerOutcome outcome = await ExecuteStepAsync(plan.Steps[index], work, input, remaining, index, plan.Steps.Count, ct).ConfigureAwait(false);
                 if (outcome.Kind is AnalyzerOutcomeKind.Cancelled or AnalyzerOutcomeKind.InvalidSource)
                 {
                     await _store.FinishAsync(work.Token, outcome.Kind == AnalyzerOutcomeKind.Cancelled
@@ -251,7 +256,7 @@ public sealed class CaptureAnalysisWorker : ICaptureAnalysisWorker, IDisposable
         }
     }
 
-    private async Task<AnalyzerOutcome> ExecuteStepAsync(AnalysisStep step, AnalysisWorkItem work, IAnalysisSourceLease source,
+    private async Task<AnalyzerOutcome> ExecuteStepAsync(AnalysisStep step, AnalysisWorkItem work, AnalysisInput input,
         int remaining, int index, int total, CancellationToken ct)
     {
         AnalyzerOutcome last = AnalyzerOutcome.Unsuccessful(AnalyzerOutcomeKind.Unsupported, "no-compatible-model");
@@ -279,8 +284,7 @@ public sealed class CaptureAnalysisWorker : ICaptureAnalysisWorker, IDisposable
                     break;
                 }
                 progress.Report(new(AnalysisProgressStage.Analyzing));
-                last = await InvokeAsync(token => analyzer.AnalyzeAsync(new(work.Token.CaptureId, work.MediaKind,
-                    source.Revision, source.Path, work.Language), progress, token), step.ExecutionTimeout, ct).ConfigureAwait(false);
+                last = await InvokeAsync(token => analyzer.AnalyzeAsync(input, progress, token), step.ExecutionTimeout, ct).ConfigureAwait(false);
                 if (last.Kind == AnalyzerOutcomeKind.Succeeded && (last.Payload!.Capability != step.Capability ||
                     !last.Payload.Supports(work.MediaKind) || last.Producer!.AnalyzerId != id))
                     last = AnalyzerOutcome.Unsuccessful(AnalyzerOutcomeKind.Failed, "invalid-model-output");

@@ -106,6 +106,7 @@ foreach (IMediaAnalyzer analyzer in analyzers)
                 modelId = outcome.Producer?.ModelId;
                 items = outcome.Payload switch
                 {
+                    FileDetailsMetadata => 1,
                     TextRecognitionMetadata text => text.Regions.Count,
                     QrCodeMetadata qr => qr.Codes.Count,
                     DescriptionMetadata description => description.Descriptions.Count,

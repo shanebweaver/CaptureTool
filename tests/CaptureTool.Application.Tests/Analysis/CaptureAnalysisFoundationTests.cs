@@ -43,17 +43,23 @@ public sealed class CaptureAnalysisFoundationTests
         CaptureAnalysisConfiguration configuration = CaptureAnalysisConfiguration.CreateDefault();
         Assert.HasCount(3, configuration.Plans);
         MediaAnalysisPlan video = configuration.Plans.Single(plan => plan.MediaKind == AnalysisMediaKind.Video);
-        CollectionAssert.AreEqual(new[] { AnalysisCapability.QrCodeDetection, AnalysisCapability.TextRecognition, AnalysisCapability.Transcription, AnalysisCapability.Description },
+        CollectionAssert.AreEqual(new[] { AnalysisCapability.FileDetails, AnalysisCapability.QrCodeDetection, AnalysisCapability.TextRecognition, AnalysisCapability.Transcription, AnalysisCapability.Description },
             video.Steps.Select(step => step.Capability).ToArray());
-        CollectionAssert.AreEqual(new[] { "zxing-video-frame-qr" }, video.Steps[0].Candidates.ToArray());
-        CollectionAssert.AreEqual(new[] { "windows-ai-video-frame-ocr", "windows-video-frame-ocr" }, video.Steps[1].Candidates.ToArray());
-        CollectionAssert.AreEqual(new[] { "windows-video-frame-description", "foundry-local-image-description" }, video.Steps[3].Candidates.ToArray());
+        CollectionAssert.AreEqual(new[] { "zxing-video-frame-qr" }, video.Steps[1].Candidates.ToArray());
+        CollectionAssert.AreEqual(new[] { "windows-ai-video-frame-ocr", "windows-video-frame-ocr" }, video.Steps[2].Candidates.ToArray());
+        CollectionAssert.AreEqual(new[] { "windows-video-frame-description", "foundry-local-image-description" }, video.Steps[4].Candidates.ToArray());
         MediaAnalysisPlan image = configuration.Plans.Single(plan => plan.MediaKind == AnalysisMediaKind.Image);
         CollectionAssert.AreEqual(new[] { "windows-image-description", "foundry-local-image-description" }, image.Steps.Single(step => step.Capability == AnalysisCapability.Description).Candidates.ToArray());
-        Assert.AreEqual(AnalysisCapability.QrCodeDetection, image.Steps[0].Capability);
-        Assert.AreEqual("zxing-image-qr", image.Steps[0].Candidates.Single());
-        Assert.AreEqual("image-v3", image.Version);
-        Assert.AreEqual("video-v3", video.Version);
+        Assert.AreEqual(AnalysisCapability.QrCodeDetection, image.Steps[1].Capability);
+        Assert.AreEqual("zxing-image-qr", image.Steps[1].Candidates.Single());
+        Assert.AreEqual("image-v4", image.Version);
+        Assert.AreEqual("video-v4", video.Version);
+        Assert.AreEqual("audio-v2", configuration.Plans.Single(plan => plan.MediaKind == AnalysisMediaKind.Audio).Version);
+        foreach (var plan in configuration.Plans)
+        {
+            Assert.AreEqual(AnalysisCapability.FileDetails, plan.Steps[0].Capability);
+            Assert.AreEqual("windows-file-details", plan.Steps[0].Candidates.Single());
+        }
     }
 
     [TestMethod]

@@ -11,6 +11,9 @@ decoding runs locally on the CPU, requires no model preparation/download, and
 does not depend on OCR or Windows AI availability. It uses the existing pipeline
 for consent, cancellation, source revisions, progress, and protected persistence.
 
+The subsequent [file-details scanner](file-details-metadata.md) advances the image
+and video plans to v4 and prepends local file properties before these QR steps.
+
 Each result retains the decoded value, normalized bounds, and a timestamp for a
 video-frame occurrence. The same value at different locations or times remains
 distinct. A completed scan with no codes is successful empty metadata. Values
