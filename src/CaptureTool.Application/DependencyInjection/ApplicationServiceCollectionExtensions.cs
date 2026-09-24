@@ -1,4 +1,5 @@
 using CaptureTool.Application.Abstractions.Ai;
+using CaptureTool.Application.Abstractions.Analysis;
 using CaptureTool.Application.Abstractions.Edit.External;
 using CaptureTool.Application.Abstractions.EditSessions;
 using CaptureTool.Application.Abstractions.Navigation;
@@ -12,6 +13,7 @@ using CaptureTool.Application.Navigation;
 using CaptureTool.Application.Storage;
 using CaptureTool.Application.UseCases;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace CaptureTool.Application.DependencyInjection;
 
@@ -45,6 +47,8 @@ public static class ApplicationServiceCollectionExtensions
         services.AddTransient<IUseCaseExecutor, UseCaseExecutor>();
         services.AddSingleton<IAiFeatureConsentService, AiFeatureConsentService>();
         services.AddSingleton(CaptureAnalysisConfiguration.CreateDefault());
+        services.TryAddSingleton<IAnalysisAuthorization, DeniedAnalysisAuthorization>();
+        services.AddSingleton<ICaptureAnalysisWorker, CaptureAnalysisWorker>();
         services.AddTransient<IOpenExternalEditorUseCase, OpenExternalEditorUseCase>();
         services.AddSingleton<IActiveEditSessionService, ActiveEditSessionService>();
         services.AddSingleton<IEditSessionGuard, EditSessionGuard>();

@@ -23,6 +23,7 @@ using CaptureTool.Application.Abstractions.Telemetry;
 using CaptureTool.Application.Abstractions.Time;
 using CaptureTool.Infrastructure.Cancellation;
 using CaptureTool.Infrastructure.Analysis.Persistence;
+using CaptureTool.Infrastructure.Analysis.Sources;
 using CaptureTool.Infrastructure.CaptureAssets;
 using CaptureTool.Infrastructure.Features;
 using CaptureTool.Infrastructure.Files;
@@ -64,6 +65,8 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddSingleton<LocalCaptureAnalysisStore>();
         services.AddSingleton<ICaptureAnalysisStore>(provider => provider.GetRequiredService<LocalCaptureAnalysisStore>());
         services.AddSingleton<ICaptureMetadataReader>(provider => provider.GetRequiredService<LocalCaptureAnalysisStore>());
+        services.AddSingleton<IAnalysisExecutionStore>(provider => provider.GetRequiredService<LocalCaptureAnalysisStore>());
+        services.AddSingleton<IAnalysisSource, LocalAnalysisSource>();
         services.AddSingleton<IBackgroundTaskRunner, BackgroundTaskRunner>();
         services.AddSingleton<ITelemetryConsentService, TelemetryConsentService>();
         services.AddSingleton<ITelemetryEventSink, NullTelemetryService>();

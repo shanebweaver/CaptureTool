@@ -1,4 +1,5 @@
 using CaptureTool.Application.DependencyInjection;
+using CaptureTool.Infrastructure.Analysis.Windows.DependencyInjection;
 using CaptureTool.FeatureManagement.DependencyInjection;
 using CaptureTool.Infrastructure.Capture.Windows.DependencyInjection;
 using CaptureTool.Infrastructure.DependencyInjection;
@@ -31,6 +32,7 @@ public partial class AppServiceProvider : IServiceProvider, IDisposable
         // Windows domains
         collection.AddWindowsCaptureDomains();
         collection.AddWindowsEditDomains();
+        collection.AddWindowsAnalysisProviders();
 
         // Application layer
         collection.AddApplicationServices();

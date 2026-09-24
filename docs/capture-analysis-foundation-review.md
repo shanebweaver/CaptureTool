@@ -4,6 +4,11 @@ Date: 2026-09-24. Scope: [slice 1](prd-capture-analysis-1-foundation.md).
 
 ## Branches
 
+Update: the reviewed foundation and follow-ups were fast-forwarded into
+`codex/capture-analysis-core` at `cfb371d4` before creating
+`codex/capture-analysis-execution` for slice 2. The following branch notes describe
+the original foundation handoff.
+
 - `codex/capture-analysis-core` starts at `main` commit `fd938e3a` and contains
   the four PRDs in commit `364c8097`.
 - `codex/capture-analysis-foundation` branches from that documentation commit and

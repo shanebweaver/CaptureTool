@@ -3,17 +3,6 @@ using CaptureTool.Domain.Analysis.Payloads;
 
 namespace CaptureTool.Application.Abstractions.Analysis;
 
-public enum AnalyzerOutcomeKind
-{
-    Succeeded,
-    Unsupported,
-    TemporarilyUnavailable,
-    Failed,
-    InvalidSource,
-    ContentRejected,
-    Cancelled,
-}
-
 /// <summary>Failure codes are bounded identifiers, never exception text or recognized content.</summary>
 public sealed class AnalyzerOutcome
 {

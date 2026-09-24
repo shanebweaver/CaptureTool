@@ -1,6 +1,7 @@
 # PRD: Capture Analysis — Slice 2, Ordered Execution
 
-Status: Planned. Depends on reviewed [slice 1](prd-capture-analysis-1-foundation.md).
+Status: Implemented for review. See [execution review notes](capture-analysis-execution-review.md).
+Depends on reviewed [slice 1](prd-capture-analysis-1-foundation.md).
 
 ## Purpose
 

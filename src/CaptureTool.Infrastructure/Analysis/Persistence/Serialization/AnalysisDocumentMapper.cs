@@ -12,7 +12,7 @@ internal static class AnalysisDocumentMapper
 
     public static CaptureAnalysisRecord ToRecord(AnalysisDocument document)
     {
-        if (document.Version != 1 || document.Results == null)
+        if (document.Version is not (1 or 2) || document.Results == null || document.SourceSha256 == null)
             throw new InvalidDataException("Unsupported or invalid analysis document.");
         try
         {
@@ -31,7 +31,7 @@ internal static class AnalysisDocumentMapper
         AnalyzerProvenance producer = result.Producer;
         var document = new ResultDocument(result.Payload.Capability.Name, result.Payload.Capability.SchemaVersion,
             new(producer.AnalyzerId, producer.ProviderId, producer.ModelId, producer.AdapterVersion, producer.ModelVersion),
-            result.GeneratedAt, result.PlanVersion, null, null, null);
+            result.GeneratedAt, result.PlanVersion, null, null, null, result.ProducingRunId);
         return result.Payload switch
         {
             TextRecognitionMetadata text => document with
@@ -70,7 +70,7 @@ internal static class AnalysisDocumentMapper
         };
         ProducerDocument producer = document.Producer;
         return new(payload, new(producer.AnalyzerId, producer.ProviderId, producer.ModelId,
-            producer.AdapterVersion, producer.ModelVersion), document.GeneratedAt, document.PlanVersion);
+            producer.AdapterVersion, producer.ModelVersion), document.GeneratedAt, document.PlanVersion, document.ProducingRunId);
     }
 
     private static RecognizedText ToText(TextDocument document)

@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0-windows10.0.26100.0</TargetFramework>
+    <RuntimeIdentifiers>win-x64;win-arm64</RuntimeIdentifiers>
+    <RuntimeIdentifier Condition="'$(Platform)' == 'x64'">win-x64</RuntimeIdentifier>
+    <RuntimeIdentifier Condition="'$(Platform)' == 'ARM64'">win-arm64</RuntimeIdentifier>
+    <Platforms>x64;ARM64</Platforms>
+    <WindowsPackageType>None</WindowsPackageType>
+    <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\CaptureTool.Infrastructure.Analysis.Windows\CaptureTool.Infrastructure.Analysis.Windows.csproj" />
+    <ProjectReference Include="..\..\src\CaptureTool.Application\CaptureTool.Application.csproj" />
+    <PackageReference Include="System.Drawing.Common" />
+  </ItemGroup>
+  <Import Project="..\..\src\CaptureTool.Infrastructure.Analysis.Windows\Foundry\NativeAotCompatibility.props" />
+</Project>

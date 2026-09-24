@@ -14,6 +14,10 @@
     <File Path="SECURITY.md" />
   </Folder>
   <Folder Name="/src/">
+    <Project Path="src/CaptureTool.Infrastructure.Analysis.Windows/CaptureTool.Infrastructure.Analysis.Windows.csproj">
+      <Platform Solution="*|ARM64" Project="ARM64" />
+      <Platform Solution="*|x64" Project="x64" />
+    </Project>
     <Project Path="src/CaptureTool.Application.Abstractions/CaptureTool.Application.Abstractions.csproj" />
     <Project Path="src/CaptureTool.Application/CaptureTool.Application.csproj" />
     <Project Path="src/CaptureTool.Domain.Capture/CaptureTool.Domain.Capture.csproj" />

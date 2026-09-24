@@ -12,7 +12,7 @@ namespace CaptureTool.Infrastructure.Analysis.Persistence;
 /// Single-process store. A short gate serializes publication and generation changes;
 /// model execution never holds it. Old generations cannot be read or written after clear.
 /// </summary>
-internal sealed class LocalCaptureAnalysisStore : ICaptureAnalysisStore, IDisposable
+internal sealed partial class LocalCaptureAnalysisStore : ICaptureAnalysisStore, IAnalysisExecutionStore, IDisposable
 {
     private readonly string _root;
     private readonly string _controlPath;
@@ -54,6 +54,8 @@ internal sealed class LocalCaptureAnalysisStore : ICaptureAnalysisStore, IDispos
         try
         {
             AnalysisControlDocument control = (await ReadControlAsync(true, cancellationToken).ConfigureAwait(false))!;
+            if ((await ReadDocumentAsync(control.Generation, captureId, cancellationToken).ConfigureAwait(false))?.Run != null)
+                throw new InvalidOperationException("Execution requests must be admitted through the execution store.");
             CaptureAnalysisRecord? previous = await ReadRecordAsync(control.Generation, captureId, cancellationToken).ConfigureAwait(false);
             if (previous != null)
             {
@@ -77,6 +79,7 @@ internal sealed class LocalCaptureAnalysisStore : ICaptureAnalysisStore, IDispos
         {
             AnalysisControlDocument? control = await ReadControlAsync(false, cancellationToken).ConfigureAwait(false);
             if (control == null || control.Generation != token.Generation) return false;
+            if ((await ReadDocumentAsync(control.Generation, token.CaptureId, cancellationToken).ConfigureAwait(false))?.Run != null) return false;
             CaptureAnalysisRecord? current = await ReadRecordAsync(control.Generation, token.CaptureId, cancellationToken).ConfigureAwait(false);
             if (current == null || current.RunId != token.RunId || current.SourceRevision != token.SourceRevision) return false;
             await WriteRecordAsync(control.Generation, current.WithResult(result), cancellationToken).ConfigureAwait(false);
@@ -122,14 +125,18 @@ internal sealed class LocalCaptureAnalysisStore : ICaptureAnalysisStore, IDispos
         finally { _gate.Release(); }
     }
 
-    public async Task<AnalysisCleanupResult> ClearAsync(CancellationToken cancellationToken = default)
+    public Task<AnalysisCleanupResult> ClearAsync(CancellationToken cancellationToken = default) =>
+        ClearAsync(long.MaxValue, cancellationToken); // Without a catalog watermark, automatic historical reconciliation must fail closed.
+
+    public async Task<AnalysisCleanupResult> ClearAsync(long reconciliationBoundary, CancellationToken cancellationToken = default)
     {
+        if (reconciliationBoundary < 0) throw new ArgumentOutOfRangeException(nameof(reconciliationBoundary));
         await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
             // Explicit deletion must also recover unreadable or missing control. Ordinary access still fails closed.
             // Publish a protected generation before touching existing analysis files, even during recovery.
-            var next = new AnalysisControlDocument(1, Guid.NewGuid());
+            var next = new AnalysisControlDocument(2, Guid.NewGuid(), ReconciliationBoundary: reconciliationBoundary);
             await _documents.WriteAsync(_controlPath, next, AnalysisJsonContext.Default.AnalysisControlDocument, cancellationToken).ConfigureAwait(false);
             // After publication, deletion is committed even if cleanup is interrupted. Do not roll back the generation.
             return CleanupOldGenerations(next.Generation);
@@ -153,19 +160,15 @@ internal sealed class LocalCaptureAnalysisStore : ICaptureAnalysisStore, IDispos
             await _documents.WriteAsync(_controlPath, control, AnalysisJsonContext.Default.AnalysisControlDocument, cancellationToken).ConfigureAwait(false);
         }
 
-        if (control.Version != 1 || control.Generation == Guid.Empty)
+        if (control.Version is not (1 or 2) || control.Generation == Guid.Empty || control.QueueOrder < 0 || control.ReconciliationBoundary < 0)
             throw new InvalidDataException("Unsupported or invalid analysis control.");
         return control;
     }
 
     private async Task<CaptureAnalysisRecord?> ReadRecordAsync(Guid generation, CaptureId id, CancellationToken cancellationToken)
     {
-        AnalysisDocument? document = await _documents.ReadAsync(RecordPath(generation, id),
-            AnalysisJsonContext.Default.AnalysisDocument, cancellationToken).ConfigureAwait(false);
-        if (document == null) return null;
-        CaptureAnalysisRecord record = AnalysisDocumentMapper.ToRecord(document);
-        if (record.CaptureId != id) throw new InvalidDataException("Metadata identity does not match its storage key.");
-        return record;
+        AnalysisDocument? document = await ReadDocumentAsync(generation, id, cancellationToken).ConfigureAwait(false);
+        return document?.SourceSha256 == null ? null : AnalysisDocumentMapper.ToRecord(document);
     }
 
     private Task WriteRecordAsync(Guid generation, CaptureAnalysisRecord record, CancellationToken cancellationToken) =>
