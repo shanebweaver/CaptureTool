@@ -1806,4 +1806,76 @@ SOFTWARE.
   <data name="CaptureOverlay_RecordingUnsupportedMessage" xml:space="preserve">
     <value>此设备不支持屏幕录制。</value>
   </data>
+  <data name="CaptureMemory_SettingsHeader.Text" xml:space="preserve">
+    <value>捕获记忆</value>
+  </data>
+  <data name="CaptureMemory_Scanning.Header" xml:space="preserve">
+    <value>分析新捕获内容</value>
+  </data>
+  <data name="CaptureMemory_Consent.Content" xml:space="preserve">
+    <value>允许捕获记忆分析</value>
+  </data>
+  <data name="CaptureMemory_SettingsDescription.Text" xml:space="preserve">
+    <value>使用设备端 AI 分析捕获内容，并安全保存信息以供捕获记忆使用。</value>
+  </data>
+  <data name="CaptureMemory_Scan.Content" xml:space="preserve">
+    <value>分析现有捕获内容</value>
+  </data>
+  <data name="CaptureMemory_Delete.Content" xml:space="preserve">
+    <value>删除分析信息</value>
+  </data>
+  <data name="CaptureMemory_Preparing" xml:space="preserve">
+    <value>正在准备设备端 AI…</value>
+  </data>
+  <data name="CaptureMemory_Analyzing" xml:space="preserve">
+    <value>正在分析捕获内容…</value>
+  </data>
+  <data name="CaptureMemory_ConsentTitle" xml:space="preserve">
+    <value>允许捕获记忆分析？</value>
+  </data>
+  <data name="CaptureMemory_ConsentContent" xml:space="preserve">
+    <value>设备端 AI 可以读取捕获内容中的文字、描述图像并转录音频。生成的信息将安全保存在此设备上。可能需要下载模型。媒体内容在此设备上处理。</value>
+  </data>
+  <data name="CaptureMemory_ConsentAccept" xml:space="preserve">
+    <value>允许</value>
+  </data>
+  <data name="CaptureMemory_ScanExistingTitle" xml:space="preserve">
+    <value>分析现有捕获内容？</value>
+  </data>
+  <data name="CaptureMemory_ScanExistingContent" xml:space="preserve">
+    <value>已启用新捕获内容的分析。是否也分析以前通过 CaptureTool 创建且仍可用的捕获内容？现有信息将保留，直到成功的新分析将其替换。</value>
+  </data>
+  <data name="CaptureMemory_ScanExistingAccept" xml:space="preserve">
+    <value>分析捕获内容</value>
+  </data>
+  <data name="CaptureMemory_DeleteMetadataTitle" xml:space="preserve">
+    <value>删除分析信息？</value>
+  </data>
+  <data name="CaptureMemory_DeleteMetadataContent" xml:space="preserve">
+    <value>是否删除已存储的分析信息并停止待处理的分析？捕获文件和分析偏好设置将保留。</value>
+  </data>
+  <data name="CaptureMemory_DeleteMetadataAccept" xml:space="preserve">
+    <value>删除信息</value>
+  </data>
+  <data name="CaptureMemory_Cancel" xml:space="preserve">
+    <value>取消</value>
+  </data>
+  <data name="CaptureMemory_Error_Policy" xml:space="preserve">
+    <value>无法加载或保存捕获记忆设置。分析已暂停，请重试。</value>
+  </data>
+  <data name="CaptureMemory_Error_Registration" xml:space="preserve">
+    <value>捕获已创建，但无法保存其捕获记忆登记信息。请重试分析现有捕获内容。</value>
+  </data>
+  <data name="CaptureMemory_Error_Provider" xml:space="preserve">
+    <value>某个 AI 模型尚未停止。队列中的捕获内容将在模型退出或重新启动 CaptureTool 后继续处理。</value>
+  </data>
+  <data name="CaptureMemory_Error_Cleanup" xml:space="preserve">
+    <value>部分分析信息无法删除。请再次尝试删除。</value>
+  </data>
+  <data name="CaptureMemory_Error_Analysis" xml:space="preserve">
+    <value>无法完成捕获分析。您可以在设置中重试。</value>
+  </data>
+  <data name="CaptureMemory_Error_Storage" xml:space="preserve">
+    <value>捕获记忆存储不可用。请重试操作，或在设置中删除其分析信息。</value>
+  </data>
 </root>

@@ -13,7 +13,7 @@ using ZXing.Common;
 namespace CaptureTool.UiTests;
 
 [TestClass]
-public sealed class ImageEditTextExtractionUiTests
+public sealed partial class ImageEditTextExtractionUiTests
 {
     private static readonly TimeSpan AppLaunchTimeout = TimeSpan.FromSeconds(30);
     private static readonly TimeSpan InteractionTimeout = TimeSpan.FromSeconds(15);

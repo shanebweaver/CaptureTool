@@ -1,4 +1,6 @@
 using CaptureTool.Application.Abstractions.Ai;
+using CaptureTool.Application.Abstractions.Analysis;
+using CaptureTool.Presentation.Windows.WinUI.Analysis;
 using CaptureTool.Application.Abstractions.Capture;
 using CaptureTool.Application.Abstractions.Capture.Audio;
 using CaptureTool.Application.Abstractions.Edit.Image.SuperResolution;
@@ -32,6 +34,8 @@ public static class WindowsPresentationServiceCollectionExtensions
         services.AddSingleton<ImageSuperResolutionPreparationConsentService>();
         services.AddSingleton<IImageSuperResolutionPreparationConsentService>(sp => sp.GetRequiredService<ImageSuperResolutionPreparationConsentService>());
         services.AddSingleton<TelemetryConsentDialogService>();
+        services.AddSingleton<CaptureMemoryDialogService>();
+        services.AddSingleton<ICaptureMemoryPrompts>(sp => sp.GetRequiredService<CaptureMemoryDialogService>());
         return services;
     }
 }

@@ -1806,4 +1806,76 @@ SOFTWARE.
   <data name="CaptureOverlay_RecordingUnsupportedMessage" xml:space="preserve">
     <value>Запись с экрана не поддерживается на этом устройстве.</value>
   </data>
+  <data name="CaptureMemory_SettingsHeader.Text" xml:space="preserve">
+    <value>Память снимков</value>
+  </data>
+  <data name="CaptureMemory_Scanning.Header" xml:space="preserve">
+    <value>Анализировать новые записи</value>
+  </data>
+  <data name="CaptureMemory_Consent.Content" xml:space="preserve">
+    <value>Разрешить анализ для памяти снимков</value>
+  </data>
+  <data name="CaptureMemory_SettingsDescription.Text" xml:space="preserve">
+    <value>Анализируйте записи с помощью ИИ на устройстве и безопасно сохраняйте полученную информацию.</value>
+  </data>
+  <data name="CaptureMemory_Scan.Content" xml:space="preserve">
+    <value>Анализировать существующие записи</value>
+  </data>
+  <data name="CaptureMemory_Delete.Content" xml:space="preserve">
+    <value>Удалить данные анализа</value>
+  </data>
+  <data name="CaptureMemory_Preparing" xml:space="preserve">
+    <value>Подготовка ИИ на устройстве…</value>
+  </data>
+  <data name="CaptureMemory_Analyzing" xml:space="preserve">
+    <value>Анализ записей…</value>
+  </data>
+  <data name="CaptureMemory_ConsentTitle" xml:space="preserve">
+    <value>Разрешить анализ для памяти снимков?</value>
+  </data>
+  <data name="CaptureMemory_ConsentContent" xml:space="preserve">
+    <value>ИИ на устройстве может читать текст, описывать изображения и расшифровывать звук в ваших записях. Полученная информация безопасно хранится на этом устройстве. Может потребоваться загрузка моделей. Медиафайлы обрабатываются на этом устройстве.</value>
+  </data>
+  <data name="CaptureMemory_ConsentAccept" xml:space="preserve">
+    <value>Разрешить</value>
+  </data>
+  <data name="CaptureMemory_ScanExistingTitle" xml:space="preserve">
+    <value>Анализировать существующие записи?</value>
+  </data>
+  <data name="CaptureMemory_ScanExistingContent" xml:space="preserve">
+    <value>Анализ новых записей включён. Также проанализировать доступные записи, ранее созданные в CaptureTool? Существующая информация сохраняется до её замены результатами успешного анализа.</value>
+  </data>
+  <data name="CaptureMemory_ScanExistingAccept" xml:space="preserve">
+    <value>Анализировать записи</value>
+  </data>
+  <data name="CaptureMemory_DeleteMetadataTitle" xml:space="preserve">
+    <value>Удалить данные анализа?</value>
+  </data>
+  <data name="CaptureMemory_DeleteMetadataContent" xml:space="preserve">
+    <value>Удалить сохранённые данные анализа и остановить ожидающие задачи? Файлы записей и настройка анализа будут сохранены.</value>
+  </data>
+  <data name="CaptureMemory_DeleteMetadataAccept" xml:space="preserve">
+    <value>Удалить данные</value>
+  </data>
+  <data name="CaptureMemory_Cancel" xml:space="preserve">
+    <value>Отмена</value>
+  </data>
+  <data name="CaptureMemory_Error_Policy" xml:space="preserve">
+    <value>Не удалось загрузить или сохранить настройки памяти снимков. Анализ приостановлен. Повторите попытку.</value>
+  </data>
+  <data name="CaptureMemory_Error_Registration" xml:space="preserve">
+    <value>Запись создана, но не удалось зарегистрировать её в памяти снимков. Попробуйте снова проанализировать существующие записи.</value>
+  </data>
+  <data name="CaptureMemory_Error_Provider" xml:space="preserve">
+    <value>Модель ИИ ещё не остановилась. Обработка очереди продолжится после её завершения или перезапуска CaptureTool.</value>
+  </data>
+  <data name="CaptureMemory_Error_Cleanup" xml:space="preserve">
+    <value>Не удалось удалить часть данных анализа. Повторите удаление.</value>
+  </data>
+  <data name="CaptureMemory_Error_Analysis" xml:space="preserve">
+    <value>Не удалось завершить анализ записей. Повторите попытку в настройках.</value>
+  </data>
+  <data name="CaptureMemory_Error_Storage" xml:space="preserve">
+    <value>Хранилище памяти снимков недоступно. Повторите операцию или удалите данные анализа в настройках.</value>
+  </data>
 </root>

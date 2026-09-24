@@ -771,6 +771,29 @@
                         </Grid>
                     </StackPanel>
 
+                    <!-- Capture Memory -->
+                    <StackPanel Spacing="8" AutomationProperties.AutomationId="CaptureMemorySettings">
+                        <TextBlock x:Uid="CaptureMemory_SettingsHeader" Margin="0,4" />
+                        <Border Padding="16" Background="{ThemeResource CardBackgroundFillColorDefault}"
+                                BorderBrush="{ThemeResource CardStrokeColorDefault}" BorderThickness="1" CornerRadius="4">
+                            <StackPanel Spacing="12">
+                                <ToggleSwitch x:Name="CaptureMemoryScanning" x:Uid="CaptureMemory_Scanning"
+                                              AutomationProperties.AutomationId="CaptureMemoryScanning"
+                                              IsOn="{x:Bind CaptureMemory.ScanningEnabled, Mode=OneWay}"
+                                              Toggled="CaptureMemoryScanning_Toggled" />
+                                <CheckBox x:Uid="CaptureMemory_Consent" AutomationProperties.AutomationId="CaptureMemoryConsent"
+                                          IsChecked="{x:Bind CaptureMemory.ConsentGranted, Mode=OneWay}" Click="CaptureMemoryConsent_Click" />
+                                <TextBlock x:Uid="CaptureMemory_SettingsDescription" TextWrapping="Wrap" Opacity=".75" />
+                                <StackPanel Spacing="8" HorizontalAlignment="Left">
+                                    <Button x:Uid="CaptureMemory_Scan" AutomationProperties.AutomationId="CaptureMemoryScan"
+                                            Command="{x:Bind CaptureMemory.ScanCommand}" />
+                                    <Button x:Uid="CaptureMemory_Delete" AutomationProperties.AutomationId="CaptureMemoryDelete"
+                                            Command="{x:Bind CaptureMemory.DeleteCommand}" />
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+
                     <!--  AI consent section  -->
                     <StackPanel Spacing="4" Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.IsAiConsentSettingsVisible), Mode=OneWay}">
                         <TextBlock x:Uid="Settings_AiConsentHeaderLabel" Margin="0,4" />

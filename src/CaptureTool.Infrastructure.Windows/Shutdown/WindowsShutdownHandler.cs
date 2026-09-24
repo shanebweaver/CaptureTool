@@ -1,4 +1,5 @@
 using CaptureTool.Application.Abstractions.Cancellation;
+using CaptureTool.Application.Abstractions.Analysis;
 using CaptureTool.Application.Abstractions.Logging;
 using CaptureTool.Application.Abstractions.Shutdown;
 using CaptureTool.Application.Abstractions.Telemetry;
@@ -11,18 +12,20 @@ public sealed partial class WindowsShutdownHandler : IShutdownHandler
     private readonly ILogService _logService;
     private readonly IWindowsAppRestartService _restartService;
     private readonly ITelemetryService? _telemetryService;
+    private readonly ICaptureMemoryService? _captureMemory;
 
     public bool IsShuttingDown { get; private set; }
 
     public WindowsShutdownHandler(
         ILogService logService,
         ICancellationService cancellationService,
-        ITelemetryService? telemetryService = null)
+        ITelemetryService? telemetryService = null,
+        ICaptureMemoryService? captureMemory = null)
         : this(
             logService,
             cancellationService,
             new WindowsAppRestartService(),
-            telemetryService)
+            telemetryService, captureMemory)
     {
     }
 
@@ -30,12 +33,14 @@ public sealed partial class WindowsShutdownHandler : IShutdownHandler
         ILogService logService,
         ICancellationService cancellationService,
         IWindowsAppRestartService restartService,
-        ITelemetryService? telemetryService = null)
+        ITelemetryService? telemetryService = null,
+        ICaptureMemoryService? captureMemory = null)
     {
         _logService = logService;
         _cancellationService = cancellationService;
         _restartService = restartService;
         _telemetryService = telemetryService;
+        _captureMemory = captureMemory;
     }
 
     public bool TryRestart()
@@ -92,6 +97,7 @@ public sealed partial class WindowsShutdownHandler : IShutdownHandler
     private void Teardown()
     {
         IsShuttingDown = true;
+        _captureMemory?.StopAsync().GetAwaiter().GetResult();
         _cancellationService.CancelAll();
     }
 

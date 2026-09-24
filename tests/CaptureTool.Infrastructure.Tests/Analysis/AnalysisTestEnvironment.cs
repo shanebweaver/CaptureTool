@@ -80,7 +80,7 @@ internal sealed class AnalysisTestEnvironment : IDisposable, IStorageService
         {
             if (BeforeWrite != null) await BeforeWrite(path, cancellationToken);
             await _inner.WriteAtomicallyAsync(path, ciphertext, cancellationToken);
-            PublishedBytes.Add(ciphertext.ToArray());
+            lock (PublishedBytes) PublishedBytes.Add(ciphertext.ToArray());
         }
 
         public string[] GetFiles(string directory) => _inner.GetFiles(directory);

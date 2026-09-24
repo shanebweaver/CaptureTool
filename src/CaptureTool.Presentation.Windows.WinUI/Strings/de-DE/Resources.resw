@@ -1800,4 +1800,76 @@ SOFTWARE.
   <data name="CaptureOverlay_RecordingUnsupportedMessage" xml:space="preserve">
     <value>Die Bildschirmaufnahme wird auf diesem Gerät nicht unterstützt.</value>
   </data>
+  <data name="CaptureMemory_SettingsHeader.Text" xml:space="preserve">
+    <value>Aufnahmegedächtnis</value>
+  </data>
+  <data name="CaptureMemory_Scanning.Header" xml:space="preserve">
+    <value>Neue Aufnahmen analysieren</value>
+  </data>
+  <data name="CaptureMemory_Consent.Content" xml:space="preserve">
+    <value>Analyse für das Aufnahmegedächtnis erlauben</value>
+  </data>
+  <data name="CaptureMemory_SettingsDescription.Text" xml:space="preserve">
+    <value>Aufnahmen mit KI auf diesem Gerät analysieren und Informationen sicher für das Aufnahmegedächtnis speichern.</value>
+  </data>
+  <data name="CaptureMemory_Scan.Content" xml:space="preserve">
+    <value>Vorhandene Aufnahmen analysieren</value>
+  </data>
+  <data name="CaptureMemory_Delete.Content" xml:space="preserve">
+    <value>Analyseinformationen löschen</value>
+  </data>
+  <data name="CaptureMemory_Preparing" xml:space="preserve">
+    <value>Lokale KI wird vorbereitet…</value>
+  </data>
+  <data name="CaptureMemory_Analyzing" xml:space="preserve">
+    <value>Aufnahmen werden analysiert…</value>
+  </data>
+  <data name="CaptureMemory_ConsentTitle" xml:space="preserve">
+    <value>Analyse für das Aufnahmegedächtnis erlauben?</value>
+  </data>
+  <data name="CaptureMemory_ConsentContent" xml:space="preserve">
+    <value>KI auf diesem Gerät kann Text lesen, Bilder beschreiben und Audio in Ihren Aufnahmen transkribieren. Abgeleitete Informationen werden sicher auf diesem Gerät gespeichert. Modelle müssen möglicherweise heruntergeladen werden. Medien werden auf diesem Gerät verarbeitet.</value>
+  </data>
+  <data name="CaptureMemory_ConsentAccept" xml:space="preserve">
+    <value>Erlauben</value>
+  </data>
+  <data name="CaptureMemory_ScanExistingTitle" xml:space="preserve">
+    <value>Vorhandene Aufnahmen analysieren?</value>
+  </data>
+  <data name="CaptureMemory_ScanExistingContent" xml:space="preserve">
+    <value>Die Analyse neuer Aufnahmen ist aktiviert. Auch verfügbare, zuvor mit CaptureTool erstellte Aufnahmen analysieren? Vorhandene Informationen bleiben erhalten, bis eine erfolgreiche Analyse sie ersetzt.</value>
+  </data>
+  <data name="CaptureMemory_ScanExistingAccept" xml:space="preserve">
+    <value>Aufnahmen analysieren</value>
+  </data>
+  <data name="CaptureMemory_DeleteMetadataTitle" xml:space="preserve">
+    <value>Analyseinformationen löschen?</value>
+  </data>
+  <data name="CaptureMemory_DeleteMetadataContent" xml:space="preserve">
+    <value>Gespeicherte Analyseinformationen löschen und ausstehende Analysen stoppen? Aufnahmedateien und Ihre Analyseeinstellung bleiben erhalten.</value>
+  </data>
+  <data name="CaptureMemory_DeleteMetadataAccept" xml:space="preserve">
+    <value>Informationen löschen</value>
+  </data>
+  <data name="CaptureMemory_Cancel" xml:space="preserve">
+    <value>Abbrechen</value>
+  </data>
+  <data name="CaptureMemory_Error_Policy" xml:space="preserve">
+    <value>Die Einstellungen des Aufnahmegedächtnisses konnten nicht geladen oder gespeichert werden. Die Analyse ist pausiert. Versuchen Sie es erneut.</value>
+  </data>
+  <data name="CaptureMemory_Error_Registration" xml:space="preserve">
+    <value>Die Aufnahme wurde erstellt, konnte aber nicht für das Aufnahmegedächtnis registriert werden. Versuchen Sie erneut, vorhandene Aufnahmen zu analysieren.</value>
+  </data>
+  <data name="CaptureMemory_Error_Provider" xml:space="preserve">
+    <value>Ein KI-Modell wurde noch nicht beendet. Aufnahmen in der Warteschlange werden danach oder nach einem Neustart von CaptureTool fortgesetzt.</value>
+  </data>
+  <data name="CaptureMemory_Error_Cleanup" xml:space="preserve">
+    <value>Einige Analyseinformationen konnten nicht gelöscht werden. Versuchen Sie das Löschen erneut.</value>
+  </data>
+  <data name="CaptureMemory_Error_Analysis" xml:space="preserve">
+    <value>Die Aufnahmeanalyse konnte nicht abgeschlossen werden. Sie können sie in den Einstellungen erneut starten.</value>
+  </data>
+  <data name="CaptureMemory_Error_Storage" xml:space="preserve">
+    <value>Der Speicher des Aufnahmegedächtnisses ist nicht verfügbar. Wiederholen Sie den Vorgang oder löschen Sie die Analyseinformationen in den Einstellungen.</value>
+  </data>
 </root>

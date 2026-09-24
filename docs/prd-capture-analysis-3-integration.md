@@ -1,6 +1,7 @@
 # PRD: Capture Analysis — Slice 3, Capture and Settings Integration
 
-Status: Planned. Depends on reviewed [slice 2](prd-capture-analysis-2-execution.md).
+Status: Implemented for review. See [integration review notes](capture-analysis-integration-review.md).
+Depends on reviewed [slice 2](prd-capture-analysis-2-execution.md).
 The Native AOT warning guard is assigned to [slice 4](prd-capture-analysis-4-verification.md);
 the reviewed vendor exception does not block this slice.
 
@@ -129,8 +130,13 @@ store and restart the same singleton worker if needed, after its previous task h
 finished. Recheck policy and resume only still-valid requests. Do not create a second
 worker or bypass its retained guard against an invocation that has not stopped.
 There is no automatic reset or tight restart loop. A committed clear with incomplete
-physical cleanup remains visible/retryable; retry cleanup without rotating generation
-again or deleting new analysis. Preserve scanning preference and capture media.
+physical cleanup reports an error. Keep the Delete metadata label unchanged and
+disable the button while deletion is running; re-enable it after failure if data
+remains. Every confirmed Delete request deletes all metadata present at that time,
+including metadata created after an earlier deletion failed. The button never
+switches to an old-data-only cleanup action.
+Automatic cleanup recovery only removes old generations, preserving newer analysis.
+Preserve scanning preference and capture media.
 
 ## Progress UX
 

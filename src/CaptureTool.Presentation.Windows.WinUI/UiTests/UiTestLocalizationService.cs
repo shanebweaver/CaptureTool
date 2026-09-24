@@ -1,4 +1,6 @@
 using CaptureTool.Application.Abstractions.Localization;
+using CaptureTool.Presentation.Windows.WinUI.Utils;
+using Microsoft.Windows.ApplicationModel.Resources;
 
 namespace CaptureTool.Presentation.Windows.WinUI.UiTests;
 
@@ -6,6 +8,7 @@ internal sealed class UiTestLocalizationService : ILocalizationService
 {
     private readonly IAppLanguage _defaultLanguage = new UiTestAppLanguage("en-US");
     private bool _isInitialized;
+    private ResourceLoader? _resources;
 
     public IAppLanguage? LanguageOverride { get; private set; }
     public IAppLanguage? RequestedLanguage { get; private set; }
@@ -35,7 +38,8 @@ internal sealed class UiTestLocalizationService : ILocalizationService
 
     public string GetString(string resourceKey)
     {
-        return resourceKey;
+        return resourceKey.StartsWith("CaptureMemory_", StringComparison.Ordinal)
+            ? WinUIResourceLoader.GetString(ref _resources, resourceKey, resourceKey) : resourceKey;
     }
 
     public void OverrideLanguage(IAppLanguage? language)

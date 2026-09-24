@@ -67,6 +67,7 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddSingleton<ICaptureMetadataReader>(provider => provider.GetRequiredService<LocalCaptureAnalysisStore>());
         services.AddSingleton<IAnalysisExecutionStore>(provider => provider.GetRequiredService<LocalCaptureAnalysisStore>());
         services.AddSingleton<IAnalysisSource, LocalAnalysisSource>();
+        services.AddSingleton<ICaptureMemoryPolicyStore, LocalCaptureMemoryPolicyStore>();
         services.AddSingleton<IBackgroundTaskRunner, BackgroundTaskRunner>();
         services.AddSingleton<ITelemetryConsentService, TelemetryConsentService>();
         services.AddSingleton<ITelemetryEventSink, NullTelemetryService>();

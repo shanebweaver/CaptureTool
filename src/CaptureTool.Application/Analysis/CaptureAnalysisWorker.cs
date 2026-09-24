@@ -44,10 +44,15 @@ public sealed class CaptureAnalysisWorker : ICaptureAnalysisWorker, IDisposable
         try
         {
             using IAnalysisAuthorizationLease grant = await _authorization.AcquireAsync(cancellationToken).ConfigureAwait(false);
-            if (!grant.IsAllowed || grant.Revision == Guid.Empty || grant.Revoked.IsCancellationRequested) return false;
+            if (!grant.IsAllowed || grant.Revision == Guid.Empty || grant.Revoked.IsCancellationRequested ||
+                request.ExpectedAuthorizationId != grant.Revision) return false;
             MediaAnalysisPlan plan = _configuration.Plans.Single(plan => plan.MediaKind == request.MediaKind);
             bool accepted = await _store.AdmitAsync(request, grant.Revision, plan, cancellationToken).ConfigureAwait(false);
-            if (accepted) Signal();
+            if (accepted)
+            {
+                if (request.ExpectedRunId is { } prior) CancelActive(new(request.CaptureId, request.Generation, prior));
+                Signal();
+            }
             return accepted;
         }
         finally { _commands.Release(); }

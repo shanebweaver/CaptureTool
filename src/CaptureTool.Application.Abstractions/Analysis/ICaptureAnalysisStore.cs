@@ -19,6 +19,7 @@ public sealed record AnalysisCleanupResult(bool Completed, int RemainingGenerati
 /// <summary>Singleton persistence boundary. Tokens fence concurrent refreshes, source changes, and clear.</summary>
 public interface ICaptureAnalysisStore : ICaptureMetadataReader
 {
+    Task<AnalysisStorageStatus> GetStorageStatusAsync(CancellationToken cancellationToken = default);
     Task<AnalysisCleanupResult> InitializeAsync(CancellationToken cancellationToken = default);
 
     Task<AnalysisWriteToken> BeginRunAsync(CaptureId captureId, AnalysisMediaKind mediaKind,

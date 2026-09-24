@@ -2087,4 +2087,76 @@ SOFTWARE.
     <value>Opening audio...</value>
     <comment>Shown while the audio playback pipeline opens a source.</comment>
   </data>
+  <data name="CaptureMemory_SettingsHeader.Text" xml:space="preserve">
+    <value>Capture Memory</value>
+  </data>
+  <data name="CaptureMemory_Scanning.Header" xml:space="preserve">
+    <value>Analyze new captures</value>
+  </data>
+  <data name="CaptureMemory_Consent.Content" xml:space="preserve">
+    <value>Allow Capture Memory analysis</value>
+  </data>
+  <data name="CaptureMemory_SettingsDescription.Text" xml:space="preserve">
+    <value>Use on-device AI to analyze captures and securely save information for Capture Memory.</value>
+  </data>
+  <data name="CaptureMemory_Scan.Content" xml:space="preserve">
+    <value>Analyze existing captures</value>
+  </data>
+  <data name="CaptureMemory_Delete.Content" xml:space="preserve">
+    <value>Delete analysis information</value>
+  </data>
+  <data name="CaptureMemory_Preparing" xml:space="preserve">
+    <value>Preparing on-device AI…</value>
+  </data>
+  <data name="CaptureMemory_Analyzing" xml:space="preserve">
+    <value>Analyzing captures…</value>
+  </data>
+  <data name="CaptureMemory_ConsentTitle" xml:space="preserve">
+    <value>Allow Capture Memory analysis?</value>
+  </data>
+  <data name="CaptureMemory_ConsentContent" xml:space="preserve">
+    <value>On-device AI can read text, describe images, and transcribe audio in your captures. Derived information is stored securely on this device for Capture Memory. Models may need to be downloaded. Media is processed on this device.</value>
+  </data>
+  <data name="CaptureMemory_ConsentAccept" xml:space="preserve">
+    <value>Allow</value>
+  </data>
+  <data name="CaptureMemory_ScanExistingTitle" xml:space="preserve">
+    <value>Analyze existing captures?</value>
+  </data>
+  <data name="CaptureMemory_ScanExistingContent" xml:space="preserve">
+    <value>Scanning new captures is enabled. Also analyze available captures previously recorded by CaptureTool? Existing information is kept until successful analysis replaces it.</value>
+  </data>
+  <data name="CaptureMemory_ScanExistingAccept" xml:space="preserve">
+    <value>Analyze captures</value>
+  </data>
+  <data name="CaptureMemory_DeleteMetadataTitle" xml:space="preserve">
+    <value>Delete analysis information?</value>
+  </data>
+  <data name="CaptureMemory_DeleteMetadataContent" xml:space="preserve">
+    <value>Delete stored analysis information and stop pending scans? Capture files and your scanning preference will be kept.</value>
+  </data>
+  <data name="CaptureMemory_DeleteMetadataAccept" xml:space="preserve">
+    <value>Delete information</value>
+  </data>
+  <data name="CaptureMemory_Cancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="CaptureMemory_Error_Policy" xml:space="preserve">
+    <value>Capture Memory settings could not be loaded or saved. Analysis is paused. Try again.</value>
+  </data>
+  <data name="CaptureMemory_Error_Registration" xml:space="preserve">
+    <value>The capture was created, but its Capture Memory registration could not be saved. Try analyzing existing captures again.</value>
+  </data>
+  <data name="CaptureMemory_Error_Provider" xml:space="preserve">
+    <value>An AI model has not stopped. Queued captures will resume when it exits or after restarting CaptureTool.</value>
+  </data>
+  <data name="CaptureMemory_Error_Cleanup" xml:space="preserve">
+    <value>Some analysis information could not be deleted. Try deleting again.</value>
+  </data>
+  <data name="CaptureMemory_Error_Analysis" xml:space="preserve">
+    <value>Capture analysis could not finish. You can retry from Settings.</value>
+  </data>
+  <data name="CaptureMemory_Error_Storage" xml:space="preserve">
+    <value>Capture Memory storage is unavailable. Retry the operation, or delete its analysis information from Settings.</value>
+  </data>
 </root>

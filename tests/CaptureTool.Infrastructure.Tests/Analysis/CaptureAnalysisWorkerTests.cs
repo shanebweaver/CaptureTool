@@ -355,7 +355,8 @@ public sealed class CaptureAnalysisWorkerTests
         AnalysisRequest old = await fixture.EnqueueAsync(Ct);
         await fixture.Authorization.ChangeAsync(false, Ct);
         AnalysisAdmissionScope scope = await fixture.Store.GetAdmissionScopeAsync(Ct);
-        Assert.IsFalse(await fixture.Worker.EnqueueAsync(AnalysisExecutionStoreTests.Request(fixture.Environment, scope), Ct));
+        Assert.IsFalse(await fixture.Worker.EnqueueAsync(AnalysisExecutionStoreTests.Request(fixture.Environment, scope)
+            with { ExpectedAuthorizationId = old.ExpectedAuthorizationId }, Ct));
         await fixture.Authorization.ChangeAsync(true, Ct);
         AnalysisRequest fresh = await fixture.EnqueueAsync(Ct);
         await DrainAsync(fixture.Worker, Ct);
@@ -473,6 +474,23 @@ public sealed class CaptureAnalysisWorkerTests
         Assert.AreEqual(AnalysisRunStatus.InvalidSource, (await fixture.Store.GetWorkAsync(request.CaptureId, Ct))!.Run.Status);
     }
 
+    [TestMethod]
+    public async Task UnadmittedRequestsCannotInheritAuthorizationAfterDisableAndReenable()
+    {
+        using var fixture = new Fixture();
+        AnalysisRequest request = AnalysisExecutionStoreTests.Request(fixture.Environment, await fixture.Store.GetAdmissionScopeAsync(Ct));
+        using (var grant = await fixture.Authorization.AcquireAsync(Ct))
+            request = request with { ExpectedAuthorizationId = grant.Revision };
+        await fixture.Authorization.ChangeAsync(false, Ct);
+        await fixture.Authorization.ChangeAsync(true, Ct);
+        Assert.IsFalse(await fixture.Worker.EnqueueAsync(request, Ct));
+        Assert.IsFalse(await fixture.Worker.EnqueueAsync(request with { ExpectedAuthorizationId = null }, Ct));
+        Assert.IsNull(await fixture.Store.GetWorkAsync(request.CaptureId, Ct));
+        using (var grant = await fixture.Authorization.AcquireAsync(Ct))
+            request = request with { ExpectedAuthorizationId = grant.Revision };
+        Assert.IsTrue(await fixture.Worker.EnqueueAsync(request, Ct));
+    }
+
     private static async Task WaitForSnapshotAsync(CaptureAnalysisWorker worker, Func<AnalysisActivitySnapshot, bool> predicate, CancellationToken ct)
     {
         using var deadline = CancellationTokenSource.CreateLinkedTokenSource(ct);
@@ -525,6 +543,8 @@ public sealed class CaptureAnalysisWorkerTests
         {
             AnalysisRequest request = AnalysisExecutionStoreTests.Request(Environment, await Store.GetAdmissionScopeAsync(ct));
             request = request with { SourcePath = Path.Combine(Environment.Root, request.CaptureId + ".png"), Language = language };
+            using (IAnalysisAuthorizationLease grant = await Authorization.AcquireAsync(ct))
+                request = request with { ExpectedAuthorizationId = grant.Revision };
             Assert.IsTrue(await Worker.EnqueueAsync(request, ct));
             return request;
         }

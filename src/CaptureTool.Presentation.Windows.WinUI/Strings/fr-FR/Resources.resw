@@ -1806,4 +1806,76 @@ SOFTWARE.
   <data name="CaptureOverlay_RecordingUnsupportedMessage" xml:space="preserve">
     <value>L’enregistrement d’écran n’est pas pris en charge sur cet appareil.</value>
   </data>
+  <data name="CaptureMemory_SettingsHeader.Text" xml:space="preserve">
+    <value>Mémoire des captures</value>
+  </data>
+  <data name="CaptureMemory_Scanning.Header" xml:space="preserve">
+    <value>Analyser les nouvelles captures</value>
+  </data>
+  <data name="CaptureMemory_Consent.Content" xml:space="preserve">
+    <value>Autoriser l’analyse de Mémoire des captures</value>
+  </data>
+  <data name="CaptureMemory_SettingsDescription.Text" xml:space="preserve">
+    <value>Analysez les captures avec l’IA sur cet appareil et enregistrez leurs informations de manière sécurisée.</value>
+  </data>
+  <data name="CaptureMemory_Scan.Content" xml:space="preserve">
+    <value>Analyser les captures existantes</value>
+  </data>
+  <data name="CaptureMemory_Delete.Content" xml:space="preserve">
+    <value>Supprimer les informations d’analyse</value>
+  </data>
+  <data name="CaptureMemory_Preparing" xml:space="preserve">
+    <value>Préparation de l’IA sur l’appareil…</value>
+  </data>
+  <data name="CaptureMemory_Analyzing" xml:space="preserve">
+    <value>Analyse des captures…</value>
+  </data>
+  <data name="CaptureMemory_ConsentTitle" xml:space="preserve">
+    <value>Autoriser l’analyse de Mémoire des captures ?</value>
+  </data>
+  <data name="CaptureMemory_ConsentContent" xml:space="preserve">
+    <value>L’IA sur cet appareil peut lire du texte, décrire des images et transcrire l’audio de vos captures. Les informations obtenues sont conservées de manière sécurisée sur cet appareil. Le téléchargement de modèles peut être nécessaire. Les médias sont traités sur cet appareil.</value>
+  </data>
+  <data name="CaptureMemory_ConsentAccept" xml:space="preserve">
+    <value>Autoriser</value>
+  </data>
+  <data name="CaptureMemory_ScanExistingTitle" xml:space="preserve">
+    <value>Analyser les captures existantes ?</value>
+  </data>
+  <data name="CaptureMemory_ScanExistingContent" xml:space="preserve">
+    <value>L’analyse des nouvelles captures est activée. Analyser aussi les captures disponibles créées précédemment avec CaptureTool ? Les informations existantes sont conservées jusqu’à leur remplacement par une analyse réussie.</value>
+  </data>
+  <data name="CaptureMemory_ScanExistingAccept" xml:space="preserve">
+    <value>Analyser les captures</value>
+  </data>
+  <data name="CaptureMemory_DeleteMetadataTitle" xml:space="preserve">
+    <value>Supprimer les informations d’analyse ?</value>
+  </data>
+  <data name="CaptureMemory_DeleteMetadataContent" xml:space="preserve">
+    <value>Supprimer les informations enregistrées et arrêter les analyses en attente ? Les fichiers de capture et votre préférence d’analyse seront conservés.</value>
+  </data>
+  <data name="CaptureMemory_DeleteMetadataAccept" xml:space="preserve">
+    <value>Supprimer les informations</value>
+  </data>
+  <data name="CaptureMemory_Cancel" xml:space="preserve">
+    <value>Annuler</value>
+  </data>
+  <data name="CaptureMemory_Error_Policy" xml:space="preserve">
+    <value>Les paramètres de Mémoire des captures n’ont pas pu être chargés ou enregistrés. L’analyse est suspendue. Réessayez.</value>
+  </data>
+  <data name="CaptureMemory_Error_Registration" xml:space="preserve">
+    <value>La capture a été créée, mais son inscription dans Mémoire des captures a échoué. Réessayez d’analyser les captures existantes.</value>
+  </data>
+  <data name="CaptureMemory_Error_Provider" xml:space="preserve">
+    <value>Un modèle d’IA ne s’est pas encore arrêté. Les captures en attente reprendront à son arrêt ou après le redémarrage de CaptureTool.</value>
+  </data>
+  <data name="CaptureMemory_Error_Cleanup" xml:space="preserve">
+    <value>Certaines informations d’analyse n’ont pas pu être supprimées. Réessayez de les supprimer.</value>
+  </data>
+  <data name="CaptureMemory_Error_Analysis" xml:space="preserve">
+    <value>L’analyse des captures n’a pas pu se terminer. Vous pouvez réessayer dans les paramètres.</value>
+  </data>
+  <data name="CaptureMemory_Error_Storage" xml:space="preserve">
+    <value>Le stockage de Mémoire des captures est indisponible. Réessayez l’opération ou supprimez ses informations d’analyse dans les paramètres.</value>
+  </data>
 </root>
