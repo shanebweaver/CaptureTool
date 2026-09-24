@@ -49,7 +49,8 @@ lease holds a Windows read-only sharing lock while adapters consume that path, b
 replacement/writes. Source changes, missing/invalid media, cancellation, and content
 refusal do not trigger alternative-model attempts. Content refusal still permits the
 next independent capability. Eligible provider failures, unsupported models, and
-cooperative timeouts advance through configured candidates. All attempts terminate.
+cooperative timeouts advance through configured candidates. Each attempt has a bounded
+waiting period even when the underlying native invocation has not stopped.
 
 Clear publishes a new generation before cleanup and cancels active work afterward.
 Old admissions, queued work, completed-step writes, and late results remain invalid,
@@ -60,7 +61,10 @@ operations with policy changes; inference does not hold the lease.
 
 Progress distinguishes preparation from analysis, counts queued captures and completed
 steps, records terminal run status, and becomes idle only when the queue drains.
-Late provider progress and throwing observers cannot revive or stop the worker.
+Provider progress validates its attempt version and updates the snapshot atomically
+with respect to attempt invalidation. One publisher delivers notifications in order,
+coalescing concurrent intermediate updates and invoking observers outside the state
+lock. Late provider progress and throwing observers cannot revive or stop the worker.
 Corrupt/protection/IO failures stop the loop with `StorageUnavailable`; the worker does
 not reset data or repeatedly retry failed storage.
 
@@ -84,21 +88,29 @@ not reset data or repeatedly retry failed storage.
   to accumulate eight locked leftovers.
 - Preparation and execution timeouts are central configuration. After timeout or
   cancellation, an invocation has two seconds to drain. If native code ignores
-  cancellation, its late result is discarded and no other model overlaps it. Queued
-  captures fail with `provider-not-stopped` until that invocation finishes. This is an
-  explicit in-process limitation; hard termination would require process isolation.
+  cancellation, the attempted capture fails, its late result is discarded, and no
+  other model overlaps it. Untouched captures remain durably pending with the same
+  run IDs. The worker reports `ProviderUnavailable` with `provider-not-stopped` while
+  waiting, then resumes FIFO processing when the invocation exits, even if it faults.
+  Enqueue/cancel/clear commands, consent revocation, and shutdown can wake this wait;
+  revoked requests are cancelled promptly and cleared requests never resume. Restart
+  also recovers the pending backlog. No polling or second queue is introduced. Hard
+  termination of the native invocation would require process isolation.
 
 ## Verification
 
-The managed suite passes **883 tests**, including **25 new cases**: 17 worker,
+The managed suite passes **888 tests**, including **30 new cases**: 22 worker,
 6 execution-store, and 2 real local-source tests. Cases cover FIFO/fallback/language
 selection, empty success, content refusal, crashes around publication, restart without
 rerunning committed steps, source mutation, retained provenance, superseded requests,
 admission racing clear, failed cleanup, revocation during inference followed by
 reenabling, throwing cancellation callbacks, and uncooperative late results.
+The hardening pass additionally verifies ordered progress delivery across a delayed
+observer, preserved FIFO backlog after a hung provider succeeds or faults, responsive
+cancel/clear/revoke while waiting, and recovery of those pending run IDs after restart.
 
 Release solution builds passed on x64 and ARM64 with zero warnings/errors. The
-final managed coverage is **93.13%**, above the repository's 90% gate, with zero test
+final managed coverage is **93.29%**, above the repository's 90% gate, with zero test
 failures or skips. The full x64 application published successfully with Native AOT.
 The provider harness published with Native AOT for both x64 and ARM64, retaining
 only the four vendor warnings described below. The ARM64 cross-publish needed
@@ -138,6 +150,11 @@ coverage, fixtures, caches and build logs live in ignored
 AI models remain hardware verification gaps. Full application settings/UI and release
 MSIX installation flows remain in later slices.
 
+The subsequent worker hardening was checked with the x64 Release solution build and
+the complete managed suite; its logs and coverage use the `hardening-` prefix in the
+same artifact directory. Provider code and AOT compatibility settings were unchanged;
+the native publish and hardware results above are from the original slice 2 checks.
+
 ## Native AOT compatibility exception
 
 Foundry 1.2.4 transitively references Betalgo 9.1.0. Its error-message converter emits
@@ -156,6 +173,15 @@ successful inference and a native command error were exercised in the AOT packag
 Revisit this exception when upgrading Foundry/Betalgo; it is not a claim that every
 API in those packages is AOT compatible.
 
+Decision agreed on 2026-09-24: this known exception does not block slice 3 and does
+not currently justify replacing the providers or redesigning execution. Defer the
+automated warning allowlist to [slice 4](prd-capture-analysis-4-verification.md), where
+it must be completed before release. It will publish the app and provider harness,
+reject new warnings outside the reviewed converter methods, and retain build logs.
+The guard prevents future regressions from being hidden by the broad warning-code
+exception; it does not repair the dependency or replace runtime verification.
+ARM64 runtime and available Windows AI inference checks also remain release work.
+
 References: [pinned Foundry package](https://www.nuget.org/packages/Microsoft.AI.Foundry.Local.WinML/1.2.4),
 [Foundry Windows requirements](https://learn.microsoft.com/en-us/windows/ai/foundry-local/get-started),
 [SDK audio implementation](https://github.com/microsoft/Foundry-Local/blob/main/sdk/cs/src/OpenAI/AudioTranscriptionRequestResponseTypes.cs),
@@ -164,16 +190,22 @@ References: [pinned Foundry package](https://www.nuget.org/packages/Microsoft.AI
 
 ## Slice 3 handoff
 
-Supply a durable `IAnalysisAuthorization`: scanning/consent default off, revision
-preserved across restart, rotated on disable/revoke, persisted before reporting the
-transition, with revocation cancellation. Start and stop the singleton worker with
-the application lifetime. Settings/navigation only observe it.
+The [slice 3 contract](prd-capture-analysis-3-integration.md) now specifies durable
+authorization and enable boundaries, monotonic catalog ordering and clear boundaries,
+expected authorization at admission, historical migration rules, and storage recovery.
+It also defines passive progress during provider/storage unavailability. Small port
+extensions for catalog ordering, admission authorization, and storage presence belong
+to that integration slice; the protected execution store remains the only queue.
 
-Capture reconciliation needs a monotonic durable catalog watermark. Pass its current
-boundary to `ClearAsync(long)` so older captures are recreated only by an explicit
-scan. Slice 2 persists that value with the new generation; it does not invent catalog
-ordering. The old no-watermark clear uses `long.MaxValue` to disable automatic
-historical reconciliation conservatively. Never turn pending work into a fresh
-generation/request automatically.
+Final readiness review: no additional slice 2 blocker was identified. Rechecked the
+worker/store ownership and recovery paths, catalog identity/auto-save hooks, policy
+persistence boundary, and UI notification contract. The integration races are explicit
+acceptance cases in slice 3. The latest code verification remains 888 passing managed
+tests, 93.29% coverage, and a clean x64 Release build; this follow-up changes docs only.
+
+Before implementation, commit the reviewed slice 2 hardening and these contract
+updates, merge `codex/capture-analysis-execution` into `codex/capture-analysis-core`,
+then create `codex/capture-analysis-integration` from core. No merge or slice 3
+implementation is performed as part of this documentation/review pass.
 
 Stop for review here before implementing slice 3.

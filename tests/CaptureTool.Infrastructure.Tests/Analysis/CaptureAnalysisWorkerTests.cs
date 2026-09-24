@@ -138,26 +138,214 @@ public sealed class CaptureAnalysisWorkerTests
     }
 
     [TestMethod]
-    public async Task NoncooperativeTimeoutPreventsOverlapAndLateResultsCannotPublish()
+    public async Task ConcurrentProgressCannotDeliverLoadingAfterIdleAndLateCallbacksAreIgnored()
+    {
+        using var fixture = new Fixture();
+        var entered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var result = new TaskCompletionSource<AnalyzerOutcome>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var reporting = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var releaseObserver = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var observed = new ConcurrentQueue<AnalysisActivitySnapshot>();
+        fixture.Preferred.Execute = (_, _) => { entered.TrySetResult(); return result.Task; };
+        fixture.Worker.ProgressChanged += value =>
+        {
+            if (value.Fraction == 0.5)
+            {
+                reporting.TrySetResult();
+                releaseObserver.Task.Wait(Ct);
+            }
+        };
+        fixture.Worker.ProgressChanged += observed.Enqueue;
+        await fixture.EnqueueAsync(Ct);
+        using var shutdown = CancellationTokenSource.CreateLinkedTokenSource(Ct);
+        Task runner = fixture.Worker.RunAsync(shutdown.Token);
+        Task callback = Task.CompletedTask;
+        try
+        {
+            await entered.Task.WaitAsync(TimeSpan.FromSeconds(5), Ct);
+            IProgress<AnalysisProgress> progress = fixture.Preferred.Progress!;
+            callback = Task.Run(() => progress.Report(new(AnalysisProgressStage.Analyzing, 0.5)), Ct);
+            await reporting.Task.WaitAsync(TimeSpan.FromSeconds(5), Ct);
+            result.SetResult(fixture.Preferred.Success());
+            // The snapshot can reach idle while an earlier notification is still being delivered.
+            await WaitForSnapshotAsync(fixture.Worker, value => value.Activity == AnalysisActivity.Idle, Ct);
+            releaseObserver.SetResult();
+            await callback.WaitAsync(TimeSpan.FromSeconds(5), Ct);
+            AnalysisActivitySnapshot[] notifications = observed.ToArray();
+            Assert.AreEqual(AnalysisActivity.Idle, notifications[^1].Activity);
+            Assert.IsTrue(notifications.SkipWhile(value => value.Activity != AnalysisActivity.Idle)
+                .All(value => value.Activity == AnalysisActivity.Idle));
+
+            int count = observed.Count;
+            progress.Report(new(AnalysisProgressStage.Analyzing, 0.9));
+            fixture.Description.Progress!.Report(new(AnalysisProgressStage.Preparing));
+            Assert.HasCount(count, observed);
+            Assert.AreEqual(AnalysisActivity.Idle, fixture.Worker.Progress.Activity);
+        }
+        finally
+        {
+            releaseObserver.TrySetResult();
+            result.TrySetResult(fixture.Preferred.Success());
+            shutdown.Cancel();
+            await Task.WhenAll(callback, runner).WaitAsync(TimeSpan.FromSeconds(5), Ct);
+        }
+    }
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task NoncooperativeTimeoutPreservesBacklogAndResumesInOrderWhenProviderExits(bool faults)
     {
         using var fixture = new Fixture(TimeSpan.FromMilliseconds(40));
         var late = new TaskCompletionSource<AnalyzerOutcome>(TaskCreationOptions.RunContinuationsAsynchronously);
-        fixture.Preferred.Execute = (_, _) => late.Task;
         AnalysisRequest first = await fixture.EnqueueAsync(Ct);
         AnalysisRequest second = await fixture.EnqueueAsync(Ct);
+        AnalysisRequest third = await fixture.EnqueueAsync(Ct);
+        fixture.Preferred.Execute = (input, _) => input.CaptureId == first.CaptureId ? late.Task : Task.FromResult(fixture.Preferred.Success());
+        using var shutdown = CancellationTokenSource.CreateLinkedTokenSource(Ct);
+        Task runner = fixture.Worker.RunAsync(shutdown.Token);
         try
         {
-            await DrainAsync(fixture.Worker, Ct);
+            await WaitForSnapshotAsync(fixture.Worker, value => value.Activity == AnalysisActivity.ProviderUnavailable, Ct);
             CollectionAssert.AreEqual(new[] { "preferred" }, fixture.Calls.ToArray());
             Assert.AreEqual(AnalysisRunStatus.Failed, (await fixture.Store.GetWorkAsync(first.CaptureId, Ct))!.Run.Status);
-            Assert.AreEqual(AnalysisRunStatus.Failed, (await fixture.Store.GetWorkAsync(second.CaptureId, Ct))!.Run.Status);
+            Assert.AreEqual(2, fixture.Worker.Progress.QueuedCaptures);
             Assert.AreEqual("provider-not-stopped", fixture.Worker.Progress.FailureCode);
-            await fixture.Worker.ClearAsync(12, Ct);
+            foreach (AnalysisRequest queued in new[] { second, third })
+            {
+                AnalysisWorkItem work = (await fixture.Store.GetWorkAsync(queued.CaptureId, Ct))!;
+                Assert.AreEqual(AnalysisRunStatus.Queued, work.Run.Status);
+                Assert.IsNull(work.Run.SourceRevision);
+                Assert.IsEmpty(work.Run.CompletedSteps);
+            }
+            IProgress<AnalysisProgress> staleProgress = fixture.Preferred.Progress!;
+            staleProgress.Report(new(AnalysisProgressStage.Analyzing, 0.9));
+            Assert.AreEqual(AnalysisActivity.ProviderUnavailable, fixture.Worker.Progress.Activity);
+            if (faults) late.SetException(new InvalidOperationException("Late provider failure."));
+            else late.SetResult(fixture.Preferred.Success());
+            await WaitForSnapshotAsync(fixture.Worker, value => value.Activity == AnalysisActivity.Idle, Ct);
+            CollectionAssert.AreEqual(new[] { "preferred", "preferred", "description", "preferred", "description" }, fixture.Calls.ToArray());
+            Assert.IsEmpty((await fixture.Store.GetAsync(first.CaptureId, cancellationToken: Ct))!.Results);
+            foreach (AnalysisRequest queued in new[] { second, third })
+            {
+                AnalysisWorkItem work = (await fixture.Store.GetWorkAsync(queued.CaptureId, Ct))!;
+                Assert.AreEqual(queued.RequestId, work.Run.Id);
+                Assert.AreEqual(AnalysisRunStatus.Completed, work.Run.Status);
+            }
         }
-        finally { late.TrySetResult(fixture.Preferred.Success()); }
-        await late.Task;
-        Assert.IsEmpty(await fixture.Store.ReadAllAsync(Ct));
-        Assert.AreEqual(AnalysisActivity.Idle, fixture.Worker.Progress.Activity);
+        finally
+        {
+            late.TrySetResult(fixture.Preferred.Success());
+            shutdown.Cancel();
+            await runner.WaitAsync(TimeSpan.FromSeconds(5), Ct);
+        }
+    }
+
+    [TestMethod]
+    public async Task CancelAndClearRemainResponsiveWhileProviderIsUnavailable()
+    {
+        using var fixture = new Fixture(TimeSpan.FromMilliseconds(40));
+        var late = new TaskCompletionSource<AnalyzerOutcome>(TaskCreationOptions.RunContinuationsAsynchronously);
+        AnalysisRequest first = await fixture.EnqueueAsync(Ct);
+        AnalysisRequest second = await fixture.EnqueueAsync(Ct);
+        await fixture.EnqueueAsync(Ct);
+        fixture.Preferred.Execute = (input, _) => input.CaptureId == first.CaptureId ? late.Task : Task.FromResult(fixture.Preferred.Success());
+        using var shutdown = CancellationTokenSource.CreateLinkedTokenSource(Ct);
+        Task runner = fixture.Worker.RunAsync(shutdown.Token);
+        try
+        {
+            await WaitForSnapshotAsync(fixture.Worker, value => value.Activity == AnalysisActivity.ProviderUnavailable, Ct);
+            await fixture.Worker.CancelAsync(second.CaptureId, Ct);
+            await WaitForSnapshotAsync(fixture.Worker, value => value.Activity == AnalysisActivity.ProviderUnavailable && value.QueuedCaptures == 1, Ct);
+            Assert.AreEqual(AnalysisRunStatus.Cancelled, (await fixture.Store.GetWorkAsync(second.CaptureId, Ct))!.Run.Status);
+            await fixture.Worker.ClearAsync(12, Ct);
+            await WaitForSnapshotAsync(fixture.Worker, value => value.Activity == AnalysisActivity.Idle, Ct);
+            Assert.IsEmpty(await fixture.Store.ReadAllAsync(Ct));
+            Assert.IsEmpty(await fixture.Store.ReadPendingAsync(Ct));
+
+            AnalysisRequest fresh = await fixture.EnqueueAsync(Ct);
+            await WaitForSnapshotAsync(fixture.Worker, value => value.Activity == AnalysisActivity.ProviderUnavailable, Ct);
+            CollectionAssert.AreEqual(new[] { "preferred" }, fixture.Calls.ToArray());
+            late.SetResult(fixture.Preferred.Success());
+            await WaitForSnapshotAsync(fixture.Worker, value => value.Activity == AnalysisActivity.Idle, Ct);
+            Assert.IsNull(await fixture.Store.GetWorkAsync(first.CaptureId, Ct));
+            Assert.IsNull(await fixture.Store.GetWorkAsync(second.CaptureId, Ct));
+            Assert.AreEqual(AnalysisRunStatus.Completed, (await fixture.Store.GetWorkAsync(fresh.CaptureId, Ct))!.Run.Status);
+            Assert.AreEqual(fresh.CaptureId, (await fixture.Store.ReadAllAsync(Ct)).Single().CaptureId);
+        }
+        finally
+        {
+            late.TrySetResult(fixture.Preferred.Success());
+            shutdown.Cancel();
+            await runner.WaitAsync(TimeSpan.FromSeconds(5), Ct);
+        }
+    }
+
+    [TestMethod]
+    public async Task RevocationCancelsWaitingBacklogWithoutWaitingForProviderExit()
+    {
+        using var fixture = new Fixture(TimeSpan.FromMilliseconds(40));
+        var late = new TaskCompletionSource<AnalyzerOutcome>(TaskCreationOptions.RunContinuationsAsynchronously);
+        AnalysisRequest first = await fixture.EnqueueAsync(Ct);
+        AnalysisRequest second = await fixture.EnqueueAsync(Ct);
+        fixture.Preferred.Execute = (input, _) => input.CaptureId == first.CaptureId ? late.Task : Task.FromResult(fixture.Preferred.Success());
+        using var shutdown = CancellationTokenSource.CreateLinkedTokenSource(Ct);
+        Task runner = fixture.Worker.RunAsync(shutdown.Token);
+        try
+        {
+            await WaitForSnapshotAsync(fixture.Worker, value => value.Activity == AnalysisActivity.ProviderUnavailable, Ct);
+            await fixture.Authorization.ChangeAsync(false, Ct);
+            await WaitForSnapshotAsync(fixture.Worker, value => value.Activity == AnalysisActivity.Idle, Ct);
+            Assert.AreEqual(AnalysisRunStatus.Cancelled, (await fixture.Store.GetWorkAsync(second.CaptureId, Ct))!.Run.Status);
+            await fixture.Authorization.ChangeAsync(true, Ct);
+            AnalysisRequest fresh = await fixture.EnqueueAsync(Ct);
+            await WaitForSnapshotAsync(fixture.Worker, value => value.Activity == AnalysisActivity.ProviderUnavailable, Ct);
+            CollectionAssert.AreEqual(new[] { "preferred" }, fixture.Calls.ToArray());
+            late.SetResult(fixture.Preferred.Success());
+            await WaitForSnapshotAsync(fixture.Worker, value => value.Activity == AnalysisActivity.Idle, Ct);
+            Assert.AreEqual(AnalysisRunStatus.Cancelled, (await fixture.Store.GetWorkAsync(second.CaptureId, Ct))!.Run.Status);
+            Assert.AreEqual(AnalysisRunStatus.Completed, (await fixture.Store.GetWorkAsync(fresh.CaptureId, Ct))!.Run.Status);
+            Assert.IsEmpty((await fixture.Store.GetAsync(first.CaptureId, cancellationToken: Ct))!.Results);
+        }
+        finally
+        {
+            late.TrySetResult(fixture.Preferred.Success());
+            shutdown.Cancel();
+            await runner.WaitAsync(TimeSpan.FromSeconds(5), Ct);
+        }
+    }
+
+    [TestMethod]
+    public async Task ShutdownWhileProviderIsUnavailablePreservesBacklogForRestart()
+    {
+        using var fixture = new Fixture(TimeSpan.FromMilliseconds(40));
+        var late = new TaskCompletionSource<AnalyzerOutcome>(TaskCreationOptions.RunContinuationsAsynchronously);
+        AnalysisRequest first = await fixture.EnqueueAsync(Ct);
+        AnalysisRequest second = await fixture.EnqueueAsync(Ct);
+        fixture.Preferred.Execute = (input, _) => input.CaptureId == first.CaptureId ? late.Task : Task.FromResult(fixture.Preferred.Success());
+        using var shutdown = CancellationTokenSource.CreateLinkedTokenSource(Ct);
+        Task runner = fixture.Worker.RunAsync(shutdown.Token);
+        try
+        {
+            await WaitForSnapshotAsync(fixture.Worker, value => value.Activity == AnalysisActivity.ProviderUnavailable, Ct);
+            shutdown.Cancel();
+            await runner.WaitAsync(TimeSpan.FromSeconds(5), Ct);
+            Assert.IsFalse(late.Task.IsCompleted);
+            Assert.AreEqual(AnalysisRunStatus.Queued, (await fixture.Store.GetWorkAsync(second.CaptureId, Ct))!.Run.Status);
+        }
+        finally
+        {
+            late.TrySetResult(fixture.Preferred.Success());
+            shutdown.Cancel();
+            await runner.WaitAsync(TimeSpan.FromSeconds(5), Ct);
+        }
+        using LocalCaptureAnalysisStore reopened = fixture.Environment.CreateStore();
+        using var restartedWorker = new CaptureAnalysisWorker(reopened, fixture.Authorization, fixture.Source, fixture.Configuration, fixture.Adapters);
+        await DrainAsync(restartedWorker, Ct);
+        AnalysisWorkItem completed = (await reopened.GetWorkAsync(second.CaptureId, Ct))!;
+        Assert.AreEqual(second.RequestId, completed.Run.Id);
+        Assert.AreEqual(AnalysisRunStatus.Completed, completed.Run.Status);
+        CollectionAssert.AreEqual(new[] { "preferred", "preferred", "description" }, fixture.Calls.ToArray());
     }
 
     [TestMethod]
@@ -285,6 +473,13 @@ public sealed class CaptureAnalysisWorkerTests
         Assert.AreEqual(AnalysisRunStatus.InvalidSource, (await fixture.Store.GetWorkAsync(request.CaptureId, Ct))!.Run.Status);
     }
 
+    private static async Task WaitForSnapshotAsync(CaptureAnalysisWorker worker, Func<AnalysisActivitySnapshot, bool> predicate, CancellationToken ct)
+    {
+        using var deadline = CancellationTokenSource.CreateLinkedTokenSource(ct);
+        deadline.CancelAfter(TimeSpan.FromSeconds(10));
+        while (!predicate(worker.Progress)) await Task.Delay(10, deadline.Token);
+    }
+
     private static async Task DrainAsync(CaptureAnalysisWorker worker, CancellationToken ct)
     {
         using var shutdown = CancellationTokenSource.CreateLinkedTokenSource(ct);
@@ -342,6 +537,7 @@ public sealed class CaptureAnalysisWorkerTests
         public MediaAnalyzerDescriptor Descriptor { get; }
         public AnalyzerAvailability Ready { get; set; } = AnalyzerAvailability.Ready;
         public string? UnsupportedLanguage { get; set; }
+        public IProgress<AnalysisProgress>? Progress { get; private set; }
         public Func<AnalysisInput, CancellationToken, Task<AnalyzerOutcome>> Execute { get; set; }
         public FakeAnalyzer(string id, AnalysisCapability capability, ConcurrentQueue<string> calls)
         {
@@ -363,6 +559,7 @@ public sealed class CaptureAnalysisWorkerTests
         public Task<AnalyzerOutcome> AnalyzeAsync(AnalysisInput input, IProgress<AnalysisProgress>? progress, CancellationToken ct)
         {
             _calls.Enqueue(Descriptor.Id);
+            Progress = progress;
             return Execute(input, ct);
         }
     }

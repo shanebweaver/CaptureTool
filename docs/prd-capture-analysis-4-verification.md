@@ -13,9 +13,17 @@ and closes actual defects instead of creating a separate test framework.
 1. Run the complete managed test suite and the repository's required build/checks.
    Build packaged x64 and ARM64 release configurations with trimming/Native AOT.
    Inspect shipped dependencies for stable supported provider/runtime versions.
+   Add a CI publish check for the app and existing provider harness that allows only
+   the reviewed Foundry/Betalgo error-converter warnings (IL2026 and IL3050 in Read
+   and Write). Match diagnostic and originating method, fail on unexpected warnings
+   in those categories or publish errors, and retain logs. Test the check with known
+   and unexpected diagnostics. Revisit the exception on dependency upgrades; remove
+   it when no longer needed. This compile check requires no model downloads/device.
 2. Exercise a capable Windows device and a limited-capability device. Validate
    preferred-model selection, compatible fallbacks, missing models, offline
    preparation, and unsupported OS/hardware without app startup failures.
+   Close the remaining ARM64 runtime and available Windows AI OCR/description gaps;
+   cross-publishing and unavailable-model results do not prove those inference paths.
 3. Test representative images, silent and multilingual audio, and video with and
    without audio. Check metadata identity, normalized coordinates, timestamps,
    actual model provenance, bounded resource usage, and source revision accuracy.
@@ -34,6 +42,12 @@ and closes actual defects instead of creating a separate test framework.
    feature does not add analysis UX to editors or search UX to Home.
 
 ## Evidence and handoff
+
+Decision agreed on 2026-09-24: the reviewed Native AOT vendor warning exception does
+not block slice 3. Implement the automated warning guard in this release-verification
+slice before shipping. Packaged x64 Native AOT provider success and one native error
+path have been exercised; this does not establish compatibility for every SDK error
+format. See the [evidence and rationale](capture-analysis-execution-review.md#native-aot-compatibility-exception).
 
 Record exact commands, configurations, device capability, pass/fail results, and
 any remaining limitation in a short verification report. Automated tests prove

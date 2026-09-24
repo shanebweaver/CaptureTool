@@ -15,10 +15,12 @@ public sealed class CaptureAnalysisWorker : ICaptureAnalysisWorker, IDisposable
     private readonly SemaphoreSlim _commands = new(1, 1);
     private readonly SemaphoreSlim _running = new(1, 1);
     private readonly object _activeLock = new();
+    private readonly object _progressLock = new();
     private CancellationTokenSource? _activeCancellation;
     private AnalysisRunToken? _activeToken;
     private Task? _invocation;
     private long _progressVersion;
+    private bool _publishingProgress;
     private AnalysisActivitySnapshot _progress = new(AnalysisActivity.Idle);
 
     public CaptureAnalysisWorker(IAnalysisExecutionStore store, IAnalysisAuthorization authorization, IAnalysisSource source,
@@ -68,8 +70,16 @@ public sealed class CaptureAnalysisWorker : ICaptureAnalysisWorker, IDisposable
                     await _signal.WaitAsync(cancellationToken).ConfigureAwait(false);
                     continue;
                 }
+                if (_invocation is { IsCompleted: false } invocation)
+                {
+                    await WaitForProviderAsync(invocation, pending, cancellationToken).ConfigureAwait(false);
+                    continue;
+                }
                 for (int index = 0; index < pending.Count; index++)
+                {
                     await ProcessAsync(pending[index], pending.Count - index - 1, cancellationToken).ConfigureAwait(false);
+                    if (_invocation is { IsCompleted: false }) break;
+                }
             }
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { }
@@ -82,6 +92,37 @@ public sealed class CaptureAnalysisWorker : ICaptureAnalysisWorker, IDisposable
             if (Progress.Activity != AnalysisActivity.StorageUnavailable) Report(Progress with { Activity = AnalysisActivity.Idle, QueuedCaptures = 0, Fraction = null });
             _running.Release();
         }
+    }
+
+    private async Task WaitForProviderAsync(Task invocation, IReadOnlyList<AnalysisWorkItem> pending, CancellationToken shutdown)
+    {
+        CancellationToken revoked;
+        AnalysisRunToken[] unauthorized;
+        using (IAnalysisAuthorizationLease grant = await _authorization.AcquireAsync(shutdown).ConfigureAwait(false))
+        {
+            unauthorized = pending.Where(work => !Permits(grant, work)).Select(work => work.Token).ToArray();
+            revoked = grant.Revoked;
+        }
+        // These run revisions cannot become authorized again. Release the policy lease
+        // before writing a potentially large backlog; store tokens reject replacements.
+        foreach (AnalysisRunToken token in unauthorized)
+            await _store.FinishAsync(token, AnalysisRunStatus.Cancelled, shutdown).ConfigureAwait(false);
+        pending = await _store.ReadPendingAsync(shutdown).ConfigureAwait(false);
+        if (pending.Count == 0) return;
+
+        Report(new(AnalysisActivity.ProviderUnavailable, pending.Count, FailureCode: "provider-not-stopped"));
+        // Wake on provider completion, queue commands, revocation, or shutdown. Cancel the
+        // losing signal wait so it cannot consume a later enqueue/clear notification.
+        using var wake = CancellationTokenSource.CreateLinkedTokenSource(shutdown, revoked);
+        Task signal = _signal.WaitAsync(wake.Token);
+        try { await Task.WhenAny(invocation, signal).ConfigureAwait(false); }
+        finally
+        {
+            await wake.CancelAsync().ConfigureAwait(false);
+            try { await signal.ConfigureAwait(false); }
+            catch (OperationCanceledException) when (wake.IsCancellationRequested) { }
+        }
+        shutdown.ThrowIfCancellationRequested();
     }
 
     public async Task CancelAsync(CaptureId captureId, CancellationToken cancellationToken = default)
@@ -141,7 +182,6 @@ public sealed class CaptureAnalysisWorker : ICaptureAnalysisWorker, IDisposable
         CancellationToken ct = cancellation.Token;
         try
         {
-            if (_invocation is { IsCompleted: false }) throw new ProviderBusyException();
             Report(new(AnalysisActivity.Analyzing, remaining, work.Token.CaptureId, work.Run.CompletedSteps.Count, plan.Steps.Count));
             await using IAnalysisSourceLease source = await OpenSourceAsync(work.SourcePath, ct).ConfigureAwait(false);
             if (work.Run.SourceRevision != null && source.Revision != work.Run.SourceRevision)
@@ -193,7 +233,7 @@ public sealed class CaptureAnalysisWorker : ICaptureAnalysisWorker, IDisposable
         }
         finally
         {
-            Interlocked.Increment(ref _progressVersion);
+            AdvanceProgressVersion();
             lock (_activeLock) { _activeCancellation = null; _activeToken = null; }
             if (!shutdown.IsCancellationRequested)
             {
@@ -214,13 +254,10 @@ public sealed class CaptureAnalysisWorker : ICaptureAnalysisWorker, IDisposable
         for (int retry = 0; retry <= step.RetryCount; retry++)
         {
             IMediaAnalyzer analyzer = _analyzers[id];
-            long version = Interlocked.Increment(ref _progressVersion);
-            var progress = new InlineProgress(value =>
-            {
-                if (Volatile.Read(ref _progressVersion) == version && !ct.IsCancellationRequested)
-                    Report(new(value.Stage == AnalysisProgressStage.Preparing ? AnalysisActivity.Preparing : AnalysisActivity.Analyzing,
-                        remaining, work.Token.CaptureId, index, total, value.Fraction));
-            });
+            long version = AdvanceProgressVersion();
+            var progress = new InlineProgress(value => Report(
+                new(value.Stage == AnalysisProgressStage.Preparing ? AnalysisActivity.Preparing : AnalysisActivity.Analyzing,
+                    remaining, work.Token.CaptureId, index, total, value.Fraction), version, ct));
             try
             {
                 AnalyzerAvailability available = await InvokeAsync(token => analyzer.GetAvailabilityAsync(work.MediaKind, work.Language, token).AsTask(),
@@ -251,7 +288,7 @@ public sealed class CaptureAnalysisWorker : ICaptureAnalysisWorker, IDisposable
             catch (TimeoutException) { last = AnalyzerOutcome.Unsuccessful(AnalyzerOutcomeKind.Failed, "model-timeout"); }
             catch (OperationCanceledException) { return AnalyzerOutcome.Unsuccessful(AnalyzerOutcomeKind.Cancelled, "model-cancelled"); }
             catch (Exception) { last = AnalyzerOutcome.Unsuccessful(AnalyzerOutcomeKind.Failed, "model-failed"); }
-            finally { Interlocked.Increment(ref _progressVersion); }
+            finally { AdvanceProgressVersion(); }
         }
         return last;
     }
@@ -301,13 +338,37 @@ public sealed class CaptureAnalysisWorker : ICaptureAnalysisWorker, IDisposable
         try { if (source != null) _ = ObserveAsync(source.CancelAsync()); } catch (ObjectDisposedException) { }
     }
     private void Signal() { try { _signal.Release(); } catch (SemaphoreFullException) { } }
-    private void Report(AnalysisActivitySnapshot snapshot)
+    private long AdvanceProgressVersion()
     {
-        Volatile.Write(ref _progress, snapshot);
-        if (ProgressChanged is not { } changed) return;
-        foreach (Action<AnalysisActivitySnapshot> observer in changed.GetInvocationList())
+        lock (_progressLock) { return ++_progressVersion; }
+    }
+    private void Report(AnalysisActivitySnapshot snapshot, long? version = null, CancellationToken ct = default)
+    {
+        lock (_progressLock)
         {
-            try { observer(snapshot); } catch (Exception) { /* An observer cannot own or stop application work. */ }
+            if (version != null && (version != _progressVersion || ct.IsCancellationRequested)) return;
+            Volatile.Write(ref _progress, snapshot);
+            if (_publishingProgress) return;
+            _publishingProgress = true;
+        }
+        // One publisher delivers snapshots in order, coalescing concurrent updates.
+        // Observers run outside the state lock and may safely read or change worker state.
+        while (true)
+        {
+            if (ProgressChanged is { } changed)
+                foreach (Action<AnalysisActivitySnapshot> observer in changed.GetInvocationList())
+                {
+                    try { observer(snapshot); } catch (Exception) { /* An observer cannot own or stop application work. */ }
+                }
+            lock (_progressLock)
+            {
+                if (ReferenceEquals(snapshot, _progress))
+                {
+                    _publishingProgress = false;
+                    return;
+                }
+                snapshot = _progress;
+            }
         }
     }
     public void Dispose() { _signal.Dispose(); _commands.Dispose(); _running.Dispose(); }

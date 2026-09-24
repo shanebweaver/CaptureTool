@@ -35,6 +35,8 @@ coupling successful capture creation to AI availability.
    publication. Cancellation must not be the only defense against late results.
 9. Expose one progress snapshot for preparation, queued/active captures, and
    terminal outcomes. Work belongs to the application lifetime, not a page.
+   Serialize attempt validation and snapshot updates; deliver notifications in order
+   so late/concurrent provider callbacks cannot restore loading after completion.
 10. Dispose provider resources and temporary decoded media deterministically.
     Bound video frame sampling, audio chunking, memory, and retained scratch.
 
@@ -112,6 +114,11 @@ arbitrary plugin discovery, dependency DAG, or model evaluation product.
   work or re-admit it into the new generation. Test stale admission racing clear.
 - Source mutation, superseded runs, and clear races cannot publish stale output.
 - One failing/unavailable model does not block unrelated steps or future captures.
+- If an invocation ignores cancellation beyond its drain budget, fail only the
+  attempted capture. Keep untouched requests pending, report provider unavailability,
+  and resume in FIFO order when it exits or after process restart. Never overlap
+  model invocations. Cancel, clear, revoke, and shutdown remain responsive while
+  waiting; discarded work cannot resume when the old invocation eventually exits.
 - Packaged smoke tests exercise real available models and unsupported hardware
   paths without requiring every developer/test machine to have those models.
 - Report preparation completion separately from recognition completion.
