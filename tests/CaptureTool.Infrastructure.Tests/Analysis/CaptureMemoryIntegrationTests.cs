@@ -217,6 +217,79 @@ public sealed class CaptureMemoryIntegrationTests
     }
 
     [TestMethod]
+    [DataRow(false, "scan")]
+    [DataRow(false, "delete")]
+    [DataRow(false, "declined-consent")]
+    [DataRow(true, "scan")]
+    [DataRow(true, "delete")]
+    [DataRow(true, "declined-consent")]
+    [DataRow(true, "declined-enable")]
+    [DataRow(true, "disable")]
+    public async Task LaterCommandCannotDiscardQueuedDisableOrRevocation(bool revokeConsent, string laterAction)
+    {
+        using var environment = new AnalysisTestEnvironment();
+        await using (var app = new App(environment))
+        {
+            await app.EnableAsync(Ct);
+            var entered = Signal();
+            var release = Signal();
+            environment.Files.BeforeWrite = async (path, ct) =>
+            {
+                if (!path.EndsWith("catalog.bin", StringComparison.Ordinal)) return;
+                entered.TrySetResult();
+                await release.Task.WaitAsync(ct);
+            };
+            Task capture = app.CaptureAsync(app.Asset(), Ct);
+            Task policy = Task.CompletedTask;
+            Task metadata = Task.CompletedTask;
+            try
+            {
+                await entered.Task.WaitAsync(TimeSpan.FromSeconds(10), Ct);
+                policy = revokeConsent ? app.Memory.SetConsentAsync(false, Ct) : app.Memory.SetScanningAsync(false, Ct);
+                app.Prompts.Override = (_, _) => Task.FromResult(false);
+                metadata = laterAction switch
+                {
+                    "delete" => app.Memory.DeleteMetadataAsync(Ct),
+                    "declined-consent" => app.Memory.SetConsentAsync(true, Ct),
+                    "declined-enable" => app.Memory.SetScanningAsync(true, Ct),
+                    "disable" => app.Memory.SetScanningAsync(false, Ct),
+                    _ => app.Memory.ScanExistingAsync(Ct)
+                };
+                Assert.IsNull(app.Memory.CaptureAuthorization);
+            }
+            finally { release.TrySetResult(); }
+            await Task.WhenAll(capture, policy, metadata);
+            environment.Files.BeforeWrite = null;
+            Assert.IsFalse(app.Memory.State.Policy.ScanningEnabled);
+            if (revokeConsent) Assert.IsFalse(app.Memory.State.Policy.ConsentGranted);
+        }
+        await using var restarted = new App(environment);
+        await restarted.Memory.InitializeAsync(Ct);
+        Assert.IsFalse(restarted.Memory.State.CanScan);
+        Assert.IsNull(restarted.Memory.CaptureAuthorization);
+    }
+
+    [TestMethod]
+    public async Task OlderDisableCannotUndoNewerEnableCommittedDuringItsStateNotification()
+    {
+        using var environment = new AnalysisTestEnvironment();
+        await using var app = new App(environment);
+        await app.EnableAsync(Ct);
+        Task? enabling = null;
+        int started = 0;
+        app.Memory.StateChanged += () =>
+        {
+            if (!app.Memory.State.PolicyAvailable && Interlocked.Exchange(ref started, 1) == 0)
+                enabling = app.Memory.SetScanningAsync(true, Ct);
+        };
+        Task disabling = app.Memory.SetScanningAsync(false, Ct);
+        Assert.IsNotNull(enabling);
+        await Task.WhenAll(disabling, enabling);
+        Assert.IsTrue(app.Memory.State.CanScan);
+        Assert.IsNotNull(app.Memory.CaptureAuthorization);
+    }
+
+    [TestMethod]
     public async Task RevocationDuringEnablePublicationCannotReopenAuthorization()
     {
         using var environment = new AnalysisTestEnvironment();

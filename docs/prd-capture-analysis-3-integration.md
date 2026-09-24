@@ -101,7 +101,11 @@ practical and persist successful transitions before showing success. Storage
 failure leaves the UI truthful and retryable. Serialize conflicting commands;
 disable/revoke/delete must be able to stop existing work promptly.
 Recheck policy/generation after a dialog returns; an outdated dialog result cannot
-undo a newer disable, revocation, or deletion. A disable/revoke request immediately
+undo a newer disable, revocation, or deletion. Metadata commands and declined
+consent dialogs must not discard a queued disable/revocation policy save; only a
+newer accepted grant can supersede that denial. Enabling reads consent after
+earlier queued policy writes so a pending revocation cannot waive its dialog.
+A disable/revoke request immediately
 blocks admission/publication in memory and requests cancellation; persist the change
 before reporting success. If persistence fails, keep analysis blocked for this session
 and report that the preference could not be saved rather than silently resuming work.

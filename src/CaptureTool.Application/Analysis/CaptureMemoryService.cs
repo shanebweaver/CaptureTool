@@ -22,6 +22,7 @@ internal sealed class CaptureMemoryService : ICaptureMemoryService, IDisposable
     private Task? _runner;
     private bool _initialized;
     private long _epoch;
+    private long _lastGrantedEpoch;
     private AnalysisStorageStatus _storage = new(null, false);
     private int _scheduling;
     private int _deleting;
@@ -86,15 +87,23 @@ internal sealed class CaptureMemoryService : ICaptureMemoryService, IDisposable
         return GuardAsync(async ct =>
         {
             if (!_authorization.IsLoaded) { SetFailure("policy-unavailable"); return; }
-            if (enabled && !_authorization.Policy.ConsentGranted && !await _prompts.ConfirmAsync(CaptureMemoryPrompt.Consent, ct).ConfigureAwait(false)) return;
+            if (enabled)
+            {
+                // Read after any queued revocation is saved; a stale snapshot must
+                // not waive the consent prompt for a subsequent enable request.
+                bool consentGranted = false;
+                await LockedAsync(() => { consentGranted = _authorization.Policy.ConsentGranted; return Task.CompletedTask; }, ct).ConfigureAwait(false);
+                if (!Current(epoch) || !consentGranted && !await _prompts.ConfirmAsync(CaptureMemoryPrompt.Consent, ct).ConfigureAwait(false)) return;
+            }
             bool applied = false;
             await LockedAsync(async () =>
             {
-                if (!Current(epoch)) return;
+                if (!CanApplyPolicy(epoch, enabled)) return;
                 CaptureMemoryPolicy policy = _authorization.Policy;
                 long boundary = enabled ? await _catalog.GetBoundaryAsync(ct).ConfigureAwait(false) : policy.EnableBoundary;
                 await _authorization.SaveAsync(new(enabled, enabled || policy.ConsentGranted,
                     Guid.NewGuid(), boundary), ct).ConfigureAwait(false);
+                if (enabled) _lastGrantedEpoch = epoch;
                 applied = true;
                 if (enabled) await RecoverAsync(ct).ConfigureAwait(false);
                 else await RefreshStatusAsync(ct).ConfigureAwait(false);
@@ -119,10 +128,11 @@ internal sealed class CaptureMemoryService : ICaptureMemoryService, IDisposable
             if (granted && !await _prompts.ConfirmAsync(CaptureMemoryPrompt.Consent, ct).ConfigureAwait(false)) return;
             await LockedAsync(async () =>
             {
-                if (!Current(epoch)) return;
+                if (!CanApplyPolicy(epoch, granted)) return;
                 CaptureMemoryPolicy policy = _authorization.Policy;
                 await _authorization.SaveAsync(new(granted && _authorization.IsAllowed, granted,
                     granted ? policy.Revision : Guid.NewGuid(), policy.EnableBoundary), ct).ConfigureAwait(false);
+                if (granted) _lastGrantedEpoch = epoch;
                 await RefreshStatusAsync(ct).ConfigureAwait(false);
             }, ct).ConfigureAwait(false);
             if (!granted && Current(epoch)) await OfferDeletionAsync(epoch, ct).ConfigureAwait(false);
@@ -302,6 +312,9 @@ internal sealed class CaptureMemoryService : ICaptureMemoryService, IDisposable
         catch (Exception) { SetFailure(failure); }
     }
     private bool Current(long epoch) => epoch == Interlocked.Read(ref _epoch);
+    // Under the command gate, only an accepted newer grant can supersede a
+    // denial. Metadata commands and declined prompts cannot discard its save.
+    private bool CanApplyPolicy(long epoch, bool granting) => granting ? Current(epoch) : epoch >= _lastGrantedEpoch;
     private static bool SamePath(string? first, string? second) => first != null && second != null &&
         string.Equals(Path.GetFullPath(first), Path.GetFullPath(second), StringComparison.OrdinalIgnoreCase);
     private void SetFailure(string code) { _failure = code; Publish(); }

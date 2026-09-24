@@ -3,12 +3,18 @@
   <PropertyGroup>
     <TargetFramework>net10.0-windows10.0.26100.0</TargetFramework>
     <Platforms>x64;ARM64</Platforms>
+    <RuntimeIdentifiers>win-x64;win-arm64</RuntimeIdentifiers>
+    <RuntimeIdentifier Condition="'$(Platform)' == 'x64'">win-x64</RuntimeIdentifier>
+    <RuntimeIdentifier Condition="'$(Platform)' == 'ARM64'">win-arm64</RuntimeIdentifier>
+    <WindowsPackageType>None</WindowsPackageType>
+    <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
     <UseVSTest>true</UseVSTest>
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
   </PropertyGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\CaptureTool.Infrastructure.Windows\CaptureTool.Infrastructure.Windows.csproj" />
+    <ProjectReference Include="..\..\src\CaptureTool.Infrastructure.Analysis.Windows\CaptureTool.Infrastructure.Analysis.Windows.csproj" />
   </ItemGroup>
 
   <ItemGroup>

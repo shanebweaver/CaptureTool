@@ -66,14 +66,53 @@ not replace or change the Delete command.
   repeated failures across queued captures are deduplicated. Pages do not own workers.
   Progress has a stable accessible text element and throttled polite announcements.
 
-No provider SDK, model ordering, provider consent, or model-management UI was added.
 The central configuration and normalized protected metadata ports from slices 1–2
 remain the integration points for future models and consuming application features.
 
+## Local description fallback and follow-up review
+
+The configured image and video description steps now prefer Windows AI and fall
+back to Qwen 3.5 0.8B through the existing stable Foundry Local WinML 1.2.4 package.
+The catalog resolved `qwen3.5-0.8b-generic-cpu:3` on this device. CPU selection
+avoids requiring an NPU or GPU; the initial download is about 1 GB. No package
+upgrade, new application queue, per-model consent, or model settings were needed.
+The new adapter supports images and sampled video frames through the existing
+bounded decoder, and publishes `DescriptionMetadata` with actual model provenance.
+Image/video plan versions advance to v2. Existing terminal captures are not
+silently rescanned; **Run analysis on existing captures** opts into the new plan.
+
+Vision uses the SDK's documented local Responses endpoint because its native chat
+wrapper cannot serialize image content with the source-generated context in 1.2.4.
+See Microsoft's [vision sample](https://github.com/microsoft/Foundry-Local/blob/main/samples/cs/foundry-local-web-server-responses-vision/Program.cs).
+The listener binds only an OS-assigned `127.0.0.1` port for the duration of one
+provider invocation. Requests disable response storage, proxies, and redirects;
+JPEG bytes stay in memory. Parsing is bounded and accepts only completed assistant
+text, excluding reasoning/tool output and rejecting refusals, missing text, model
+mismatches, and incomplete responses. Metadata still goes through the protected
+store. If cancellation arrives during HTTP inference, the adapter waits for native
+completion before unloading; the existing worker fence rejects late output and
+prevents another inference from overlapping it.
+
+The follow-up review reproduced and fixed a policy persistence race: a queued
+disable or consent revocation could be discarded by a later metadata command or
+declined consent dialog. The session stopped scanning, but the durable policy
+could remain enabled across restart. Denials now persist unless superseded by a
+newer accepted grant. A later enable reads consent after queued policy writes,
+so it cannot skip a required prompt using a stale consent value. Regression tests
+cover deletion, backfill, declined consent/enable, another disable, restart, and a
+newer accepted enable. The Delete command retains its single delete-all meaning.
+No further slice 3 blockers were identified; the remaining work is the device and
+release verification already assigned to slice 4.
+
+The production adapter described a generated red square and blue circle correctly
+for both image and video on this machine, where Windows AI description reported
+`TemporarilyUnavailable`. Legacy Windows OCR also succeeded. These are synthetic
+device checks, not a claim about description quality on arbitrary captures.
+
 ## Validation
 
-The complete managed suite passes **911 tests** without failures or skips. Coverage
-is **93.63%** (7,068 / 7,549 lines), above the repository's 90% gate. Added checks use
+The complete managed suite passes **929 tests** without failures or skips. Coverage
+is **93.66%** (7,081 / 7,560 lines), above the repository's 90% gate. Added checks use
 the real worker, protected metadata/catalog/policy implementations, and deterministic
 analyzers. They cover consent transitions, delayed intake, registration recovery,
 clear boundaries, interrupted backfill, policy-write races/failures, unreadable
@@ -82,7 +121,7 @@ Existing postprocessor tests now verify intake and auto-save aliases for all thr
 media types. View-model tests cover dispatcher ordering, command availability,
 disposal, and error deduplication.
 
-The isolated desktop workflow passes consent grant/decline, backfill, visible passive
+The slice 3 baseline desktop workflow passes consent grant/decline, backfill, visible passive
 progress and disappearance, disable with retained metadata, explicit deletion,
 consent revocation, navigation, and restoring the toggle after a cancelled prompt.
 Screenshots were inspected at normal and narrow widths in light and dark themes. It uses separate app data
@@ -92,21 +131,29 @@ All six supported locales contain the same 24 new nonempty resource keys.
 The x64 and ARM64 Release solution builds pass with zero warnings/errors. The integrated app
 also publishes successfully with x64 Native AOT. Its only warnings are the four
 previously reviewed Betalgo `Error.MessageConverter.Read`/`Write` IL2026/IL3050
-diagnostics; no new compatibility warnings appeared. This is a publish check,
-not a new production-model runtime result. Exact validation
+diagnostics; no new compatibility warnings appeared. The packaged x64 Native AOT
+provider harness additionally passes real Qwen image/video inference, actual model
+provenance, video timestamps, and repeated service/model cleanup. Its shape
+descriptions matched the managed harness. ARM64 inference and representative media
+quality still require slice 4 device verification. Exact validation
 commands and ignored evidence:
 
 ```powershell
-dotnet-coverage collect 'powershell -NoProfile -ExecutionPolicy Bypass -File .github\scripts\run-managed-tests.ps1' -s .github/coverage.runsettings -f cobertura -o artifacts/capture-analysis-execution/slice3-coverage.cobertura.xml
+dotnet-coverage collect 'powershell -NoProfile -ExecutionPolicy Bypass -File .github\scripts\run-managed-tests.ps1' -s .github/coverage.runsettings -f cobertura -o artifacts/capture-analysis-execution/slice3-vision-coverage.cobertura.xml
 dotnet build CaptureTool.slnx -c Release -p:Platform=x64 --nologo -m:1
 dotnet build CaptureTool.slnx -c Release -p:Platform=ARM64 --nologo -m:1
 $env:CAPTURETOOL_RUN_UI_TESTS='1'; $env:CONFIGURATION='Release'; $env:PLATFORM='x64'
 dotnet test tests/CaptureTool.UiTests/CaptureTool.UiTests.csproj -p:Platform=x64 -c Release --filter FullyQualifiedName~CaptureMemory_ --nologo
-dotnet publish src/CaptureTool.Presentation.Windows.WinUI/CaptureTool.Presentation.Windows.WinUI.csproj -c Release -p:Platform=x64 -r win-x64 -p:WindowsPackageType=None -p:WindowsAppSDKSelfContained=true -p:EnableMsixTooling=false -o artifacts/capture-analysis-execution/slice3-app-aot-x64 -m:1
+dotnet publish src/CaptureTool.Presentation.Windows.WinUI/CaptureTool.Presentation.Windows.WinUI.csproj -c Release -p:Platform=x64 -r win-x64 -p:WindowsPackageType=None -p:WindowsAppSDKSelfContained=true -p:EnableMsixTooling=false -o artifacts/capture-analysis-execution/slice3-vision-app-aot-x64 -m:1
+dotnet publish tools/CaptureTool.Analysis.Smoke/CaptureTool.Analysis.Smoke.csproj -c Release -p:Platform=x64 -r win-x64 -p:PublishAot=true -o artifacts/capture-analysis-execution/slice3-vision-aot -m:1
+& tools/CaptureTool.Analysis.Smoke/run-smoke.ps1 -BinaryDirectory artifacts/capture-analysis-execution/slice3-vision-aot -OutputDirectory D:/Git/CaptureTool/artifacts/capture-analysis-execution/slice3-vision-smoke -Packaged -PrepareVision
 ```
 
 Logs use the `slice3-` prefix in `artifacts/capture-analysis-execution/`. UI artifacts
 are under `tests/CaptureTool.UiTests/TestResults/artifacts/capture-memory/`.
+The fallback and follow-up review use `slice3-vision-` logs; the provider report is
+`slice3-vision-smoke/results.json`. Baseline UI checks were not rerun for this
+provider/policy-only follow-up.
 
 ## Remaining release verification
 

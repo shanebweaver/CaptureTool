@@ -18,6 +18,8 @@ public static class WindowsAnalysisServiceCollectionExtensions
         AddImage("windows-ai-video-frame-ocr", WindowsImageModel.Ocr, AnalysisMediaKind.Video);
         AddImage("windows-video-frame-ocr", WindowsImageModel.LegacyOcr, AnalysisMediaKind.Video);
         AddImage("windows-video-frame-description", WindowsImageModel.Description, AnalysisMediaKind.Video);
+        services.AddSingleton<IMediaAnalyzer>(provider => new FoundryImageDescriptionAnalyzer("foundry-local-image-description",
+            "qwen3.5-0.8b", provider.GetRequiredService<FoundryRuntime>(), provider.GetRequiredService<WindowsAnalysisMedia>()));
         services.AddSingleton<IMediaAnalyzer>(provider => new FoundrySpeechAnalyzer("foundry-local-nemotron-multilingual-speech-transcript",
             "nemotron-3.5-asr-streaming-0.6b", true, provider.GetRequiredService<FoundryRuntime>(), provider.GetRequiredService<WindowsAnalysisMedia>()));
         services.AddSingleton<IMediaAnalyzer>(provider => new FoundrySpeechAnalyzer("foundry-local-speech-transcript",

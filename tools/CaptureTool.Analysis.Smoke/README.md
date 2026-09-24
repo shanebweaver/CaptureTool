@@ -1,9 +1,10 @@
 # Provider smoke checks
 
 This opt-in Windows harness exercises the production adapters using a generated
-text image and synthetic speech/video. It never reads the user's captures or
+text image, colored shapes, and synthetic speech/video. It never reads the user's captures or
 enables background scanning. Reports contain statuses, counts, model identity,
-and diagnostics from synthetic failures, not recognized text.
+and diagnostics from synthetic failures. The vision checks also record the
+description of the generated shapes for inspection.
 
 From the repository root, publish and run on an x64 Windows 11 24H2+ machine:
 
@@ -21,9 +22,12 @@ manifest is x64; ARM64 native publishing can be checked separately with
 the corresponding manifest architecture.
 
 Omit `-PrepareAll` for passive probes; use `-PrepareWhisper` for the small speech
-fallback only. Preparation can download models into the isolated output directory.
+fallback only, or `-PrepareVision` for the Qwen 3.5 0.8B CPU description fallback
+(about 1 GB on first use). Preparation can download models into the isolated output directory.
 The fourfold synthetic speech fixture spans multiple 15-second chunks. The harness
 also verifies malformed-image rejection and a real native transcription failure.
+The Qwen checks require a description containing both colors, preserve the video
+frame timestamp, and exercise listener start/stop and model load/unload twice.
 Unavailable models are reported; they are not treated as successful inference.
 `results.json` and `exit-code.txt` are written under the output directory. Scratch
 WAV chunks should be gone after execution. Model caches are intentionally retained

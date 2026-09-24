@@ -46,6 +46,11 @@ public sealed class CaptureAnalysisFoundationTests
         CollectionAssert.AreEqual(new[] { AnalysisCapability.TextRecognition, AnalysisCapability.Transcription, AnalysisCapability.Description },
             video.Steps.Select(step => step.Capability).ToArray());
         CollectionAssert.AreEqual(new[] { "windows-ai-video-frame-ocr", "windows-video-frame-ocr" }, video.Steps[0].Candidates.ToArray());
+        CollectionAssert.AreEqual(new[] { "windows-video-frame-description", "foundry-local-image-description" }, video.Steps[2].Candidates.ToArray());
+        MediaAnalysisPlan image = configuration.Plans.Single(plan => plan.MediaKind == AnalysisMediaKind.Image);
+        CollectionAssert.AreEqual(new[] { "windows-image-description", "foundry-local-image-description" }, image.Steps.Single(step => step.Capability == AnalysisCapability.Description).Candidates.ToArray());
+        Assert.AreEqual("image-v2", image.Version);
+        Assert.AreEqual("video-v2", video.Version);
     }
 
     [TestMethod]
