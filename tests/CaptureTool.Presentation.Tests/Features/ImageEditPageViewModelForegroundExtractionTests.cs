@@ -31,20 +31,16 @@ public sealed class ImageEditPageViewModelForegroundExtractionTests
     public async Task ToggleMode_WhenConsentRefused_ShouldRemainInactive()
     {
         var consent = new Mock<IAiFeatureConsentService>();
-        var dialog = new Mock<IAiFeatureConsentDialogService>();
         var service = new Mock<IImageForegroundExtractionService>();
         consent
             .Setup(x => x.GetConsentState(AiFeatureId.ImageForegroundExtraction))
             .Returns(AiFeatureConsentState.Denied);
         consent
-            .Setup(x => x.SetConsentAsync(AiFeatureId.ImageForegroundExtraction, false, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(true);
-        dialog
-            .Setup(x => x.RequestConsentAsync(AiFeatureId.ImageForegroundExtraction, It.IsAny<CancellationToken>()))
+            .Setup(x => x.EnsureConsentAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(false);
         service.Setup(x => x.GetReadyState()).Returns(ForegroundExtractionReadyState.Ready);
 
-        ImageEditPageViewModel viewModel = CreateViewModel(service.Object, consent.Object, dialog.Object);
+        ImageEditPageViewModel viewModel = CreateViewModel(service.Object, consent.Object);
         await viewModel.LoadAsync(new ImageFile("original.png"), CancellationToken.None);
 
         await viewModel.ToggleForegroundExtractionModeCommand.ExecuteAsync(null);
@@ -131,8 +127,7 @@ public sealed class ImageEditPageViewModelForegroundExtractionTests
 
     private static ImageEditPageViewModel CreateViewModel(
         IImageForegroundExtractionService foregroundExtractionService,
-        IAiFeatureConsentService? consentService = null,
-        IAiFeatureConsentDialogService? consentDialogService = null)
+        IAiFeatureConsentService? consentService = null)
     {
         var imageMetadata = new Mock<IImageMetadataService>();
         imageMetadata
@@ -156,7 +151,6 @@ public sealed class ImageEditPageViewModelForegroundExtractionTests
             imageMetadata.Object,
             Mock.Of<IImageSuperResolutionService>(),
             Mock.Of<IImageSuperResolutionFeatureAvailability>(x => x.IsImageSuperResolutionEnabled == false),
-            Mock.Of<IImageSuperResolutionPreparationConsentService>(),
             Mock.Of<IShareService>(),
             Mock.Of<IOpenExternalEditorUseCase>(),
             Mock.Of<IStorageService>(),
@@ -174,7 +168,6 @@ public sealed class ImageEditPageViewModelForegroundExtractionTests
             new TextExtractionToolViewModel(Mock.Of<IClipboardService>(), localization, notifications),
             consentService ?? Mock.Of<IAiFeatureConsentService>(x =>
                 x.GetConsentState(AiFeatureId.ImageForegroundExtraction) == AiFeatureConsentState.Granted),
-            consentDialogService ?? Mock.Of<IAiFeatureConsentDialogService>(),
             null,
             null,
             null,

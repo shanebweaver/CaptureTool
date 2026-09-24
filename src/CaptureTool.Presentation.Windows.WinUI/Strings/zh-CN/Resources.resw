@@ -1323,18 +1323,6 @@ SOFTWARE.
   <data name="ImageEdit_SuperResolutionProgressRing.AutomationProperties.Name" xml:space="preserve">
     <value>正在增强图像</value>
   </data>
-  <data name="ImageSuperResolutionPreparation_Title" xml:space="preserve">
-    <value>Prepare Super Resolution</value>
-  </data>
-  <data name="ImageSuperResolutionPreparation_Content" xml:space="preserve">
-    <value>Windows needs to prepare local AI components before Super Resolution can run. This may use Windows Update and can take some time.</value>
-  </data>
-  <data name="ImageSuperResolutionPreparation_ContinueButton" xml:space="preserve">
-    <value>Continue</value>
-  </data>
-  <data name="ImageSuperResolutionPreparation_CancelButton" xml:space="preserve">
-    <value>Cancel</value>
-  </data>
   <data name="ImageSuperResolutionStatus_NotSupported" xml:space="preserve">
     <value>Super Resolution is not supported on this PC.</value>
   </data>
@@ -1467,30 +1455,6 @@ SOFTWARE.
   <data name="TextExtractionStatus_Failed" xml:space="preserve">
     <value>文本提取失败。</value>
   </data>
-  <data name="AiFeatureConsentDialog_AllowButton" xml:space="preserve">
-    <value>允许</value>
-  </data>
-  <data name="AiFeatureConsentDialog_DontAllowButton" xml:space="preserve">
-    <value>不允许</value>
-  </data>
-  <data name="AiFeatureConsentDialog_CancelButton" xml:space="preserve">
-    <value>取消</value>
-  </data>
-  <data name="AiFeatureConsentDialog_TextExtractionTitle" xml:space="preserve">
-    <value>允许文本提取？</value>
-  </data>
-  <data name="AiFeatureConsentDialog_TextExtractionContent" xml:space="preserve">
-    <value>文本提取功能使用设备上的 AI 模型检测当前图像中的文本及文本位置。</value>
-  </data>
-  <data name="Settings_AiConsentHeaderLabel.Text" xml:space="preserve">
-    <value>AI 功能权限</value>
-  </data>
-  <data name="Settings_AiConsentDescription.Text" xml:space="preserve">
-    <value>允许此 AI 功能在此设备上处理图像。</value>
-  </data>
-  <data name="Settings_AiConsent_TextExtractionDisplayName" xml:space="preserve">
-    <value>文本提取</value>
-  </data>
   <data name="ImageEdit_ImageDescriptionButton.Label" xml:space="preserve">
     <value>图像描述</value>
   </data>
@@ -1557,15 +1521,6 @@ SOFTWARE.
   <data name="ImageEdit_ImageDescriptionProgressRing.AutomationProperties.Name" xml:space="preserve">
     <value>正在生成图像描述</value>
   </data>
-  <data name="AiFeatureConsentDialog_ImageDescriptionTitle" xml:space="preserve">
-    <value>允许图像描述？</value>
-  </data>
-  <data name="AiFeatureConsentDialog_ImageDescriptionContent" xml:space="preserve">
-    <value>图像描述功能使用设备上的 AI 模型描述当前图像。</value>
-  </data>
-  <data name="Settings_AiConsent_ImageDescriptionDisplayName" xml:space="preserve">
-    <value>图像描述</value>
-  </data>
   <data name="ImageDescriptionStatus_NotSupported" xml:space="preserve">
     <value>此电脑不支持图像描述。</value>
   </data>
@@ -1608,15 +1563,6 @@ SOFTWARE.
   <data name="ImageEdit_ForegroundExtractionProgressRing.AutomationProperties.Name" xml:space="preserve">
     <value>正在移除图像背景</value>
   </data>
-  <data name="AiFeatureConsentDialog_ImageForegroundExtractionTitle" xml:space="preserve">
-    <value>允许移除背景吗？</value>
-  </data>
-  <data name="AiFeatureConsentDialog_ImageForegroundExtractionContent" xml:space="preserve">
-    <value>背景移除功能使用设备上的 AI 模型来分离你选择的主体并移除其背景。</value>
-  </data>
-  <data name="Settings_AiConsent_ImageForegroundExtractionDisplayName" xml:space="preserve">
-    <value>背景移除</value>
-  </data>
   <data name="ForegroundExtractionStatus_Success" xml:space="preserve">
     <value>背景已移除。</value>
   </data>
@@ -1652,15 +1598,6 @@ SOFTWARE.
   </data>
   <data name="ImageEdit_ObjectEraseProgressRing.AutomationProperties.Name" xml:space="preserve">
     <value>正在擦除所选对象</value>
-  </data>
-  <data name="AiFeatureConsentDialog_ImageObjectEraseTitle" xml:space="preserve">
-    <value>允许对象擦除吗？</value>
-  </data>
-  <data name="AiFeatureConsentDialog_ImageObjectEraseContent" xml:space="preserve">
-    <value>对象擦除功能使用设备上的 AI 模型来识别你选择的对象、将其移除，并根据周围内容填充该区域。</value>
-  </data>
-  <data name="Settings_AiConsent_ImageObjectEraseDisplayName" xml:space="preserve">
-    <value>对象擦除</value>
   </data>
   <data name="ObjectEraseStatus_Success" xml:space="preserve">
     <value>对象已擦除。</value>
@@ -1698,15 +1635,6 @@ SOFTWARE.
   <data name="ImageEdit_ObjectExtractionProgressRing.AutomationProperties.Name" xml:space="preserve">
     <value>正在提取所选对象</value>
   </data>
-  <data name="AiFeatureConsentDialog_ImageObjectExtractionTitle" xml:space="preserve">
-    <value>允许对象提取吗？</value>
-  </data>
-  <data name="AiFeatureConsentDialog_ImageObjectExtractionContent" xml:space="preserve">
-    <value>对象提取功能使用设备上的 AI 模型，从当前图像中识别并提取你选择的对象。</value>
-  </data>
-  <data name="Settings_AiConsent_ImageObjectExtractionDisplayName" xml:space="preserve">
-    <value>对象提取</value>
-  </data>
   <data name="ObjectExtractionStatus_Success" xml:space="preserve">
     <value>对象已提取。</value>
   </data>
@@ -1742,15 +1670,6 @@ SOFTWARE.
   </data>
   <data name="VideoEdit_SuperResolutionProgressText.Text" xml:space="preserve">
     <value>正在增强视频...</value>
-  </data>
-  <data name="AiFeatureConsentDialog_VideoSuperResolutionTitle" xml:space="preserve">
-    <value>允许视频超分辨率？</value>
-  </data>
-  <data name="AiFeatureConsentDialog_VideoSuperResolutionContent" xml:space="preserve">
-    <value>视频超分辨率使用设备上的 AI 模型，为当前视频创建更清晰、分辨率更高的副本。</value>
-  </data>
-  <data name="Settings_AiConsent_VideoSuperResolutionDisplayName" xml:space="preserve">
-    <value>视频超分辨率</value>
   </data>
   <data name="VideoSuperResolutionStatus_NotSupported" xml:space="preserve">
     <value>此设备不支持视频超分辨率。</value>
@@ -1807,22 +1726,22 @@ SOFTWARE.
     <value>此设备不支持屏幕录制。</value>
   </data>
   <data name="CaptureMemory_SettingsHeader.Text" xml:space="preserve">
-    <value>捕获记忆</value>
+    <value>AI</value>
   </data>
-  <data name="CaptureMemory_Scanning.Header" xml:space="preserve">
-    <value>分析新捕获内容</value>
+  <data name="CaptureMemory_Scanning.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>自动分析新捕获的内容</value>
   </data>
-  <data name="CaptureMemory_Consent.Content" xml:space="preserve">
-    <value>允许捕获记忆分析</value>
+  <data name="CaptureMemory_Consent.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>允许本地 AI 功能</value>
   </data>
   <data name="CaptureMemory_SettingsDescription.Text" xml:space="preserve">
     <value>使用设备端 AI 分析捕获内容，并安全保存信息以供捕获记忆使用。</value>
   </data>
   <data name="CaptureMemory_Scan.Content" xml:space="preserve">
-    <value>分析现有捕获内容</value>
+    <value>分析</value>
   </data>
   <data name="CaptureMemory_Delete.Content" xml:space="preserve">
-    <value>删除分析信息</value>
+    <value>删除</value>
   </data>
   <data name="CaptureMemory_Preparing" xml:space="preserve">
     <value>正在准备设备端 AI…</value>
@@ -1831,10 +1750,10 @@ SOFTWARE.
     <value>正在分析捕获内容…</value>
   </data>
   <data name="CaptureMemory_ConsentTitle" xml:space="preserve">
-    <value>允许捕获记忆分析？</value>
+    <value>允许本地 AI 功能？</value>
   </data>
   <data name="CaptureMemory_ConsentContent" xml:space="preserve">
-    <value>设备端 AI 可以读取捕获内容中的文字、描述图像并转录音频。生成的信息将安全保存在此设备上。可能需要下载模型。媒体内容在此设备上处理。</value>
+    <value>允许设备上的 AI 在您使用 AI 工具时识别文字、描述图像、转录录音和编辑媒体。自动分析捕获内容是一项单独的设置。AI 分析会安全地存储在此设备上。可能需要下载模型；您的媒体会在此设备上处理。</value>
   </data>
   <data name="CaptureMemory_ConsentAccept" xml:space="preserve">
     <value>允许</value>
@@ -1877,5 +1796,29 @@ SOFTWARE.
   </data>
   <data name="CaptureMemory_Error_Storage" xml:space="preserve">
     <value>捕获记忆存储不可用。请重试操作，或在设置中删除其分析信息。</value>
+  </data>
+  <data name="AiSettings_ConsentHeader.Text" xml:space="preserve">
+    <value>允许本地 AI 功能</value>
+  </data>
+  <data name="AiSettings_ConsentDescription.Text" xml:space="preserve">
+    <value>文字识别、图像描述、转录和 AI 编辑工具共用一项同意。</value>
+  </data>
+  <data name="AiSettings_ScanningHeader.Text" xml:space="preserve">
+    <value>自动分析新捕获的内容</value>
+  </data>
+  <data name="AiSettings_ScanningDescription.Text" xml:space="preserve">
+    <value>在捕获后分析图像、音频和视频。</value>
+  </data>
+  <data name="AiSettings_ScanHeader.Text" xml:space="preserve">
+    <value>分析现有捕获内容</value>
+  </data>
+  <data name="AiSettings_ScanDescription.Text" xml:space="preserve">
+    <value>为现有捕获内容创建或更新已保存的分析。</value>
+  </data>
+  <data name="AiSettings_DeleteHeader.Text" xml:space="preserve">
+    <value>删除 AI 元数据</value>
+  </data>
+  <data name="AiSettings_DeleteDescription.Text" xml:space="preserve">
+    <value>删除所有已保存的 AI 分析。捕获内容将被保留。</value>
   </data>
 </root>

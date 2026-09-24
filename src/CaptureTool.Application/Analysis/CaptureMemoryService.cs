@@ -42,7 +42,7 @@ internal sealed class CaptureMemoryService : ICaptureMemoryService, IDisposable
     }
     public CaptureMemoryState State => new(_authorization.Policy, _authorization.IsLoaded &&
         (!_authorization.Policy.IsAllowed || _authorization.IsAllowed), Volatile.Read(ref _storage), _worker.Progress,
-        Volatile.Read(ref _scheduling) > 0, Volatile.Read(ref _failure), Volatile.Read(ref _deleting) > 0);
+        Volatile.Read(ref _scheduling) > 0, Volatile.Read(ref _failure), Volatile.Read(ref _deleting) > 0, _authorization.ConsentAvailable);
     public event Action? StateChanged;
     public Guid? CaptureAuthorization => _authorization.IsAllowed ? _authorization.Policy.Revision : null;
 
@@ -92,7 +92,7 @@ internal sealed class CaptureMemoryService : ICaptureMemoryService, IDisposable
                 // Read after any queued revocation is saved; a stale snapshot must
                 // not waive the consent prompt for a subsequent enable request.
                 bool consentGranted = false;
-                await LockedAsync(() => { consentGranted = _authorization.Policy.ConsentGranted; return Task.CompletedTask; }, ct).ConfigureAwait(false);
+                await LockedAsync(() => { consentGranted = _authorization.IsConsentAllowed; return Task.CompletedTask; }, ct).ConfigureAwait(false);
                 if (!Current(epoch) || !consentGranted && !await _prompts.ConfirmAsync(CaptureMemoryPrompt.Consent, ct).ConfigureAwait(false)) return;
             }
             bool applied = false;
@@ -101,8 +101,9 @@ internal sealed class CaptureMemoryService : ICaptureMemoryService, IDisposable
                 if (!CanApplyPolicy(epoch, enabled)) return;
                 CaptureMemoryPolicy policy = _authorization.Policy;
                 long boundary = enabled ? await _catalog.GetBoundaryAsync(ct).ConfigureAwait(false) : policy.EnableBoundary;
+                if (!CanApplyPolicy(epoch, enabled)) return;
                 await _authorization.SaveAsync(new(enabled, enabled || policy.ConsentGranted,
-                    Guid.NewGuid(), boundary), ct).ConfigureAwait(false);
+                    Guid.NewGuid(), boundary), ct, grantConsent: enabled).ConfigureAwait(false);
                 if (enabled) _lastGrantedEpoch = epoch;
                 applied = true;
                 if (enabled) await RecoverAsync(ct).ConfigureAwait(false);
@@ -120,8 +121,9 @@ internal sealed class CaptureMemoryService : ICaptureMemoryService, IDisposable
 
     public Task SetConsentAsync(bool granted, CancellationToken cancellationToken = default)
     {
+        if (granted && _authorization.IsConsentAllowed) return Task.CompletedTask;
         long epoch = Interlocked.Increment(ref _epoch);
-        if (!granted) { _authorization.Block(); Publish(); }
+        if (!granted) { _authorization.Block(revokeConsent: true); Publish(); }
         return GuardAsync(async ct =>
         {
             if (!_authorization.IsLoaded) { SetFailure("policy-unavailable"); return; }
@@ -131,12 +133,19 @@ internal sealed class CaptureMemoryService : ICaptureMemoryService, IDisposable
                 if (!CanApplyPolicy(epoch, granted)) return;
                 CaptureMemoryPolicy policy = _authorization.Policy;
                 await _authorization.SaveAsync(new(granted && _authorization.IsAllowed, granted,
-                    granted ? policy.Revision : Guid.NewGuid(), policy.EnableBoundary), ct).ConfigureAwait(false);
+                    granted ? policy.Revision : Guid.NewGuid(), policy.EnableBoundary), ct, grantConsent: granted).ConfigureAwait(false);
                 if (granted) _lastGrantedEpoch = epoch;
                 await RefreshStatusAsync(ct).ConfigureAwait(false);
             }, ct).ConfigureAwait(false);
             if (!granted && Current(epoch)) await OfferDeletionAsync(epoch, ct).ConfigureAwait(false);
         }, cancellationToken);
+    }
+
+    public async Task<bool> EnsureConsentAsync(CancellationToken cancellationToken = default)
+    {
+        await InitializeAsync(cancellationToken).ConfigureAwait(false);
+        if (!_authorization.IsConsentAllowed) await SetConsentAsync(true, cancellationToken).ConfigureAwait(false);
+        return !cancellationToken.IsCancellationRequested && _authorization.IsConsentAllowed;
     }
 
     public Task ScanExistingAsync(CancellationToken cancellationToken = default)

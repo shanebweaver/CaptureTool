@@ -86,6 +86,11 @@ public sealed class WindowsTextExtractionService : ITextExtractionService
             IReadOnlyList<RecognizedQrCodeRegion> qrCodes = QrCodeDetector.Detect(sourceBitmap);
             cancellationToken.ThrowIfCancellationRequested();
 
+            // Reuse canonical OCR while retaining the existing QR-code feature.
+            // This path never probes, prepares, or invokes an OCR model.
+            if (request.ExistingText is { } existing)
+                return TextExtractionResult.Success(new(existing.Text, existing.ImageSize, existing.Regions, qrCodes));
+
             TextExtractionResult? aiResult = await TryExtractWithWindowsAiAsync(
                 sourceBitmap,
                 request,

@@ -10,9 +10,12 @@ internal sealed class CaptureMemoryAuthorization(ICaptureMemoryPolicyStore store
     private CancellationTokenSource _revoked = new();
     private CaptureMemoryPolicy _policy = CaptureMemoryPolicy.Disabled();
     private bool _blocked = true;
+    private bool _consentBlocked = true;
     private long _blockVersion;
     public CaptureMemoryPolicy Policy => Volatile.Read(ref _policy);
     public bool IsAllowed => !Volatile.Read(ref _blocked) && Policy.IsAllowed;
+    public bool ConsentAvailable => IsLoaded && !Volatile.Read(ref _consentBlocked);
+    public bool IsConsentAllowed => ConsentAvailable && Policy.ConsentGranted;
     public bool IsLoaded { get; private set; }
 
     public async Task InitializeAsync(CancellationToken ct)
@@ -27,7 +30,7 @@ internal sealed class CaptureMemoryAuthorization(ICaptureMemoryPolicyStore store
             if (stored == null) await store.SaveAsync(policy, ct).ConfigureAwait(false);
             Volatile.Write(ref _policy, policy);
             lock (_blockGate)
-                if (blockVersion == _blockVersion) Volatile.Write(ref _blocked, false);
+                if (blockVersion == _blockVersion) { Volatile.Write(ref _blocked, false); Volatile.Write(ref _consentBlocked, false); }
             IsLoaded = true;
         }
         catch (OperationCanceledException) { throw; }
@@ -35,27 +38,32 @@ internal sealed class CaptureMemoryAuthorization(ICaptureMemoryPolicyStore store
         finally { _gate.Release(); }
     }
 
-    public void Block()
+    public void Block(bool revokeConsent = false)
     {
         lock (_blockGate)
         {
             Interlocked.Increment(ref _blockVersion);
             Volatile.Write(ref _blocked, true);
+            if (revokeConsent) Volatile.Write(ref _consentBlocked, true);
         }
         _ = ObserveCancellationAsync(Volatile.Read(ref _revoked));
     }
 
-    public async Task SaveAsync(CaptureMemoryPolicy policy, CancellationToken ct)
+    public async Task SaveAsync(CaptureMemoryPolicy policy, CancellationToken ct, bool grantConsent = true)
     {
+        long blockVersion = Interlocked.Read(ref _blockVersion);
         await _gate.WaitAsync(ct).ConfigureAwait(false);
         try
         {
             if (!IsLoaded) throw new InvalidOperationException("Capture memory policy is unavailable.");
-            if (!policy.IsAllowed) Block();
-            long blockVersion = Interlocked.Read(ref _blockVersion);
+            if (!policy.IsAllowed && !grantConsent)
+            {
+                Block(revokeConsent: !policy.ConsentGranted);
+                blockVersion = Interlocked.Read(ref _blockVersion);
+            }
             try { await store.SaveAsync(policy, ct).ConfigureAwait(false); }
-            catch (OperationCanceledException) { Block(); throw; }
-            catch (Exception exception) { Block(); throw new CaptureMemoryPolicyException("policy-save", exception); }
+            catch (OperationCanceledException) { Block(revokeConsent: true); throw; }
+            catch (Exception exception) { Block(revokeConsent: true); throw new CaptureMemoryPolicyException("policy-save", exception); }
             if (policy.Revision != Policy.Revision || _revoked.IsCancellationRequested)
             {
                 // Old leases keep a valid revoked token until application teardown.
@@ -67,7 +75,11 @@ internal sealed class CaptureMemoryAuthorization(ICaptureMemoryPolicyStore store
             // A newer disable/revocation may arrive while the protected write is in flight.
             // Persisting this older command must never undo that immediate fence.
             lock (_blockGate)
-                if (blockVersion == _blockVersion) Volatile.Write(ref _blocked, false);
+                if (blockVersion == _blockVersion)
+                {
+                    Volatile.Write(ref _blocked, false);
+                    if (grantConsent || !policy.ConsentGranted) Volatile.Write(ref _consentBlocked, false);
+                }
         }
         finally { _gate.Release(); }
     }

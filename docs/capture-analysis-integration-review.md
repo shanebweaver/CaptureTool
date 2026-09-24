@@ -4,6 +4,10 @@ Implemented on `codex/capture-analysis-integration`, based on `fede19dd` after
 merging the reviewed execution branch into `codex/capture-analysis-core`.
 `main` is unchanged. Slice 4 remains a separate review/release-verification step.
 
+The [shared consent and OCR follow-up](ai-consent-and-ocr-integration.md) extends
+this baseline: existing OCR can reuse saved metadata, and one protected consent
+now covers all local AI features. Automatic scanning retains its separate toggle.
+
 ## Behavior
 
 Image, audio, and video completion register the retained original and the consent

@@ -350,7 +350,6 @@ public sealed class ImageEditPageViewModelDefaultsTests
             imageMetadata ?? Mock.Of<IImageMetadataService>(),
             Mock.Of<IImageSuperResolutionService>(),
             Mock.Of<IImageSuperResolutionFeatureAvailability>(x => x.IsImageSuperResolutionEnabled == true),
-            Mock.Of<IImageSuperResolutionPreparationConsentService>(),
             Mock.Of<IShareService>(),
             Mock.Of<IOpenExternalEditorUseCase>(),
             Mock.Of<IStorageService>(),

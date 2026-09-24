@@ -136,13 +136,7 @@ public sealed partial class SettingsPage : SettingsPageBase
         }
     }
 
-    private void AiFeatureConsentCheckBox_Click(object sender, RoutedEventArgs e)
-    {
-        if (sender is CheckBox checkBox && checkBox.DataContext is AiFeatureConsentViewModel featureConsent)
-        {
-            _ = ViewModel.UpdateAiFeatureConsentAsync(featureConsent.FeatureId, checkBox.IsChecked == true);
-        }
-    }
+
 
     private void AppThemeRadioButtons_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {

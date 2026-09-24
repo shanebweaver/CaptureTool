@@ -15,6 +15,26 @@ public sealed class CaptureMemoryStorageTests
     private CancellationToken Ct => TestContext.CancellationToken;
 
     [TestMethod]
+    public async Task NarrowerV1ConsentMigratesOnceWithoutAuthorizingAnyAiFeature()
+    {
+        using var environment = new AnalysisTestEnvironment();
+        var documents = new ProtectedDocumentFile(environment.Protector, environment.Files);
+        string path = Path.Combine(environment.Root, "CaptureMemoryPolicy.bin");
+        var old = new CaptureMemoryPolicy(true, true, Guid.NewGuid(), 12);
+        await documents.WriteAsync(path, new CaptureMemoryPolicyDocument(1, old), CaptureMemoryPolicyJsonContext.Default.CaptureMemoryPolicyDocument, Ct);
+        var store = new LocalCaptureMemoryPolicyStore(environment, environment.Protector, environment.Files);
+        var migrated = await store.LoadAsync(Ct);
+        Assert.IsNotNull(migrated);
+        Assert.IsFalse(migrated.ConsentGranted);
+        Assert.IsFalse(migrated.ScanningEnabled);
+        Assert.AreEqual(old.EnableBoundary, migrated.EnableBoundary);
+        Assert.AreNotEqual(old.Revision, migrated.Revision);
+        Assert.AreEqual(migrated, await store.LoadAsync(Ct));
+        var persisted = await documents.ReadAsync(path, CaptureMemoryPolicyJsonContext.Default.CaptureMemoryPolicyDocument, Ct);
+        Assert.AreEqual(2, persisted!.Version);
+    }
+
+    [TestMethod]
     public async Task PolicyRoundTripsProtectedAndFailedSaveKeepsLastCommittedPolicy()
     {
         using var environment = new AnalysisTestEnvironment();

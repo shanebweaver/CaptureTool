@@ -1323,18 +1323,6 @@ SOFTWARE.
   <data name="ImageEdit_SuperResolutionProgressRing.AutomationProperties.Name" xml:space="preserve">
     <value>Amélioration de l’image</value>
   </data>
-  <data name="ImageSuperResolutionPreparation_Title" xml:space="preserve">
-    <value>Prepare Super Resolution</value>
-  </data>
-  <data name="ImageSuperResolutionPreparation_Content" xml:space="preserve">
-    <value>Windows needs to prepare local AI components before Super Resolution can run. This may use Windows Update and can take some time.</value>
-  </data>
-  <data name="ImageSuperResolutionPreparation_ContinueButton" xml:space="preserve">
-    <value>Continue</value>
-  </data>
-  <data name="ImageSuperResolutionPreparation_CancelButton" xml:space="preserve">
-    <value>Cancel</value>
-  </data>
   <data name="ImageSuperResolutionStatus_NotSupported" xml:space="preserve">
     <value>Super Resolution is not supported on this PC.</value>
   </data>
@@ -1467,30 +1455,6 @@ SOFTWARE.
   <data name="TextExtractionStatus_Failed" xml:space="preserve">
     <value>Échec de l’extraction de texte.</value>
   </data>
-  <data name="AiFeatureConsentDialog_AllowButton" xml:space="preserve">
-    <value>Autoriser</value>
-  </data>
-  <data name="AiFeatureConsentDialog_DontAllowButton" xml:space="preserve">
-    <value>Ne pas autoriser</value>
-  </data>
-  <data name="AiFeatureConsentDialog_CancelButton" xml:space="preserve">
-    <value>Annuler</value>
-  </data>
-  <data name="AiFeatureConsentDialog_TextExtractionTitle" xml:space="preserve">
-    <value>Autoriser l’extraction de texte ?</value>
-  </data>
-  <data name="AiFeatureConsentDialog_TextExtractionContent" xml:space="preserve">
-    <value>L’extraction de texte utilise un modèle d’IA sur l’appareil pour détecter le texte et sa position dans l’image actuelle.</value>
-  </data>
-  <data name="Settings_AiConsentHeaderLabel.Text" xml:space="preserve">
-    <value>Consentement pour l’IA</value>
-  </data>
-  <data name="Settings_AiConsentDescription.Text" xml:space="preserve">
-    <value>Autoriser cette fonctionnalité d’IA à traiter les images sur cet appareil.</value>
-  </data>
-  <data name="Settings_AiConsent_TextExtractionDisplayName" xml:space="preserve">
-    <value>Extraction de texte</value>
-  </data>
   <data name="ImageEdit_ImageDescriptionButton.Label" xml:space="preserve">
     <value>Description de l’image</value>
   </data>
@@ -1557,15 +1521,6 @@ SOFTWARE.
   <data name="ImageEdit_ImageDescriptionProgressRing.AutomationProperties.Name" xml:space="preserve">
     <value>Génération de la description de l’image</value>
   </data>
-  <data name="AiFeatureConsentDialog_ImageDescriptionTitle" xml:space="preserve">
-    <value>Autoriser la description d’image ?</value>
-  </data>
-  <data name="AiFeatureConsentDialog_ImageDescriptionContent" xml:space="preserve">
-    <value>La description d’image utilise un modèle d’IA sur l’appareil pour décrire l’image actuelle.</value>
-  </data>
-  <data name="Settings_AiConsent_ImageDescriptionDisplayName" xml:space="preserve">
-    <value>Description de l’image</value>
-  </data>
   <data name="ImageDescriptionStatus_NotSupported" xml:space="preserve">
     <value>La description d’image n’est pas prise en charge sur ce PC.</value>
   </data>
@@ -1608,15 +1563,6 @@ SOFTWARE.
   <data name="ImageEdit_ForegroundExtractionProgressRing.AutomationProperties.Name" xml:space="preserve">
     <value>Suppression de l’arrière-plan de l’image</value>
   </data>
-  <data name="AiFeatureConsentDialog_ImageForegroundExtractionTitle" xml:space="preserve">
-    <value>Autoriser la suppression de l’arrière-plan ?</value>
-  </data>
-  <data name="AiFeatureConsentDialog_ImageForegroundExtractionContent" xml:space="preserve">
-    <value>La suppression de l’arrière-plan utilise un modèle d’IA sur l’appareil pour isoler le sujet sélectionné et supprimer son arrière-plan.</value>
-  </data>
-  <data name="Settings_AiConsent_ImageForegroundExtractionDisplayName" xml:space="preserve">
-    <value>Suppression de l’arrière-plan</value>
-  </data>
   <data name="ForegroundExtractionStatus_Success" xml:space="preserve">
     <value>Arrière-plan supprimé.</value>
   </data>
@@ -1652,15 +1598,6 @@ SOFTWARE.
   </data>
   <data name="ImageEdit_ObjectEraseProgressRing.AutomationProperties.Name" xml:space="preserve">
     <value>Effacement de l’objet sélectionné</value>
-  </data>
-  <data name="AiFeatureConsentDialog_ImageObjectEraseTitle" xml:space="preserve">
-    <value>Autoriser l’effacement d’objet ?</value>
-  </data>
-  <data name="AiFeatureConsentDialog_ImageObjectEraseContent" xml:space="preserve">
-    <value>L’effacement d’objet utilise des modèles d’IA sur l’appareil pour identifier l’objet sélectionné, le supprimer et remplir la zone à partir de son environnement.</value>
-  </data>
-  <data name="Settings_AiConsent_ImageObjectEraseDisplayName" xml:space="preserve">
-    <value>Effacement d’objet</value>
   </data>
   <data name="ObjectEraseStatus_Success" xml:space="preserve">
     <value>Objet effacé.</value>
@@ -1698,15 +1635,6 @@ SOFTWARE.
   <data name="ImageEdit_ObjectExtractionProgressRing.AutomationProperties.Name" xml:space="preserve">
     <value>Extraction de l’objet sélectionné</value>
   </data>
-  <data name="AiFeatureConsentDialog_ImageObjectExtractionTitle" xml:space="preserve">
-    <value>Autoriser l’extraction d’objet ?</value>
-  </data>
-  <data name="AiFeatureConsentDialog_ImageObjectExtractionContent" xml:space="preserve">
-    <value>L’extraction d’objet utilise un modèle d’IA sur l’appareil pour identifier et extraire de l’image actuelle l’objet que vous sélectionnez.</value>
-  </data>
-  <data name="Settings_AiConsent_ImageObjectExtractionDisplayName" xml:space="preserve">
-    <value>Extraction d’objet</value>
-  </data>
   <data name="ObjectExtractionStatus_Success" xml:space="preserve">
     <value>Objet extrait.</value>
   </data>
@@ -1742,15 +1670,6 @@ SOFTWARE.
   </data>
   <data name="VideoEdit_SuperResolutionProgressText.Text" xml:space="preserve">
     <value>Amélioration de la vidéo...</value>
-  </data>
-  <data name="AiFeatureConsentDialog_VideoSuperResolutionTitle" xml:space="preserve">
-    <value>Autoriser la super-résolution vidéo ?</value>
-  </data>
-  <data name="AiFeatureConsentDialog_VideoSuperResolutionContent" xml:space="preserve">
-    <value>La super-résolution vidéo utilise un modèle d’IA sur l’appareil pour créer une copie plus nette et de plus haute résolution de la vidéo actuelle.</value>
-  </data>
-  <data name="Settings_AiConsent_VideoSuperResolutionDisplayName" xml:space="preserve">
-    <value>Super-résolution vidéo</value>
   </data>
   <data name="VideoSuperResolutionStatus_NotSupported" xml:space="preserve">
     <value>La super-résolution vidéo n’est pas prise en charge sur cet appareil.</value>
@@ -1807,22 +1726,22 @@ SOFTWARE.
     <value>L’enregistrement d’écran n’est pas pris en charge sur cet appareil.</value>
   </data>
   <data name="CaptureMemory_SettingsHeader.Text" xml:space="preserve">
-    <value>Mémoire des captures</value>
+    <value>IA</value>
   </data>
-  <data name="CaptureMemory_Scanning.Header" xml:space="preserve">
-    <value>Analyser les nouvelles captures</value>
+  <data name="CaptureMemory_Scanning.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Analyser automatiquement les nouvelles captures</value>
   </data>
-  <data name="CaptureMemory_Consent.Content" xml:space="preserve">
-    <value>Autoriser l’analyse de Mémoire des captures</value>
+  <data name="CaptureMemory_Consent.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Autoriser les fonctions d’IA locale</value>
   </data>
   <data name="CaptureMemory_SettingsDescription.Text" xml:space="preserve">
     <value>Analysez les captures avec l’IA sur cet appareil et enregistrez leurs informations de manière sécurisée.</value>
   </data>
   <data name="CaptureMemory_Scan.Content" xml:space="preserve">
-    <value>Analyser les captures existantes</value>
+    <value>Analyser</value>
   </data>
   <data name="CaptureMemory_Delete.Content" xml:space="preserve">
-    <value>Supprimer les informations d’analyse</value>
+    <value>Supprimer</value>
   </data>
   <data name="CaptureMemory_Preparing" xml:space="preserve">
     <value>Préparation de l’IA sur l’appareil…</value>
@@ -1831,10 +1750,10 @@ SOFTWARE.
     <value>Analyse des captures…</value>
   </data>
   <data name="CaptureMemory_ConsentTitle" xml:space="preserve">
-    <value>Autoriser l’analyse de Mémoire des captures ?</value>
+    <value>Autoriser les fonctions d’IA locale ?</value>
   </data>
   <data name="CaptureMemory_ConsentContent" xml:space="preserve">
-    <value>L’IA sur cet appareil peut lire du texte, décrire des images et transcrire l’audio de vos captures. Les informations obtenues sont conservées de manière sécurisée sur cet appareil. Le téléchargement de modèles peut être nécessaire. Les médias sont traités sur cet appareil.</value>
+    <value>Autorisez l’IA de cet appareil à reconnaître du texte, décrire des images, transcrire des enregistrements et modifier des médias lorsque vous utilisez un outil d’IA. L’analyse automatique des captures est un réglage distinct. Les analyses sont stockées de façon sécurisée sur cet appareil. Le téléchargement de modèles peut être nécessaire ; vos médias sont traités sur cet appareil.</value>
   </data>
   <data name="CaptureMemory_ConsentAccept" xml:space="preserve">
     <value>Autoriser</value>
@@ -1877,5 +1796,29 @@ SOFTWARE.
   </data>
   <data name="CaptureMemory_Error_Storage" xml:space="preserve">
     <value>Le stockage de Mémoire des captures est indisponible. Réessayez l’opération ou supprimez ses informations d’analyse dans les paramètres.</value>
+  </data>
+  <data name="AiSettings_ConsentHeader.Text" xml:space="preserve">
+    <value>Autoriser les fonctions d’IA locale</value>
+  </data>
+  <data name="AiSettings_ConsentDescription.Text" xml:space="preserve">
+    <value>Un seul consentement pour la reconnaissance de texte, les descriptions, la transcription et la retouche par IA.</value>
+  </data>
+  <data name="AiSettings_ScanningHeader.Text" xml:space="preserve">
+    <value>Analyser automatiquement les nouvelles captures</value>
+  </data>
+  <data name="AiSettings_ScanningDescription.Text" xml:space="preserve">
+    <value>Analyser les images, l’audio et les vidéos après la capture.</value>
+  </data>
+  <data name="AiSettings_ScanHeader.Text" xml:space="preserve">
+    <value>Analyser les captures existantes</value>
+  </data>
+  <data name="AiSettings_ScanDescription.Text" xml:space="preserve">
+    <value>Créer ou actualiser les analyses enregistrées de vos captures existantes.</value>
+  </data>
+  <data name="AiSettings_DeleteHeader.Text" xml:space="preserve">
+    <value>Supprimer les métadonnées d’IA</value>
+  </data>
+  <data name="AiSettings_DeleteDescription.Text" xml:space="preserve">
+    <value>Supprimer toutes les analyses d’IA enregistrées. Vos captures sont conservées.</value>
   </data>
 </root>

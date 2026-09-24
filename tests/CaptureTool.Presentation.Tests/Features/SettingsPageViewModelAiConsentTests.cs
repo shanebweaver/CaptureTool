@@ -112,74 +112,6 @@ public sealed class SettingsPageViewModelAiConsentTests
     }
 
     [TestMethod]
-    public async Task LoadAsync_WhenAiConsentSettingsFeatureDisabled_ShouldHideSectionAndRows()
-    {
-        SettingsPageViewModel viewModel = CreateViewModel(isAiConsentSettingsEnabled: false);
-
-        await viewModel.LoadAsync(TestContext.CancellationToken);
-
-        viewModel.IsAiConsentSettingsVisible.Should().BeFalse();
-        viewModel.AiFeatureConsents.Should().BeEmpty();
-    }
-
-    [TestMethod]
-    public async Task LoadAsync_WhenOnlySuperResolutionFeatureEnabled_ShouldShowSuperResolutionConsentOnly()
-    {
-        SettingsPageViewModel viewModel = CreateViewModel(
-            isImageSuperResolutionEnabled: true,
-            isTextExtractionEnabled: false);
-
-        await viewModel.LoadAsync(TestContext.CancellationToken);
-
-        viewModel.IsAiConsentSettingsVisible.Should().BeTrue();
-        viewModel.AiFeatureConsents.Should().ContainSingle(consent =>
-            consent.FeatureId == AiFeatureId.ImageSuperResolution &&
-            consent.DisplayName == "Super image resolution");
-    }
-
-    [TestMethod]
-    public async Task LoadAsync_WhenOnlyTextExtractionFeatureEnabled_ShouldShowTextExtractionConsentOnly()
-    {
-        SettingsPageViewModel viewModel = CreateViewModel(
-            isImageSuperResolutionEnabled: false,
-            isTextExtractionEnabled: true);
-
-        await viewModel.LoadAsync(TestContext.CancellationToken);
-
-        viewModel.IsAiConsentSettingsVisible.Should().BeTrue();
-        viewModel.AiFeatureConsents.Should().ContainSingle(consent =>
-            consent.FeatureId == AiFeatureId.TextExtraction &&
-            consent.DisplayName == "Localized text extraction");
-    }
-
-    [TestMethod]
-    public async Task UpdateAiFeatureConsentAsync_WhenPersistenceFails_KeepsCommittedConsent()
-    {
-        SettingsPageViewModel viewModel = CreateViewModel(
-            isImageSuperResolutionEnabled: false,
-            isTextExtractionEnabled: true,
-            aiConsentSaveSucceeded: false);
-        await viewModel.LoadAsync(TestContext.CancellationToken);
-
-        await viewModel.UpdateAiFeatureConsentAsync(AiFeatureId.TextExtraction, false);
-
-        viewModel.AiFeatureConsents.Single().IsConsented.Should().BeTrue();
-    }
-
-    [TestMethod]
-    public async Task LoadAsync_WhenNoChildAiFeaturesEnabled_ShouldHideSectionAndRows()
-    {
-        SettingsPageViewModel viewModel = CreateViewModel(
-            isImageSuperResolutionEnabled: false,
-            isTextExtractionEnabled: false);
-
-        await viewModel.LoadAsync(TestContext.CancellationToken);
-
-        viewModel.IsAiConsentSettingsVisible.Should().BeFalse();
-        viewModel.AiFeatureConsents.Should().BeEmpty();
-    }
-
-    [TestMethod]
     public async Task RestoreDefaultSettingsCommand_WhenRestoreFails_ShouldKeepDisplayedTheme()
     {
         var restoreDefaults = new Mock<IRestoreDefaultsUseCase>();
@@ -195,110 +127,11 @@ public sealed class SettingsPageViewModelAiConsentTests
         viewModel.SelectedAppThemeIndex.Should().Be(selectedThemeIndex);
     }
 
-    [TestMethod]
-    public async Task LoadAsync_WhenOnlyImageDescriptionFeatureEnabled_ShouldShowImageDescriptionConsentOnly()
-    {
-        SettingsPageViewModel viewModel = CreateViewModel(
-            isImageSuperResolutionEnabled: false,
-            isTextExtractionEnabled: false,
-            isImageDescriptionEnabled: true);
-
-        await viewModel.LoadAsync(TestContext.CancellationToken);
-
-        viewModel.IsAiConsentSettingsVisible.Should().BeTrue();
-        viewModel.AiFeatureConsents.Should().ContainSingle(consent =>
-            consent.FeatureId == AiFeatureId.ImageDescription &&
-            consent.DisplayName == "Localized image description");
-    }
-
-    [TestMethod]
-    public async Task LoadAsync_WhenOnlyForegroundExtractionFeatureEnabled_ShouldShowBackgroundRemovalConsentOnly()
-    {
-        SettingsPageViewModel viewModel = CreateViewModel(
-            isImageSuperResolutionEnabled: false,
-            isTextExtractionEnabled: false,
-            isImageDescriptionEnabled: false,
-            isImageForegroundExtractionEnabled: true);
-
-        await viewModel.LoadAsync(TestContext.CancellationToken);
-
-        viewModel.IsAiConsentSettingsVisible.Should().BeTrue();
-        viewModel.AiFeatureConsents.Should().ContainSingle(consent =>
-            consent.FeatureId == AiFeatureId.ImageForegroundExtraction &&
-            consent.DisplayName == "Localized background removal");
-    }
-
-    [TestMethod]
-    public async Task LoadAsync_WhenOnlyObjectEraseFeatureEnabled_ShouldShowObjectEraseConsentOnly()
-    {
-        SettingsPageViewModel viewModel = CreateViewModel(
-            isImageSuperResolutionEnabled: false,
-            isTextExtractionEnabled: false,
-            isImageDescriptionEnabled: false,
-            isImageForegroundExtractionEnabled: false,
-            isImageObjectEraseEnabled: true);
-
-        await viewModel.LoadAsync(TestContext.CancellationToken);
-
-        viewModel.IsAiConsentSettingsVisible.Should().BeTrue();
-        viewModel.AiFeatureConsents.Should().ContainSingle(consent =>
-            consent.FeatureId == AiFeatureId.ImageObjectErase &&
-            consent.DisplayName == "Localized object erase");
-    }
-
-    [TestMethod]
-    public async Task LoadAsync_WhenOnlyObjectExtractionFeatureEnabled_ShouldShowObjectExtractionConsentOnly()
-    {
-        SettingsPageViewModel viewModel = CreateViewModel(
-            isImageSuperResolutionEnabled: false,
-            isTextExtractionEnabled: false,
-            isImageDescriptionEnabled: false,
-            isImageForegroundExtractionEnabled: false,
-            isImageObjectEraseEnabled: false,
-            isImageObjectExtractionEnabled: true);
-
-        await viewModel.LoadAsync(TestContext.CancellationToken);
-
-        viewModel.IsAiConsentSettingsVisible.Should().BeTrue();
-        viewModel.AiFeatureConsents.Should().ContainSingle(consent =>
-            consent.FeatureId == AiFeatureId.ImageObjectExtraction &&
-            consent.DisplayName == "Localized object extraction");
-    }
-
-    [TestMethod]
-    public async Task LoadAsync_WhenOnlyVideoSuperResolutionFeatureEnabled_ShouldShowVideoSuperResolutionConsentOnly()
-    {
-        SettingsPageViewModel viewModel = CreateViewModel(
-            isImageSuperResolutionEnabled: false,
-            isTextExtractionEnabled: false,
-            isImageDescriptionEnabled: false,
-            isImageForegroundExtractionEnabled: false,
-            isImageObjectEraseEnabled: false,
-            isImageObjectExtractionEnabled: false,
-            isVideoSuperResolutionEnabled: true);
-
-        await viewModel.LoadAsync(TestContext.CancellationToken);
-
-        viewModel.IsAiConsentSettingsVisible.Should().BeTrue();
-        viewModel.AiFeatureConsents.Should().ContainSingle(consent =>
-            consent.FeatureId == AiFeatureId.VideoSuperResolution &&
-            consent.DisplayName == "Localized video super resolution");
-    }
-
     private static SettingsPageViewModel CreateViewModel(
-        bool isAiConsentSettingsEnabled = true,
-        bool isImageSuperResolutionEnabled = true,
-        bool isTextExtractionEnabled = true,
-        bool isImageDescriptionEnabled = false,
-        bool isImageForegroundExtractionEnabled = false,
-        bool isImageObjectEraseEnabled = false,
-        bool isImageObjectExtractionEnabled = false,
-        bool isVideoSuperResolutionEnabled = false,
         string telemetryConsentValue = TelemetryConsentSettingValues.Unknown,
         ITelemetryConsentService? telemetryConsentService = null,
         SettingsMutationStatus settingsMutationStatus = SettingsMutationStatus.Saved,
         IUpdateImageAutoSaveUseCase? updateImageAutoSaveAction = null,
-        bool aiConsentSaveSucceeded = true,
         IRestoreDefaultsUseCase? restoreDefaultsUseCase = null)
     {
         var localization = new Mock<ILocalizationService>();
@@ -307,16 +140,7 @@ public sealed class SettingsPageViewModelAiConsentTests
             .Returns([]);
         localization
             .Setup(service => service.GetString(It.IsAny<string>()))
-            .Returns<string>(resourceKey => resourceKey switch
-            {
-                "Settings_AiConsent_TextExtractionDisplayName" => "Localized text extraction",
-                "Settings_AiConsent_ImageDescriptionDisplayName" => "Localized image description",
-                "Settings_AiConsent_ImageForegroundExtractionDisplayName" => "Localized background removal",
-                "Settings_AiConsent_ImageObjectEraseDisplayName" => "Localized object erase",
-                "Settings_AiConsent_ImageObjectExtractionDisplayName" => "Localized object extraction",
-                "Settings_AiConsent_VideoSuperResolutionDisplayName" => "Localized video super resolution",
-                _ => resourceKey
-            });
+            .Returns<string>(resourceKey => resourceKey);
 
         var settings = new Mock<ISettingsService>();
         settings
@@ -334,25 +158,6 @@ public sealed class SettingsPageViewModelAiConsentTests
                 It.IsAny<string>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(new SettingsMutationResult(settingsMutationStatus));
-
-        var aiFeatureConsentService = new Mock<IAiFeatureConsentService>();
-        aiFeatureConsentService
-            .Setup(service => service.GetFeatureConsents())
-            .Returns([
-                new(AiFeatureId.TextExtraction, "Text extraction", AiFeatureConsentState.Granted),
-                new(AiFeatureId.ImageSuperResolution, "Super image resolution", AiFeatureConsentState.Granted),
-                new(AiFeatureId.ImageDescription, "Image description", AiFeatureConsentState.Granted),
-                new(AiFeatureId.ImageForegroundExtraction, "Background removal", AiFeatureConsentState.Granted),
-                new(AiFeatureId.ImageObjectErase, "Object erase", AiFeatureConsentState.Granted),
-                new(AiFeatureId.ImageObjectExtraction, "Object extraction", AiFeatureConsentState.Granted),
-                new(AiFeatureId.VideoSuperResolution, "Video super resolution", AiFeatureConsentState.Granted)
-            ]);
-        aiFeatureConsentService
-            .Setup(service => service.SetConsentAsync(
-                It.IsAny<AiFeatureId>(),
-                It.IsAny<bool>(),
-                It.IsAny<CancellationToken>()))
-            .ReturnsAsync(aiConsentSaveSucceeded);
 
         var appLanguageViewModelFactory = new Mock<IFactoryServiceWithArgs<AppLanguageViewModel, IAppLanguage?>>();
         appLanguageViewModelFactory
@@ -402,13 +207,6 @@ public sealed class SettingsPageViewModelAiConsentTests
             Mock.Of<IOpenTempFolderUseCase>(),
             Mock.Of<IClearTempFilesUseCase>(),
             restoreDefaultsUseCase ?? Mock.Of<IRestoreDefaultsUseCase>(),
-            aiFeatureConsentService.Object,
-            Mock.Of<IAiConsentSettingsFeatureAvailability>(service =>
-                service.IsAiConsentSettingsEnabled == isAiConsentSettingsEnabled),
-            Mock.Of<IImageSuperResolutionFeatureAvailability>(service =>
-                service.IsImageSuperResolutionEnabled == isImageSuperResolutionEnabled),
-            Mock.Of<ITextExtractionFeatureAvailability>(service =>
-                service.IsTextExtractionEnabled == isTextExtractionEnabled),
             localization.Object,
             Mock.Of<IThemeService>(service =>
                 service.DefaultTheme == AppTheme.Light &&
@@ -420,16 +218,6 @@ public sealed class SettingsPageViewModelAiConsentTests
             storage.Object,
             appLanguageViewModelFactory.Object,
             appThemeViewModelFactory.Object,
-            Mock.Of<IImageDescriptionFeatureAvailability>(service =>
-                service.IsImageDescriptionEnabled == isImageDescriptionEnabled),
-            Mock.Of<IImageForegroundExtractionFeatureAvailability>(service =>
-                service.IsImageForegroundExtractionEnabled == isImageForegroundExtractionEnabled),
-            Mock.Of<IImageObjectEraseFeatureAvailability>(service =>
-                service.IsImageObjectEraseEnabled == isImageObjectEraseEnabled),
-            Mock.Of<IImageObjectExtractionFeatureAvailability>(service =>
-                service.IsImageObjectExtractionEnabled == isImageObjectExtractionEnabled),
-            Mock.Of<IVideoSuperResolutionFeatureAvailability>(service =>
-                service.IsVideoSuperResolutionEnabled == isVideoSuperResolutionEnabled),
             telemetryConsentService);
     }
 

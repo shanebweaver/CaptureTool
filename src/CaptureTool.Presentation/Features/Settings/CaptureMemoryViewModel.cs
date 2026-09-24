@@ -63,7 +63,7 @@ public sealed class CaptureMemoryViewModel : ViewModelBase
     {
         CaptureMemoryState state = _memory.State;
         ScanningEnabled = state.PolicyAvailable && state.Policy.ScanningEnabled;
-        ConsentGranted = state.Policy.ConsentGranted;
+        ConsentGranted = state.ConsentAvailable && state.Policy.ConsentGranted;
         CanScan = state.CanScan;
         CanDelete = state.CanDelete;
         IsAnalysisActive = state.IsLoading;

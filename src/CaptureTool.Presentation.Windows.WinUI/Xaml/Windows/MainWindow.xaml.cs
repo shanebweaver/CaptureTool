@@ -9,7 +9,6 @@ using CaptureTool.Presentation.Features.Settings;
 using CaptureTool.Presentation.Windows.WinUI.Analysis;
 using CaptureTool.Presentation.Windows.WinUI.AudioCapture;
 using CaptureTool.Presentation.Windows.WinUI.Capture;
-using CaptureTool.Presentation.Windows.WinUI.Edit;
 using CaptureTool.Presentation.Windows.WinUI.EditSessions;
 using CaptureTool.Presentation.Windows.WinUI.Telemetry;
 using CaptureTool.Presentation.Windows.WinUI.UiTests;
@@ -42,8 +41,6 @@ public sealed partial class MainWindow : Window
     private readonly WinUIAudioCaptureNavigationConfirmationService _audioCaptureNavigationConfirmationService;
     private readonly WinUICaptureDiscardConfirmationService _captureDiscardConfirmationService;
     private readonly WinUIEditSessionConfirmationService _editSessionConfirmationService;
-    private readonly AiFeatureConsentDialogService _aiFeatureConsentDialogService;
-    private readonly ImageSuperResolutionPreparationConsentService _imageSuperResolutionPreparationConsentService;
     private readonly TelemetryConsentDialogService _telemetryConsentDialogService;
     private readonly DispatcherQueueTimer _notificationTimer;
     private readonly CaptureMemoryDialogService _captureMemoryDialogs;
@@ -65,8 +62,6 @@ public sealed partial class MainWindow : Window
         _audioCaptureNavigationConfirmationService = App.Current.ServiceProvider.GetService<WinUIAudioCaptureNavigationConfirmationService>();
         _captureDiscardConfirmationService = App.Current.ServiceProvider.GetService<WinUICaptureDiscardConfirmationService>();
         _editSessionConfirmationService = App.Current.ServiceProvider.GetService<WinUIEditSessionConfirmationService>();
-        _aiFeatureConsentDialogService = App.Current.ServiceProvider.GetService<AiFeatureConsentDialogService>();
-        _imageSuperResolutionPreparationConsentService = App.Current.ServiceProvider.GetService<ImageSuperResolutionPreparationConsentService>();
         _telemetryConsentDialogService = App.Current.ServiceProvider.GetService<TelemetryConsentDialogService>();
         _captureMemoryDialogs = App.Current.ServiceProvider.GetService<CaptureMemoryDialogService>();
 
@@ -108,8 +103,6 @@ public sealed partial class MainWindow : Window
         _editSessionConfirmationService.XamlRoot = RootGrid.XamlRoot;
         _audioCaptureNavigationConfirmationService.XamlRoot = RootGrid.XamlRoot;
         _captureDiscardConfirmationService.XamlRoot = RootGrid.XamlRoot;
-        _aiFeatureConsentDialogService.XamlRoot = RootGrid.XamlRoot;
-        _imageSuperResolutionPreparationConsentService.XamlRoot = RootGrid.XamlRoot;
         _telemetryConsentDialogService.XamlRoot = RootGrid.XamlRoot;
         _captureMemoryDialogs.XamlRoot = RootGrid.XamlRoot;
         NavigateToUiTestImageWhenRequested();

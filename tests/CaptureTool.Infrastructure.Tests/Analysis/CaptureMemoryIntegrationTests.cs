@@ -19,6 +19,55 @@ public sealed class CaptureMemoryIntegrationTests
     private CancellationToken Ct => TestContext.CancellationToken;
 
     [TestMethod]
+    public async Task SharedOnUseConsentIsPersistedOnceAndScanningOffPreservesIt()
+    {
+        using var environment = new AnalysisTestEnvironment();
+        await using var app = new App(environment);
+        int prompts = 0;
+        app.Prompts.Override = (prompt, _) => { if (prompt == CaptureMemoryPrompt.Consent) prompts++; return Task.FromResult(prompt == CaptureMemoryPrompt.Consent); };
+        Assert.IsTrue(await app.Memory.EnsureConsentAsync(Ct));
+        Assert.IsFalse(app.Memory.State.Policy.ScanningEnabled);
+        Assert.IsTrue(await app.Memory.EnsureConsentAsync(Ct));
+        await app.Memory.SetScanningAsync(true, Ct);
+        await app.Memory.SetScanningAsync(false, Ct);
+        Assert.IsTrue(app.Memory.State.ConsentAvailable);
+        Assert.IsTrue(app.Memory.State.Policy.ConsentGranted);
+        Assert.IsTrue(await app.Memory.EnsureConsentAsync(Ct));
+        Assert.AreEqual(1, prompts);
+    }
+
+    [TestMethod]
+    public async Task ConsentRevocationBlocksImmediatelyAndFailedWriteRequiresFreshApproval()
+    {
+        using var environment = new AnalysisTestEnvironment();
+        await using var app = new App(environment);
+        await app.EnableAsync(Ct);
+        var entered = Signal();
+        var release = Signal();
+        environment.Files.BeforeWrite = async (path, ct) =>
+        {
+            if (!path.EndsWith("CaptureMemoryPolicy.bin", StringComparison.Ordinal)) return;
+            entered.TrySetResult();
+            await release.Task.WaitAsync(ct);
+            throw new IOException("Injected policy failure");
+        };
+        var revocation = app.Memory.SetConsentAsync(false, Ct);
+        await entered.Task.WaitAsync(Ct);
+        Assert.IsFalse(app.Memory.State.ConsentAvailable);
+        release.TrySetResult();
+        await revocation;
+        Assert.IsFalse(app.Memory.State.ConsentAvailable);
+        environment.Files.BeforeWrite = null;
+        app.Prompts.Override = (_, _) => Task.FromResult(false);
+        Assert.IsFalse(await app.Memory.EnsureConsentAsync(Ct));
+        await app.Memory.SetScanningAsync(true, Ct);
+        Assert.IsFalse(app.Memory.State.CanScan);
+        Assert.IsFalse(app.Memory.State.ConsentAvailable);
+        app.Prompts.Override = (prompt, _) => Task.FromResult(prompt == CaptureMemoryPrompt.Consent);
+        Assert.IsTrue(await app.Memory.EnsureConsentAsync(Ct));
+    }
+
+    [TestMethod]
     public async Task ConsentAloneDoesNotEnableScanningAndDeclinedHistoryStaysUnscheduledAfterRestart()
     {
         using var environment = new AnalysisTestEnvironment();

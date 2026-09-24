@@ -23,7 +23,7 @@ public interface ICaptureMemoryPrompts
 public sealed record AnalysisStorageStatus(bool? HasData, bool IsAvailable, bool CleanupPending = false);
 public sealed record CaptureMemoryState(CaptureMemoryPolicy Policy, bool PolicyAvailable,
     AnalysisStorageStatus Storage, AnalysisActivitySnapshot Activity, bool IsScheduling = false, string? FailureCode = null,
-    bool IsDeleting = false)
+    bool IsDeleting = false, bool ConsentAvailable = true)
 {
     public bool CanScan => PolicyAvailable && Policy.IsAllowed && !IsScheduling && !IsDeleting;
     public bool CanDelete => Storage.HasData == true && !IsDeleting;
@@ -41,6 +41,7 @@ public interface ICaptureMemoryService
     Task SetPreferredPathAsync(string sourcePath, string preferredPath, CancellationToken cancellationToken = default);
     Task SetScanningAsync(bool enabled, CancellationToken cancellationToken = default);
     Task SetConsentAsync(bool granted, CancellationToken cancellationToken = default);
+    Task<bool> EnsureConsentAsync(CancellationToken cancellationToken = default);
     Task ScanExistingAsync(CancellationToken cancellationToken = default);
     Task DeleteMetadataAsync(CancellationToken cancellationToken = default);
     Task RefreshAsync(CancellationToken cancellationToken = default);

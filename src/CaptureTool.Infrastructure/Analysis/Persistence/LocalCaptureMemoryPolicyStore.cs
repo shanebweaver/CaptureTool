@@ -21,14 +21,22 @@ internal sealed class LocalCaptureMemoryPolicyStore : ICaptureMemoryPolicyStore
     {
         CaptureMemoryPolicyDocument? document = await _documents.ReadAsync(_path, CaptureMemoryPolicyJsonContext.Default.CaptureMemoryPolicyDocument, cancellationToken).ConfigureAwait(false);
         if (document == null) return null;
-        if (document.Version != 1 || document.Policy == null) throw new InvalidDataException("Unsupported capture memory policy.");
+        if (document.Version is not (1 or 2) || document.Policy == null) throw new InvalidDataException("Unsupported capture memory policy.");
         Validate(document.Policy);
+        if (document.Version == 1)
+        {
+            // Earlier consent covered background analysis only, not every AI tool.
+            // Preserve media/metadata, but ask once for the expanded consent scope.
+            var migrated = new CaptureMemoryPolicy(false, false, Guid.NewGuid(), document.Policy.EnableBoundary);
+            await SaveAsync(migrated, cancellationToken).ConfigureAwait(false);
+            return migrated;
+        }
         return document.Policy;
     }
     public Task SaveAsync(CaptureMemoryPolicy policy, CancellationToken cancellationToken)
     {
         Validate(policy);
-        return _documents.WriteAsync(_path, new CaptureMemoryPolicyDocument(1, policy), CaptureMemoryPolicyJsonContext.Default.CaptureMemoryPolicyDocument, cancellationToken);
+        return _documents.WriteAsync(_path, new CaptureMemoryPolicyDocument(2, policy), CaptureMemoryPolicyJsonContext.Default.CaptureMemoryPolicyDocument, cancellationToken);
     }
     private static void Validate(CaptureMemoryPolicy policy)
     {

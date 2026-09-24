@@ -36,7 +36,9 @@ internal sealed class CaptureMemoryDialogService(ITaskEnvironment ui) : ICapture
                         DefaultButton = prompt == CaptureMemoryPrompt.DeleteMetadata ? ContentDialogButton.Close : ContentDialogButton.Primary
                     };
                     AutomationProperties.SetAutomationId(dialog, "CaptureMemory" + name + "Dialog");
-                    using var registration = cancellationToken.Register(() => ui.TryExecute(dialog.Hide));
+                    // Keep a managed callback target; passing the WinRT method group
+                    // directly fails delegate marshalling when cancellation closes it.
+                    using var registration = cancellationToken.Register(() => ui.TryExecute(() => dialog.Hide()));
                     ContentDialogResult result = await dialog.ShowAsync();
                     completion.TrySetResult(!cancellationToken.IsCancellationRequested && result == ContentDialogResult.Primary);
                 }

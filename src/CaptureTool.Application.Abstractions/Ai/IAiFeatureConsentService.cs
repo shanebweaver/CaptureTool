@@ -4,10 +4,9 @@ namespace CaptureTool.Application.Abstractions.Ai;
 
 public interface IAiFeatureConsentService
 {
-    IReadOnlyList<AiFeatureConsent> GetFeatureConsents();
-
+    /// <summary>Every feature shares the same protected, application-wide consent.</summary>
     AiFeatureConsentState GetConsentState(AiFeatureId featureId);
-
-    Task<bool> SetConsentAsync(AiFeatureId featureId, bool isGranted, CancellationToken cancellationToken = default);
+    Task<bool> EnsureConsentAsync(CancellationToken cancellationToken = default);
+    CancellationToken Revoked { get; }
 }
 

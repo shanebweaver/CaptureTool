@@ -771,78 +771,63 @@
                         </Grid>
                     </StackPanel>
 
-                    <!-- Capture Memory -->
-                    <StackPanel Spacing="8" AutomationProperties.AutomationId="CaptureMemorySettings">
+                    <!-- One consent for local AI; automatic capture scanning remains optional. -->
+                    <StackPanel Spacing="4" AutomationProperties.AutomationId="CaptureMemorySettings">
                         <TextBlock x:Uid="CaptureMemory_SettingsHeader" Margin="0,4" />
-                        <Border Padding="16" Background="{ThemeResource CardBackgroundFillColorDefault}"
-                                BorderBrush="{ThemeResource CardStrokeColorDefault}" BorderThickness="1" CornerRadius="4">
-                            <StackPanel Spacing="12">
-                                <ToggleSwitch x:Name="CaptureMemoryScanning" x:Uid="CaptureMemory_Scanning"
-                                              AutomationProperties.AutomationId="CaptureMemoryScanning"
-                                              IsOn="{x:Bind CaptureMemory.ScanningEnabled, Mode=OneWay}"
-                                              Toggled="CaptureMemoryScanning_Toggled" />
-                                <CheckBox x:Uid="CaptureMemory_Consent" AutomationProperties.AutomationId="CaptureMemoryConsent"
-                                          IsChecked="{x:Bind CaptureMemory.ConsentGranted, Mode=OneWay}" Click="CaptureMemoryConsent_Click" />
-                                <TextBlock x:Uid="CaptureMemory_SettingsDescription" TextWrapping="Wrap" Opacity=".75" />
-                                <StackPanel Spacing="8" HorizontalAlignment="Left">
-                                    <Button x:Uid="CaptureMemory_Scan" AutomationProperties.AutomationId="CaptureMemoryScan"
-                                            Command="{x:Bind CaptureMemory.ScanCommand}" />
-                                    <Button x:Uid="CaptureMemory_Delete" AutomationProperties.AutomationId="CaptureMemoryDelete"
-                                            Command="{x:Bind CaptureMemory.DeleteCommand}" />
-                                </StackPanel>
+                        <Grid Padding="16,12" Background="{ThemeResource CardBackgroundFillColorDefault}"
+                              BorderBrush="{ThemeResource CardStrokeColorDefault}" BorderThickness="1" ColumnSpacing="16" CornerRadius="4">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" /><ColumnDefinition /><ColumnDefinition Width="Auto" /><ColumnDefinition Width="28" />
+                            </Grid.ColumnDefinitions>
+                            <SymbolIcon Symbol="Permissions" />
+                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                <TextBlock x:Uid="AiSettings_ConsentHeader" TextWrapping="WrapWholeWords" />
+                                <TextBlock x:Uid="AiSettings_ConsentDescription" FontSize="12" Opacity=".75" TextWrapping="WrapWholeWords" />
                             </StackPanel>
-                        </Border>
-                    </StackPanel>
-
-                    <!--  AI consent section  -->
-                    <StackPanel Spacing="4" Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.IsAiConsentSettingsVisible), Mode=OneWay}">
-                        <TextBlock x:Uid="Settings_AiConsentHeaderLabel" Margin="0,4" />
-
-                        <ItemsControl ItemsSource="{x:Bind ViewModel.AiFeatureConsents, Mode=OneWay}">
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate x:DataType="settings:AiFeatureConsentViewModel">
-                                    <Grid
-                                        Padding="16,12"
-                                        Background="{ThemeResource CardBackgroundFillColorDefault}"
-                                        BorderBrush="{ThemeResource CardStrokeColorDefault}"
-                                        BorderThickness="1"
-                                        ColumnSpacing="16"
-                                        CornerRadius="4">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="Auto" />
-                                            <ColumnDefinition />
-                                            <ColumnDefinition Width="Auto" />
-                                            <ColumnDefinition Width="28" />
-                                        </Grid.ColumnDefinitions>
-
-                                        <SymbolIcon Symbol="Permissions" />
-
-                                        <StackPanel Grid.Column="1">
-                                            <TextBlock
-                                                MaxLines="2"
-                                                Text="{x:Bind DisplayName}"
-                                                TextTrimming="WordEllipsis"
-                                                TextWrapping="WrapWholeWords" />
-                                            <TextBlock
-                                                x:Uid="Settings_AiConsentDescription"
-                                                FontSize="12"
-                                                MaxLines="2"
-                                                Opacity=".75"
-                                                TextTrimming="WordEllipsis"
-                                                TextWrapping="WrapWholeWords" />
-                                        </StackPanel>
-
-                                        <CheckBox
-                                            Grid.Column="2"
-                                            MinWidth="0"
-                                            HorizontalAlignment="Right"
-                                            AutomationProperties.Name="{x:Bind DisplayName}"
-                                            Click="AiFeatureConsentCheckBox_Click"
-                                            IsChecked="{x:Bind IsConsented, Mode=OneWay}" />
-                                    </Grid>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
+                            <CheckBox x:Uid="CaptureMemory_Consent" Grid.Column="2" MinWidth="0" HorizontalAlignment="Right"
+                                      AutomationProperties.AutomationId="CaptureMemoryConsent"
+                                      IsChecked="{x:Bind CaptureMemory.ConsentGranted, Mode=OneWay}" Click="CaptureMemoryConsent_Click" />
+                        </Grid>
+                        <Grid Padding="16,12" Background="{ThemeResource CardBackgroundFillColorDefault}"
+                              BorderBrush="{ThemeResource CardStrokeColorDefault}" BorderThickness="1" ColumnSpacing="16" CornerRadius="4">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" /><ColumnDefinition /><ColumnDefinition Width="Auto" /><ColumnDefinition Width="28" />
+                            </Grid.ColumnDefinitions>
+                            <SymbolIcon Symbol="Camera" />
+                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                <TextBlock x:Uid="AiSettings_ScanningHeader" TextWrapping="WrapWholeWords" />
+                                <TextBlock x:Uid="AiSettings_ScanningDescription" FontSize="12" Opacity=".75" TextWrapping="WrapWholeWords" />
+                            </StackPanel>
+                            <ToggleSwitch x:Name="CaptureMemoryScanning" x:Uid="CaptureMemory_Scanning" Grid.Column="2" MinWidth="0" HorizontalAlignment="Right"
+                                          AutomationProperties.AutomationId="CaptureMemoryScanning"
+                                          IsOn="{x:Bind CaptureMemory.ScanningEnabled, Mode=OneWay}" Toggled="CaptureMemoryScanning_Toggled" />
+                        </Grid>
+                        <Grid Padding="16,12" Background="{ThemeResource CardBackgroundFillColorDefault}"
+                              BorderBrush="{ThemeResource CardStrokeColorDefault}" BorderThickness="1" ColumnSpacing="16" CornerRadius="4">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" /><ColumnDefinition /><ColumnDefinition Width="Auto" /><ColumnDefinition Width="28" />
+                            </Grid.ColumnDefinitions>
+                            <SymbolIcon Symbol="Refresh" />
+                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                <TextBlock x:Uid="AiSettings_ScanHeader" TextWrapping="WrapWholeWords" />
+                                <TextBlock x:Uid="AiSettings_ScanDescription" FontSize="12" Opacity=".75" TextWrapping="WrapWholeWords" />
+                            </StackPanel>
+                            <Button x:Uid="CaptureMemory_Scan" Grid.Column="2" HorizontalAlignment="Right" VerticalAlignment="Center"
+                                    AutomationProperties.AutomationId="CaptureMemoryScan" Command="{x:Bind CaptureMemory.ScanCommand}" />
+                        </Grid>
+                        <Grid Padding="16,12" Background="{ThemeResource CardBackgroundFillColorDefault}"
+                              BorderBrush="{ThemeResource CardStrokeColorDefault}" BorderThickness="1" ColumnSpacing="16" CornerRadius="4">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" /><ColumnDefinition /><ColumnDefinition Width="Auto" /><ColumnDefinition Width="28" />
+                            </Grid.ColumnDefinitions>
+                            <SymbolIcon Symbol="Delete" />
+                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                <TextBlock x:Uid="AiSettings_DeleteHeader" TextWrapping="WrapWholeWords" />
+                                <TextBlock x:Uid="AiSettings_DeleteDescription" FontSize="12" Opacity=".75" TextWrapping="WrapWholeWords" />
+                            </StackPanel>
+                            <Button x:Uid="CaptureMemory_Delete" Grid.Column="2" HorizontalAlignment="Right" VerticalAlignment="Center"
+                                    AutomationProperties.AutomationId="CaptureMemoryDelete" Command="{x:Bind CaptureMemory.DeleteCommand}" />
+                        </Grid>
                     </StackPanel>
 
                     <!--  Privacy section  -->

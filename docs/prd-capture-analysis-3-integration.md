@@ -92,11 +92,12 @@ saved enabled/consented combination or report a failed save as a successful tran
 | Disable scanning | Stop queued/active work and prevent late publication. Offer deletion if metadata exists; keeping it leaves scanning off. |
 | Run analysis on existing captures | Disabled when scanning is off. Require consent, then explicitly schedule a new run for eligible captures. Preserve still-valid successful results until replaced. |
 | Delete metadata | Enabled only when data exists. Confirm, invalidate previous work, and delete analysis data without touching media or scanning preference. Future captures remain eligible; old captures return only through an explicit scan. |
-| Capture Memory consent checkbox | Generic consent for all background scanning. Revocation disables scanning and offers deletion. Checking it alone does not start work. |
+| Local AI consent checkbox | One consent for all local AI: background scanning, OCR, descriptions, transcription, and AI editing. Revocation disables scanning, cancels active AI tools, and offers deletion. Checking it alone does not start work. |
 
 Consent copy explains on-device processing, persisted derived data, and model
-downloads. Do not introduce separate model consents or reuse interactive editor
-tool consent as authorization for background scanning. Combine prompts where
+downloads. The shared local AI consent supersedes the original background-only
+scope; older per-tool approvals do not authorize the expanded scope. Automatic
+scanning still requires its separate enabled preference. Combine prompts where
 practical and persist successful transitions before showing success. Storage
 failure leaves the UI truthful and retryable. Serialize conflicting commands;
 disable/revoke/delete must be able to stop existing work promptly.

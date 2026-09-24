@@ -48,17 +48,13 @@ public sealed class ImageEditPageViewModelImageDescriptionTests
     public async Task ToggleMode_WhenConsentRefused_ShouldRemainInactiveAndRefreshToggle()
     {
         var consent = new Mock<IAiFeatureConsentService>();
-        var dialog = new Mock<IAiFeatureConsentDialogService>();
         var service = new Mock<IImageDescriptionService>();
 
         consent
             .Setup(x => x.GetConsentState(AiFeatureId.ImageDescription))
             .Returns(AiFeatureConsentState.Denied);
         consent
-            .Setup(x => x.SetConsentAsync(AiFeatureId.ImageDescription, false, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(true);
-        dialog
-            .Setup(x => x.RequestConsentAsync(AiFeatureId.ImageDescription, It.IsAny<CancellationToken>()))
+            .Setup(x => x.EnsureConsentAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(false);
         service
             .Setup(x => x.GetReadyState())
@@ -66,8 +62,7 @@ public sealed class ImageEditPageViewModelImageDescriptionTests
 
         ImageEditPageViewModel viewModel = CreateViewModel(
             imageDescriptionService: service.Object,
-            consentService: consent.Object,
-            consentDialogService: dialog.Object);
+            consentService: consent.Object);
 
         await viewModel.LoadAsync(new ImageFile("original.png"), CancellationToken.None);
         List<string?> changedProperties = [];
@@ -87,17 +82,13 @@ public sealed class ImageEditPageViewModelImageDescriptionTests
     public async Task ToggleMode_WhenConsentAccepted_ShouldEnableModeWithoutRunningModel()
     {
         var consent = new Mock<IAiFeatureConsentService>();
-        var dialog = new Mock<IAiFeatureConsentDialogService>();
         var service = new Mock<IImageDescriptionService>();
 
         consent
             .Setup(x => x.GetConsentState(AiFeatureId.ImageDescription))
             .Returns(AiFeatureConsentState.Unknown);
         consent
-            .Setup(x => x.SetConsentAsync(AiFeatureId.ImageDescription, true, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(true);
-        dialog
-            .Setup(x => x.RequestConsentAsync(AiFeatureId.ImageDescription, It.IsAny<CancellationToken>()))
+            .Setup(x => x.EnsureConsentAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
         service
             .Setup(x => x.GetReadyState())
@@ -105,8 +96,7 @@ public sealed class ImageEditPageViewModelImageDescriptionTests
 
         ImageEditPageViewModel viewModel = CreateViewModel(
             imageDescriptionService: service.Object,
-            consentService: consent.Object,
-            consentDialogService: dialog.Object);
+            consentService: consent.Object);
 
         await viewModel.LoadAsync(new ImageFile("original.png"), CancellationToken.None);
         await viewModel.ToggleImageDescriptionModeCommand.ExecuteAsync(null);
@@ -469,7 +459,6 @@ public sealed class ImageEditPageViewModelImageDescriptionTests
         IImageDescriptionService? imageDescriptionService = null,
         IImageDescriptionFeatureAvailability? featureAvailability = null,
         IAiFeatureConsentService? consentService = null,
-        IAiFeatureConsentDialogService? consentDialogService = null,
         IClipboardService? clipboardService = null)
     {
         var imageMetadata = new Mock<IImageMetadataService>();
@@ -494,7 +483,6 @@ public sealed class ImageEditPageViewModelImageDescriptionTests
             imageMetadata.Object,
             Mock.Of<IImageSuperResolutionService>(),
             Mock.Of<IImageSuperResolutionFeatureAvailability>(x => x.IsImageSuperResolutionEnabled == false),
-            Mock.Of<IImageSuperResolutionPreparationConsentService>(),
             Mock.Of<IShareService>(),
             Mock.Of<IOpenExternalEditorUseCase>(),
             Mock.Of<IStorageService>(),
@@ -512,7 +500,6 @@ public sealed class ImageEditPageViewModelImageDescriptionTests
             new TextExtractionToolViewModel(Mock.Of<IClipboardService>(), localization, notifications),
             consentService ?? Mock.Of<IAiFeatureConsentService>(x =>
                 x.GetConsentState(AiFeatureId.ImageDescription) == AiFeatureConsentState.Granted),
-            consentDialogService ?? Mock.Of<IAiFeatureConsentDialogService>(),
             null,
             null,
             imageDescriptionService ?? Mock.Of<IImageDescriptionService>(x =>

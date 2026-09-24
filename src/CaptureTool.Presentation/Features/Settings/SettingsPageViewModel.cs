@@ -1,11 +1,3 @@
-using CaptureTool.Application.Abstractions.Ai;
-using CaptureTool.Application.Abstractions.Edit.Image.Description;
-using CaptureTool.Application.Abstractions.Edit.Image.ForegroundExtraction;
-using CaptureTool.Application.Abstractions.Edit.Image.ObjectErase;
-using CaptureTool.Application.Abstractions.Edit.Image.ObjectExtraction;
-using CaptureTool.Application.Abstractions.Edit.Image.SuperResolution;
-using CaptureTool.Application.Abstractions.Edit.Image.TextExtraction;
-using CaptureTool.Application.Abstractions.Edit.Video.SuperResolution;
 using CaptureTool.Application.Abstractions.Localization;
 using CaptureTool.Application.Abstractions.Metrics;
 using CaptureTool.Application.Abstractions.Settings;
@@ -36,7 +28,6 @@ using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Application.Abstractions.Store;
 using CaptureTool.Application.Abstractions.Telemetry;
 using CaptureTool.Application.Abstractions.Themes;
-using CaptureTool.Domain.Ai;
 using CaptureTool.Presentation.Factories;
 using CaptureTool.Presentation.ViewModels;
 using CommunityToolkit.Mvvm.Input;
@@ -69,15 +60,6 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
     private readonly IOpenTempFolderUseCase _openTempFolderAction;
     private readonly IClearTempFilesUseCase _clearTempFilesAction;
     private readonly IRestoreDefaultsUseCase _restoreDefaultsAction;
-    private readonly IAiFeatureConsentService _aiFeatureConsentService;
-    private readonly IAiConsentSettingsFeatureAvailability _aiConsentSettingsFeatureAvailability;
-    private readonly IImageSuperResolutionFeatureAvailability _imageSuperResolutionFeatureAvailability;
-    private readonly ITextExtractionFeatureAvailability _textExtractionFeatureAvailability;
-    private readonly IImageDescriptionFeatureAvailability _imageDescriptionFeatureAvailability;
-    private readonly IImageForegroundExtractionFeatureAvailability _imageForegroundExtractionFeatureAvailability;
-    private readonly IImageObjectEraseFeatureAvailability _imageObjectEraseFeatureAvailability;
-    private readonly IImageObjectExtractionFeatureAvailability _imageObjectExtractionFeatureAvailability;
-    private readonly IVideoSuperResolutionFeatureAvailability _videoSuperResolutionFeatureAvailability;
     private readonly ILocalizationService _localizationService;
     private readonly ISettingsService _settingsService;
     private readonly IAppMetricsService _appMetricsService;
@@ -140,18 +122,6 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
     }
 
     public ObservableCollection<AppThemeViewModel> AppThemes
-    {
-        get;
-        private set => Set(ref field, value);
-    }
-
-    public ObservableCollection<AiFeatureConsentViewModel> AiFeatureConsents
-    {
-        get;
-        private set => Set(ref field, value);
-    }
-
-    public bool IsAiConsentSettingsVisible
     {
         get;
         private set => Set(ref field, value);
@@ -289,10 +259,6 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
         IOpenTempFolderUseCase openTempFolderAction,
         IClearTempFilesUseCase clearTempFilesAction,
         IRestoreDefaultsUseCase restoreDefaultsAction,
-        IAiFeatureConsentService aiFeatureConsentService,
-        IAiConsentSettingsFeatureAvailability aiConsentSettingsFeatureAvailability,
-        IImageSuperResolutionFeatureAvailability imageSuperResolutionFeatureAvailability,
-        ITextExtractionFeatureAvailability textExtractionFeatureAvailability,
         ILocalizationService localizationService,
         IThemeService themeService,
         ISettingsService settingsService,
@@ -301,11 +267,6 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
         IStorageService storageService,
         IFactoryServiceWithArgs<AppLanguageViewModel, IAppLanguage?> appLanguageViewModelFactory,
         IFactoryServiceWithArgs<AppThemeViewModel, AppTheme> appThemeViewModelFactory,
-        IImageDescriptionFeatureAvailability? imageDescriptionFeatureAvailability = null,
-        IImageForegroundExtractionFeatureAvailability? imageForegroundExtractionFeatureAvailability = null,
-        IImageObjectEraseFeatureAvailability? imageObjectEraseFeatureAvailability = null,
-        IImageObjectExtractionFeatureAvailability? imageObjectExtractionFeatureAvailability = null,
-        IVideoSuperResolutionFeatureAvailability? videoSuperResolutionFeatureAvailability = null,
         ITelemetryConsentService? telemetryConsentService = null)
     {
         _goBackAction = goBackAction;
@@ -331,16 +292,6 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
         _openTempFolderAction = openTempFolderAction;
         _clearTempFilesAction = clearTempFilesAction;
         _restoreDefaultsAction = restoreDefaultsAction;
-        _aiFeatureConsentService = aiFeatureConsentService;
-        _aiConsentSettingsFeatureAvailability = aiConsentSettingsFeatureAvailability;
-        _imageSuperResolutionFeatureAvailability = imageSuperResolutionFeatureAvailability;
-        _textExtractionFeatureAvailability = textExtractionFeatureAvailability;
-        _imageDescriptionFeatureAvailability = imageDescriptionFeatureAvailability ?? new DisabledImageDescriptionFeatureAvailability();
-        _imageForegroundExtractionFeatureAvailability = imageForegroundExtractionFeatureAvailability ?? new DisabledImageForegroundExtractionFeatureAvailability();
-        _imageObjectEraseFeatureAvailability = imageObjectEraseFeatureAvailability ?? new DisabledImageObjectEraseFeatureAvailability();
-        _imageObjectExtractionFeatureAvailability = imageObjectExtractionFeatureAvailability ?? new DisabledImageObjectExtractionFeatureAvailability();
-        _videoSuperResolutionFeatureAvailability =
-            videoSuperResolutionFeatureAvailability ?? new DisabledVideoSuperResolutionFeatureAvailability();
         _telemetryConsentService = telemetryConsentService;
         _localizationService = localizationService;
         _themeService = themeService;
@@ -353,7 +304,6 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
 
         AppThemes = [];
         AppLanguages = [];
-        AiFeatureConsents = [];
         ScreenshotsFolderPath = string.Empty;
         AudioFolderPath = string.Empty;
         VideosFolderPath = string.Empty;
@@ -458,7 +408,6 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
             TelemetryConsentSettingValues.Parse(
                 _settingsService.Get(CaptureToolSettings.Settings_TelemetryConsent)) ==
             TelemetryConsentState.Granted;
-        RefreshAiFeatureConsents();
 
         var screenshotsFolder = _settingsService.Get(CaptureToolSettings.Settings_ImageCapture_AutoSaveFolder);
         if (string.IsNullOrWhiteSpace(screenshotsFolder))
@@ -486,21 +435,6 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
         TemporaryFilesFolderPath = _storageService.GetApplicationScratchFolderPath();
 
         await base.LoadAsync(cancellationToken);
-    }
-
-    public async Task UpdateAiFeatureConsentAsync(AiFeatureId featureId, bool isConsented)
-    {
-        bool saved = await _aiFeatureConsentService.SetConsentAsync(
-            featureId,
-            isConsented,
-            CancellationToken.None);
-        if (!saved)
-        {
-            return;
-        }
-
-        AiFeatureConsentViewModel? featureConsent = AiFeatureConsents.FirstOrDefault(consent => consent.FeatureId == featureId);
-        featureConsent?.ApplyConsent(isConsented);
     }
 
     private async Task UpdateAppLanguageAsync(int index)
@@ -819,7 +753,6 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
         AudioCaptureDefaultLocalAudio = _settingsService.Get(CaptureToolSettings.Settings_AudioCapture_DefaultLocalAudioEnabled);
         CaptureWarnBeforeDiscard = _settingsService.Get(CaptureToolSettings.Settings_Capture_WarnBeforeDiscard);
         EditWarnBeforeDiscard = _settingsService.Get(CaptureToolSettings.Settings_Edit_WarnBeforeDiscard);
-        RefreshAiFeatureConsents();
         OptionalUsageDataEnabled = false;
         _telemetryConsentService?.SetState(TelemetryConsentState.Unknown);
 
@@ -839,94 +772,4 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
         UpdateShowAppThemeRestartMessage();
     }
 
-    private void RefreshAiFeatureConsents()
-    {
-        AiFeatureConsents.Clear();
-
-        if (!_aiConsentSettingsFeatureAvailability.IsAiConsentSettingsEnabled)
-        {
-            IsAiConsentSettingsVisible = false;
-            return;
-        }
-
-        foreach (AiFeatureConsent consent in _aiFeatureConsentService.GetFeatureConsents())
-        {
-            if (!IsAiFeatureConsentVisible(consent.FeatureId))
-            {
-                continue;
-            }
-
-            AiFeatureConsents.Add(new(
-                consent.FeatureId,
-                GetAiFeatureDisplayName(consent),
-                consent.State == AiFeatureConsentState.Granted));
-        }
-
-        IsAiConsentSettingsVisible = AiFeatureConsents.Count > 0;
-    }
-
-    private string GetAiFeatureDisplayName(AiFeatureConsent consent)
-    {
-        string? resourceKey = consent.FeatureId switch
-        {
-            AiFeatureId.TextExtraction => "Settings_AiConsent_TextExtractionDisplayName",
-            AiFeatureId.ImageDescription => "Settings_AiConsent_ImageDescriptionDisplayName",
-            AiFeatureId.ImageForegroundExtraction => "Settings_AiConsent_ImageForegroundExtractionDisplayName",
-            AiFeatureId.ImageObjectErase => "Settings_AiConsent_ImageObjectEraseDisplayName",
-            AiFeatureId.ImageObjectExtraction => "Settings_AiConsent_ImageObjectExtractionDisplayName",
-            AiFeatureId.VideoSuperResolution => "Settings_AiConsent_VideoSuperResolutionDisplayName",
-            _ => null
-        };
-
-        if (resourceKey is null)
-        {
-            return consent.DisplayName;
-        }
-
-        string localizedDisplayName = _localizationService.GetString(resourceKey);
-        return string.IsNullOrWhiteSpace(localizedDisplayName)
-            ? consent.DisplayName
-            : localizedDisplayName;
-    }
-
-    private bool IsAiFeatureConsentVisible(AiFeatureId featureId)
-    {
-        return featureId switch
-        {
-            AiFeatureId.TextExtraction => _textExtractionFeatureAvailability.IsTextExtractionEnabled,
-            AiFeatureId.ImageSuperResolution => _imageSuperResolutionFeatureAvailability.IsImageSuperResolutionEnabled,
-            AiFeatureId.ImageDescription => _imageDescriptionFeatureAvailability.IsImageDescriptionEnabled,
-            AiFeatureId.ImageForegroundExtraction => _imageForegroundExtractionFeatureAvailability.IsImageForegroundExtractionEnabled,
-            AiFeatureId.ImageObjectErase => _imageObjectEraseFeatureAvailability.IsImageObjectEraseEnabled,
-            AiFeatureId.ImageObjectExtraction => _imageObjectExtractionFeatureAvailability.IsImageObjectExtractionEnabled,
-            AiFeatureId.VideoSuperResolution => _videoSuperResolutionFeatureAvailability.IsVideoSuperResolutionEnabled,
-            _ => false
-        };
-    }
-
-    private sealed class DisabledImageDescriptionFeatureAvailability : IImageDescriptionFeatureAvailability
-    {
-        public bool IsImageDescriptionEnabled => false;
-    }
-
-    private sealed class DisabledImageForegroundExtractionFeatureAvailability : IImageForegroundExtractionFeatureAvailability
-    {
-        public bool IsImageForegroundExtractionEnabled => false;
-    }
-
-    private sealed class DisabledImageObjectEraseFeatureAvailability : IImageObjectEraseFeatureAvailability
-    {
-        public bool IsImageObjectEraseEnabled => false;
-    }
-
-    private sealed class DisabledImageObjectExtractionFeatureAvailability : IImageObjectExtractionFeatureAvailability
-    {
-        public bool IsImageObjectExtractionEnabled => false;
-    }
-
-    private sealed class DisabledVideoSuperResolutionFeatureAvailability :
-        IVideoSuperResolutionFeatureAvailability
-    {
-        public bool IsVideoSuperResolutionEnabled => false;
-    }
 }

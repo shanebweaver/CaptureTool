@@ -210,7 +210,6 @@ public sealed class ImageEditPageViewModelSaveTests
             imageMetadata.Object,
             Mock.Of<IImageSuperResolutionService>(),
             Mock.Of<IImageSuperResolutionFeatureAvailability>(),
-            Mock.Of<IImageSuperResolutionPreparationConsentService>(),
             Mock.Of<IShareService>(),
             Mock.Of<IOpenExternalEditorUseCase>(),
             Mock.Of<IStorageService>(),
