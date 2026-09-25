@@ -8,12 +8,14 @@ internal sealed class UiTestLaunchOptions
         bool isEnabled,
         string? imageFilePath,
         string? dataFolderPath,
-        string? temporaryFolderPath)
+        string? temporaryFolderPath,
+        string? language = null)
     {
         IsEnabled = isEnabled;
         ImageFilePath = imageFilePath;
         DataFolderPath = dataFolderPath;
         TemporaryFolderPath = temporaryFolderPath;
+        Language = language;
     }
 
     public static UiTestLaunchOptions Current { get; private set; } = new(
@@ -30,6 +32,8 @@ internal sealed class UiTestLaunchOptions
 
     public string? TemporaryFolderPath { get; }
 
+    public string? Language { get; }
+
     public static void Initialize(string[] args)
     {
         bool isEnabled = args.Contains("--capturetool-ui-test", StringComparer.OrdinalIgnoreCase);
@@ -38,7 +42,8 @@ internal sealed class UiTestLaunchOptions
             isEnabled,
             GetOptionValue(args, "--ui-test-image"),
             GetOptionValue(args, "--ui-test-data-dir"),
-            GetOptionValue(args, "--ui-test-temp-dir"));
+            GetOptionValue(args, "--ui-test-temp-dir"),
+            GetOptionValue(args, "--ui-test-language"));
     }
 
     private static string? GetOptionValue(string[] args, string optionName)

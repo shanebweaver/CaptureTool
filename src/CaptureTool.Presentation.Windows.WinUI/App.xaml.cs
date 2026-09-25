@@ -25,6 +25,11 @@ public partial class App : Microsoft.UI.Xaml.Application
 
     internal App(StartupActivationQueue<ActivationMaterializationResult> redirectedActivations)
     {
+        if (UiTestLaunchOptions.Current.IsEnabled && UiTestLaunchOptions.Current.Language is { Length: > 0 } language)
+        {
+            // Unpackaged UI test launches use a process-local resource override.
+            Microsoft.Windows.Globalization.ApplicationLanguages.PrimaryLanguageOverride = language;
+        }
         _redirectedActivations = redirectedActivations;
         UnhandledException += App_UnhandledException;
         DispatcherQueue = DispatcherQueue.GetForCurrentThread();

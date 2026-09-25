@@ -1821,4 +1821,10 @@ SOFTWARE.
   <data name="AiSettings_DeleteDescription.Text" xml:space="preserve">
     <value>Supprimer toutes les analyses enregistrées, y compris le texte, les codes QR et les détails des fichiers. Vos captures sont conservées.</value>
   </data>
+  <data name="CaptureMemory_Scanning.OnContent" xml:space="preserve">
+    <value>Activé</value>
+  </data>
+  <data name="CaptureMemory_Scanning.OffContent" xml:space="preserve">
+    <value>Désactivé</value>
+  </data>
 </root>

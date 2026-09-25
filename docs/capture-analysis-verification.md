@@ -44,6 +44,18 @@ This Insider host also does not establish behavior across supported retail OS ve
   with 100 ms blocks. The streaming adapter now uses that bounded block size;
   it still awaits stop and consumes only final responses. No source padding or
   provisional transcript is published. Fixture assertions check words near the end.
+- Localized settings rendered the scanning toggle's state as English `On`/`Off`.
+  Added explicit state resources for all six languages, matching the other settings.
+  The desktop flow now runs for every supported locale and asserts translated
+  accessible consent/action labels as well as the existing consent and keyboard behavior.
+- Bundle inspection found six declared languages but only English strings: the
+  generated regional language packs were absent from the bundle. UI translations
+  now stay in each main package; scale and graphics-specific resources may still
+  split. The existing Store-build workflow checks actual packaged resource values
+  against source translations for every supported language and both architectures.
+  The new check rejected the retained incomplete bundle before this fix.
+  Keeping all translations increased each main resource index from 235,568 to
+  351,248 bytes (about 113 KB), avoiding separate language-pack availability.
 
 ## Stable dependencies
 
@@ -69,12 +81,14 @@ Commands run from the repository root; detailed outputs are under ignored
 | Storage and execution regressions | `discovery-fix-tests.log` | 64 passed; both new regressions failed before their fixes |
 | Diagnostic guard | `pwsh -NoProfile -File .github/scripts/test-native-aot-log.ps1` | 11 passed |
 | x64/ARM64 Native AOT app and harness | `pwsh -NoProfile -File .github/scripts/verify-native-aot.ps1 -Platform <x64 or ARM64> -OutputDirectory artifacts/slice4/verified-native-aot`; corresponding `verified-native-aot-*.log` | All four publishes passed; four accepted vendor diagnostics per executable; app resources present |
-| Combined x64/ARM64 Native AOT MSIX bundle | `package-final.log`, `package-payload-results.json`, `package-*-pri.xml` | Release 2.16.3.0 built; eight accepted vendor warnings, zero errors; both native PE architectures, one expected WinML DLL per package, fonts/images and embedded compiled XAML verified |
+| Combined x64/ARM64 Native AOT MSIX bundle | Initial `package-final.log`, final `package-all-languages.log`, `package-payload-results.json`, `package-*-pri.xml` | Release 2.16.3.0 rebuilt with all six languages in each main package; eight accepted vendor warnings, zero errors; both native PE architectures, one expected WinML DLL per package, fonts/images and embedded compiled XAML verified |
+| Packaged localization guard | `pwsh -File .github/scripts/assert-package-localization.ps1 -BundlePath <bundle>`; `package-language-guard-repro.log`, `package-language-guard-fixed.log` | Rejected the retained incomplete bundle; accepted translated header and toggle states for all six languages in both corrected architecture packages |
 | Process interruption, managed harness | `recovery-fixed/recovery-results.json` | Seven passed: registration, admission, preparation, execution, publication, committed step, deletion |
 | Process interruption, Native AOT | `recovery-aot/recovery-results.json` | Same seven stages passed with actual child process termination/restart |
 | Managed published desktop flows after resource fix | `resource-fix-ui.log` | Settings/consent/progress/deletion and interactive OCR flows passed |
 | Keyboard and passive progress | `keyboard-ui.log` | Tab order, keyboard consent revocation, accessible consent name, and nonfocusable progress passed |
 | Native AOT desktop flows | `verified-native-ui.log`, final `final-native-ui-diagnostic.log` | Both settings and OCR flows passed, including keyboard checks and receipt of the progress live-region event through UI Automation |
+| Localized Native AOT desktop flows | `localized-native-ui-fixed.log`, `localized-resource-results.json` | Seven passed: six language variants of the settings flow plus OCR; 26 matching nonempty feature keys per locale; light/dark narrow layouts visually inspected |
 | Packaged x64 Native AOT providers | `verified-provider-smoke.log`, `provider-smoke/results.json` | 23 successful cases; four unavailable Windows AI cases explicitly unverified |
 | Empty model cache, passive probes | `passive-smoke/results.json` | Exit 0; Foundry reported preparation required without creating `data/AnalysisModels` or initializing/downloading models |
 | Dependency advisory audit | `dotnet list src/CaptureTool.Presentation.Windows.WinUI/CaptureTool.Presentation.Windows.WinUI.csproj package --vulnerable --include-transitive --no-restore`; `dependency-audit.log` | No known vulnerable packages from the current NuGet source |
@@ -86,15 +100,25 @@ clear, unchanged source, protected derived data, orphan cleanup, and settled pro
 It does not prove power-loss durability or termination inside a native model.
 
 Settings light/dark and narrow screenshots were visually inspected under
-`tests/CaptureTool.UiTests/TestResults/artifacts/capture-memory/`. Consent, scanning,
-analysis, and deletion rows remained readable and aligned. All six supported
-resource files contain the same 24 nonempty `CaptureMemory_` keys. This is resource
-coverage; spoken screen-reader announcements and all translated layouts still
-need their own checks.
-The final desktop run used the frozen `verified-native-aot/x64/app` executable
+`tests/CaptureTool.UiTests/TestResults/artifacts/capture-memory/<locale>/` for
+English, German, Spanish, French, Russian, and Simplified Chinese. Consent, scanning,
+analysis, and deletion rows remained readable and aligned at a 900-by-950 window
+size. All six resource files contain the same 26 nonempty `CaptureMemory_` keys.
+The toggle state labels were checked visually; their text is not exposed as a
+child UI Automation element. Spoken screen-reader output still needs its own check.
+
+The initial final desktop run used the frozen `verified-native-aot/x64/app` executable
 and freshly compiled tests with `-m:1 -p:BuildProjectReferences=false`
 `-p:UseSharedCompilation=false --no-restore`; earlier build attempts stalled
 before test execution. This final run completed with zero warnings/errors.
+The localized run used `localized-native-aot-fixed` with the same test build options,
+`CAPTURETOOL_RUN_UI_TESTS=1`, and `CAPTURETOOL_UI_TEST_APP_PATH` pointing at that
+published executable. Its preceding publish (`localized-publish.log`) passed the
+diagnostic guard with four accepted vendor warnings; the resource-only incremental
+publish (`localized-publish-fixed.log`) passed with none. The test-only language
+option is applied before resource loading. For this unpackaged test executable the
+[SDK language override](https://learn.microsoft.com/en-us/windows/windows-app-sdk/api/winrt/microsoft.windows.globalization.applicationlanguages.primarylanguageoverride)
+is process-local and does not persist the user's language preference.
 
 The MSIX build used Visual Studio 18 Community MSBuild against the app project:
 `/restore /m:1 /p:Configuration=Release /p:Platform=x64`
@@ -108,6 +132,7 @@ Windows App SDK runtime assets (x64 `BBBB34415D8CE303F8A2A2C524C46BD749E21423CCA
 ARM64 `4FA3283776CF65FD5838A1C3F821CA5282D06B85DA772F9DD2ECC2D514A170DC`).
 The app package was inspected without replacing the installed CaptureTool.
 The new hosted CI workflow has not yet run.
+The Store-build workflow's new localization check also awaits its first hosted run.
 
 The packaged provider run used real Windows OCR, QR, file details, Qwen
 `qwen3.5-0.8b-generic-cpu:3`, Nemotron
@@ -142,14 +167,16 @@ the full discovery cost and is a known scaling limit.
 
 ## Remaining verification
 
-- Spoken screen-reader output and translated layouts beyond resource-key
-  completeness. UI Automation event delivery passed; it does not prove Narrator's
-  spoken behavior. Check each supported language at a narrow window width and with
-  keyboard focus, and verify the passive progress message using a screen reader.
+- Spoken screen-reader output. UI Automation event delivery and localized layouts
+  passed; they do not prove Narrator's spoken behavior. Verify the passive progress
+  message using a screen reader.
 - Offline preparation with network access actually unavailable, for both a fresh
   isolated model cache and a previously prepared cache. Retain provider status,
   recovery after reconnection, and confirmation that consent/settings stay usable;
   a passive preparation-required result does not establish this behavior.
+  The host execution token is not elevated (`offline-prerequisite.json`), so it
+  cannot apply a temporary per-executable firewall rule for this check. Network
+  isolation must be supplied for the real offline run.
 - Native ARM64 and available Windows AI inference on a capable device. Run the
   [provider harness](../tools/CaptureTool.Analysis.Smoke/README.md) natively with
   matching architecture and retain its OS/process architecture and model reports.

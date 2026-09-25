@@ -2102,4 +2102,10 @@ SOFTWARE.
   <data name="AiSettings_DeleteDescription.Text" xml:space="preserve">
     <value>Remove all saved analysis, including text, QR codes, and file details. Your captures are kept.</value>
   </data>
+  <data name="CaptureMemory_Scanning.OnContent" xml:space="preserve">
+    <value>On</value>
+  </data>
+  <data name="CaptureMemory_Scanning.OffContent" xml:space="preserve">
+    <value>Off</value>
+  </data>
 </root>

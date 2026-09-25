@@ -5,19 +5,28 @@ using FlaUI.Core.WindowsAPI;
 using FlaUI.UIA3;
 using System.Text.Json;
 using System.Runtime.InteropServices;
+using System.Xml.Linq;
 
 namespace CaptureTool.UiTests;
 
 public sealed partial class ImageEditTextExtractionUiTests
 {
     [TestMethod]
+    [DataRow("en-US")]
+    [DataRow("de-DE")]
+    [DataRow("es-ES")]
+    [DataRow("fr-FR")]
+    [DataRow("ru-RU")]
+    [DataRow("zh-CN")]
     [TestCategory("UI")]
-    public void CaptureMemory_ConsentScanProgressAndDeleteRemainConsistentAfterNavigation()
+    public void CaptureMemory_ConsentScanProgressAndDeleteRemainConsistentAfterNavigation(string language)
     {
         if (!ShouldRunUiTests()) Assert.Inconclusive("Set CAPTURETOOL_RUN_UI_TESTS=1 to run desktop UI automation tests.");
         using var dpi = new DesktopDpiScope();
         string repo = FindRepositoryRoot();
-        string artifacts = Path.Combine(repo, "tests", "CaptureTool.UiTests", "TestResults", "artifacts", "capture-memory");
+        string artifacts = Path.Combine(repo, "tests", "CaptureTool.UiTests", "TestResults", "artifacts", "capture-memory", language);
+        var resources = XDocument.Load(Path.Combine(repo, "src", "CaptureTool.Presentation.Windows.WinUI", "Strings", language, "Resources.resw"))
+            .Root!.Elements("data").ToDictionary(item => (string)item.Attribute("name")!, item => item.Element("value")!.Value);
         string isolated = Path.Combine(artifacts, Guid.NewGuid().ToString("N"));
         string data = Path.Combine(isolated, "data");
         string temp = Path.Combine(isolated, "temp");
@@ -38,7 +47,7 @@ public sealed partial class ImageEditTextExtractionUiTests
             json.WriteEndArray();
         }
 
-        using var app = LaunchApp(ResolveAppExecutablePath(repo), fixture, data, temp);
+        using var app = LaunchApp(ResolveAppExecutablePath(repo), fixture, data, temp, language);
         using var automation = new UIA3Automation();
         Window window = WaitForMainWindow(app, automation, AppLaunchTimeout);
         window.Focus();
@@ -55,6 +64,9 @@ public sealed partial class ImageEditTextExtractionUiTests
         Assert.IsFalse(scan.IsEnabled);
         Assert.IsFalse(delete.IsEnabled);
         Assert.IsFalse(string.IsNullOrWhiteSpace(consent.Name), "Consent needs an accessible name.");
+        Assert.AreEqual(resources["CaptureMemory_Consent.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name"], consent.Name);
+        Assert.AreEqual(resources["CaptureMemory_Scan.Content"], scan.Name);
+        Assert.AreEqual(resources["CaptureMemory_Delete.Content"], delete.Name);
         consent.Focus();
         Keyboard.Type(VirtualKeyShort.TAB);
         WaitFor(() => toggle.Properties.HasKeyboardFocus.Value ? toggle : null, InteractionTimeout,
@@ -67,8 +79,8 @@ public sealed partial class ImageEditTextExtractionUiTests
                 if (element.AutomationId == "CaptureMemoryProgress") Interlocked.Increment(ref progressAnnouncements);
             });
         toggle.Patterns.Toggle.Pattern.Toggle();
-        Confirm("Consent", "Allow");
-        Confirm("ScanExisting", "Analyze captures");
+        Confirm("Consent", "CaptureMemory_ConsentAccept");
+        Confirm("ScanExisting", "CaptureMemory_ScanExistingAccept");
         AutomationElement progress = Element("CaptureMemoryProgress");
         Assert.IsFalse(progress.IsOffscreen, "Analysis progress should be visible in the shell.");
         Assert.IsFalse(progress.Patterns.Invoke.IsSupported, "Progress must be passive.");
@@ -82,11 +94,11 @@ public sealed partial class ImageEditTextExtractionUiTests
         Assert.IsTrue(scan.IsEnabled);
 
         toggle.Patterns.Toggle.Pattern.Toggle();
-        Confirm("DeleteMetadata", "Cancel");
+        Confirm("DeleteMetadata", "CaptureMemory_Cancel");
         WaitFor(() => !scan.IsEnabled ? scan : null, InteractionTimeout, "scan disabled with scanning off");
         WaitFor(() => delete.IsEnabled ? delete : null, InteractionTimeout, "retained metadata available after declining deletion");
         delete.Patterns.Invoke.Pattern.Invoke();
-        Confirm("DeleteMetadata", "Delete information");
+        Confirm("DeleteMetadata", "CaptureMemory_DeleteMetadataAccept");
         WaitFor(() => !delete.IsEnabled && !Directory.EnumerateFiles(Path.Combine(data, "CaptureAnalysis"), "*.analysis", SearchOption.AllDirectories).Any()
             ? delete : null, InteractionTimeout, "deletion completes");
         Assert.IsTrue(File.Exists(fixture), "Deleting analysis must keep capture media.");
@@ -96,7 +108,7 @@ public sealed partial class ImageEditTextExtractionUiTests
         Keyboard.Type(VirtualKeyShort.SPACE);
         WaitFor(() => consent.Patterns.Toggle.Pattern.ToggleState.Value == ToggleState.Off ? consent : null,
             InteractionTimeout, "consent revoked");
-        WaitForElementByName(window, automation, "File", InteractionTimeout).Click();
+        WaitForElementByName(window, automation, resources["AppMenu_FileMenuItem.Title"], InteractionTimeout).Click();
         WaitForElement(window, automation, "AppMenu_HomeItem", InteractionTimeout).Click();
         OpenSettings();
         toggle = Element("CaptureMemoryScanning");
@@ -108,7 +120,7 @@ public sealed partial class ImageEditTextExtractionUiTests
         Assert.IsFalse(scan.IsEnabled);
         Assert.IsFalse(delete.IsEnabled);
         toggle.Patterns.Toggle.Pattern.Toggle();
-        Confirm("Consent", "Cancel");
+        Confirm("Consent", "CaptureMemory_Cancel");
         WaitFor(() => toggle.Patterns.Toggle.Pattern.ToggleState.Value == ToggleState.Off ? toggle : null,
             InteractionTimeout, "cancelled enable restores off state");
         consent.Focus();
@@ -124,7 +136,7 @@ public sealed partial class ImageEditTextExtractionUiTests
         void OpenSettings()
         {
             window.Focus();
-            WaitForElementByName(window, automation, "File", InteractionTimeout).Click();
+            WaitForElementByName(window, automation, resources["AppMenu_FileMenuItem.Title"], InteractionTimeout).Click();
             WaitForElement(window, automation, "AppMenu_SettingsItem", InteractionTimeout).Patterns.Invoke.Pattern.Invoke();
             AutomationElement target = Element("CaptureMemoryConsent");
             var scroll = window.FindAllDescendants().First(element => element.Patterns.Scroll.IsSupported &&
@@ -141,7 +153,7 @@ public sealed partial class ImageEditTextExtractionUiTests
         void Confirm(string prompt, string answer)
         {
             AutomationElement dialog = Element("CaptureMemory" + prompt + "Dialog");
-            WaitForElementByName(dialog, automation, answer, InteractionTimeout).AsButton().Invoke();
+            WaitForElementByName(dialog, automation, resources[answer], InteractionTimeout).AsButton().Invoke();
             WaitForElementRemoved(window, automation, "CaptureMemory" + prompt + "Dialog", InteractionTimeout);
         }
         void SaveScreenshot(string name)

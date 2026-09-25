@@ -6,7 +6,7 @@ namespace CaptureTool.Presentation.Windows.WinUI.UiTests;
 
 internal sealed class UiTestLocalizationService : ILocalizationService
 {
-    private readonly IAppLanguage _defaultLanguage = new UiTestAppLanguage("en-US");
+    private readonly IAppLanguage _defaultLanguage = new UiTestAppLanguage(UiTestLaunchOptions.Current.Language ?? "en-US");
     private bool _isInitialized;
     private ResourceLoader? _resources;
 

@@ -164,6 +164,10 @@
     <AppxAutoIncrementPackageRevision>True</AppxAutoIncrementPackageRevision>
     <AppxBundle>Auto</AppxBundle>
     <AppxBundlePlatforms>arm64|x64</AppxBundlePlatforms>
+    <!-- Keep the small set of UI translations available in the main package.
+         Split regional language packs were absent from the verified bundle;
+         image scale and graphics-specific resources may still be split. -->
+    <AppxBundleAutoResourcePackageQualifiers>Scale|DXFeatureLevel</AppxBundleAutoResourcePackageQualifiers>
     <AppxPackageDir>$(SolutionDir)output\$(Platform)\</AppxPackageDir>
     <AppxPackageSigningEnabled>False</AppxPackageSigningEnabled>
     <AppxPackageSigningTimestampDigestAlgorithm>SHA256</AppxPackageSigningTimestampDigestAlgorithm>

@@ -1821,4 +1821,10 @@ SOFTWARE.
   <data name="AiSettings_DeleteDescription.Text" xml:space="preserve">
     <value>Удалить весь сохранённый анализ, включая текст, QR-коды и сведения о файлах. Ваши записи сохранятся.</value>
   </data>
+  <data name="CaptureMemory_Scanning.OnContent" xml:space="preserve">
+    <value>Вкл.</value>
+  </data>
+  <data name="CaptureMemory_Scanning.OffContent" xml:space="preserve">
+    <value>Выкл.</value>
+  </data>
 </root>
