@@ -1899,4 +1899,15 @@ SOFTWARE.
   <data name="HomePage_RecentCaptureDetailsMenuItem.Text" xml:space="preserve"><value>Detalles</value></data>
   <data name="CaptureDetails_AnalyzedFile" xml:space="preserve"><value>Archivo analizado</value></data>
   <data name="CaptureDetails_AnalyzedAt" xml:space="preserve"><value>Propiedades registradas</value></data>
+  <data name="CapturePane_Toggle.Label" xml:space="preserve"><value>Detalles</value></data>
+  <data name="CapturePane_Heading.Text" xml:space="preserve"><value>Detalles de la captura</value></data>
+  <data name="CapturePane_Close.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Cerrar detalles</value></data>
+  <data name="CapturePane_Close.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve"><value>Cerrar detalles</value></data>
+  <data name="CapturePane_CopyPath.Content" xml:space="preserve"><value>Copiar ruta</value></data>
+  <data name="CapturePane_OpenFolder.Content" xml:space="preserve"><value>Abrir carpeta</value></data>
+  <data name="CapturePane_Technical.Header" xml:space="preserve"><value>Detalles técnicos</value></data>
+  <data name="CapturePane_Summary.Text" xml:space="preserve"><value>Resumen de IA</value></data>
+  <data name="CapturePane_PendingEdits.Message" xml:space="preserve"><value>Las propiedades describen el archivo original. No incluyen los cambios pendientes.</value></data>
+  <data name="CapturePane_FileUnavailable" xml:space="preserve"><value>Las propiedades no están disponibles. Actualice cuando el archivo esté listo.</value></data>
+  <data name="CapturePane_FolderUnavailable" xml:space="preserve"><value>No se pudo abrir la carpeta.</value></data>
 </root>

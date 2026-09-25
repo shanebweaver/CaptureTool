@@ -19,8 +19,10 @@ public sealed partial class ImageEditTextExtractionUiTests
     [DataRow("ru-RU")]
     [DataRow("zh-CN")]
     [TestCategory("UI")]
-    public void CaptureDetails_ReadCopyEvidenceAndChangedSource(string language)
+    public void CapturePane_LocalDetailsAndAnalysisLifecycle(string language)
     {
+        if (Environment.GetEnvironmentVariable("CAPTURETOOL_UI_TEST_LANGUAGE") is { Length: > 0 } requested && requested != language)
+            Assert.Inconclusive("A different UI language was requested for this targeted run.");
         if (!ShouldRunUiTests()) Assert.Inconclusive("Set CAPTURETOOL_RUN_UI_TESTS=1 to run desktop UI automation tests.");
         using var dpi = new DesktopDpiScope();
         string repo = FindRepositoryRoot();
@@ -47,10 +49,12 @@ public sealed partial class ImageEditTextExtractionUiTests
         window.Focus();
         MaximizeWindow(window);
         WaitForElement(window, automation, "ImageEdit_CommandBar", AppLaunchTimeout);
-        GoHome();
         AutomationElement dialog = OpenDetails();
-        WaitForElementByName(dialog, automation, resources["CaptureDetails_Empty"], InteractionTimeout);
-        Screenshot("empty");
+        WaitForElementByName(dialog, automation, resources["CaptureDetails_Unknown"], InteractionTimeout);
+        WaitForElementByName(dialog, automation, resources["CaptureDetails_Media_Image"], InteractionTimeout);
+        Screenshot("local-details");
+        WaitForElementByName(dialog, automation, resources["CapturePane_CopyPath.Content"], InteractionTimeout).AsButton().Invoke();
+        WaitFor(() => ReadDetailsClipboard() == fixture ? dialog : null, InteractionTimeout, "source path copied without AI consent");
         CloseDetails();
 
         OpenSettings();
@@ -58,75 +62,29 @@ public sealed partial class ImageEditTextExtractionUiTests
         Confirm("Consent", "CaptureMemory_ConsentAccept");
         Confirm("ScanExisting", "CaptureMemory_ScanExistingAccept");
         GoHome();
+        OpenCapture();
         dialog = OpenDetails();
-        WaitForElementByName(dialog, automation, resources["CaptureDetails_Analyzing"], InteractionTimeout);
-        WaitForElementByName(dialog, automation, "Contoso invoice", TimeSpan.FromSeconds(30));
-        WaitForElementRemoved(window, automation, "CaptureMemoryProgress", TimeSpan.FromSeconds(30));
-        var copy = dialog.FindAllDescendants(automation.ConditionFactory.ByName(
-            resources["CaptureDetails_Copy.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name"]))
-            .First(element => element.Patterns.Invoke.IsSupported);
-        copy.Patterns.Invoke.Pattern.Invoke();
-        WaitForElementByName(dialog, automation, resources["CaptureDetails_Copied"], InteractionTimeout);
-        Assert.AreEqual("Contoso invoice", ReadDetailsClipboard());
-        var source = dialog.FindAllDescendants(automation.ConditionFactory.ByName(resources["CaptureDetails_Evidence.Header"]))
-            .First(element => element.Patterns.ExpandCollapse.IsSupported);
-        source.Patterns.ExpandCollapse.Pattern.Expand();
-        WaitForElementByName(dialog, automation, "Contoso invoice. Reference: INV-2048. Total USD 125.00. Due 2026-10-15.", InteractionTimeout);
-        Screenshot("overview");
-        source.Patterns.ExpandCollapse.Pattern.Collapse();
-        var facts = WaitForElementByName(dialog, automation, resources["CaptureDetails_FactsHeading.Text"], InteractionTimeout);
-        ScrollTo(dialog, facts);
-        Screenshot("facts");
-        var recognized = dialog.FindAllDescendants(automation.ConditionFactory.ByName(resources["CaptureDetails_RecognizedText"]))
-            .First(element => element.Patterns.ExpandCollapse.IsSupported);
-        ScrollTo(dialog, recognized);
-        recognized.Patterns.ExpandCollapse.Pattern.Expand();
-        var copyAll = WaitForElementByName(recognized, automation, resources["CaptureDetails_CopyAll.Content"], InteractionTimeout);
-        ScrollTo(dialog, copyAll);
-        copyAll.Patterns.Invoke.Pattern.Invoke();
-        string expectedText = "Contoso invoice. Reference: INV-2048. Total USD 125.00. Due 2026-10-15." + Environment.NewLine +
-            "Contact billing@example.com or visit https://example.com/invoice.";
-        WaitFor(() => ReadDetailsClipboard() == expectedText ? dialog : null, InteractionTimeout, "complete source text on the clipboard");
-        // WinUI may report expanded descendants as onscreen while the outer viewport still clips them.
-        dialog.FindAllDescendants().First(element => element.Patterns.Scroll.IsSupported &&
-            element.Patterns.Scroll.Pattern.VerticallyScrollable.Value).Patterns.Scroll.Pattern
-            .Scroll(ScrollAmount.NoAmount, ScrollAmount.LargeIncrement);
-        Screenshot("source-content");
-        recognized.Patterns.ExpandCollapse.Pattern.Collapse();
-        var properties = dialog.FindAllDescendants(automation.ConditionFactory.ByName(resources["CaptureDetails_PropertiesHeading.Header"]))
-            .First(element => element.Patterns.ExpandCollapse.IsSupported);
-        ScrollTo(dialog, properties);
-        properties.Patterns.ExpandCollapse.Pattern.Expand();
-        WaitForElementByName(dialog, automation, "3:2", InteractionTimeout);
-        Screenshot("properties");
+        WaitForElementByName(dialog, automation, "Invoice INV-2048 totals USD 125.00 and is due on 2026-10-15.", InteractionTimeout);
+        Screenshot("summary");
         CloseDetails();
-
         OpenSettings();
         WaitForElementByName(window, automation, "AppTheme_Dark", InteractionTimeout).Patterns.SelectionItem.Pattern.Select();
-        GoHome();
+        GoHome(); OpenCapture();
         window.Patterns.Window.Pattern.SetWindowVisualState(WindowVisualState.Normal);
         window.Patterns.Transform.Pattern.Resize(720, 760);
         dialog = OpenDetails();
-        WaitForElementByName(dialog, automation, "Contoso invoice", InteractionTimeout);
         Screenshot("compact-dark");
-        Keyboard.Type(VirtualKeyShort.ESCAPE);
-        WaitForElementRemoved(window, automation, "CaptureDetailsDialog", InteractionTimeout);
-        MaximizeWindow(window);
-
-        // Same source path, different bytes: old insights must disappear on the next verified read.
-        File.AppendAllText(fixture, "changed source bytes");
-        dialog = OpenDetails();
-        WaitForElementByName(dialog, automation, resources["CaptureDetails_SourceChanged"], InteractionTimeout);
-        Assert.IsNull(dialog.FindFirstDescendant(automation.ConditionFactory.ByName("Contoso invoice")));
-        Screenshot("changed");
         CloseDetails();
+        MaximizeWindow(window);
         OpenSettings();
         Element("CaptureMemoryDelete").Patterns.Invoke.Pattern.Invoke();
         Confirm("DeleteMetadata", "CaptureMemory_DeleteMetadataAccept");
         WaitFor(() => !Element("CaptureMemoryDelete").IsEnabled ? window : null, InteractionTimeout, "metadata deletion");
-        GoHome();
+        GoHome(); OpenCapture();
         dialog = OpenDetails();
-        WaitForElementByName(dialog, automation, resources["CaptureDetails_Empty"], InteractionTimeout);
+        WaitForElementByName(dialog, automation, resources["CaptureDetails_Media_Image"], InteractionTimeout);
+        Assert.IsNull(dialog.FindFirstDescendant(automation.ConditionFactory.ByName("Invoice INV-2048 totals USD 125.00 and is due on 2026-10-15.")));
+        Screenshot("after-delete");
         CloseDetails();
 
         AutomationElement Element(string id) => WaitForElement(window, automation, id, InteractionTimeout);
@@ -143,22 +101,27 @@ public sealed partial class ImageEditTextExtractionUiTests
             var target = Element("CaptureMemoryConsent");
             ScrollTo(window, target);
         }
-        AutomationElement OpenDetails()
+        void OpenCapture()
         {
             var grid = Element("Home_RecentCaptures");
             var item = WaitFor(() => grid.FindFirstDescendant(automation.ConditionFactory.ByControlType(ControlType.ListItem)),
                 InteractionTimeout, "recent capture");
-            item.Focus();
-            Keyboard.Press(VirtualKeyShort.SHIFT);
-            Keyboard.Type(VirtualKeyShort.F10);
-            Keyboard.Release(VirtualKeyShort.SHIFT);
-            Element("Home_CaptureDetails").Patterns.Invoke.Pattern.Invoke();
-            return Element("CaptureDetailsDialog");
+            item.DoubleClick();
+            Element("Editor_DetailsToggle");
+        }
+        AutomationElement OpenDetails()
+        {
+            var toggle = Element("Editor_DetailsToggle").Patterns.Toggle.Pattern;
+            if (toggle.ToggleState.Value != ToggleState.On) toggle.Toggle();
+            Thread.Sleep(300);
+            window.CaptureToFile(Path.Combine(artifacts, "opened-pane.png"));
+            return Element("CaptureDetailsPane");
         }
         void CloseDetails()
         {
-            WaitForElementByName(dialog, automation, resources["CaptureDetails_Dialog.CloseButtonText"], InteractionTimeout).AsButton().Invoke();
-            WaitForElementRemoved(window, automation, "CaptureDetailsDialog", InteractionTimeout);
+            WaitForElementByName(dialog, automation, resources["CapturePane_Close.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name"], InteractionTimeout).AsButton().Invoke();
+            WaitFor(() => Element("Editor_DetailsToggle").Patterns.Toggle.Pattern.ToggleState.Value == ToggleState.Off ? window : null,
+                InteractionTimeout, "closed details pane");
         }
         void Confirm(string prompt, string answer)
         {

@@ -15,6 +15,50 @@ namespace CaptureTool.Presentation.Tests.Features;
 public sealed class CaptureDetailsTests
 {
     [TestMethod]
+    public async Task LocalPropertiesAppearBeforeSlowAnalysisAndSurviveDeletion()
+    {
+        var setup = new Setup();
+        using var vm = setup.ViewModel;
+        var delayed = new TaskCompletionSource<CaptureDetailsSnapshot>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var ready = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        setup.Reader.Setup(reader => reader.ReadAsync(It.IsAny<string>(), It.IsAny<CancellationToken>())).Returns(delayed.Task);
+        var date = DateTimeOffset.UtcNow;
+        setup.Reader.Setup(reader => reader.ReadFileAsync(It.IsAny<string>(), AnalysisMediaKind.Image, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new FileDetailsMetadata(AnalysisMediaKind.Image, "capture.png", 2048, "image/png", date, date,
+                image: new(new(1200, 800))));
+        vm.PropertyChanged += (_, e) => { if (e.PropertyName == nameof(vm.FileProperties)) ready.TrySetResult(); };
+        Task opening = vm.OpenAsync("capture.png", AnalysisMediaKind.Image);
+        await ready.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        Assert.AreEqual("1200 × 800 · 2 KiB", vm.FileProperties.Compact);
+        Assert.IsTrue(vm.IsReading);
+        setup.State = setup.State with { IsDeleting = true };
+        setup.Memory.Raise(memory => memory.StateChanged += null);
+        delayed.SetResult(new(CaptureDetailsStatus.Available, Record()));
+        await opening;
+        Assert.AreEqual("1200 × 800 · 2 KiB", vm.FileProperties.Compact);
+        Assert.IsFalse(vm.HasSummary);
+        vm.CopyPathCommand.Execute(null);
+        setup.Clipboard.Verify(clipboard => clipboard.CopyTextAsync("capture.png"), Times.Once);
+    }
+
+    [TestMethod]
+    public async Task ClosedPaneDiscardsLateLocalProperties()
+    {
+        var setup = new Setup();
+        var delayed = new TaskCompletionSource<FileDetailsMetadata?>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var started = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        setup.Reader.Setup(reader => reader.ReadFileAsync(It.IsAny<string>(), It.IsAny<AnalysisMediaKind>(), It.IsAny<CancellationToken>()))
+            .Returns(() => { started.TrySetResult(); return delayed.Task; });
+        Task opening = setup.ViewModel.OpenAsync("capture.wav", AnalysisMediaKind.Audio);
+        await started.Task;
+        setup.ViewModel.Dispose();
+        var date = DateTimeOffset.UtcNow;
+        delayed.SetResult(new(AnalysisMediaKind.Audio, "capture.wav", 12, null, date, date));
+        await opening;
+        Assert.IsEmpty(setup.ViewModel.FileProperties.Basic);
+    }
+
+    [TestMethod]
     public void FactsShowSourceContextAndKeepSuggestionsSeparate()
     {
         var record = Record();

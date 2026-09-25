@@ -163,7 +163,7 @@ public sealed class CaptureDetailsContent
     internal static string Time(TimeSpan time) => time.TotalHours >= 1
         ? $"{(long)time.TotalHours}:{time.Minutes:00}:{time.Seconds:00}" : $"{time.Minutes}:{time.Seconds:00}";
     private static uint Gcd(uint a, uint b) { while (b != 0) (a, b) = (b, a % b); return a; }
-    private static string FormatSize(long bytes)
+    internal static string FormatSize(long bytes)
     {
         string[] units = ["B", "KiB", "MiB", "GiB", "TiB", "PiB", "EiB"];
         double value = bytes;

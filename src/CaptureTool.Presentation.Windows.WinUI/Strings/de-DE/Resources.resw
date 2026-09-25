@@ -1893,4 +1893,15 @@ SOFTWARE.
   <data name="HomePage_RecentCaptureDetailsMenuItem.Text" xml:space="preserve"><value>Details</value></data>
   <data name="CaptureDetails_AnalyzedFile" xml:space="preserve"><value>Analysierte Datei</value></data>
   <data name="CaptureDetails_AnalyzedAt" xml:space="preserve"><value>Eigenschaften erfasst</value></data>
+  <data name="CapturePane_Toggle.Label" xml:space="preserve"><value>Details</value></data>
+  <data name="CapturePane_Heading.Text" xml:space="preserve"><value>Aufnahmedetails</value></data>
+  <data name="CapturePane_Close.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Details schließen</value></data>
+  <data name="CapturePane_Close.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve"><value>Details schließen</value></data>
+  <data name="CapturePane_CopyPath.Content" xml:space="preserve"><value>Pfad kopieren</value></data>
+  <data name="CapturePane_OpenFolder.Content" xml:space="preserve"><value>Ordner öffnen</value></data>
+  <data name="CapturePane_Technical.Header" xml:space="preserve"><value>Technische Details</value></data>
+  <data name="CapturePane_Summary.Text" xml:space="preserve"><value>KI-Zusammenfassung</value></data>
+  <data name="CapturePane_PendingEdits.Message" xml:space="preserve"><value>Die Eigenschaften beziehen sich auf die Quelldatei. Nicht gespeicherte Änderungen sind nicht enthalten.</value></data>
+  <data name="CapturePane_FileUnavailable" xml:space="preserve"><value>Dateieigenschaften sind nicht verfügbar. Aktualisieren Sie, sobald die Datei bereit ist.</value></data>
+  <data name="CapturePane_FolderUnavailable" xml:space="preserve"><value>Der Ordner konnte nicht geöffnet werden.</value></data>
 </root>

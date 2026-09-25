@@ -2,5 +2,6 @@ namespace CaptureTool.Domain.FileSystem;
 
 public sealed partial class AudioFile : FileReference
 {
-    public AudioFile(string path) : base(path) { }
+    public string? PersistentFilePath { get; }
+    public AudioFile(string path, string? persistentFilePath = null) : base(path) => PersistentFilePath = persistentFilePath;
 }

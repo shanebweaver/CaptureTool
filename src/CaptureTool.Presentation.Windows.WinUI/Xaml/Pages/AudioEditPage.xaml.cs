@@ -37,6 +37,7 @@ public sealed partial class AudioEditPage : AudioEditPageBase
     public AudioEditPage()
     {
         InitializeComponent();
+        DetailsHost.ToggleControl = DetailsToggle;
         _logService = App.Current.ServiceProvider.GetService<ILogService>();
         _mediaPlayer = CreateMediaPlayer();
         AudioPlayer.SetMediaPlayer(_mediaPlayer);

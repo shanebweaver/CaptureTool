@@ -134,7 +134,7 @@ public class OpenFileUseCaseTests
         navigationService.Verify(
             service => service.NavigateAsync(
                 NavigationRoute.AudioEdit,
-                It.Is<AudioFile>(file => file.FilePath == copiedPath),
+                It.Is<AudioFile>(file => file.FilePath == copiedPath && file.PersistentFilePath == sourcePath),
                 false,
                 It.IsAny<CancellationToken>()),
             Times.Once);
@@ -180,7 +180,7 @@ public class OpenFileUseCaseTests
         navigationService.Verify(
             service => service.NavigateAsync(
                 NavigationRoute.VideoEdit,
-                It.Is<VideoFile>(file => file.FilePath == copiedPath),
+                It.Is<VideoFile>(file => file.FilePath == copiedPath && file.PersistentFilePath == sourcePath),
                 false,
                 It.IsAny<CancellationToken>()),
             Times.Once);

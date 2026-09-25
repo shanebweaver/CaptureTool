@@ -15,6 +15,25 @@ namespace CaptureTool.Application.Tests.Library;
 public sealed class CaptureDetailsReaderTests
 {
     [TestMethod]
+    [DataRow(AnalysisMediaKind.Image)]
+    [DataRow(AnalysisMediaKind.Audio)]
+    [DataRow(AnalysisMediaKind.Video)]
+    public async Task LocalPropertiesNeedNeitherSavedMetadataNorReadableCatalog(AnalysisMediaKind kind)
+    {
+        var setup = new Setup();
+        var properties = new Mock<IMediaFileDetailsReader>();
+        var date = DateTimeOffset.UtcNow;
+        var file = new FileDetailsMetadata(kind, "capture.file", 10, null, date, date);
+        properties.Setup(reader => reader.ReadAsync(Setup.Path, kind, null, It.IsAny<CancellationToken>())).ReturnsAsync(file);
+        setup.Catalog.Setup(catalog => catalog.ReadAllAsync(It.IsAny<CancellationToken>())).ThrowsAsync(new CryptographicException());
+        var reader = new CaptureDetailsReader(setup.Catalog.Object, setup.Metadata.Object, setup.Store.Object, setup.Files.Object, properties.Object);
+        Assert.AreSame(file, await reader.ReadFileAsync(Setup.Path, kind));
+        setup.Metadata.VerifyNoOtherCalls();
+        setup.Files.VerifyNoOtherCalls();
+        setup.Store.VerifyNoOtherCalls();
+    }
+
+    [TestMethod]
     [DataRow(CaptureFileType.Image, AnalysisMediaKind.Image)]
     [DataRow(CaptureFileType.Audio, AnalysisMediaKind.Audio)]
     [DataRow(CaptureFileType.Video, AnalysisMediaKind.Video)]

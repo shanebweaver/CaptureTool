@@ -2180,4 +2180,15 @@ SOFTWARE.
   <data name="HomePage_RecentCaptureDetailsMenuItem.Text" xml:space="preserve"><value>Details</value></data>
   <data name="CaptureDetails_AnalyzedFile" xml:space="preserve"><value>Analyzed file</value></data>
   <data name="CaptureDetails_AnalyzedAt" xml:space="preserve"><value>Properties recorded</value></data>
+  <data name="CapturePane_Toggle.Label" xml:space="preserve"><value>Details</value></data>
+  <data name="CapturePane_Heading.Text" xml:space="preserve"><value>Capture details</value></data>
+  <data name="CapturePane_Close.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Close details</value></data>
+  <data name="CapturePane_Close.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve"><value>Close details</value></data>
+  <data name="CapturePane_CopyPath.Content" xml:space="preserve"><value>Copy path</value></data>
+  <data name="CapturePane_OpenFolder.Content" xml:space="preserve"><value>Open folder</value></data>
+  <data name="CapturePane_Technical.Header" xml:space="preserve"><value>Technical details</value></data>
+  <data name="CapturePane_Summary.Text" xml:space="preserve"><value>AI summary</value></data>
+  <data name="CapturePane_PendingEdits.Message" xml:space="preserve"><value>Properties describe the source file. Pending edits are not included.</value></data>
+  <data name="CapturePane_FileUnavailable" xml:space="preserve"><value>File properties are unavailable. Try refreshing after the file is ready.</value></data>
+  <data name="CapturePane_FolderUnavailable" xml:space="preserve"><value>The folder could not be opened.</value></data>
 </root>

@@ -12,6 +12,7 @@
     d:DataContext="{d:DesignInstance Type=videoedit:VideoEditPageViewModel}"
     mc:Ignorable="d">
 
+    <controls:CaptureDetailsHost x:Name="DetailsHost" SourcePath="{x:Bind ViewModel.DetailsSourcePath, Mode=OneWay}" MediaKind="Video" HasEdits="{x:Bind ViewModel.HasUnsavedChanges, Mode=OneWay}">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -24,6 +25,9 @@
             HorizontalAlignment="Stretch"
             DefaultLabelPosition="Right"
             IsOpen="False">
+            <AppBarToggleButton x:Name="DetailsToggle" x:Uid="CapturePane_Toggle" Icon="Bullets"
+                AutomationProperties.AutomationId="Editor_DetailsToggle"
+                IsChecked="{x:Bind DetailsHost.IsPaneOpen, Mode=TwoWay}" />
             <!--  Trim  -->
             <AppBarToggleButton
                 x:Uid="VideoEdit_TrimButton"
@@ -295,4 +299,5 @@
             </Grid>
         </Grid>
     </Grid>
+    </controls:CaptureDetailsHost>
 </local:VideoEditPageBase>

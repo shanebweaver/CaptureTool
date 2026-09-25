@@ -1,4 +1,5 @@
 using CaptureTool.Domain.Analysis;
+using CaptureTool.Domain.Analysis.Payloads;
 
 namespace CaptureTool.Application.Abstractions.Library.CaptureDetails;
 
@@ -11,4 +12,5 @@ public sealed record CaptureDetailsSnapshot(CaptureDetailsStatus Status, Capture
 public interface ICaptureDetailsReader
 {
     Task<CaptureDetailsSnapshot> ReadAsync(string path, CancellationToken cancellationToken = default);
+    Task<FileDetailsMetadata?> ReadFileAsync(string path, AnalysisMediaKind kind, CancellationToken cancellationToken = default);
 }

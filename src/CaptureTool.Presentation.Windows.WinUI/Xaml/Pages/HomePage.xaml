@@ -342,13 +342,7 @@
                                                 CommandParameter="{x:Bind}"
                                                 Icon="Folder"
                                                 Text="Open" />
-                                            <MenuFlyoutItem
-                                                x:Uid="HomePage_RecentCaptureDetailsMenuItem"
-                                                AutomationProperties.AutomationId="Home_CaptureDetails"
-                                                Click="CaptureDetailsMenuItem_Click"
-                                                CommandParameter="{x:Bind}"
-                                                Icon="More"
-                                                Text="Details" />
+
                                             <MenuFlyoutItem
                                                 x:Uid="HomePage_RecentCaptureRemoveMenuItem"
                                                 Click="RemoveRecentCaptureMenuItem_Click"

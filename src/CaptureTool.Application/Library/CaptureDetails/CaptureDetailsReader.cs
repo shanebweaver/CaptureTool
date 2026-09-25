@@ -2,14 +2,32 @@ using CaptureTool.Application.Abstractions.Analysis;
 using CaptureTool.Application.Abstractions.Capture.Assets;
 using CaptureTool.Application.Abstractions.Library.CaptureDetails;
 using CaptureTool.Domain.Analysis;
+using CaptureTool.Domain.Analysis.Payloads;
 using CaptureTool.Domain.Capture;
 using System.Security.Cryptography;
 
 namespace CaptureTool.Application.Library.CaptureDetails;
 
 public sealed class CaptureDetailsReader(ICaptureAssetCatalog catalog, ICaptureMetadataReader metadata,
-    IAnalysisExecutionStore execution, IAnalysisSource files) : ICaptureDetailsReader
+    IAnalysisExecutionStore execution, IAnalysisSource files, IMediaFileDetailsReader? properties = null) : ICaptureDetailsReader
 {
+    public async Task<FileDetailsMetadata?> ReadFileAsync(string path, AnalysisMediaKind kind, CancellationToken cancellationToken = default)
+    {
+        if (properties == null || !Path.IsPathFullyQualified(path)) return null;
+        DateTimeOffset? capturedAt = null;
+        try
+        {
+            var matches = (await catalog.ReadAllAsync(cancellationToken).ConfigureAwait(false))
+                .Where(asset => SamePath(path, asset.SourcePath) || SamePath(path, asset.PreferredPath)).Take(2).ToArray();
+            if (matches.Length == 1) capturedAt = matches[0].CapturedAt;
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or CryptographicException)
+        {
+            // An unavailable catalog must not hide readable filesystem properties.
+        }
+        return await properties.ReadAsync(path, kind, capturedAt, cancellationToken).ConfigureAwait(false);
+    }
+
     public async Task<CaptureDetailsSnapshot> ReadAsync(string path, CancellationToken cancellationToken = default)
     {
         if (!Path.IsPathFullyQualified(path)) return new(CaptureDetailsStatus.SourceUnavailable);

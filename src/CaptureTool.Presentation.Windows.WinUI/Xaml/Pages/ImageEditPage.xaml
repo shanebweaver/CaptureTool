@@ -17,6 +17,7 @@
         <converters:ShapeTypeToIntConverter x:Key="ShapeTypeToIntConverter" />
     </Page.Resources>
 
+    <controls:CaptureDetailsHost x:Name="DetailsHost" SourcePath="{x:Bind ViewModel.DetailsSourcePath, Mode=OneWay}" MediaKind="Image" HasEdits="{x:Bind ViewModel.HasUnsavedChanges, Mode=OneWay}">
     <Grid
         AutomationProperties.AccessibilityView="Control"
         AutomationProperties.AutomationId="ImageEditPageRoot">
@@ -33,6 +34,9 @@
             HorizontalAlignment="Stretch"
             DefaultLabelPosition="Right"
             IsOpen="False">
+            <AppBarToggleButton x:Name="DetailsToggle" x:Uid="CapturePane_Toggle" Icon="Bullets"
+                AutomationProperties.AutomationId="Editor_DetailsToggle"
+                IsChecked="{x:Bind DetailsHost.IsPaneOpen, Mode=TwoWay}" />
             <!--  Chroma Key  -->
             <AppBarToggleButton
                 x:Uid="ImageEdit_ChromaKeyButton"
@@ -738,4 +742,5 @@
             </VisualStateGroup>
         </VisualStateManager.VisualStateGroups>
     </Grid>
+    </controls:CaptureDetailsHost>
 </local:ImageEditPageBase>

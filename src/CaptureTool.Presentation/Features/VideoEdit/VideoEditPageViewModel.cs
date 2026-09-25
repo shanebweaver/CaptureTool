@@ -22,6 +22,8 @@ namespace CaptureTool.Presentation.Features.VideoEdit;
 
 public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<VideoFile>, IEditableSession
 {
+    public string? DetailsSourcePath { get; private set => Set(ref field, value); }
+
     private const double TrimComparisonToleranceSeconds = 0.01;
 
     private enum VideoVariant
@@ -273,6 +275,7 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
         StartLoading();
 
         _originalVideoPath = video.FilePath;
+        DetailsSourcePath = video.PersistentFilePath ?? video.FilePath;
         TrackScratchArtifact(video.FilePath);
         _superResolutionVideoPath = null;
         _savedEditSnapshot = null;

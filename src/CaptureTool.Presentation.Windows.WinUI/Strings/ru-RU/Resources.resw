@@ -1899,4 +1899,15 @@ SOFTWARE.
   <data name="HomePage_RecentCaptureDetailsMenuItem.Text" xml:space="preserve"><value>Сведения</value></data>
   <data name="CaptureDetails_AnalyzedFile" xml:space="preserve"><value>Проанализированный файл</value></data>
   <data name="CaptureDetails_AnalyzedAt" xml:space="preserve"><value>Свойства записаны</value></data>
+  <data name="CapturePane_Toggle.Label" xml:space="preserve"><value>Сведения</value></data>
+  <data name="CapturePane_Heading.Text" xml:space="preserve"><value>Сведения о записи</value></data>
+  <data name="CapturePane_Close.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Закрыть сведения</value></data>
+  <data name="CapturePane_Close.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve"><value>Закрыть сведения</value></data>
+  <data name="CapturePane_CopyPath.Content" xml:space="preserve"><value>Копировать путь</value></data>
+  <data name="CapturePane_OpenFolder.Content" xml:space="preserve"><value>Открыть папку</value></data>
+  <data name="CapturePane_Technical.Header" xml:space="preserve"><value>Технические сведения</value></data>
+  <data name="CapturePane_Summary.Text" xml:space="preserve"><value>Сводка ИИ</value></data>
+  <data name="CapturePane_PendingEdits.Message" xml:space="preserve"><value>Свойства относятся к исходному файлу и не учитывают несохранённые изменения.</value></data>
+  <data name="CapturePane_FileUnavailable" xml:space="preserve"><value>Свойства файла недоступны. Обновите сведения, когда файл будет готов.</value></data>
+  <data name="CapturePane_FolderUnavailable" xml:space="preserve"><value>Не удалось открыть папку.</value></data>
 </root>

@@ -35,6 +35,8 @@ namespace CaptureTool.Presentation.Features.ImageEdit;
 
 public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<ImageFile>, ISourceSaveableSession
 {
+    public string? DetailsSourcePath { get; private set => Set(ref field, value); }
+
     private enum CanvasUpdateMode
     {
         InvalidateLayout,
@@ -897,6 +899,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
             _editSession = new ImageEditSession(_imageMetadataService.GetImageFileSize(imageFile));
             SyncImageGeometryFromSession();
             _originalImageFile = imageFile;
+            DetailsSourcePath = imageFile.PersistentFilePath ?? imageFile.FilePath;
             _originalImageSize = ImageSize;
             ApplyImageSizeBasedDefaults(ImageSize);
 

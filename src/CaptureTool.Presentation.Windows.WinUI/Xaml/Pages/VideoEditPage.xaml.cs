@@ -34,6 +34,7 @@ public sealed partial class VideoEditPage : VideoEditPageBase
     public VideoEditPage()
     {
         InitializeComponent();
+        DetailsHost.ToggleControl = DetailsToggle;
         _logService = App.Current.ServiceProvider.GetService<ILogService>();
         _scratchArtifactStore = App.Current.ServiceProvider.GetService<IScratchArtifactStore>();
         _videoFileTrimmer = App.Current.ServiceProvider.GetService<IVideoFileTrimmer>();

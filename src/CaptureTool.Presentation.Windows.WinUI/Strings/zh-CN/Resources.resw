@@ -1899,4 +1899,15 @@ SOFTWARE.
   <data name="HomePage_RecentCaptureDetailsMenuItem.Text" xml:space="preserve"><value>详情</value></data>
   <data name="CaptureDetails_AnalyzedFile" xml:space="preserve"><value>已分析的文件</value></data>
   <data name="CaptureDetails_AnalyzedAt" xml:space="preserve"><value>属性记录时间</value></data>
+  <data name="CapturePane_Toggle.Label" xml:space="preserve"><value>详细信息</value></data>
+  <data name="CapturePane_Heading.Text" xml:space="preserve"><value>捕获详细信息</value></data>
+  <data name="CapturePane_Close.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>关闭详细信息</value></data>
+  <data name="CapturePane_Close.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve"><value>关闭详细信息</value></data>
+  <data name="CapturePane_CopyPath.Content" xml:space="preserve"><value>复制路径</value></data>
+  <data name="CapturePane_OpenFolder.Content" xml:space="preserve"><value>打开文件夹</value></data>
+  <data name="CapturePane_Technical.Header" xml:space="preserve"><value>技术详细信息</value></data>
+  <data name="CapturePane_Summary.Text" xml:space="preserve"><value>AI 摘要</value></data>
+  <data name="CapturePane_PendingEdits.Message" xml:space="preserve"><value>这些属性描述源文件，不包括尚未保存的编辑。</value></data>
+  <data name="CapturePane_FileUnavailable" xml:space="preserve"><value>文件属性不可用。请在文件准备就绪后刷新。</value></data>
+  <data name="CapturePane_FolderUnavailable" xml:space="preserve"><value>无法打开文件夹。</value></data>
 </root>

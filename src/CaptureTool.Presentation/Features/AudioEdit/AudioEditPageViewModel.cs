@@ -17,6 +17,8 @@ namespace CaptureTool.Presentation.Features.AudioEdit;
 
 public sealed partial class AudioEditPageViewModel : LoadableViewModelBase<AudioFile>
 {
+    public string? DetailsSourcePath { get; private set => Set(ref field, value); }
+
     private const double WaveformMinBarHeight = 0;
     private const double WaveformMaxBarHeight = 132;
 
@@ -135,6 +137,7 @@ public sealed partial class AudioEditPageViewModel : LoadableViewModelBase<Audio
         StartLoading();
 
         AudioPath = audio.FilePath;
+        DetailsSourcePath = audio.PersistentFilePath ?? audio.FilePath;
         IsAudioReady = true;
         BeginMediaLoading();
         ResetWaveform();

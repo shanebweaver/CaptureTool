@@ -31,6 +31,7 @@ public sealed partial class ImageEditPage : ImageEditPageBase
     public ImageEditPage()
     {
         InitializeComponent();
+        DetailsHost.ToggleControl = DetailsToggle;
         InitializeContextMenus();
         InitializeToolbarHosts();
         ViewModel.LoadStateChanged += ViewModel_LoadStateChanged;
