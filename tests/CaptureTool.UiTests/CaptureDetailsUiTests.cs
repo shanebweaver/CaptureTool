@@ -87,6 +87,10 @@ public sealed partial class ImageEditTextExtractionUiTests
         string expectedText = "Contoso invoice. Reference: INV-2048. Total USD 125.00. Due 2026-10-15." + Environment.NewLine +
             "Contact billing@example.com or visit https://example.com/invoice.";
         WaitFor(() => ReadDetailsClipboard() == expectedText ? dialog : null, InteractionTimeout, "complete source text on the clipboard");
+        // WinUI may report expanded descendants as onscreen while the outer viewport still clips them.
+        dialog.FindAllDescendants().First(element => element.Patterns.Scroll.IsSupported &&
+            element.Patterns.Scroll.Pattern.VerticallyScrollable.Value).Patterns.Scroll.Pattern
+            .Scroll(ScrollAmount.NoAmount, ScrollAmount.LargeIncrement);
         Screenshot("source-content");
         recognized.Patterns.ExpandCollapse.Pattern.Collapse();
         var properties = dialog.FindAllDescendants(automation.ConditionFactory.ByName(resources["CaptureDetails_PropertiesHeading.Header"]))
