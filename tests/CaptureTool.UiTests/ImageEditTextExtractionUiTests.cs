@@ -200,7 +200,8 @@ public sealed partial class ImageEditTextExtractionUiTests
         string appExecutablePath,
         string fixtureImagePath,
         string appDataDirectory,
-        string appTempDirectory)
+        string appTempDirectory,
+        string? language = null)
     {
         string[] appArguments = [
             "--capturetool-ui-test",
@@ -221,6 +222,11 @@ public sealed partial class ImageEditTextExtractionUiTests
         foreach (string argument in appArguments)
         {
             startInfo.ArgumentList.Add(argument);
+        }
+        if (language != null)
+        {
+            startInfo.ArgumentList.Add("--ui-test-language");
+            startInfo.ArgumentList.Add(language);
         }
 
         Process process = Process.Start(startInfo) ??

@@ -11,6 +11,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AI.Foundry.Local;
 using System.Drawing;
 using System.Drawing.Imaging;
+using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -22,11 +23,15 @@ using Windows.Storage;
 // This opt-in harness uses synthetic fixtures only. It does not enable the app's background scanning.
 if (args.Length == 0 || !Path.IsPathFullyQualified(args[0]))
 {
-    Console.Error.WriteLine("Usage: CaptureTool.Analysis.Smoke <absolute-output-directory> [--prepare-whisper] [--prepare-vision] [--prepare-all]");
+    Console.Error.WriteLine("Usage: CaptureTool.Analysis.Smoke <absolute-output-directory> [--prepare-whisper | --prepare-vision | --prepare-all | --recovery-checks | --scale-checks]");
     return 2;
 }
 string output = Path.GetFullPath(args[0]);
 Directory.CreateDirectory(output);
+if (args.Contains("--recovery-checks", StringComparer.Ordinal)) return await RecoveryChecks.RunAsync(output);
+if (args.Contains("--recovery-child", StringComparer.Ordinal)) return await RecoveryChecks.ChildAsync(output, args[^1], resume: false);
+if (args.Contains("--recovery-resume", StringComparer.Ordinal)) return await RecoveryChecks.ChildAsync(output, args[^1], resume: true);
+if (args.Contains("--scale-checks", StringComparer.Ordinal)) return await ScaleChecks.RunAsync(output);
 var storage = new SmokeStorage(output);
 var services = new ServiceCollection().AddGenericServices().AddApplicationServices()
     .AddSingleton<IStorageService>(storage).AddWindowsAnalysisProviders();
@@ -57,8 +62,10 @@ if (!File.Exists(visionVideoPath))
     var composition = new MediaComposition();
     composition.Clips.Add(await MediaClip.CreateFromImageFileAsync(await StorageFile.GetFileFromPathAsync(visionPath), TimeSpan.FromSeconds(2)));
     await File.WriteAllBytesAsync(visionVideoPath, []);
+    var profile = MediaEncodingProfile.CreateMp4(VideoEncodingQuality.Vga);
+    profile.Audio = null;
     var transcode = await composition.RenderToFileAsync(await StorageFile.GetFileFromPathAsync(visionVideoPath),
-        MediaTrimmingPreference.Precise, MediaEncodingProfile.CreateMp4(VideoEncodingQuality.Vga));
+        MediaTrimmingPreference.Precise, profile);
     if (transcode != Windows.Media.Transcoding.TranscodeFailureReason.None) throw new InvalidOperationException("Synthetic vision video creation failed.");
 }
 string audioPath = Path.Combine(output, "synthetic.wav");
@@ -133,9 +140,10 @@ foreach (IMediaAnalyzer analyzer in analyzers)
         catch (Exception exception) { status = "Error:" + exception.GetType().Name + ":" + exception.HResult.ToString("X8"); diagnostic = exception.ToString(); }
         results.Add(new(analyzer.Descriptor.Id, kind.ToString(), status, items, modelId, diagnostic, descriptionText));
         Console.WriteLine($"{analyzer.Descriptor.Id} {kind}: {status}");
-        await File.WriteAllTextAsync(Path.Combine(output, "results.json"), JsonSerializer.Serialize(new SmokeReport(packaged, results.ToArray()), SmokeJsonContext.Default.SmokeReport));
+        await File.WriteAllTextAsync(Path.Combine(output, "results.json"), JsonSerializer.Serialize(Report(), SmokeJsonContext.Default.SmokeReport));
     }
 }
+results.AddRange(await AudioChecks.RunAsync(analyzers, output, storage.GetApplicationScratchFolderPath()));
 // Exercise a real native command failure as well as successful transcription under AOT.
 if (FoundryLocalManager.IsInitialized)
 {
@@ -171,14 +179,19 @@ if (await legacy.GetAvailabilityAsync(AnalysisMediaKind.Image, "en", default) ==
     var outcome = await legacy.AnalyzeAsync(new(CaptureId.New(), AnalysisMediaKind.Image, new SourceRevision(new string('a', 64)), corrupt, "en"), null, default);
     results.Add(new("invalid-image", "Image", outcome.Kind == AnalyzerOutcomeKind.InvalidSource ? "Succeeded" : "FixtureMismatch", null, null, null));
 }
-await File.WriteAllTextAsync(Path.Combine(output, "results.json"), JsonSerializer.Serialize(new SmokeReport(packaged, results.ToArray()), SmokeJsonContext.Default.SmokeReport));
+await File.WriteAllTextAsync(Path.Combine(output, "results.json"), JsonSerializer.Serialize(Report(), SmokeJsonContext.Default.SmokeReport));
 int exitCode = results.Any(result => result.Status.StartsWith("Error:", StringComparison.Ordinal) ||
     result.Status is "FixtureMismatch" or "MissingFixture" || result.Status.StartsWith("Failed", StringComparison.Ordinal)) ? 1 : 0;
 await File.WriteAllTextAsync(Path.Combine(output, "exit-code.txt"), exitCode.ToString());
 return exitCode;
 
-internal sealed record SmokeResult(string Analyzer, string Media, string Status, int? Items, string? ActualModel, string? Diagnostic, string? SyntheticDescription = null);
-internal sealed record SmokeReport(bool Packaged, SmokeResult[] Results);
+SmokeReport Report() => new(packaged, results.ToArray(), RuntimeInformation.OSDescription,
+    RuntimeInformation.OSArchitecture.ToString(), RuntimeInformation.ProcessArchitecture.ToString(), DateTimeOffset.UtcNow);
+
+internal sealed record SmokeResult(string Analyzer, string Media, string Status, int? Items, string? ActualModel, string? Diagnostic,
+    string? SyntheticDescription = null, string? SyntheticTranscript = null);
+internal sealed record SmokeReport(bool Packaged, SmokeResult[] Results, string OS, string OSArchitecture,
+    string ProcessArchitecture, DateTimeOffset RecordedAt);
 [JsonSerializable(typeof(SmokeReport))]
 internal partial class SmokeJsonContext : JsonSerializerContext;
 

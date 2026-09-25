@@ -62,6 +62,38 @@
     <Content Include="Fonts\FluentSystemIcons-Regular.ttf" />
   </ItemGroup>
 
+  <!-- MSIX collects these resources through packaging output groups. An unpackaged
+       dotnet publish must also carry the app's PRI, compiled XAML, and content. -->
+  <Target Name="IncludeUnpackagedUiResources" AfterTargets="ComputeFilesToPublish"
+          DependsOnTargets="ComputeProcessXamlFiles"
+          Condition="'$(WindowsPackageType)' == 'None'">
+    <ItemGroup>
+      <_UnpackagedUiResource Include="@(ProcessedXamlFiles);$(TargetDir)$(AssemblyName).pri" />
+      <ResolvedFileToPublish Include="@(_UnpackagedUiResource)">
+        <RelativePath>$([MSBuild]::MakeRelative('$(TargetDir)', '%(FullPath)'))</RelativePath>
+        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      </ResolvedFileToPublish>
+      <ResolvedFileToPublish Include="@(ContentWithTargetPath)" Exclude="@(ResolvedFileToPublish)"
+                             Condition="$([System.String]::Copy('%(ContentWithTargetPath.FullPath)').StartsWith('$(MSBuildProjectDirectory)\'))">
+        <RelativePath>%(ContentWithTargetPath.TargetPath)</RelativePath>
+        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      </ResolvedFileToPublish>
+    </ItemGroup>
+  </Target>
+
+  <!-- Foundry 1.2.4 bundles an older WinML DLL as Content. Publish resolves it
+       against the Windows App SDK runtime asset, but MSIX sees both payloads.
+       Keep the same SDK DLL used by the verified unpackaged app and harness. -->
+  <Target Name="PreferSdkMachineLearningPayload" BeforeTargets="_ComputeAppxPackagePayload">
+    <ItemGroup>
+      <_CaptureToolSdkWinML Include="@(PackagingOutputs)"
+          Condition="'%(PackagingOutputs.Filename)%(PackagingOutputs.Extension)' == 'Microsoft.Windows.AI.MachineLearning.dll' and $([System.String]::Copy('%(PackagingOutputs.FullPath)').Contains('microsoft.windows.ai.machinelearning'))" />
+      <_CaptureToolFoundryWinML Include="@(PackagingOutputs)"
+          Condition="'%(PackagingOutputs.Filename)%(PackagingOutputs.Extension)' == 'Microsoft.Windows.AI.MachineLearning.dll' and $([System.String]::Copy('%(PackagingOutputs.FullPath)').Contains('microsoft.ai.foundry.local.core.winml'))" />
+      <PackagingOutputs Remove="@(_CaptureToolFoundryWinML)" Condition="'@(_CaptureToolSdkWinML)' != ''" />
+    </ItemGroup>
+  </Target>
+
   <!-- Validate both package architectures without modifying Visual Studio's
        loose MSIX layout. The MSIX tooling must remain the sole owner of AppX;
        copying a self-contained test output into a framework-dependent layout
@@ -132,6 +164,10 @@
     <AppxAutoIncrementPackageRevision>True</AppxAutoIncrementPackageRevision>
     <AppxBundle>Auto</AppxBundle>
     <AppxBundlePlatforms>arm64|x64</AppxBundlePlatforms>
+    <!-- Keep the small set of UI translations available in the main package.
+         Split regional language packs were absent from the verified bundle;
+         image scale and graphics-specific resources may still be split. -->
+    <AppxBundleAutoResourcePackageQualifiers>Scale|DXFeatureLevel</AppxBundleAutoResourcePackageQualifiers>
     <AppxPackageDir>$(SolutionDir)output\$(Platform)\</AppxPackageDir>
     <AppxPackageSigningEnabled>False</AppxPackageSigningEnabled>
     <AppxPackageSigningTimestampDigestAlgorithm>SHA256</AppxPackageSigningTimestampDigestAlgorithm>

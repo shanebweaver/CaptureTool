@@ -17,6 +17,35 @@ public sealed class AnalysisExecutionStoreTests
     ]);
 
     [TestMethod]
+    public async Task PendingDiscoveryYieldsToClearAndDiscardsWorkFromTheClearedGeneration()
+    {
+        using var environment = new AnalysisTestEnvironment();
+        using var store = environment.CreateStore();
+        var scope = await store.GetAdmissionScopeAsync(Ct);
+        for (int index = 0; index < 40; index++) await store.AdmitAsync(Request(environment, scope), Authorization, Plan, Ct);
+        var entered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var release = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        int reads = 0;
+        environment.Files.BeforeRead = async (path, ct) =>
+        {
+            if (!path.EndsWith(".analysis", StringComparison.Ordinal)) return;
+            if (Interlocked.Increment(ref reads) == 1)
+            {
+                entered.TrySetResult();
+                await release.Task.WaitAsync(ct);
+            }
+        };
+        Task<IReadOnlyList<AnalysisWorkItem>> discovery = store.ReadPendingAsync(Ct);
+        await entered.Task.WaitAsync(TimeSpan.FromSeconds(5), Ct);
+        Task<AnalysisCleanupResult> clear = store.ClearAsync(40, Ct);
+        release.TrySetResult();
+        Assert.IsTrue((await clear).Completed);
+        Assert.IsEmpty(await discovery, "A discovery interrupted by clear must discard the previous generation.");
+        Assert.IsLessThan(40, reads, "Clear must run before discovery reads every document.");
+        Assert.AreEqual(40, (await store.GetAdmissionScopeAsync(Ct)).ReconciliationBoundary);
+    }
+
+    [TestMethod]
     public async Task AdmissionSurvivesRestartInFifoOrderAndStaleReplayCannotSupersedeNewWork()
     {
         using var environment = new AnalysisTestEnvironment();

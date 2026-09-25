@@ -37,6 +37,15 @@ jobs:
           /p:GenerateTemporaryStoreCertificate=false
       shell: pwsh
 
+    - name: Verify packaged UI languages
+      shell: pwsh
+      run: |
+        $bundles = @(Get-ChildItem output -Recurse -Filter *.msixbundle)
+        if (!$bundles.Count) { throw 'No Store bundle was produced.' }
+        foreach ($bundle in $bundles) {
+          .github/scripts/assert-package-localization.ps1 -BundlePath $bundle.FullName
+        }
+
     - name: Install coverage tools
       run: |
         dotnet tool install --global dotnet-coverage

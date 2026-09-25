@@ -15,6 +15,9 @@
     <ProjectReference Include="..\..\src\CaptureTool.Infrastructure.Analysis.Windows\CaptureTool.Infrastructure.Analysis.Windows.csproj" />
     <ProjectReference Include="..\..\src\CaptureTool.Application\CaptureTool.Application.csproj" />
     <PackageReference Include="System.Drawing.Common" />
+    <PackageReference Include="System.Security.Cryptography.ProtectedData" />
+    <!-- Exercise the production DPAPI implementation without importing the UI service graph. -->
+    <Compile Include="..\..\src\CaptureTool.Infrastructure.Windows\Security\WindowsUserDataProtector.cs" Link="WindowsUserDataProtector.cs" />
   </ItemGroup>
   <Import Project="..\..\src\CaptureTool.Infrastructure.Analysis.Windows\Foundry\NativeAotCompatibility.props" />
 </Project>

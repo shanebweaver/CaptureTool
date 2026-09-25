@@ -58,9 +58,17 @@ internal sealed class FoundrySpeechAnalyzer(string id, string alias, bool stream
             string? language = null;
             await foreach (AudioChunk chunk in media.ReadAudioChunksAsync(input.SourcePath, input.MediaKind, cancellationToken).ConfigureAwait(false))
             {
+                ReadOnlyMemory<byte> samples = PcmWave.GetSamples(await File.ReadAllBytesAsync(chunk.Path, cancellationToken).ConfigureAwait(false));
+                // Digital silence has no speech. Do not let a model invent a transcript;
+                // preserve even the quietest nonzero sample without a VAD threshold.
+                if (samples.Span.IndexOfAnyExcept((byte)0) < 0)
+                {
+                    progress?.Report(new(AnalysisProgressStage.Analyzing));
+                    continue;
+                }
                 if (streaming)
                 {
-                    string? detectedLanguage = await TranscribeLiveAsync(client, chunk, transcript, cancellationToken).ConfigureAwait(false);
+                    string? detectedLanguage = await TranscribeLiveAsync(client, chunk, samples, transcript, cancellationToken).ConfigureAwait(false);
                     language ??= detectedLanguage;
                 }
                 else
@@ -81,11 +89,9 @@ internal sealed class FoundrySpeechAnalyzer(string id, string alias, bool stream
         finally { await model.UnloadAsync(CancellationToken.None).ConfigureAwait(false); }
     }
 
-    private static async Task<string?> TranscribeLiveAsync(OpenAIAudioClient client, AudioChunk chunk,
+    private static async Task<string?> TranscribeLiveAsync(OpenAIAudioClient client, AudioChunk chunk, ReadOnlyMemory<byte> samples,
         TranscriptCollector transcript, CancellationToken ct)
     {
-        byte[] bytes = await File.ReadAllBytesAsync(chunk.Path, ct).ConfigureAwait(false);
-        ReadOnlyMemory<byte> samples = PcmWave.GetSamples(bytes);
         await using LiveAudioTranscriptionSession session = client.CreateLiveTranscriptionSession();
         session.Settings.SampleRate = 16000;
         session.Settings.Channels = 1;
@@ -98,8 +104,11 @@ internal sealed class FoundrySpeechAnalyzer(string id, string alias, bool stream
         Task consume = ConsumeAsync();
         try
         {
-            for (int offset = 0; offset < samples.Length; offset += 32000)
-                await session.AppendAsync(samples.Slice(offset, Math.Min(32000, samples.Length - offset)), streamCancellation.Token).ConfigureAwait(false);
+            // Feed 100 ms PCM blocks. SDK 1.2.4 truncates utterance tails with
+            // one-second pushes, even after StopAsync completes.
+            const int blockBytes = 16000 * 2 / 10;
+            for (int offset = 0; offset < samples.Length; offset += blockBytes)
+                await session.AppendAsync(samples.Slice(offset, Math.Min(blockBytes, samples.Length - offset)), streamCancellation.Token).ConfigureAwait(false);
             await session.StopAsync(streamCancellation.Token).ConfigureAwait(false);
             await consume.ConfigureAwait(false);
         }

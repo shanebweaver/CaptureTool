@@ -1821,4 +1821,10 @@ SOFTWARE.
   <data name="AiSettings_DeleteDescription.Text" xml:space="preserve">
     <value>删除所有已保存的分析，包括文本、二维码和文件详情。捕获内容将被保留。</value>
   </data>
+  <data name="CaptureMemory_Scanning.OnContent" xml:space="preserve">
+    <value>开</value>
+  </data>
+  <data name="CaptureMemory_Scanning.OffContent" xml:space="preserve">
+    <value>关</value>
+  </data>
 </root>

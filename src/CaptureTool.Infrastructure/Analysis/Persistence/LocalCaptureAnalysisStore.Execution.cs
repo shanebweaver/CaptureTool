@@ -34,25 +34,40 @@ internal sealed partial class LocalCaptureAnalysisStore
 
     public async Task<IReadOnlyList<AnalysisWorkItem>> ReadPendingAsync(CancellationToken cancellationToken = default)
     {
+        const int batchSize = 16;
+        Guid generation;
+        string[] paths;
         await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
             AnalysisControlDocument? control = await ReadControlAsync(false, cancellationToken).ConfigureAwait(false);
             if (control == null) return [];
-            List<AnalysisWorkItem> pending = [];
-            foreach (string path in _files.GetFiles(GenerationPath(control.Generation)))
-            {
-                if (!path.EndsWith(".analysis", StringComparison.Ordinal)) continue;
-                if (!Guid.TryParseExact(Path.GetFileNameWithoutExtension(path), "N", out Guid id) || id == Guid.Empty)
-                    throw new InvalidDataException("Unexpected metadata filename.");
-                AnalysisDocument? document = await ReadDocumentAsync(control.Generation, new CaptureId(id), cancellationToken).ConfigureAwait(false);
-                if (document?.Run == null) continue;
-                AnalysisWorkItem work = ToWork(control.Generation, document);
-                if (work.Run.IsPending) pending.Add(work);
-            }
-            return pending.OrderBy(work => work.Run.QueueOrder).ToArray();
+            generation = control.Generation;
+            paths = _files.GetFiles(GenerationPath(generation)).Where(path => path.EndsWith(".analysis", StringComparison.Ordinal)).ToArray();
         }
         finally { _gate.Release(); }
+
+        List<AnalysisWorkItem> pending = [];
+        for (int offset = 0; offset < paths.Length; offset += batchSize)
+        {
+            // Bound each hold so settings and clear do not wait for the entire library.
+            await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
+            try
+            {
+                AnalysisControlDocument? control = await ReadControlAsync(false, cancellationToken).ConfigureAwait(false);
+                if (control?.Generation != generation) return [];
+                for (int index = offset; index < Math.Min(offset + batchSize, paths.Length); index++)
+                {
+                    if (!Guid.TryParseExact(Path.GetFileNameWithoutExtension(paths[index]), "N", out Guid id) || id == Guid.Empty)
+                        throw new InvalidDataException("Unexpected metadata filename.");
+                    AnalysisDocument? document = await ReadDocumentAsync(generation, new CaptureId(id), cancellationToken).ConfigureAwait(false);
+                    if (document?.Run?.Status is (int)AnalysisRunStatus.Queued or (int)AnalysisRunStatus.Running)
+                        pending.Add(ToWork(generation, document));
+                }
+            }
+            finally { _gate.Release(); }
+        }
+        return pending.OrderBy(work => work.Run.QueueOrder).ToArray();
     }
 
     public async Task<bool> AdmitAsync(AnalysisRequest request, Guid authorizationId, MediaAnalysisPlan plan,

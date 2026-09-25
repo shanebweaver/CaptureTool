@@ -504,6 +504,34 @@ public sealed class LocalCaptureAnalysisStoreTests
     }
 
     [TestMethod]
+    public async Task InitializationRemovesInterruptedCurrentGenerationTemporariesAndReportsLockedCleanup()
+    {
+        using var environment = new AnalysisTestEnvironment();
+        using var store = environment.CreateStore();
+        var id = CaptureId.New();
+        var token = await store.BeginRunAsync(id, AnalysisMediaKind.Image, AnalysisTestEnvironment.Revision(), "v1", Cancellation);
+        await store.TryWriteAsync(token, AnalysisTestEnvironment.Description("committed"), Cancellation);
+        string record = environment.MetadataPaths.Single();
+        string temporary = record + "." + Guid.NewGuid().ToString("N") + ".tmp";
+        string unrelated = Path.Combine(Path.GetDirectoryName(record)!, "unrelated.tmp");
+        await File.WriteAllBytesAsync(temporary, [1, 2, 3], Cancellation);
+        await File.WriteAllBytesAsync(unrelated, [4, 5, 6], Cancellation);
+        using (var locked = new FileStream(temporary, FileMode.Open, FileAccess.Read, FileShare.Read))
+        {
+            var cleanup = await store.InitializeAsync(Cancellation);
+            Assert.IsFalse(cleanup.Completed);
+            Assert.AreEqual(1, cleanup.RemainingGenerations);
+            Assert.IsTrue((await store.GetStorageStatusAsync(Cancellation)).CleanupPending);
+            Assert.AreEqual("committed", DescriptionText((await store.GetAsync(id, cancellationToken: Cancellation))!));
+        }
+        Assert.IsTrue((await store.InitializeAsync(Cancellation)).Completed);
+        Assert.IsFalse(File.Exists(temporary));
+        Assert.IsTrue(File.Exists(unrelated), "Recovery must only remove recognized store-owned temporary files.");
+        Assert.IsFalse((await store.GetStorageStatusAsync(Cancellation)).CleanupPending);
+        Assert.AreEqual("committed", DescriptionText((await store.GetAsync(id, cancellationToken: Cancellation))!));
+    }
+
+    [TestMethod]
     public async Task InterruptedFirstControlWriteCanInitializeWithoutResettingAnyCommittedData()
     {
         using var environment = new AnalysisTestEnvironment();

@@ -71,10 +71,15 @@ internal sealed class AnalysisTestEnvironment : IDisposable, IStorageService
     {
         private readonly LocalProtectedFileSystem _inner = new();
         public Func<string, CancellationToken, Task>? BeforeWrite { get; set; }
+        public Func<string, CancellationToken, Task>? BeforeRead { get; set; }
         public bool FailCleanup { get; set; }
         public List<byte[]> PublishedBytes { get; } = [];
 
-        public Task<byte[]?> ReadAsync(string path, CancellationToken cancellationToken) => _inner.ReadAsync(path, cancellationToken);
+        public async Task<byte[]?> ReadAsync(string path, CancellationToken cancellationToken)
+        {
+            if (BeforeRead != null) await BeforeRead(path, cancellationToken);
+            return await _inner.ReadAsync(path, cancellationToken);
+        }
 
         public async Task WriteAtomicallyAsync(string path, byte[] ciphertext, CancellationToken cancellationToken)
         {

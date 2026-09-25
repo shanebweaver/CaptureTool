@@ -40,7 +40,7 @@ internal sealed partial class LocalCaptureAnalysisStore : ICaptureAnalysisStore,
         {
             AnalysisControlDocument control = (await ReadControlAsync(true, cancellationToken).ConfigureAwait(false))!;
             DeleteControlTemporaries();
-            return CleanupOldGenerations(control.Generation);
+            return CleanupObsoleteFiles(control.Generation);
         }
         finally { _gate.Release(); }
     }
@@ -139,7 +139,7 @@ internal sealed partial class LocalCaptureAnalysisStore : ICaptureAnalysisStore,
             var next = new AnalysisControlDocument(2, Guid.NewGuid(), ReconciliationBoundary: reconciliationBoundary);
             await _documents.WriteAsync(_controlPath, next, AnalysisJsonContext.Default.AnalysisControlDocument, cancellationToken).ConfigureAwait(false);
             // After publication, deletion is committed even if cleanup is interrupted. Do not roll back the generation.
-            return CleanupOldGenerations(next.Generation);
+            return CleanupObsoleteFiles(next.Generation);
         }
         finally { _gate.Release(); }
     }
@@ -175,9 +175,19 @@ internal sealed partial class LocalCaptureAnalysisStore : ICaptureAnalysisStore,
         _documents.WriteAsync(RecordPath(generation, record.CaptureId), AnalysisDocumentMapper.ToDocument(record),
             AnalysisJsonContext.Default.AnalysisDocument, cancellationToken);
 
-    private AnalysisCleanupResult CleanupOldGenerations(Guid current)
+    private AnalysisCleanupResult CleanupObsoleteFiles(Guid current)
     {
         int remaining = 0;
+        bool currentPending = false;
+        // Initialization holds the publication gate, so no current temporary can
+        // belong to an active write in this single-process store.
+        foreach (string path in _files.GetFiles(GenerationPath(current)).Where(IsAnalysisTemporary))
+        {
+            try { _files.DeleteFile(path); }
+            catch (IOException) { currentPending = true; }
+            catch (UnauthorizedAccessException) { currentPending = true; }
+        }
+        if (currentPending) remaining++;
         foreach (string directory in _files.GetDirectories(_recordsRoot))
         {
             if (!Guid.TryParseExact(Path.GetFileName(directory), "N", out Guid generation))
@@ -212,5 +222,13 @@ internal sealed partial class LocalCaptureAnalysisStore : ICaptureAnalysisStore,
         string name = Path.GetFileName(path);
         return name.Length == prefix.Length + 32 + 4 && name.StartsWith(prefix, StringComparison.Ordinal) &&
             name.EndsWith(".tmp", StringComparison.Ordinal) && Guid.TryParseExact(name[prefix.Length..^4], "N", out _);
+    }
+
+    private static bool IsAnalysisTemporary(string path)
+    {
+        string[] parts = Path.GetFileName(path).Split('.');
+        return parts.Length == 4 && parts[1] == "analysis" && parts[3] == "tmp" &&
+            Guid.TryParseExact(parts[0], "N", out Guid capture) && capture != Guid.Empty &&
+            Guid.TryParseExact(parts[2], "N", out _);
     }
 }

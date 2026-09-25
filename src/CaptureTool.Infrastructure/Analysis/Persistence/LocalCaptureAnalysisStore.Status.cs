@@ -15,7 +15,8 @@ internal sealed partial class LocalCaptureAnalysisStore
             bool records = generations.Any(path => _files.GetFiles(path).Length != 0);
             hasData = records || _files.GetFiles(_root).Contains(_controlPath, StringComparer.OrdinalIgnoreCase);
             var control = await ReadControlAsync(false, cancellationToken).ConfigureAwait(false);
-            bool cleanup = control != null && generations.Any(path => !string.Equals(path, GenerationPath(control.Generation), StringComparison.OrdinalIgnoreCase));
+            bool cleanup = control != null && (generations.Any(path => !string.Equals(path, GenerationPath(control.Generation), StringComparison.OrdinalIgnoreCase)) ||
+                _files.GetFiles(GenerationPath(control.Generation)).Any(IsAnalysisTemporary));
             return new(records || cleanup, true, cleanup);
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or CryptographicException)
