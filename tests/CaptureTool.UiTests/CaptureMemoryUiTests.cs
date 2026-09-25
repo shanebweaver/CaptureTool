@@ -1,5 +1,7 @@
 using FlaUI.Core.AutomationElements;
 using FlaUI.Core.Definitions;
+using FlaUI.Core.Input;
+using FlaUI.Core.WindowsAPI;
 using FlaUI.UIA3;
 using System.Text.Json;
 using System.Runtime.InteropServices;
@@ -52,7 +54,18 @@ public sealed partial class ImageEditTextExtractionUiTests
         Assert.AreEqual(ToggleState.Off, toggle.Patterns.Toggle.Pattern.ToggleState.Value);
         Assert.IsFalse(scan.IsEnabled);
         Assert.IsFalse(delete.IsEnabled);
+        Assert.IsFalse(string.IsNullOrWhiteSpace(consent.Name), "Consent needs an accessible name.");
+        consent.Focus();
+        Keyboard.Type(VirtualKeyShort.TAB);
+        WaitFor(() => toggle.Properties.HasKeyboardFocus.Value ? toggle : null, InteractionTimeout,
+            "keyboard navigation from consent to automatic scanning");
 
+        int progressAnnouncements = 0;
+        using var announcements = window.RegisterAutomationEvent(automation.EventLibrary.Element.LiveRegionChangedEvent,
+            TreeScope.Subtree, (element, _) =>
+            {
+                if (element.AutomationId == "CaptureMemoryProgress") Interlocked.Increment(ref progressAnnouncements);
+            });
         toggle.Patterns.Toggle.Pattern.Toggle();
         Confirm("Consent", "Allow");
         Confirm("ScanExisting", "Analyze captures");
@@ -60,8 +73,10 @@ public sealed partial class ImageEditTextExtractionUiTests
         Assert.IsFalse(progress.IsOffscreen, "Analysis progress should be visible in the shell.");
         Assert.IsFalse(progress.Patterns.Invoke.IsSupported, "Progress must be passive.");
         Assert.IsFalse(progress.Patterns.Toggle.IsSupported);
+        Assert.IsFalse(progress.Properties.IsKeyboardFocusable.Value, "Passive progress must not enter the tab order.");
         SaveScreenshot("loading");
         WaitForElementRemoved(window, automation, "CaptureMemoryProgress", InteractionTimeout);
+        Assert.IsGreaterThan(0, Volatile.Read(ref progressAnnouncements), "Progress must announce itself through UI Automation.");
         Assert.AreEqual(ToggleState.On, consent.Patterns.Toggle.Pattern.ToggleState.Value);
         WaitFor(() => delete.IsEnabled ? delete : null, InteractionTimeout, "deletion enabled after analysis");
         Assert.IsTrue(scan.IsEnabled);
@@ -78,7 +93,7 @@ public sealed partial class ImageEditTextExtractionUiTests
 
         // Revoking consent with no metadata requires no further deletion prompt.
         consent.Focus();
-        consent.Click();
+        Keyboard.Type(VirtualKeyShort.SPACE);
         WaitFor(() => consent.Patterns.Toggle.Pattern.ToggleState.Value == ToggleState.Off ? consent : null,
             InteractionTimeout, "consent revoked");
         WaitForElementByName(window, automation, "File", InteractionTimeout).Click();

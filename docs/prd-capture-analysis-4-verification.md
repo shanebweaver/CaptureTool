@@ -1,6 +1,8 @@
 # PRD: Capture Analysis — Slice 4, Release Verification
 
-Status: Planned. Depends on reviewed [slice 3](prd-capture-analysis-3-integration.md).
+Status: In progress. Local verification is recorded in the
+[verification report](capture-analysis-verification.md). Native ARM64 and available
+Windows AI inference remain required device gates; no additional device is available.
 
 ## Purpose
 

@@ -1,0 +1,37 @@
+name: Native AOT
+
+on:
+  pull_request:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: windows-2025-vs2026
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [x64, ARM64]
+    steps:
+    - uses: actions/checkout@v7
+    - uses: actions/setup-dotnet@v6
+      with:
+        dotnet-version: '10.0.x'
+    - uses: microsoft/setup-msbuild@v3
+    - name: Test diagnostic guard
+      shell: pwsh
+      run: .github/scripts/test-native-aot-log.ps1
+    - name: Publish app and provider harness
+      shell: pwsh
+      run: .github/scripts/verify-native-aot.ps1 -Platform '${{ matrix.platform }}'
+    - name: Retain publish logs
+      if: always()
+      uses: actions/upload-artifact@v7
+      with:
+        name: native-aot-${{ matrix.platform }}-logs
+        path: artifacts/native-aot/${{ matrix.platform }}/*.log
+        if-no-files-found: error
