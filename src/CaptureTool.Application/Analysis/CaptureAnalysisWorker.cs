@@ -2,6 +2,7 @@ using CaptureTool.Application.Abstractions.Analysis;
 using CaptureTool.Application.Abstractions.Capture.Assets;
 using CaptureTool.Domain;
 using CaptureTool.Domain.Analysis;
+using CaptureTool.Domain.Analysis.Payloads;
 
 namespace CaptureTool.Application.Analysis;
 
@@ -13,6 +14,7 @@ public sealed class CaptureAnalysisWorker : ICaptureAnalysisWorker, IDisposable
     private readonly ICaptureAssetCatalog _catalog;
     private readonly CaptureAnalysisConfiguration _configuration;
     private readonly IReadOnlyDictionary<string, IMediaAnalyzer> _analyzers;
+    private readonly IReadOnlyDictionary<string, IMetadataProcessor> _processors;
     private readonly SemaphoreSlim _signal = new(0, 1);
     private readonly SemaphoreSlim _commands = new(1, 1);
     private readonly SemaphoreSlim _running = new(1, 1);
@@ -26,7 +28,8 @@ public sealed class CaptureAnalysisWorker : ICaptureAnalysisWorker, IDisposable
     private AnalysisActivitySnapshot _progress = new(AnalysisActivity.Idle);
 
     public CaptureAnalysisWorker(IAnalysisExecutionStore store, IAnalysisAuthorization authorization, IAnalysisSource source,
-        CaptureAnalysisConfiguration configuration, IEnumerable<IMediaAnalyzer> analyzers, ICaptureAssetCatalog catalog)
+        CaptureAnalysisConfiguration configuration, IEnumerable<IMediaAnalyzer> analyzers, ICaptureAssetCatalog catalog,
+        IEnumerable<IMetadataProcessor>? processors = null)
     {
         _store = store;
         _authorization = authorization;
@@ -34,8 +37,10 @@ public sealed class CaptureAnalysisWorker : ICaptureAnalysisWorker, IDisposable
         _catalog = catalog;
         _configuration = configuration;
         IMediaAnalyzer[] adapters = analyzers.ToArray();
-        configuration.ValidateAnalyzers(adapters.Select(analyzer => analyzer.Descriptor));
+        IMetadataProcessor[] metadata = processors?.ToArray() ?? [];
+        configuration.ValidateAnalyzers(adapters.Select(analyzer => analyzer.Descriptor), metadata.Select(processor => processor.Descriptor));
         _analyzers = adapters.ToDictionary(analyzer => analyzer.Descriptor.Id, StringComparer.Ordinal);
+        _processors = metadata.ToDictionary(processor => processor.Descriptor.Id, StringComparer.Ordinal);
     }
 
     public AnalysisActivitySnapshot Progress => Volatile.Read(ref _progress);
@@ -208,7 +213,9 @@ public sealed class CaptureAnalysisWorker : ICaptureAnalysisWorker, IDisposable
                 ct.ThrowIfCancellationRequested();
                 AnalysisWorkItem? current = await _store.GetWorkAsync(work.Token.CaptureId, ct).ConfigureAwait(false);
                 if (current?.Token != work.Token || !current.Run.IsPending) return;
-                AnalyzerOutcome outcome = await ExecuteStepAsync(plan.Steps[index], work, input, remaining, index, plan.Steps.Count, ct).ConfigureAwait(false);
+                CaptureAnalysisRecord? metadata = _processors.ContainsKey(plan.Steps[index].Candidates[0])
+                    ? await _store.GetAsync(work.Token.CaptureId, source.Revision, ct).ConfigureAwait(false) : null;
+                var (outcome, derivation) = await ExecuteStepAsync(plan.Steps[index], work, input, metadata, remaining, index, plan.Steps.Count, ct).ConfigureAwait(false);
                 if (outcome.Kind is AnalyzerOutcomeKind.Cancelled or AnalyzerOutcomeKind.InvalidSource)
                 {
                     await _store.FinishAsync(work.Token, outcome.Kind == AnalyzerOutcomeKind.Cancelled
@@ -223,7 +230,7 @@ public sealed class CaptureAnalysisWorker : ICaptureAnalysisWorker, IDisposable
                 using IAnalysisAuthorizationLease grant = await _authorization.AcquireAsync(ct).ConfigureAwait(false);
                 if (!Permits(grant, work)) return;
                 AnalysisResult? result = outcome.Kind == AnalyzerOutcomeKind.Succeeded
-                    ? new(outcome.Payload!, outcome.Producer!, DateTimeOffset.UtcNow, plan.Version, work.Run.Id) : null;
+                    ? new(outcome.Payload!, outcome.Producer!, DateTimeOffset.UtcNow, plan.Version, work.Run.Id, derivation: derivation) : null;
                 if (!await _store.CommitStepAsync(work.Token, new(plan.Steps[index].Capability, outcome.Kind, outcome.FailureCode), result, ct).ConfigureAwait(false)) return;
             }
         }
@@ -258,7 +265,8 @@ public sealed class CaptureAnalysisWorker : ICaptureAnalysisWorker, IDisposable
         }
     }
 
-    private async Task<AnalyzerOutcome> ExecuteStepAsync(AnalysisStep step, AnalysisWorkItem work, AnalysisInput input,
+    private async Task<(AnalyzerOutcome Outcome, AnalysisDerivation? Derivation)> ExecuteStepAsync(AnalysisStep step, AnalysisWorkItem work, AnalysisInput input,
+        CaptureAnalysisRecord? metadata,
         int remaining, int index, int total, CancellationToken ct)
     {
         AnalyzerOutcome last = AnalyzerOutcome.Unsuccessful(AnalyzerOutcomeKind.Unsupported, "no-compatible-model");
@@ -266,19 +274,31 @@ public sealed class CaptureAnalysisWorker : ICaptureAnalysisWorker, IDisposable
         foreach (string id in step.Candidates)
         for (int retry = 0; retry <= step.RetryCount; retry++)
         {
-            IMediaAnalyzer analyzer = _analyzers[id];
+            IMediaAnalyzer? analyzer = _analyzers.GetValueOrDefault(id);
+            IMetadataProcessor? processor = _processors.GetValueOrDefault(id);
+            MetadataProcessorInput? snapshot = null;
             long version = AdvanceProgressVersion();
             var progress = new InlineProgress(value => Report(
                 new(value.Stage == AnalysisProgressStage.Preparing ? AnalysisActivity.Preparing : AnalysisActivity.Analyzing,
                     remaining, work.Token.CaptureId, index, total, value.Fraction), version, ct));
             try
             {
-                AnalyzerAvailability available = await InvokeAsync(token => analyzer.GetAvailabilityAsync(work.MediaKind, work.Language, token).AsTask(),
+                // Select whole entries immediately before this attempt. The store rechecks the
+                // consulted identities at commit; preparation never owns the publication gate.
+                if (processor != null)
+                {
+                    if (metadata == null) return (AnalyzerOutcome.Unsuccessful(AnalyzerOutcomeKind.Unsupported, "metadata-input-missing"), null);
+                    snapshot = MetadataProcessorInput.Create(metadata, processor.Descriptor, ct);
+                    if (!snapshot.Entries.Any(entry => !string.IsNullOrWhiteSpace(entry.Text)))
+                        return (AnalyzerOutcome.Unsuccessful(AnalyzerOutcomeKind.Unsupported, "metadata-input-empty"), null);
+                }
+                AnalyzerAvailability available = await InvokeAsync(token => processor != null
+                    ? processor.GetAvailabilityAsync(token).AsTask() : analyzer!.GetAvailabilityAsync(work.MediaKind, work.Language, token).AsTask(),
                     TimeSpan.FromSeconds(10), ct).ConfigureAwait(false);
                 if (available == AnalyzerAvailability.PreparationRequired)
                 {
                     progress.Report(new(AnalysisProgressStage.Preparing));
-                    available = await InvokeAsync(token => analyzer.PrepareAsync(progress, token), step.PreparationTimeout, ct).ConfigureAwait(false);
+                    available = await InvokeAsync(token => processor != null ? processor.PrepareAsync(progress, token) : analyzer!.PrepareAsync(progress, token), step.PreparationTimeout, ct).ConfigureAwait(false);
                 }
                 if (available != AnalyzerAvailability.Ready)
                 {
@@ -287,18 +307,23 @@ public sealed class CaptureAnalysisWorker : ICaptureAnalysisWorker, IDisposable
                     break;
                 }
                 progress.Report(new(AnalysisProgressStage.Analyzing));
-                last = await InvokeAsync(token => analyzer.AnalyzeAsync(input, progress, token), step.ExecutionTimeout, ct).ConfigureAwait(false);
+                last = await InvokeAsync(token => processor != null ? processor.ProcessAsync(snapshot!, token) : analyzer!.AnalyzeAsync(input, progress, token), step.ExecutionTimeout, ct).ConfigureAwait(false);
                 if (last.Kind == AnalyzerOutcomeKind.Succeeded && (last.Payload!.Capability != step.Capability ||
-                    !last.Payload.Supports(work.MediaKind) || last.Producer!.AnalyzerId != id))
+                    !last.Payload.Supports(work.MediaKind) || last.Producer!.AnalyzerId != id ||
+                    (last.Payload is DerivedAnalysisPayload) != (processor != null)))
                     last = AnalyzerOutcome.Unsuccessful(AnalyzerOutcomeKind.Failed, "invalid-model-output");
+                if (last.Kind == AnalyzerOutcomeKind.Succeeded && snapshot != null)
+                    _ = metadata!.WithResult(new(last.Payload!, last.Producer!, DateTimeOffset.UtcNow, metadata.PlanVersion, derivation: snapshot.Derivation));
+                if (processor != null && last.Kind == AnalyzerOutcomeKind.InvalidSource)
+                    last = AnalyzerOutcome.Unsuccessful(AnalyzerOutcomeKind.Failed, "invalid-metadata-input");
                 if (last.Kind is AnalyzerOutcomeKind.Succeeded or AnalyzerOutcomeKind.ContentRejected or AnalyzerOutcomeKind.Cancelled or AnalyzerOutcomeKind.InvalidSource)
-                    return last;
+                    return (last, last.Kind == AnalyzerOutcomeKind.Succeeded ? snapshot?.Derivation : null);
                 if (last.Kind == AnalyzerOutcomeKind.Unsupported) break;
             }
             catch (OperationCanceledException) when (ct.IsCancellationRequested) { throw; }
             catch (ProviderBusyException) { throw; }
             catch (TimeoutException) { last = AnalyzerOutcome.Unsuccessful(AnalyzerOutcomeKind.Failed, "model-timeout"); }
-            catch (OperationCanceledException) { return AnalyzerOutcome.Unsuccessful(AnalyzerOutcomeKind.Cancelled, "model-cancelled"); }
+            catch (OperationCanceledException) { return (AnalyzerOutcome.Unsuccessful(AnalyzerOutcomeKind.Cancelled, "model-cancelled"), null); }
             catch (Exception) { last = AnalyzerOutcome.Unsuccessful(AnalyzerOutcomeKind.Failed, "model-failed"); }
             finally
             {
@@ -307,7 +332,7 @@ public sealed class CaptureAnalysisWorker : ICaptureAnalysisWorker, IDisposable
                 AdvanceProgressVersion();
             }
         }
-        return strongestFailure;
+        return (strongestFailure, null);
     }
 
     private static int FailureRank(AnalyzerOutcomeKind kind) => kind switch

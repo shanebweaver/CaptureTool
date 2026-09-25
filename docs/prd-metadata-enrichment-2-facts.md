@@ -1,6 +1,6 @@
 # Metadata enrichment — slice 2: structured facts
 
-Status: implemented on `codex/capture-metadata-enrichment-facts`, awaiting slice review. Built on the completed foundation branch after approval to proceed. See the [facts review](metadata-enrichment-facts-review.md).
+Status: Implemented and reviewed; registered in the shared pipeline. See [final review and verification](metadata-enrichment-verification.md).
 
 ## Goal
 

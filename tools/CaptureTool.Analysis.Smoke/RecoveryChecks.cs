@@ -35,7 +35,7 @@ internal static class RecoveryChecks
         string root = Path.Combine(output, "recovery-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(root);
         List<RecoveryResult> results = [];
-        foreach (string stage in new[] { "registration", "admission", "preparation", "execution", "publication", "committed", "deletion" })
+        foreach (string stage in new[] { "registration", "admission", "preparation", "execution", "publication", "committed", "metadata-execution", "metadata-publication", "metadata-committed", "deletion" })
         {
             string directory = Path.Combine(root, stage);
             Directory.CreateDirectory(directory);
@@ -95,7 +95,8 @@ internal static class RecoveryChecks
             var faults = new CheckpointFiles(root, resume ? null : stage, protector);
             var plan = new MediaAnalysisPlan(AnalysisMediaKind.Image, "recovery-v1", [
                 new(AnalysisCapability.Description, ["description"], TimeSpan.FromMinutes(1), TimeSpan.FromMinutes(1)),
-                new(AnalysisCapability.TextRecognition, ["text"], TimeSpan.FromMinutes(1), TimeSpan.FromMinutes(1))
+                new(AnalysisCapability.TextRecognition, ["text"], TimeSpan.FromMinutes(1), TimeSpan.FromMinutes(1)),
+                new(AnalysisCapability.CaptureSynopsis, ["synopsis"], TimeSpan.FromSeconds(1), TimeSpan.FromMinutes(1)),
             ]);
             var services = new ServiceCollection().AddGenericServices().AddApplicationServices()
                 .AddSingleton<IStorageService>(storage).AddSingleton<IUserDataProtector>(protector)
@@ -103,7 +104,8 @@ internal static class RecoveryChecks
                 .AddSingleton<IRecentCaptureCatalog>(new NoRecents()).AddSingleton<ICaptureMemoryPrompts>(new Prompts())
                 .AddSingleton(new CaptureAnalysisConfiguration([plan]))
                 .AddSingleton<IMediaAnalyzer>(new Analyzer("description", AnalysisCapability.Description, faults))
-                .AddSingleton<IMediaAnalyzer>(new Analyzer("text", AnalysisCapability.TextRecognition, faults));
+                .AddSingleton<IMediaAnalyzer>(new Analyzer("text", AnalysisCapability.TextRecognition, faults))
+                .AddSingleton<IMetadataProcessor>(new Processor(faults));
             // Capture registration uses the same production file boundary as metadata.
             services.AddSingleton<ICaptureAssetCatalog>(new CaptureTool.Infrastructure.CaptureAssets.LocalCaptureAssetCatalog(storage, protector, faults));
             using ServiceProvider provider = services.BuildServiceProvider();
@@ -147,11 +149,16 @@ internal static class RecoveryChecks
                     var completed = await CompletedAsync(store, Id, ct);
                     if (stage != "registration") Require(completed.Token.RunId == checkpoint.RunId, "Restart must retain the admitted run identity.");
                     var record = await store.GetAsync(Id, Revision, ct);
-                    Require(record?.Results.Count == 2, "Both steps must be available after recovery.");
+                    Require(record?.Results.Count == 3, "Basic and derived steps must be available after recovery.");
+                    Require(record.Results.Single(result => result.Payload is CaptureSynopsisMetadata).Derivation!.Matches(record.Results), "Recovered insights must retain current input identities.");
                     Require(record.Results.All(result => result.ProducingRunId == completed.Token.RunId), "Results must belong to the resumed run.");
                     Require((await store.ReadPendingAsync(ct)).Count == 0, "Completed work must leave the queue.");
                     if (stage == "committed") Require(File.ReadAllLines(Path.Combine(root, "description-calls.txt")).Length == 1,
                         "A committed step must not execute twice after restart.");
+                    if (stage.StartsWith("metadata-", StringComparison.Ordinal))
+                        Require(File.ReadAllLines(Path.Combine(root, "text-calls.txt")).Length == 1, "Enrichment restart must not repeat basic scanning.");
+                    if (stage == "metadata-committed")
+                        Require(File.ReadAllLines(Path.Combine(root, "synopsis-calls.txt")).Length == 1, "A committed insight must not execute twice.");
                 }
                 Require(await File.ReadAllTextAsync(sourcePath, ct) == Source, "Source media was modified.");
                 Require(Directory.GetFiles(storage.GetApplicationDataFolderPath(), "*.tmp", SearchOption.AllDirectories).Length == 0,
@@ -232,13 +239,14 @@ internal static class RecoveryChecks
                 try { document = JsonSerializer.Deserialize(plaintext, AnalysisJsonContext.Default.AnalysisDocument); }
                 finally { CryptographicOperations.ZeroMemory(plaintext); }
                 _latest = new(Guid.ParseExact(Path.GetFileName(Path.GetDirectoryName(path))!, "N"), document!.Run!.Id);
-                if (Armed && stage == "publication" && document.Run.CompletedSteps.Length == 1)
+                if (Armed && (stage == "publication" && document.Run.CompletedSteps.Length == 1 ||
+                    stage == "metadata-publication" && document.Run.CompletedSteps.Length == 3))
                 {
                     // Simulate an interrupted encrypted temporary write before atomic replacement.
                     Directory.CreateDirectory(Path.GetDirectoryName(path)!);
                     using (var partial = new FileStream(path + "." + Guid.NewGuid().ToString("N") + ".tmp", FileMode.CreateNew))
                     { partial.Write(ciphertext, 0, ciphertext.Length / 2); partial.Flush(true); }
-                    await PauseAsync("publication", ct);
+                    await PauseAsync(stage, ct);
                 }
             }
             await _inner.WriteAtomicallyAsync(path, ciphertext, ct);
@@ -247,6 +255,7 @@ internal static class RecoveryChecks
             {
                 if (run.SourceSha256 == null) await PauseAsync("admission", ct);
                 if (run.CompletedSteps.Length == 1) await PauseAsync("committed", ct);
+                if (run.CompletedSteps.Length == 3) await PauseAsync("metadata-committed", ct);
             }
         }
         public async Task PauseAsync(string point, CancellationToken ct)
@@ -256,6 +265,18 @@ internal static class RecoveryChecks
             await File.WriteAllTextAsync(temporary, JsonSerializer.Serialize(_latest, RecoveryJsonContext.Default.Checkpoint), ct);
             File.Move(temporary, Path.Combine(root, "checkpoint.json"));
             await Task.Delay(Timeout.Infinite, ct);
+        }
+    }
+    private sealed class Processor(CheckpointFiles faults) : IMetadataProcessor
+    {
+        public MetadataProcessorDescriptor Descriptor { get; } = new("synopsis", "1", AnalysisCapability.CaptureSynopsis,
+            [AnalysisCapability.TextRecognition], new(10, 1000, 1000, TimeSpan.FromMinutes(1)));
+        public async Task<AnalyzerOutcome> ProcessAsync(MetadataProcessorInput input, CancellationToken ct)
+        {
+            await File.AppendAllTextAsync(Path.Combine(faults.Root, "synopsis-calls.txt"), "called\n", ct);
+            await faults.PauseAsync("metadata-execution", ct);
+            var entry = input.Entries[0];
+            return AnalyzerOutcome.Success(new CaptureSynopsisMetadata(new(Derived, [new(entry.ResultId, entry.EntryIndex, 0, entry.Text.Length)]), [], input.Coverage), Producer("synopsis"));
         }
     }
     private sealed class Prompts : ICaptureMemoryPrompts

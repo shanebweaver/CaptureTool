@@ -39,6 +39,18 @@ internal static class AnalysisDocumentMapper
                 new(input.Capability.Name, input.Capability.SchemaVersion), input.ResultId)).ToArray());
         return result.Payload switch
         {
+            CaptureSynopsisMetadata synopsis => document with
+            {
+                Synopsis = new(synopsis.Title == null ? null : ToDocument(synopsis.Title), synopsis.Summary.Select(ToDocument).ToArray()),
+                Coverage = ToDocument(synopsis.Coverage),
+            },
+            CaptureClassificationMetadata classification => document with
+            {
+                Classification = new(CaptureClassificationMetadata.VocabularyVersion,
+                    classification.Category is { } category ? (int)category : null,
+                    classification.CategoryEvidence.Select(ToDocument).ToArray(), classification.Topics.Select(ToDocument).ToArray()),
+                Coverage = ToDocument(classification.Coverage),
+            },
             StructuredFactsMetadata facts => document with
             {
                 Facts = facts.Facts.Select(fact => new FactDocument((int)fact.Kind, fact.Value,
@@ -85,12 +97,23 @@ internal static class AnalysisDocumentMapper
     {
         if (document == null || document.SchemaVersion != 1 || document.Producer == null)
             throw new InvalidDataException("Unsupported or invalid analysis result.");
-        if (document.Facts != null && document.ResultId == null)
+        int payloads = (document.Facts != null ? 1 : 0) + (document.Synopsis != null ? 1 : 0) + (document.Classification != null ? 1 : 0) +
+            (document.FileDetails != null ? 1 : 0) + (document.Text != null ? 1 : 0) + (document.Descriptions != null ? 1 : 0) +
+            (document.Transcript != null ? 1 : 0) + (document.QrCodes != null ? 1 : 0);
+        if (payloads != 1) throw new InvalidDataException("Unsupported or ambiguous metadata payload.");
+        bool derived = document.Facts != null || document.Synopsis != null || document.Classification != null;
+        if (derived && document.ResultId == null)
             throw new InvalidDataException("Derived metadata requires a persisted result identity.");
-        if (document.Facts == null && document.Coverage != null)
-            throw new InvalidDataException("Processing coverage belongs to structured facts metadata.");
+        if (!derived && document.Coverage != null)
+            throw new InvalidDataException("Processing coverage belongs to derived metadata.");
         AnalysisPayload payload = document switch
         {
+            { Capability: "capture-synopsis", Synopsis.Summary: not null, Coverage: not null } =>
+                new CaptureSynopsisMetadata(document.Synopsis.Title == null ? null : ToSuggestedText(document.Synopsis.Title),
+                    document.Synopsis.Summary.Select(ToSuggestedText), ToCoverage(document.Coverage)),
+            { Capability: "capture-classification", Classification: { VocabularyVersion: "1", Evidence: not null, Topics: not null }, Coverage: not null } =>
+                new CaptureClassificationMetadata(document.Classification.Category is { } category ? (CaptureCategory)category : null,
+                    document.Classification.Evidence.Select(ToEvidence), document.Classification.Topics.Select(ToSuggestedText), ToCoverage(document.Coverage)),
             { Capability: "structured-facts", Facts: not null, FileDetails: null, Text: null, Descriptions: null, Transcript: null, QrCodes: null } =>
                 new StructuredFactsMetadata(document.Facts.Select(ToFact), document.Coverage is { } coverage ?
                     new(coverage.AvailableEntries, coverage.IncludedEntries, coverage.IncludedCharacters, (MetadataProcessingLimit)coverage.Limits) : null),
@@ -117,6 +140,17 @@ internal static class AnalysisDocumentMapper
     // repeated reads do not change it; the next ordinary write persists the assigned identity.
     private static Guid LegacyResultId(ResultDocument document) =>
         new(SHA256.HashData(JsonSerializer.SerializeToUtf8Bytes(document, AnalysisJsonContext.Default.ResultDocument)).AsSpan(0, 16));
+
+    private static CoverageDocument ToDocument(MetadataProcessingCoverage coverage) =>
+        new(coverage.AvailableEntries, coverage.IncludedEntries, coverage.IncludedCharacters, (int)coverage.Limits);
+    private static MetadataProcessingCoverage ToCoverage(CoverageDocument coverage) =>
+        new(coverage.AvailableEntries, coverage.IncludedEntries, coverage.IncludedCharacters, (MetadataProcessingLimit)coverage.Limits);
+    private static EvidenceDocument ToDocument(AnalysisEvidence evidence) => new(evidence.ResultId, evidence.EntryIndex, evidence.Start, evidence.Length);
+    private static SuggestedTextDocument ToDocument(SuggestedText text) => new(text.Text, text.Evidence.Select(ToDocument).ToArray());
+    private static AnalysisEvidence ToEvidence(EvidenceDocument document) => document == null
+        ? throw new InvalidDataException("Missing insight evidence.") : new(document.ResultId, document.EntryIndex, document.Start, document.Length);
+    private static SuggestedText ToSuggestedText(SuggestedTextDocument document) => document?.Evidence == null
+        ? throw new InvalidDataException("Missing insight text or evidence.") : new(document.Text, document.Evidence.Select(ToEvidence));
 
     private static AnalysisInputReference ToInputReference(InputReferenceDocument document)
     {

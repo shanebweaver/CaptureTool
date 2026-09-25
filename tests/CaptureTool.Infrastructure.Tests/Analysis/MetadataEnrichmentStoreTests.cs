@@ -9,7 +9,7 @@ using System.Text.Json.Nodes;
 namespace CaptureTool.Infrastructure.Tests.Analysis;
 
 [TestClass]
-public sealed class MetadataEnrichmentStoreTests
+public sealed partial class MetadataEnrichmentStoreTests
 {
     private const string Value = "https://private.example.test";
     public TestContext TestContext { get; set; } = null!;

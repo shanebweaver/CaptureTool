@@ -54,12 +54,32 @@ directly; these modes do not initialize or download models:
 & artifacts/capture-analysis-execution/aot/CaptureTool.Analysis.Smoke.exe "$PWD/artifacts/scale" --scale-checks
 ```
 
-Recovery checks kill child processes at seven controlled boundaries, restart them,
+Recovery checks kill child processes at ten controlled boundaries, restart them,
 and verify durable intent, preserved commits, deletion fencing, encrypted storage,
 and orphan temporary cleanup. They use the production worker, catalog, policy,
 atomic store, and Windows DPAPI with synthetic analyzers. The publication boundary
 injects a partial encrypted temporary write before replacement. This is process
 crash evidence, not power-loss or real model interruption evidence.
+
+Metadata enrichment checks use synthetic OCR/transcript entries rather than media:
+
+```powershell
+& artifacts/capture-analysis-execution/aot/CaptureTool.Analysis.Smoke.exe "$PWD/artifacts/enrichment" --enrichment-checks
+```
+
+The configured text model is prepared if necessary. `enrichment-results.json` retains
+normalized outputs, source evidence, real model identities, and fixture acceptance
+separately from provider outcomes. Noise/hostile fixtures may safely abstain or be
+rejected; a provider failure is never relabeled successful inference. Inspect meaning
+as well as the automated schema/category checks. The corpus covers three media kinds,
+German, conflicting entries, and a whole oversized entry omitted with explicit coverage.
+Use `--enrichment-first` for the invoice only, or `--enrichment-model <catalog-alias>`
+to evaluate a candidate without editing production configuration. Models and runtime
+components are retained under this output directory for repeat checks.
+
+An opt-in `--enrichment-probe --enrichment-model <catalog-alias>` diagnostic writes
+raw responses for one hard-coded synthetic invoice only. It never reads captures.
+Production adapters do not log source text, prompts, or raw responses.
 
 Scale checks seed 100, 1,000, and 10,000 DPAPI-protected records with 200 OCR regions
 each. Reports measure discovery, settings contention, cancellation, deletion,

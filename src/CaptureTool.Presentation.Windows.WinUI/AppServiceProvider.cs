@@ -32,7 +32,7 @@ public partial class AppServiceProvider : IServiceProvider, IDisposable
         // Windows domains
         collection.AddWindowsCaptureDomains();
         collection.AddWindowsEditDomains();
-        collection.AddWindowsAnalysisProviders();
+        collection.AddWindowsAnalysisProviders(CaptureTool.Application.Analysis.MetadataEnrichmentConfiguration.SemanticModels);
 
         // Application layer
         collection.AddApplicationServices();

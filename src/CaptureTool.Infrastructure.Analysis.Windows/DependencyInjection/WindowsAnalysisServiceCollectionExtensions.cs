@@ -8,10 +8,14 @@ namespace CaptureTool.Infrastructure.Analysis.Windows.DependencyInjection;
 
 public static class WindowsAnalysisServiceCollectionExtensions
 {
-    public static IServiceCollection AddWindowsAnalysisProviders(this IServiceCollection services)
+    public static IServiceCollection AddWindowsAnalysisProviders(this IServiceCollection services,
+        IEnumerable<(MetadataProcessorDescriptor Descriptor, string Alias)>? metadataModels = null)
     {
         services.AddSingleton<WindowsAnalysisMedia>();
         services.AddSingleton<FoundryRuntime>();
+        foreach (var model in metadataModels ?? [])
+            services.AddSingleton<IMetadataProcessor>(provider => new FoundryMetadataProcessor(
+                model.Descriptor, model.Alias, provider.GetRequiredService<FoundryRuntime>()));
         services.AddSingleton<IMediaAnalyzer, FileDetailsAnalyzer>();
         services.AddSingleton<IMediaAnalyzer>(provider => new QrCodeAnalyzer("zxing-image-qr", AnalysisMediaKind.Image,
             provider.GetRequiredService<WindowsAnalysisMedia>()));

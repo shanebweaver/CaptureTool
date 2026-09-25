@@ -56,35 +56,7 @@ public sealed class StructuredFactsMetadata : DerivedAnalysisPayload
     public override void ValidateEvidence(IReadOnlyList<AnalysisResult> inputs)
     {
         ArgumentNullException.ThrowIfNull(inputs);
-        if (Coverage is { } coverage)
-        {
-            long available = inputs.Sum(input => input.Payload switch
-            {
-                TextRecognitionMetadata ocr => (long)ocr.Regions.Count,
-                QrCodeMetadata qr => qr.Codes.Count,
-                TranscriptMetadata transcript => transcript.Segments.Count,
-                DescriptionMetadata descriptions => descriptions.Descriptions.Count,
-                _ => 0,
-            });
-            var evidenceEntries = Facts.SelectMany(fact => fact.Evidence)
-                .GroupBy(evidence => (evidence.ResultId, evidence.EntryIndex)).ToArray();
-            if (coverage.AvailableEntries != available || evidenceEntries.Length > coverage.IncludedEntries ||
-                evidenceEntries.Sum(entry => entry.Max(evidence => (long)evidence.Start + evidence.Length)) > coverage.IncludedCharacters)
-                throw new ArgumentException("Coverage does not match declared sources and evidence.", nameof(inputs));
-            if (coverage.IncludedEntries == available)
-            {
-                long characters = inputs.Sum(input => input.Payload switch
-                {
-                    TextRecognitionMetadata ocr => ocr.Regions.Sum(region => (long)region.Text.Length),
-                    QrCodeMetadata qr => qr.Codes.Sum(code => (long)code.Value.Length),
-                    TranscriptMetadata transcript => transcript.Segments.Sum(segment => (long)segment.Text.Length),
-                    DescriptionMetadata descriptions => descriptions.Descriptions.Sum(description => (long)description.Text.Length),
-                    _ => 0,
-                });
-                if (coverage.IncludedCharacters != characters)
-                    throw new ArgumentException("Complete input coverage must account for all source characters.", nameof(inputs));
-            }
-        }
+        Coverage?.Validate(inputs, Facts.SelectMany(fact => fact.Evidence));
         foreach (StructuredFact fact in Facts)
         foreach (AnalysisEvidence evidence in fact.Evidence)
         {

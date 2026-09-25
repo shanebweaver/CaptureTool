@@ -11,7 +11,7 @@ using System.Collections.Concurrent;
 namespace CaptureTool.Infrastructure.Tests.Analysis;
 
 [TestClass]
-public sealed class CaptureAnalysisWorkerTests
+public sealed partial class CaptureAnalysisWorkerTests
 {
     public TestContext TestContext { get; set; } = null!;
     private CancellationToken Ct => TestContext.CancellationToken;
@@ -587,23 +587,27 @@ public sealed class CaptureAnalysisWorkerTests
         public IMediaAnalyzer[] Adapters => [Preferred, Fallback, Description];
         public CaptureAnalysisConfiguration Configuration { get; }
         public CaptureAnalysisWorker Worker { get; }
-        public Fixture(TimeSpan? timeout = null)
+        public Fixture(TimeSpan? timeout = null, IEnumerable<IMetadataProcessor>? processors = null, AnalysisMediaKind kind = AnalysisMediaKind.Image)
         {
             Store = Environment.CreateStore();
             Catalog = Environment.CreateCatalog();
-            Preferred = new("preferred", AnalysisCapability.TextRecognition, Calls);
-            Fallback = new("fallback", AnalysisCapability.TextRecognition, Calls);
+            var sourceCapability = kind == AnalysisMediaKind.Audio ? AnalysisCapability.Transcription : AnalysisCapability.TextRecognition;
+            Preferred = new("preferred", sourceCapability, Calls);
+            Fallback = new("fallback", sourceCapability, Calls);
             Description = new("description", AnalysisCapability.Description, Calls);
-            Configuration = new([new(AnalysisMediaKind.Image, "v1", [
-                new(AnalysisCapability.TextRecognition, ["preferred", "fallback"], TimeSpan.FromSeconds(1), timeout ?? TimeSpan.FromSeconds(5)),
-                new(AnalysisCapability.Description, ["description"], TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(5)),
+            IMetadataProcessor[] metadata = processors?.ToArray() ?? [];
+            Configuration = new([new(kind, "v1", [
+                new(sourceCapability, ["preferred", "fallback"], TimeSpan.FromSeconds(1), timeout ?? TimeSpan.FromSeconds(5)),
+                .. kind == AnalysisMediaKind.Audio ? Array.Empty<AnalysisStep>() : [new(AnalysisCapability.Description, ["description"], TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(5))],
+                .. metadata.GroupBy(processor => processor.Descriptor.Capability).Select(group => new AnalysisStep(group.Key,
+                    group.Select(processor => processor.Descriptor.Id), TimeSpan.FromSeconds(1), timeout ?? group.First().Descriptor.Limits.ExecutionTimeout)),
             ])]);
-            Worker = new(Store, Authorization, Source, Configuration, Adapters, Catalog);
+            Worker = new(Store, Authorization, Source, Configuration, Adapters, Catalog, metadata);
         }
         public async Task<AnalysisRequest> EnqueueAsync(CancellationToken ct, string? language = null)
         {
             AnalysisRequest request = AnalysisExecutionStoreTests.Request(Environment, await Store.GetAdmissionScopeAsync(ct));
-            request = request with { SourcePath = Path.Combine(Environment.Root, request.CaptureId + ".png"), Language = language };
+            request = request with { SourcePath = Path.Combine(Environment.Root, request.CaptureId + ".png"), Language = language, MediaKind = Configuration.Plans[0].MediaKind };
             using (IAnalysisAuthorizationLease grant = await Authorization.AcquireAsync(ct))
                 request = request with { ExpectedAuthorizationId = grant.Revision };
             Assert.IsTrue(await Worker.EnqueueAsync(request, ct));
@@ -623,7 +627,7 @@ public sealed class CaptureAnalysisWorkerTests
         public FakeAnalyzer(string id, AnalysisCapability capability, ConcurrentQueue<string> calls)
         {
             _calls = calls;
-            Descriptor = new(id, capability, [AnalysisMediaKind.Image]);
+            Descriptor = new(id, capability, [AnalysisMediaKind.Image, AnalysisMediaKind.Audio, AnalysisMediaKind.Video]);
             Execute = (_, _) => Task.FromResult(Success());
         }
         public AnalyzerOutcome Success() => AnalyzerOutcome.Success(Descriptor.Capability == AnalysisCapability.TextRecognition

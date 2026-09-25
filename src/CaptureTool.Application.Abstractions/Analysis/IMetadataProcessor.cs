@@ -40,6 +40,9 @@ public sealed class MetadataProcessorDescriptor
         ArgumentException.ThrowIfNullOrWhiteSpace(version);
         if (id.Length > 200 || version.Length > 200) throw new ArgumentException("Processor identifiers must be bounded.");
         ArgumentNullException.ThrowIfNull(capability);
+        if (capability == AnalysisCapability.FileDetails || capability == AnalysisCapability.TextRecognition ||
+            capability == AnalysisCapability.QrCodeDetection || capability == AnalysisCapability.Description || capability == AnalysisCapability.Transcription)
+            throw new ArgumentException("Metadata processors must produce a derived capability.", nameof(capability));
         ArgumentNullException.ThrowIfNull(inputs);
         ArgumentNullException.ThrowIfNull(limits);
         AnalysisCapability[] copy = inputs.ToArray();
@@ -62,5 +65,15 @@ public sealed class MetadataProcessorDescriptor
 public interface IMetadataProcessor
 {
     MetadataProcessorDescriptor Descriptor { get; }
+    ValueTask<AnalyzerAvailability> GetAvailabilityAsync(CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        return ValueTask.FromResult(AnalyzerAvailability.Ready);
+    }
+    Task<AnalyzerAvailability> PrepareAsync(IProgress<AnalysisProgress>? progress, CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        return Task.FromResult(AnalyzerAvailability.Ready);
+    }
     Task<AnalyzerOutcome> ProcessAsync(MetadataProcessorInput input, CancellationToken cancellationToken);
 }

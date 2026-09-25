@@ -1,3 +1,5 @@
+using CaptureTool.Domain.Analysis.Payloads;
+
 namespace CaptureTool.Domain.Analysis;
 
 [Flags]
@@ -42,5 +44,34 @@ public sealed record MetadataProcessingCoverage
         const MetadataProcessingLimit outputLimits = MetadataProcessingLimit.Facts | MetadataProcessingLimit.Evidence | MetadataProcessingLimit.FactValue;
         if ((limits & ~outputLimits) != 0) throw new ArgumentException("Only output limits may be added after input selection.", nameof(limits));
         return new(AvailableEntries, IncludedEntries, IncludedCharacters, Limits | limits);
+    }
+
+    internal void Validate(IReadOnlyList<AnalysisResult> inputs, IEnumerable<AnalysisEvidence> evidence)
+    {
+        long available = inputs.Sum(input => input.Payload switch
+        {
+            TextRecognitionMetadata ocr => (long)ocr.Regions.Count,
+            QrCodeMetadata qr => qr.Codes.Count,
+            TranscriptMetadata transcript => transcript.Segments.Count,
+            DescriptionMetadata descriptions => descriptions.Descriptions.Count,
+            _ => 0,
+        });
+        var entries = evidence.GroupBy(span => (span.ResultId, span.EntryIndex)).ToArray();
+        if (AvailableEntries != available || entries.Length > IncludedEntries ||
+            entries.Sum(entry => entry.Max(span => (long)span.Start + span.Length)) > IncludedCharacters)
+            throw new ArgumentException("Coverage does not match declared sources and evidence.", nameof(inputs));
+        if (IncludedEntries == available)
+        {
+            long characters = inputs.Sum(input => input.Payload switch
+            {
+                TextRecognitionMetadata ocr => ocr.Regions.Sum(region => (long)region.Text.Length),
+                QrCodeMetadata qr => qr.Codes.Sum(code => (long)code.Value.Length),
+                TranscriptMetadata transcript => transcript.Segments.Sum(segment => (long)segment.Text.Length),
+                DescriptionMetadata descriptions => descriptions.Descriptions.Sum(description => (long)description.Text.Length),
+                _ => 0,
+            });
+            if (IncludedCharacters != characters)
+                throw new ArgumentException("Complete input coverage must account for all source characters.", nameof(inputs));
+        }
     }
 }
