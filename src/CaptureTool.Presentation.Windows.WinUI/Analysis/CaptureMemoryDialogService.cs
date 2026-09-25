@@ -16,13 +16,14 @@ internal sealed class CaptureMemoryDialogService(MainWindowDialogCoordinator dia
         var result = await dialogs.ShowAsync(() =>
         {
             string name = prompt.ToString();
+            bool welcome = prompt is CaptureMemoryPrompt.Consent or CaptureMemoryPrompt.EnableScanning;
             var dialog = new ContentDialog
             {
-                Title = Text("CaptureMemory_" + name + "Title"),
-                Content = prompt == CaptureMemoryPrompt.EnableScanning
+                Title = Text("CaptureMemory_" + (welcome ? "EnableScanning" : name) + "Title"),
+                Content = welcome
                     ? new CaptureTool.Presentation.Windows.WinUI.Xaml.Controls.CaptureAnalysisWelcome() : Text("CaptureMemory_" + name + "Content"),
                 PrimaryButtonText = Text("CaptureMemory_" + name + "Accept"),
-                CloseButtonText = Text(prompt == CaptureMemoryPrompt.EnableScanning ? "CaptureWelcome_NotNow" : "CaptureMemory_Cancel"),
+                CloseButtonText = Text(welcome ? "CaptureWelcome_NotNow" : "CaptureMemory_Cancel"),
                 DefaultButton = prompt == CaptureMemoryPrompt.DeleteMetadata ? ContentDialogButton.Close : ContentDialogButton.Primary
             };
             AutomationProperties.SetAutomationId(dialog, "CaptureMemory" + name + "Dialog");

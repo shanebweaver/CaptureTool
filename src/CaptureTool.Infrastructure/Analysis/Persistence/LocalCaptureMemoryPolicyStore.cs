@@ -21,13 +21,21 @@ internal sealed class LocalCaptureMemoryPolicyStore : ICaptureMemoryPolicyStore
     {
         CaptureMemoryPolicyDocument? document = await _documents.ReadAsync(_path, CaptureMemoryPolicyJsonContext.Default.CaptureMemoryPolicyDocument, cancellationToken).ConfigureAwait(false);
         if (document == null) return null;
-        if (document.Version is not (1 or 2) || document.Policy == null) throw new InvalidDataException("Unsupported capture memory policy.");
+        if (document.Version is not (1 or 2 or 3) || document.Policy == null) throw new InvalidDataException("Unsupported capture memory policy.");
         Validate(document.Policy);
         if (document.Version == 1)
         {
             // Earlier consent covered background analysis only, not every AI tool.
             // Preserve media/metadata, but ask once for the expanded consent scope.
-            var migrated = new CaptureMemoryPolicy(false, false, Guid.NewGuid(), document.Policy.EnableBoundary);
+            var migrated = new CaptureMemoryPolicy(false, false, Guid.NewGuid(), document.Policy.EnableBoundary, document.Policy.ScanningEnabled);
+            await SaveAsync(migrated, cancellationToken).ConfigureAwait(false);
+            return migrated;
+        }
+        if (document.Version == 2)
+        {
+            // Older policies conflated defaults, explicit choices and consent revocation.
+            // Preserve saved off values rather than guessing that they were never chosen.
+            var migrated = document.Policy with { ScanningPreference = document.Policy.ScanningEnabled };
             await SaveAsync(migrated, cancellationToken).ConfigureAwait(false);
             return migrated;
         }
@@ -36,11 +44,12 @@ internal sealed class LocalCaptureMemoryPolicyStore : ICaptureMemoryPolicyStore
     public Task SaveAsync(CaptureMemoryPolicy policy, CancellationToken cancellationToken)
     {
         Validate(policy);
-        return _documents.WriteAsync(_path, new CaptureMemoryPolicyDocument(2, policy), CaptureMemoryPolicyJsonContext.Default.CaptureMemoryPolicyDocument, cancellationToken);
+        return _documents.WriteAsync(_path, new CaptureMemoryPolicyDocument(3, policy), CaptureMemoryPolicyJsonContext.Default.CaptureMemoryPolicyDocument, cancellationToken);
     }
     private static void Validate(CaptureMemoryPolicy policy)
     {
-        if (policy.Revision == Guid.Empty || policy.EnableBoundary < 0 || policy.ScanningEnabled && !policy.ConsentGranted)
+        if (policy.Revision == Guid.Empty || policy.EnableBoundary < 0 || policy.ScanningEnabled &&
+            (!policy.ConsentGranted || policy.ScanningPreference == false))
             throw new InvalidDataException("Invalid capture memory policy.");
     }
 }

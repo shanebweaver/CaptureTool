@@ -1,6 +1,7 @@
 using CaptureTool.Application.Abstractions.Analysis;
 using CaptureTool.Application.Abstractions.Library.RecentCaptures;
 using CaptureTool.Application.Analysis;
+using CaptureTool.Application.Capture;
 using CaptureTool.Domain;
 using CaptureTool.Domain.Analysis;
 using CaptureTool.Domain.Analysis.Payloads;
@@ -26,7 +27,7 @@ public sealed class CaptureMemoryIntegrationTests
         int prompts = 0;
         app.Prompts.Override = (prompt, _) => { if (prompt == CaptureMemoryPrompt.Consent) prompts++; return Task.FromResult(prompt == CaptureMemoryPrompt.Consent); };
         Assert.IsTrue(await app.Memory.EnsureConsentAsync(Ct));
-        Assert.IsFalse(app.Memory.State.Policy.ScanningEnabled);
+        Assert.IsTrue(app.Memory.State.Policy.ScanningEnabled);
         Assert.IsTrue(await app.Memory.EnsureConsentAsync(Ct));
         await app.Memory.SetScanningAsync(true, Ct);
         await app.Memory.SetScanningAsync(false, Ct);
@@ -68,7 +69,7 @@ public sealed class CaptureMemoryIntegrationTests
     }
 
     [TestMethod]
-    public async Task ConsentAloneDoesNotEnableScanningAndDeclinedHistoryStaysUnscheduledAfterRestart()
+    public async Task ConsentEnablesDefaultsAndDeclinedHistoryStaysUnscheduledAfterRestart()
     {
         using var environment = new AnalysisTestEnvironment();
         CaptureAsset old;
@@ -80,8 +81,8 @@ public sealed class CaptureMemoryIntegrationTests
             await app.CaptureAsync(old, Ct);
             await app.Memory.SetConsentAsync(true, Ct);
             Assert.IsTrue(app.Memory.State.Policy.ConsentGranted);
-            Assert.IsFalse(app.Memory.State.CanScan);
-            await app.Memory.ScanExistingAsync(Ct);
+            Assert.IsTrue(app.Memory.State.CanScan);
+            Assert.IsTrue(app.Names.IsEnabled);
             Assert.IsNull(await app.Store.GetWorkAsync(old.Id, Ct));
             await app.EnableAsync(Ct);
             CaptureAsset next = app.Asset();
@@ -94,6 +95,75 @@ public sealed class CaptureMemoryIntegrationTests
         Assert.IsTrue(restarted.Memory.State.CanScan);
         Assert.IsNull(await restarted.Store.GetWorkAsync(old.Id, Ct));
         Assert.HasCount(2, await restarted.Catalog.ReadAllAsync(Ct));
+    }
+
+    [TestMethod]
+    public async Task FirstConsentEnablesDefaultsWithoutPromptingForAnEmptyOrIneligibleLibrary()
+    {
+        using var environment = new AnalysisTestEnvironment();
+        await using var app = new App(environment);
+        await app.Memory.InitializeAsync(Ct);
+        Assert.IsFalse(app.Names.IsEnabled);
+        var missing = app.Asset();
+        await app.CaptureAsync(missing, Ct);
+        File.Delete(missing.SourcePath);
+        app.Recents.Entries = [Entry(app.Asset(), RecentCaptureOrigin.Opened), Entry(missing, RecentCaptureOrigin.Captured)];
+        var prompts = new List<CaptureMemoryPrompt>();
+        app.Prompts.Override = (prompt, _) => { prompts.Add(prompt); return Task.FromResult(true); };
+        await app.Memory.SetConsentAsync(true, Ct);
+        Assert.IsTrue(app.Memory.State.CanScan);
+        Assert.IsTrue(app.Names.IsEnabled);
+        CollectionAssert.AreEqual(new[] { CaptureMemoryPrompt.Consent }, prompts);
+    }
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task ExistingAvailableCapturesAreOfferedAfterConsent(bool recentOnly)
+    {
+        using var environment = new AnalysisTestEnvironment();
+        await using var app = new App(environment);
+        await app.Memory.InitializeAsync(Ct);
+        var old = app.Asset();
+        if (recentOnly) app.Recents.Entries = [Entry(old, RecentCaptureOrigin.Captured)];
+        else await app.CaptureAsync(old, Ct);
+        var prompts = new List<CaptureMemoryPrompt>();
+        app.Prompts.Override = (prompt, _) => { prompts.Add(prompt); return Task.FromResult(true); };
+        await app.Memory.SetConsentAsync(true, Ct);
+        CollectionAssert.AreEqual(new[] { CaptureMemoryPrompt.Consent, CaptureMemoryPrompt.ScanExisting }, prompts);
+        var registered = (await app.Catalog.ReadAllAsync(Ct)).Single();
+        await app.CompletedAsync(registered, Ct);
+    }
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task ConsentAfterRestartHonorsExplicitOptOutsAndOtherwiseRestoresDefaults(bool optedOut)
+    {
+        using var environment = new AnalysisTestEnvironment();
+        await using (var app = new App(environment))
+        {
+            await app.Memory.InitializeAsync(Ct);
+            await app.Memory.SetConsentAsync(true, Ct);
+            if (optedOut)
+            {
+                await app.Names.SetEnabledAsync(false, Ct);
+                await app.Memory.SetScanningAsync(false, Ct);
+            }
+            await app.Memory.SetConsentAsync(false, Ct);
+            Assert.IsFalse(app.Memory.State.CanScan);
+        }
+        await using var restarted = new App(environment);
+        await restarted.Memory.InitializeAsync(Ct);
+        await restarted.Memory.SetConsentAsync(true, Ct);
+        Assert.AreEqual(!optedOut, restarted.Memory.State.CanScan);
+        Assert.AreEqual(!optedOut, restarted.Names.IsEnabled);
+        if (optedOut)
+        {
+            await restarted.Memory.SetScanningAsync(true, Ct);
+            Assert.IsTrue(restarted.Memory.State.CanScan);
+            Assert.IsFalse(restarted.Names.IsEnabled, "An explicit scan enable must not override the naming opt-out.");
+        }
     }
 
     [TestMethod]
@@ -500,6 +570,7 @@ public sealed class CaptureMemoryIntegrationTests
         public CaptureMemoryAuthorization Authorization { get; }
         public CaptureAnalysisWorker Worker { get; }
         public CaptureMemoryService Memory { get; }
+        public CaptureNamingService Names { get; }
         public Prompts Prompts { get; } = new();
         public Recents Recents { get; } = new();
         public Analyzer Analyzer { get; } = new();
@@ -512,7 +583,8 @@ public sealed class CaptureMemoryIntegrationTests
             var configuration = new CaptureAnalysisConfiguration([new(AnalysisMediaKind.Image, "test-v1",
                 [new(AnalysisCapability.Description, ["test"], TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(5))])]);
             Worker = new(Store, Authorization, new LocalAnalysisSource(), configuration, [Analyzer], Catalog);
-            Memory = new(Authorization, Catalog, Store, Worker, Prompts, Recents, new LocalFileSystem());
+            Names = new(Catalog, Catalog, Store, Store, new LocalAnalysisSource(), Authorization, Worker, new NameNotifier(), new LocalFileSystem());
+            Memory = new(Authorization, Catalog, Store, Worker, Prompts, Recents, new LocalFileSystem(), Names);
         }
         public CaptureAsset Asset()
         {
@@ -537,8 +609,13 @@ public sealed class CaptureMemoryIntegrationTests
         public async ValueTask DisposeAsync()
         {
             await Memory.StopAsync();
-            Memory.Dispose(); Worker.Dispose(); Authorization.Dispose(); Catalog.Dispose(); Store.Dispose();
+            Memory.Dispose(); Names.Dispose(); Worker.Dispose(); Authorization.Dispose(); Catalog.Dispose(); Store.Dispose();
         }
+    }
+    private sealed class NameNotifier : IRecentCapturesChangeNotifier
+    {
+        public event EventHandler? RecentCapturesChanged;
+        public void NotifyRecentCapturesChanged() => RecentCapturesChanged?.Invoke(this, EventArgs.Empty);
     }
     private sealed class Prompts : ICaptureMemoryPrompts
     {

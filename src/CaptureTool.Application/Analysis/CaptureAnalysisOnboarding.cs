@@ -22,7 +22,8 @@ internal sealed class CaptureAnalysisOnboarding(ICaptureMemoryService memory, IS
             if (memory.State.Policy.IsAllowed) return true;
             if (attempt != Interlocked.Read(ref _attempt)) return memory.State.Policy.IsAllowed;
             if (firstLaunch && (_shown || settings.Get(CaptureToolSettings.Settings_CaptureAnalysis_OnboardingSeen) || memory.State.Policy.ConsentGranted)) return false;
-            await memory.SetScanningAsync(true, ct).ConfigureAwait(false);
+            if (!memory.State.Policy.ConsentGranted) await memory.SetConsentAsync(true, ct).ConfigureAwait(false);
+            else await memory.SetScanningAsync(true, ct).ConfigureAwait(false);
             ct.ThrowIfCancellationRequested();
             _shown = true;
             Interlocked.Increment(ref _attempt);

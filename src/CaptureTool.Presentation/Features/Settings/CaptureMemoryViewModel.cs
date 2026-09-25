@@ -24,7 +24,7 @@ public sealed class CaptureMemoryViewModel : ViewModelBase
     private int _operationRecovered;
     private int _updateQueued;
     private bool _disposed;
-    private bool _operationRequested;
+    private int _activeOperations;
 
     public bool NamingEnabled { get; private set => Set(ref field, value); }
     public bool CanSetNaming { get; private set => Set(ref field, value); }
@@ -52,7 +52,7 @@ public sealed class CaptureMemoryViewModel : ViewModelBase
         {
             if (_naming != null && !await _naming.SetEnabledAsync(value))
                 _notifications.ShowError(_localization.GetString("CaptureNaming_SaveFailed"));
-        }));
+        }, reportMemoryFailure: false));
         SetScanningCommand = new AsyncRelayCommand<bool>(value => RunAsync(() => memory.SetScanningAsync(value)));
         SetConsentCommand = new AsyncRelayCommand<bool>(value => RunAsync(() => memory.SetConsentAsync(value)));
         ScanCommand = new AsyncRelayCommand(() => RunAsync(() => memory.ScanExistingAsync()), () => CanScan);
@@ -61,12 +61,17 @@ public sealed class CaptureMemoryViewModel : ViewModelBase
         if (_naming != null) _naming.Changed += QueueUpdate;
         QueueUpdate();
     }
-    public Task RefreshAsync() => RunAsync(() => _memory.RefreshAsync());
-    private async Task RunAsync(Func<Task> action)
+    // Page navigation observes state; it is not an explicit analysis retry.
+    public Task RefreshAsync() => RunAsync(() => _memory.RefreshAsync(), reportMemoryFailure: false);
+    private async Task RunAsync(Func<Task> action, bool reportMemoryFailure = true)
     {
-        _operationRequested = true;
+        if (reportMemoryFailure) Interlocked.Increment(ref _activeOperations);
         try { await action(); }
-        finally { QueueUpdate(); }
+        finally
+        {
+            try { QueueUpdate(); }
+            finally { if (reportMemoryFailure) Interlocked.Decrement(ref _activeOperations); }
+        }
     }
     private void QueueUpdate()
     {
@@ -74,7 +79,12 @@ public sealed class CaptureMemoryViewModel : ViewModelBase
         // Preserve a terminal failure even if the next capture starts before the UI dispatches.
         CaptureMemoryState state = _memory.State;
         if (GetAnalysisFailure(state) is { } failure) Interlocked.Exchange(ref _pendingFailure, failure);
-        if (state.FailureCode is { } operationFailure) Interlocked.Exchange(ref _pendingOperationFailure, operationFailure);
+        if (state.FailureCode is { } operationFailure)
+        {
+            // Capture eligibility with the event so a delayed dispatcher still reports
+            // command failures without exposing dormant failures after the command ends.
+            if (ShouldReportOperationFailure(state)) Interlocked.Exchange(ref _pendingOperationFailure, operationFailure);
+        }
         else Interlocked.Exchange(ref _operationRecovered, 1);
         if (Interlocked.Exchange(ref _updateQueued, 1) != 0) return;
         if (!_ui.TryExecute(() =>
@@ -99,9 +109,8 @@ public sealed class CaptureMemoryViewModel : ViewModelBase
         DeleteCommand.NotifyCanExecuteChanged();
         if (Interlocked.Exchange(ref _operationRecovered, 0) != 0) _reportedOperationFailure = null;
         string? pendingOperation = Interlocked.Exchange(ref _pendingOperationFailure, null);
-        string? operationFailure = state.FailureCode ?? pendingOperation;
-        if (_operationRequested || state.Policy.IsAllowed || operationFailure is "policy-save" or "capture-registration" or "cleanup-pending")
-            ShowFailure(operationFailure, ref _reportedOperationFailure);
+        string? operationFailure = (ShouldReportOperationFailure(state) ? state.FailureCode : null) ?? pendingOperation;
+        ShowFailure(operationFailure, ref _reportedOperationFailure);
         string? pendingFailure = Interlocked.Exchange(ref _pendingFailure, null);
         string? failure = GetAnalysisFailure(state) ?? pendingFailure;
         if (operationFailure == null && state.PolicyAvailable && state.Policy.IsAllowed) ShowFailure(failure, ref _reportedFailure);
@@ -110,6 +119,9 @@ public sealed class CaptureMemoryViewModel : ViewModelBase
             state.Activity.LastRunStatus == AnalysisRunStatus.Completed && !state.Activity.LastRunHadFailures)
             _reportedFailure = null;
     }
+    private bool ShouldReportOperationFailure(CaptureMemoryState state) =>
+        Volatile.Read(ref _activeOperations) > 0 || state.Policy.IsAllowed ||
+        state.FailureCode is "policy-save" or "capture-registration" or "cleanup-pending";
     private void ShowFailure(string? failure, ref string? reported)
     {
         if (failure != null && failure != reported)

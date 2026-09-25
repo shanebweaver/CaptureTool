@@ -7,7 +7,9 @@ public interface ITextExtractionConsentService
 {
     AiFeatureConsentState State { get; }
     CancellationToken Revoked { get; }
+    event Action? StateChanged;
     Task<bool> EnsureConsentAsync(CancellationToken cancellationToken = default);
+    Task<bool> RevokeConsentAsync(CancellationToken cancellationToken = default);
 }
 
 public interface ITextExtractionConsentPrompt

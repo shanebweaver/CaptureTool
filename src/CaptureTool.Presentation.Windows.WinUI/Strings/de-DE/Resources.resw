@@ -1747,7 +1747,7 @@ SOFTWARE.
     <value>Lokale KI-Funktionen erlauben?</value>
   </data>
   <data name="CaptureMemory_ConsentContent" xml:space="preserve">
-    <value>Erlauben Sie der KI auf diesem Gerät, Text zu erkennen, Bilder zu beschreiben, Aufnahmen zu transkribieren und Medien mit KI-Werkzeugen zu bearbeiten. Die automatische Analyse neuer Aufnahmen wird separat aktiviert. KI-Analysen werden sicher auf diesem Gerät gespeichert. Modelle müssen eventuell heruntergeladen werden; Ihre Medien werden auf diesem Gerät verarbeitet.</value>
+    <value>Aktivieren Sie lokale KI-Funktionen und die automatische Analyse neuer Aufnahmen. Die Verarbeitung erfolgt auf diesem PC, und Analysen werden sicher gespeichert. Modelle müssen möglicherweise heruntergeladen werden. Sie können die Analyse in den Einstellungen deaktivieren oder gespeicherte Analysen löschen.</value>
   </data>
   <data name="CaptureMemory_ConsentAccept" xml:space="preserve">
     <value>Erlauben</value>
@@ -1952,9 +1952,14 @@ SOFTWARE.
   <data name="CaptureWelcome_Hero.Text" xml:space="preserve"><value>Ein wenig Aufnahmemagie</value></data>
   <data name="CaptureWelcome_Text.Text" xml:space="preserve"><value>Wörter in Bildern finden und kopieren.</value></data>
   <data name="CaptureWelcome_Recording.Text" xml:space="preserve"><value>Sprache und Bildschirmtext in Aufnahmen erkunden.</value></data>
-  <data name="CaptureWelcome_Names.Text" xml:space="preserve"><value>Aussagekräftige Aufnahmenamen in den Einstellungen aktivieren.</value></data>
-  <data name="CaptureWelcome_Consent.Text" xml:space="preserve"><value>Automatische Analyse neuer Aufnahmen und lokale KI-Werkzeuge aktivieren. Analysen bleiben geschützt auf diesem Gerät. Modelle müssen eventuell heruntergeladen werden; verfügbare Funktionen hängen vom PC ab. Analyse und gespeicherte Daten lassen sich in den Einstellungen deaktivieren bzw. löschen. Die eigenständige Texterkennung fragt separat nach Zustimmung.</value></data>
+  <data name="CaptureWelcome_Names.Text" xml:space="preserve"><value>Geben Sie neuen Aufnahmen aussagekräftige Namen.</value></data>
+  <data name="CaptureWelcome_Consent.Text" xml:space="preserve"><value>Aktivieren Sie lokale KI-Funktionen und die automatische Analyse neuer Aufnahmen. Die Verarbeitung erfolgt auf diesem PC, und Analysen werden sicher gespeichert. Modelle müssen möglicherweise heruntergeladen werden. Sie können die Analyse in den Einstellungen deaktivieren oder gespeicherte Analysen löschen.</value></data>
   <data name="CaptureMemory_EnableScanningAccept" xml:space="preserve"><value>Analyse aktivieren</value></data>
   <data name="CaptureWelcome_NotNow" xml:space="preserve"><value>Nicht jetzt</value></data>
   <data name="CapturePane_EnableAnalysis.Content" xml:space="preserve"><value>Aufnahmeanalyse aktivieren</value></data>
+  <data name="TextExtractionSettings_Header.Text" xml:space="preserve"><value>Texterkennung</value></data>
+  <data name="TextExtractionSettings_Description.Text" xml:space="preserve"><value>Lesen Sie Text und QR-Codes mit der Texterkennung im Bildeditor.</value></data>
+  <data name="TextExtractionSettings_Consent.Content" xml:space="preserve"><value>Zulassen</value></data>
+  <data name="TextExtractionSettings_Consent.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Eigenständige Texterkennung zulassen</value></data>
+  <data name="TextExtractionSettings_SaveFailed" xml:space="preserve"><value>Die Berechtigung für die Texterkennung konnte nicht gespeichert werden. Versuchen Sie es erneut.</value></data>
 </root>

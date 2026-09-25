@@ -53,7 +53,11 @@ internal sealed class CaptureNamingService : ICaptureNamingService, IDisposable
         try
         {
             await _commands.WaitAsync(ct).ConfigureAwait(false);
-            try { await ReadStatusAsync(ct).ConfigureAwait(false); }
+            try
+            {
+                if (_authorization.IsConsentAllowed) await _names.EnableAutomaticNamingByDefaultAsync(ct).ConfigureAwait(false);
+                await ReadStatusAsync(ct).ConfigureAwait(false);
+            }
             finally { _commands.Release(); }
             QueueReconcile();
         }

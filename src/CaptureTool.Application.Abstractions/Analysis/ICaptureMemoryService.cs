@@ -2,7 +2,8 @@ using CaptureTool.Domain.Capture;
 
 namespace CaptureTool.Application.Abstractions.Analysis;
 
-public sealed record CaptureMemoryPolicy(bool ScanningEnabled, bool ConsentGranted, Guid Revision, long EnableBoundary)
+public sealed record CaptureMemoryPolicy(bool ScanningEnabled, bool ConsentGranted, Guid Revision, long EnableBoundary,
+    bool? ScanningPreference = null)
 {
     public bool IsAllowed => ScanningEnabled && ConsentGranted;
     public static CaptureMemoryPolicy Disabled() => new(false, false, Guid.NewGuid(), 0);

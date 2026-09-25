@@ -2034,7 +2034,7 @@ SOFTWARE.
     <value>Allow local AI features?</value>
   </data>
   <data name="CaptureMemory_ConsentContent" xml:space="preserve">
-    <value>Allow on-device AI to recognize text, describe images, transcribe recordings, and edit media when you use an AI tool. Automatic capture scanning is a separate setting. AI analysis is stored securely on this device. Models may need to be downloaded; your media is processed on this device.</value>
+    <value>Enable local AI features and automatic analysis of new captures. Processing stays on this PC, and analysis is stored securely. Models may need to be downloaded. You can turn scanning off or delete analysis in Settings.</value>
   </data>
   <data name="CaptureMemory_ConsentAccept" xml:space="preserve">
     <value>Allow</value>
@@ -2239,9 +2239,14 @@ SOFTWARE.
   <data name="CaptureWelcome_Hero.Text" xml:space="preserve"><value>A little capture magic</value></data>
   <data name="CaptureWelcome_Text.Text" xml:space="preserve"><value>Find and copy words inside images.</value></data>
   <data name="CaptureWelcome_Recording.Text" xml:space="preserve"><value>Explore speech and on-screen text in recordings.</value></data>
-  <data name="CaptureWelcome_Names.Text" xml:space="preserve"><value>Turn on meaningful capture names in Settings.</value></data>
-  <data name="CaptureWelcome_Consent.Text" xml:space="preserve"><value>Enable automatic scanning of new captures and local AI tools. Analysis stays protected on this device. Models may need a download; available features depend on this PC. You can turn scanning off or delete analysis in Settings. Standalone Text Extraction has its own consent.</value></data>
+  <data name="CaptureWelcome_Names.Text" xml:space="preserve"><value>Give new captures meaningful names.</value></data>
+  <data name="CaptureWelcome_Consent.Text" xml:space="preserve"><value>Enable local AI features and automatic analysis of new captures. Processing stays on this PC, and analysis is stored securely. Models may need to be downloaded. You can turn scanning off or delete analysis in Settings.</value></data>
   <data name="CaptureMemory_EnableScanningAccept" xml:space="preserve"><value>Enable scanning</value></data>
   <data name="CaptureWelcome_NotNow" xml:space="preserve"><value>Not now</value></data>
   <data name="CapturePane_EnableAnalysis.Content" xml:space="preserve"><value>Enable capture analysis</value></data>
+  <data name="TextExtractionSettings_Header.Text" xml:space="preserve"><value>Text Extraction</value></data>
+  <data name="TextExtractionSettings_Description.Text" xml:space="preserve"><value>Read text and QR codes when you use Text Extraction in the image editor.</value></data>
+  <data name="TextExtractionSettings_Consent.Content" xml:space="preserve"><value>Allow</value></data>
+  <data name="TextExtractionSettings_Consent.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Allow standalone Text Extraction</value></data>
+  <data name="TextExtractionSettings_SaveFailed" xml:space="preserve"><value>The Text Extraction permission could not be saved. Try again.</value></data>
 </root>

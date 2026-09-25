@@ -15,6 +15,48 @@ public sealed class CaptureMemoryStorageTests
     private CancellationToken Ct => TestContext.CancellationToken;
 
     [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task LegacyScanningStateMigratesAsAPreservedPreference(bool enabled)
+    {
+        using var environment = new AnalysisTestEnvironment();
+        var documents = new ProtectedDocumentFile(environment.Protector, environment.Files);
+        string path = Path.Combine(environment.Root, "CaptureMemoryPolicy.bin");
+        var old = new CaptureMemoryPolicy(enabled, true, Guid.NewGuid(), 12);
+        await documents.WriteAsync(path, new CaptureMemoryPolicyDocument(2, old), CaptureMemoryPolicyJsonContext.Default.CaptureMemoryPolicyDocument, Ct);
+        var store = new LocalCaptureMemoryPolicyStore(environment, environment.Protector, environment.Files);
+        Assert.AreEqual(old with { ScanningPreference = enabled }, await store.LoadAsync(Ct));
+        Assert.AreEqual(old with { ScanningPreference = enabled }, await store.LoadAsync(Ct));
+    }
+
+    [TestMethod]
+    [DataRow(3, false, true)]
+    [DataRow(4, false, false)]
+    [DataRow(4, true, true)]
+    public async Task NamingDefaultsPreserveLegacyChoices(int version, bool wasEnabled, bool expected)
+    {
+        using var environment = new AnalysisTestEnvironment();
+        var documents = new ProtectedDocumentFile(environment.Protector, environment.Files);
+        string path = Path.Combine(environment.Root, "CaptureAssets", "catalog.bin");
+        Guid? epoch = wasEnabled ? Guid.NewGuid() : null;
+        await documents.WriteAsync(path, new CaptureCatalogDocument(version, [], NamingEpoch: epoch), CaptureCatalogJsonContext.Default.CaptureCatalogDocument, Ct);
+        using var catalog = environment.CreateCatalog();
+        await catalog.EnableAutomaticNamingByDefaultAsync(Ct);
+        Assert.AreEqual(expected, (await catalog.ReadNamingAsync(Ct)).Epoch != null);
+        if (wasEnabled) Assert.AreEqual(epoch, (await catalog.ReadNamingAsync(Ct)).Epoch);
+    }
+
+    [TestMethod]
+    public async Task ExplicitNamingOffIsSavedEvenBeforeNamingWasEverEnabled()
+    {
+        using var environment = new AnalysisTestEnvironment();
+        using (var catalog = environment.CreateCatalog()) await catalog.SetAutomaticNamingAsync(false, Ct);
+        using var reopened = environment.CreateCatalog();
+        await reopened.EnableAutomaticNamingByDefaultAsync(Ct);
+        Assert.IsNull((await reopened.ReadNamingAsync(Ct)).Epoch);
+    }
+
+    [TestMethod]
     public async Task NarrowerV1ConsentMigratesOnceWithoutAuthorizingAnyAiFeature()
     {
         using var environment = new AnalysisTestEnvironment();
@@ -31,7 +73,7 @@ public sealed class CaptureMemoryStorageTests
         Assert.AreNotEqual(old.Revision, migrated.Revision);
         Assert.AreEqual(migrated, await store.LoadAsync(Ct));
         var persisted = await documents.ReadAsync(path, CaptureMemoryPolicyJsonContext.Default.CaptureMemoryPolicyDocument, Ct);
-        Assert.AreEqual(2, persisted!.Version);
+        Assert.AreEqual(3, persisted!.Version);
     }
 
     [TestMethod]
@@ -91,7 +133,7 @@ public sealed class CaptureMemoryStorageTests
         Assert.AreEqual(authorization, added.AutomaticAuthorization);
         Assert.AreEqual(2L, added.Sequence);
         var persisted = JsonSerializer.Deserialize(environment.Protector.Unprotect(await File.ReadAllBytesAsync(path, Ct)), CaptureCatalogJsonContext.Default.CaptureCatalogDocument);
-        Assert.AreEqual(4, persisted!.Version);
+        Assert.AreEqual(5, persisted!.Version);
     }
 
     [TestMethod]
@@ -124,7 +166,7 @@ public sealed class CaptureMemoryStorageTests
         Assert.AreEqual(version == 1 ? 2 : 12, await catalog.GetBoundaryAsync(Ct));
         using var reopened = environment.CreateCatalog();
         CollectionAssert.AreEqual(migrated.ToArray(), (await reopened.ReadRegistrationsAsync(Ct)).ToArray());
-        Assert.AreEqual(4, (await documents.ReadAsync(path, CaptureCatalogJsonContext.Default.CaptureCatalogDocument, Ct))!.Version);
+        Assert.AreEqual(5, (await documents.ReadAsync(path, CaptureCatalogJsonContext.Default.CaptureCatalogDocument, Ct))!.Version);
         var knownExternal = new CaptureAsset(CaptureId.New(), CaptureFileType.Audio, at, Path.Combine(environment.Root, "known.wav"), CaptureSourceOwnership.External);
         await reopened.RegisterAsync(knownExternal, Ct);
         Assert.AreEqual(at, (await catalog.GetAsync(knownExternal.Id, Ct))!.CapturedAt);

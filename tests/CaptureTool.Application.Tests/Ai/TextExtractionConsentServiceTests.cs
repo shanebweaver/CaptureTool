@@ -9,6 +9,49 @@ namespace CaptureTool.Application.Tests.Ai;
 public sealed class TextExtractionConsentServiceTests
 {
     [TestMethod]
+    [DataRow(true)]
+    [DataRow(false)]
+    public async Task RevocationImmediatelyCancelsOcrEvenWhilePersistenceIsPendingOrFails(bool saved)
+    {
+        bool setting = true;
+        var settings = new Mock<ISettingsService>();
+        settings.Setup(x => x.IsSet(CaptureToolSettings.Settings_AiConsent_TextExtraction)).Returns(true);
+        settings.Setup(x => x.Get(CaptureToolSettings.Settings_AiConsent_TextExtraction)).Returns(() => setting);
+        var pending = new TaskCompletionSource<SettingsMutationResult>();
+        settings.Setup(x => x.TrySetAndSaveAsync(CaptureToolSettings.Settings_AiConsent_TextExtraction, false, It.IsAny<CancellationToken>())).Returns(pending.Task);
+        using var service = new TextExtractionConsentService(settings.Object, Mock.Of<ITextExtractionConsentPrompt>());
+        var token = service.Revoked;
+        int changes = 0;
+        service.StateChanged += () => changes++;
+        var revoke = service.RevokeConsentAsync();
+        Assert.IsTrue(token.IsCancellationRequested);
+        Assert.AreEqual(AiFeatureConsentState.Denied, service.State);
+        if (saved) setting = false;
+        pending.SetResult(saved ? SettingsMutationResult.Saved : SettingsMutationResult.PersistenceFailed);
+        Assert.AreEqual(saved, await revoke);
+        Assert.AreEqual(AiFeatureConsentState.Denied, service.State);
+        Assert.AreEqual(1, changes);
+    }
+
+    [TestMethod]
+    public async Task ANewerSettingsRevocationRejectsAnEarlierConsentPrompt()
+    {
+        var settings = new Mock<ISettingsService>();
+        settings.Setup(x => x.TrySetAndSaveAsync(CaptureToolSettings.Settings_AiConsent_TextExtraction, false, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(SettingsMutationResult.Saved);
+        var pending = new TaskCompletionSource<bool>();
+        var prompt = new Mock<ITextExtractionConsentPrompt>();
+        prompt.Setup(x => x.ConfirmAsync(It.IsAny<CancellationToken>())).Returns(pending.Task);
+        using var service = new TextExtractionConsentService(settings.Object, prompt.Object);
+        var grant = service.EnsureConsentAsync();
+        var revoke = service.RevokeConsentAsync();
+        pending.SetResult(true);
+        Assert.IsFalse(await grant);
+        Assert.IsTrue(await revoke);
+        settings.Verify(x => x.TrySetAndSaveAsync(CaptureToolSettings.Settings_AiConsent_TextExtraction, true, It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [TestMethod]
     [DataRow(true, true)]
     [DataRow(false, true)]
     [DataRow(true, false)]

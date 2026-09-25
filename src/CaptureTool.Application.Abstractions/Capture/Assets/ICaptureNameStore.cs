@@ -9,6 +9,7 @@ public interface ICaptureNameStore
 {
     Task<CaptureNamingSnapshot> ReadNamingAsync(CancellationToken cancellationToken = default);
     Task SetAutomaticNamingAsync(bool enabled, CancellationToken cancellationToken = default);
+    Task EnableAutomaticNamingByDefaultAsync(CancellationToken cancellationToken = default);
     Task InvalidatePendingNamesAsync(CancellationToken cancellationToken = default);
     Task<bool> TryApplyAutomaticNameAsync(CaptureId id, string name, Guid epoch, string expectedSourcePath, CancellationToken cancellationToken = default);
     Task SetUserNameAsync(CaptureId id, string name, CancellationToken cancellationToken = default);

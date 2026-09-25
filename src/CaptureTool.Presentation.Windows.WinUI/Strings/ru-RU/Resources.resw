@@ -1753,7 +1753,7 @@ SOFTWARE.
     <value>Разрешить локальные функции ИИ?</value>
   </data>
   <data name="CaptureMemory_ConsentContent" xml:space="preserve">
-    <value>Разрешите ИИ на этом устройстве распознавать текст, описывать изображения, расшифровывать записи и редактировать медиа при использовании инструментов ИИ. Автоматический анализ записей включается отдельно. Результаты анализа надёжно хранятся на этом устройстве. Может потребоваться загрузка моделей; ваши медиа обрабатываются на этом устройстве.</value>
+    <value>Включите локальные функции ИИ и автоматический анализ новых снимков и записей. Обработка выполняется на этом ПК, а результаты анализа хранятся в защищённом виде. Может потребоваться загрузка моделей. Вы можете отключить анализ или удалить его результаты в настройках.</value>
   </data>
   <data name="CaptureMemory_ConsentAccept" xml:space="preserve">
     <value>Разрешить</value>
@@ -1958,9 +1958,14 @@ SOFTWARE.
   <data name="CaptureWelcome_Hero.Text" xml:space="preserve"><value>Немного магии</value></data>
   <data name="CaptureWelcome_Text.Text" xml:space="preserve"><value>Находите и копируйте слова на изображениях.</value></data>
   <data name="CaptureWelcome_Recording.Text" xml:space="preserve"><value>Исследуйте речь и текст на экране в записях.</value></data>
-  <data name="CaptureWelcome_Names.Text" xml:space="preserve"><value>Включите понятные названия снимков в настройках.</value></data>
-  <data name="CaptureWelcome_Consent.Text" xml:space="preserve"><value>Включите автоматический анализ новых снимков и локальные инструменты ИИ. Анализ хранится защищённо на этом устройстве. Может потребоваться загрузка моделей; функции зависят от ПК. Анализ можно отключить, а его данные удалить в настройках. Отдельное извлечение текста запрашивает собственное согласие.</value></data>
+  <data name="CaptureWelcome_Names.Text" xml:space="preserve"><value>Давайте новым снимкам и записям понятные названия.</value></data>
+  <data name="CaptureWelcome_Consent.Text" xml:space="preserve"><value>Включите локальные функции ИИ и автоматический анализ новых снимков и записей. Обработка выполняется на этом ПК, а результаты анализа хранятся в защищённом виде. Может потребоваться загрузка моделей. Вы можете отключить анализ или удалить его результаты в настройках.</value></data>
   <data name="CaptureMemory_EnableScanningAccept" xml:space="preserve"><value>Включить анализ</value></data>
   <data name="CaptureWelcome_NotNow" xml:space="preserve"><value>Не сейчас</value></data>
   <data name="CapturePane_EnableAnalysis.Content" xml:space="preserve"><value>Включить анализ снимков</value></data>
+  <data name="TextExtractionSettings_Header.Text" xml:space="preserve"><value>Извлечение текста</value></data>
+  <data name="TextExtractionSettings_Description.Text" xml:space="preserve"><value>Читайте текст и QR-коды с помощью извлечения текста в редакторе изображений.</value></data>
+  <data name="TextExtractionSettings_Consent.Content" xml:space="preserve"><value>Разрешить</value></data>
+  <data name="TextExtractionSettings_Consent.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Разрешить отдельное извлечение текста</value></data>
+  <data name="TextExtractionSettings_SaveFailed" xml:space="preserve"><value>Не удалось сохранить разрешение на извлечение текста. Повторите попытку.</value></data>
 </root>

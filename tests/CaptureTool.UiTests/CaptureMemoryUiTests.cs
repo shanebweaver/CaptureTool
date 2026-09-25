@@ -58,8 +58,8 @@ public sealed partial class ImageEditTextExtractionUiTests
         AutomationElement consent = Element("CaptureMemoryConsent");
         AutomationElement scan = Element("CaptureMemoryScan");
         AutomationElement delete = Element("CaptureMemoryDelete");
-        Assert.HasCount(1, window.FindAllDescendants(
-            automation.ConditionFactory.ByControlType(ControlType.CheckBox)), "AI settings must expose a single consent checkbox.");
+        Assert.HasCount(2, window.FindAllDescendants(
+            automation.ConditionFactory.ByControlType(ControlType.CheckBox)), "Analysis and standalone Text Extraction have independent consent checkboxes.");
         Assert.AreEqual(ToggleState.Off, toggle.Patterns.Toggle.Pattern.ToggleState.Value);
         Assert.IsFalse(scan.IsEnabled);
         Assert.IsFalse(delete.IsEnabled);

@@ -150,7 +150,7 @@ public sealed class CaptureMemoryViewModelTests
     [TestMethod]
     [DataRow("storage-unavailable")]
     [DataRow("policy-unavailable")]
-    public async Task DisabledStartupStaysQuietButSettingsRetryReportsStorageFailure(string code)
+    public async Task DisabledStartupAndSettingsVisitsStayQuiet(string code)
     {
         using var fixture = new Fixture();
         fixture.Change(fixture.State with { Policy = CaptureMemoryPolicy.Disabled(), FailureCode = code,
@@ -159,7 +159,69 @@ public sealed class CaptureMemoryViewModelTests
         fixture.Notifications.Verify(x => x.ShowError(It.IsAny<string>()), Times.Never);
         await fixture.ViewModel.RefreshAsync();
         fixture.Dispatch();
+        await fixture.ViewModel.RefreshAsync();
+        fixture.Dispatch();
+        fixture.Notifications.Verify(x => x.ShowError(It.IsAny<string>()), Times.Never);
+    }
+
+    [TestMethod]
+    [DataRow("storage-unavailable")]
+    [DataRow("policy-unavailable")]
+    public async Task ExplicitActionReportsFailureEvenWhenUiUpdateRunsAfterCommandCompletes(string code)
+    {
+        using var fixture = new Fixture();
+        fixture.Change(fixture.State with { Policy = CaptureMemoryPolicy.Disabled(), FailureCode = code });
+        fixture.Dispatch();
+        fixture.Notifications.Verify(x => x.ShowError(It.IsAny<string>()), Times.Never);
+        await fixture.ViewModel.SetScanningCommand.ExecuteAsync(true);
+        fixture.Dispatch();
         fixture.Notifications.Verify(x => x.ShowError(It.IsAny<string>()), Times.Once);
+    }
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task CompletedActionDoesNotEnableLaterDormantErrorNotifications(bool dispatchDuringAction)
+    {
+        using var fixture = new Fixture();
+        fixture.Change(fixture.State with { Policy = CaptureMemoryPolicy.Disabled() });
+        fixture.Dispatch();
+        fixture.Memory.Setup(x => x.SetScanningAsync(false, default)).Callback(() =>
+        {
+            fixture.Change(fixture.State);
+            if (dispatchDuringAction) fixture.Dispatch();
+        }).Returns(Task.CompletedTask);
+        await fixture.ViewModel.SetScanningCommand.ExecuteAsync(false);
+        fixture.Change(fixture.State with { FailureCode = "storage-unavailable" });
+        fixture.Dispatch();
+        await fixture.ViewModel.RefreshAsync();
+        fixture.Dispatch();
+        fixture.Notifications.Verify(x => x.ShowError(It.IsAny<string>()), Times.Never);
+    }
+
+    [TestMethod]
+    public async Task ExplicitFailureSurvivesRecoveryBeforeDispatcherRuns()
+    {
+        using var fixture = new Fixture();
+        fixture.Change(fixture.State with { Policy = CaptureMemoryPolicy.Disabled() });
+        fixture.Dispatch();
+        fixture.Memory.Setup(x => x.SetScanningAsync(true, default)).Callback(() =>
+        {
+            fixture.Change(fixture.State with { FailureCode = "storage-unavailable" });
+            fixture.Change(fixture.State with { FailureCode = null });
+        }).Returns(Task.CompletedTask);
+        await fixture.ViewModel.SetScanningCommand.ExecuteAsync(true);
+        fixture.Dispatch();
+        fixture.Notifications.Verify(x => x.ShowError("CaptureMemory_Error_Storage"), Times.Once);
+    }
+
+    [TestMethod]
+    public void EnabledAnalysisStillReportsStorageFailures()
+    {
+        using var fixture = new Fixture();
+        fixture.Change(fixture.State with { FailureCode = "storage-unavailable" });
+        fixture.Dispatch();
+        fixture.Notifications.Verify(x => x.ShowError("CaptureMemory_Error_Storage"), Times.Once);
     }
 
     private sealed class Fixture : IDisposable

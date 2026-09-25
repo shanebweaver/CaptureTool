@@ -1753,7 +1753,7 @@ SOFTWARE.
     <value>¿Permitir funciones de IA local?</value>
   </data>
   <data name="CaptureMemory_ConsentContent" xml:space="preserve">
-    <value>Permite que la IA de este dispositivo reconozca texto, describa imágenes, transcriba grabaciones y edite contenido al usar herramientas de IA. El análisis automático de capturas se activa por separado. Los análisis se guardan de forma segura en este dispositivo. Puede ser necesario descargar modelos; el contenido se procesa en este dispositivo.</value>
+    <value>Activa las funciones de IA local y el análisis automático de nuevas capturas. El procesamiento se realiza en este PC y los análisis se guardan de forma segura. Puede ser necesario descargar modelos. Puedes desactivar el análisis o eliminar los análisis guardados en Configuración.</value>
   </data>
   <data name="CaptureMemory_ConsentAccept" xml:space="preserve">
     <value>Permitir</value>
@@ -1958,9 +1958,14 @@ SOFTWARE.
   <data name="CaptureWelcome_Hero.Text" xml:space="preserve"><value>Un toque de magia</value></data>
   <data name="CaptureWelcome_Text.Text" xml:space="preserve"><value>Busca y copia palabras dentro de imágenes.</value></data>
   <data name="CaptureWelcome_Recording.Text" xml:space="preserve"><value>Explora voz y texto en pantalla en grabaciones.</value></data>
-  <data name="CaptureWelcome_Names.Text" xml:space="preserve"><value>Activa nombres útiles para las capturas en Configuración.</value></data>
-  <data name="CaptureWelcome_Consent.Text" xml:space="preserve"><value>Activa el análisis automático de nuevas capturas y las herramientas de IA local. El análisis se guarda protegido en este dispositivo. Puede ser necesario descargar modelos; las funciones dependen del PC. Puedes desactivar el análisis o borrar sus datos en Configuración. Extracción de texto independiente solicita su propio consentimiento.</value></data>
+  <data name="CaptureWelcome_Names.Text" xml:space="preserve"><value>Asigna nombres útiles a las nuevas capturas.</value></data>
+  <data name="CaptureWelcome_Consent.Text" xml:space="preserve"><value>Activa las funciones de IA local y el análisis automático de nuevas capturas. El procesamiento se realiza en este PC y los análisis se guardan de forma segura. Puede ser necesario descargar modelos. Puedes desactivar el análisis o eliminar los análisis guardados en Configuración.</value></data>
   <data name="CaptureMemory_EnableScanningAccept" xml:space="preserve"><value>Activar análisis</value></data>
   <data name="CaptureWelcome_NotNow" xml:space="preserve"><value>Ahora no</value></data>
   <data name="CapturePane_EnableAnalysis.Content" xml:space="preserve"><value>Activar análisis de capturas</value></data>
+  <data name="TextExtractionSettings_Header.Text" xml:space="preserve"><value>Extracción de texto</value></data>
+  <data name="TextExtractionSettings_Description.Text" xml:space="preserve"><value>Lee texto y códigos QR al usar Extracción de texto en el editor de imágenes.</value></data>
+  <data name="TextExtractionSettings_Consent.Content" xml:space="preserve"><value>Permitir</value></data>
+  <data name="TextExtractionSettings_Consent.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Permitir la extracción de texto independiente</value></data>
+  <data name="TextExtractionSettings_SaveFailed" xml:space="preserve"><value>No se pudo guardar el permiso de Extracción de texto. Inténtalo de nuevo.</value></data>
 </root>

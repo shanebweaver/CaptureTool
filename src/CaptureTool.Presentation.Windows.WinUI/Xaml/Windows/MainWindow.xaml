@@ -67,7 +67,9 @@
                     Canvas.ZIndex="90" IsHitTestVisible="False"
                     Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(CaptureMemory.IsAnalysisActive), Mode=OneWay}">
                 <StackPanel Orientation="Horizontal" Spacing="12">
-                    <controls:AiLoadingIndicator Width="24" Height="24" IsActive="{x:Bind CaptureMemory.IsAnalysisActive, Mode=OneWay}" />
+                    <Viewbox Width="24" Height="24" Stretch="Uniform" VerticalAlignment="Center">
+                        <controls:AiLoadingIndicator IsActive="{x:Bind CaptureMemory.IsAnalysisActive, Mode=OneWay}" />
+                    </Viewbox>
                     <TextBlock x:Name="CaptureMemoryProgressLabel" AutomationProperties.AutomationId="CaptureMemoryProgress" VerticalAlignment="Center" TextWrapping="Wrap"
                                AutomationProperties.LiveSetting="Polite" Text="{x:Bind CaptureMemory.ProgressText, Mode=OneWay}" />
                 </StackPanel>

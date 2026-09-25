@@ -19,20 +19,24 @@ internal sealed partial class LocalCaptureAssetCatalog
     }
 
     public Task SetAutomaticNamingAsync(bool enabled, CancellationToken cancellationToken = default) =>
-        UpdateNamingAsync(epoch => enabled == (epoch != null) ? epoch : enabled ? Guid.NewGuid() : null, cancellationToken);
+        UpdateNamingAsync(state => state with { AutomaticNamingEnabled = enabled,
+            NamingEpoch = enabled ? state.NamingEpoch ?? Guid.NewGuid() : null }, cancellationToken);
+
+    public Task EnableAutomaticNamingByDefaultAsync(CancellationToken cancellationToken = default) =>
+        UpdateNamingAsync(state => state.AutomaticNamingEnabled != null ? state :
+            state with { AutomaticNamingEnabled = true, NamingEpoch = Guid.NewGuid() }, cancellationToken);
 
     public Task InvalidatePendingNamesAsync(CancellationToken cancellationToken = default) =>
-        UpdateNamingAsync(epoch => epoch == null ? null : Guid.NewGuid(), cancellationToken);
+        UpdateNamingAsync(state => state with { NamingEpoch = state.NamingEpoch == null ? null : Guid.NewGuid() }, cancellationToken);
 
-    private async Task UpdateNamingAsync(Func<Guid?, Guid?> update, CancellationToken ct)
+    private async Task UpdateNamingAsync(Func<Catalog, Catalog> update, CancellationToken ct)
     {
         await _gate.WaitAsync(ct).ConfigureAwait(false);
         try
         {
             var state = await LoadAsync(ct).ConfigureAwait(false);
-            Guid? epoch = update(state.NamingEpoch);
-            if (epoch != state.NamingEpoch)
-                await SaveAsync(state with { NamingEpoch = epoch }, ct).ConfigureAwait(false);
+            var next = update(state);
+            if (next != state) await SaveAsync(next, ct).ConfigureAwait(false);
         }
         finally { _gate.Release(); }
     }

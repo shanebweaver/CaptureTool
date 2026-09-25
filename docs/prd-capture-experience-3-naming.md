@@ -8,7 +8,7 @@ New captures acquire useful names after existing local analysis produces a title
 
 ## Product contract
 
-- One setting: Automatically name new captures. Explain that it uses local AI analysis. Enabling requires scanning and the existing shared local-AI consent; do not introduce another consent checkbox. When scanning is off, the setting cannot activate naming.
+- One setting: Automatically name new captures. Granting shared local-AI consent defaults it on unless a previous choice is saved. Preserve explicit opt-outs across consent changes and restarts. Actual naming requires scanning and consent; the stored preference survives either being disabled. See [onboarding defaults](capture-onboarding-review.md). Do not introduce another consent checkbox.
 - Capture/save operations never wait for title generation. The existing filename remains the fallback while analysis is pending or yields no suitable title.
 - This setting applies to newly captured assets while it is enabled. Turning it on does not rename the existing library. Reanalysis does not continually rename an established capture.
 - An explicit user name always wins, including when entered while analysis is completing. Turning the setting off stops pending automatic application as well as future enrollment.

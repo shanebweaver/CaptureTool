@@ -26,6 +26,7 @@ public sealed class CaptureNamingTests
         using var environment = new AnalysisTestEnvironment();
         await using var app = new Setup(environment);
         await app.InitializeAsync(Ct);
+        await app.Names.SetEnabledAsync(false, Ct);
         var old = await app.CaptureAsync(Ct);
         Assert.IsTrue(await app.Names.SetEnabledAsync(true, Ct));
         var fresh = await app.CaptureAsync(Ct);

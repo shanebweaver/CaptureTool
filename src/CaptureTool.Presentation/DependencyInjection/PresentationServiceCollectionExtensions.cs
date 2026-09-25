@@ -31,6 +31,7 @@ public static class PresentationServiceCollectionExtensions
         services.AddSingleton<IAudioWaveformHistory, AudioWaveformHistory>();
         services.AddSingleton<IAppNotificationService, AppNotificationService>();
         services.AddSingleton<CaptureMemoryViewModel>();
+        services.AddSingleton<TextExtractionConsentViewModel>();
 
         // ViewModels
         services.AddTransient<MainWindowViewModel>();

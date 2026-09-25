@@ -1753,7 +1753,7 @@ SOFTWARE.
     <value>允许本地 AI 功能？</value>
   </data>
   <data name="CaptureMemory_ConsentContent" xml:space="preserve">
-    <value>允许设备上的 AI 在您使用 AI 工具时识别文字、描述图像、转录录音和编辑媒体。自动分析捕获内容是一项单独的设置。AI 分析会安全地存储在此设备上。可能需要下载模型；您的媒体会在此设备上处理。</value>
+    <value>启用本地 AI 功能和新捕获的自动分析。所有处理均在此电脑上进行，分析数据会安全存储。可能需要下载模型。您可以在设置中关闭扫描或删除分析数据。</value>
   </data>
   <data name="CaptureMemory_ConsentAccept" xml:space="preserve">
     <value>允许</value>
@@ -1958,9 +1958,14 @@ SOFTWARE.
   <data name="CaptureWelcome_Hero.Text" xml:space="preserve"><value>让捕获多一点魔力</value></data>
   <data name="CaptureWelcome_Text.Text" xml:space="preserve"><value>查找并复制图像中的文字。</value></data>
   <data name="CaptureWelcome_Recording.Text" xml:space="preserve"><value>探索录音和视频中的语音及屏幕文字。</value></data>
-  <data name="CaptureWelcome_Names.Text" xml:space="preserve"><value>在设置中启用有意义的捕获名称。</value></data>
-  <data name="CaptureWelcome_Consent.Text" xml:space="preserve"><value>启用新捕获的自动分析和本地 AI 工具。分析数据在此设备上受到保护。模型可能需要下载；可用功能取决于此电脑。您可以在设置中关闭扫描或删除分析数据。独立的文本提取功能会单独征求同意。</value></data>
+  <data name="CaptureWelcome_Names.Text" xml:space="preserve"><value>为新捕获生成有意义的名称。</value></data>
+  <data name="CaptureWelcome_Consent.Text" xml:space="preserve"><value>启用本地 AI 功能和新捕获的自动分析。所有处理均在此电脑上进行，分析数据会安全存储。可能需要下载模型。您可以在设置中关闭扫描或删除分析数据。</value></data>
   <data name="CaptureMemory_EnableScanningAccept" xml:space="preserve"><value>启用扫描</value></data>
   <data name="CaptureWelcome_NotNow" xml:space="preserve"><value>暂不启用</value></data>
   <data name="CapturePane_EnableAnalysis.Content" xml:space="preserve"><value>启用捕获分析</value></data>
+  <data name="TextExtractionSettings_Header.Text" xml:space="preserve"><value>文本提取</value></data>
+  <data name="TextExtractionSettings_Description.Text" xml:space="preserve"><value>在图像编辑器中使用文本提取功能读取文字和二维码。</value></data>
+  <data name="TextExtractionSettings_Consent.Content" xml:space="preserve"><value>允许</value></data>
+  <data name="TextExtractionSettings_Consent.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>允许独立文本提取</value></data>
+  <data name="TextExtractionSettings_SaveFailed" xml:space="preserve"><value>无法保存文本提取权限。请重试。</value></data>
 </root>
