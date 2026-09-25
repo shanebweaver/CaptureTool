@@ -92,7 +92,8 @@ public sealed class WindowsTextExtractionService : ITextExtractionService
             // Reuse canonical OCR while retaining the existing QR-code feature.
             // This path never probes, prepares, or invokes an OCR model.
             if (request.ExistingText is { } existing)
-                return TextExtractionResult.Success(new(existing.Text, existing.ImageSize, existing.Regions, qrCodes));
+                return TextExtractionResult.Success(RecognizedTextDocument.FromRecognition(
+                    existing.Text, existing.ImageSize, existing.Regions, qrCodes));
 
             TextExtractionResult? aiResult = await TryExtractWithWindowsAiAsync(
                 sourceBitmap,
@@ -207,11 +208,8 @@ public sealed class WindowsTextExtractionService : ITextExtractionService
                 lineIndex++;
             }
 
-            string documentText = CombineRecognizedValues(
+            return TextExtractionResult.Success(RecognizedTextDocument.FromRecognition(
                 string.Join(Environment.NewLine, recognizedLines),
-                qrCodes);
-            return TextExtractionResult.Success(new RecognizedTextDocument(
-                documentText,
                 request.SourceSize,
                 regions,
                 qrCodes));
@@ -270,11 +268,8 @@ public sealed class WindowsTextExtractionService : ITextExtractionService
             }
         }
 
-        string documentText = CombineRecognizedValues(
+        return TextExtractionResult.Success(RecognizedTextDocument.FromRecognition(
             string.Join(Environment.NewLine, recognizedLines),
-            qrCodes);
-        return TextExtractionResult.Success(new RecognizedTextDocument(
-            documentText,
             request.SourceSize,
             regions,
             qrCodes));
@@ -320,17 +315,5 @@ public sealed class WindowsTextExtractionService : ITextExtractionService
             : result.ExtendedError.Message;
     }
 
-    private static string CombineRecognizedValues(
-        string? recognizedText,
-        IReadOnlyList<RecognizedQrCodeRegion> qrCodes)
-    {
-        IEnumerable<string> values = qrCodes.Select(qrCode => qrCode.Value);
-        if (!string.IsNullOrWhiteSpace(recognizedText))
-        {
-            values = values.Prepend(recognizedText.TrimEnd());
-        }
-
-        return string.Join(Environment.NewLine, values);
-    }
 }
 

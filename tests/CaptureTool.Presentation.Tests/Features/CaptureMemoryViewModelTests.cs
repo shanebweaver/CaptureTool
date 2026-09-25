@@ -1,6 +1,7 @@
 using CaptureTool.Application.Abstractions.Analysis;
 using CaptureTool.Application.Abstractions.Localization;
 using CaptureTool.Application.Abstractions.TaskEnvironment;
+using CaptureTool.Domain.Analysis;
 using CaptureTool.Presentation.Features.Settings;
 using CaptureTool.Presentation.Notifications;
 using Moq;
@@ -65,17 +66,52 @@ public sealed class CaptureMemoryViewModelTests
     }
 
     [TestMethod]
-    public void RepeatedFailuresAcrossQueuedCapturesDoNotFloodNotifications()
+    [DataRow(false)]
+    [DataRow(true)]
+    public void RepeatedFailuresAcrossQueuedCapturesDoNotFloodNotifications(bool completed)
     {
         using var fixture = new Fixture();
         for (int i = 0; i < 3; i++)
         {
             fixture.Change(fixture.State with { Activity = new(AnalysisActivity.Analyzing) });
             fixture.Dispatch();
-            fixture.Change(fixture.State with { Activity = new(AnalysisActivity.Analyzing, LastRunStatus: CaptureTool.Domain.Analysis.AnalysisRunStatus.Failed) });
+            fixture.Change(fixture.State with { Activity = new(AnalysisActivity.Analyzing,
+                LastRunStatus: completed ? AnalysisRunStatus.Completed : AnalysisRunStatus.Failed, LastRunHadFailures: completed) });
             fixture.Dispatch();
         }
         fixture.Notifications.Verify(value => value.ShowError("CaptureMemory_Error_Analysis"), Times.Once);
+    }
+
+    [TestMethod]
+    [DataRow(AnalysisActivity.Analyzing)]
+    [DataRow(AnalysisActivity.Idle)]
+    public void CompletedStepFailureSurvivesCoalescingWithTheNextCapture(AnalysisActivity nextActivity)
+    {
+        using var fixture = new Fixture();
+        fixture.Change(fixture.State with { Activity = new(AnalysisActivity.Analyzing,
+            LastRunStatus: AnalysisRunStatus.Completed, LastRunHadFailures: true) });
+        fixture.Change(fixture.State with { Activity = new(nextActivity,
+            LastRunStatus: nextActivity == AnalysisActivity.Idle ? AnalysisRunStatus.Completed : null) });
+        fixture.Dispatch();
+        fixture.Notifications.Verify(value => value.ShowError("CaptureMemory_Error_Analysis"), Times.Once);
+        Assert.AreEqual(nextActivity == AnalysisActivity.Analyzing, fixture.ViewModel.IsAnalysisActive);
+    }
+
+    [TestMethod]
+    public void SuccessfulCompletionResetsFailureDeduplicationAndUnsupportedStepsRemainQuiet()
+    {
+        using var fixture = new Fixture();
+        var failed = fixture.State with { Activity = new(AnalysisActivity.Idle,
+            LastRunStatus: AnalysisRunStatus.Completed, LastRunHadFailures: true) };
+        fixture.Change(failed);
+        fixture.Dispatch();
+        fixture.Change(fixture.State with { Activity = new(AnalysisActivity.Idle,
+            FailureCode: "model-unavailable", LastRunStatus: AnalysisRunStatus.Completed) });
+        fixture.Dispatch();
+        fixture.Notifications.Verify(value => value.ShowError(It.IsAny<string>()), Times.Once);
+        fixture.Change(failed);
+        fixture.Dispatch();
+        fixture.Notifications.Verify(value => value.ShowError("CaptureMemory_Error_Analysis"), Times.Exactly(2));
     }
 
     [TestMethod]

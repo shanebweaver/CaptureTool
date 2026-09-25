@@ -251,7 +251,9 @@ public sealed class CaptureAnalysisWorker : ICaptureAnalysisWorker, IDisposable
                 if (finished?.Token == work.Token && !finished.Run.IsPending)
                     Report(new(AnalysisActivity.Analyzing, remaining, work.Token.CaptureId, finished.Run.CompletedSteps.Count, plan.Steps.Count,
                         FailureCode: finished.Run.CompletedSteps.LastOrDefault(step => step.Outcome != AnalyzerOutcomeKind.Succeeded)?.FailureCode ?? Progress.FailureCode,
-                        LastRunStatus: finished.Run.Status));
+                        LastRunStatus: finished.Run.Status,
+                        LastRunHadFailures: finished.Run.Status == AnalysisRunStatus.Completed && finished.Run.CompletedSteps.Any(step =>
+                            step.Outcome is AnalyzerOutcomeKind.Failed or AnalyzerOutcomeKind.TemporarilyUnavailable)));
             }
         }
     }
@@ -260,6 +262,7 @@ public sealed class CaptureAnalysisWorker : ICaptureAnalysisWorker, IDisposable
         int remaining, int index, int total, CancellationToken ct)
     {
         AnalyzerOutcome last = AnalyzerOutcome.Unsuccessful(AnalyzerOutcomeKind.Unsupported, "no-compatible-model");
+        AnalyzerOutcome strongestFailure = last;
         foreach (string id in step.Candidates)
         for (int retry = 0; retry <= step.RetryCount; retry++)
         {
@@ -297,10 +300,22 @@ public sealed class CaptureAnalysisWorker : ICaptureAnalysisWorker, IDisposable
             catch (TimeoutException) { last = AnalyzerOutcome.Unsuccessful(AnalyzerOutcomeKind.Failed, "model-timeout"); }
             catch (OperationCanceledException) { return AnalyzerOutcome.Unsuccessful(AnalyzerOutcomeKind.Cancelled, "model-cancelled"); }
             catch (Exception) { last = AnalyzerOutcome.Unsuccessful(AnalyzerOutcomeKind.Failed, "model-failed"); }
-            finally { AdvanceProgressVersion(); }
+            finally
+            {
+                // An unavailable/unsupported fallback cannot hide an earlier execution failure.
+                if (FailureRank(last.Kind) >= FailureRank(strongestFailure.Kind)) strongestFailure = last;
+                AdvanceProgressVersion();
+            }
         }
-        return last;
+        return strongestFailure;
     }
+
+    private static int FailureRank(AnalyzerOutcomeKind kind) => kind switch
+    {
+        AnalyzerOutcomeKind.Failed => 2,
+        AnalyzerOutcomeKind.TemporarilyUnavailable => 1,
+        _ => 0,
+    };
 
     private async Task<T> InvokeAsync<T>(Func<CancellationToken, Task<T>> invoke, TimeSpan timeout, CancellationToken ct)
     {

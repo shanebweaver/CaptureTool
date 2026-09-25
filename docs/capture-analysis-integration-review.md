@@ -149,7 +149,7 @@ dotnet build CaptureTool.slnx -c Release -p:Platform=ARM64 --nologo -m:1
 $env:CAPTURETOOL_RUN_UI_TESTS='1'; $env:CONFIGURATION='Release'; $env:PLATFORM='x64'
 dotnet test tests/CaptureTool.UiTests/CaptureTool.UiTests.csproj -p:Platform=x64 -c Release --filter FullyQualifiedName~CaptureMemory_ --nologo
 dotnet publish src/CaptureTool.Presentation.Windows.WinUI/CaptureTool.Presentation.Windows.WinUI.csproj -c Release -p:Platform=x64 -r win-x64 -p:WindowsPackageType=None -p:WindowsAppSDKSelfContained=true -p:EnableMsixTooling=false -o artifacts/capture-analysis-execution/slice3-vision-app-aot-x64 -m:1
-dotnet publish tools/CaptureTool.Analysis.Smoke/CaptureTool.Analysis.Smoke.csproj -c Release -p:Platform=x64 -r win-x64 -p:PublishAot=true -o artifacts/capture-analysis-execution/slice3-vision-aot -m:1
+dotnet publish tools/CaptureTool.Analysis.Smoke/CaptureTool.Analysis.Smoke.csproj -c Release -p:Platform=x64 -r win-x64 -o artifacts/capture-analysis-execution/slice3-vision-aot -m:1
 & tools/CaptureTool.Analysis.Smoke/run-smoke.ps1 -BinaryDirectory artifacts/capture-analysis-execution/slice3-vision-aot -OutputDirectory D:/Git/CaptureTool/artifacts/capture-analysis-execution/slice3-vision-smoke -Packaged -PrepareVision
 ```
 
@@ -158,6 +158,64 @@ are under `tests/CaptureTool.UiTests/TestResults/artifacts/capture-memory/`.
 The fallback and follow-up review use `slice3-vision-` logs; the provider report is
 `slice3-vision-smoke/results.json`. Baseline UI checks were not rerun for this
 provider/policy-only follow-up.
+
+## Final slice 3 hardening
+
+The review after shared consent, saved OCR/QR reuse, and file-details scanning
+confirmed three issues, now fixed:
+
+- A run can finish every step while some capabilities fail. The activity snapshot
+  now explicitly reports that distinction without changing the persisted run schema.
+  Exhausted failed/temporarily unavailable candidates produce the existing localized
+  analysis notice. An unsupported final fallback cannot hide an earlier execution
+  failure. Successful fallbacks and ordinary unsupported skips stay quiet; useful
+  results from later steps are still retained. The view model preserves failures
+  through dispatcher coalescing and deduplicates them across a failing queue.
+- Saved OCR/QR documents and older OCR supplemented by a fresh QR scan now include
+  decoded QR values in Copy all text. A shared document factory keeps that rule
+  consistent with fresh OCR, without changing word boxes or duplicating QR values
+  when an already-complete document is reused.
+- Audio decoding uses the existing scratch lease store for the whole iterator
+  lifetime. Clearing temporary files preserves active chunks and their directory;
+  normal completion, cancellation, and disposal remove the file and release the
+  lease. An owner-scoped allocation overload prunes interrupted audio output and
+  retains the existing eight-artifact bound when cleanup cannot finish. Other
+  owners and active leases are preserved, including concurrent lease reservations.
+
+The slice 4 checklist now explicitly covers the shared consent, saved OCR/QR,
+file-details, partial-failure, and scratch-lifetime paths. It remains release
+verification rather than another feature expansion.
+
+The complete managed suite passes **979 tests**, with **94.28% line coverage**
+(7,335 / 7,780), above the 90% gate. Both existing desktop workflows pass. The audio
+regression uses a real Windows transcode and the real scratch store, exercises
+clearing between chunks and completion/cancellation/disposal, and confirms the
+original audio bytes remain intact. Storage tests cover locked-file limits,
+restart pruning, and preserving other owners. No models were downloaded or invoked
+for this hardening pass.
+
+The app and updated provider harness both publish with x64 Native AOT, each with
+only the four accepted Betalgo converter IL2026/IL3050 warnings. Harness Release
+publishing now enables AOT in its executable project, avoiding a global flag that
+incorrectly reached the netstandard build-time generator. Publish commands above
+have been updated for that configuration. This is a build-setting correction;
+the existing vendor warning exception is unchanged.
+
+Both x64 and ARM64 Release solution builds pass with zero warnings/errors. The
+normal x64 solution output was rebuilt after publishing. Packaged app/device
+verification and the automated warning guard remain in slice 4.
+
+Commands and ignored evidence are under `artifacts/slice3-hardening/`:
+
+```powershell
+dotnet-coverage collect 'powershell -NoProfile -ExecutionPolicy Bypass -File .github\scripts\run-managed-tests.ps1' -s .github/coverage.runsettings -f cobertura -o artifacts/slice3-hardening/coverage.cobertura.xml
+$env:CAPTURETOOL_RUN_UI_TESTS='1'; $env:CONFIGURATION='Release'; $env:PLATFORM='x64'
+dotnet test tests/CaptureTool.UiTests/CaptureTool.UiTests.csproj -c Release -p:Platform=x64 --filter 'FullyQualifiedName~CaptureMemory_|FullyQualifiedName~TextExtractionMode'
+dotnet build CaptureTool.slnx -m:1 -c Release -p:Platform=ARM64
+dotnet publish src/CaptureTool.Presentation.Windows.WinUI/CaptureTool.Presentation.Windows.WinUI.csproj -c Release -p:Platform=x64 -r win-x64 -p:WindowsPackageType=None -p:WindowsAppSDKSelfContained=true -p:EnableMsixTooling=false -o artifacts/slice3-hardening/app-aot-x64 -m:1
+dotnet publish tools/CaptureTool.Analysis.Smoke/CaptureTool.Analysis.Smoke.csproj -c Release -p:Platform=x64 -r win-x64 -o artifacts/slice3-hardening/harness-aot-x64 -m:1
+dotnet build CaptureTool.slnx -m:1 -c Release -p:Platform=x64
+```
 
 ## Remaining release verification
 

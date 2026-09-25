@@ -85,7 +85,8 @@ public sealed class FoundryVisionTests
     public async Task CompositionAndPassiveReadinessDoNotTouchStorageOrInitializeModels()
     {
         var storage = new Mock<IStorageService>(MockBehavior.Strict);
-        using var provider = new ServiceCollection().AddSingleton(storage.Object).AddWindowsAnalysisProviders().BuildServiceProvider();
+        using var provider = new ServiceCollection().AddSingleton(storage.Object).AddSingleton(Mock.Of<IScratchArtifactStore>())
+            .AddWindowsAnalysisProviders().BuildServiceProvider();
         IMediaAnalyzer vision = provider.GetServices<IMediaAnalyzer>().Single(analyzer => analyzer.Descriptor.Id == "foundry-local-image-description");
         Assert.AreEqual(AnalysisCapability.Description, vision.Descriptor.Capability);
         Assert.AreEqual(AnalyzerAvailability.PreparationRequired,

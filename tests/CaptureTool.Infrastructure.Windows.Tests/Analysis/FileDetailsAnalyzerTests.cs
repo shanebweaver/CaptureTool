@@ -31,7 +31,8 @@ public sealed class FileDetailsAnalyzerTests
     [TestMethod]
     public async Task DefaultPlansUseOneAlwaysReadyLocalAdapterForEveryMediaKind()
     {
-        using var services = new ServiceCollection().AddSingleton(Mock.Of<IStorageService>()).AddWindowsAnalysisProviders().BuildServiceProvider();
+        using var services = new ServiceCollection().AddSingleton(Mock.Of<IStorageService>()).AddSingleton(Mock.Of<IScratchArtifactStore>())
+            .AddWindowsAnalysisProviders().BuildServiceProvider();
         var analyzers = services.GetServices<IMediaAnalyzer>().ToArray();
         var configuration = CaptureAnalysisConfiguration.CreateDefault();
         configuration.ValidateAnalyzers(analyzers.Select(analyzer => analyzer.Descriptor));

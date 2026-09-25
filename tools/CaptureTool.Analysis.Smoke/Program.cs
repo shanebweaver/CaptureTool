@@ -1,10 +1,12 @@
 using CaptureTool.Application.Abstractions.Analysis;
 using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Application.Analysis;
+using CaptureTool.Application.DependencyInjection;
 using CaptureTool.Domain;
 using CaptureTool.Domain.Analysis;
 using CaptureTool.Domain.Analysis.Payloads;
 using CaptureTool.Infrastructure.Analysis.Windows.DependencyInjection;
+using CaptureTool.Infrastructure.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AI.Foundry.Local;
 using System.Drawing;
@@ -26,7 +28,8 @@ if (args.Length == 0 || !Path.IsPathFullyQualified(args[0]))
 string output = Path.GetFullPath(args[0]);
 Directory.CreateDirectory(output);
 var storage = new SmokeStorage(output);
-var services = new ServiceCollection().AddSingleton<IStorageService>(storage).AddWindowsAnalysisProviders();
+var services = new ServiceCollection().AddGenericServices().AddApplicationServices()
+    .AddSingleton<IStorageService>(storage).AddWindowsAnalysisProviders();
 using ServiceProvider provider = services.BuildServiceProvider();
 IMediaAnalyzer[] analyzers = provider.GetServices<IMediaAnalyzer>().ToArray();
 CaptureAnalysisConfiguration.CreateDefault().ValidateAnalyzers(analyzers.Select(analyzer => analyzer.Descriptor));

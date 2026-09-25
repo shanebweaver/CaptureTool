@@ -125,6 +125,18 @@ public sealed class CapturedImageTextReaderTests
         var document = await Reader().ReadAsync(new(PathName, null, Revision, new(200, 100)), Ct);
         Assert.IsTrue(document!.HasQrCodeResults);
         Assert.HasCount(empty ? 0 : 1, document.QrCodes);
+        Assert.AreEqual(empty ? string.Empty : "https://example.com", document.Text);
         if (!empty) Assert.AreEqual(new RectangleF(20, 20, 60, 40), document.QrCodes.Single().Bounds);
+    }
+
+    [TestMethod]
+    public async Task CopyTextCombinesOcrInReadingOrderWithEveryDecodedQrValue()
+    {
+        SetRecord([new("world", new(.4, .2, .2, .1)), new("Hello", new(.1, .2, .2, .1))],
+            codes: [new("https://example.com/one", new(.1, .5, .2, .2)), new("https://example.com/two", new(.5, .5, .2, .2))]);
+        var document = await Reader().ReadAsync(new(PathName, null, Revision, new(200, 100)), Ct);
+        Assert.AreEqual(string.Join(Environment.NewLine, "Hello world", "https://example.com/one", "https://example.com/two"), document!.Text);
+        Assert.HasCount(2, document.Regions);
+        Assert.HasCount(2, document.QrCodes);
     }
 }

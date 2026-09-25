@@ -13,7 +13,7 @@ using Windows.Storage.Streams;
 namespace CaptureTool.Infrastructure.Analysis.Windows.Media;
 
 /// <summary>Bounded shared decoding for all providers. Frames/chunks are valid only until the next iteration.</summary>
-internal sealed class WindowsAnalysisMedia(IStorageService storage)
+internal sealed class WindowsAnalysisMedia(IScratchArtifactStore scratch)
 {
     internal const int MaximumImageDimension = 2048;
     internal static readonly TimeSpan MaximumDuration = TimeSpan.FromHours(2);
@@ -78,29 +78,32 @@ internal sealed class WindowsAnalysisMedia(IStorageService storage)
             duration = track.OriginalDuration;
         }
         ValidateDuration(duration);
-        string directory = Path.Combine(storage.GetApplicationScratchFolderPath(), "AnalysisAudio");
-        Directory.CreateDirectory(directory);
-        CleanupScratch(directory);
-        for (TimeSpan offset = TimeSpan.Zero; offset < duration; offset += AudioChunkDuration)
+        // Keep one leased path for the iterator's lifetime, including time spent in a provider.
+        // Clearing temporary files must not remove either the current chunk or its directory.
+        string outputPath = scratch.CreateLeasedArtifactPath("analysis-audio", ".wav", maximumRetainedArtifacts: 8);
+        try
         {
-            ct.ThrowIfCancellationRequested();
-            TimeSpan end = offset + AudioChunkDuration < duration ? offset + AudioChunkDuration : duration;
-            string outputPath = Path.Combine(directory, Guid.NewGuid().ToString("N") + ".wav");
-            try
+            for (TimeSpan offset = TimeSpan.Zero; offset < duration; offset += AudioChunkDuration)
             {
-                using (FileStream placeholder = new(outputPath, FileMode.CreateNew, FileAccess.Write, FileShare.None)) { }
-                StorageFile output = await StorageFile.GetFileFromPathAsync(outputPath).AsTask(ct).ConfigureAwait(false);
-                var transcoder = new MediaTranscoder { TrimStartTime = offset, TrimStopTime = end };
-                MediaEncodingProfile profile = MediaEncodingProfile.CreateWav(AudioEncodingQuality.Low);
-                profile.Audio = AudioEncodingProperties.CreatePcm(16000, 1, 16);
-                PrepareTranscodeResult prepared = await transcoder.PrepareFileTranscodeAsync(source, output, profile).AsTask(ct).ConfigureAwait(false);
-                if (!prepared.CanTranscode) throw new InvalidAnalysisMediaException();
-                await prepared.TranscodeAsync().AsTask(ct).ConfigureAwait(false);
-                if (new FileInfo(outputPath).Length > 1024 * 1024) throw new InvalidDataException("Decoded audio exceeds its chunk bound.");
-                yield return new(outputPath, offset, end - offset);
+                ct.ThrowIfCancellationRequested();
+                TimeSpan end = offset + AudioChunkDuration < duration ? offset + AudioChunkDuration : duration;
+                try
+                {
+                    using (FileStream placeholder = new(outputPath, FileMode.CreateNew, FileAccess.Write, FileShare.None)) { }
+                    StorageFile output = await StorageFile.GetFileFromPathAsync(outputPath).AsTask(ct).ConfigureAwait(false);
+                    var transcoder = new MediaTranscoder { TrimStartTime = offset, TrimStopTime = end };
+                    MediaEncodingProfile profile = MediaEncodingProfile.CreateWav(AudioEncodingQuality.Low);
+                    profile.Audio = AudioEncodingProperties.CreatePcm(16000, 1, 16);
+                    PrepareTranscodeResult prepared = await transcoder.PrepareFileTranscodeAsync(source, output, profile).AsTask(ct).ConfigureAwait(false);
+                    if (!prepared.CanTranscode) throw new InvalidAnalysisMediaException();
+                    await prepared.TranscodeAsync().AsTask(ct).ConfigureAwait(false);
+                    if (new FileInfo(outputPath).Length > 1024 * 1024) throw new InvalidDataException("Decoded audio exceeds its chunk bound.");
+                    yield return new(outputPath, offset, end - offset);
+                }
+                finally { File.Delete(outputPath); }
             }
-            finally { File.Delete(outputPath); }
         }
+        finally { scratch.DeleteArtifact(outputPath); }
     }
 
     private static void ValidateDuration(TimeSpan duration)
@@ -115,22 +118,6 @@ internal sealed class WindowsAnalysisMedia(IStorageService storage)
         { throw new InvalidAnalysisMediaException(); }
     }
 
-    private static void CleanupScratch(string directory)
-    {
-        string root = Path.GetFullPath(directory);
-        if ((File.GetAttributes(root) & System.IO.FileAttributes.ReparsePoint) != 0) throw new IOException("Analysis scratch cannot be a directory link.");
-        int retained = 0;
-        foreach (string path in Directory.EnumerateFiles(root, "*.wav"))
-        {
-            if (!Guid.TryParseExact(Path.GetFileNameWithoutExtension(path), "N", out _)) continue;
-            if (!string.Equals(Path.GetDirectoryName(Path.GetFullPath(path)), root, StringComparison.OrdinalIgnoreCase))
-                throw new IOException("Analysis scratch path is outside its owned directory.");
-            try { File.Delete(path); }
-            catch (IOException) { retained++; }
-            catch (UnauthorizedAccessException) { retained++; }
-            if (retained >= 8) throw new IOException("Pending scratch cleanup exceeds its bound.");
-        }
-    }
 }
 
 internal sealed record AudioChunk(string Path, TimeSpan Offset, TimeSpan Duration);

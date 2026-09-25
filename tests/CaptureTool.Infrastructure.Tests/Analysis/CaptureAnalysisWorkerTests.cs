@@ -33,6 +33,7 @@ public sealed class CaptureAnalysisWorkerTests
         Assert.Contains(AnalysisActivity.Analyzing, progress.ToArray());
         Assert.AreEqual(AnalysisActivity.Idle, fixture.Worker.Progress.Activity);
         Assert.AreEqual(AnalysisRunStatus.Completed, fixture.Worker.Progress.LastRunStatus);
+        Assert.IsFalse(fixture.Worker.Progress.LastRunHadFailures, "A successful fallback resolves the preferred model's failure.");
         Assert.AreEqual(AnalysisRunStatus.Completed, (await fixture.Store.GetWorkAsync(first.CaptureId, Ct))!.Run.Status);
         Assert.AreEqual(AnalysisRunStatus.Completed, (await fixture.Store.GetWorkAsync(second.CaptureId, Ct))!.Run.Status);
         Assert.IsTrue((await fixture.Store.GetAsync(first.CaptureId, cancellationToken: Ct))!.Results.All(result => result.ProducingRunId == first.RequestId));
@@ -67,6 +68,43 @@ public sealed class CaptureAnalysisWorkerTests
         Assert.AreEqual(AnalyzerOutcomeKind.Unsupported, work.Run.CompletedSteps[1].Outcome);
         var text = (TextRecognitionMetadata)(await fixture.Store.GetAsync(request.CaptureId, cancellationToken: Ct))!.Results.Single().Payload;
         Assert.IsEmpty(text.Regions);
+        Assert.IsFalse(fixture.Worker.Progress.LastRunHadFailures, "Unsupported capabilities are ordinary skips.");
+    }
+
+    [TestMethod]
+    [DataRow(AnalyzerOutcomeKind.Failed)]
+    [DataRow(AnalyzerOutcomeKind.TemporarilyUnavailable)]
+    public async Task ExhaustedModelsReportFailedStepsEvenWhenAllStepsAreCompleted(AnalyzerOutcomeKind outcome)
+    {
+        using var fixture = new Fixture();
+        foreach (var analyzer in new[] { fixture.Preferred, fixture.Fallback, fixture.Description })
+            analyzer.Execute = (_, _) => Task.FromResult(AnalyzerOutcome.Unsuccessful(outcome, "provider-error"));
+        var request = await fixture.EnqueueAsync(Ct);
+        await DrainAsync(fixture.Worker, Ct);
+        var record = (await fixture.Store.GetAsync(request.CaptureId, cancellationToken: Ct))!;
+        Assert.IsEmpty(record.Results);
+        Assert.AreEqual(AnalysisRunStatus.Completed, fixture.Worker.Progress.LastRunStatus);
+        Assert.IsTrue(fixture.Worker.Progress.LastRunHadFailures);
+        Assert.AreEqual(AnalysisActivity.Idle, fixture.Worker.Progress.Activity);
+    }
+
+    [TestMethod]
+    [DataRow(AnalyzerOutcomeKind.Failed)]
+    [DataRow(AnalyzerOutcomeKind.TemporarilyUnavailable)]
+    public async Task UnsupportedFallbackCannotHideExecutionFailureAndLaterResultsAreRetained(AnalyzerOutcomeKind outcome)
+    {
+        using var fixture = new Fixture();
+        fixture.Preferred.Execute = (_, _) => Task.FromResult(AnalyzerOutcome.Unsuccessful(outcome, "provider-error"));
+        fixture.Fallback.Ready = AnalyzerAvailability.Unsupported;
+        var request = await fixture.EnqueueAsync(Ct);
+        await DrainAsync(fixture.Worker, Ct);
+        var work = (await fixture.Store.GetWorkAsync(request.CaptureId, Ct))!;
+        Assert.AreEqual(outcome, work.Run.CompletedSteps[0].Outcome);
+        Assert.AreEqual("provider-error", work.Run.CompletedSteps[0].FailureCode);
+        Assert.AreEqual(AnalysisRunStatus.Completed, work.Run.Status);
+        Assert.IsTrue(fixture.Worker.Progress.LastRunHadFailures);
+        var record = (await fixture.Store.GetAsync(request.CaptureId, cancellationToken: Ct))!;
+        Assert.AreEqual(AnalysisCapability.Description, record.Results.Single().Payload.Capability);
     }
 
     [TestMethod]

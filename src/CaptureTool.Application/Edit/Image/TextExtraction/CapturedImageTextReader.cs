@@ -58,7 +58,7 @@ internal sealed class CapturedImageTextReader(ICaptureAssetCatalog catalog, ICap
                     (float)(code.Bounds.X * source.ImageSize.Width), (float)(code.Bounds.Y * source.ImageSize.Height),
                     (float)(code.Bounds.Width * source.ImageSize.Width), (float)(code.Bounds.Height * source.ImageSize.Height))))
                 .ToArray();
-            return new(content, source.ImageSize, regions, codes);
+            return RecognizedTextDocument.FromRecognition(content, source.ImageSize, regions, codes);
         }
         catch (Exception ex) when (CacheUnavailable(ex)) { return null; }
     }

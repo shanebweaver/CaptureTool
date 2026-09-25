@@ -40,6 +40,11 @@ QR detection. An edited image still uses the normal ad-hoc path. Existing
 captures get QR metadata through **Analyze existing captures**; an upgrade does
 not automatically rescan the library.
 
+Saved and freshly recognized documents use the same text-combining factory: OCR
+text is followed by decoded QR values on separate lines in **Copy all text**.
+QR-only results remain copyable when OCR is empty. Reusing a complete document
+does not append values again, and QR regions remain separate from OCR word boxes.
+
 Regression tests cover real encoded QR images, inverted/rotated codes, multiple
 locations, synthetic video frame timestamps, empty and invalid media,
 cancellation, provider registration, protected storage/reload/deletion, and

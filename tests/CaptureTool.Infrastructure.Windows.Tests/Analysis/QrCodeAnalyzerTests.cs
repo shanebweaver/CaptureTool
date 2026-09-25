@@ -30,7 +30,8 @@ public sealed class QrCodeAnalyzerTests
     [TestMethod]
     public void DefaultCompositionIncludesQrAnalyzersWithoutDependingOnAnOcrModel()
     {
-        using var services = new ServiceCollection().AddSingleton(Mock.Of<IStorageService>()).AddWindowsAnalysisProviders().BuildServiceProvider();
+        using var services = new ServiceCollection().AddSingleton(Mock.Of<IStorageService>()).AddSingleton(Mock.Of<IScratchArtifactStore>())
+            .AddWindowsAnalysisProviders().BuildServiceProvider();
         var analyzers = services.GetServices<IMediaAnalyzer>().ToArray();
         CaptureAnalysisConfiguration.CreateDefault().ValidateAnalyzers(analyzers.Select(analyzer => analyzer.Descriptor));
         Assert.HasCount(2, analyzers.Where(analyzer => analyzer.Descriptor.Capability == AnalysisCapability.QrCodeDetection).ToArray());
@@ -94,7 +95,7 @@ public sealed class QrCodeAnalyzerTests
         await Assert.ThrowsExactlyAsync<OperationCanceledException>(() => analyzer.AnalyzeAsync(Input(path, AnalysisMediaKind.Image), null, canceled.Token));
     }
 
-    private static QrCodeAnalyzer Analyzer(AnalysisMediaKind kind) => new("qr-test", kind, new WindowsAnalysisMedia(Mock.Of<IStorageService>()));
+    private static QrCodeAnalyzer Analyzer(AnalysisMediaKind kind) => new("qr-test", kind, new WindowsAnalysisMedia(Mock.Of<IScratchArtifactStore>()));
     private static AnalysisInput Input(string path, AnalysisMediaKind kind) => new(CaptureId.New(), kind, new(new string('a', 64)), path);
 
     private async Task<string> CreateImageAsync(bool empty)

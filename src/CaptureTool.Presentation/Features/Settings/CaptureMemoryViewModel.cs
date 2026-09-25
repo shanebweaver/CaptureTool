@@ -16,6 +16,7 @@ public sealed class CaptureMemoryViewModel : ViewModelBase
     private readonly ILocalizationService _localization;
     private readonly IAppNotificationService _notifications;
     private string? _reportedFailure;
+    private string? _pendingFailure;
     private int _updateQueued;
     private bool _disposed;
 
@@ -52,7 +53,10 @@ public sealed class CaptureMemoryViewModel : ViewModelBase
     }
     private void QueueUpdate()
     {
-        if (_disposed || Interlocked.Exchange(ref _updateQueued, 1) != 0) return;
+        if (_disposed) return;
+        // Preserve a terminal failure even if the next capture starts before the UI dispatches.
+        if (GetFailure(_memory.State) is { } failure) Interlocked.Exchange(ref _pendingFailure, failure);
+        if (Interlocked.Exchange(ref _updateQueued, 1) != 0) return;
         if (!_ui.TryExecute(() =>
         {
             Interlocked.Exchange(ref _updateQueued, 0);
@@ -71,8 +75,8 @@ public sealed class CaptureMemoryViewModel : ViewModelBase
             ? "CaptureMemory_Preparing" : "CaptureMemory_Analyzing") : string.Empty;
         ScanCommand.NotifyCanExecuteChanged();
         DeleteCommand.NotifyCanExecuteChanged();
-        string? failure = state.FailureCode ?? (state.Activity.Activity == AnalysisActivity.ProviderUnavailable ? "provider-unavailable" :
-            state.Activity.LastRunStatus == AnalysisRunStatus.Failed ? "analysis-failed" : null);
+        string? pendingFailure = Interlocked.Exchange(ref _pendingFailure, null);
+        string? failure = GetFailure(state) ?? pendingFailure;
         if (failure != null && failure != _reportedFailure)
         {
             string key = failure switch
@@ -89,9 +93,13 @@ public sealed class CaptureMemoryViewModel : ViewModelBase
         // Starting the next queued capture is not recovery from the preceding failure.
         // Keep the notification deduplicated until work actually succeeds.
         if (failure != null) _reportedFailure = failure;
-        else if (state.Activity.Activity == AnalysisActivity.Idle && state.Activity.LastRunStatus == AnalysisRunStatus.Completed)
+        if (GetFailure(state) == null && state.Activity.Activity == AnalysisActivity.Idle &&
+            state.Activity.LastRunStatus == AnalysisRunStatus.Completed && !state.Activity.LastRunHadFailures)
             _reportedFailure = null;
     }
+    private static string? GetFailure(CaptureMemoryState state) => state.FailureCode ??
+        (state.Activity.Activity == AnalysisActivity.ProviderUnavailable ? "provider-unavailable" :
+        state.Activity.LastRunStatus == AnalysisRunStatus.Failed || state.Activity.LastRunHadFailures ? "analysis-failed" : null);
     public override void Dispose()
     {
         if (_disposed) return;

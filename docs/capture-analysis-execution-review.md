@@ -85,7 +85,11 @@ not reset data or repeatedly retry failed storage.
   15-second, mono 16-kHz PCM16 chunk at a time, at most 1 MiB per WAV. Streaming pushes
   have a bounded queue. OCR and transcript output are bounded. Scratch chunks are
   deleted in `finally`; the next extraction cleans owned interrupted WAVs and refuses
-  to accumulate eight locked leftovers.
+  to accumulate eight locked leftovers. Slice 3 hardening moves these files onto
+  the shared scratch store's leases and owner-scoped retention bound. An extraction
+  reuses one leased path; clearing temporary files preserves it until the iterator
+  completes or is disposed. Restart pruning and general stale-artifact cleanup
+  remove abandoned output without touching active leases or other owners' files.
 - Preparation and execution timeouts are central configuration. After timeout or
   cancellation, an invocation has two seconds to drain. If native code ignores
   cancellation, the attempted capture fails, its late result is discarded, and no
@@ -125,7 +129,7 @@ dotnet build CaptureTool.slnx -c Release -p:Platform=x64 --nologo -m:1
 dotnet build CaptureTool.slnx -c Release -p:Platform=ARM64 --nologo -m:1
 dotnet-coverage collect 'powershell -NoProfile -ExecutionPolicy Bypass -File .github\scripts\run-managed-tests.ps1' -s .github/coverage.runsettings -f cobertura -o artifacts/capture-analysis-execution/coverage.cobertura.xml
 dotnet publish src/CaptureTool.Presentation.Windows.WinUI/CaptureTool.Presentation.Windows.WinUI.csproj -c Release -p:Platform=x64 -r win-x64 -p:WindowsPackageType=None -p:WindowsAppSDKSelfContained=true -p:EnableMsixTooling=false -o artifacts/capture-analysis-execution/app-aot-x64 -m:1
-dotnet publish tools/CaptureTool.Analysis.Smoke/CaptureTool.Analysis.Smoke.csproj -c Release -p:Platform=ARM64 -r win-arm64 -p:PublishAot=true -p:BuildInParallel=false -p:ProduceReferenceAssembly=false -o artifacts/capture-analysis-execution/aot-arm64 -m:1
+dotnet publish tools/CaptureTool.Analysis.Smoke/CaptureTool.Analysis.Smoke.csproj -c Release -p:Platform=ARM64 -r win-arm64 -p:BuildInParallel=false -p:ProduceReferenceAssembly=false -o artifacts/capture-analysis-execution/aot-arm64 -m:1
 ```
 
 The [smoke instructions](../tools/CaptureTool.Analysis.Smoke/README.md) give the x64

@@ -14,11 +14,13 @@ public sealed class WindowsTextExtractionServiceTests
     [DataRow(true)]
     public async Task CompleteStoredResultsSkipImageDecodingAndQrScanningEvenWhenNoCodesWereFound(bool empty)
     {
-        var existing = new RecognizedTextDocument("saved", new(240, 240), [],
+        var existing = RecognizedTextDocument.FromRecognition("saved", new(240, 240), [],
             empty ? [] : [new("https://example.com", new(10, 10, 100, 100))]);
         var result = await new WindowsTextExtractionService().ExtractAsync(new(Stream.Null, existing.ImageSize, existing));
         Assert.AreEqual(TextExtractionStatus.Success, result.Status);
+        Assert.IsNotNull(result.Document);
         Assert.AreSame(existing, result.Document);
+        Assert.AreEqual(empty ? "saved" : "saved" + Environment.NewLine + "https://example.com", result.Document.Text);
     }
 
     [TestMethod]
@@ -42,7 +44,7 @@ public sealed class WindowsTextExtractionServiceTests
         var existing = new RecognizedTextDocument("saved text", new(240, 240), [new("saved text", new(10, 10, 20, 10))]);
         var result = await new WindowsTextExtractionService().ExtractAsync(new(source, new(240, 240), existing));
         Assert.AreEqual(TextExtractionStatus.Success, result.Status);
-        Assert.AreEqual(existing.Text, result.Document!.Text);
+        Assert.AreEqual(existing.Text + Environment.NewLine + "https://example.com/capture/42", result.Document!.Text);
         Assert.AreEqual(existing.Regions[0], result.Document.Regions[0]);
         Assert.HasCount(1, result.Document.QrCodes);
         Assert.AreEqual("https://example.com/capture/42", result.Document.QrCodes[0].Value);
