@@ -100,7 +100,7 @@ internal sealed class CaptureMemoryService : ICaptureMemoryService, IDisposable
                 // not waive the consent prompt for a subsequent enable request.
                 bool consentGranted = false;
                 await LockedAsync(() => { consentGranted = _authorization.IsConsentAllowed; return Task.CompletedTask; }, ct).ConfigureAwait(false);
-                if (!Current(epoch) || !consentGranted && !await _prompts.ConfirmAsync(CaptureMemoryPrompt.Consent, ct).ConfigureAwait(false)) return;
+                if (!Current(epoch) || !consentGranted && !await _prompts.ConfirmAsync(CaptureMemoryPrompt.EnableScanning, ct).ConfigureAwait(false)) return;
             }
             bool applied = false;
             await LockedAsync(async () =>

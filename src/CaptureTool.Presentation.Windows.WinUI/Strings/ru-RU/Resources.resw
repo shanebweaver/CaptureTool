@@ -1800,9 +1800,7 @@ SOFTWARE.
   <data name="AiSettings_ConsentHeader.Text" xml:space="preserve">
     <value>Разрешить локальные функции ИИ</value>
   </data>
-  <data name="AiSettings_ConsentDescription.Text" xml:space="preserve">
-    <value>Единое согласие на распознавание текста, описания, расшифровку и редактирование с ИИ.</value>
-  </data>
+  <data name="AiSettings_ConsentDescription.Text" xml:space="preserve"><value>Согласие на анализ снимков и локальное редактирование с ИИ. Отдельное извлечение текста запрашивает согласие отдельно.</value></data>
   <data name="AiSettings_ScanningHeader.Text" xml:space="preserve">
     <value>Автоматически анализировать новые записи</value>
   </data>
@@ -1940,4 +1938,29 @@ SOFTWARE.
   <data name="CaptureNaming_FileName.Text" xml:space="preserve"><value>Имя файла</value></data>
   <data name="CaptureNaming_Invalid" xml:space="preserve"><value>Введите имя в одну строку длиной от 1 до 160 символов.</value></data>
   <data name="CaptureNaming_SaveFailed" xml:space="preserve"><value>Не удалось сохранить имя или настройку именования. Повторите попытку.</value></data>
+  <data name="AiFeatureConsentDialog_TextExtractionTitle" xml:space="preserve">
+    <value>Разрешить распознавание текста?</value>
+  </data>
+  <data name="AiFeatureConsentDialog_TextExtractionContent" xml:space="preserve">
+    <value>Функция распознавания текста использует локальную модель ИИ для обнаружения текста и его расположения на текущем изображении.</value>
+  </data>
+  <data name="AiFeatureConsentDialog_AllowButton" xml:space="preserve">
+    <value>Разрешить</value>
+  </data>
+  <data name="AiFeatureConsentDialog_DontAllowButton" xml:space="preserve">
+    <value>Не разрешать</value>
+  </data>
+  <data name="AiFeatureConsentDialog_CancelButton" xml:space="preserve">
+    <value>Отмена</value>
+  </data>
+  <data name="CaptureMemory_EnableScanningTitle" xml:space="preserve"><value>Откройте больше в каждом снимке</value></data>
+  <data name="CaptureWelcome_Eyebrow.Text" xml:space="preserve"><value>ЛОКАЛЬНЫЙ ИИ</value></data>
+  <data name="CaptureWelcome_Hero.Text" xml:space="preserve"><value>Немного магии</value></data>
+  <data name="CaptureWelcome_Text.Text" xml:space="preserve"><value>Находите и копируйте слова на изображениях.</value></data>
+  <data name="CaptureWelcome_Recording.Text" xml:space="preserve"><value>Исследуйте речь и текст на экране в записях.</value></data>
+  <data name="CaptureWelcome_Names.Text" xml:space="preserve"><value>Включите понятные названия снимков в настройках.</value></data>
+  <data name="CaptureWelcome_Consent.Text" xml:space="preserve"><value>Включите автоматический анализ новых снимков и локальные инструменты ИИ. Анализ хранится защищённо на этом устройстве. Может потребоваться загрузка моделей; функции зависят от ПК. Анализ можно отключить, а его данные удалить в настройках. Отдельное извлечение текста запрашивает собственное согласие.</value></data>
+  <data name="CaptureMemory_EnableScanningAccept" xml:space="preserve"><value>Включить анализ</value></data>
+  <data name="CaptureWelcome_NotNow" xml:space="preserve"><value>Не сейчас</value></data>
+  <data name="CapturePane_EnableAnalysis.Content" xml:space="preserve"><value>Включить анализ снимков</value></data>
 </root>

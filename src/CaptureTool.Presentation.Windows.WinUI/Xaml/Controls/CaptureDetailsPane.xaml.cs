@@ -81,9 +81,10 @@ public sealed partial class CaptureDetailsPane : UserControl, INotifyPropertyCha
     private void Close_Click(object sender, RoutedEventArgs e) => CloseRequested?.Invoke(this, EventArgs.Empty);
     private void ContentTabs_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (!ReferenceEquals(sender, ContentTabs) || !ReferenceEquals(e.OriginalSource, ContentTabs)) return;
+        if (!ReferenceEquals(sender, ContentTabs) || !e.AddedItems.OfType<PivotItem>().Any(item => ReferenceEquals(item, ContentTabs.SelectedItem))) return;
         _preferredTab = ContentTabs.SelectedIndex;
         if (_preferredTab != 1) ClearLocation?.Invoke();
+        else if (ViewModel != null) _ = ViewModel.OpenTextAsync();
     }
     private void ScrollToPassage(CaptureTextPassage passage) => Passages.ScrollIntoView(passage, ScrollIntoViewAlignment.Leading);
     private void SelectionChanged(object? sender, PropertyChangedEventArgs e)

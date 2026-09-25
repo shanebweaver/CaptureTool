@@ -17,6 +17,24 @@ namespace CaptureTool.Presentation.Tests.Features;
 public sealed class CaptureDetailsTests
 {
     [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task TextTabOffersAnalysisConsentOnlyWhenNeeded(bool consent)
+    {
+        var memory = new Mock<ICaptureMemoryService>();
+        memory.SetupGet(x => x.State).Returns(new CaptureMemoryState(new(false, consent, Guid.NewGuid(), 0), true, new(false, true), new(AnalysisActivity.Idle)));
+        var onboarding = new Mock<ICaptureAnalysisOnboarding>();
+        onboarding.Setup(x => x.EnableAsync(It.IsAny<CancellationToken>())).ReturnsAsync(false);
+        var text = new Mock<ILocalizationService>();
+        text.Setup(x => x.GetString(It.IsAny<string>())).Returns<string>(key => key);
+        using var vm = new CaptureDetailsViewModel(Mock.Of<ICaptureDetailsReader>(), memory.Object, Mock.Of<IClipboardService>(),
+            text.Object, Mock.Of<ITaskEnvironment>(), onboarding: onboarding.Object);
+        onboarding.VerifyNoOtherCalls();
+        await vm.OpenTextAsync();
+        onboarding.Verify(x => x.EnableAsync(It.IsAny<CancellationToken>()), consent ? Times.Never() : Times.Once());
+    }
+
+    [TestMethod]
     public async Task DraftNameSurvivesBackgroundTitleAndUserSaveWorksWithoutConsent()
     {
         var names = new Mock<ICaptureNamingService>();

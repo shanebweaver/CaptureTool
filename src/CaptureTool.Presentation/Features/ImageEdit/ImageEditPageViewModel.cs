@@ -61,8 +61,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     private readonly IImageSuperResolutionService _imageSuperResolutionService;
     private readonly IImageSuperResolutionFeatureAvailability _imageSuperResolutionFeatureAvailability;
     private readonly ITextExtractionService _textExtractionService;
-    private readonly ICapturedImageTextReader? _capturedImageTextReader;
-    private CapturedImageTextSource? _capturedImageTextSource;
+    private readonly ITextExtractionConsentService? _textExtractionConsent;
     private readonly ITextExtractionFeatureAvailability _textExtractionFeatureAvailability;
     private readonly IImageDescriptionService _imageDescriptionService;
     private readonly IImageDescriptionFeatureAvailability _imageDescriptionFeatureAvailability;
@@ -758,7 +757,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         ITelemetryService? telemetryService = null,
         IScratchArtifactStore? scratchArtifactStore = null,
         IFileSystem? fileSystem = null,
-        ICapturedImageTextReader? capturedImageTextReader = null, ICaptureNamingService? captureNames = null)
+        ITextExtractionConsentService? textExtractionConsent = null, ICaptureNamingService? captureNames = null)
     {
         _localizationService = localizationService;
         _cancellationService = cancellationService;
@@ -769,7 +768,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         _imageSuperResolutionService = imageSuperResolutionService;
         _imageSuperResolutionFeatureAvailability = imageSuperResolutionFeatureAvailability;
         _textExtractionService = textExtractionService ?? new NullTextExtractionService();
-        _capturedImageTextReader = capturedImageTextReader;
+        _textExtractionConsent = textExtractionConsent;
         _textExtractionFeatureAvailability = textExtractionFeatureAvailability ?? new DisabledTextExtractionFeatureAvailability();
         _imageDescriptionService = imageDescriptionService ?? new NullImageDescriptionService();
         _imageDescriptionFeatureAvailability = imageDescriptionFeatureAvailability ?? new DisabledImageDescriptionFeatureAvailability();
@@ -916,8 +915,6 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
             UpdateUndoRedoStackProperties();
             await ChromaKeyTool.LoadAsync(imageFile, cancellationToken);
-            _capturedImageTextSource = _capturedImageTextReader != null && IsTextExtractionFeatureEnabled
-                ? await _capturedImageTextReader.OpenAsync(imageFile, ImageSize, cancellationToken) : null;
 
             InvalidateCanvasRequested?.Invoke(this, EventArgs.Empty);
         }
@@ -1020,7 +1017,6 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         ObjectExtractionStatusMessage = string.Empty;
         _editRevision = 0;
         _textExtractionProcessedRevision = null;
-        _capturedImageTextSource = null;
         _editHistory.Clear();
         HasUnsavedChanges = false;
         ApplyActiveMode(_modeStateMachine.Reset());
@@ -2302,7 +2298,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
     private async Task EnsureTextExtractionCurrentAsync()
     {
-        if (_textExtractionProcessedRevision == _editRevision)
+        if (_textExtractionProcessedRevision == _editRevision && _textExtractionConsent?.State == AiFeatureConsentState.Granted)
         {
             return;
         }
@@ -2331,52 +2327,37 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
         try
         {
-            RecognizedTextDocument? existing = CanReuseCapturedText() && _capturedImageTextReader != null
-                ? await _capturedImageTextReader.ReadAsync(_capturedImageTextSource!, cancellationToken) : null;
+            IsTextExtractionRunning = false;
+            bool consented = _textExtractionConsent != null && await _textExtractionConsent.EnsureConsentAsync(cancellationToken);
             cancellationToken.ThrowIfCancellationRequested();
             if (!operation.IsCurrent || processedRevision != _editRevision) return;
-            if (existing is { HasTextResults: true, HasQrCodeResults: true })
+            if (!consented)
             {
-                ApplyTextExtractionDocument(existing, processedRevision);
+                ApplyActiveMode(_modeStateMachine.Deactivate(ImageEditMode.TextExtraction));
+                TrackEditTool("text_extraction", TelemetryOutcomes.Canceled);
                 return;
             }
-            if (existing != null) ApplyTextExtractionDocument(existing, processedRevision);
-            if (existing?.HasTextResults != true)
+            IsTextExtractionRunning = true;
+            authorization = CancellationTokenSource.CreateLinkedTokenSource(operation.Token, _textExtractionConsent!.Revoked);
+            cancellationToken = authorization.Token;
+            cancellationToken.ThrowIfCancellationRequested();
+            TextExtractionReadyState readyState = _textExtractionService.GetReadyState();
+            if (readyState == TextExtractionReadyState.PreparationNeeded)
             {
-                IsTextExtractionRunning = false;
-                bool consented = await EnsureAiFeatureConsentAsync(AiFeatureId.TextExtraction, cancellationToken);
+                TextExtractionPreparationResult preparationResult = await _textExtractionService.EnsureReadyAsync(cancellationToken);
                 cancellationToken.ThrowIfCancellationRequested();
-                if (!operation.IsCurrent || processedRevision != _editRevision) return;
-                if (!consented)
+                if (preparationResult.Status != TextExtractionPreparationStatus.Success)
                 {
-                    if (existing?.QrCodes.Count is not > 0)
-                        ApplyActiveMode(_modeStateMachine.Deactivate(ImageEditMode.TextExtraction));
-                    TrackEditTool("text_extraction", TelemetryOutcomes.Canceled);
-                    return;
-                }
-                IsTextExtractionRunning = true;
-                authorization = CancellationTokenSource.CreateLinkedTokenSource(operation.Token, _aiFeatureConsentService.Revoked);
-                cancellationToken = authorization.Token;
-                cancellationToken.ThrowIfCancellationRequested();
-                TextExtractionReadyState readyState = _textExtractionService.GetReadyState();
-                if (readyState == TextExtractionReadyState.PreparationNeeded)
-                {
-                    TextExtractionPreparationResult preparationResult =
-                        await _textExtractionService.EnsureReadyAsync(cancellationToken);
-                    cancellationToken.ThrowIfCancellationRequested();
-                    if (preparationResult.Status != TextExtractionPreparationStatus.Success)
-                    {
-                        ShowTextExtractionFailure(GetPreparationFailureMessage(preparationResult));
-                        UpdateTextExtractionAvailability();
-                        return;
-                    }
-                }
-                else if (readyState != TextExtractionReadyState.Ready)
-                {
-                    ShowTextExtractionFailure(GetReadyStateFailureMessage(readyState));
+                    ShowTextExtractionFailure(GetPreparationFailureMessage(preparationResult));
                     UpdateTextExtractionAvailability();
                     return;
                 }
+            }
+            else if (readyState != TextExtractionReadyState.Ready)
+            {
+                ShowTextExtractionFailure(GetReadyStateFailureMessage(readyState));
+                UpdateTextExtractionAvailability();
+                return;
             }
 
             ImageCanvasRenderOptions options = GetImageCanvasRenderOptions();
@@ -2385,7 +2366,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
             Size renderedSize = GetRenderedImageSize(options);
             TextExtractionResult result = await _textExtractionService.ExtractAsync(
-                new TextExtractionRequest(sourceImage, renderedSize, existing),
+                new TextExtractionRequest(sourceImage, renderedSize),
                 cancellationToken);
             cancellationToken.ThrowIfCancellationRequested();
             if (!operation.IsCurrent || processedRevision != _editRevision) return;
@@ -2435,15 +2416,6 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         return options.CropRect.Width > 0 && options.CropRect.Height > 0
             ? new Size(options.CropRect.Width, options.CropRect.Height)
             : options.CanvasSize;
-    }
-
-    private bool CanReuseCapturedText()
-    {
-        if (_capturedImageTextSource == null || _editRevision != 0 || IsSuperResolutionActive ||
-            Drawables.Count != 1 || _imageDrawable?.ImageEffect?.IsEnabled == true) return false;
-        ImageCanvasRenderOptions options = GetImageCanvasRenderOptions();
-        return options.Orientation == ImageOrientation.RotateNoneFlipNone && options.CanvasSize == _capturedImageTextSource.ImageSize &&
-            (options.CropRect.IsEmpty || options.CropRect == new Rectangle(Point.Empty, options.CanvasSize));
     }
 
     private static IReadOnlyList<RecognizedTextRegion> NormalizeTextExtractionRegions(
@@ -2831,7 +2803,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         }
 
         TextExtractionReadyState readyState = _textExtractionService.GetReadyState();
-        IsTextExtractionAvailable = _capturedImageTextSource != null || readyState is
+        IsTextExtractionAvailable = readyState is
             TextExtractionReadyState.Ready or
             TextExtractionReadyState.PreparationNeeded;
     }

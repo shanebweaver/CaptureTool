@@ -24,6 +24,7 @@ public sealed class CaptureMemoryViewModel : ViewModelBase
     private int _operationRecovered;
     private int _updateQueued;
     private bool _disposed;
+    private bool _operationRequested;
 
     public bool NamingEnabled { get; private set => Set(ref field, value); }
     public bool CanSetNaming { get; private set => Set(ref field, value); }
@@ -63,6 +64,7 @@ public sealed class CaptureMemoryViewModel : ViewModelBase
     public Task RefreshAsync() => RunAsync(() => _memory.RefreshAsync());
     private async Task RunAsync(Func<Task> action)
     {
+        _operationRequested = true;
         try { await action(); }
         finally { QueueUpdate(); }
     }
@@ -98,11 +100,11 @@ public sealed class CaptureMemoryViewModel : ViewModelBase
         if (Interlocked.Exchange(ref _operationRecovered, 0) != 0) _reportedOperationFailure = null;
         string? pendingOperation = Interlocked.Exchange(ref _pendingOperationFailure, null);
         string? operationFailure = state.FailureCode ?? pendingOperation;
-        ShowFailure(operationFailure, ref _reportedOperationFailure);
-        _reportedOperationFailure = state.FailureCode;
+        if (_operationRequested || state.Policy.IsAllowed || operationFailure is "policy-save" or "capture-registration" or "cleanup-pending")
+            ShowFailure(operationFailure, ref _reportedOperationFailure);
         string? pendingFailure = Interlocked.Exchange(ref _pendingFailure, null);
         string? failure = GetAnalysisFailure(state) ?? pendingFailure;
-        if (operationFailure == null) ShowFailure(failure, ref _reportedFailure);
+        if (operationFailure == null && state.PolicyAvailable && state.Policy.IsAllowed) ShowFailure(failure, ref _reportedFailure);
         // Starting the next queued capture is not recovery from the preceding failure.
         if (GetAnalysisFailure(state) == null && state.Activity.Activity == AnalysisActivity.Idle &&
             state.Activity.LastRunStatus == AnalysisRunStatus.Completed && !state.Activity.LastRunHadFailures)

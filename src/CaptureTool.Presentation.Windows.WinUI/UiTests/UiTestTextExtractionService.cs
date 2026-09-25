@@ -24,9 +24,7 @@ internal sealed class UiTestTextExtractionService : ITextExtractionService
         CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        if (request.ExistingText == null) await Task.Delay(SimulatedInferenceDelay, cancellationToken);
-        if (request.ExistingText is { HasQrCodeResults: true } complete)
-            return TextExtractionResult.Success(complete);
+        await Task.Delay(SimulatedInferenceDelay, cancellationToken);
 
         Size sourceSize = request.SourceSize.Width > 0 && request.SourceSize.Height > 0
             ? request.SourceSize
@@ -43,9 +41,6 @@ internal sealed class UiTestTextExtractionService : ITextExtractionService
                 "https://example.com/capturetool",
                 ScaleBounds(new RectangleF(262, 40, 125, 140), sourceSize))
         ];
-
-        if (request.ExistingText is { } existing)
-            return TextExtractionResult.Success(new(existing.Text, existing.ImageSize, existing.Regions, qrCodes));
 
         return TextExtractionResult.Success(new RecognizedTextDocument(
             "OCR MODE" + Environment.NewLine +

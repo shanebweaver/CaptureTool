@@ -1794,9 +1794,7 @@ SOFTWARE.
   <data name="AiSettings_ConsentHeader.Text" xml:space="preserve">
     <value>Lokale KI-Funktionen erlauben</value>
   </data>
-  <data name="AiSettings_ConsentDescription.Text" xml:space="preserve">
-    <value>Eine Zustimmung für Texterkennung, Beschreibungen, Transkription und KI-Bearbeitung.</value>
-  </data>
+  <data name="AiSettings_ConsentDescription.Text" xml:space="preserve"><value>Zustimmung für Aufnahmeanalyse und lokale KI-Bearbeitung. Die eigenständige Texterkennung fragt separat.</value></data>
   <data name="AiSettings_ScanningHeader.Text" xml:space="preserve">
     <value>Neue Aufnahmen automatisch analysieren</value>
   </data>
@@ -1934,4 +1932,29 @@ SOFTWARE.
   <data name="CaptureNaming_FileName.Text" xml:space="preserve"><value>Dateiname</value></data>
   <data name="CaptureNaming_Invalid" xml:space="preserve"><value>Geben Sie einen einzeiligen Namen mit 1–160 Zeichen ein.</value></data>
   <data name="CaptureNaming_SaveFailed" xml:space="preserve"><value>Der Name oder die Benennungseinstellung konnte nicht gespeichert werden. Versuchen Sie es erneut.</value></data>
+  <data name="AiFeatureConsentDialog_TextExtractionTitle" xml:space="preserve">
+    <value>Texterkennung zulassen?</value>
+  </data>
+  <data name="AiFeatureConsentDialog_TextExtractionContent" xml:space="preserve">
+    <value>Die Texterkennung verwendet ein KI-Modell auf dem Gerät, um Text und Textpositionen im aktuellen Bild zu erkennen.</value>
+  </data>
+  <data name="AiFeatureConsentDialog_AllowButton" xml:space="preserve">
+    <value>Zulassen</value>
+  </data>
+  <data name="AiFeatureConsentDialog_DontAllowButton" xml:space="preserve">
+    <value>Nicht zulassen</value>
+  </data>
+  <data name="AiFeatureConsentDialog_CancelButton" xml:space="preserve">
+    <value>Abbrechen</value>
+  </data>
+  <data name="CaptureMemory_EnableScanningTitle" xml:space="preserve"><value>Mehr aus jeder Aufnahme machen</value></data>
+  <data name="CaptureWelcome_Eyebrow.Text" xml:space="preserve"><value>LOKALE KI</value></data>
+  <data name="CaptureWelcome_Hero.Text" xml:space="preserve"><value>Ein wenig Aufnahmemagie</value></data>
+  <data name="CaptureWelcome_Text.Text" xml:space="preserve"><value>Wörter in Bildern finden und kopieren.</value></data>
+  <data name="CaptureWelcome_Recording.Text" xml:space="preserve"><value>Sprache und Bildschirmtext in Aufnahmen erkunden.</value></data>
+  <data name="CaptureWelcome_Names.Text" xml:space="preserve"><value>Aussagekräftige Aufnahmenamen in den Einstellungen aktivieren.</value></data>
+  <data name="CaptureWelcome_Consent.Text" xml:space="preserve"><value>Automatische Analyse neuer Aufnahmen und lokale KI-Werkzeuge aktivieren. Analysen bleiben geschützt auf diesem Gerät. Modelle müssen eventuell heruntergeladen werden; verfügbare Funktionen hängen vom PC ab. Analyse und gespeicherte Daten lassen sich in den Einstellungen deaktivieren bzw. löschen. Die eigenständige Texterkennung fragt separat nach Zustimmung.</value></data>
+  <data name="CaptureMemory_EnableScanningAccept" xml:space="preserve"><value>Analyse aktivieren</value></data>
+  <data name="CaptureWelcome_NotNow" xml:space="preserve"><value>Nicht jetzt</value></data>
+  <data name="CapturePane_EnableAnalysis.Content" xml:space="preserve"><value>Aufnahmeanalyse aktivieren</value></data>
 </root>

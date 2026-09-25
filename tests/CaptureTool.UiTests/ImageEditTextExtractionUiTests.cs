@@ -77,7 +77,7 @@ public sealed partial class ImageEditTextExtractionUiTests
             WaitForElement(
                 mainWindow,
                 automation,
-                "CaptureMemoryConsentDialog",
+                "AiFeatureConsentDialog",
                 InteractionTimeout);
             AutomationElement allowButton = WaitForElementByName(
                 mainWindow,
@@ -85,7 +85,7 @@ public sealed partial class ImageEditTextExtractionUiTests
                 "Allow",
                 InteractionTimeout);
             allowButton.Click();
-            WaitForElementRemoved(mainWindow, automation, "CaptureMemoryConsentDialog", InteractionTimeout);
+            WaitForElementRemoved(mainWindow, automation, "AiFeatureConsentDialog", InteractionTimeout);
 
             WaitForElement(
                 mainWindow,
@@ -202,7 +202,7 @@ public sealed partial class ImageEditTextExtractionUiTests
         string appDataDirectory,
         string appTempDirectory,
         string? language = null,
-        bool detailsFixture = false, bool captureFixture = false)
+        bool detailsFixture = false, bool captureFixture = false, bool onboarding = false)
     {
         string[] appArguments = [
             "--capturetool-ui-test",
@@ -224,6 +224,7 @@ public sealed partial class ImageEditTextExtractionUiTests
         {
             startInfo.ArgumentList.Add(argument);
         }
+        if (onboarding) startInfo.ArgumentList.Add("--ui-test-onboarding");
         if (detailsFixture) startInfo.ArgumentList.Add("--ui-test-details");
         if (captureFixture) startInfo.ArgumentList.Add("--ui-test-capture");
         if (language != null)

@@ -31,7 +31,7 @@ public sealed partial class ImageEditTextExtractionUiTests
             Settings();
             Assert.IsFalse(Element("CaptureNamingToggle").IsEnabled);
             Element("CaptureMemoryScanning").Patterns.Toggle.Pattern.Toggle();
-            Confirm("Consent", "CaptureMemory_ConsentAccept");
+            Confirm("EnableScanning", "CaptureMemory_EnableScanningAccept");
             Confirm("ScanExisting", "CaptureMemory_ScanExistingAccept");
             WaitFor(() => Element("CaptureNamingToggle").IsEnabled ? window : null, InteractionTimeout, "naming enabled by scanning consent");
             Element("CaptureNamingToggle").Patterns.Toggle.Pattern.Toggle();

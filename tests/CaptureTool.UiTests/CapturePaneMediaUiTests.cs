@@ -64,7 +64,7 @@ public sealed partial class ImageEditTextExtractionUiTests
         window.CaptureToFile(Path.Combine(artifacts, "local-details.png"));
         Menu("AppMenu_SettingsItem");
         Element("CaptureMemoryScanning").Patterns.Toggle.Pattern.Toggle();
-        Confirm("Consent", "Allow");
+        Confirm("EnableScanning", "Enable scanning");
         // Read exact localized dialog labels from the resources rather than depending on the capture fixture.
         var resources = System.Xml.Linq.XDocument.Load(Path.Combine(repo, "src", "CaptureTool.Presentation.Windows.WinUI", "Strings", "en-US", "Resources.resw"))
             .Root!.Elements("data").ToDictionary(item => (string)item.Attribute("name")!, item => item.Element("value")!.Value);

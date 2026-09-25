@@ -52,6 +52,8 @@ public sealed partial class MainWindow : Window
     private bool _closeConfirmationInProgress;
     private bool _isShown;
     private bool _uiTestLaunchNavigationHandled;
+    private CancellationTokenSource? _startupPrompts;
+    private bool _requestingStartupPrompts;
 
     public MainWindow()
     {
@@ -109,7 +111,7 @@ public sealed partial class MainWindow : Window
 
         if (_isShown)
         {
-            RequestTelemetryConsentIfNeeded();
+            RequestStartupPromptsIfNeeded();
         }
     }
 
@@ -132,13 +134,14 @@ public sealed partial class MainWindow : Window
 
         if (RootGrid.XamlRoot is not null)
         {
-            RequestTelemetryConsentIfNeeded();
+            RequestStartupPromptsIfNeeded();
         }
     }
 
     internal void NotifyHidden()
     {
         _isShown = false;
+        _startupPrompts?.Cancel();
         _mainWindowActivationService.SetActive(false);
         _telemetryConsentDialogService.SuppressPrompt();
 
@@ -148,21 +151,22 @@ public sealed partial class MainWindow : Window
         }
     }
 
-    private async void RequestTelemetryConsentIfNeeded()
+    private async void RequestStartupPromptsIfNeeded()
     {
-        if (UiTestLaunchOptions.Current.IsEnabled)
-        {
-            return;
-        }
-
+        if (_requestingStartupPrompts || (UiTestLaunchOptions.Current.IsEnabled && !UiTestLaunchOptions.Onboarding)) return;
+        _requestingStartupPrompts = true;
+        using var lifetime = new CancellationTokenSource();
+        _startupPrompts = lifetime;
         try
         {
-            await _telemetryConsentDialogService.RequestConsentIfNeededAsync();
+            await App.Current.ServiceProvider.GetService<CaptureTool.Application.Abstractions.Analysis.ICaptureAnalysisOnboarding>()
+                .ShowOnFirstLaunchAsync(lifetime.Token);
+            if (_isShown && !UiTestLaunchOptions.Current.IsEnabled)
+                await _telemetryConsentDialogService.RequestConsentIfNeededAsync(lifetime.Token);
         }
-        catch (Exception ex)
-        {
-            _logService.LogException(ex, "Failed to request telemetry consent.");
-        }
+        catch (OperationCanceledException) when (lifetime.IsCancellationRequested) { }
+        catch (Exception ex) { _logService.LogException(ex, "Failed to request startup consent."); }
+        finally { _startupPrompts = null; _requestingStartupPrompts = false; }
     }
 
     private void NavigateToUiTestImageWhenRequested()
@@ -376,6 +380,7 @@ public sealed partial class MainWindow : Window
 
     private void OnClosed(object sender, WindowEventArgs args)
     {
+        _startupPrompts?.Cancel();
         _mainWindowActivationService.SetActive(false);
         Activated -= OnActivated;
         Activated -= OnActivationStateChanged;

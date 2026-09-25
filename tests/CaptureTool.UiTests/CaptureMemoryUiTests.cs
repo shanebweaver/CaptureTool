@@ -79,7 +79,7 @@ public sealed partial class ImageEditTextExtractionUiTests
                 if (element.AutomationId == "CaptureMemoryProgress") Interlocked.Increment(ref progressAnnouncements);
             });
         toggle.Patterns.Toggle.Pattern.Toggle();
-        Confirm("Consent", "CaptureMemory_ConsentAccept");
+        Confirm("EnableScanning", "CaptureMemory_EnableScanningAccept");
         Confirm("ScanExisting", "CaptureMemory_ScanExistingAccept");
         AutomationElement progress = Element("CaptureMemoryProgress");
         Assert.IsFalse(progress.IsOffscreen, "Analysis progress should be visible in the shell.");
@@ -120,7 +120,7 @@ public sealed partial class ImageEditTextExtractionUiTests
         Assert.IsFalse(scan.IsEnabled);
         Assert.IsFalse(delete.IsEnabled);
         toggle.Patterns.Toggle.Pattern.Toggle();
-        Confirm("Consent", "CaptureMemory_Cancel");
+        Confirm("EnableScanning", "CaptureWelcome_NotNow");
         WaitFor(() => toggle.Patterns.Toggle.Pattern.ToggleState.Value == ToggleState.Off ? toggle : null,
             InteractionTimeout, "cancelled enable restores off state");
         consent.Focus();

@@ -11,23 +11,7 @@ namespace CaptureTool.Infrastructure.Edit.Windows.Tests;
 public sealed class WindowsTextExtractionServiceTests
 {
     [TestMethod]
-    [DataRow(false)]
-    [DataRow(true)]
-    public async Task CompleteStoredResultsSkipImageDecodingAndQrScanningEvenWhenNoCodesWereFound(bool empty)
-    {
-        var existing = RecognizedTextDocument.FromRecognition("saved", new(240, 240), [],
-            empty ? [] : [new("https://example.com", new(10, 10, 100, 100))]);
-        var result = await new WindowsTextExtractionService(new RecognizedTextDocumentBuilder()).ExtractAsync(new(Stream.Null, existing.ImageSize, existing));
-        Assert.AreEqual(TextExtractionStatus.Success, result.Status);
-        Assert.IsNotNull(result.Document);
-        Assert.AreSame(existing, result.Document);
-        Assert.AreEqual(empty ? "saved" : "saved" + Environment.NewLine + "https://example.com", result.Document.Text);
-    }
-
-    [TestMethod]
-    [DataRow(false)]
-    [DataRow(true)]
-    public async Task ExistingOcrKeepsNearbyTextAndExcludesQrGlyphsWhenDetectingMissingQrCodes(bool overlaps)
+    public async Task StandaloneExtractionReadsCurrentImageTextAndQrWithoutMetadata()
     {
         var writer = new ZXing.BarcodeWriterPixelData
         {
@@ -35,23 +19,27 @@ public sealed class WindowsTextExtractionServiceTests
             Options = new ZXing.Common.EncodingOptions { Width = 240, Height = 240, Margin = 4 }
         };
         var pixels = writer.Write("https://example.com/capture/42");
-        using var encoded = new global::Windows.Storage.Streams.InMemoryRandomAccessStream();
-        var encoder = await global::Windows.Graphics.Imaging.BitmapEncoder.CreateAsync(global::Windows.Graphics.Imaging.BitmapEncoder.PngEncoderId, encoded);
-        encoder.SetPixelData(global::Windows.Graphics.Imaging.BitmapPixelFormat.Bgra8, global::Windows.Graphics.Imaging.BitmapAlphaMode.Ignore,
-            (uint)pixels.Width, (uint)pixels.Height, 96, 96, pixels.Pixels);
-        await encoder.FlushAsync();
-        encoded.Seek(0);
+        using var image = new Bitmap(800, 300);
+        using (var graphics = Graphics.FromImage(image))
+        using (var font = new Font("Arial", 30))
+        {
+            graphics.Clear(Color.White);
+            graphics.DrawString("CAPTURE TOOL", font, Brushes.Black, 15, 80);
+            for (int y = 0; y < pixels.Height; y++)
+                for (int x = 0; x < pixels.Width; x++)
+                    image.SetPixel(x + 530, y + 20, pixels.Pixels[(y * pixels.Width + x) * 4] == 0 ? Color.Black : Color.White);
+        }
         using var source = new MemoryStream();
-        using (var encodedStream = encoded.AsStreamForRead()) await encodedStream.CopyToAsync(source);
+        image.Save(source, System.Drawing.Imaging.ImageFormat.Png);
         source.Position = 0;
-        var existing = new RecognizedTextDocument("saved text", new(240, 240), [new("saved text", overlaps ? new(100, 100, 20, 10) : new(0, 0, 5, 5))]);
-        var result = await new WindowsTextExtractionService(new RecognizedTextDocumentBuilder()).ExtractAsync(new(source, new(240, 240), existing));
+        var service = new WindowsTextExtractionService(new RecognizedTextDocumentBuilder());
+        var result = await service.ExtractAsync(new(source, new(800, 300)));
         Assert.AreEqual(TextExtractionStatus.Success, result.Status);
-        Assert.AreEqual((overlaps ? "" : existing.Text + Environment.NewLine) + "https://example.com/capture/42", result.Document!.Text);
-        Assert.HasCount(overlaps ? 0 : 1, result.Document.Regions);
-        if (!overlaps) Assert.AreEqual(existing.Regions[0], result.Document.Regions[0]);
+        Assert.IsNotNull(result.Document);
         Assert.HasCount(1, result.Document.QrCodes);
         Assert.AreEqual("https://example.com/capture/42", result.Document.QrCodes[0].Value);
+        if (global::Windows.Media.Ocr.OcrEngine.TryCreateFromUserProfileLanguages() != null)
+            StringAssert.Contains(result.Document.Text, "CAPTURE");
     }
 
     [TestMethod]

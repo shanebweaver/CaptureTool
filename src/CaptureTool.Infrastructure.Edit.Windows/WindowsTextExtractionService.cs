@@ -77,25 +77,14 @@ public sealed class WindowsTextExtractionService(IRecognizedTextDocumentBuilder 
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        if (request.ExistingText is { HasTextResults: true, HasQrCodeResults: true } complete)
-            return TextExtractionResult.Success(complete);
-
         try
         {
             using SoftwareBitmap sourceBitmap = await LoadSoftwareBitmapAsync(request.SourceImage);
 
             cancellationToken.ThrowIfCancellationRequested();
 
-            IReadOnlyList<RecognizedQrCodeRegion> qrCodes = request.ExistingText is { HasQrCodeResults: true } saved
-                ? saved.QrCodes : QrCodeDetector.Detect(sourceBitmap);
+            IReadOnlyList<RecognizedQrCodeRegion> qrCodes = QrCodeDetector.Detect(sourceBitmap);
             cancellationToken.ThrowIfCancellationRequested();
-
-            // Reuse canonical OCR while retaining the existing QR-code feature.
-            // This path never probes, prepares, or invokes an OCR model.
-            if (request.ExistingText is { HasTextResults: true } existing)
-                return TextExtractionResult.Success(documents.Build(existing.ImageSize,
-                    existing.Regions.Count == 0 && !string.IsNullOrWhiteSpace(existing.Text)
-                        ? [new(existing.Text, RectangleF.Empty)] : existing.Regions, qrCodes));
 
             TextExtractionResult? aiResult = await TryExtractWithWindowsAiAsync(
                 sourceBitmap,

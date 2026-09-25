@@ -22,7 +22,7 @@ An image user finds and copies text from the capture. An audio/video user finds 
 
 Project normalized payloads into source passages with stable identifiers, original text, optional time and optional image bounds. Retain source positions through grouping and search. Never fabricate a timestamp or region from a summary or description.
 
-Share matching, filtering and copy-scope behavior across editors. Keep media playback and image-canvas operations in their existing editor owners behind explicit navigation requests. Reuse existing OCR results and preserve the current ad-hoc OCR fallback; do not run duplicate inference merely to populate the pane.
+Share matching, filtering and copy-scope behavior across editors. Keep media playback and image-canvas operations in their existing editor owners behind explicit navigation requests. The pane reads stored OCR from capture analysis. Per the subsequent onboarding review, the standalone image-toolbar Text Extraction tool uses its own consent and feature flag and scans the current editor image independently; it does not read or populate pipeline metadata. See [onboarding and OCR separation](capture-onboarding-review.md).
 
 Source verification, metadata deletion and view cancellation continue to gate results. Refreshes should not recreate unchanged passage objects or cause repeated whole-file verification for each progress fraction.
 

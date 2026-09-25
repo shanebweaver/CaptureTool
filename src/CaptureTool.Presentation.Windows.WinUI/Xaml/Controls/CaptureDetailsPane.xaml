@@ -89,6 +89,9 @@
                 <Grid RowSpacing="8">
                     <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
                     <StackPanel Spacing="8">
+                        <Button x:Uid="CapturePane_EnableAnalysis" AutomationProperties.AutomationId="CapturePane_EnableAnalysis"
+                                Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.CanEnableAnalysis), Mode=OneWay}"
+                                Command="{x:Bind ViewModel.EnableAnalysisCommand, Mode=OneWay}" />
                         <TextBox x:Uid="CapturePane_Search" AutomationProperties.AutomationId="CapturePane_Search" MaxLength="256"
                                  Text="{x:Bind ViewModel.TextContent.Query, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                         <ComboBox x:Uid="CapturePane_SourceFilter" HorizontalAlignment="Stretch"

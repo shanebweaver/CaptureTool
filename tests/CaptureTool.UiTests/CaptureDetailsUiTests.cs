@@ -59,7 +59,7 @@ public sealed partial class ImageEditTextExtractionUiTests
 
         OpenSettings();
         Element("CaptureMemoryScanning").Patterns.Toggle.Pattern.Toggle();
-        Confirm("Consent", "CaptureMemory_ConsentAccept");
+        Confirm("EnableScanning", "CaptureMemory_EnableScanningAccept");
         Confirm("ScanExisting", "CaptureMemory_ScanExistingAccept");
         GoHome();
         OpenCapture();

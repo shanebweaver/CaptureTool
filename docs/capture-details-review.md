@@ -10,7 +10,7 @@ Branch: `codex/capture-details`, based on `codex/capture-analysis-core`.
 4. Use the pencil beside the capture name to give it your own name. This works without AI. A draft is not replaced by background completion, and a saved user name wins over automatic naming.
 5. Delete capture analysis in Settings. Saved names and ordinary local file details remain. Physical files retain their existing names throughout these workflows.
 
-The Home Details dialog has been removed. This work adds no new Home cards or search experience. Existing ad-hoc OCR remains available in the image toolbar.
+The Home Details dialog has been removed. This work adds no new Home cards or search experience. Existing ad-hoc OCR remains available in the image toolbar with its own consent and feature flag, independently of analysis metadata. See [onboarding and OCR separation](capture-onboarding-review.md) for the revised consent flows.
 
 ## Boundaries
 

@@ -14,7 +14,7 @@ public interface ICaptureMemoryPolicyStore
     Task SaveAsync(CaptureMemoryPolicy policy, CancellationToken cancellationToken);
 }
 
-public enum CaptureMemoryPrompt { Consent, ScanExisting, DeleteMetadata }
+public enum CaptureMemoryPrompt { Consent, ScanExisting, DeleteMetadata, EnableScanning }
 public interface ICaptureMemoryPrompts
 {
     Task<bool> ConfirmAsync(CaptureMemoryPrompt prompt, CancellationToken cancellationToken);

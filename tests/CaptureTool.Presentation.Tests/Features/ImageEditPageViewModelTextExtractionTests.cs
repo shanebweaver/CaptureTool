@@ -29,162 +29,38 @@ namespace CaptureTool.Presentation.Tests.Features;
 public sealed class ImageEditPageViewModelTextExtractionTests
 {
     [TestMethod]
-    [DataRow(false)]
-    [DataRow(true)]
-    public async Task SavedOcrBypassesConsentAndModelPreparationIncludingEmptyResults(bool empty)
+    public async Task StandaloneOcrDoesNotAskCaptureAnalysisForConsent()
     {
-        var cached = new RecognizedTextDocument(empty ? "" : "saved text", new(100, 50), []);
-        var reader = CreateMetadataReader(cached);
-        var consent = new Mock<IAiFeatureConsentService>(MockBehavior.Strict);
-        consent.Setup(x => x.GetConsentState(It.IsAny<AiFeatureId>())).Returns(AiFeatureConsentState.Denied);
-        var extraction = new Mock<ITextExtractionService>();
-        extraction.Setup(x => x.GetReadyState()).Returns(TextExtractionReadyState.NotSupported);
-        extraction.Setup(x => x.ExtractAsync(It.Is<TextExtractionRequest>(r => r.ExistingText == cached), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(TextExtractionResult.Success(cached));
-        var exporter = CreateExporter();
-        using var vm = CreateViewModel(imageCanvasExporter: exporter.Object, textExtractionService: extraction.Object,
-            aiFeatureConsentService: consent.Object, capturedImageTextReader: reader.Object);
-        await vm.LoadAsync(new ImageFile("original.png"), CancellationToken.None);
-        vm.CanToggleTextExtraction.Should().BeTrue();
-        await vm.ToggleTextExtractionModeCommand.ExecuteAsync(null);
-        vm.TextExtractionTool.Text.Should().Be(cached.Text);
-        vm.IsTextExtractionModeActive.Should().BeTrue();
-        extraction.Verify(x => x.EnsureReadyAsync(It.IsAny<CancellationToken>()), Times.Never);
-        extraction.Verify(x => x.ExtractAsync(It.Is<TextExtractionRequest>(r => r.ExistingText == cached), It.IsAny<CancellationToken>()), Times.Once);
-        consent.Verify(x => x.EnsureConsentAsync(It.IsAny<CancellationToken>()), Times.Never);
-    }
-
-    [TestMethod]
-    public async Task CompleteStoredResultsSkipRenderingAndUnknownBoundsStayCopyOnly()
-    {
-        var cached = new RecognizedTextDocument("copy only", new(100, 50), [new("copy only", RectangleF.Empty)], []);
-        var extraction = new Mock<ITextExtractionService>();
-        var exporter = CreateExporter();
-        using var vm = CreateViewModel(imageCanvasExporter: exporter.Object, textExtractionService: extraction.Object,
-            capturedImageTextReader: CreateMetadataReader(cached).Object);
-        await vm.LoadAsync(new ImageFile("original.png"), CancellationToken.None);
-        await vm.ToggleTextExtractionModeCommand.ExecuteAsync(null);
-        vm.TextExtractionTool.Text.Should().Be("copy only");
-        vm.TextExtractionRegions.Should().BeEmpty();
-        exporter.Verify(x => x.RenderToStreamAsync(It.IsAny<IDrawable[]>(), It.IsAny<ImageCanvasRenderOptions>()), Times.Never);
-        extraction.Verify(x => x.ExtractAsync(It.IsAny<TextExtractionRequest>(), It.IsAny<CancellationToken>()), Times.Never);
-    }
-
-    [TestMethod]
-    [DataRow("declined")]
-    [DataRow("unsupported")]
-    [DataRow("preparation")]
-    [DataRow("failed")]
-    [DataRow("exception")]
-    public async Task SavedQrSurvivesUnavailableOcrAndMissingOcrCanBeRetried(string reason)
-    {
-        var cached = RecognizedTextDocument.FromRecognition("", new(100, 50), [], [new("decoded", new(10, 10, 20, 20))], false);
-        var consent = new Mock<IAiFeatureConsentService>();
-        consent.Setup(x => x.EnsureConsentAsync(It.IsAny<CancellationToken>())).ReturnsAsync(reason != "declined");
-        var extraction = new Mock<ITextExtractionService>();
-        extraction.Setup(x => x.GetReadyState()).Returns(reason switch
-        {
-            "unsupported" => TextExtractionReadyState.NotSupported,
-            "preparation" => TextExtractionReadyState.PreparationNeeded,
-            _ => TextExtractionReadyState.Ready
-        });
-        extraction.Setup(x => x.EnsureReadyAsync(It.IsAny<CancellationToken>())).ReturnsAsync(TextExtractionPreparationResult.NotSupported);
-        var request = extraction.Setup(x => x.ExtractAsync(It.Is<TextExtractionRequest>(r => r.ExistingText == cached), It.IsAny<CancellationToken>()));
-        if (reason == "exception") request.ThrowsAsync(new IOException());
-        else request.ReturnsAsync(TextExtractionResult.Failed("unavailable"));
-        using var vm = CreateViewModel(imageCanvasExporter: CreateExporter().Object, textExtractionService: extraction.Object,
-            aiFeatureConsentService: consent.Object, capturedImageTextReader: CreateMetadataReader(cached).Object);
-        await vm.LoadAsync(new ImageFile("original.png"), CancellationToken.None);
-        await vm.ToggleTextExtractionModeCommand.ExecuteAsync(null);
-        vm.TextExtractionTool.Text.Should().Be("decoded");
-        vm.TextExtractionQrCodes.Should().ContainSingle();
-        vm.IsTextExtractionModeActive.Should().BeTrue();
-        await vm.ToggleTextExtractionModeCommand.ExecuteAsync(null);
-        await vm.ToggleTextExtractionModeCommand.ExecuteAsync(null);
-        consent.Verify(x => x.EnsureConsentAsync(It.IsAny<CancellationToken>()), Times.Exactly(2));
-        vm.TextExtractionTool.Text.Should().Be("decoded");
-    }
-
-    [TestMethod]
-    [DataRow(false)]
-    [DataRow(true)]
-    public async Task SavedQrIsRetainedDuringOcrAndLateResultCannotReplaceItAfterRevocation(bool revoke)
-    {
-        var cached = RecognizedTextDocument.FromRecognition("", new(100, 50), [], [new("decoded", new(10, 10, 20, 20))], false);
-        using var revoked = new CancellationTokenSource();
-        var consent = new Mock<IAiFeatureConsentService>();
-        consent.Setup(x => x.GetConsentState(It.IsAny<AiFeatureId>())).Returns(AiFeatureConsentState.Granted);
-        consent.SetupGet(x => x.Revoked).Returns(revoked.Token);
-        var extraction = new Mock<ITextExtractionService>();
-        extraction.Setup(x => x.GetReadyState()).Returns(TextExtractionReadyState.Ready);
-        var pending = new TaskCompletionSource<TextExtractionResult>();
-        extraction.Setup(x => x.ExtractAsync(It.Is<TextExtractionRequest>(r => r.ExistingText == cached), It.IsAny<CancellationToken>())).Returns(pending.Task);
-        using var vm = CreateViewModel(imageCanvasExporter: CreateExporter().Object, textExtractionService: extraction.Object,
-            aiFeatureConsentService: consent.Object, capturedImageTextReader: CreateMetadataReader(cached).Object);
-        await vm.LoadAsync(new ImageFile("original.png"), CancellationToken.None);
-        var operation = vm.ToggleTextExtractionModeCommand.ExecuteAsync(null);
-        vm.TextExtractionTool.Text.Should().Be("decoded");
-        if (revoke) await revoked.CancelAsync();
-        pending.SetResult(TextExtractionResult.Success(RecognizedTextDocument.FromRecognition("fresh", cached.ImageSize,
-            [new("fresh", new(50, 10, 20, 10))], cached.QrCodes)));
-        await operation;
-        vm.TextExtractionTool.Text.Should().Be(revoke ? "decoded" : "fresh" + Environment.NewLine + "decoded");
-        vm.TextExtractionQrCodes.Should().ContainSingle();
-    }
-
-    [TestMethod]
-    [DataRow(false)]
-    [DataRow(true)]
-    public async Task MissingMetadataOrEditedImageUsesConsentedAdHocOcr(bool edited)
-    {
-        var cached = new RecognizedTextDocument("stale", new(100, 50), []);
-        var reader = CreateMetadataReader(edited ? cached : null);
-        var consent = new Mock<IAiFeatureConsentService>();
+        var shared = new Mock<IAiFeatureConsentService>(MockBehavior.Strict);
+        var consent = new Mock<ITextExtractionConsentService>();
         consent.Setup(x => x.EnsureConsentAsync(It.IsAny<CancellationToken>())).ReturnsAsync(true);
         var extraction = new Mock<ITextExtractionService>();
         extraction.Setup(x => x.GetReadyState()).Returns(TextExtractionReadyState.Ready);
-        extraction.Setup(x => x.ExtractAsync(It.Is<TextExtractionRequest>(r => r.ExistingText == null), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(TextExtractionResult.Success(new("fresh", new(100, 50), [])));
+        extraction.Setup(x => x.ExtractAsync(It.IsAny<TextExtractionRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(TextExtractionResult.Success(new("fresh OCR", new(100, 50), [])));
         using var vm = CreateViewModel(imageCanvasExporter: CreateExporter().Object, textExtractionService: extraction.Object,
-            aiFeatureConsentService: consent.Object, capturedImageTextReader: reader.Object);
-        await vm.LoadAsync(new ImageFile("original.png"), CancellationToken.None);
-        if (edited) vm.RotateCommand.Execute(null);
+            textExtractionConsent: consent.Object, sharedConsent: shared.Object);
+        await vm.LoadAsync(new ImageFile("new-capture.png"), CancellationToken.None);
         await vm.ToggleTextExtractionModeCommand.ExecuteAsync(null);
-        vm.TextExtractionTool.Text.Should().Be("fresh");
+        Assert.AreEqual("fresh OCR", vm.TextExtractionTool.Text);
+        shared.VerifyNoOtherCalls();
         consent.Verify(x => x.EnsureConsentAsync(It.IsAny<CancellationToken>()), Times.Once);
-        reader.Verify(x => x.ReadAsync(It.IsAny<CapturedImageTextSource>(), It.IsAny<CancellationToken>()), edited ? Times.Never() : Times.Once());
-    }
-
-    [TestMethod]
-    public async Task EditWhileMetadataIsLoadingDiscardsTheLateResult()
-    {
-        var reader = CreateMetadataReader(null);
-        var pending = new TaskCompletionSource<RecognizedTextDocument?>();
-        reader.Setup(x => x.ReadAsync(It.IsAny<CapturedImageTextSource>(), It.IsAny<CancellationToken>())).Returns(pending.Task);
-        var extraction = new Mock<ITextExtractionService>();
-        using var vm = CreateViewModel(capturedImageTextReader: reader.Object, textExtractionService: extraction.Object);
-        await vm.LoadAsync(new ImageFile("original.png"), CancellationToken.None);
-        var operation = vm.ToggleTextExtractionModeCommand.ExecuteAsync(null);
-        vm.RotateCommand.Execute(null);
-        pending.SetResult(new("stale", new(100, 50), []));
-        await operation;
-        vm.TextExtractionTool.Text.Should().BeEmpty();
-        extraction.Verify(x => x.ExtractAsync(It.IsAny<TextExtractionRequest>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [TestMethod]
     public async Task RevokingConsentDuringAdHocOcrDiscardsEvenANonCooperativeProviderResult()
     {
         using var revoked = new CancellationTokenSource();
-        var consent = new Mock<IAiFeatureConsentService>();
-        consent.Setup(x => x.GetConsentState(It.IsAny<AiFeatureId>())).Returns(AiFeatureConsentState.Granted);
+        var consent = new Mock<ITextExtractionConsentService>();
+        consent.SetupGet(x => x.State).Returns(AiFeatureConsentState.Granted);
+        consent.Setup(x => x.EnsureConsentAsync(It.IsAny<CancellationToken>())).ReturnsAsync(true);
         consent.SetupGet(x => x.Revoked).Returns(revoked.Token);
         var extraction = new Mock<ITextExtractionService>();
         extraction.Setup(x => x.GetReadyState()).Returns(TextExtractionReadyState.Ready);
         var pending = new TaskCompletionSource<TextExtractionResult>();
         extraction.Setup(x => x.ExtractAsync(It.IsAny<TextExtractionRequest>(), It.IsAny<CancellationToken>())).Returns(pending.Task);
         using var vm = CreateViewModel(imageCanvasExporter: CreateExporter().Object, textExtractionService: extraction.Object,
-            aiFeatureConsentService: consent.Object);
+            textExtractionConsent: consent.Object);
         await vm.LoadAsync(new ImageFile("original.png"), CancellationToken.None);
         var operation = vm.ToggleTextExtractionModeCommand.ExecuteAsync(null);
         await revoked.CancelAsync();
@@ -192,15 +68,6 @@ public sealed class ImageEditPageViewModelTextExtractionTests
         await operation;
         vm.TextExtractionTool.Text.Should().BeEmpty();
         vm.IsTextExtractionRunning.Should().BeFalse();
-    }
-
-    private static Mock<ICapturedImageTextReader> CreateMetadataReader(RecognizedTextDocument? cached)
-    {
-        var reader = new Mock<ICapturedImageTextReader>();
-        reader.Setup(x => x.OpenAsync(It.IsAny<ImageFile>(), It.IsAny<Size>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new CapturedImageTextSource("original.png", null, new(new string('a', 64)), new(100, 50)));
-        reader.Setup(x => x.ReadAsync(It.IsAny<CapturedImageTextSource>(), It.IsAny<CancellationToken>())).ReturnsAsync(cached);
-        return reader;
     }
 
     private static Mock<IImageCanvasExporter> CreateExporter()
@@ -231,25 +98,22 @@ public sealed class ImageEditPageViewModelTextExtractionTests
     public async Task ToggleTextExtractionMode_WhenFirstUseConsentDenied_ShouldPersistDenialAndNotExtract()
     {
         AiFeatureConsentState consentState = AiFeatureConsentState.Unknown;
-        var consent = new Mock<IAiFeatureConsentService>();
+        var consent = new Mock<ITextExtractionConsentService>();
         var textExtraction = new Mock<ITextExtractionService>();
 
         consent
-            .Setup(service => service.GetConsentState(AiFeatureId.TextExtraction))
+            .SetupGet(service => service.State)
             .Returns(() => consentState);
         consent
             .Setup(service => service.EnsureConsentAsync(It.IsAny<CancellationToken>()))
             .Callback(() => consentState = AiFeatureConsentState.Denied)
             .ReturnsAsync(false);
-        consent
-            .Setup(service => service.GetConsentState(AiFeatureId.ImageSuperResolution))
-            .Returns(AiFeatureConsentState.Granted);
         textExtraction
             .Setup(service => service.GetReadyState())
             .Returns(TextExtractionReadyState.Ready);
 
         ImageEditPageViewModel viewModel = CreateViewModel(
-            aiFeatureConsentService: consent.Object,
+            textExtractionConsent: consent.Object,
             textExtractionService: textExtraction.Object);
 
         await viewModel.LoadAsync(new ImageFile("original.png"), CancellationToken.None);
@@ -270,20 +134,17 @@ public sealed class ImageEditPageViewModelTextExtractionTests
     public async Task ToggleTextExtractionMode_WhenConsentWasDenied_ShouldPromptAgainAndExtractWhenAccepted()
     {
         AiFeatureConsentState consentState = AiFeatureConsentState.Denied;
-        var consent = new Mock<IAiFeatureConsentService>();
+        var consent = new Mock<ITextExtractionConsentService>();
         var exporter = new Mock<IImageCanvasExporter>();
         var textExtraction = new Mock<ITextExtractionService>();
 
         consent
-            .Setup(service => service.GetConsentState(AiFeatureId.TextExtraction))
+            .SetupGet(service => service.State)
             .Returns(() => consentState);
         consent
             .Setup(service => service.EnsureConsentAsync(It.IsAny<CancellationToken>()))
             .Callback(() => consentState = AiFeatureConsentState.Granted)
             .ReturnsAsync(true);
-        consent
-            .Setup(service => service.GetConsentState(AiFeatureId.ImageSuperResolution))
-            .Returns(AiFeatureConsentState.Granted);
         exporter
             .Setup(service => service.RenderToStreamAsync(
                 It.IsAny<IDrawable[]>(),
@@ -303,7 +164,7 @@ public sealed class ImageEditPageViewModelTextExtractionTests
 
         ImageEditPageViewModel viewModel = CreateViewModel(
             imageCanvasExporter: exporter.Object,
-            aiFeatureConsentService: consent.Object,
+            textExtractionConsent: consent.Object,
             textExtractionService: textExtraction.Object);
 
         await viewModel.LoadAsync(new ImageFile("original.png"), CancellationToken.None);
@@ -670,11 +531,11 @@ public sealed class ImageEditPageViewModelTextExtractionTests
         IStorageService? storageService = null,
         ITextExtractionService? textExtractionService = null,
         ITextExtractionFeatureAvailability? textExtractionFeatureAvailability = null,
-        IAiFeatureConsentService? aiFeatureConsentService = null,
+        ITextExtractionConsentService? textExtractionConsent = null,
         IClipboardService? clipboardService = null,
         ILocalizationService? localizationService = null,
         IAppNotificationService? notificationService = null,
-        ICapturedImageTextReader? capturedImageTextReader = null)
+        IAiFeatureConsentService? sharedConsent = null)
     {
         var imageMetadata = new Mock<IImageMetadataService>();
         imageMetadata
@@ -719,11 +580,10 @@ public sealed class ImageEditPageViewModelTextExtractionTests
                 clipboardService ?? Mock.Of<IClipboardService>(),
                 localization,
                 notifications),
-            aiFeatureConsentService ?? Mock.Of<IAiFeatureConsentService>(
-                service => service.GetConsentState(AiFeatureId.TextExtraction) == AiFeatureConsentState.Granted &&
-                    service.GetConsentState(AiFeatureId.ImageSuperResolution) == AiFeatureConsentState.Granted),
+            sharedConsent ?? Mock.Of<IAiFeatureConsentService>(),
             textExtractionService ?? Mock.Of<ITextExtractionService>(service => service.GetReadyState() == TextExtractionReadyState.Ready),
             textExtractionFeatureAvailability ?? Mock.Of<ITextExtractionFeatureAvailability>(service => service.IsTextExtractionEnabled == true),
-            capturedImageTextReader: capturedImageTextReader);
+            textExtractionConsent: textExtractionConsent ?? Mock.Of<ITextExtractionConsentService>(
+                service => service.State == AiFeatureConsentState.Granted && service.EnsureConsentAsync(It.IsAny<CancellationToken>()) == Task.FromResult(true)));
     }
 }

@@ -252,7 +252,7 @@ public sealed class CaptureMemoryIntegrationTests
         var answer = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
         app.Prompts.Override = (prompt, ct) =>
         {
-            if (prompt != CaptureMemoryPrompt.Consent) return Task.FromResult(false);
+            if (prompt != CaptureMemoryPrompt.EnableScanning) return Task.FromResult(false);
             entered.TrySetResult();
             return answer.Task.WaitAsync(ct);
         };
@@ -548,7 +548,7 @@ public sealed class CaptureMemoryIntegrationTests
         public Task<bool> ConfirmAsync(CaptureMemoryPrompt prompt, CancellationToken ct)
         {
             if (prompt == CaptureMemoryPrompt.DeleteMetadata) DeleteCalls++;
-            return Override?.Invoke(prompt, ct) ?? Task.FromResult(prompt == CaptureMemoryPrompt.Consent || prompt == CaptureMemoryPrompt.DeleteMetadata && Delete);
+            return Override?.Invoke(prompt, ct) ?? Task.FromResult(prompt is CaptureMemoryPrompt.Consent or CaptureMemoryPrompt.EnableScanning || prompt == CaptureMemoryPrompt.DeleteMetadata && Delete);
         }
     }
     private sealed class Analyzer : IMediaAnalyzer

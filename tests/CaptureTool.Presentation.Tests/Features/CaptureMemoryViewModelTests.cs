@@ -147,6 +147,21 @@ public sealed class CaptureMemoryViewModelTests
         Assert.IsFalse(fixture.ViewModel.IsAnalysisActive);
     }
 
+    [TestMethod]
+    [DataRow("storage-unavailable")]
+    [DataRow("policy-unavailable")]
+    public async Task DisabledStartupStaysQuietButSettingsRetryReportsStorageFailure(string code)
+    {
+        using var fixture = new Fixture();
+        fixture.Change(fixture.State with { Policy = CaptureMemoryPolicy.Disabled(), FailureCode = code,
+            Activity = new(AnalysisActivity.Idle, LastRunStatus: AnalysisRunStatus.Failed) });
+        fixture.Dispatch();
+        fixture.Notifications.Verify(x => x.ShowError(It.IsAny<string>()), Times.Never);
+        await fixture.ViewModel.RefreshAsync();
+        fixture.Dispatch();
+        fixture.Notifications.Verify(x => x.ShowError(It.IsAny<string>()), Times.Once);
+    }
+
     private sealed class Fixture : IDisposable
     {
         public Mock<ICaptureMemoryService> Memory { get; } = new();

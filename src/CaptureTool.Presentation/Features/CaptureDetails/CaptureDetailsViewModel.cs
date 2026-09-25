@@ -19,6 +19,9 @@ public sealed class CaptureDetailsViewModel : ViewModelBase
     private readonly ICaptureNamingService? _names;
     private long _nameRevision;
     private readonly ICaptureMemoryService _memory;
+    private readonly ICaptureAnalysisOnboarding? _onboarding;
+    public bool CanEnableAnalysis => !_memory.State.Policy.IsAllowed;
+    public IAsyncRelayCommand EnableAnalysisCommand { get; }
     private readonly IClipboardService _clipboard;
     private readonly ILocalizationService _text;
     private readonly ITaskEnvironment _ui;
@@ -67,11 +70,18 @@ public sealed class CaptureDetailsViewModel : ViewModelBase
     public IAsyncRelayCommand<string> CopyCommand { get; }
 
     public CaptureDetailsViewModel(ICaptureDetailsReader reader, ICaptureMemoryService memory, IClipboardService clipboard,
-        ILocalizationService text, ITaskEnvironment ui, IFolderLauncher? folders = null, ICaptureNamingService? names = null)
+        ILocalizationService text, ITaskEnvironment ui, IFolderLauncher? folders = null, ICaptureNamingService? names = null, ICaptureAnalysisOnboarding? onboarding = null)
     {
         _reader = reader; _memory = memory; _clipboard = clipboard; _text = text; _ui = ui;
         _folders = folders;
         _names = names;
+        _onboarding = onboarding;
+        EnableAnalysisCommand = new AsyncRelayCommand(async () =>
+        {
+            try { if (_onboarding != null) await _onboarding.EnableAsync(_cancellation); }
+            catch (OperationCanceledException) when (_cancellation.IsCancellationRequested) { }
+            catch (Exception) { if (!_disposed) CopyStatus = Text("Unavailable"); }
+        });
         EditNameCommand = new RelayCommand(() => { NameDraft = FileName == PhysicalFileName ? Path.GetFileNameWithoutExtension(FileName) : FileName; NameStatus = string.Empty; IsEditingName = true; });
         CancelNameCommand = new RelayCommand(() => { IsEditingName = false; NameStatus = string.Empty; });
         SaveNameCommand = new AsyncRelayCommand(SaveNameAsync);
@@ -257,6 +267,13 @@ public sealed class CaptureDetailsViewModel : ViewModelBase
         return string.Join(" ", messages);
     }
 
+    public async Task OpenTextAsync()
+    {
+        if (!_disposed && !_memory.State.Policy.ConsentGranted && _onboarding != null)
+            try { await EnableAnalysisCommand.ExecuteAsync(null); }
+            catch (OperationCanceledException) when (_cancellation.IsCancellationRequested) { }
+    }
+
     private void OnMemoryChanged()
     {
         var state = _memory.State;
@@ -268,6 +285,7 @@ public sealed class CaptureDetailsViewModel : ViewModelBase
         _ui.TryExecute(() =>
         {
             if (_disposed) return;
+            RaisePropertyChanged(nameof(CanEnableAnalysis));
             if (state.IsDeleting || state.Storage.HasData == false)
             {
                 Content = new();
