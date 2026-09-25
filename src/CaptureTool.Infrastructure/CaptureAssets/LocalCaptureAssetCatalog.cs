@@ -102,14 +102,15 @@ internal sealed class LocalCaptureAssetCatalog : ICaptureAssetCatalog, IDisposab
         CaptureCatalogDocument? document = await _documents.ReadAsync(_path,
             CaptureCatalogJsonContext.Default.CaptureCatalogDocument, cancellationToken).ConfigureAwait(false);
         if (document == null) return new(0, []);
-        if (document.Version is not (1 or 2) || document.Assets == null) throw new InvalidDataException("Unsupported or invalid capture catalog.");
+        if (document.Version is not (1 or 2 or 3) || document.Assets == null) throw new InvalidDataException("Unsupported or invalid capture catalog.");
         Catalog state;
         try
         {
             var entries = document.Assets.Select((asset, index) => asset == null
                 ? throw new InvalidDataException("Missing capture asset.")
                 : new CaptureRegistration(Normalize(new CaptureAsset(new CaptureId(asset.Id), (CaptureFileType)asset.MediaType,
-                    asset.CapturedAt, asset.SourcePath, (CaptureSourceOwnership)asset.SourceOwnership, asset.PreferredPath)),
+                    document.Version < 3 && asset.SourceOwnership == (int)CaptureSourceOwnership.External ? null : asset.CapturedAt,
+                    asset.SourcePath, (CaptureSourceOwnership)asset.SourceOwnership, asset.PreferredPath)),
                     document.Version == 1 ? index + 1 : asset.Sequence,
                     document.Version == 1 ? null : asset.AutomaticAuthorization)).ToList();
             long sequence = document.Version == 1 ? entries.Count : document.Sequence;
@@ -121,13 +122,14 @@ internal sealed class LocalCaptureAssetCatalog : ICaptureAssetCatalog, IDisposab
             state = new(sequence, entries);
         }
         catch (ArgumentException exception) { throw new InvalidDataException("Invalid capture catalog.", exception); }
-        // Known v1 entries are historical. Persist stable order before exposing it.
-        if (document.Version == 1) await SaveAsync(state, cancellationToken).ConfigureAwait(false);
+        // V1 gains stable registration order. Before v3, imported dates came from recent activity,
+        // not capture provenance; preserve identity/eligibility while dropping that unreliable fact.
+        if (document.Version < 3) await SaveAsync(state, cancellationToken).ConfigureAwait(false);
         return state;
     }
 
     private Task SaveAsync(Catalog state, CancellationToken cancellationToken) =>
-        _documents.WriteAsync(_path, new CaptureCatalogDocument(2, state.Entries.Select(entry =>
+        _documents.WriteAsync(_path, new CaptureCatalogDocument(3, state.Entries.Select(entry =>
             new CaptureAssetDocument(entry.Asset.Id.Value, (int)entry.Asset.MediaType, entry.Asset.CapturedAt,
                 entry.Asset.SourcePath, (int)entry.Asset.SourceOwnership, entry.Asset.PreferredPath, entry.Sequence, entry.AutomaticAuthorization)).ToArray(), state.Sequence),
             CaptureCatalogJsonContext.Default.CaptureCatalogDocument, cancellationToken);

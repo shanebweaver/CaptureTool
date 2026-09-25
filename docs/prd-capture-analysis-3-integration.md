@@ -1,6 +1,7 @@
 # PRD: Capture Analysis — Slice 3, Capture and Settings Integration
 
-Status: Implemented for review. See [integration review notes](capture-analysis-integration-review.md).
+Status: Implemented, hardened, and reviewed; ready for slice 4 release verification.
+See the [readiness audit and evidence](capture-analysis-integration-review.md#slice-4-readiness-audit).
 Depends on reviewed [slice 2](prd-capture-analysis-2-execution.md).
 The Native AOT warning guard is assigned to [slice 4](prd-capture-analysis-4-verification.md);
 the reviewed vendor exception does not block this slice.

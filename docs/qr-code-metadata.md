@@ -40,10 +40,19 @@ QR detection. An edited image still uses the normal ad-hoc path. Existing
 captures get QR metadata through **Analyze existing captures**; an upgrade does
 not automatically rescan the library.
 
-Saved and freshly recognized documents use the same text-combining factory: OCR
-text is followed by decoded QR values on separate lines in **Copy all text**.
-QR-only results remain copyable when OCR is empty. Reusing a complete document
-does not append values again, and QR regions remain separate from OCR word boxes.
+Saved and freshly recognized documents use the same application document builder
+for reading order, excluding OCR glyphs inside QR bounds, and **Copy all text**.
+OCR text is followed by decoded QR values on separate lines. Text without known
+bounds stays copyable but has no overlay hitbox. Reusing a complete document does
+not append values again, and QR regions remain separate from OCR word boxes.
+
+OCR and QR each distinguish missing results from completed empty scans. Saved
+QR-only metadata remains usable when OCR failed or was unsupported; the editor
+can obtain consent and retry missing OCR while retaining the saved QR results.
+Denied consent, unavailable preparation, failure, or revocation cannot erase those
+already stored results. Incomplete documents remain retryable on the next toggle.
+Complete metadata bypasses rendering and model work entirely. Original-source
+hash validation and edit-revision checks still govern all reuse.
 
 Regression tests cover real encoded QR images, inverted/rotated codes, multiple
 locations, synthetic video frame timestamps, empty and invalid media,

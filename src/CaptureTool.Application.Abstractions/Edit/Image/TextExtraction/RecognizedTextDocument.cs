@@ -8,20 +8,26 @@ public sealed record RecognizedTextDocument
         string text,
         Size imageSize,
         IReadOnlyList<RecognizedTextRegion> regions,
-        IReadOnlyList<RecognizedQrCodeRegion>? qrCodes = null)
+        IReadOnlyList<RecognizedQrCodeRegion>? qrCodes = null,
+        bool hasTextResults = true)
     {
         Text = text;
         ImageSize = imageSize;
         Regions = regions;
         QrCodes = qrCodes ?? [];
         HasQrCodeResults = qrCodes != null;
+        HasTextResults = hasTextResults;
     }
 
     public string Text { get; }
 
     public Size ImageSize { get; }
 
+    /// <summary>OCR regions; an empty bound preserves copyable text whose position is unknown.</summary>
     public IReadOnlyList<RecognizedTextRegion> Regions { get; }
+
+    /// <summary>False means OCR is missing, even if QR results are available.</summary>
+    public bool HasTextResults { get; }
 
     public IReadOnlyList<RecognizedQrCodeRegion> QrCodes { get; }
 
@@ -33,11 +39,12 @@ public sealed record RecognizedTextDocument
         string recognizedText,
         Size imageSize,
         IReadOnlyList<RecognizedTextRegion> regions,
-        IReadOnlyList<RecognizedQrCodeRegion>? qrCodes)
+        IReadOnlyList<RecognizedQrCodeRegion>? qrCodes,
+        bool hasTextResults = true)
     {
         IEnumerable<string> values = qrCodes?.Select(code => code.Value) ?? [];
         if (!string.IsNullOrWhiteSpace(recognizedText)) values = values.Prepend(recognizedText.TrimEnd());
-        return new(string.Join(Environment.NewLine, values), imageSize, regions, qrCodes);
+        return new(string.Join(Environment.NewLine, values), imageSize, regions, qrCodes, hasTextResults);
     }
 }
 

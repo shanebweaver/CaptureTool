@@ -1,4 +1,5 @@
 using CaptureTool.Application.Abstractions.Edit.Image.TextExtraction;
+using CaptureTool.Application.Edit.Image.TextExtraction;
 using Microsoft.Windows.AI;
 using Microsoft.Windows.AI.Imaging;
 using System.Drawing;
@@ -16,7 +17,7 @@ public sealed class WindowsTextExtractionServiceTests
     {
         var existing = RecognizedTextDocument.FromRecognition("saved", new(240, 240), [],
             empty ? [] : [new("https://example.com", new(10, 10, 100, 100))]);
-        var result = await new WindowsTextExtractionService().ExtractAsync(new(Stream.Null, existing.ImageSize, existing));
+        var result = await new WindowsTextExtractionService(new RecognizedTextDocumentBuilder()).ExtractAsync(new(Stream.Null, existing.ImageSize, existing));
         Assert.AreEqual(TextExtractionStatus.Success, result.Status);
         Assert.IsNotNull(result.Document);
         Assert.AreSame(existing, result.Document);
@@ -24,7 +25,9 @@ public sealed class WindowsTextExtractionServiceTests
     }
 
     [TestMethod]
-    public async Task ExistingOcrKeepsItsTextAndWordBoxesAndStillDetectsQrCodes()
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task ExistingOcrKeepsNearbyTextAndExcludesQrGlyphsWhenDetectingMissingQrCodes(bool overlaps)
     {
         var writer = new ZXing.BarcodeWriterPixelData
         {
@@ -41,11 +44,12 @@ public sealed class WindowsTextExtractionServiceTests
         using var source = new MemoryStream();
         using (var encodedStream = encoded.AsStreamForRead()) await encodedStream.CopyToAsync(source);
         source.Position = 0;
-        var existing = new RecognizedTextDocument("saved text", new(240, 240), [new("saved text", new(10, 10, 20, 10))]);
-        var result = await new WindowsTextExtractionService().ExtractAsync(new(source, new(240, 240), existing));
+        var existing = new RecognizedTextDocument("saved text", new(240, 240), [new("saved text", overlaps ? new(100, 100, 20, 10) : new(0, 0, 5, 5))]);
+        var result = await new WindowsTextExtractionService(new RecognizedTextDocumentBuilder()).ExtractAsync(new(source, new(240, 240), existing));
         Assert.AreEqual(TextExtractionStatus.Success, result.Status);
-        Assert.AreEqual(existing.Text + Environment.NewLine + "https://example.com/capture/42", result.Document!.Text);
-        Assert.AreEqual(existing.Regions[0], result.Document.Regions[0]);
+        Assert.AreEqual((overlaps ? "" : existing.Text + Environment.NewLine) + "https://example.com/capture/42", result.Document!.Text);
+        Assert.HasCount(overlaps ? 0 : 1, result.Document.Regions);
+        if (!overlaps) Assert.AreEqual(existing.Regions[0], result.Document.Regions[0]);
         Assert.HasCount(1, result.Document.QrCodes);
         Assert.AreEqual("https://example.com/capture/42", result.Document.QrCodes[0].Value);
     }

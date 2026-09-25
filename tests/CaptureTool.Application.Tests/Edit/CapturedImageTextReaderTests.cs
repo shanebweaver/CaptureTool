@@ -109,11 +109,11 @@ public sealed class CapturedImageTextReaderTests
         await Assert.ThrowsExactlyAsync<OperationCanceledException>(() => reader.ReadAsync(new(PathName, null, Revision, new(200, 100)), Ct));
     }
 
-    private CapturedImageTextReader Reader() => new(_catalog.Object, _metadata.Object, _files.Object);
-    private void SetRecord(RecognizedText[] regions, SourceRevision? revision = null, DecodedQrCode[]? codes = null) =>
+    private CapturedImageTextReader Reader() => new(_catalog.Object, _metadata.Object, _files.Object, new RecognizedTextDocumentBuilder());
+    private void SetRecord(RecognizedText[]? regions, SourceRevision? revision = null, DecodedQrCode[]? codes = null) =>
         _metadata.Setup(x => x.GetAsync(_asset.Id, Revision, It.IsAny<CancellationToken>())).ReturnsAsync(
             new CaptureAnalysisRecord(_asset.Id, AnalysisMediaKind.Image, revision ?? Revision, "v1", Guid.NewGuid(),
-                new[] { new AnalysisResult(new TextRecognitionMetadata(regions), new("ocr", "local", "ocr", "v1"), DateTimeOffset.UtcNow, "v1") }
+                (regions == null ? [] : new[] { new AnalysisResult(new TextRecognitionMetadata(regions), new("ocr", "local", "ocr", "v1"), DateTimeOffset.UtcNow, "v1") })
                     .Concat(codes == null ? [] : new[] { new AnalysisResult(new QrCodeMetadata(codes), new("qr", "local", "qr", "v1"), DateTimeOffset.UtcNow, "v1") })));
 
     [TestMethod]
@@ -127,6 +127,33 @@ public sealed class CapturedImageTextReaderTests
         Assert.HasCount(empty ? 0 : 1, document.QrCodes);
         Assert.AreEqual(empty ? string.Empty : "https://example.com", document.Text);
         if (!empty) Assert.AreEqual(new RectangleF(20, 20, 60, 40), document.QrCodes.Single().Bounds);
+    }
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task QrOnlyMetadataIsReusableWithoutPretendingOcrCompleted(bool empty)
+    {
+        SetRecord(null, codes: empty ? [] : [new("https://example.com", new(.1, .2, .3, .4))]);
+        var document = await Reader().ReadAsync(new(PathName, null, Revision, new(200, 100)), Ct);
+        Assert.IsNotNull(document);
+        Assert.IsFalse(document.HasTextResults);
+        Assert.IsTrue(document.HasQrCodeResults);
+        Assert.AreEqual(empty ? "" : "https://example.com", document.Text);
+        SetRecord(null);
+        Assert.IsNull(await Reader().ReadAsync(new(PathName, null, Revision, new(200, 100)), Ct));
+    }
+
+    [TestMethod]
+    public async Task SavedOcrExcludesQrGlyphsButPreservesNearbyAndUnpositionedText()
+    {
+        SetRecord([new("QR noise", new(.2, .2, .1, .1)), new("caption", new(.6, .2, .2, .1)), new("unpositioned")],
+            codes: [new("decoded", new(.1, .1, .3, .4))]);
+        var document = await Reader().ReadAsync(new(PathName, null, Revision, new(200, 100)), Ct);
+        Assert.AreEqual("caption unpositioned" + Environment.NewLine + "decoded", document!.Text);
+        Assert.HasCount(2, document.Regions);
+        Assert.IsTrue(document.HasTextResults);
+        Assert.AreEqual(RectangleF.Empty, document.Regions[1].Bounds);
     }
 
     [TestMethod]

@@ -1816,9 +1816,9 @@ SOFTWARE.
     <value>为现有捕获内容创建或更新已保存的分析。</value>
   </data>
   <data name="AiSettings_DeleteHeader.Text" xml:space="preserve">
-    <value>删除 AI 元数据</value>
+    <value>删除捕获分析</value>
   </data>
   <data name="AiSettings_DeleteDescription.Text" xml:space="preserve">
-    <value>删除所有已保存的 AI 分析。捕获内容将被保留。</value>
+    <value>删除所有已保存的分析，包括文本、二维码和文件详情。捕获内容将被保留。</value>
   </data>
 </root>

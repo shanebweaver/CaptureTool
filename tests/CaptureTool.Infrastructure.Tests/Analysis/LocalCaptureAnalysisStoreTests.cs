@@ -57,6 +57,32 @@ public sealed class LocalCaptureAnalysisStoreTests
     }
 
     [TestMethod]
+    public async Task LegacyFileDetailsDateBecomesUnknownWithoutLosingOtherFactsOrProvenance()
+    {
+        using var environment = new AnalysisTestEnvironment();
+        using var store = environment.CreateStore();
+        var id = CaptureId.New();
+        var token = await store.BeginRunAsync(id, AnalysisMediaKind.Image, AnalysisTestEnvironment.Revision(), "details-v1", Cancellation);
+        var at = DateTimeOffset.UtcNow;
+        var details = new FileDetailsMetadata(AnalysisMediaKind.Image, "old.png", 1234, "image/png", at, at, at,
+            image: new(new(100, 50), 96, 96));
+        var result = new AnalysisResult(details, AnalysisTestEnvironment.Producer(), at, "details-v1");
+        Assert.IsTrue(await store.TryWriteAsync(token, result, Cancellation));
+        await MutateDocument(environment, environment.MetadataPaths.Single(), node =>
+            node["Results"]![0]!["FileDetails"]!.AsObject().Remove("CaptureTimeVerified"));
+        using var reopened = environment.CreateStore();
+        var saved = (await reopened.GetAsync(id, cancellationToken: Cancellation))!.Results.Single();
+        var loaded = (FileDetailsMetadata)saved.Payload;
+        Assert.IsNull(loaded.CapturedAt);
+        Assert.AreEqual(details.SizeBytes, loaded.SizeBytes);
+        Assert.AreEqual(details.FileCreatedAt, loaded.FileCreatedAt);
+        Assert.AreEqual(details.FileModifiedAt, loaded.FileModifiedAt);
+        Assert.AreEqual(details.Image, loaded.Image);
+        Assert.AreEqual(result.Producer, saved.Producer);
+        Assert.AreEqual(result.GeneratedAt, saved.GeneratedAt);
+    }
+
+    [TestMethod]
     public async Task QrMetadataRoundTripsProtectedWithBoundsTimesAndEmptySuccessAndDeletesNormally()
     {
         using var environment = new AnalysisTestEnvironment();

@@ -31,6 +31,8 @@ and closes actual defects instead of creating a separate test framework.
    image dimensions/aspect ratio, audio/video duration and format), and QR values,
    bounds, repeated occurrences, inverted codes, and successful empty scans.
    Unknown file properties must remain unknown rather than invented defaults.
+   Verify historical recents import and v1/v2 catalog migration do not mistake
+   recent activity for capture time; legacy unverified metadata dates read as unknown.
 4. Interrupt the process during queue admission, preparation, execution, metadata
    publication, and deletion. Restart and verify recovery, idempotency, no stale
    publication, and no indefinite progress indicator.
@@ -56,12 +58,21 @@ and closes actual defects instead of creating a separate test framework.
    with exhausted model failures produce a deduplicated notice; ordinary unsupported
    skips and successful fallbacks remain quiet, and loading always disappears.
    Check failure delivery when the next capture starts before the UI updates.
+   After a successful settings retry, a later independent failure must be reported
+   again even with scanning off; unchanged failures must not flood notifications.
 8. Verify the existing image OCR feature with fresh, stale, edited, missing, and
    unreadable metadata. Saved OCR/QR must retain word/QR actions and include decoded
    QR values exactly once in Copy all text. Empty OCR and empty QR scans remain valid
    cached successes; older OCR-only metadata still scans for QR codes. Validate
    working-copy aliases and coordinate mapping on rotated and large images.
+   Include QR-only metadata when OCR is unsupported, denied, or fails; keep saved
+   results usable and missing OCR retryable. Compare saved/fresh OCR exclusion near
+   QR bounds and ensure unpositioned text is copyable without an origin hitbox.
    No new analysis panels in editors or search results UX on Home are introduced.
+9. Measure startup/queue discovery and settings responsiveness with a large capture
+   library, including cancellation and delete during discovery. The current store
+   enumerates protected per-capture documents under its gate; record representative
+   latency and memory before deciding whether a small work index is necessary.
 
 ## Evidence and handoff
 

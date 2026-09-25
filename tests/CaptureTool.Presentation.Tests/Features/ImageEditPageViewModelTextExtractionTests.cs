@@ -55,6 +55,84 @@ public sealed class ImageEditPageViewModelTextExtractionTests
     }
 
     [TestMethod]
+    public async Task CompleteStoredResultsSkipRenderingAndUnknownBoundsStayCopyOnly()
+    {
+        var cached = new RecognizedTextDocument("copy only", new(100, 50), [new("copy only", RectangleF.Empty)], []);
+        var extraction = new Mock<ITextExtractionService>();
+        var exporter = CreateExporter();
+        using var vm = CreateViewModel(imageCanvasExporter: exporter.Object, textExtractionService: extraction.Object,
+            capturedImageTextReader: CreateMetadataReader(cached).Object);
+        await vm.LoadAsync(new ImageFile("original.png"), CancellationToken.None);
+        await vm.ToggleTextExtractionModeCommand.ExecuteAsync(null);
+        vm.TextExtractionTool.Text.Should().Be("copy only");
+        vm.TextExtractionRegions.Should().BeEmpty();
+        exporter.Verify(x => x.RenderToStreamAsync(It.IsAny<IDrawable[]>(), It.IsAny<ImageCanvasRenderOptions>()), Times.Never);
+        extraction.Verify(x => x.ExtractAsync(It.IsAny<TextExtractionRequest>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [TestMethod]
+    [DataRow("declined")]
+    [DataRow("unsupported")]
+    [DataRow("preparation")]
+    [DataRow("failed")]
+    [DataRow("exception")]
+    public async Task SavedQrSurvivesUnavailableOcrAndMissingOcrCanBeRetried(string reason)
+    {
+        var cached = RecognizedTextDocument.FromRecognition("", new(100, 50), [], [new("decoded", new(10, 10, 20, 20))], false);
+        var consent = new Mock<IAiFeatureConsentService>();
+        consent.Setup(x => x.EnsureConsentAsync(It.IsAny<CancellationToken>())).ReturnsAsync(reason != "declined");
+        var extraction = new Mock<ITextExtractionService>();
+        extraction.Setup(x => x.GetReadyState()).Returns(reason switch
+        {
+            "unsupported" => TextExtractionReadyState.NotSupported,
+            "preparation" => TextExtractionReadyState.PreparationNeeded,
+            _ => TextExtractionReadyState.Ready
+        });
+        extraction.Setup(x => x.EnsureReadyAsync(It.IsAny<CancellationToken>())).ReturnsAsync(TextExtractionPreparationResult.NotSupported);
+        var request = extraction.Setup(x => x.ExtractAsync(It.Is<TextExtractionRequest>(r => r.ExistingText == cached), It.IsAny<CancellationToken>()));
+        if (reason == "exception") request.ThrowsAsync(new IOException());
+        else request.ReturnsAsync(TextExtractionResult.Failed("unavailable"));
+        using var vm = CreateViewModel(imageCanvasExporter: CreateExporter().Object, textExtractionService: extraction.Object,
+            aiFeatureConsentService: consent.Object, capturedImageTextReader: CreateMetadataReader(cached).Object);
+        await vm.LoadAsync(new ImageFile("original.png"), CancellationToken.None);
+        await vm.ToggleTextExtractionModeCommand.ExecuteAsync(null);
+        vm.TextExtractionTool.Text.Should().Be("decoded");
+        vm.TextExtractionQrCodes.Should().ContainSingle();
+        vm.IsTextExtractionModeActive.Should().BeTrue();
+        await vm.ToggleTextExtractionModeCommand.ExecuteAsync(null);
+        await vm.ToggleTextExtractionModeCommand.ExecuteAsync(null);
+        consent.Verify(x => x.EnsureConsentAsync(It.IsAny<CancellationToken>()), Times.Exactly(2));
+        vm.TextExtractionTool.Text.Should().Be("decoded");
+    }
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task SavedQrIsRetainedDuringOcrAndLateResultCannotReplaceItAfterRevocation(bool revoke)
+    {
+        var cached = RecognizedTextDocument.FromRecognition("", new(100, 50), [], [new("decoded", new(10, 10, 20, 20))], false);
+        using var revoked = new CancellationTokenSource();
+        var consent = new Mock<IAiFeatureConsentService>();
+        consent.Setup(x => x.GetConsentState(It.IsAny<AiFeatureId>())).Returns(AiFeatureConsentState.Granted);
+        consent.SetupGet(x => x.Revoked).Returns(revoked.Token);
+        var extraction = new Mock<ITextExtractionService>();
+        extraction.Setup(x => x.GetReadyState()).Returns(TextExtractionReadyState.Ready);
+        var pending = new TaskCompletionSource<TextExtractionResult>();
+        extraction.Setup(x => x.ExtractAsync(It.Is<TextExtractionRequest>(r => r.ExistingText == cached), It.IsAny<CancellationToken>())).Returns(pending.Task);
+        using var vm = CreateViewModel(imageCanvasExporter: CreateExporter().Object, textExtractionService: extraction.Object,
+            aiFeatureConsentService: consent.Object, capturedImageTextReader: CreateMetadataReader(cached).Object);
+        await vm.LoadAsync(new ImageFile("original.png"), CancellationToken.None);
+        var operation = vm.ToggleTextExtractionModeCommand.ExecuteAsync(null);
+        vm.TextExtractionTool.Text.Should().Be("decoded");
+        if (revoke) await revoked.CancelAsync();
+        pending.SetResult(TextExtractionResult.Success(RecognizedTextDocument.FromRecognition("fresh", cached.ImageSize,
+            [new("fresh", new(50, 10, 20, 10))], cached.QrCodes)));
+        await operation;
+        vm.TextExtractionTool.Text.Should().Be(revoke ? "decoded" : "fresh" + Environment.NewLine + "decoded");
+        vm.TextExtractionQrCodes.Should().ContainSingle();
+    }
+
+    [TestMethod]
     [DataRow(false)]
     [DataRow(true)]
     public async Task MissingMetadataOrEditedImageUsesConsentedAdHocOcr(bool edited)
@@ -412,7 +490,7 @@ public sealed class ImageEditPageViewModelTextExtractionTests
             .ReturnsAsync(TextExtractionResult.Success(new RecognizedTextDocument(
                 "hello",
                 new Size(100, 50),
-                [new RecognizedTextRegion("hello", new RectangleF(10, 10, 20, 5))])));
+                [new RecognizedTextRegion("hello", new RectangleF(10, 10, 20, 5))], [])));
         ImageEditPageViewModel viewModel = CreateViewModel(
             imageCanvasExporter: exporter.Object,
             textExtractionService: textExtraction.Object);

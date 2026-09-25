@@ -115,6 +115,28 @@ public sealed class CaptureMemoryViewModelTests
     }
 
     [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public void SuccessfulSettingsRetryResetsFailureNotificationEvenWithScanningOff(bool coalesced)
+    {
+        using var fixture = new Fixture();
+        var failed = fixture.State with { Policy = CaptureMemoryPolicy.Disabled(), FailureCode = "policy-save" };
+        fixture.Change(failed);
+        fixture.Dispatch();
+        fixture.Change(failed);
+        fixture.Dispatch();
+        fixture.Notifications.Verify(value => value.ShowError("CaptureMemory_Error_Policy"), Times.Once);
+        fixture.Change(failed with { FailureCode = null });
+        if (!coalesced) fixture.Dispatch();
+        fixture.Change(failed);
+        fixture.Dispatch();
+        fixture.Notifications.Verify(value => value.ShowError("CaptureMemory_Error_Policy"), Times.Exactly(2));
+        fixture.Change(failed);
+        fixture.Dispatch();
+        fixture.Notifications.Verify(value => value.ShowError(It.IsAny<string>()), Times.Exactly(2));
+    }
+
+    [TestMethod]
     public void DisposalIgnoresQueuedUpdatesAndUnsubscribes()
     {
         using var fixture = new Fixture();

@@ -10,7 +10,7 @@ using WinRect = global::Windows.Foundation.Rect;
 
 namespace CaptureTool.Infrastructure.Edit.Windows;
 
-public sealed class WindowsTextExtractionService : ITextExtractionService
+public sealed class WindowsTextExtractionService(IRecognizedTextDocumentBuilder documents) : ITextExtractionService
 {
     public TextExtractionReadyState GetReadyState()
     {
@@ -77,7 +77,7 @@ public sealed class WindowsTextExtractionService : ITextExtractionService
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        if (request.ExistingText is { HasQrCodeResults: true } complete)
+        if (request.ExistingText is { HasTextResults: true, HasQrCodeResults: true } complete)
             return TextExtractionResult.Success(complete);
 
         try
@@ -86,14 +86,16 @@ public sealed class WindowsTextExtractionService : ITextExtractionService
 
             cancellationToken.ThrowIfCancellationRequested();
 
-            IReadOnlyList<RecognizedQrCodeRegion> qrCodes = QrCodeDetector.Detect(sourceBitmap);
+            IReadOnlyList<RecognizedQrCodeRegion> qrCodes = request.ExistingText is { HasQrCodeResults: true } saved
+                ? saved.QrCodes : QrCodeDetector.Detect(sourceBitmap);
             cancellationToken.ThrowIfCancellationRequested();
 
             // Reuse canonical OCR while retaining the existing QR-code feature.
             // This path never probes, prepares, or invokes an OCR model.
-            if (request.ExistingText is { } existing)
-                return TextExtractionResult.Success(RecognizedTextDocument.FromRecognition(
-                    existing.Text, existing.ImageSize, existing.Regions, qrCodes));
+            if (request.ExistingText is { HasTextResults: true } existing)
+                return TextExtractionResult.Success(documents.Build(existing.ImageSize,
+                    existing.Regions.Count == 0 && !string.IsNullOrWhiteSpace(existing.Text)
+                        ? [new(existing.Text, RectangleF.Empty)] : existing.Regions, qrCodes));
 
             TextExtractionResult? aiResult = await TryExtractWithWindowsAiAsync(
                 sourceBitmap,
@@ -156,7 +158,7 @@ public sealed class WindowsTextExtractionService : ITextExtractionService
         return RectangleF.FromLTRB(left, top, right, bottom);
     }
 
-    private static async Task<TextExtractionResult?> TryExtractWithWindowsAiAsync(
+    private async Task<TextExtractionResult?> TryExtractWithWindowsAiAsync(
         SoftwareBitmap sourceBitmap,
         TextExtractionRequest request,
         IReadOnlyList<RecognizedQrCodeRegion> qrCodes,
@@ -179,40 +181,27 @@ public sealed class WindowsTextExtractionService : ITextExtractionService
             cancellationToken.ThrowIfCancellationRequested();
 
             List<RecognizedTextRegion> regions = [];
-            List<string> recognizedLines = [];
             int lineIndex = 0;
             foreach (RecognizedLine line in recognizedText.Lines)
             {
-                List<string> recognizedWords = [];
                 int wordIndex = 0;
                 foreach (RecognizedWord word in line.Words)
                 {
                     RectangleF bounds = ToRectangleF(word.BoundingBox);
                     if (!string.IsNullOrWhiteSpace(word.Text) &&
                         bounds.Width > 0 &&
-                        bounds.Height > 0 &&
-                        !QrCodeDetector.ShouldExcludeText(bounds, qrCodes))
+                        bounds.Height > 0)
                     {
                         regions.Add(new RecognizedTextRegion(word.Text, bounds, lineIndex, wordIndex));
-                        recognizedWords.Add(word.Text);
                     }
 
                     wordIndex++;
                 }
 
-                if (recognizedWords.Count > 0)
-                {
-                    recognizedLines.Add(string.Join(' ', recognizedWords));
-                }
-
                 lineIndex++;
             }
 
-            return TextExtractionResult.Success(RecognizedTextDocument.FromRecognition(
-                string.Join(Environment.NewLine, recognizedLines),
-                request.SourceSize,
-                regions,
-                qrCodes));
+            return TextExtractionResult.Success(documents.Build(request.SourceSize, regions, qrCodes));
         }
         catch (OperationCanceledException)
         {
@@ -225,7 +214,7 @@ public sealed class WindowsTextExtractionService : ITextExtractionService
         }
     }
 
-    private static async Task<TextExtractionResult> ExtractWithLegacyOcrAsync(
+    private async Task<TextExtractionResult> ExtractWithLegacyOcrAsync(
         SoftwareBitmap sourceBitmap,
         TextExtractionRequest request,
         IReadOnlyList<RecognizedQrCodeRegion> qrCodes,
@@ -234,7 +223,7 @@ public sealed class WindowsTextExtractionService : ITextExtractionService
         OcrEngine? engine = OcrEngine.TryCreateFromUserProfileLanguages();
         if (engine is null)
         {
-            return TextExtractionResult.NotReady;
+            return qrCodes.Count != 0 ? TextExtractionResult.Success(documents.Build(request.SourceSize, null, qrCodes)) : TextExtractionResult.NotReady;
         }
 
         OcrResult ocrResult = await engine
@@ -243,36 +232,24 @@ public sealed class WindowsTextExtractionService : ITextExtractionService
         cancellationToken.ThrowIfCancellationRequested();
 
         List<RecognizedTextRegion> regions = [];
-        List<string> recognizedLines = [];
         for (int lineIndex = 0; lineIndex < ocrResult.Lines.Count; lineIndex++)
         {
             OcrLine line = ocrResult.Lines[lineIndex];
-            List<string> recognizedWords = [];
             for (int wordIndex = 0; wordIndex < line.Words.Count; wordIndex++)
             {
                 OcrWord word = line.Words[wordIndex];
                 RectangleF bounds = ToRectangleF(word.BoundingRect);
                 if (!string.IsNullOrWhiteSpace(word.Text) &&
                     bounds.Width > 0 &&
-                    bounds.Height > 0 &&
-                    !QrCodeDetector.ShouldExcludeText(bounds, qrCodes))
+                    bounds.Height > 0)
                 {
                     regions.Add(new RecognizedTextRegion(word.Text, bounds, lineIndex, wordIndex));
-                    recognizedWords.Add(word.Text);
                 }
             }
 
-            if (recognizedWords.Count > 0)
-            {
-                recognizedLines.Add(string.Join(' ', recognizedWords));
-            }
         }
 
-        return TextExtractionResult.Success(RecognizedTextDocument.FromRecognition(
-            string.Join(Environment.NewLine, recognizedLines),
-            request.SourceSize,
-            regions,
-            qrCodes));
+        return TextExtractionResult.Success(documents.Build(request.SourceSize, regions, qrCodes));
     }
 
     private static async Task<SoftwareBitmap> LoadSoftwareBitmapAsync(Stream sourceStream)

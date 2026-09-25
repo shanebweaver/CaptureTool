@@ -2322,7 +2322,13 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
                 ? await _capturedImageTextReader.ReadAsync(_capturedImageTextSource!, cancellationToken) : null;
             cancellationToken.ThrowIfCancellationRequested();
             if (!operation.IsCurrent || processedRevision != _editRevision) return;
-            if (existing == null)
+            if (existing is { HasTextResults: true, HasQrCodeResults: true })
+            {
+                ApplyTextExtractionDocument(existing, processedRevision);
+                return;
+            }
+            if (existing != null) ApplyTextExtractionDocument(existing, processedRevision);
+            if (existing?.HasTextResults != true)
             {
                 IsTextExtractionRunning = false;
                 bool consented = await EnsureAiFeatureConsentAsync(AiFeatureId.TextExtraction, cancellationToken);
@@ -2330,7 +2336,8 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
                 if (!operation.IsCurrent || processedRevision != _editRevision) return;
                 if (!consented)
                 {
-                    ApplyActiveMode(_modeStateMachine.Deactivate(ImageEditMode.TextExtraction));
+                    if (existing?.QrCodes.Count is not > 0)
+                        ApplyActiveMode(_modeStateMachine.Deactivate(ImageEditMode.TextExtraction));
                     TrackEditTool("text_extraction", TelemetryOutcomes.Canceled);
                     return;
                 }
@@ -2376,12 +2383,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
                 return;
             }
 
-            TextExtractionRegions = NormalizeTextExtractionRegions(result.Document.Regions, result.Document.ImageSize);
-            TextExtractionQrCodes = NormalizeQrCodeRegions(result.Document.QrCodes, result.Document.ImageSize);
-            TextExtractionTool.SetText(result.Document.Text);
-            _textExtractionProcessedRevision = processedRevision;
-            InvalidateCanvasRequested?.Invoke(this, EventArgs.Empty);
-            TrackEditTool("text_extraction");
+            ApplyTextExtractionDocument(result.Document, processedRevision);
         }
         catch (OperationCanceledException)
         {
@@ -2403,6 +2405,16 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
             authorization?.Dispose();
             UpdateCanToggleTextExtraction();
         }
+    }
+
+    private void ApplyTextExtractionDocument(RecognizedTextDocument document, int processedRevision)
+    {
+        TextExtractionRegions = NormalizeTextExtractionRegions(document.Regions, document.ImageSize);
+        TextExtractionQrCodes = NormalizeQrCodeRegions(document.QrCodes, document.ImageSize);
+        TextExtractionTool.SetText(document.Text);
+        if (document.HasTextResults && document.HasQrCodeResults) _textExtractionProcessedRevision = processedRevision;
+        InvalidateCanvasRequested?.Invoke(this, EventArgs.Empty);
+        TrackEditTool("text_extraction");
     }
 
     private static Size GetRenderedImageSize(ImageCanvasRenderOptions options)
@@ -2435,6 +2447,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         foreach (RecognizedTextRegion region in regions)
         {
             RectangleF bounds = region.Bounds;
+            if (bounds.Width <= 0 || bounds.Height <= 0) continue; // Copy-only text has no clickable box.
             float horizontalPadding = Math.Clamp(bounds.Height * 0.15f, 2, 8);
             float verticalPadding = Math.Clamp(bounds.Height * 0.1f, 2, 6);
             bounds.Inflate(horizontalPadding, verticalPadding);

@@ -2097,9 +2097,9 @@ SOFTWARE.
     <value>Create or refresh saved analysis for your existing captures.</value>
   </data>
   <data name="AiSettings_DeleteHeader.Text" xml:space="preserve">
-    <value>Delete AI metadata</value>
+    <value>Delete capture analysis</value>
   </data>
   <data name="AiSettings_DeleteDescription.Text" xml:space="preserve">
-    <value>Remove all saved AI analysis. Your captures are kept.</value>
+    <value>Remove all saved analysis, including text, QR codes, and file details. Your captures are kept.</value>
   </data>
 </root>

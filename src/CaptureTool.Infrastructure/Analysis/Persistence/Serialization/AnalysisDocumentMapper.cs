@@ -40,7 +40,8 @@ internal static class AnalysisDocumentMapper
                     file.FileCreatedAt, file.FileModifiedAt, file.CapturedAt, file.Duration?.Ticks,
                     file.Image is { } image ? new(new(image.Dimensions.Width, image.Dimensions.Height), image.DpiX, image.DpiY) : null,
                     file.Video is { } video ? new(new(video.Dimensions.Width, video.Dimensions.Height), video.FrameRate, video.Bitrate, video.Codec) : null,
-                    file.Audio is { } audio ? new(audio.Channels, audio.SampleRate, audio.Bitrate, audio.Codec) : null),
+                    file.Audio is { } audio ? new(audio.Channels, audio.SampleRate, audio.Bitrate, audio.Codec) : null,
+                    CaptureTimeVerified: file.CapturedAt != null),
             },
             QrCodeMetadata qr => document with
             {
@@ -100,7 +101,9 @@ internal static class AnalysisDocumentMapper
 
     private static FileDetailsMetadata ToFileDetails(FileDetailsDocument file) =>
         new((AnalysisMediaKind)file.MediaKind, file.FileName, file.SizeBytes, file.ContentType,
-            file.FileCreatedAt, file.FileModifiedAt, file.CapturedAt,
+            // Older file-details results could confuse historical activity with capture time.
+            // Keep all other facts, but expose unverified capture dates as unknown until reanalysis.
+            file.FileCreatedAt, file.FileModifiedAt, file.CaptureTimeVerified ? file.CapturedAt : null,
             file.DurationTicks is { } ticks ? TimeSpan.FromTicks(ticks) : null,
             file.Image is { } image ? new(ToDimensions(image.Dimensions), image.DpiX, image.DpiY) : null,
             file.Video is { } video ? new(ToDimensions(video.Dimensions), video.FrameRate, video.Bitrate, video.Codec) : null,

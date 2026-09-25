@@ -1810,9 +1810,9 @@ SOFTWARE.
     <value>Gespeicherte Analysen für vorhandene Aufnahmen erstellen oder aktualisieren.</value>
   </data>
   <data name="AiSettings_DeleteHeader.Text" xml:space="preserve">
-    <value>KI-Metadaten löschen</value>
+    <value>Aufnahmeanalysen löschen</value>
   </data>
   <data name="AiSettings_DeleteDescription.Text" xml:space="preserve">
-    <value>Alle gespeicherten KI-Analysen entfernen. Ihre Aufnahmen bleiben erhalten.</value>
+    <value>Alle gespeicherten Analysen einschließlich Text, QR-Codes und Dateidetails entfernen. Ihre Aufnahmen bleiben erhalten.</value>
   </data>
 </root>

@@ -17,6 +17,9 @@ public sealed class CaptureMemoryViewModel : ViewModelBase
     private readonly IAppNotificationService _notifications;
     private string? _reportedFailure;
     private string? _pendingFailure;
+    private string? _reportedOperationFailure;
+    private string? _pendingOperationFailure;
+    private int _operationRecovered;
     private int _updateQueued;
     private bool _disposed;
 
@@ -55,7 +58,10 @@ public sealed class CaptureMemoryViewModel : ViewModelBase
     {
         if (_disposed) return;
         // Preserve a terminal failure even if the next capture starts before the UI dispatches.
-        if (GetFailure(_memory.State) is { } failure) Interlocked.Exchange(ref _pendingFailure, failure);
+        CaptureMemoryState state = _memory.State;
+        if (GetAnalysisFailure(state) is { } failure) Interlocked.Exchange(ref _pendingFailure, failure);
+        if (state.FailureCode is { } operationFailure) Interlocked.Exchange(ref _pendingOperationFailure, operationFailure);
+        else Interlocked.Exchange(ref _operationRecovered, 1);
         if (Interlocked.Exchange(ref _updateQueued, 1) != 0) return;
         if (!_ui.TryExecute(() =>
         {
@@ -75,9 +81,22 @@ public sealed class CaptureMemoryViewModel : ViewModelBase
             ? "CaptureMemory_Preparing" : "CaptureMemory_Analyzing") : string.Empty;
         ScanCommand.NotifyCanExecuteChanged();
         DeleteCommand.NotifyCanExecuteChanged();
+        if (Interlocked.Exchange(ref _operationRecovered, 0) != 0) _reportedOperationFailure = null;
+        string? pendingOperation = Interlocked.Exchange(ref _pendingOperationFailure, null);
+        string? operationFailure = state.FailureCode ?? pendingOperation;
+        ShowFailure(operationFailure, ref _reportedOperationFailure);
+        _reportedOperationFailure = state.FailureCode;
         string? pendingFailure = Interlocked.Exchange(ref _pendingFailure, null);
-        string? failure = GetFailure(state) ?? pendingFailure;
-        if (failure != null && failure != _reportedFailure)
+        string? failure = GetAnalysisFailure(state) ?? pendingFailure;
+        if (operationFailure == null) ShowFailure(failure, ref _reportedFailure);
+        // Starting the next queued capture is not recovery from the preceding failure.
+        if (GetAnalysisFailure(state) == null && state.Activity.Activity == AnalysisActivity.Idle &&
+            state.Activity.LastRunStatus == AnalysisRunStatus.Completed && !state.Activity.LastRunHadFailures)
+            _reportedFailure = null;
+    }
+    private void ShowFailure(string? failure, ref string? reported)
+    {
+        if (failure != null && failure != reported)
         {
             string key = failure switch
             {
@@ -89,15 +108,10 @@ public sealed class CaptureMemoryViewModel : ViewModelBase
                 _ => "CaptureMemory_Error_Storage"
             };
             _notifications.ShowError(_localization.GetString(key));
+            reported = failure;
         }
-        // Starting the next queued capture is not recovery from the preceding failure.
-        // Keep the notification deduplicated until work actually succeeds.
-        if (failure != null) _reportedFailure = failure;
-        if (GetFailure(state) == null && state.Activity.Activity == AnalysisActivity.Idle &&
-            state.Activity.LastRunStatus == AnalysisRunStatus.Completed && !state.Activity.LastRunHadFailures)
-            _reportedFailure = null;
     }
-    private static string? GetFailure(CaptureMemoryState state) => state.FailureCode ??
+    private static string? GetAnalysisFailure(CaptureMemoryState state) =>
         (state.Activity.Activity == AnalysisActivity.ProviderUnavailable ? "provider-unavailable" :
         state.Activity.LastRunStatus == AnalysisRunStatus.Failed || state.Activity.LastRunHadFailures ? "analysis-failed" : null);
     public override void Dispose()

@@ -1816,9 +1816,9 @@ SOFTWARE.
     <value>Créer ou actualiser les analyses enregistrées de vos captures existantes.</value>
   </data>
   <data name="AiSettings_DeleteHeader.Text" xml:space="preserve">
-    <value>Supprimer les métadonnées d’IA</value>
+    <value>Supprimer les analyses des captures</value>
   </data>
   <data name="AiSettings_DeleteDescription.Text" xml:space="preserve">
-    <value>Supprimer toutes les analyses d’IA enregistrées. Vos captures sont conservées.</value>
+    <value>Supprimer toutes les analyses enregistrées, y compris le texte, les codes QR et les détails des fichiers. Vos captures sont conservées.</value>
   </data>
 </root>

@@ -455,6 +455,7 @@ public sealed class CaptureMemoryIntegrationTests
         await app.CompletedAsync(imported, Ct);
         Assert.HasCount(2, await app.Catalog.ReadAllAsync(Ct));
         Assert.AreEqual(CaptureSourceOwnership.External, imported.SourceOwnership);
+        Assert.IsNull(imported.CapturedAt, "Recent activity does not establish when a historical capture was taken.");
         await app.Memory.ScanExistingAsync(Ct);
         Assert.HasCount(2, await app.Catalog.ReadAllAsync(Ct));
         Assert.AreEqual(original.SourcePath, (await app.Catalog.GetAsync(original.Id, Ct))!.SourcePath);

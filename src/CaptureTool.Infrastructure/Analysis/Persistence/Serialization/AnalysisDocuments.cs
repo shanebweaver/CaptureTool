@@ -31,7 +31,7 @@ internal sealed record SegmentDocument(string Text, long StartTicks, long EndTic
 
 internal sealed record FileDetailsDocument(int MediaKind, string FileName, long SizeBytes, string? ContentType,
     DateTimeOffset FileCreatedAt, DateTimeOffset FileModifiedAt, DateTimeOffset? CapturedAt, long? DurationTicks,
-    ImageFileDocument? Image, VideoFileDocument? Video, AudioFileDocument? Audio);
+    ImageFileDocument? Image, VideoFileDocument? Video, AudioFileDocument? Audio, bool CaptureTimeVerified = false);
 internal sealed record DimensionsDocument(uint Width, uint Height);
 internal sealed record ImageFileDocument(DimensionsDocument Dimensions, double? DpiX, double? DpiY);
 internal sealed record VideoFileDocument(DimensionsDocument Dimensions, double? FrameRate, uint? Bitrate, string? Codec);

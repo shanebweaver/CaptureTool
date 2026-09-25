@@ -23,10 +23,19 @@ video describe its first embedded track, not all tracks.
 Capture date is distinct from file creation date. The application worker reads
 the capture catalog once per run and passes its `CapturedAt` through the generic
 `AnalysisInput`. Adapters still own no policy, catalog, or metadata persistence.
-If there is no catalog entry, capture date stays null; a copied file's creation
-date is not substituted. Legacy catalog entries retain their previously recorded
-date, which may have originated from recent-history activity. All stored dates
-are normalized to UTC. EXIF capture dates are not substituted for the catalog.
+If the catalog has no known capture time, capture date stays null. Neither recent
+activity nor filesystem/EXIF dates substitute for it. Historical recents import
+uses an unknown capture time. Catalog v3 migrates older imported entries by
+clearing their inferred dates while preserving IDs, paths, registration order,
+and authorization; dates recorded for application-owned captures are retained.
+The migration must persist successfully before its state is exposed.
+
+New file-details documents mark known capture times as verified. Older stored
+file details lack that marker and return a null capture date, conservatively
+including previously correct dates; other facts and provenance are unchanged.
+Explicit reanalysis can restore a known catalog date. This avoids exposing old
+activity-derived dates without automatically rescanning the library. All stored
+dates are normalized to UTC.
 
 The scanner reads properties without rendering images, sampling frames,
 transcoding audio, or generating scratch media. The existing worker source lease

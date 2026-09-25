@@ -217,6 +217,62 @@ dotnet publish tools/CaptureTool.Analysis.Smoke/CaptureTool.Analysis.Smoke.cspro
 dotnet build CaptureTool.slnx -m:1 -c Release -p:Platform=x64
 ```
 
+## Slice 4 readiness audit
+
+The follow-up architecture/UX review reproduced four defects in three areas and
+corrected them before moving on:
+
+- Historical recents used last activity as capture time. New imports now carry an
+  unknown time. Catalog v3 clears inferred dates on older imported entries while
+  preserving identity, paths, ordering, and authorization. Legacy file-details
+  results without the verification marker expose an unknown capture time while
+  retaining every other fact. Explicit reanalysis can restore known catalog dates.
+- QR-only saved metadata was discarded if OCR failed, and saved OCR retained glyphs
+  inside QR bounds that fresh extraction excluded. One application document builder
+  now owns reading order, QR exclusion, and copy text for both paths. Missing OCR
+  and missing QR remain independent from successful empty results. The editor keeps
+  available results through unavailable/declined/failed supplemental scanning and
+  retries incomplete documents. Unknown word bounds stay copyable without hitboxes.
+- A recovered settings failure could suppress a later independent error while
+  scanning stayed off. Settings operation recovery now resets its own notification
+  state, including coalesced updates; failing analysis batches still deduplicate.
+
+The delete setting now says **Delete capture analysis** in all six locales, with
+copy covering text, QR codes, and file details. Every confirmed deletion retains
+its delete-all semantics, and its action stays disabled throughout deletion.
+
+| Requirement | Architecture and evidence |
+| --- | --- |
+| Extensible, ordered local analysis | `CaptureAnalysisConfiguration` owns ordered steps, candidates, and budgets; adding an existing-capability model changes its adapter/registration and configuration. Worker tests prove FIFO, fallbacks, empty success, language compatibility, timeout/drain, and non-overlap. |
+| Durable secure metadata | One protected per-capture document owns run state and results; source/run/generation checks fence stale publication. Storage tests cover atomic failure, superseded runs, restart, unknown schema, and clear with incomplete cleanup. |
+| Finalization and identity | Durable registration precedes admission; stable sequence/boundaries distinguish future captures from history. Integration tests cover delayed callbacks, restart, auto-save aliases, idempotent recents import, and capture-date migration. |
+| Shared consent and controls | One persisted local-AI consent plus an independent scanning toggle. Tests cover prompt cancellation, queued revocation, stale dialogs, save failures, enable/backfill, disable/retain, and delete-all recovery. |
+| Lifetime and progress | One application service owns the runner; pages observe dispatcher-coalesced snapshots. Tests cover navigation, preparation versus execution, idle/unavailable states, terminal failure delivery, and notification recovery. |
+| Existing OCR consumer | Source-hash and edit-revision checks precede reuse; shared assembly handles partial OCR/QR, copy text, and bounds. Tests include revoked consent and late non-cooperative results. |
+| Bounded local media work | Existing decoder limits and leased scratch remain in place. Real Windows fixture tests cover QR decoding, file properties, audio scratch cleanup, and cancellation. |
+| Scope and presentation | Settings follow existing rows and resource conventions; one consent checkbox and a passive snackbar. No editor analysis pane or Home search UX was introduced. |
+
+No additional framework or persistence layer is justified for slice 3. The one
+architectural watchpoint is full-document queue discovery under the store gate:
+slice 4 now explicitly measures startup, cancellation, delete, and settings latency
+with a large library before deciding whether a small work index is necessary.
+
+Validation for this audit: **1,002 managed tests pass**, with **94.34% line coverage**
+(7,361 / 7,803). Both desktop workflows pass. Narrow light/dark screenshots were
+inspected; the updated deletion copy wraps cleanly and controls remain aligned.
+All six locale resources are valid and nonempty. x64 and ARM64 Release solution
+builds have zero warnings/errors. No models were downloaded or invoked in this pass.
+The app and provider harness both publish with x64 Native AOT, each with exactly
+the four accepted Betalgo converter IL2026/IL3050 warnings and no additional
+diagnostics. Their logs are `publish-app-aot.log` and `publish-harness-aot.log`.
+Normal x64 solution outputs were restored with a clean build after publishing
+(`build-x64-restored.log`). Slice 3 is ready for the release verification in slice 4.
+
+Regression evidence is under `artifacts/slice3-readiness/`. Commands match the
+preceding hardening block with that artifact directory; `build-x64.log`,
+`build-arm64.log`, `desktop-workflows.log`, `managed-tests.log`, and
+`coverage.cobertura.xml` retain the results. Focused regression logs are also kept.
+
 ## Remaining release verification
 
 The [slice 4 PRD](prd-capture-analysis-4-verification.md) still owns the Native AOT

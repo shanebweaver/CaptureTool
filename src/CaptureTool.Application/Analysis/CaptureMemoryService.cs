@@ -272,7 +272,7 @@ internal sealed class CaptureMemoryService : ICaptureMemoryService, IDisposable
                 if (!Current(epoch)) return;
                 var assets = await _catalog.ReadAllAsync(ct).ConfigureAwait(false);
                 if (assets.Any(asset => SamePath(asset.SourcePath, entry.FilePath) || SamePath(asset.PreferredPath, entry.FilePath))) return;
-                var asset = new CaptureAsset(CaptureId.New(), entry.CaptureFileType, new DateTimeOffset(DateTime.SpecifyKind(entry.LastActivityUtc, DateTimeKind.Utc)),
+                var asset = new CaptureAsset(CaptureId.New(), entry.CaptureFileType, null,
                     entry.FilePath, CaptureSourceOwnership.External);
                 await _catalog.RegisterAsync(asset, ct).ConfigureAwait(false);
             }, ct).ConfigureAwait(false);

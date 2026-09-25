@@ -32,6 +32,7 @@ internal static class ImageServiceCollectionExtensions
     public static IServiceCollection AddImageEditUseCases(this IServiceCollection services)
     {
         services.AddTransient<ICapturedImageTextReader, CapturedImageTextReader>();
+        services.AddSingleton<IRecognizedTextDocumentBuilder, RecognizedTextDocumentBuilder>();
         services.AddTransient<IChromaKeyAccessService, ChromaKeyAccessService>();
         services.AddTransient<IOpenImageEditPageUseCase, OpenImageEditPageUseCase>();
 

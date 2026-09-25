@@ -1816,9 +1816,9 @@ SOFTWARE.
     <value>Crear o actualizar el análisis guardado de las capturas existentes.</value>
   </data>
   <data name="AiSettings_DeleteHeader.Text" xml:space="preserve">
-    <value>Eliminar metadatos de IA</value>
+    <value>Eliminar análisis de capturas</value>
   </data>
   <data name="AiSettings_DeleteDescription.Text" xml:space="preserve">
-    <value>Eliminar todos los análisis de IA guardados. Las capturas se conservan.</value>
+    <value>Eliminar todos los análisis guardados, incluidos texto, códigos QR y detalles de archivos. Las capturas se conservan.</value>
   </data>
 </root>

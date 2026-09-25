@@ -91,7 +91,61 @@ public sealed class CaptureMemoryStorageTests
         Assert.AreEqual(authorization, added.AutomaticAuthorization);
         Assert.AreEqual(2L, added.Sequence);
         var persisted = JsonSerializer.Deserialize(environment.Protector.Unprotect(await File.ReadAllBytesAsync(path, Ct)), CaptureCatalogJsonContext.Default.CaptureCatalogDocument);
-        Assert.AreEqual(2, persisted!.Version);
+        Assert.AreEqual(3, persisted!.Version);
+    }
+
+    [TestMethod]
+    [DataRow(1)]
+    [DataRow(2)]
+    public async Task LegacyCatalogDropsImportedActivityDateAndPreservesIdentityAndAuthorization(int version)
+    {
+        using var environment = new AnalysisTestEnvironment();
+        var at = DateTimeOffset.UtcNow;
+        Guid authorization = Guid.NewGuid();
+        var original = new CaptureCatalogDocument(version, [
+            new(Guid.NewGuid(), (int)CaptureFileType.Image, at, Path.Combine(environment.Root, "owned.png"), (int)CaptureSourceOwnership.Application, null, 7, authorization),
+            new(Guid.NewGuid(), (int)CaptureFileType.Video, at, Path.Combine(environment.Root, "imported.mp4"), (int)CaptureSourceOwnership.External, Path.Combine(environment.Root, "saved.mp4"), 9, null)
+        ], 12);
+        string path = Path.Combine(environment.Root, "CaptureAssets", "catalog.bin");
+        var documents = new ProtectedDocumentFile(environment.Protector, environment.Files);
+        await documents.WriteAsync(path, original, CaptureCatalogJsonContext.Default.CaptureCatalogDocument, Ct);
+        using var catalog = environment.CreateCatalog();
+        var migrated = await catalog.ReadRegistrationsAsync(Ct);
+        Assert.AreEqual(at, migrated[0].Asset.CapturedAt);
+        Assert.IsNull(migrated[1].Asset.CapturedAt);
+        for (int i = 0; i < migrated.Count; i++)
+        {
+            Assert.AreEqual(original.Assets[i].Id, migrated[i].Asset.Id.Value);
+            Assert.AreEqual(original.Assets[i].SourcePath, migrated[i].Asset.SourcePath);
+            Assert.AreEqual(original.Assets[i].PreferredPath, migrated[i].Asset.PreferredPath);
+            Assert.AreEqual(version == 1 ? i + 1 : original.Assets[i].Sequence, migrated[i].Sequence);
+            Assert.AreEqual(version == 1 ? null : original.Assets[i].AutomaticAuthorization, migrated[i].AutomaticAuthorization);
+        }
+        Assert.AreEqual(version == 1 ? 2 : 12, await catalog.GetBoundaryAsync(Ct));
+        using var reopened = environment.CreateCatalog();
+        CollectionAssert.AreEqual(migrated.ToArray(), (await reopened.ReadRegistrationsAsync(Ct)).ToArray());
+        Assert.AreEqual(3, (await documents.ReadAsync(path, CaptureCatalogJsonContext.Default.CaptureCatalogDocument, Ct))!.Version);
+        var knownExternal = new CaptureAsset(CaptureId.New(), CaptureFileType.Audio, at, Path.Combine(environment.Root, "known.wav"), CaptureSourceOwnership.External);
+        await reopened.RegisterAsync(knownExternal, Ct);
+        Assert.AreEqual(at, (await catalog.GetAsync(knownExternal.Id, Ct))!.CapturedAt);
+    }
+
+    [TestMethod]
+    public async Task FailedCatalogMigrationDoesNotExposeOrOverwriteUncommittedState()
+    {
+        using var environment = new AnalysisTestEnvironment();
+        string path = Path.Combine(environment.Root, "CaptureAssets", "catalog.bin");
+        var documents = new ProtectedDocumentFile(environment.Protector, environment.Files);
+        await documents.WriteAsync(path, new CaptureCatalogDocument(2, [
+            new(Guid.NewGuid(), (int)CaptureFileType.Image, DateTimeOffset.UtcNow, Path.Combine(environment.Root, "old.png"), (int)CaptureSourceOwnership.External, null, 1)
+        ], 1), CaptureCatalogJsonContext.Default.CaptureCatalogDocument, Ct);
+        byte[] committed = await File.ReadAllBytesAsync(path, Ct);
+        environment.Files.BeforeWrite = (_, _) => throw new IOException("Injected migration failure.");
+        using var catalog = environment.CreateCatalog();
+        await Assert.ThrowsExactlyAsync<IOException>(() => catalog.ReadAllAsync(Ct));
+        CollectionAssert.AreEqual(committed, await File.ReadAllBytesAsync(path, Ct));
+        environment.Files.BeforeWrite = null;
+        Assert.IsNull((await catalog.ReadAllAsync(Ct)).Single().CapturedAt);
     }
 
     [TestMethod]
