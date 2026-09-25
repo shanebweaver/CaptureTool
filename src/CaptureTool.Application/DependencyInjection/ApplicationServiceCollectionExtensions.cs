@@ -46,6 +46,7 @@ public static class ApplicationServiceCollectionExtensions
         services.AddTransient<IUseCaseExecutor, UseCaseExecutor>();
         services.AddSingleton<IAiFeatureConsentService, AiFeatureConsentService>();
         services.AddSingleton(CaptureAnalysisConfiguration.CreateDefault());
+        services.AddSingleton<IMetadataProcessor, StructuredFactsProcessor>();
         services.AddSingleton<CaptureMemoryAuthorization>();
         services.AddSingleton<IAnalysisAuthorization>(provider => provider.GetRequiredService<CaptureMemoryAuthorization>());
         services.AddSingleton<ICaptureAnalysisWorker, CaptureAnalysisWorker>();

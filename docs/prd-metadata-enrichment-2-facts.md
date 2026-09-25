@@ -1,6 +1,6 @@
 # Metadata enrichment — slice 2: structured facts
 
-Status: planned; depends on review of slice 1.
+Status: Implemented and reviewed; registered in the shared pipeline. See [final review and verification](metadata-enrichment-verification.md).
 
 ## Goal
 
@@ -21,7 +21,7 @@ Extract useful literal facts from existing metadata with predictable, local rule
 ## Acceptance
 
 - A fixture corpus covers positive examples and common false positives: punctuation near URLs, invalid dates, plain numbers, ambiguous currency symbols, ordinary prose mistaken for codes, repeated video-frame OCR, multilingual text, empty input, and very large input.
-- Facts are deterministic for the same input and adapter version. Results identify their processor and exact inputs.
+- Facts are deterministic for the same input, configured limits, and adapter version. Results identify their processor and exact inputs.
 - Cancellation and malformed input do not publish partial success. A deliberate input limit produces an explicitly partial result, not silent data loss.
 - Run the relevant unit and storage regressions. No settings/editor/Home UX changes or automatic background scheduling yet.
 

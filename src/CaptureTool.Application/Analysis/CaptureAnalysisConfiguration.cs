@@ -18,40 +18,65 @@ public sealed class CaptureAnalysisConfiguration
     }
 
     /// <summary>Call when composing the worker, after the configured adapters have been registered.</summary>
-    public void ValidateAnalyzers(IEnumerable<MediaAnalyzerDescriptor> analyzers)
+    public void ValidateAnalyzers(IEnumerable<MediaAnalyzerDescriptor> analyzers,
+        IEnumerable<MetadataProcessorDescriptor>? processors = null)
     {
         ArgumentNullException.ThrowIfNull(analyzers);
         MediaAnalyzerDescriptor[] copy = analyzers.ToArray();
         if (copy.Any(analyzer => analyzer == null) || copy.Select(analyzer => analyzer.Id).Distinct(StringComparer.Ordinal).Count() != copy.Length)
             throw new ArgumentException("Analyzer identities must be unique.", nameof(analyzers));
         var byId = copy.ToDictionary(analyzer => analyzer.Id, StringComparer.Ordinal);
+        MetadataProcessorDescriptor[] metadata = processors?.ToArray() ?? [];
+        if (metadata.Any(processor => processor == null) || metadata.Select(processor => processor.Id).Distinct(StringComparer.Ordinal).Count() != metadata.Length ||
+            metadata.Any(processor => byId.ContainsKey(processor.Id)))
+            throw new ArgumentException("Provider identities must be unique.", nameof(processors));
+        var metadataById = metadata.ToDictionary(processor => processor.Id, StringComparer.Ordinal);
         foreach (MediaAnalysisPlan plan in Plans)
-        foreach (AnalysisStep step in plan.Steps)
-        foreach (string id in step.Candidates)
         {
-            if (!byId.TryGetValue(id, out MediaAnalyzerDescriptor? analyzer) ||
-                analyzer.Capability != step.Capability || !analyzer.SupportedMedia.Contains(plan.MediaKind))
-                throw new ArgumentException($"Analyzer '{id}' is missing or incompatible with the configured step.", nameof(analyzers));
+            bool metadataStarted = false;
+            foreach (AnalysisStep step in plan.Steps)
+            {
+                MetadataProcessorDescriptor? contract = metadataById.GetValueOrDefault(step.Candidates[0]);
+                if (contract != null) metadataStarted = true;
+                else if (metadataStarted) throw new ArgumentException("All media steps must precede metadata processing.", nameof(processors));
+                foreach (string id in step.Candidates)
+                {
+                    if (contract != null)
+                    {
+                        if (!metadataById.TryGetValue(id, out MetadataProcessorDescriptor? processor) || processor.Capability != step.Capability ||
+                            processor.Version != contract.Version || !processor.Inputs.SequenceEqual(contract.Inputs) || processor.Limits != contract.Limits ||
+                            step.ExecutionTimeout > processor.Limits.ExecutionTimeout)
+                            throw new ArgumentException($"Processor '{id}' is missing or incompatible with the configured contract.", nameof(processors));
+                        continue;
+                    }
+                    if (!byId.TryGetValue(id, out MediaAnalyzerDescriptor? analyzer) ||
+                        analyzer.Capability != step.Capability || !analyzer.SupportedMedia.Contains(plan.MediaKind))
+                        throw new ArgumentException($"Analyzer '{id}' is missing or incompatible with the configured step.", nameof(analyzers));
+                }
+            }
         }
     }
 
     public static CaptureAnalysisConfiguration CreateDefault() => new([
-        new(AnalysisMediaKind.Image, "image-v4", [
+        new(AnalysisMediaKind.Image, "image-v5", [
             Step(AnalysisCapability.FileDetails, ["windows-file-details"], 1),
             Step(AnalysisCapability.QrCodeDetection, ["zxing-image-qr"], 2),
             Step(AnalysisCapability.TextRecognition, ["windows-ai-ocr-document", "windows-ocr-document"], 2),
             Step(AnalysisCapability.Description, ["windows-image-description", "foundry-local-image-description"], 2),
+            .. MetadataEnrichmentConfiguration.Steps,
         ]),
-        new(AnalysisMediaKind.Audio, "audio-v2", [
+        new(AnalysisMediaKind.Audio, "audio-v3", [
             Step(AnalysisCapability.FileDetails, ["windows-file-details"], 1),
             Step(AnalysisCapability.Transcription, ["foundry-local-nemotron-multilingual-speech-transcript", "foundry-local-speech-transcript"], 30),
+            .. MetadataEnrichmentConfiguration.Steps,
         ]),
-        new(AnalysisMediaKind.Video, "video-v4", [
+        new(AnalysisMediaKind.Video, "video-v5", [
             Step(AnalysisCapability.FileDetails, ["windows-file-details"], 1),
             Step(AnalysisCapability.QrCodeDetection, ["zxing-video-frame-qr"], 15),
             Step(AnalysisCapability.TextRecognition, ["windows-ai-video-frame-ocr", "windows-video-frame-ocr"], 15),
             Step(AnalysisCapability.Transcription, ["foundry-local-nemotron-multilingual-speech-transcript", "foundry-local-speech-transcript"], 30),
             Step(AnalysisCapability.Description, ["windows-video-frame-description", "foundry-local-image-description"], 15),
+            .. MetadataEnrichmentConfiguration.Steps,
         ]),
     ]);
 

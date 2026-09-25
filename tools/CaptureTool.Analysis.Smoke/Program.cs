@@ -33,11 +33,24 @@ if (args.Contains("--recovery-child", StringComparer.Ordinal)) return await Reco
 if (args.Contains("--recovery-resume", StringComparer.Ordinal)) return await RecoveryChecks.ChildAsync(output, args[^1], resume: true);
 if (args.Contains("--scale-checks", StringComparer.Ordinal)) return await ScaleChecks.RunAsync(output);
 var storage = new SmokeStorage(output);
+IEnumerable<(MetadataProcessorDescriptor Descriptor, string Alias)> metadataModels = MetadataEnrichmentConfiguration.SemanticModels;
+int modelOption = Array.IndexOf(args, "--enrichment-model");
+if (modelOption >= 0)
+{
+    if (modelOption + 1 == args.Length) return 2;
+    string alias = args[modelOption + 1];
+    metadataModels = new[] { AnalysisCapability.CaptureSynopsis, AnalysisCapability.CaptureClassification }
+        .Select(capability => (MetadataEnrichmentConfiguration.CreateSemantic("foundry-evaluation", capability), alias));
+    if (args.Contains("--enrichment-probe", StringComparer.Ordinal)) return await MetadataProbe.RunAsync(storage, output, alias);
+}
 var services = new ServiceCollection().AddGenericServices().AddApplicationServices()
-    .AddSingleton<IStorageService>(storage).AddWindowsAnalysisProviders();
+    .AddSingleton<IStorageService>(storage).AddWindowsAnalysisProviders(metadataModels);
 using ServiceProvider provider = services.BuildServiceProvider();
+if (args.Contains("--enrichment-checks", StringComparer.Ordinal))
+    return await MetadataChecks.RunAsync(provider.GetServices<IMetadataProcessor>(), output, args);
 IMediaAnalyzer[] analyzers = provider.GetServices<IMediaAnalyzer>().ToArray();
-CaptureAnalysisConfiguration.CreateDefault().ValidateAnalyzers(analyzers.Select(analyzer => analyzer.Descriptor));
+CaptureAnalysisConfiguration.CreateDefault().ValidateAnalyzers(analyzers.Select(analyzer => analyzer.Descriptor),
+    provider.GetServices<IMetadataProcessor>().Select(processor => processor.Descriptor));
 string imagePath = Path.Combine(output, "synthetic.png");
 using (var bitmap = new Bitmap(1000, 350))
 using (Graphics graphics = Graphics.FromImage(bitmap))

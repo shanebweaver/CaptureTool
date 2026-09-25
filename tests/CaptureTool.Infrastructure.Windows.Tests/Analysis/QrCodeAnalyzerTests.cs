@@ -31,9 +31,10 @@ public sealed class QrCodeAnalyzerTests
     public void DefaultCompositionIncludesQrAnalyzersWithoutDependingOnAnOcrModel()
     {
         using var services = new ServiceCollection().AddSingleton(Mock.Of<IStorageService>()).AddSingleton(Mock.Of<IScratchArtifactStore>())
-            .AddWindowsAnalysisProviders().BuildServiceProvider();
+            .AddSingleton<IMetadataProcessor, StructuredFactsProcessor>()
+            .AddWindowsAnalysisProviders(MetadataEnrichmentConfiguration.SemanticModels).BuildServiceProvider();
         var analyzers = services.GetServices<IMediaAnalyzer>().ToArray();
-        CaptureAnalysisConfiguration.CreateDefault().ValidateAnalyzers(analyzers.Select(analyzer => analyzer.Descriptor));
+        CaptureAnalysisConfiguration.CreateDefault().ValidateAnalyzers(analyzers.Select(analyzer => analyzer.Descriptor), services.GetServices<IMetadataProcessor>().Select(processor => processor.Descriptor));
         Assert.HasCount(2, analyzers.Where(analyzer => analyzer.Descriptor.Capability == AnalysisCapability.QrCodeDetection).ToArray());
     }
 

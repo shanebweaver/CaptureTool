@@ -22,7 +22,7 @@ try {
         # PublishAot is local to each executable. A global property would reach
         # the netstandard build-time generator and fail before compiling the app.
         $arguments = @('publish', $target.Project, '-c', 'Release', "-p:Platform=$Platform", '-r', $rid,
-            '-o', $destination, '-m:1', '-p:TrimmerSingleWarn=false') + $target.Extra
+            '-o', $destination, '-m:1', '-p:UseSharedCompilation=false', '-p:TrimmerSingleWarn=false') + $target.Extra
         & dotnet @arguments *> $log
         $publishExit = $LASTEXITCODE
         & (Join-Path $PSScriptRoot 'assert-native-aot-log.ps1') -LogPath $log -PublishExitCode $publishExit

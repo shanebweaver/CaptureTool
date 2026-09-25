@@ -20,5 +20,8 @@ public sealed record AnalysisCapability
     public static AnalysisCapability QrCodeDetection { get; } = new("qr-code-detection", 1);
     public static AnalysisCapability Description { get; } = new("description", 1);
     public static AnalysisCapability Transcription { get; } = new("transcription", 1);
+    public static AnalysisCapability StructuredFacts { get; } = new("structured-facts", 1);
+    public static AnalysisCapability CaptureSynopsis { get; } = new("capture-synopsis", 1);
+    public static AnalysisCapability CaptureClassification { get; } = new("capture-classification", 1);
     public override string ToString() => $"{Name}/v{SchemaVersion}";
 }

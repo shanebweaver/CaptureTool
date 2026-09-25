@@ -146,6 +146,7 @@ internal sealed partial class LocalCaptureAnalysisStore
             AnalysisRun run = ToWork(token.Generation, document).Run;
             if (run.Status != AnalysisRunStatus.Running || run.Steps[run.CompletedSteps.Count] != step.Capability) return false;
             CaptureAnalysisRecord record = AnalysisDocumentMapper.ToRecord(document);
+            if (result != null && !record.HasCurrentInputs(result)) return false;
             if (result != null) record = record.WithResult(result);
             AnalysisDocument next = AnalysisDocumentMapper.ToDocument(record) with
             {

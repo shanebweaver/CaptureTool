@@ -1,6 +1,6 @@
 # Metadata enrichment — slice 3: titles, summaries, and classification
 
-Status: planned; depends on review of slices 1 and 2.
+Status: Implemented and reviewed, with a measured stable local text provider. See [provider decision](metadata-enrichment-provider-decision.md) and [verification](metadata-enrichment-verification.md).
 
 ## Goal
 

@@ -91,7 +91,7 @@ internal sealed class FoundryImageDescriptionAnalyzer(string id, string alias, F
         catch (InvalidAnalysisMediaException) { return AnalyzerOutcome.Unsuccessful(AnalyzerOutcomeKind.InvalidSource, "invalid-media"); }
         finally
         {
-            try { if (serving) await runtime.StopVisionServiceAsync().ConfigureAwait(false); }
+            try { if (serving) await runtime.StopServiceAsync().ConfigureAwait(false); }
             finally { await model.UnloadAsync(CancellationToken.None).ConfigureAwait(false); }
         }
     }

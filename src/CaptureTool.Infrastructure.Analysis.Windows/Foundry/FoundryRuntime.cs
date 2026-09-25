@@ -43,22 +43,25 @@ internal sealed class FoundryRuntime(IStorageService storage) : IDisposable
 
     // Vision in SDK 1.2.4 uses its documented Responses endpoint. Bind only an OS-assigned
     // loopback port, and keep the listener alive only for this provider invocation.
-    public async Task<Uri> StartVisionServiceAsync(CancellationToken ct)
+    public Task<Uri> StartVisionServiceAsync(CancellationToken ct) => StartServiceAsync("/v1/responses", ct);
+    public Task<Uri> StartChatServiceAsync(CancellationToken ct) => StartServiceAsync("/v1/chat/completions", ct);
+
+    private async Task<Uri> StartServiceAsync(string path, CancellationToken ct)
     {
-        if (!_ownsManager || _manager == null) throw new InvalidOperationException("Vision requires an application-owned runtime.");
+        if (!_ownsManager || _manager == null) throw new InvalidOperationException("Inference requires an application-owned runtime.");
         try
         {
             await _manager.StartWebServiceAsync(ct).ConfigureAwait(false);
-            string address = _manager.Urls?.Single() ?? throw new InvalidOperationException("Vision endpoint is unavailable.");
+            string address = _manager.Urls?.Single() ?? throw new InvalidOperationException("Inference endpoint is unavailable.");
             var endpoint = new Uri(address, UriKind.Absolute);
             if (endpoint.Scheme != "http" || endpoint.Host != "127.0.0.1" || endpoint.Port <= 0)
-                throw new InvalidOperationException("Vision endpoint must be local.");
-            return new Uri(endpoint, "/v1/responses");
+                throw new InvalidOperationException("Inference endpoint must be local.");
+            return new Uri(endpoint, path);
         }
-        catch { await StopVisionServiceAsync().ConfigureAwait(false); throw; }
+        catch { await StopServiceAsync().ConfigureAwait(false); throw; }
     }
 
-    public Task StopVisionServiceAsync() => _manager?.StopWebServiceAsync(CancellationToken.None) ?? Task.CompletedTask;
+    public Task StopServiceAsync() => _manager?.StopWebServiceAsync(CancellationToken.None) ?? Task.CompletedTask;
 
     public void Dispose()
     {

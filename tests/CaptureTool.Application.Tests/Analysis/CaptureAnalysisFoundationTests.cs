@@ -43,7 +43,7 @@ public sealed class CaptureAnalysisFoundationTests
         CaptureAnalysisConfiguration configuration = CaptureAnalysisConfiguration.CreateDefault();
         Assert.HasCount(3, configuration.Plans);
         MediaAnalysisPlan video = configuration.Plans.Single(plan => plan.MediaKind == AnalysisMediaKind.Video);
-        CollectionAssert.AreEqual(new[] { AnalysisCapability.FileDetails, AnalysisCapability.QrCodeDetection, AnalysisCapability.TextRecognition, AnalysisCapability.Transcription, AnalysisCapability.Description },
+        CollectionAssert.AreEqual(new[] { AnalysisCapability.FileDetails, AnalysisCapability.QrCodeDetection, AnalysisCapability.TextRecognition, AnalysisCapability.Transcription, AnalysisCapability.Description, AnalysisCapability.StructuredFacts, AnalysisCapability.CaptureSynopsis, AnalysisCapability.CaptureClassification },
             video.Steps.Select(step => step.Capability).ToArray());
         CollectionAssert.AreEqual(new[] { "zxing-video-frame-qr" }, video.Steps[1].Candidates.ToArray());
         CollectionAssert.AreEqual(new[] { "windows-ai-video-frame-ocr", "windows-video-frame-ocr" }, video.Steps[2].Candidates.ToArray());
@@ -52,9 +52,9 @@ public sealed class CaptureAnalysisFoundationTests
         CollectionAssert.AreEqual(new[] { "windows-image-description", "foundry-local-image-description" }, image.Steps.Single(step => step.Capability == AnalysisCapability.Description).Candidates.ToArray());
         Assert.AreEqual(AnalysisCapability.QrCodeDetection, image.Steps[1].Capability);
         Assert.AreEqual("zxing-image-qr", image.Steps[1].Candidates.Single());
-        Assert.AreEqual("image-v4", image.Version);
-        Assert.AreEqual("video-v4", video.Version);
-        Assert.AreEqual("audio-v2", configuration.Plans.Single(plan => plan.MediaKind == AnalysisMediaKind.Audio).Version);
+        Assert.AreEqual("image-v5", image.Version);
+        Assert.AreEqual("video-v5", video.Version);
+        Assert.AreEqual("audio-v3", configuration.Plans.Single(plan => plan.MediaKind == AnalysisMediaKind.Audio).Version);
         foreach (var plan in configuration.Plans)
         {
             Assert.AreEqual(AnalysisCapability.FileDetails, plan.Steps[0].Capability);

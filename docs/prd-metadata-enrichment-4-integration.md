@@ -1,6 +1,6 @@
 # Metadata enrichment — slice 4: pipeline integration and verification
 
-Status: planned; depends on reviewed processor contracts and at least the deterministic facts adapter.
+Status: Implemented and reviewed; available local verification passed. Device/environment release gates remain explicitly documented. See [integration review](metadata-enrichment-verification.md).
 
 ## Goal
 

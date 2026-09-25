@@ -32,10 +32,11 @@ public sealed class FileDetailsAnalyzerTests
     public async Task DefaultPlansUseOneAlwaysReadyLocalAdapterForEveryMediaKind()
     {
         using var services = new ServiceCollection().AddSingleton(Mock.Of<IStorageService>()).AddSingleton(Mock.Of<IScratchArtifactStore>())
-            .AddWindowsAnalysisProviders().BuildServiceProvider();
+            .AddSingleton<IMetadataProcessor, StructuredFactsProcessor>()
+            .AddWindowsAnalysisProviders(MetadataEnrichmentConfiguration.SemanticModels).BuildServiceProvider();
         var analyzers = services.GetServices<IMediaAnalyzer>().ToArray();
         var configuration = CaptureAnalysisConfiguration.CreateDefault();
-        configuration.ValidateAnalyzers(analyzers.Select(analyzer => analyzer.Descriptor));
+        configuration.ValidateAnalyzers(analyzers.Select(analyzer => analyzer.Descriptor), services.GetServices<IMetadataProcessor>().Select(processor => processor.Descriptor));
         var analyzer = analyzers.Single(item => item.Descriptor.Capability == AnalysisCapability.FileDetails);
         foreach (var kind in Enum.GetValues<AnalysisMediaKind>())
             Assert.AreEqual(AnalyzerAvailability.Ready, await analyzer.GetAvailabilityAsync(kind, null, Ct));
