@@ -44,6 +44,8 @@ internal static class AnalysisDocumentMapper
                 Facts = facts.Facts.Select(fact => new FactDocument((int)fact.Kind, fact.Value,
                     fact.Evidence.Select(evidence => new EvidenceDocument(evidence.ResultId,
                         evidence.EntryIndex, evidence.Start, evidence.Length)).ToArray())).ToArray(),
+                Coverage = facts.Coverage is { } coverage ? new(coverage.AvailableEntries, coverage.IncludedEntries,
+                    coverage.IncludedCharacters, (int)coverage.Limits) : null,
             },
             FileDetailsMetadata file => document with
             {
@@ -85,10 +87,13 @@ internal static class AnalysisDocumentMapper
             throw new InvalidDataException("Unsupported or invalid analysis result.");
         if (document.Facts != null && document.ResultId == null)
             throw new InvalidDataException("Derived metadata requires a persisted result identity.");
+        if (document.Facts == null && document.Coverage != null)
+            throw new InvalidDataException("Processing coverage belongs to structured facts metadata.");
         AnalysisPayload payload = document switch
         {
             { Capability: "structured-facts", Facts: not null, FileDetails: null, Text: null, Descriptions: null, Transcript: null, QrCodes: null } =>
-                new StructuredFactsMetadata(document.Facts.Select(ToFact)),
+                new StructuredFactsMetadata(document.Facts.Select(ToFact), document.Coverage is { } coverage ?
+                    new(coverage.AvailableEntries, coverage.IncludedEntries, coverage.IncludedCharacters, (MetadataProcessingLimit)coverage.Limits) : null),
             { Capability: "file-details", FileDetails: not null, Text: null, Descriptions: null, Transcript: null, QrCodes: null, Facts: null } =>
                 ToFileDetails(document.FileDetails),
             { Capability: "qr-code-detection", QrCodes: not null, Text: null, Descriptions: null, Transcript: null, FileDetails: null, Facts: null } =>

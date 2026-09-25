@@ -14,11 +14,13 @@ internal sealed record ResultDocument(string Capability, int SchemaVersion, Prod
     [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] FileDetailsDocument? FileDetails = null,
     [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] Guid? ResultId = null,
     [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] InputReferenceDocument[]? Inputs = null,
-    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] FactDocument[]? Facts = null);
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] FactDocument[]? Facts = null,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] CoverageDocument? Coverage = null);
 
 internal sealed record InputReferenceDocument(CapabilityDocument Capability, Guid? ResultId);
 internal sealed record EvidenceDocument(Guid ResultId, int EntryIndex, int Start, int Length);
 internal sealed record FactDocument(int Kind, string Value, EvidenceDocument[] Evidence);
+internal sealed record CoverageDocument(long AvailableEntries, int IncludedEntries, int IncludedCharacters, int Limits);
 
 internal sealed record RunDocument(Guid Id, Guid AuthorizationId, long QueueOrder, string PlanVersion,
     string SourcePath, string? Language, string? SourceSha256, int Status, CapabilityDocument[] Steps,
