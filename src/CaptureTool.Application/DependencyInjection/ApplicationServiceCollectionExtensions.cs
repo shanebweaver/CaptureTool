@@ -51,6 +51,8 @@ public static class ApplicationServiceCollectionExtensions
         services.AddSingleton<IAnalysisAuthorization>(provider => provider.GetRequiredService<CaptureMemoryAuthorization>());
         services.AddSingleton<ICaptureAnalysisWorker, CaptureAnalysisWorker>();
         services.AddSingleton<ICaptureMemoryService, CaptureMemoryService>();
+        services.AddTransient<CaptureTool.Application.Abstractions.Library.CaptureDetails.ICaptureDetailsReader,
+            CaptureTool.Application.Library.CaptureDetails.CaptureDetailsReader>();
         services.AddSingleton<CaptureAnalysisIntake>();
         services.AddTransient<IOpenExternalEditorUseCase, OpenExternalEditorUseCase>();
         services.AddSingleton<IActiveEditSessionService, ActiveEditSessionService>();

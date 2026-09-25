@@ -2108,4 +2108,76 @@ SOFTWARE.
   <data name="CaptureMemory_Scanning.OffContent" xml:space="preserve">
     <value>Off</value>
   </data>
+  <data name="CaptureDetails_Dialog.Title" xml:space="preserve"><value>Capture details</value></data>
+  <data name="CaptureDetails_Dialog.CloseButtonText" xml:space="preserve"><value>Close</value></data>
+  <data name="CaptureDetails_Evidence.Header" xml:space="preserve"><value>View source</value></data>
+  <data name="CaptureDetails_Copy.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Copy text</value></data>
+  <data name="CaptureDetails_Copy.ToolTipService.ToolTip" xml:space="preserve"><value>Copy text</value></data>
+  <data name="CaptureDetails_Refresh.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Refresh details</value></data>
+  <data name="CaptureDetails_Refresh.ToolTipService.ToolTip" xml:space="preserve"><value>Refresh saved details</value></data>
+  <data name="CaptureDetails_CopyAll.Content" xml:space="preserve"><value>Copy all text</value></data>
+  <data name="CaptureDetails_OverviewHeading.Text" xml:space="preserve"><value>AI overview</value></data>
+  <data name="CaptureDetails_SuggestionsHint.Text" xml:space="preserve"><value>Generated suggestions. Check the source when accuracy matters.</value></data>
+  <data name="CaptureDetails_FactsHeading.Text" xml:space="preserve"><value>Useful information</value></data>
+  <data name="CaptureDetails_SourcesHeading.Text" xml:space="preserve"><value>Source content</value></data>
+  <data name="CaptureDetails_PropertiesHeading.Header" xml:space="preserve"><value>File properties</value></data>
+  <data name="CaptureDetails_SuggestedTitle" xml:space="preserve"><value>Suggested title</value></data>
+  <data name="CaptureDetails_Summary" xml:space="preserve"><value>Summary</value></data>
+  <data name="CaptureDetails_Category" xml:space="preserve"><value>Suggested category</value></data>
+  <data name="CaptureDetails_Topic" xml:space="preserve"><value>Suggested topic</value></data>
+  <data name="CaptureDetails_Category_Document" xml:space="preserve"><value>Document</value></data>
+  <data name="CaptureDetails_Category_Conversation" xml:space="preserve"><value>Conversation</value></data>
+  <data name="CaptureDetails_Category_Code" xml:space="preserve"><value>Code</value></data>
+  <data name="CaptureDetails_Category_Error" xml:space="preserve"><value>Error</value></data>
+  <data name="CaptureDetails_Category_WebContent" xml:space="preserve"><value>Web content</value></data>
+  <data name="CaptureDetails_Category_Media" xml:space="preserve"><value>Media</value></data>
+  <data name="CaptureDetails_Category_Other" xml:space="preserve"><value>Other</value></data>
+  <data name="CaptureDetails_Fact_Url" xml:space="preserve"><value>Web link</value></data>
+  <data name="CaptureDetails_Fact_EmailAddress" xml:space="preserve"><value>Email address</value></data>
+  <data name="CaptureDetails_Fact_Date" xml:space="preserve"><value>Date found in content</value></data>
+  <data name="CaptureDetails_Fact_CurrencyAmount" xml:space="preserve"><value>Amount</value></data>
+  <data name="CaptureDetails_Fact_ErrorCode" xml:space="preserve"><value>Error code</value></data>
+  <data name="CaptureDetails_Fact_ReferenceCode" xml:space="preserve"><value>Reference code</value></data>
+  <data name="CaptureDetails_QrCode" xml:space="preserve"><value>QR code</value></data>
+  <data name="CaptureDetails_RecognizedText" xml:space="preserve"><value>Recognized text</value></data>
+  <data name="CaptureDetails_Transcript" xml:space="preserve"><value>Transcript</value></data>
+  <data name="CaptureDetails_Descriptions" xml:space="preserve"><value>AI descriptions</value></data>
+  <data name="CaptureDetails_Sources" xml:space="preserve"><value>Source</value></data>
+  <data name="CaptureDetails_MediaType" xml:space="preserve"><value>Media type</value></data>
+  <data name="CaptureDetails_Media_Image" xml:space="preserve"><value>Image</value></data>
+  <data name="CaptureDetails_Media_Audio" xml:space="preserve"><value>Audio</value></data>
+  <data name="CaptureDetails_Media_Video" xml:space="preserve"><value>Video</value></data>
+  <data name="CaptureDetails_Size" xml:space="preserve"><value>File size</value></data>
+  <data name="CaptureDetails_ContentType" xml:space="preserve"><value>File format</value></data>
+  <data name="CaptureDetails_CapturedAt" xml:space="preserve"><value>Captured</value></data>
+  <data name="CaptureDetails_CreatedAt" xml:space="preserve"><value>File created</value></data>
+  <data name="CaptureDetails_ModifiedAt" xml:space="preserve"><value>File modified</value></data>
+  <data name="CaptureDetails_Unknown" xml:space="preserve"><value>Unknown</value></data>
+  <data name="CaptureDetails_Duration" xml:space="preserve"><value>Duration</value></data>
+  <data name="CaptureDetails_Dimensions" xml:space="preserve"><value>Dimensions (pixels)</value></data>
+  <data name="CaptureDetails_AspectRatio" xml:space="preserve"><value>Aspect ratio</value></data>
+  <data name="CaptureDetails_DpiX" xml:space="preserve"><value>Horizontal DPI</value></data>
+  <data name="CaptureDetails_DpiY" xml:space="preserve"><value>Vertical DPI</value></data>
+  <data name="CaptureDetails_FrameRate" xml:space="preserve"><value>Frame rate (fps)</value></data>
+  <data name="CaptureDetails_VideoBitrate" xml:space="preserve"><value>Video bitrate</value></data>
+  <data name="CaptureDetails_VideoCodec" xml:space="preserve"><value>Video codec</value></data>
+  <data name="CaptureDetails_Channels" xml:space="preserve"><value>Audio channels</value></data>
+  <data name="CaptureDetails_SampleRate" xml:space="preserve"><value>Audio sample rate</value></data>
+  <data name="CaptureDetails_AudioBitrate" xml:space="preserve"><value>Audio bitrate</value></data>
+  <data name="CaptureDetails_AudioCodec" xml:space="preserve"><value>Audio codec</value></data>
+  <data name="CaptureDetails_Deleting" xml:space="preserve"><value>Saved analysis is being deleted.</value></data>
+  <data name="CaptureDetails_Unavailable" xml:space="preserve"><value>Details could not be read. Try refreshing.</value></data>
+  <data name="CaptureDetails_SourceChanged" xml:space="preserve"><value>This file has changed since analysis. Run analysis again in Settings to update its details.</value></data>
+  <data name="CaptureDetails_SourceUnavailable" xml:space="preserve"><value>The capture file is unavailable. Its saved details cannot be verified.</value></data>
+  <data name="CaptureDetails_Analyzing" xml:space="preserve"><value>Analysis is queued or in progress. Details update as results become available.</value></data>
+  <data name="CaptureDetails_Paused" xml:space="preserve"><value>Analysis is paused. Enable scanning in Settings to continue.</value></data>
+  <data name="CaptureDetails_Partial" xml:space="preserve"><value>Some analysis did not complete. Available saved results are shown.</value></data>
+  <data name="CaptureDetails_Empty" xml:space="preserve"><value>No saved details yet. You can run analysis on existing captures in Settings.</value></data>
+  <data name="CaptureDetails_Retained" xml:space="preserve"><value>Some results are from an earlier analysis of this same file.</value></data>
+  <data name="CaptureDetails_Limited" xml:space="preserve"><value>Some content or results were omitted. These insights may not cover the entire capture.</value></data>
+  <data name="CaptureDetails_Copied" xml:space="preserve"><value>Text copied.</value></data>
+  <data name="CaptureDetails_CopyFailed" xml:space="preserve"><value>Could not copy text. Please try again.</value></data>
+  <data name="HomePage_RecentCaptureDetailsMenuItem.Text" xml:space="preserve"><value>Details</value></data>
+  <data name="CaptureDetails_AnalyzedFile" xml:space="preserve"><value>Analyzed file</value></data>
+  <data name="CaptureDetails_AnalyzedAt" xml:space="preserve"><value>Properties recorded</value></data>
 </root>

@@ -38,7 +38,7 @@ internal sealed class UiTestLocalizationService : ILocalizationService
 
     public string GetString(string resourceKey)
     {
-        return resourceKey.StartsWith("CaptureMemory_", StringComparison.Ordinal)
+        return resourceKey.StartsWith("CaptureMemory_", StringComparison.Ordinal) || resourceKey.StartsWith("CaptureDetails_", StringComparison.Ordinal)
             ? WinUIResourceLoader.GetString(ref _resources, resourceKey, resourceKey) : resourceKey;
     }
 

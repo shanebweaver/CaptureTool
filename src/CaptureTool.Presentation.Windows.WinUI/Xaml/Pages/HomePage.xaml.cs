@@ -26,6 +26,7 @@ public sealed partial class HomePage : HomePageBase
     private readonly ILogService _logService = App.Current.ServiceProvider.GetService<ILogService>();
     private readonly Dictionary<string, BitmapImage> _thumbnailCache = new(StringComparer.OrdinalIgnoreCase);
     private ContentDialog? _activeStoreReviewDialog;
+    private ContentDialog? _activeDetailsDialog;
     private bool _storeReviewPromptPending;
     private int _storeReviewPromptGeneration;
 
@@ -33,6 +34,7 @@ public sealed partial class HomePage : HomePageBase
     {
         InitializeComponent();
         Loaded += HomePage_Loaded;
+        Unloaded += (_, _) => _activeDetailsDialog?.Hide();
         ViewModel.StoreReviewPromptRequested += ViewModel_StoreReviewPromptRequested;
     }
 
@@ -152,9 +154,29 @@ public sealed partial class HomePage : HomePageBase
         }
     }
 
+    private async void CaptureDetailsMenuItem_Click(object sender, RoutedEventArgs e)
+    {
+        if (_activeDetailsDialog != null || _activeStoreReviewDialog != null ||
+            sender is not MenuFlyoutItem { CommandParameter: RecentCaptureViewModel capture }) return;
+        using var viewModel = App.Current.ServiceProvider.GetService<CaptureTool.Presentation.Features.CaptureDetails.CaptureDetailsViewModel>();
+        try
+        {
+            _activeDetailsDialog = new Controls.CaptureDetailsDialog(viewModel, capture.FilePath)
+            {
+                XamlRoot = XamlRoot,
+                RequestedTheme = ActualTheme
+            };
+            await _activeDetailsDialog.ShowAsync();
+        }
+        finally { _activeDetailsDialog = null; }
+    }
+
     private void RecentCapturesGridView_KeyDown(object sender, KeyRoutedEventArgs e)
     {
-        if (e.Key != VirtualKey.Delete)
+        bool contextMenu = e.Key == VirtualKey.Application || e.Key == VirtualKey.F10 &&
+            (Microsoft.UI.Input.InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Shift) &
+                global::Windows.UI.Core.CoreVirtualKeyStates.Down) != 0;
+        if (e.Key != VirtualKey.Delete && !contextMenu)
         {
             return;
         }
@@ -166,7 +188,12 @@ public sealed partial class HomePage : HomePageBase
                 && RecentCapturesGridView.ItemFromContainer(itemContainer) is RecentCaptureViewModel recentCapture)
             {
                 e.Handled = true;
-                _ = ViewModel.RemoveRecentCaptureCommand.ExecuteAsync(recentCapture);
+                if (contextMenu)
+                {
+                    Grid? card = FindDescendant<Grid>(itemContainer, "RecentCaptureCard");
+                    if (card != null) card.ContextFlyout?.ShowAt(card);
+                }
+                else _ = ViewModel.RemoveRecentCaptureCommand.ExecuteAsync(recentCapture);
                 return;
             }
 
@@ -297,7 +324,7 @@ public sealed partial class HomePage : HomePageBase
 
     private async Task ShowStoreReviewPromptAsync()
     {
-        if (_activeStoreReviewDialog is not null)
+        if (_activeStoreReviewDialog is not null || _activeDetailsDialog is not null)
         {
             return;
         }

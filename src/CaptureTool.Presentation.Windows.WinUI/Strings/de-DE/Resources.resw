@@ -1821,4 +1821,76 @@ SOFTWARE.
   <data name="CaptureMemory_Scanning.OffContent" xml:space="preserve">
     <value>Aus</value>
   </data>
+  <data name="CaptureDetails_Dialog.Title" xml:space="preserve"><value>Aufnahmedetails</value></data>
+  <data name="CaptureDetails_Dialog.CloseButtonText" xml:space="preserve"><value>Schließen</value></data>
+  <data name="CaptureDetails_Evidence.Header" xml:space="preserve"><value>Quelle anzeigen</value></data>
+  <data name="CaptureDetails_Copy.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Text kopieren</value></data>
+  <data name="CaptureDetails_Copy.ToolTipService.ToolTip" xml:space="preserve"><value>Text kopieren</value></data>
+  <data name="CaptureDetails_Refresh.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Details aktualisieren</value></data>
+  <data name="CaptureDetails_Refresh.ToolTipService.ToolTip" xml:space="preserve"><value>Gespeicherte Details aktualisieren</value></data>
+  <data name="CaptureDetails_CopyAll.Content" xml:space="preserve"><value>Gesamten Text kopieren</value></data>
+  <data name="CaptureDetails_OverviewHeading.Text" xml:space="preserve"><value>KI-Übersicht</value></data>
+  <data name="CaptureDetails_SuggestionsHint.Text" xml:space="preserve"><value>Generierte Vorschläge. Prüfen Sie bei wichtigen Angaben die Quelle.</value></data>
+  <data name="CaptureDetails_FactsHeading.Text" xml:space="preserve"><value>Nützliche Informationen</value></data>
+  <data name="CaptureDetails_SourcesHeading.Text" xml:space="preserve"><value>Quellinhalt</value></data>
+  <data name="CaptureDetails_PropertiesHeading.Header" xml:space="preserve"><value>Dateieigenschaften</value></data>
+  <data name="CaptureDetails_SuggestedTitle" xml:space="preserve"><value>Titelvorschlag</value></data>
+  <data name="CaptureDetails_Summary" xml:space="preserve"><value>Zusammenfassung</value></data>
+  <data name="CaptureDetails_Category" xml:space="preserve"><value>Kategorievorschlag</value></data>
+  <data name="CaptureDetails_Topic" xml:space="preserve"><value>Themenvorschlag</value></data>
+  <data name="CaptureDetails_Category_Document" xml:space="preserve"><value>Dokument</value></data>
+  <data name="CaptureDetails_Category_Conversation" xml:space="preserve"><value>Gespräch</value></data>
+  <data name="CaptureDetails_Category_Code" xml:space="preserve"><value>Code</value></data>
+  <data name="CaptureDetails_Category_Error" xml:space="preserve"><value>Fehler</value></data>
+  <data name="CaptureDetails_Category_WebContent" xml:space="preserve"><value>Webinhalt</value></data>
+  <data name="CaptureDetails_Category_Media" xml:space="preserve"><value>Medien</value></data>
+  <data name="CaptureDetails_Category_Other" xml:space="preserve"><value>Sonstiges</value></data>
+  <data name="CaptureDetails_Fact_Url" xml:space="preserve"><value>Weblink</value></data>
+  <data name="CaptureDetails_Fact_EmailAddress" xml:space="preserve"><value>E-Mail-Adresse</value></data>
+  <data name="CaptureDetails_Fact_Date" xml:space="preserve"><value>Datum im Inhalt</value></data>
+  <data name="CaptureDetails_Fact_CurrencyAmount" xml:space="preserve"><value>Betrag</value></data>
+  <data name="CaptureDetails_Fact_ErrorCode" xml:space="preserve"><value>Fehlercode</value></data>
+  <data name="CaptureDetails_Fact_ReferenceCode" xml:space="preserve"><value>Referenzcode</value></data>
+  <data name="CaptureDetails_QrCode" xml:space="preserve"><value>QR-Code</value></data>
+  <data name="CaptureDetails_RecognizedText" xml:space="preserve"><value>Erkannter Text</value></data>
+  <data name="CaptureDetails_Transcript" xml:space="preserve"><value>Transkript</value></data>
+  <data name="CaptureDetails_Descriptions" xml:space="preserve"><value>KI-Beschreibungen</value></data>
+  <data name="CaptureDetails_Sources" xml:space="preserve"><value>Quelle</value></data>
+  <data name="CaptureDetails_MediaType" xml:space="preserve"><value>Medientyp</value></data>
+  <data name="CaptureDetails_Media_Image" xml:space="preserve"><value>Bild</value></data>
+  <data name="CaptureDetails_Media_Audio" xml:space="preserve"><value>Audio</value></data>
+  <data name="CaptureDetails_Media_Video" xml:space="preserve"><value>Video</value></data>
+  <data name="CaptureDetails_Size" xml:space="preserve"><value>Dateigröße</value></data>
+  <data name="CaptureDetails_ContentType" xml:space="preserve"><value>Dateiformat</value></data>
+  <data name="CaptureDetails_CapturedAt" xml:space="preserve"><value>Aufgenommen</value></data>
+  <data name="CaptureDetails_CreatedAt" xml:space="preserve"><value>Datei erstellt</value></data>
+  <data name="CaptureDetails_ModifiedAt" xml:space="preserve"><value>Datei geändert</value></data>
+  <data name="CaptureDetails_Unknown" xml:space="preserve"><value>Unbekannt</value></data>
+  <data name="CaptureDetails_Duration" xml:space="preserve"><value>Dauer</value></data>
+  <data name="CaptureDetails_Dimensions" xml:space="preserve"><value>Abmessungen (Pixel)</value></data>
+  <data name="CaptureDetails_AspectRatio" xml:space="preserve"><value>Seitenverhältnis</value></data>
+  <data name="CaptureDetails_DpiX" xml:space="preserve"><value>Horizontale DPI</value></data>
+  <data name="CaptureDetails_DpiY" xml:space="preserve"><value>Vertikale DPI</value></data>
+  <data name="CaptureDetails_FrameRate" xml:space="preserve"><value>Bildrate (fps)</value></data>
+  <data name="CaptureDetails_VideoBitrate" xml:space="preserve"><value>Video-Bitrate</value></data>
+  <data name="CaptureDetails_VideoCodec" xml:space="preserve"><value>Video-Codec</value></data>
+  <data name="CaptureDetails_Channels" xml:space="preserve"><value>Audiokanäle</value></data>
+  <data name="CaptureDetails_SampleRate" xml:space="preserve"><value>Audio-Abtastrate</value></data>
+  <data name="CaptureDetails_AudioBitrate" xml:space="preserve"><value>Audio-Bitrate</value></data>
+  <data name="CaptureDetails_AudioCodec" xml:space="preserve"><value>Audio-Codec</value></data>
+  <data name="CaptureDetails_Deleting" xml:space="preserve"><value>Gespeicherte Analysen werden gelöscht.</value></data>
+  <data name="CaptureDetails_Unavailable" xml:space="preserve"><value>Details konnten nicht gelesen werden. Aktualisieren Sie die Ansicht.</value></data>
+  <data name="CaptureDetails_SourceChanged" xml:space="preserve"><value>Diese Datei wurde seit der Analyse geändert. Starten Sie die Analyse in den Einstellungen erneut.</value></data>
+  <data name="CaptureDetails_SourceUnavailable" xml:space="preserve"><value>Die Aufnahmedatei ist nicht verfügbar. Gespeicherte Details können nicht überprüft werden.</value></data>
+  <data name="CaptureDetails_Analyzing" xml:space="preserve"><value>Analyse ausstehend oder in Bearbeitung. Details werden mit neuen Ergebnissen aktualisiert.</value></data>
+  <data name="CaptureDetails_Paused" xml:space="preserve"><value>Die Analyse ist pausiert. Aktivieren Sie das Scannen in den Einstellungen.</value></data>
+  <data name="CaptureDetails_Partial" xml:space="preserve"><value>Einige Analysen wurden nicht abgeschlossen. Verfügbare Ergebnisse werden angezeigt.</value></data>
+  <data name="CaptureDetails_Empty" xml:space="preserve"><value>Noch keine gespeicherten Details. Sie können vorhandene Aufnahmen in den Einstellungen analysieren.</value></data>
+  <data name="CaptureDetails_Retained" xml:space="preserve"><value>Einige Ergebnisse stammen aus einer früheren Analyse derselben Datei.</value></data>
+  <data name="CaptureDetails_Limited" xml:space="preserve"><value>Einige Inhalte oder Ergebnisse wurden ausgelassen. Diese Einblicke decken möglicherweise nicht die gesamte Aufnahme ab.</value></data>
+  <data name="CaptureDetails_Copied" xml:space="preserve"><value>Text kopiert.</value></data>
+  <data name="CaptureDetails_CopyFailed" xml:space="preserve"><value>Text konnte nicht kopiert werden. Versuchen Sie es erneut.</value></data>
+  <data name="HomePage_RecentCaptureDetailsMenuItem.Text" xml:space="preserve"><value>Details</value></data>
+  <data name="CaptureDetails_AnalyzedFile" xml:space="preserve"><value>Analysierte Datei</value></data>
+  <data name="CaptureDetails_AnalyzedAt" xml:space="preserve"><value>Eigenschaften erfasst</value></data>
 </root>

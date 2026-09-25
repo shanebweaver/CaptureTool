@@ -34,9 +34,12 @@ internal sealed class UiTestLaunchOptions
 
     public string? Language { get; }
 
+    public static bool DetailsFixture { get; private set; }
+
     public static void Initialize(string[] args)
     {
         bool isEnabled = args.Contains("--capturetool-ui-test", StringComparer.OrdinalIgnoreCase);
+        DetailsFixture = isEnabled && args.Contains("--ui-test-details", StringComparer.OrdinalIgnoreCase);
 
         Current = new(
             isEnabled,

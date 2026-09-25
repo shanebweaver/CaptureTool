@@ -201,7 +201,8 @@ public sealed partial class ImageEditTextExtractionUiTests
         string fixtureImagePath,
         string appDataDirectory,
         string appTempDirectory,
-        string? language = null)
+        string? language = null,
+        bool detailsFixture = false)
     {
         string[] appArguments = [
             "--capturetool-ui-test",
@@ -223,6 +224,7 @@ public sealed partial class ImageEditTextExtractionUiTests
         {
             startInfo.ArgumentList.Add(argument);
         }
+        if (detailsFixture) startInfo.ArgumentList.Add("--ui-test-details");
         if (language != null)
         {
             startInfo.ArgumentList.Add("--ui-test-language");

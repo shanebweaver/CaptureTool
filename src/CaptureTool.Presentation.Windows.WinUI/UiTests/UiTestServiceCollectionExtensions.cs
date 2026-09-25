@@ -8,6 +8,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using CaptureTool.Application.Abstractions.Analysis;
 using CaptureTool.Application.Analysis;
+using CaptureTool.Domain.Analysis;
+using CaptureTool.Domain.Analysis.Payloads;
 
 namespace CaptureTool.Presentation.Windows.WinUI.UiTests;
 
@@ -44,7 +46,17 @@ internal static class UiTestServiceCollectionExtensions
     private sealed class UiTestMetadataProcessor(MetadataProcessorDescriptor descriptor) : IMetadataProcessor
     {
         public MetadataProcessorDescriptor Descriptor => descriptor;
-        public Task<AnalyzerOutcome> ProcessAsync(MetadataProcessorInput input, CancellationToken cancellationToken) =>
-            Task.FromResult(AnalyzerOutcome.Unsuccessful(CaptureTool.Domain.Analysis.AnalyzerOutcomeKind.Unsupported, "ui-test-provider"));
+        public Task<AnalyzerOutcome> ProcessAsync(MetadataProcessorInput input, CancellationToken cancellationToken)
+        {
+            if (!UiTestLaunchOptions.DetailsFixture || input.Entries.Count == 0)
+                return Task.FromResult(AnalyzerOutcome.Unsuccessful(AnalyzerOutcomeKind.Unsupported, "ui-test-provider"));
+            MetadataTextEntry entry = input.Entries[0];
+            AnalysisEvidence[] evidence = [new(entry.ResultId, entry.EntryIndex, 0, entry.Text.Length)];
+            AnalysisPayload payload = descriptor.Capability == AnalysisCapability.CaptureSynopsis
+                ? new CaptureSynopsisMetadata(new("Contoso invoice", evidence),
+                    [new("Invoice INV-2048 totals USD 125.00 and is due on 2026-10-15.", evidence)], input.Coverage)
+                : new CaptureClassificationMetadata(CaptureCategory.Document, evidence, [new("invoice", evidence)], input.Coverage);
+            return Task.FromResult(AnalyzerOutcome.Success(payload, new(descriptor.Id, "ui-test", "fixture", "1")));
+        }
     }
 }

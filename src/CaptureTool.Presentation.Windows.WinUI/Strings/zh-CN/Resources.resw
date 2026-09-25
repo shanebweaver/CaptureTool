@@ -1827,4 +1827,76 @@ SOFTWARE.
   <data name="CaptureMemory_Scanning.OffContent" xml:space="preserve">
     <value>关</value>
   </data>
+  <data name="CaptureDetails_Dialog.Title" xml:space="preserve"><value>捕获详情</value></data>
+  <data name="CaptureDetails_Dialog.CloseButtonText" xml:space="preserve"><value>关闭</value></data>
+  <data name="CaptureDetails_Evidence.Header" xml:space="preserve"><value>查看来源</value></data>
+  <data name="CaptureDetails_Copy.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>复制文本</value></data>
+  <data name="CaptureDetails_Copy.ToolTipService.ToolTip" xml:space="preserve"><value>复制文本</value></data>
+  <data name="CaptureDetails_Refresh.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>刷新详情</value></data>
+  <data name="CaptureDetails_Refresh.ToolTipService.ToolTip" xml:space="preserve"><value>刷新已保存的详情</value></data>
+  <data name="CaptureDetails_CopyAll.Content" xml:space="preserve"><value>复制全部文本</value></data>
+  <data name="CaptureDetails_OverviewHeading.Text" xml:space="preserve"><value>AI 概览</value></data>
+  <data name="CaptureDetails_SuggestionsHint.Text" xml:space="preserve"><value>以下为生成的建议。需要确保准确性时，请核对来源。</value></data>
+  <data name="CaptureDetails_FactsHeading.Text" xml:space="preserve"><value>实用信息</value></data>
+  <data name="CaptureDetails_SourcesHeading.Text" xml:space="preserve"><value>来源内容</value></data>
+  <data name="CaptureDetails_PropertiesHeading.Header" xml:space="preserve"><value>文件属性</value></data>
+  <data name="CaptureDetails_SuggestedTitle" xml:space="preserve"><value>建议标题</value></data>
+  <data name="CaptureDetails_Summary" xml:space="preserve"><value>摘要</value></data>
+  <data name="CaptureDetails_Category" xml:space="preserve"><value>建议类别</value></data>
+  <data name="CaptureDetails_Topic" xml:space="preserve"><value>建议主题</value></data>
+  <data name="CaptureDetails_Category_Document" xml:space="preserve"><value>文档</value></data>
+  <data name="CaptureDetails_Category_Conversation" xml:space="preserve"><value>对话</value></data>
+  <data name="CaptureDetails_Category_Code" xml:space="preserve"><value>代码</value></data>
+  <data name="CaptureDetails_Category_Error" xml:space="preserve"><value>错误</value></data>
+  <data name="CaptureDetails_Category_WebContent" xml:space="preserve"><value>网页内容</value></data>
+  <data name="CaptureDetails_Category_Media" xml:space="preserve"><value>媒体</value></data>
+  <data name="CaptureDetails_Category_Other" xml:space="preserve"><value>其他</value></data>
+  <data name="CaptureDetails_Fact_Url" xml:space="preserve"><value>网页链接</value></data>
+  <data name="CaptureDetails_Fact_EmailAddress" xml:space="preserve"><value>电子邮件地址</value></data>
+  <data name="CaptureDetails_Fact_Date" xml:space="preserve"><value>内容中的日期</value></data>
+  <data name="CaptureDetails_Fact_CurrencyAmount" xml:space="preserve"><value>金额</value></data>
+  <data name="CaptureDetails_Fact_ErrorCode" xml:space="preserve"><value>错误代码</value></data>
+  <data name="CaptureDetails_Fact_ReferenceCode" xml:space="preserve"><value>参考代码</value></data>
+  <data name="CaptureDetails_QrCode" xml:space="preserve"><value>二维码</value></data>
+  <data name="CaptureDetails_RecognizedText" xml:space="preserve"><value>识别的文本</value></data>
+  <data name="CaptureDetails_Transcript" xml:space="preserve"><value>转录文本</value></data>
+  <data name="CaptureDetails_Descriptions" xml:space="preserve"><value>AI 描述</value></data>
+  <data name="CaptureDetails_Sources" xml:space="preserve"><value>来源</value></data>
+  <data name="CaptureDetails_MediaType" xml:space="preserve"><value>媒体类型</value></data>
+  <data name="CaptureDetails_Media_Image" xml:space="preserve"><value>图像</value></data>
+  <data name="CaptureDetails_Media_Audio" xml:space="preserve"><value>音频</value></data>
+  <data name="CaptureDetails_Media_Video" xml:space="preserve"><value>视频</value></data>
+  <data name="CaptureDetails_Size" xml:space="preserve"><value>文件大小</value></data>
+  <data name="CaptureDetails_ContentType" xml:space="preserve"><value>文件格式</value></data>
+  <data name="CaptureDetails_CapturedAt" xml:space="preserve"><value>捕获时间</value></data>
+  <data name="CaptureDetails_CreatedAt" xml:space="preserve"><value>文件创建时间</value></data>
+  <data name="CaptureDetails_ModifiedAt" xml:space="preserve"><value>文件修改时间</value></data>
+  <data name="CaptureDetails_Unknown" xml:space="preserve"><value>未知</value></data>
+  <data name="CaptureDetails_Duration" xml:space="preserve"><value>时长</value></data>
+  <data name="CaptureDetails_Dimensions" xml:space="preserve"><value>尺寸（像素）</value></data>
+  <data name="CaptureDetails_AspectRatio" xml:space="preserve"><value>宽高比</value></data>
+  <data name="CaptureDetails_DpiX" xml:space="preserve"><value>水平 DPI</value></data>
+  <data name="CaptureDetails_DpiY" xml:space="preserve"><value>垂直 DPI</value></data>
+  <data name="CaptureDetails_FrameRate" xml:space="preserve"><value>帧率（fps）</value></data>
+  <data name="CaptureDetails_VideoBitrate" xml:space="preserve"><value>视频比特率</value></data>
+  <data name="CaptureDetails_VideoCodec" xml:space="preserve"><value>视频编解码器</value></data>
+  <data name="CaptureDetails_Channels" xml:space="preserve"><value>音频声道</value></data>
+  <data name="CaptureDetails_SampleRate" xml:space="preserve"><value>音频采样率</value></data>
+  <data name="CaptureDetails_AudioBitrate" xml:space="preserve"><value>音频比特率</value></data>
+  <data name="CaptureDetails_AudioCodec" xml:space="preserve"><value>音频编解码器</value></data>
+  <data name="CaptureDetails_Deleting" xml:space="preserve"><value>正在删除已保存的分析。</value></data>
+  <data name="CaptureDetails_Unavailable" xml:space="preserve"><value>无法读取详情，请尝试刷新。</value></data>
+  <data name="CaptureDetails_SourceChanged" xml:space="preserve"><value>此文件在分析后已更改。请在设置中重新运行分析以更新详情。</value></data>
+  <data name="CaptureDetails_SourceUnavailable" xml:space="preserve"><value>捕获文件不可用，无法验证已保存的详情。</value></data>
+  <data name="CaptureDetails_Analyzing" xml:space="preserve"><value>分析正在排队或进行中。结果可用时，详情会自动更新。</value></data>
+  <data name="CaptureDetails_Paused" xml:space="preserve"><value>分析已暂停。请在设置中启用扫描以继续。</value></data>
+  <data name="CaptureDetails_Partial" xml:space="preserve"><value>部分分析未完成。此处显示可用的已保存结果。</value></data>
+  <data name="CaptureDetails_Empty" xml:space="preserve"><value>暂无已保存的详情。您可以在设置中分析现有捕获。</value></data>
+  <data name="CaptureDetails_Retained" xml:space="preserve"><value>部分结果来自对同一文件的先前分析。</value></data>
+  <data name="CaptureDetails_Limited" xml:space="preserve"><value>部分内容或结果已省略。这些见解可能未涵盖整个捕获。</value></data>
+  <data name="CaptureDetails_Copied" xml:space="preserve"><value>文本已复制。</value></data>
+  <data name="CaptureDetails_CopyFailed" xml:space="preserve"><value>无法复制文本，请重试。</value></data>
+  <data name="HomePage_RecentCaptureDetailsMenuItem.Text" xml:space="preserve"><value>详情</value></data>
+  <data name="CaptureDetails_AnalyzedFile" xml:space="preserve"><value>已分析的文件</value></data>
+  <data name="CaptureDetails_AnalyzedAt" xml:space="preserve"><value>属性记录时间</value></data>
 </root>

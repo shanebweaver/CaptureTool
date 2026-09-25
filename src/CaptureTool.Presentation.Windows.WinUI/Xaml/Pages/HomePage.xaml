@@ -303,6 +303,7 @@
 
                     <GridView
                         x:Name="RecentCapturesGridView"
+                        AutomationProperties.AutomationId="Home_RecentCaptures"
                         Grid.Row="1"
                         CanDragItems="False"
                         ContainerContentChanging="RecentCapturesGridView_ContainerContentChanging"
@@ -329,6 +330,7 @@
                         <GridView.ItemTemplate>
                             <DataTemplate x:DataType="recent:RecentCaptureViewModel">
                                 <Grid
+                                    x:Name="RecentCaptureCard"
                                     HorizontalAlignment="Stretch"
                                     VerticalAlignment="Stretch"
                                     ToolTipService.ToolTip="{x:Bind FilePath}">
@@ -340,6 +342,13 @@
                                                 CommandParameter="{x:Bind}"
                                                 Icon="Folder"
                                                 Text="Open" />
+                                            <MenuFlyoutItem
+                                                x:Uid="HomePage_RecentCaptureDetailsMenuItem"
+                                                AutomationProperties.AutomationId="Home_CaptureDetails"
+                                                Click="CaptureDetailsMenuItem_Click"
+                                                CommandParameter="{x:Bind}"
+                                                Icon="More"
+                                                Text="Details" />
                                             <MenuFlyoutItem
                                                 x:Uid="HomePage_RecentCaptureRemoveMenuItem"
                                                 Click="RemoveRecentCaptureMenuItem_Click"
