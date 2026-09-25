@@ -1,4 +1,5 @@
 using CaptureTool.Application.Abstractions.Edit.Image.TextExtraction;
+using CaptureTool.Application.Edit.Image.TextExtraction;
 using Microsoft.Windows.AI;
 using Microsoft.Windows.AI.Imaging;
 using System.Drawing;
@@ -9,6 +10,50 @@ namespace CaptureTool.Infrastructure.Edit.Windows.Tests;
 [TestClass]
 public sealed class WindowsTextExtractionServiceTests
 {
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task CompleteStoredResultsSkipImageDecodingAndQrScanningEvenWhenNoCodesWereFound(bool empty)
+    {
+        var existing = RecognizedTextDocument.FromRecognition("saved", new(240, 240), [],
+            empty ? [] : [new("https://example.com", new(10, 10, 100, 100))]);
+        var result = await new WindowsTextExtractionService(new RecognizedTextDocumentBuilder()).ExtractAsync(new(Stream.Null, existing.ImageSize, existing));
+        Assert.AreEqual(TextExtractionStatus.Success, result.Status);
+        Assert.IsNotNull(result.Document);
+        Assert.AreSame(existing, result.Document);
+        Assert.AreEqual(empty ? "saved" : "saved" + Environment.NewLine + "https://example.com", result.Document.Text);
+    }
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task ExistingOcrKeepsNearbyTextAndExcludesQrGlyphsWhenDetectingMissingQrCodes(bool overlaps)
+    {
+        var writer = new ZXing.BarcodeWriterPixelData
+        {
+            Format = ZXing.BarcodeFormat.QR_CODE,
+            Options = new ZXing.Common.EncodingOptions { Width = 240, Height = 240, Margin = 4 }
+        };
+        var pixels = writer.Write("https://example.com/capture/42");
+        using var encoded = new global::Windows.Storage.Streams.InMemoryRandomAccessStream();
+        var encoder = await global::Windows.Graphics.Imaging.BitmapEncoder.CreateAsync(global::Windows.Graphics.Imaging.BitmapEncoder.PngEncoderId, encoded);
+        encoder.SetPixelData(global::Windows.Graphics.Imaging.BitmapPixelFormat.Bgra8, global::Windows.Graphics.Imaging.BitmapAlphaMode.Ignore,
+            (uint)pixels.Width, (uint)pixels.Height, 96, 96, pixels.Pixels);
+        await encoder.FlushAsync();
+        encoded.Seek(0);
+        using var source = new MemoryStream();
+        using (var encodedStream = encoded.AsStreamForRead()) await encodedStream.CopyToAsync(source);
+        source.Position = 0;
+        var existing = new RecognizedTextDocument("saved text", new(240, 240), [new("saved text", overlaps ? new(100, 100, 20, 10) : new(0, 0, 5, 5))]);
+        var result = await new WindowsTextExtractionService(new RecognizedTextDocumentBuilder()).ExtractAsync(new(source, new(240, 240), existing));
+        Assert.AreEqual(TextExtractionStatus.Success, result.Status);
+        Assert.AreEqual((overlaps ? "" : existing.Text + Environment.NewLine) + "https://example.com/capture/42", result.Document!.Text);
+        Assert.HasCount(overlaps ? 0 : 1, result.Document.Regions);
+        if (!overlaps) Assert.AreEqual(existing.Regions[0], result.Document.Regions[0]);
+        Assert.HasCount(1, result.Document.QrCodes);
+        Assert.AreEqual("https://example.com/capture/42", result.Document.QrCodes[0].Value);
+    }
+
     [TestMethod]
     [DataRow(AIFeatureReadyState.Ready, false, TextExtractionReadyState.Ready)]
     [DataRow(AIFeatureReadyState.NotReady, false, TextExtractionReadyState.PreparationNeeded)]

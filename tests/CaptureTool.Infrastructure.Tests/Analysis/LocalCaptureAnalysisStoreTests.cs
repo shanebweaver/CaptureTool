@@ -16,6 +16,97 @@ public sealed class LocalCaptureAnalysisStoreTests
     private CancellationToken Cancellation => TestContext.CancellationToken;
 
     [TestMethod]
+    [DataRow(AnalysisMediaKind.Image, false)]
+    [DataRow(AnalysisMediaKind.Image, true)]
+    [DataRow(AnalysisMediaKind.Audio, false)]
+    [DataRow(AnalysisMediaKind.Audio, true)]
+    [DataRow(AnalysisMediaKind.Video, false)]
+    [DataRow(AnalysisMediaKind.Video, true)]
+    public async Task FileDetailsRoundTripProtectedWithOptionalPropertiesAndDeleteNormally(AnalysisMediaKind kind, bool complete)
+    {
+        using var environment = new AnalysisTestEnvironment();
+        using var store = environment.CreateStore();
+        var id = CaptureId.New();
+        var token = await store.BeginRunAsync(id, kind, AnalysisTestEnvironment.Revision(), "details-v1", Cancellation);
+        var created = new DateTimeOffset(2024, 2, 3, 4, 5, 6, TimeSpan.Zero);
+        var details = new FileDetailsMetadata(kind, "private capture.dat", 987654, "application/octet-stream", created, created.AddDays(1),
+            complete ? created.AddDays(-1) : null, complete && kind != AnalysisMediaKind.Image ? TimeSpan.FromSeconds(12.5) : null,
+            complete && kind == AnalysisMediaKind.Image ? new(new(3840, 2160), 144, 144) : null,
+            complete && kind == AnalysisMediaKind.Video ? new(new(1920, 1080), 30000d / 1001, 1500000, "H264") : null,
+            complete && kind != AnalysisMediaKind.Image ? new(2, 48000, 128000, "AAC") : null);
+        var result = new AnalysisResult(details, AnalysisTestEnvironment.Producer(), created, "details-v1");
+        Assert.IsTrue(await store.TryWriteAsync(token, result, Cancellation));
+        using var reopened = environment.CreateStore();
+        var record = (await reopened.GetAsync(id, cancellationToken: Cancellation))!;
+        var loaded = (FileDetailsMetadata)record.Results.Single().Payload;
+        Assert.AreEqual(details.FileName, loaded.FileName);
+        Assert.AreEqual(details.SizeBytes, loaded.SizeBytes);
+        Assert.AreEqual(details.ContentType, loaded.ContentType);
+        Assert.AreEqual(details.FileCreatedAt, loaded.FileCreatedAt);
+        Assert.AreEqual(details.FileModifiedAt, loaded.FileModifiedAt);
+        Assert.AreEqual(details.CapturedAt, loaded.CapturedAt);
+        Assert.AreEqual(details.Duration, loaded.Duration);
+        Assert.AreEqual(details.Image, loaded.Image);
+        Assert.AreEqual(details.Video, loaded.Video);
+        Assert.AreEqual(details.Audio, loaded.Audio);
+        foreach (byte[] bytes in environment.Files.PublishedBytes)
+            Assert.DoesNotContain("private capture", Encoding.UTF8.GetString(bytes));
+        await store.ClearAsync(Cancellation);
+        Assert.IsNull(await reopened.GetAsync(id, cancellationToken: Cancellation));
+        Assert.IsFalse(await store.TryWriteAsync(token, result, Cancellation));
+    }
+
+    [TestMethod]
+    public async Task LegacyFileDetailsDateBecomesUnknownWithoutLosingOtherFactsOrProvenance()
+    {
+        using var environment = new AnalysisTestEnvironment();
+        using var store = environment.CreateStore();
+        var id = CaptureId.New();
+        var token = await store.BeginRunAsync(id, AnalysisMediaKind.Image, AnalysisTestEnvironment.Revision(), "details-v1", Cancellation);
+        var at = DateTimeOffset.UtcNow;
+        var details = new FileDetailsMetadata(AnalysisMediaKind.Image, "old.png", 1234, "image/png", at, at, at,
+            image: new(new(100, 50), 96, 96));
+        var result = new AnalysisResult(details, AnalysisTestEnvironment.Producer(), at, "details-v1");
+        Assert.IsTrue(await store.TryWriteAsync(token, result, Cancellation));
+        await MutateDocument(environment, environment.MetadataPaths.Single(), node =>
+            node["Results"]![0]!["FileDetails"]!.AsObject().Remove("CaptureTimeVerified"));
+        using var reopened = environment.CreateStore();
+        var saved = (await reopened.GetAsync(id, cancellationToken: Cancellation))!.Results.Single();
+        var loaded = (FileDetailsMetadata)saved.Payload;
+        Assert.IsNull(loaded.CapturedAt);
+        Assert.AreEqual(details.SizeBytes, loaded.SizeBytes);
+        Assert.AreEqual(details.FileCreatedAt, loaded.FileCreatedAt);
+        Assert.AreEqual(details.FileModifiedAt, loaded.FileModifiedAt);
+        Assert.AreEqual(details.Image, loaded.Image);
+        Assert.AreEqual(result.Producer, saved.Producer);
+        Assert.AreEqual(result.GeneratedAt, saved.GeneratedAt);
+    }
+
+    [TestMethod]
+    public async Task QrMetadataRoundTripsProtectedWithBoundsTimesAndEmptySuccessAndDeletesNormally()
+    {
+        using var environment = new AnalysisTestEnvironment();
+        using var store = environment.CreateStore();
+        var id = CaptureId.New();
+        var token = await store.BeginRunAsync(id, AnalysisMediaKind.Video, AnalysisTestEnvironment.Revision(), "video-v3", Cancellation);
+        var code = new DecodedQrCode("private QR payload", new(.1, .2, .3, .4), TimeSpan.FromSeconds(5));
+        var result = new AnalysisResult(new QrCodeMetadata([code]), AnalysisTestEnvironment.Producer(), DateTimeOffset.UtcNow, "video-v3");
+        Assert.IsTrue(await store.TryWriteAsync(token, result, Cancellation));
+        using var reopened = environment.CreateStore();
+        var record = (await reopened.GetAsync(id, cancellationToken: Cancellation))!;
+        Assert.AreEqual(code, ((QrCodeMetadata)record.Results.Single().Payload).Codes.Single());
+        Assert.AreEqual(result.Producer, record.Results.Single().Producer);
+        foreach (byte[] bytes in environment.Files.PublishedBytes)
+            Assert.DoesNotContain("private QR payload", Encoding.UTF8.GetString(bytes));
+        var empty = new AnalysisResult(new QrCodeMetadata([]), result.Producer, DateTimeOffset.UtcNow, "video-v3");
+        Assert.IsTrue(await store.TryWriteAsync(token, empty, Cancellation));
+        Assert.HasCount(0, ((QrCodeMetadata)(await reopened.GetAsync(id, cancellationToken: Cancellation))!.Results.Single().Payload).Codes);
+        await store.ClearAsync(Cancellation);
+        Assert.IsNull(await reopened.GetAsync(id, cancellationToken: Cancellation));
+        Assert.IsFalse(await store.TryWriteAsync(token, result, Cancellation));
+    }
+
+    [TestMethod]
     public async Task TypedResultsAndActualProvenanceSurviveReloadWithoutPlaintextFiles()
     {
         using var environment = new AnalysisTestEnvironment();

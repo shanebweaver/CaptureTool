@@ -21,6 +21,7 @@ internal sealed class ImageCapturePostProcessor
     private readonly ImageCaptureFileNameGenerator _fileNameGenerator;
     private readonly IRecentCaptureCatalog _recentCaptureCatalog;
     private readonly ITelemetryService? _telemetryService;
+    private readonly CaptureAnalysisIntake? _analysis;
 
     public ImageCapturePostProcessor(
         IClipboardService clipboardService,
@@ -31,7 +32,8 @@ internal sealed class ImageCapturePostProcessor
         ILogService logService,
         ImageCaptureFileNameGenerator fileNameGenerator,
         IRecentCaptureCatalog recentCaptureCatalog,
-        ITelemetryService? telemetryService = null)
+        ITelemetryService? telemetryService = null,
+        CaptureAnalysisIntake? analysis = null)
     {
         _clipboardService = clipboardService;
         _fileAllocator = fileAllocator;
@@ -42,12 +44,14 @@ internal sealed class ImageCapturePostProcessor
         _fileNameGenerator = fileNameGenerator;
         _recentCaptureCatalog = recentCaptureCatalog;
         _telemetryService = telemetryService;
+        _analysis = analysis;
     }
 
     public void Process(ImageFile imageFile)
     {
+        Task registration = _analysis?.RegisterAsync(imageFile.FilePath, CaptureFileType.Image) ?? Task.CompletedTask;
         _recentCaptureCatalog.RecordCaptured(imageFile.FilePath, CaptureFileType.Image);
-        AutoSaveImage(imageFile);
+        AutoSaveImage(imageFile, registration);
         AutoCopyImage(imageFile);
     }
 
@@ -75,9 +79,9 @@ internal sealed class ImageCapturePostProcessor
         });
     }
 
-    private void AutoSaveImage(ImageFile imageFile)
+    private void AutoSaveImage(ImageFile imageFile, Task registration)
     {
-        _taskEnvironment.TryExecute(() =>
+        _taskEnvironment.TryExecute(async () =>
         {
             try
             {
@@ -98,6 +102,7 @@ internal sealed class ImageCapturePostProcessor
                     screenshotsFolder,
                     _fileNameGenerator.GetNewCaptureFileName);
                 imageFile.PersistentFilePath = newFilePath;
+                if (_analysis != null) await _analysis.SavedAsync(registration, imageFile.FilePath, newFilePath);
                 _recentCaptureCatalog.ReplacePath(imageFile.FilePath, newFilePath);
                 TrackOutput("auto_save", TelemetryOutcomes.Succeeded);
             }

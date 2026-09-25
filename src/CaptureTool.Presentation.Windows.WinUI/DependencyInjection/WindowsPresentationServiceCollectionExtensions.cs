@@ -1,4 +1,6 @@
 using CaptureTool.Application.Abstractions.Ai;
+using CaptureTool.Application.Abstractions.Analysis;
+using CaptureTool.Presentation.Windows.WinUI.Analysis;
 using CaptureTool.Application.Abstractions.Capture;
 using CaptureTool.Application.Abstractions.Capture.Audio;
 using CaptureTool.Application.Abstractions.Edit.Image.SuperResolution;
@@ -7,7 +9,6 @@ using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Application.Abstractions.Windowing;
 using CaptureTool.Presentation.Windows.WinUI.AudioCapture;
 using CaptureTool.Presentation.Windows.WinUI.Capture;
-using CaptureTool.Presentation.Windows.WinUI.Edit;
 using CaptureTool.Presentation.Windows.WinUI.EditSessions;
 using CaptureTool.Presentation.Windows.WinUI.Telemetry;
 using Microsoft.Extensions.DependencyInjection;
@@ -27,11 +28,9 @@ public static class WindowsPresentationServiceCollectionExtensions
         services.AddSingleton<IAudioCaptureNavigationConfirmationService>(sp => sp.GetRequiredService<WinUIAudioCaptureNavigationConfirmationService>());
         services.AddSingleton<WinUICaptureDiscardConfirmationService>();
         services.AddSingleton<ICaptureDiscardConfirmationService>(sp => sp.GetRequiredService<WinUICaptureDiscardConfirmationService>());
-        services.AddSingleton<AiFeatureConsentDialogService>();
-        services.AddSingleton<IAiFeatureConsentDialogService>(sp => sp.GetRequiredService<AiFeatureConsentDialogService>());
-        services.AddSingleton<ImageSuperResolutionPreparationConsentService>();
-        services.AddSingleton<IImageSuperResolutionPreparationConsentService>(sp => sp.GetRequiredService<ImageSuperResolutionPreparationConsentService>());
         services.AddSingleton<TelemetryConsentDialogService>();
+        services.AddSingleton<CaptureMemoryDialogService>();
+        services.AddSingleton<ICaptureMemoryPrompts>(sp => sp.GetRequiredService<CaptureMemoryDialogService>());
         return services;
     }
 }

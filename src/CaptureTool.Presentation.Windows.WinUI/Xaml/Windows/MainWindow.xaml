@@ -9,6 +9,7 @@
     xmlns:pages="using:CaptureTool.Presentation.Windows.WinUI.Xaml.Pages"
     xmlns:utils="using:CaptureTool.Presentation.Windows.WinUI.Utils"
     xmlns:views="using:CaptureTool.Presentation.Windows.WinUI.Xaml.Views"
+    xmlns:controls="using:CaptureTool.Presentation.Windows.WinUI.Xaml.Controls"
     mc:Ignorable="d">
     <Window.SystemBackdrop>
         <MicaBackdrop />
@@ -59,6 +60,18 @@
 
         <Grid Row="2">
             <Frame x:Name="NavigationFrame" SourcePageType="pages:LoadingPage" />
+
+            <Border MaxWidth="440" Margin="12" Padding="16,12" HorizontalAlignment="Right" VerticalAlignment="Bottom"
+                    Background="{ThemeResource SystemControlBackgroundChromeMediumLowBrush}"
+                    BorderBrush="{ThemeResource SystemControlForegroundBaseLowBrush}" BorderThickness="1" CornerRadius="8"
+                    Canvas.ZIndex="90" IsHitTestVisible="False"
+                    Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(CaptureMemory.IsAnalysisActive), Mode=OneWay}">
+                <StackPanel Orientation="Horizontal" Spacing="12">
+                    <controls:AiLoadingIndicator Width="24" Height="24" IsActive="{x:Bind CaptureMemory.IsAnalysisActive, Mode=OneWay}" />
+                    <TextBlock x:Name="CaptureMemoryProgressLabel" AutomationProperties.AutomationId="CaptureMemoryProgress" VerticalAlignment="Center" TextWrapping="Wrap"
+                               AutomationProperties.LiveSetting="Polite" Text="{x:Bind CaptureMemory.ProgressText, Mode=OneWay}" />
+                </StackPanel>
+            </Border>
 
             <Border
                 x:Name="NotificationHost"

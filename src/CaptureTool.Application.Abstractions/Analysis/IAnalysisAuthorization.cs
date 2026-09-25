@@ -3,7 +3,7 @@ namespace CaptureTool.Application.Abstractions.Analysis;
 /// <summary>
 /// Supplied by the application consent workflow. The revision is durable across restart and changes on disable/revocation.
 /// A lease serializes short admission/publication operations with policy changes; never hold it during inference.
-/// Default composition denies analysis until that workflow is connected.
+/// Application composition denies analysis until the protected consent policy has loaded and permits it.
 /// </summary>
 public interface IAnalysisAuthorization
 {

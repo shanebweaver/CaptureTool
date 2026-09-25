@@ -13,7 +13,7 @@ using ZXing.Common;
 namespace CaptureTool.UiTests;
 
 [TestClass]
-public sealed class ImageEditTextExtractionUiTests
+public sealed partial class ImageEditTextExtractionUiTests
 {
     private static readonly TimeSpan AppLaunchTimeout = TimeSpan.FromSeconds(30);
     private static readonly TimeSpan InteractionTimeout = TimeSpan.FromSeconds(15);
@@ -77,7 +77,7 @@ public sealed class ImageEditTextExtractionUiTests
             WaitForElement(
                 mainWindow,
                 automation,
-                "AiFeatureConsentDialog",
+                "CaptureMemoryConsentDialog",
                 InteractionTimeout);
             AutomationElement allowButton = WaitForElementByName(
                 mainWindow,
@@ -85,6 +85,7 @@ public sealed class ImageEditTextExtractionUiTests
                 "Allow",
                 InteractionTimeout);
             allowButton.Click();
+            WaitForElementRemoved(mainWindow, automation, "CaptureMemoryConsentDialog", InteractionTimeout);
 
             WaitForElement(
                 mainWindow,
@@ -96,11 +97,15 @@ public sealed class ImageEditTextExtractionUiTests
                 textExtractionButton.IsEnabled,
                 "The Text Extraction button should remain enabled while OCR is running.");
             textExtractionButton.Click();
-            WaitForElementRemoved(
-                mainWindow,
-                automation,
-                "ImageEdit_TextExtractionProgressRing",
-                InteractionTimeout);
+            try
+            {
+                WaitForElementRemoved(mainWindow, automation, "ImageEdit_TextExtractionProgressRing", InteractionTimeout);
+            }
+            catch
+            {
+                CaptureWindowScreenshot(app.ProcessId, mainWindow, Path.Combine(screenshotDirectory, "text-extraction-failure.png"));
+                throw;
+            }
 
             textExtractionButton.Click();
             WaitForElement(
@@ -582,6 +587,9 @@ public sealed class ImageEditTextExtractionUiTests
 
     private static string ResolveAppExecutablePath(string repoRoot)
     {
+        if (Environment.GetEnvironmentVariable("CAPTURETOOL_UI_TEST_APP_PATH") is { Length: > 0 } publishedApp)
+            return Path.GetFullPath(publishedApp);
+
         string configuration = Environment.GetEnvironmentVariable("CONFIGURATION") ?? "Debug";
         string platform = Environment.GetEnvironmentVariable("PLATFORM") ?? "x64";
         string runtimeIdentifier = RuntimeInformation.ProcessArchitecture == Architecture.Arm64 || platform.Equals("ARM64", StringComparison.OrdinalIgnoreCase)

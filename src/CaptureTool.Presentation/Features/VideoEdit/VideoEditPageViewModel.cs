@@ -199,7 +199,6 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
     private readonly IVideoSuperResolutionService _videoSuperResolutionService;
     private readonly IVideoSuperResolutionFeatureAvailability _videoSuperResolutionFeatureAvailability;
     private readonly IAiFeatureConsentService _aiFeatureConsentService;
-    private readonly IAiFeatureConsentDialogService _aiFeatureConsentDialogService;
     private readonly ILocalizationService _localizationService;
     private readonly IAppNotificationService _notificationService;
     private readonly ITelemetryService? _telemetryService;
@@ -226,7 +225,6 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
         IVideoSuperResolutionService? videoSuperResolutionService = null,
         IVideoSuperResolutionFeatureAvailability? videoSuperResolutionFeatureAvailability = null,
         IAiFeatureConsentService? aiFeatureConsentService = null,
-        IAiFeatureConsentDialogService? aiFeatureConsentDialogService = null,
         ILocalizationService? localizationService = null,
         IAppNotificationService? notificationService = null,
         ITelemetryService? telemetryService = null,
@@ -241,7 +239,6 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
         _videoSuperResolutionFeatureAvailability =
             videoSuperResolutionFeatureAvailability ?? new DisabledVideoSuperResolutionFeatureAvailability();
         _aiFeatureConsentService = aiFeatureConsentService ?? new PermissiveAiFeatureConsentService();
-        _aiFeatureConsentDialogService = aiFeatureConsentDialogService ?? new PermissiveAiFeatureConsentDialogService();
         _localizationService = localizationService ?? new ResourceKeyLocalizationService();
         _notificationService = notificationService ?? new NullAppNotificationService();
         _telemetryService = telemetryService;
@@ -514,14 +511,17 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
 
         VideoSuperResolutionStatusMessage = string.Empty;
         IsVideoSuperResolutionGenerating = true;
+        CancellationToken cancellationToken = _aiFeatureConsentService.Revoked;
         UpdateVideoSuperResolutionAvailability();
         try
         {
+            cancellationToken.ThrowIfCancellationRequested();
             VideoSuperResolutionReadyState readyState = _videoSuperResolutionService.GetReadyState();
             if (readyState == VideoSuperResolutionReadyState.PreparationNeeded)
             {
                 VideoSuperResolutionPreparationResult preparationResult =
-                    await _videoSuperResolutionService.EnsureReadyAsync(CancellationToken.None);
+                    await _videoSuperResolutionService.EnsureReadyAsync(cancellationToken);
+                cancellationToken.ThrowIfCancellationRequested();
                 if (preparationResult.Status != VideoSuperResolutionPreparationStatus.Success)
                 {
                     ShowVideoSuperResolutionFailure(GetPreparationFailureMessage(preparationResult));
@@ -536,7 +536,8 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
 
             VideoSuperResolutionResult result = await _videoSuperResolutionService.GenerateAsync(
                 new VideoSuperResolutionRequest(new VideoFile(_originalVideoPath)),
-                CancellationToken.None);
+                cancellationToken);
+            cancellationToken.ThrowIfCancellationRequested();
             if (result.Status != VideoSuperResolutionStatus.Success ||
                 result.VideoFile is null)
             {
@@ -575,15 +576,9 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
             return true;
         }
 
-        bool consented = await _aiFeatureConsentDialogService.RequestConsentAsync(
-            featureId,
-            cancellationToken);
-        bool saved = await _aiFeatureConsentService.SetConsentAsync(
-            featureId,
-            consented,
-            cancellationToken);
+        bool consented = await _aiFeatureConsentService.EnsureConsentAsync(cancellationToken);
         UpdateVideoSuperResolutionAvailability();
-        return consented && saved;
+        return consented;
     }
 
     private void ShowOriginalVideo()
@@ -652,10 +647,7 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
             !IsFinalizingVideo &&
             !IsVideoSuperResolutionGenerating &&
             (readyState is VideoSuperResolutionReadyState.Ready or
-                VideoSuperResolutionReadyState.PreparationNeeded) &&
-            (IsVideoSuperResolutionActive ||
-                _aiFeatureConsentService.GetConsentState(AiFeatureId.VideoSuperResolution) !=
-                    AiFeatureConsentState.Denied);
+                VideoSuperResolutionReadyState.PreparationNeeded);
     }
 
     private string GetReadyStateFailureMessage(VideoSuperResolutionReadyState readyState)
@@ -846,33 +838,9 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
 
     private sealed class PermissiveAiFeatureConsentService : IAiFeatureConsentService
     {
-        public IReadOnlyList<AiFeatureConsent> GetFeatureConsents()
-        {
-            return [];
-        }
-
-        public AiFeatureConsentState GetConsentState(AiFeatureId featureId)
-        {
-            return AiFeatureConsentState.Granted;
-        }
-
-        public Task<bool> SetConsentAsync(
-            AiFeatureId featureId,
-            bool isGranted,
-            CancellationToken cancellationToken = default)
-        {
-            return Task.FromResult(true);
-        }
-    }
-
-    private sealed class PermissiveAiFeatureConsentDialogService : IAiFeatureConsentDialogService
-    {
-        public Task<bool> RequestConsentAsync(
-            AiFeatureId featureId,
-            CancellationToken cancellationToken = default)
-        {
-            return Task.FromResult(true);
-        }
+        public AiFeatureConsentState GetConsentState(AiFeatureId featureId) => AiFeatureConsentState.Granted;
+        public Task<bool> EnsureConsentAsync(CancellationToken cancellationToken = default) => Task.FromResult(true);
+        public CancellationToken Revoked => CancellationToken.None;
     }
 
     private sealed class ResourceKeyLocalizationService : ILocalizationService

@@ -1,4 +1,5 @@
 using CaptureTool.Application.Abstractions.Cancellation;
+using CaptureTool.Application.Abstractions.Analysis;
 using CaptureTool.Application.Abstractions.Localization;
 using CaptureTool.Application.Abstractions.Logging;
 using CaptureTool.Application.Abstractions.Metrics;
@@ -27,6 +28,7 @@ internal sealed class ApplicationStartupInitializer : IApplicationStartupInitial
     private readonly SemaphoreSlim _semaphore = new(1, 1);
 
     private bool _isInitialized;
+    private readonly ICaptureMemoryService? _captureMemory;
 
     public ApplicationStartupInitializer(
         ICancellationService cancellationService,
@@ -39,7 +41,8 @@ internal sealed class ApplicationStartupInitializer : IApplicationStartupInitial
         IStorageService storageService,
         IScratchArtifactStore scratchArtifactStore,
         ITelemetryService? telemetryService = null,
-        ITelemetryConsentService? telemetryConsentService = null)
+        ITelemetryConsentService? telemetryConsentService = null,
+        ICaptureMemoryService? captureMemory = null)
     {
         _cancellationService = cancellationService;
         _settingsService = settingsService;
@@ -52,6 +55,7 @@ internal sealed class ApplicationStartupInitializer : IApplicationStartupInitial
         _scratchArtifactStore = scratchArtifactStore;
         _telemetryService = telemetryService;
         _telemetryConsentService = telemetryConsentService;
+        _captureMemory = captureMemory;
     }
 
     public async Task InitializeAsync(CancellationToken cancellationToken = default)
@@ -83,6 +87,7 @@ internal sealed class ApplicationStartupInitializer : IApplicationStartupInitial
             _localizationService.Initialize(languageOverride);
 
             _navigationService.SetNavigationHandler(_navigationHandler);
+            if (_captureMemory != null) await _captureMemory.InitializeAsync(cancellationTokenSource.Token);
 
             _isInitialized = true;
             _telemetryService?.TrackEvent(TelemetryEvents.AppStarted);

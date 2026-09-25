@@ -13,7 +13,6 @@ using CaptureTool.Application.Navigation;
 using CaptureTool.Application.Storage;
 using CaptureTool.Application.UseCases;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace CaptureTool.Application.DependencyInjection;
 
@@ -47,8 +46,11 @@ public static class ApplicationServiceCollectionExtensions
         services.AddTransient<IUseCaseExecutor, UseCaseExecutor>();
         services.AddSingleton<IAiFeatureConsentService, AiFeatureConsentService>();
         services.AddSingleton(CaptureAnalysisConfiguration.CreateDefault());
-        services.TryAddSingleton<IAnalysisAuthorization, DeniedAnalysisAuthorization>();
+        services.AddSingleton<CaptureMemoryAuthorization>();
+        services.AddSingleton<IAnalysisAuthorization>(provider => provider.GetRequiredService<CaptureMemoryAuthorization>());
         services.AddSingleton<ICaptureAnalysisWorker, CaptureAnalysisWorker>();
+        services.AddSingleton<ICaptureMemoryService, CaptureMemoryService>();
+        services.AddSingleton<CaptureAnalysisIntake>();
         services.AddTransient<IOpenExternalEditorUseCase, OpenExternalEditorUseCase>();
         services.AddSingleton<IActiveEditSessionService, ActiveEditSessionService>();
         services.AddSingleton<IEditSessionGuard, EditSessionGuard>();

@@ -1,10 +1,12 @@
 using CaptureTool.Application.Abstractions.Analysis;
 using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Application.Analysis;
+using CaptureTool.Application.DependencyInjection;
 using CaptureTool.Domain;
 using CaptureTool.Domain.Analysis;
 using CaptureTool.Domain.Analysis.Payloads;
 using CaptureTool.Infrastructure.Analysis.Windows.DependencyInjection;
+using CaptureTool.Infrastructure.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AI.Foundry.Local;
 using System.Drawing;
@@ -20,13 +22,14 @@ using Windows.Storage;
 // This opt-in harness uses synthetic fixtures only. It does not enable the app's background scanning.
 if (args.Length == 0 || !Path.IsPathFullyQualified(args[0]))
 {
-    Console.Error.WriteLine("Usage: CaptureTool.Analysis.Smoke <absolute-output-directory> [--prepare-whisper] [--prepare-all]");
+    Console.Error.WriteLine("Usage: CaptureTool.Analysis.Smoke <absolute-output-directory> [--prepare-whisper] [--prepare-vision] [--prepare-all]");
     return 2;
 }
 string output = Path.GetFullPath(args[0]);
 Directory.CreateDirectory(output);
 var storage = new SmokeStorage(output);
-var services = new ServiceCollection().AddSingleton<IStorageService>(storage).AddWindowsAnalysisProviders();
+var services = new ServiceCollection().AddGenericServices().AddApplicationServices()
+    .AddSingleton<IStorageService>(storage).AddWindowsAnalysisProviders();
 using ServiceProvider provider = services.BuildServiceProvider();
 IMediaAnalyzer[] analyzers = provider.GetServices<IMediaAnalyzer>().ToArray();
 CaptureAnalysisConfiguration.CreateDefault().ValidateAnalyzers(analyzers.Select(analyzer => analyzer.Descriptor));
@@ -38,6 +41,25 @@ using (var font = new Font("Arial", 48))
     graphics.Clear(Color.White);
     graphics.DrawString("Capture analysis\nSmoke test 42", font, Brushes.Black, 35, 35);
     bitmap.Save(imagePath, ImageFormat.Png);
+}
+string visionPath = Path.Combine(output, "synthetic-shapes.png");
+string visionVideoPath = Path.Combine(output, "synthetic-shapes.mp4");
+using (var bitmap = new Bitmap(384, 256))
+using (Graphics graphics = Graphics.FromImage(bitmap))
+{
+    graphics.Clear(Color.White);
+    graphics.FillRectangle(Brushes.Red, 32, 64, 112, 112);
+    graphics.FillEllipse(Brushes.Blue, 224, 64, 112, 112);
+    bitmap.Save(visionPath, ImageFormat.Png);
+}
+if (!File.Exists(visionVideoPath))
+{
+    var composition = new MediaComposition();
+    composition.Clips.Add(await MediaClip.CreateFromImageFileAsync(await StorageFile.GetFileFromPathAsync(visionPath), TimeSpan.FromSeconds(2)));
+    await File.WriteAllBytesAsync(visionVideoPath, []);
+    var transcode = await composition.RenderToFileAsync(await StorageFile.GetFileFromPathAsync(visionVideoPath),
+        MediaTrimmingPreference.Precise, MediaEncodingProfile.CreateMp4(VideoEncodingQuality.Vga));
+    if (transcode != Windows.Media.Transcoding.TranscodeFailureReason.None) throw new InvalidOperationException("Synthetic vision video creation failed.");
 }
 string audioPath = Path.Combine(output, "synthetic.wav");
 string videoPath = Path.Combine(output, "synthetic.mp4");
@@ -61,15 +83,19 @@ foreach (IMediaAnalyzer analyzer in analyzers)
     foreach (AnalysisMediaKind kind in analyzer.Descriptor.SupportedMedia)
     {
         string path = kind switch { AnalysisMediaKind.Image => imagePath, AnalysisMediaKind.Audio => Path.Combine(output, "synthetic.wav"), _ => Path.Combine(output, "synthetic.mp4") };
+        bool vision = analyzer.Descriptor.Id == "foundry-local-image-description";
+        if (vision) path = kind == AnalysisMediaKind.Image ? visionPath : visionVideoPath;
         using var budget = new CancellationTokenSource(TimeSpan.FromMinutes(10));
         string status;
         int? items = null;
         string? modelId = null;
         string? diagnostic = null;
+        string? descriptionText = null;
         try
         {
             AnalyzerAvailability readiness = await analyzer.GetAvailabilityAsync(kind, "en", budget.Token);
             bool prepare = args.Contains("--prepare-all", StringComparer.Ordinal) ||
+                args.Contains("--prepare-vision", StringComparer.Ordinal) && vision ||
                 args.Contains("--prepare-whisper", StringComparer.Ordinal) && analyzer.Descriptor.Id == "foundry-local-speech-transcript";
             if (readiness == AnalyzerAvailability.PreparationRequired && prepare)
                 readiness = await analyzer.PrepareAsync(null, budget.Token);
@@ -83,18 +109,29 @@ foreach (IMediaAnalyzer analyzer in analyzers)
                 modelId = outcome.Producer?.ModelId;
                 items = outcome.Payload switch
                 {
+                    FileDetailsMetadata => 1,
                     TextRecognitionMetadata text => text.Regions.Count,
+                    QrCodeMetadata qr => qr.Codes.Count,
                     DescriptionMetadata description => description.Descriptions.Count,
                     TranscriptMetadata transcript => transcript.Segments.Count,
                     _ => null,
                 };
                 if (outcome.Payload is TextRecognitionMetadata recognized && !recognized.Regions.Any(region => region.Text.Contains("Capture", StringComparison.OrdinalIgnoreCase)))
                     status = "FixtureMismatch";
+                if (vision && outcome.Payload is DescriptionMetadata described)
+                {
+                    descriptionText = string.Join(" ", described.Descriptions.Select(item => item.Text));
+                    if (described.Descriptions.Count != 1 ||
+                        !descriptionText.Contains("red", StringComparison.OrdinalIgnoreCase) ||
+                        !descriptionText.Contains("blue", StringComparison.OrdinalIgnoreCase) ||
+                        kind == AnalysisMediaKind.Video && described.Descriptions[0].Timestamp != TimeSpan.Zero)
+                        status = "FixtureMismatch";
+                }
             }
             else if (readiness == AnalyzerAvailability.Ready) status = "MissingFixture";
         }
         catch (Exception exception) { status = "Error:" + exception.GetType().Name + ":" + exception.HResult.ToString("X8"); diagnostic = exception.ToString(); }
-        results.Add(new(analyzer.Descriptor.Id, kind.ToString(), status, items, modelId, diagnostic));
+        results.Add(new(analyzer.Descriptor.Id, kind.ToString(), status, items, modelId, diagnostic, descriptionText));
         Console.WriteLine($"{analyzer.Descriptor.Id} {kind}: {status}");
         await File.WriteAllTextAsync(Path.Combine(output, "results.json"), JsonSerializer.Serialize(new SmokeReport(packaged, results.ToArray()), SmokeJsonContext.Default.SmokeReport));
     }
@@ -140,7 +177,7 @@ int exitCode = results.Any(result => result.Status.StartsWith("Error:", StringCo
 await File.WriteAllTextAsync(Path.Combine(output, "exit-code.txt"), exitCode.ToString());
 return exitCode;
 
-internal sealed record SmokeResult(string Analyzer, string Media, string Status, int? Items, string? ActualModel, string? Diagnostic);
+internal sealed record SmokeResult(string Analyzer, string Media, string Status, int? Items, string? ActualModel, string? Diagnostic, string? SyntheticDescription = null);
 internal sealed record SmokeReport(bool Packaged, SmokeResult[] Results);
 [JsonSerializable(typeof(SmokeReport))]
 internal partial class SmokeJsonContext : JsonSerializerContext;

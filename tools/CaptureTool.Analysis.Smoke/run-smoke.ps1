@@ -3,6 +3,7 @@ param(
     [Parameter(Mandatory)][string]$OutputDirectory,
     [switch]$Packaged,
     [switch]$PrepareWhisper,
+    [switch]$PrepareVision,
     [switch]$PrepareAll
 )
 $ErrorActionPreference = 'Stop'
@@ -26,13 +27,14 @@ finally {
     [void][Runtime.InteropServices.Marshal]::ReleaseComObject($stream)
     [void][Runtime.InteropServices.Marshal]::ReleaseComObject($voice)
 }
-foreach ($name in @('synthetic.mp4', 'exit-code.txt', 'results.json')) {
+foreach ($name in @('synthetic.mp4', 'synthetic-shapes.mp4', 'exit-code.txt', 'results.json')) {
     $fixture = Join-Path $outputRoot $name
     if (Test-Path -LiteralPath $fixture) { Remove-Item -LiteralPath $fixture }
 }
 $arguments = '"' + $outputRoot + '"'
 if ($PrepareAll) { $arguments += ' --prepare-all' }
 elseif ($PrepareWhisper) { $arguments += ' --prepare-whisper' }
+if ($PrepareVision) { $arguments += ' --prepare-vision' }
 $packageName = 'CaptureTool.AnalysisSmoke.Slice2'
 $registered = $false
 $createdManifest = $false

@@ -6,6 +6,7 @@ namespace CaptureTool.Presentation.Windows.WinUI.Xaml.Pages;
 
 public sealed partial class SettingsPage : SettingsPageBase
 {
+    public CaptureMemoryViewModel CaptureMemory { get; } = ViewModelLocator.GetViewModel<CaptureMemoryViewModel>();
     public SettingsPage()
     {
         InitializeComponent();
@@ -16,9 +17,27 @@ public sealed partial class SettingsPage : SettingsPageBase
 #endif
     }
 
-    private void SettingsPage_Loaded(object sender, RoutedEventArgs e)
+    private async void SettingsPage_Loaded(object sender, RoutedEventArgs e)
     {
         SettingsAmbientMotionStoryboard.Begin();
+        await CaptureMemory.RefreshAsync();
+    }
+
+    private async void CaptureMemoryScanning_Toggled(object sender, RoutedEventArgs e)
+    {
+        if (sender is ToggleSwitch toggle && toggle.IsOn != CaptureMemory.ScanningEnabled)
+        {
+            await CaptureMemory.SetScanningCommand.ExecuteAsync(toggle.IsOn);
+            toggle.IsOn = CaptureMemory.ScanningEnabled;
+        }
+    }
+    private async void CaptureMemoryConsent_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is CheckBox checkbox)
+        {
+            await CaptureMemory.SetConsentCommand.ExecuteAsync(checkbox.IsChecked == true);
+            checkbox.IsChecked = CaptureMemory.ConsentGranted;
+        }
     }
 
     private void ImageAutoCopyToggleSwitch_Toggled(object sender, RoutedEventArgs e)
@@ -117,13 +136,7 @@ public sealed partial class SettingsPage : SettingsPageBase
         }
     }
 
-    private void AiFeatureConsentCheckBox_Click(object sender, RoutedEventArgs e)
-    {
-        if (sender is CheckBox checkBox && checkBox.DataContext is AiFeatureConsentViewModel featureConsent)
-        {
-            _ = ViewModel.UpdateAiFeatureConsentAsync(featureConsent.FeatureId, checkBox.IsChecked == true);
-        }
-    }
+
 
     private void AppThemeRadioButtons_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {

@@ -86,6 +86,7 @@
             <!--  Settings  -->
             <MenuFlyoutItem
                 x:Uid="AppMenu_SettingsItem"
+                AutomationProperties.AutomationId="AppMenu_SettingsItem"
                 Command="{x:Bind ViewModel.NavigateToSettingsCommand}"
                 Icon="Setting" />
 

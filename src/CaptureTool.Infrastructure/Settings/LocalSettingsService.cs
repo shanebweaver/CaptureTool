@@ -14,13 +14,6 @@ public partial class LocalSettingsService : ISettingsService, IDisposable
 
     private static readonly IReadOnlySet<string> TelemetrySettingKeys = new HashSet<string>(StringComparer.Ordinal)
     {
-        CaptureToolSettings.Settings_AiConsent_ImageDescription.Key,
-        CaptureToolSettings.Settings_AiConsent_ImageForegroundExtraction.Key,
-        CaptureToolSettings.Settings_AiConsent_ImageObjectErase.Key,
-        CaptureToolSettings.Settings_AiConsent_ImageObjectExtraction.Key,
-        CaptureToolSettings.Settings_AiConsent_ImageSuperResolution.Key,
-        CaptureToolSettings.Settings_AiConsent_TextExtraction.Key,
-        CaptureToolSettings.Settings_AiConsent_VideoSuperResolution.Key,
         CaptureToolSettings.Settings_AudioCapture_AutoCopy.Key,
         CaptureToolSettings.Settings_AudioCapture_AutoSave.Key,
         CaptureToolSettings.Settings_AudioCapture_DefaultLocalAudioEnabled.Key,

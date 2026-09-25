@@ -1323,18 +1323,6 @@ SOFTWARE.
   <data name="ImageEdit_SuperResolutionProgressRing.AutomationProperties.Name" xml:space="preserve">
     <value>Улучшение изображения</value>
   </data>
-  <data name="ImageSuperResolutionPreparation_Title" xml:space="preserve">
-    <value>Prepare Super Resolution</value>
-  </data>
-  <data name="ImageSuperResolutionPreparation_Content" xml:space="preserve">
-    <value>Windows needs to prepare local AI components before Super Resolution can run. This may use Windows Update and can take some time.</value>
-  </data>
-  <data name="ImageSuperResolutionPreparation_ContinueButton" xml:space="preserve">
-    <value>Continue</value>
-  </data>
-  <data name="ImageSuperResolutionPreparation_CancelButton" xml:space="preserve">
-    <value>Cancel</value>
-  </data>
   <data name="ImageSuperResolutionStatus_NotSupported" xml:space="preserve">
     <value>Super Resolution is not supported on this PC.</value>
   </data>
@@ -1467,30 +1455,6 @@ SOFTWARE.
   <data name="TextExtractionStatus_Failed" xml:space="preserve">
     <value>Не удалось распознать текст.</value>
   </data>
-  <data name="AiFeatureConsentDialog_AllowButton" xml:space="preserve">
-    <value>Разрешить</value>
-  </data>
-  <data name="AiFeatureConsentDialog_DontAllowButton" xml:space="preserve">
-    <value>Не разрешать</value>
-  </data>
-  <data name="AiFeatureConsentDialog_CancelButton" xml:space="preserve">
-    <value>Отмена</value>
-  </data>
-  <data name="AiFeatureConsentDialog_TextExtractionTitle" xml:space="preserve">
-    <value>Разрешить распознавание текста?</value>
-  </data>
-  <data name="AiFeatureConsentDialog_TextExtractionContent" xml:space="preserve">
-    <value>Функция распознавания текста использует локальную модель ИИ для обнаружения текста и его расположения на текущем изображении.</value>
-  </data>
-  <data name="Settings_AiConsentHeaderLabel.Text" xml:space="preserve">
-    <value>Согласие на использование ИИ</value>
-  </data>
-  <data name="Settings_AiConsentDescription.Text" xml:space="preserve">
-    <value>Разрешить этой функции ИИ обрабатывать изображения на этом устройстве.</value>
-  </data>
-  <data name="Settings_AiConsent_TextExtractionDisplayName" xml:space="preserve">
-    <value>Распознавание текста</value>
-  </data>
   <data name="ImageEdit_ImageDescriptionButton.Label" xml:space="preserve">
     <value>Описание изображения</value>
   </data>
@@ -1557,15 +1521,6 @@ SOFTWARE.
   <data name="ImageEdit_ImageDescriptionProgressRing.AutomationProperties.Name" xml:space="preserve">
     <value>Создание описания изображения</value>
   </data>
-  <data name="AiFeatureConsentDialog_ImageDescriptionTitle" xml:space="preserve">
-    <value>Разрешить описание изображений?</value>
-  </data>
-  <data name="AiFeatureConsentDialog_ImageDescriptionContent" xml:space="preserve">
-    <value>Функция описания изображений использует локальную модель ИИ для описания текущего изображения.</value>
-  </data>
-  <data name="Settings_AiConsent_ImageDescriptionDisplayName" xml:space="preserve">
-    <value>Описание изображения</value>
-  </data>
   <data name="ImageDescriptionStatus_NotSupported" xml:space="preserve">
     <value>Описание изображений не поддерживается на этом компьютере.</value>
   </data>
@@ -1608,15 +1563,6 @@ SOFTWARE.
   <data name="ImageEdit_ForegroundExtractionProgressRing.AutomationProperties.Name" xml:space="preserve">
     <value>Удаление фона изображения</value>
   </data>
-  <data name="AiFeatureConsentDialog_ImageForegroundExtractionTitle" xml:space="preserve">
-    <value>Разрешить удаление фона?</value>
-  </data>
-  <data name="AiFeatureConsentDialog_ImageForegroundExtractionContent" xml:space="preserve">
-    <value>Удаление фона использует модель ИИ на устройстве, чтобы выделить выбранный объект и удалить его фон.</value>
-  </data>
-  <data name="Settings_AiConsent_ImageForegroundExtractionDisplayName" xml:space="preserve">
-    <value>Удаление фона</value>
-  </data>
   <data name="ForegroundExtractionStatus_Success" xml:space="preserve">
     <value>Фон удален.</value>
   </data>
@@ -1652,15 +1598,6 @@ SOFTWARE.
   </data>
   <data name="ImageEdit_ObjectEraseProgressRing.AutomationProperties.Name" xml:space="preserve">
     <value>Удаление выбранного объекта</value>
-  </data>
-  <data name="AiFeatureConsentDialog_ImageObjectEraseTitle" xml:space="preserve">
-    <value>Разрешить удаление объектов?</value>
-  </data>
-  <data name="AiFeatureConsentDialog_ImageObjectEraseContent" xml:space="preserve">
-    <value>Удаление объектов использует модели ИИ на устройстве, чтобы определить выбранный объект, удалить его и заполнить область на основе окружения.</value>
-  </data>
-  <data name="Settings_AiConsent_ImageObjectEraseDisplayName" xml:space="preserve">
-    <value>Удаление объектов</value>
   </data>
   <data name="ObjectEraseStatus_Success" xml:space="preserve">
     <value>Объект удален.</value>
@@ -1698,15 +1635,6 @@ SOFTWARE.
   <data name="ImageEdit_ObjectExtractionProgressRing.AutomationProperties.Name" xml:space="preserve">
     <value>Извлечение выбранного объекта</value>
   </data>
-  <data name="AiFeatureConsentDialog_ImageObjectExtractionTitle" xml:space="preserve">
-    <value>Разрешить извлечение объектов?</value>
-  </data>
-  <data name="AiFeatureConsentDialog_ImageObjectExtractionContent" xml:space="preserve">
-    <value>Извлечение объектов использует модель ИИ на устройстве, чтобы определить и извлечь выбранный объект из текущего изображения.</value>
-  </data>
-  <data name="Settings_AiConsent_ImageObjectExtractionDisplayName" xml:space="preserve">
-    <value>Извлечение объектов</value>
-  </data>
   <data name="ObjectExtractionStatus_Success" xml:space="preserve">
     <value>Объект извлечен.</value>
   </data>
@@ -1742,15 +1670,6 @@ SOFTWARE.
   </data>
   <data name="VideoEdit_SuperResolutionProgressText.Text" xml:space="preserve">
     <value>Улучшение видео...</value>
-  </data>
-  <data name="AiFeatureConsentDialog_VideoSuperResolutionTitle" xml:space="preserve">
-    <value>Разрешить сверхвысокое разрешение видео?</value>
-  </data>
-  <data name="AiFeatureConsentDialog_VideoSuperResolutionContent" xml:space="preserve">
-    <value>Сверхвысокое разрешение видео использует локальную модель ИИ, чтобы создать более чёткую копию текущего видео с более высоким разрешением.</value>
-  </data>
-  <data name="Settings_AiConsent_VideoSuperResolutionDisplayName" xml:space="preserve">
-    <value>Сверхвысокое разрешение видео</value>
   </data>
   <data name="VideoSuperResolutionStatus_NotSupported" xml:space="preserve">
     <value>Сверхвысокое разрешение видео не поддерживается на этом устройстве.</value>
@@ -1805,5 +1724,101 @@ SOFTWARE.
   </data>
   <data name="CaptureOverlay_RecordingUnsupportedMessage" xml:space="preserve">
     <value>Запись с экрана не поддерживается на этом устройстве.</value>
+  </data>
+  <data name="CaptureMemory_SettingsHeader.Text" xml:space="preserve">
+    <value>ИИ</value>
+  </data>
+  <data name="CaptureMemory_Scanning.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Автоматически анализировать новые записи</value>
+  </data>
+  <data name="CaptureMemory_Consent.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Разрешить локальные функции ИИ</value>
+  </data>
+  <data name="CaptureMemory_SettingsDescription.Text" xml:space="preserve">
+    <value>Анализируйте записи с помощью ИИ на устройстве и безопасно сохраняйте полученную информацию.</value>
+  </data>
+  <data name="CaptureMemory_Scan.Content" xml:space="preserve">
+    <value>Анализировать</value>
+  </data>
+  <data name="CaptureMemory_Delete.Content" xml:space="preserve">
+    <value>Удалить</value>
+  </data>
+  <data name="CaptureMemory_Preparing" xml:space="preserve">
+    <value>Подготовка ИИ на устройстве…</value>
+  </data>
+  <data name="CaptureMemory_Analyzing" xml:space="preserve">
+    <value>Анализ записей…</value>
+  </data>
+  <data name="CaptureMemory_ConsentTitle" xml:space="preserve">
+    <value>Разрешить локальные функции ИИ?</value>
+  </data>
+  <data name="CaptureMemory_ConsentContent" xml:space="preserve">
+    <value>Разрешите ИИ на этом устройстве распознавать текст, описывать изображения, расшифровывать записи и редактировать медиа при использовании инструментов ИИ. Автоматический анализ записей включается отдельно. Результаты анализа надёжно хранятся на этом устройстве. Может потребоваться загрузка моделей; ваши медиа обрабатываются на этом устройстве.</value>
+  </data>
+  <data name="CaptureMemory_ConsentAccept" xml:space="preserve">
+    <value>Разрешить</value>
+  </data>
+  <data name="CaptureMemory_ScanExistingTitle" xml:space="preserve">
+    <value>Анализировать существующие записи?</value>
+  </data>
+  <data name="CaptureMemory_ScanExistingContent" xml:space="preserve">
+    <value>Анализ новых записей включён. Также проанализировать доступные записи, ранее созданные в CaptureTool? Существующая информация сохраняется до её замены результатами успешного анализа.</value>
+  </data>
+  <data name="CaptureMemory_ScanExistingAccept" xml:space="preserve">
+    <value>Анализировать записи</value>
+  </data>
+  <data name="CaptureMemory_DeleteMetadataTitle" xml:space="preserve">
+    <value>Удалить данные анализа?</value>
+  </data>
+  <data name="CaptureMemory_DeleteMetadataContent" xml:space="preserve">
+    <value>Удалить сохранённые данные анализа и остановить ожидающие задачи? Файлы записей и настройка анализа будут сохранены.</value>
+  </data>
+  <data name="CaptureMemory_DeleteMetadataAccept" xml:space="preserve">
+    <value>Удалить данные</value>
+  </data>
+  <data name="CaptureMemory_Cancel" xml:space="preserve">
+    <value>Отмена</value>
+  </data>
+  <data name="CaptureMemory_Error_Policy" xml:space="preserve">
+    <value>Не удалось загрузить или сохранить настройки памяти снимков. Анализ приостановлен. Повторите попытку.</value>
+  </data>
+  <data name="CaptureMemory_Error_Registration" xml:space="preserve">
+    <value>Запись создана, но не удалось зарегистрировать её в памяти снимков. Попробуйте снова проанализировать существующие записи.</value>
+  </data>
+  <data name="CaptureMemory_Error_Provider" xml:space="preserve">
+    <value>Модель ИИ ещё не остановилась. Обработка очереди продолжится после её завершения или перезапуска CaptureTool.</value>
+  </data>
+  <data name="CaptureMemory_Error_Cleanup" xml:space="preserve">
+    <value>Не удалось удалить часть данных анализа. Повторите удаление.</value>
+  </data>
+  <data name="CaptureMemory_Error_Analysis" xml:space="preserve">
+    <value>Не удалось завершить анализ записей. Повторите попытку в настройках.</value>
+  </data>
+  <data name="CaptureMemory_Error_Storage" xml:space="preserve">
+    <value>Хранилище памяти снимков недоступно. Повторите операцию или удалите данные анализа в настройках.</value>
+  </data>
+  <data name="AiSettings_ConsentHeader.Text" xml:space="preserve">
+    <value>Разрешить локальные функции ИИ</value>
+  </data>
+  <data name="AiSettings_ConsentDescription.Text" xml:space="preserve">
+    <value>Единое согласие на распознавание текста, описания, расшифровку и редактирование с ИИ.</value>
+  </data>
+  <data name="AiSettings_ScanningHeader.Text" xml:space="preserve">
+    <value>Автоматически анализировать новые записи</value>
+  </data>
+  <data name="AiSettings_ScanningDescription.Text" xml:space="preserve">
+    <value>Анализировать изображения, аудио и видео после захвата.</value>
+  </data>
+  <data name="AiSettings_ScanHeader.Text" xml:space="preserve">
+    <value>Анализировать существующие записи</value>
+  </data>
+  <data name="AiSettings_ScanDescription.Text" xml:space="preserve">
+    <value>Создать или обновить сохранённый анализ существующих записей.</value>
+  </data>
+  <data name="AiSettings_DeleteHeader.Text" xml:space="preserve">
+    <value>Удалить анализ записей</value>
+  </data>
+  <data name="AiSettings_DeleteDescription.Text" xml:space="preserve">
+    <value>Удалить весь сохранённый анализ, включая текст, QR-коды и сведения о файлах. Ваши записи сохранятся.</value>
   </data>
 </root>

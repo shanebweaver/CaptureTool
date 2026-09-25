@@ -32,9 +32,12 @@ public sealed record AnalysisProgress
     }
 }
 
-/// <summary>Only provided after authorization and source verification. Providers must not mutate the source.</summary>
+/// <summary>
+/// Only provided after authorization and source verification. Providers must not mutate the source.
+/// CapturedAt is the catalog-recorded capture date, or null when unknown; it is not a filesystem timestamp.
+/// </summary>
 public sealed record AnalysisInput(CaptureId CaptureId, AnalysisMediaKind MediaKind,
-    SourceRevision SourceRevision, string SourcePath, string? Language = null);
+    SourceRevision SourceRevision, string SourcePath, string? Language = null, DateTimeOffset? CapturedAt = null);
 
 public sealed class MediaAnalyzerDescriptor
 {
@@ -56,7 +59,7 @@ public sealed class MediaAnalyzerDescriptor
     }
 }
 
-/// <summary>One on-device model/capability adapter. It owns no policy, persistence, or UI.</summary>
+/// <summary>One local capability adapter, with or without a model. It owns no policy, persistence, or UI.</summary>
 public interface IMediaAnalyzer
 {
     MediaAnalyzerDescriptor Descriptor { get; }

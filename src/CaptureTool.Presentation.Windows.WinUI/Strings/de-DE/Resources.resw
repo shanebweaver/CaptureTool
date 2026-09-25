@@ -1317,18 +1317,6 @@ SOFTWARE.
   <data name="ImageEdit_SuperResolutionProgressRing.AutomationProperties.Name" xml:space="preserve">
     <value>Bild wird verbessert</value>
   </data>
-  <data name="ImageSuperResolutionPreparation_Title" xml:space="preserve">
-    <value>Prepare Super Resolution</value>
-  </data>
-  <data name="ImageSuperResolutionPreparation_Content" xml:space="preserve">
-    <value>Windows needs to prepare local AI components before Super Resolution can run. This may use Windows Update and can take some time.</value>
-  </data>
-  <data name="ImageSuperResolutionPreparation_ContinueButton" xml:space="preserve">
-    <value>Continue</value>
-  </data>
-  <data name="ImageSuperResolutionPreparation_CancelButton" xml:space="preserve">
-    <value>Cancel</value>
-  </data>
   <data name="ImageSuperResolutionStatus_NotSupported" xml:space="preserve">
     <value>Super Resolution is not supported on this PC.</value>
   </data>
@@ -1461,30 +1449,6 @@ SOFTWARE.
   <data name="TextExtractionStatus_Failed" xml:space="preserve">
     <value>Die Texterkennung ist fehlgeschlagen.</value>
   </data>
-  <data name="AiFeatureConsentDialog_AllowButton" xml:space="preserve">
-    <value>Zulassen</value>
-  </data>
-  <data name="AiFeatureConsentDialog_DontAllowButton" xml:space="preserve">
-    <value>Nicht zulassen</value>
-  </data>
-  <data name="AiFeatureConsentDialog_CancelButton" xml:space="preserve">
-    <value>Abbrechen</value>
-  </data>
-  <data name="AiFeatureConsentDialog_TextExtractionTitle" xml:space="preserve">
-    <value>Texterkennung zulassen?</value>
-  </data>
-  <data name="AiFeatureConsentDialog_TextExtractionContent" xml:space="preserve">
-    <value>Die Texterkennung verwendet ein KI-Modell auf dem Gerät, um Text und Textpositionen im aktuellen Bild zu erkennen.</value>
-  </data>
-  <data name="Settings_AiConsentHeaderLabel.Text" xml:space="preserve">
-    <value>KI-Zustimmung</value>
-  </data>
-  <data name="Settings_AiConsentDescription.Text" xml:space="preserve">
-    <value>Dieser KI-Funktion erlauben, Bilder auf diesem Gerät zu verarbeiten.</value>
-  </data>
-  <data name="Settings_AiConsent_TextExtractionDisplayName" xml:space="preserve">
-    <value>Texterkennung</value>
-  </data>
   <data name="ImageEdit_ImageDescriptionButton.Label" xml:space="preserve">
     <value>Bildbeschreibung</value>
   </data>
@@ -1551,15 +1515,6 @@ SOFTWARE.
   <data name="ImageEdit_ImageDescriptionProgressRing.AutomationProperties.Name" xml:space="preserve">
     <value>Bildbeschreibung wird erstellt</value>
   </data>
-  <data name="AiFeatureConsentDialog_ImageDescriptionTitle" xml:space="preserve">
-    <value>Bildbeschreibung zulassen?</value>
-  </data>
-  <data name="AiFeatureConsentDialog_ImageDescriptionContent" xml:space="preserve">
-    <value>Die Bildbeschreibung verwendet ein KI-Modell auf dem Gerät, um das aktuelle Bild zu beschreiben.</value>
-  </data>
-  <data name="Settings_AiConsent_ImageDescriptionDisplayName" xml:space="preserve">
-    <value>Bildbeschreibung</value>
-  </data>
   <data name="ImageDescriptionStatus_NotSupported" xml:space="preserve">
     <value>Die Bildbeschreibung wird auf diesem PC nicht unterstützt.</value>
   </data>
@@ -1602,15 +1557,6 @@ SOFTWARE.
   <data name="ImageEdit_ForegroundExtractionProgressRing.AutomationProperties.Name" xml:space="preserve">
     <value>Bildhintergrund wird entfernt</value>
   </data>
-  <data name="AiFeatureConsentDialog_ImageForegroundExtractionTitle" xml:space="preserve">
-    <value>Hintergrundentfernung zulassen?</value>
-  </data>
-  <data name="AiFeatureConsentDialog_ImageForegroundExtractionContent" xml:space="preserve">
-    <value>Die Hintergrundentfernung verwendet ein KI-Modell auf dem Gerät, um das ausgewählte Motiv freizustellen und seinen Hintergrund zu entfernen.</value>
-  </data>
-  <data name="Settings_AiConsent_ImageForegroundExtractionDisplayName" xml:space="preserve">
-    <value>Hintergrundentfernung</value>
-  </data>
   <data name="ForegroundExtractionStatus_Success" xml:space="preserve">
     <value>Hintergrund entfernt.</value>
   </data>
@@ -1646,15 +1592,6 @@ SOFTWARE.
   </data>
   <data name="ImageEdit_ObjectEraseProgressRing.AutomationProperties.Name" xml:space="preserve">
     <value>Ausgewähltes Objekt wird entfernt</value>
-  </data>
-  <data name="AiFeatureConsentDialog_ImageObjectEraseTitle" xml:space="preserve">
-    <value>Objektentfernung zulassen?</value>
-  </data>
-  <data name="AiFeatureConsentDialog_ImageObjectEraseContent" xml:space="preserve">
-    <value>Die Objektentfernung verwendet KI-Modelle auf dem Gerät, um das ausgewählte Objekt zu erkennen, es zu entfernen und den Bereich anhand seiner Umgebung aufzufüllen.</value>
-  </data>
-  <data name="Settings_AiConsent_ImageObjectEraseDisplayName" xml:space="preserve">
-    <value>Objektentfernung</value>
   </data>
   <data name="ObjectEraseStatus_Success" xml:space="preserve">
     <value>Objekt entfernt.</value>
@@ -1692,15 +1629,6 @@ SOFTWARE.
   <data name="ImageEdit_ObjectExtractionProgressRing.AutomationProperties.Name" xml:space="preserve">
     <value>Ausgewähltes Objekt wird extrahiert</value>
   </data>
-  <data name="AiFeatureConsentDialog_ImageObjectExtractionTitle" xml:space="preserve">
-    <value>Objektextraktion zulassen?</value>
-  </data>
-  <data name="AiFeatureConsentDialog_ImageObjectExtractionContent" xml:space="preserve">
-    <value>Die Objektextraktion verwendet ein KI-Modell auf dem Gerät, um das ausgewählte Objekt im aktuellen Bild zu erkennen und zu extrahieren.</value>
-  </data>
-  <data name="Settings_AiConsent_ImageObjectExtractionDisplayName" xml:space="preserve">
-    <value>Objektextraktion</value>
-  </data>
   <data name="ObjectExtractionStatus_Success" xml:space="preserve">
     <value>Objekt extrahiert.</value>
   </data>
@@ -1736,15 +1664,6 @@ SOFTWARE.
   </data>
   <data name="VideoEdit_SuperResolutionProgressText.Text" xml:space="preserve">
     <value>Video wird verbessert...</value>
-  </data>
-  <data name="AiFeatureConsentDialog_VideoSuperResolutionTitle" xml:space="preserve">
-    <value>Video-Superauflösung zulassen?</value>
-  </data>
-  <data name="AiFeatureConsentDialog_VideoSuperResolutionContent" xml:space="preserve">
-    <value>Die Video-Superauflösung verwendet ein KI-Modell auf dem Gerät, um eine schärfere Kopie des aktuellen Videos mit höherer Auflösung zu erstellen.</value>
-  </data>
-  <data name="Settings_AiConsent_VideoSuperResolutionDisplayName" xml:space="preserve">
-    <value>Video-Superauflösung</value>
   </data>
   <data name="VideoSuperResolutionStatus_NotSupported" xml:space="preserve">
     <value>Die Video-Superauflösung wird auf diesem Gerät nicht unterstützt.</value>
@@ -1799,5 +1718,101 @@ SOFTWARE.
   </data>
   <data name="CaptureOverlay_RecordingUnsupportedMessage" xml:space="preserve">
     <value>Die Bildschirmaufnahme wird auf diesem Gerät nicht unterstützt.</value>
+  </data>
+  <data name="CaptureMemory_SettingsHeader.Text" xml:space="preserve">
+    <value>KI</value>
+  </data>
+  <data name="CaptureMemory_Scanning.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Neue Aufnahmen automatisch analysieren</value>
+  </data>
+  <data name="CaptureMemory_Consent.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Lokale KI-Funktionen erlauben</value>
+  </data>
+  <data name="CaptureMemory_SettingsDescription.Text" xml:space="preserve">
+    <value>Aufnahmen mit KI auf diesem Gerät analysieren und Informationen sicher für das Aufnahmegedächtnis speichern.</value>
+  </data>
+  <data name="CaptureMemory_Scan.Content" xml:space="preserve">
+    <value>Analysieren</value>
+  </data>
+  <data name="CaptureMemory_Delete.Content" xml:space="preserve">
+    <value>Löschen</value>
+  </data>
+  <data name="CaptureMemory_Preparing" xml:space="preserve">
+    <value>Lokale KI wird vorbereitet…</value>
+  </data>
+  <data name="CaptureMemory_Analyzing" xml:space="preserve">
+    <value>Aufnahmen werden analysiert…</value>
+  </data>
+  <data name="CaptureMemory_ConsentTitle" xml:space="preserve">
+    <value>Lokale KI-Funktionen erlauben?</value>
+  </data>
+  <data name="CaptureMemory_ConsentContent" xml:space="preserve">
+    <value>Erlauben Sie der KI auf diesem Gerät, Text zu erkennen, Bilder zu beschreiben, Aufnahmen zu transkribieren und Medien mit KI-Werkzeugen zu bearbeiten. Die automatische Analyse neuer Aufnahmen wird separat aktiviert. KI-Analysen werden sicher auf diesem Gerät gespeichert. Modelle müssen eventuell heruntergeladen werden; Ihre Medien werden auf diesem Gerät verarbeitet.</value>
+  </data>
+  <data name="CaptureMemory_ConsentAccept" xml:space="preserve">
+    <value>Erlauben</value>
+  </data>
+  <data name="CaptureMemory_ScanExistingTitle" xml:space="preserve">
+    <value>Vorhandene Aufnahmen analysieren?</value>
+  </data>
+  <data name="CaptureMemory_ScanExistingContent" xml:space="preserve">
+    <value>Die Analyse neuer Aufnahmen ist aktiviert. Auch verfügbare, zuvor mit CaptureTool erstellte Aufnahmen analysieren? Vorhandene Informationen bleiben erhalten, bis eine erfolgreiche Analyse sie ersetzt.</value>
+  </data>
+  <data name="CaptureMemory_ScanExistingAccept" xml:space="preserve">
+    <value>Aufnahmen analysieren</value>
+  </data>
+  <data name="CaptureMemory_DeleteMetadataTitle" xml:space="preserve">
+    <value>Analyseinformationen löschen?</value>
+  </data>
+  <data name="CaptureMemory_DeleteMetadataContent" xml:space="preserve">
+    <value>Gespeicherte Analyseinformationen löschen und ausstehende Analysen stoppen? Aufnahmedateien und Ihre Analyseeinstellung bleiben erhalten.</value>
+  </data>
+  <data name="CaptureMemory_DeleteMetadataAccept" xml:space="preserve">
+    <value>Informationen löschen</value>
+  </data>
+  <data name="CaptureMemory_Cancel" xml:space="preserve">
+    <value>Abbrechen</value>
+  </data>
+  <data name="CaptureMemory_Error_Policy" xml:space="preserve">
+    <value>Die Einstellungen des Aufnahmegedächtnisses konnten nicht geladen oder gespeichert werden. Die Analyse ist pausiert. Versuchen Sie es erneut.</value>
+  </data>
+  <data name="CaptureMemory_Error_Registration" xml:space="preserve">
+    <value>Die Aufnahme wurde erstellt, konnte aber nicht für das Aufnahmegedächtnis registriert werden. Versuchen Sie erneut, vorhandene Aufnahmen zu analysieren.</value>
+  </data>
+  <data name="CaptureMemory_Error_Provider" xml:space="preserve">
+    <value>Ein KI-Modell wurde noch nicht beendet. Aufnahmen in der Warteschlange werden danach oder nach einem Neustart von CaptureTool fortgesetzt.</value>
+  </data>
+  <data name="CaptureMemory_Error_Cleanup" xml:space="preserve">
+    <value>Einige Analyseinformationen konnten nicht gelöscht werden. Versuchen Sie das Löschen erneut.</value>
+  </data>
+  <data name="CaptureMemory_Error_Analysis" xml:space="preserve">
+    <value>Die Aufnahmeanalyse konnte nicht abgeschlossen werden. Sie können sie in den Einstellungen erneut starten.</value>
+  </data>
+  <data name="CaptureMemory_Error_Storage" xml:space="preserve">
+    <value>Der Speicher des Aufnahmegedächtnisses ist nicht verfügbar. Wiederholen Sie den Vorgang oder löschen Sie die Analyseinformationen in den Einstellungen.</value>
+  </data>
+  <data name="AiSettings_ConsentHeader.Text" xml:space="preserve">
+    <value>Lokale KI-Funktionen erlauben</value>
+  </data>
+  <data name="AiSettings_ConsentDescription.Text" xml:space="preserve">
+    <value>Eine Zustimmung für Texterkennung, Beschreibungen, Transkription und KI-Bearbeitung.</value>
+  </data>
+  <data name="AiSettings_ScanningHeader.Text" xml:space="preserve">
+    <value>Neue Aufnahmen automatisch analysieren</value>
+  </data>
+  <data name="AiSettings_ScanningDescription.Text" xml:space="preserve">
+    <value>Bilder, Audio und Videos nach der Aufnahme analysieren.</value>
+  </data>
+  <data name="AiSettings_ScanHeader.Text" xml:space="preserve">
+    <value>Vorhandene Aufnahmen analysieren</value>
+  </data>
+  <data name="AiSettings_ScanDescription.Text" xml:space="preserve">
+    <value>Gespeicherte Analysen für vorhandene Aufnahmen erstellen oder aktualisieren.</value>
+  </data>
+  <data name="AiSettings_DeleteHeader.Text" xml:space="preserve">
+    <value>Aufnahmeanalysen löschen</value>
+  </data>
+  <data name="AiSettings_DeleteDescription.Text" xml:space="preserve">
+    <value>Alle gespeicherten Analysen einschließlich Text, QR-Codes und Dateidetails entfernen. Ihre Aufnahmen bleiben erhalten.</value>
   </data>
 </root>

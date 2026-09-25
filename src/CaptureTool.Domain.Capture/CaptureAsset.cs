@@ -11,12 +11,13 @@ public sealed record CaptureAsset
 {
     public CaptureId Id { get; }
     public CaptureFileType MediaType { get; }
-    public DateTimeOffset CapturedAt { get; }
+    /// <summary>The known capture time; historical activity/file dates are not substitutes.</summary>
+    public DateTimeOffset? CapturedAt { get; }
     public string SourcePath { get; }
     public string? PreferredPath { get; }
     public CaptureSourceOwnership SourceOwnership { get; }
 
-    public CaptureAsset(CaptureId id, CaptureFileType mediaType, DateTimeOffset capturedAt,
+    public CaptureAsset(CaptureId id, CaptureFileType mediaType, DateTimeOffset? capturedAt,
         string sourcePath, CaptureSourceOwnership sourceOwnership, string? preferredPath = null)
     {
         if (id.IsEmpty) throw new ArgumentException("Capture identity is required.", nameof(id));

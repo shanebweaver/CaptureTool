@@ -1,6 +1,8 @@
 # PRD: Capture Analysis — Slice 3, Capture and Settings Integration
 
-Status: Planned. Depends on reviewed [slice 2](prd-capture-analysis-2-execution.md).
+Status: Implemented, hardened, and reviewed; ready for slice 4 release verification.
+See the [readiness audit and evidence](capture-analysis-integration-review.md#slice-4-readiness-audit).
+Depends on reviewed [slice 2](prd-capture-analysis-2-execution.md).
 The Native AOT warning guard is assigned to [slice 4](prd-capture-analysis-4-verification.md);
 the reviewed vendor exception does not block this slice.
 
@@ -91,16 +93,21 @@ saved enabled/consented combination or report a failed save as a successful tran
 | Disable scanning | Stop queued/active work and prevent late publication. Offer deletion if metadata exists; keeping it leaves scanning off. |
 | Run analysis on existing captures | Disabled when scanning is off. Require consent, then explicitly schedule a new run for eligible captures. Preserve still-valid successful results until replaced. |
 | Delete metadata | Enabled only when data exists. Confirm, invalidate previous work, and delete analysis data without touching media or scanning preference. Future captures remain eligible; old captures return only through an explicit scan. |
-| Capture Memory consent checkbox | Generic consent for all background scanning. Revocation disables scanning and offers deletion. Checking it alone does not start work. |
+| Local AI consent checkbox | One consent for all local AI: background scanning, OCR, descriptions, transcription, and AI editing. Revocation disables scanning, cancels active AI tools, and offers deletion. Checking it alone does not start work. |
 
 Consent copy explains on-device processing, persisted derived data, and model
-downloads. Do not introduce separate model consents or reuse interactive editor
-tool consent as authorization for background scanning. Combine prompts where
+downloads. The shared local AI consent supersedes the original background-only
+scope; older per-tool approvals do not authorize the expanded scope. Automatic
+scanning still requires its separate enabled preference. Combine prompts where
 practical and persist successful transitions before showing success. Storage
 failure leaves the UI truthful and retryable. Serialize conflicting commands;
 disable/revoke/delete must be able to stop existing work promptly.
 Recheck policy/generation after a dialog returns; an outdated dialog result cannot
-undo a newer disable, revocation, or deletion. A disable/revoke request immediately
+undo a newer disable, revocation, or deletion. Metadata commands and declined
+consent dialogs must not discard a queued disable/revocation policy save; only a
+newer accepted grant can supersede that denial. Enabling reads consent after
+earlier queued policy writes so a pending revocation cannot waive its dialog.
+A disable/revoke request immediately
 blocks admission/publication in memory and requests cancellation; persist the change
 before reporting success. If persistence fails, keep analysis blocked for this session
 and report that the preference could not be saved rather than silently resuming work.
@@ -129,8 +136,13 @@ store and restart the same singleton worker if needed, after its previous task h
 finished. Recheck policy and resume only still-valid requests. Do not create a second
 worker or bypass its retained guard against an invocation that has not stopped.
 There is no automatic reset or tight restart loop. A committed clear with incomplete
-physical cleanup remains visible/retryable; retry cleanup without rotating generation
-again or deleting new analysis. Preserve scanning preference and capture media.
+physical cleanup reports an error. Keep the Delete metadata label unchanged and
+disable the button while deletion is running; re-enable it after failure if data
+remains. Every confirmed Delete request deletes all metadata present at that time,
+including metadata created after an earlier deletion failed. The button never
+switches to an old-data-only cleanup action.
+Automatic cleanup recovery only removes old generations, preserving newer analysis.
+Preserve scanning preference and capture media.
 
 ## Progress UX
 

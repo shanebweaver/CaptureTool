@@ -1,8 +1,7 @@
 using CaptureTool.Application.Abstractions.Ai;
-using CaptureTool.Application.Abstractions.Settings;
+using CaptureTool.Application.Abstractions.Analysis;
 using CaptureTool.Application.Ai;
 using CaptureTool.Domain.Ai;
-using FluentAssertions;
 using Moq;
 
 namespace CaptureTool.Application.Tests.Ai;
@@ -11,211 +10,63 @@ namespace CaptureTool.Application.Tests.Ai;
 public sealed class AiFeatureConsentServiceTests
 {
     [TestMethod]
-    public void GetConsentState_WhenSettingIsNotSet_ReturnsUnknown()
+    public void EveryFeatureSharesConsentAndDisablingScanningDoesNotRevokeEditing()
     {
-        var settings = new Mock<ISettingsService>();
-        settings
-            .Setup(service => service.IsSet(CaptureToolSettings.Settings_AiConsent_TextExtraction))
-            .Returns(false);
-        var service = new AiFeatureConsentService(settings.Object);
+        CaptureMemoryState state = State(true, true);
+        var memory = new Mock<ICaptureMemoryService>();
+        memory.SetupGet(x => x.State).Returns(() => state);
+        using var service = new AiFeatureConsentService(memory.Object);
+        CancellationToken authorized = service.Revoked;
+        foreach (AiFeatureId id in Enum.GetValues<AiFeatureId>())
+            Assert.AreEqual(AiFeatureConsentState.Granted, service.GetConsentState(id));
 
-        service.GetConsentState(AiFeatureId.TextExtraction).Should().Be(AiFeatureConsentState.Unknown);
+        state = State(true, false);
+        memory.Raise(x => x.StateChanged += null);
+        Assert.AreEqual(authorized, service.Revoked);
+        Assert.IsFalse(authorized.IsCancellationRequested);
     }
 
     [TestMethod]
-    public void GetConsentState_WhenSettingIsTrue_ReturnsGranted()
+    public void RevocationAndUnavailablePolicyCancelOldWorkAndRegrantCannotReviveIt()
     {
-        var settings = new Mock<ISettingsService>();
-        settings
-            .Setup(service => service.IsSet(CaptureToolSettings.Settings_AiConsent_ImageSuperResolution))
-            .Returns(true);
-        settings
-            .Setup(service => service.Get(CaptureToolSettings.Settings_AiConsent_ImageSuperResolution))
-            .Returns(true);
-        var service = new AiFeatureConsentService(settings.Object);
+        CaptureMemoryState state = State(true);
+        var memory = new Mock<ICaptureMemoryService>();
+        memory.SetupGet(x => x.State).Returns(() => state);
+        using var service = new AiFeatureConsentService(memory.Object);
+        CancellationToken original = service.Revoked;
+        state = state with { ConsentAvailable = false };
+        memory.Raise(x => x.StateChanged += null);
+        Assert.IsTrue(original.IsCancellationRequested);
+        Assert.AreEqual(AiFeatureConsentState.Unknown, service.GetConsentState(AiFeatureId.TextExtraction));
 
-        service.GetConsentState(AiFeatureId.ImageSuperResolution).Should().Be(AiFeatureConsentState.Granted);
+        state = State(false);
+        memory.Raise(x => x.StateChanged += null);
+        Assert.AreEqual(AiFeatureConsentState.Denied, service.GetConsentState(AiFeatureId.ImageDescription));
+        state = State(true);
+        memory.Raise(x => x.StateChanged += null);
+        Assert.IsTrue(original.IsCancellationRequested);
+        Assert.IsFalse(service.Revoked.IsCancellationRequested);
+        Assert.AreNotEqual(original, service.Revoked);
+        CancellationToken next = service.Revoked;
+        state = State(false);
+        memory.Raise(x => x.StateChanged += null);
+        Assert.IsTrue(next.IsCancellationRequested);
     }
 
     [TestMethod]
-    public async Task SetConsentAsync_PersistsFeatureConsent()
+    [DataRow(true)]
+    [DataRow(false)]
+    public async Task OnUseConsentDelegatesToTheSingleProtectedPolicyOwner(bool approved)
     {
-        Mock<ISettingsService> settings = CreatePersistingSettings();
-        var service = new AiFeatureConsentService(settings.Object);
-
-        bool saved = await service.SetConsentAsync(
-            AiFeatureId.TextExtraction,
-            true,
-            TestContext.CancellationToken);
-
-        saved.Should().BeTrue();
-        settings.Verify(service => service.TrySetAndSaveAsync(
-            CaptureToolSettings.Settings_AiConsent_TextExtraction,
-            true,
-            TestContext.CancellationToken), Times.Once);
+        var memory = new Mock<ICaptureMemoryService>();
+        memory.SetupGet(x => x.State).Returns(State(false));
+        using var cancellation = new CancellationTokenSource();
+        memory.Setup(x => x.EnsureConsentAsync(cancellation.Token)).ReturnsAsync(approved);
+        using var service = new AiFeatureConsentService(memory.Object);
+        Assert.AreEqual(approved, await service.EnsureConsentAsync(cancellation.Token));
+        memory.Verify(x => x.EnsureConsentAsync(cancellation.Token), Times.Once);
     }
 
-    [TestMethod]
-    public void GetFeatureConsents_IncludesImageDescription()
-    {
-        var settings = new Mock<ISettingsService>();
-        var service = new AiFeatureConsentService(settings.Object);
-
-        service.GetFeatureConsents().Should().Contain(consent =>
-            consent.FeatureId == AiFeatureId.ImageDescription &&
-            consent.DisplayName == "Image description");
-    }
-
-    [TestMethod]
-    public async Task SetConsentAsync_PersistsImageDescriptionConsent()
-    {
-        Mock<ISettingsService> settings = CreatePersistingSettings();
-        var service = new AiFeatureConsentService(settings.Object);
-
-        await service.SetConsentAsync(AiFeatureId.ImageDescription, true, TestContext.CancellationToken);
-
-        settings.Verify(service => service.TrySetAndSaveAsync(
-            CaptureToolSettings.Settings_AiConsent_ImageDescription,
-            true,
-            TestContext.CancellationToken), Times.Once);
-    }
-
-    [TestMethod]
-    public void GetFeatureConsents_IncludesBackgroundRemoval()
-    {
-        var settings = new Mock<ISettingsService>();
-        var service = new AiFeatureConsentService(settings.Object);
-
-        service.GetFeatureConsents().Should().Contain(consent =>
-            consent.FeatureId == AiFeatureId.ImageForegroundExtraction &&
-            consent.DisplayName == "Background removal");
-    }
-
-    [TestMethod]
-    public async Task SetConsentAsync_PersistsBackgroundRemovalConsent()
-    {
-        Mock<ISettingsService> settings = CreatePersistingSettings();
-        var service = new AiFeatureConsentService(settings.Object);
-
-        await service.SetConsentAsync(AiFeatureId.ImageForegroundExtraction, true, TestContext.CancellationToken);
-
-        settings.Verify(service => service.TrySetAndSaveAsync(
-            CaptureToolSettings.Settings_AiConsent_ImageForegroundExtraction,
-            true,
-            TestContext.CancellationToken), Times.Once);
-    }
-
-    [TestMethod]
-    public void GetFeatureConsents_IncludesObjectErase()
-    {
-        var settings = new Mock<ISettingsService>();
-        var service = new AiFeatureConsentService(settings.Object);
-
-        service.GetFeatureConsents().Should().Contain(consent =>
-            consent.FeatureId == AiFeatureId.ImageObjectErase &&
-            consent.DisplayName == "Object erase");
-    }
-
-    [TestMethod]
-    public async Task SetConsentAsync_PersistsObjectEraseConsent()
-    {
-        Mock<ISettingsService> settings = CreatePersistingSettings();
-        var service = new AiFeatureConsentService(settings.Object);
-
-        await service.SetConsentAsync(AiFeatureId.ImageObjectErase, true, TestContext.CancellationToken);
-
-        settings.Verify(service => service.TrySetAndSaveAsync(
-            CaptureToolSettings.Settings_AiConsent_ImageObjectErase,
-            true,
-            TestContext.CancellationToken), Times.Once);
-    }
-
-    [TestMethod]
-    public void GetFeatureConsents_IncludesObjectExtraction()
-    {
-        var settings = new Mock<ISettingsService>();
-        var service = new AiFeatureConsentService(settings.Object);
-
-        service.GetFeatureConsents().Should().Contain(consent =>
-            consent.FeatureId == AiFeatureId.ImageObjectExtraction &&
-            consent.DisplayName == "Object extraction");
-    }
-
-    [TestMethod]
-    public async Task SetConsentAsync_PersistsObjectExtractionConsent()
-    {
-        Mock<ISettingsService> settings = CreatePersistingSettings();
-        var service = new AiFeatureConsentService(settings.Object);
-
-        await service.SetConsentAsync(AiFeatureId.ImageObjectExtraction, true, TestContext.CancellationToken);
-
-        settings.Verify(service => service.TrySetAndSaveAsync(
-            CaptureToolSettings.Settings_AiConsent_ImageObjectExtraction,
-            true,
-            TestContext.CancellationToken), Times.Once);
-    }
-
-    [TestMethod]
-    public void GetFeatureConsents_IncludesVideoSuperResolution()
-    {
-        var settings = new Mock<ISettingsService>();
-        var service = new AiFeatureConsentService(settings.Object);
-
-        service.GetFeatureConsents().Should().Contain(consent =>
-            consent.FeatureId == AiFeatureId.VideoSuperResolution &&
-            consent.DisplayName == "Video super resolution");
-    }
-
-    [TestMethod]
-    public async Task SetConsentAsync_PersistsVideoSuperResolutionConsent()
-    {
-        Mock<ISettingsService> settings = CreatePersistingSettings();
-        var service = new AiFeatureConsentService(settings.Object);
-
-        await service.SetConsentAsync(
-            AiFeatureId.VideoSuperResolution,
-            true,
-            TestContext.CancellationToken);
-
-        settings.Verify(
-            service => service.TrySetAndSaveAsync(
-                CaptureToolSettings.Settings_AiConsent_VideoSuperResolution,
-                true,
-                TestContext.CancellationToken),
-            Times.Once);
-    }
-
-    [TestMethod]
-    public async Task SetConsentAsync_WhenPersistenceFails_ReturnsFalse()
-    {
-        var settings = new Mock<ISettingsService>();
-        settings
-            .Setup(service => service.TrySetAndSaveAsync(
-                CaptureToolSettings.Settings_AiConsent_TextExtraction,
-                true,
-                TestContext.CancellationToken))
-            .ReturnsAsync(SettingsMutationResult.PersistenceFailed);
-        var service = new AiFeatureConsentService(settings.Object);
-
-        bool saved = await service.SetConsentAsync(
-            AiFeatureId.TextExtraction,
-            true,
-            TestContext.CancellationToken);
-
-        saved.Should().BeFalse();
-    }
-
-    private static Mock<ISettingsService> CreatePersistingSettings()
-    {
-        var settings = new Mock<ISettingsService>();
-        settings
-            .Setup(service => service.TrySetAndSaveAsync(
-                It.IsAny<IBoolSettingDefinition>(),
-                It.IsAny<bool>(),
-                It.IsAny<CancellationToken>()))
-            .ReturnsAsync(SettingsMutationResult.Saved);
-        return settings;
-    }
-
-    public TestContext TestContext { get; set; } = null!;
+    private static CaptureMemoryState State(bool consent, bool scanning = false) =>
+        new(new(scanning, consent, Guid.NewGuid(), 0), true, new(false, true), new(AnalysisActivity.Idle));
 }

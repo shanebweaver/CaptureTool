@@ -26,7 +26,15 @@ internal sealed class ScratchArtifactStore : IScratchArtifactStore
         _logService = logService;
     }
 
-    public string CreateLeasedArtifactPath(string owner, string extension)
+    public string CreateLeasedArtifactPath(string owner, string extension) => CreateLeasedPath(owner, extension, null);
+
+    public string CreateLeasedArtifactPath(string owner, string extension, int maximumRetainedArtifacts)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(maximumRetainedArtifacts);
+        return CreateLeasedPath(owner, extension, maximumRetainedArtifacts);
+    }
+
+    private string CreateLeasedPath(string owner, string extension, int? maximumRetainedArtifacts)
     {
         string rootPath = GetNormalizedRootPath();
         _fileSystem.CreateDirectory(rootPath);
@@ -35,6 +43,7 @@ internal sealed class ScratchArtifactStore : IScratchArtifactStore
         string ownerDirectory = Path.Combine(rootPath, $"{ownerName}-{Guid.NewGuid():N}");
         lock (_lock)
         {
+            if (maximumRetainedArtifacts is { } limit) PruneOwnerArtifacts(rootPath, ownerName, limit);
             _activeOwnerDirectories.Add(ownerDirectory);
         }
 
@@ -57,6 +66,26 @@ internal sealed class ScratchArtifactStore : IScratchArtifactStore
             TryDeleteEntry(ownerDirectory);
             throw;
         }
+    }
+
+    // Called under the lease lock so concurrent allocations cannot prune each other or exceed the limit.
+    private void PruneOwnerArtifacts(string rootPath, string ownerName, int limit)
+    {
+        string prefix = ownerName + "-";
+        bool IsOwned(string entry)
+        {
+            string name = Path.GetFileName(entry);
+            return name.StartsWith(prefix, StringComparison.OrdinalIgnoreCase) && Guid.TryParseExact(name[prefix.Length..], "N", out _);
+        }
+        // Include reserved directories that an allocating caller has not created yet.
+        int retained = _activeOwnerDirectories.Count(IsOwned);
+        foreach (string entry in _fileSystem.EnumerateFileSystemEntries(rootPath))
+        {
+            if (!IsOwned(entry) || _activeOwnerDirectories.Contains(entry)) continue;
+            TryDeleteEntry(entry);
+            if (_fileSystem.DirectoryExists(entry) || _fileSystem.FileExists(entry)) retained++;
+        }
+        if (retained >= limit) throw new IOException("Pending scratch cleanup exceeds its bound.");
     }
 
     public void DeleteArtifact(string artifactPath)

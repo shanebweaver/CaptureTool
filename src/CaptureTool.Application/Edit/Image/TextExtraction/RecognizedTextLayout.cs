@@ -32,7 +32,7 @@ public sealed class RecognizedTextLayout
 
     public IReadOnlyList<IReadOnlyList<PointF>> CutoutContours { get; }
 
-    public static RecognizedTextLayout Create(IReadOnlyList<RecognizedTextRegion>? regions)
+    public static RecognizedTextLayout Create(IReadOnlyList<RecognizedTextRegion>? regions, bool includeCutoutContours = true)
     {
         if (regions is null || regions.Count == 0)
         {
@@ -98,7 +98,7 @@ public sealed class RecognizedTextLayout
         return new RecognizedTextLayout(
             blocks,
             readingOrder,
-            CreateUnionContours(CreateCutoutRectangles(blocks)));
+            includeCutoutContours ? CreateUnionContours(CreateCutoutRectangles(blocks)) : []);
     }
 
     public static IReadOnlyList<IReadOnlyList<PointF>> CreateUnionContours(

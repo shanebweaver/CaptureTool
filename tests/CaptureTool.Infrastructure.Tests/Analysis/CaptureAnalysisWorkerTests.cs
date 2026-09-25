@@ -4,6 +4,8 @@ using CaptureTool.Domain;
 using CaptureTool.Domain.Analysis;
 using CaptureTool.Domain.Analysis.Payloads;
 using CaptureTool.Infrastructure.Analysis.Persistence;
+using CaptureTool.Infrastructure.CaptureAssets;
+using CaptureTool.Domain.Capture;
 using System.Collections.Concurrent;
 
 namespace CaptureTool.Infrastructure.Tests.Analysis;
@@ -31,6 +33,7 @@ public sealed class CaptureAnalysisWorkerTests
         Assert.Contains(AnalysisActivity.Analyzing, progress.ToArray());
         Assert.AreEqual(AnalysisActivity.Idle, fixture.Worker.Progress.Activity);
         Assert.AreEqual(AnalysisRunStatus.Completed, fixture.Worker.Progress.LastRunStatus);
+        Assert.IsFalse(fixture.Worker.Progress.LastRunHadFailures, "A successful fallback resolves the preferred model's failure.");
         Assert.AreEqual(AnalysisRunStatus.Completed, (await fixture.Store.GetWorkAsync(first.CaptureId, Ct))!.Run.Status);
         Assert.AreEqual(AnalysisRunStatus.Completed, (await fixture.Store.GetWorkAsync(second.CaptureId, Ct))!.Run.Status);
         Assert.IsTrue((await fixture.Store.GetAsync(first.CaptureId, cancellationToken: Ct))!.Results.All(result => result.ProducingRunId == first.RequestId));
@@ -65,6 +68,43 @@ public sealed class CaptureAnalysisWorkerTests
         Assert.AreEqual(AnalyzerOutcomeKind.Unsupported, work.Run.CompletedSteps[1].Outcome);
         var text = (TextRecognitionMetadata)(await fixture.Store.GetAsync(request.CaptureId, cancellationToken: Ct))!.Results.Single().Payload;
         Assert.IsEmpty(text.Regions);
+        Assert.IsFalse(fixture.Worker.Progress.LastRunHadFailures, "Unsupported capabilities are ordinary skips.");
+    }
+
+    [TestMethod]
+    [DataRow(AnalyzerOutcomeKind.Failed)]
+    [DataRow(AnalyzerOutcomeKind.TemporarilyUnavailable)]
+    public async Task ExhaustedModelsReportFailedStepsEvenWhenAllStepsAreCompleted(AnalyzerOutcomeKind outcome)
+    {
+        using var fixture = new Fixture();
+        foreach (var analyzer in new[] { fixture.Preferred, fixture.Fallback, fixture.Description })
+            analyzer.Execute = (_, _) => Task.FromResult(AnalyzerOutcome.Unsuccessful(outcome, "provider-error"));
+        var request = await fixture.EnqueueAsync(Ct);
+        await DrainAsync(fixture.Worker, Ct);
+        var record = (await fixture.Store.GetAsync(request.CaptureId, cancellationToken: Ct))!;
+        Assert.IsEmpty(record.Results);
+        Assert.AreEqual(AnalysisRunStatus.Completed, fixture.Worker.Progress.LastRunStatus);
+        Assert.IsTrue(fixture.Worker.Progress.LastRunHadFailures);
+        Assert.AreEqual(AnalysisActivity.Idle, fixture.Worker.Progress.Activity);
+    }
+
+    [TestMethod]
+    [DataRow(AnalyzerOutcomeKind.Failed)]
+    [DataRow(AnalyzerOutcomeKind.TemporarilyUnavailable)]
+    public async Task UnsupportedFallbackCannotHideExecutionFailureAndLaterResultsAreRetained(AnalyzerOutcomeKind outcome)
+    {
+        using var fixture = new Fixture();
+        fixture.Preferred.Execute = (_, _) => Task.FromResult(AnalyzerOutcome.Unsuccessful(outcome, "provider-error"));
+        fixture.Fallback.Ready = AnalyzerAvailability.Unsupported;
+        var request = await fixture.EnqueueAsync(Ct);
+        await DrainAsync(fixture.Worker, Ct);
+        var work = (await fixture.Store.GetWorkAsync(request.CaptureId, Ct))!;
+        Assert.AreEqual(outcome, work.Run.CompletedSteps[0].Outcome);
+        Assert.AreEqual("provider-error", work.Run.CompletedSteps[0].FailureCode);
+        Assert.AreEqual(AnalysisRunStatus.Completed, work.Run.Status);
+        Assert.IsTrue(fixture.Worker.Progress.LastRunHadFailures);
+        var record = (await fixture.Store.GetAsync(request.CaptureId, cancellationToken: Ct))!;
+        Assert.AreEqual(AnalysisCapability.Description, record.Results.Single().Payload.Capability);
     }
 
     [TestMethod]
@@ -89,7 +129,7 @@ public sealed class CaptureAnalysisWorkerTests
         await fixture.Store.CommitStepAsync(work.Token, new(AnalysisCapability.TextRecognition, AnalyzerOutcomeKind.Succeeded, null),
             new(new TextRecognitionMetadata([]), new("preferred", "fake", "model", "1"), DateTimeOffset.UtcNow, "v1", request.RequestId), Ct);
         using LocalCaptureAnalysisStore reopened = fixture.Environment.CreateStore();
-        using var restartedWorker = new CaptureAnalysisWorker(reopened, fixture.Authorization, fixture.Source, fixture.Configuration, fixture.Adapters);
+        using var restartedWorker = new CaptureAnalysisWorker(reopened, fixture.Authorization, fixture.Source, fixture.Configuration, fixture.Adapters, fixture.Catalog);
         await DrainAsync(restartedWorker, Ct);
         CollectionAssert.AreEqual(new[] { "description" }, fixture.Calls.ToArray());
         AnalysisWorkItem completed = (await reopened.GetWorkAsync(request.CaptureId, Ct))!;
@@ -340,7 +380,7 @@ public sealed class CaptureAnalysisWorkerTests
             await runner.WaitAsync(TimeSpan.FromSeconds(5), Ct);
         }
         using LocalCaptureAnalysisStore reopened = fixture.Environment.CreateStore();
-        using var restartedWorker = new CaptureAnalysisWorker(reopened, fixture.Authorization, fixture.Source, fixture.Configuration, fixture.Adapters);
+        using var restartedWorker = new CaptureAnalysisWorker(reopened, fixture.Authorization, fixture.Source, fixture.Configuration, fixture.Adapters, fixture.Catalog);
         await DrainAsync(restartedWorker, Ct);
         AnalysisWorkItem completed = (await reopened.GetWorkAsync(second.CaptureId, Ct))!;
         Assert.AreEqual(second.RequestId, completed.Run.Id);
@@ -355,7 +395,8 @@ public sealed class CaptureAnalysisWorkerTests
         AnalysisRequest old = await fixture.EnqueueAsync(Ct);
         await fixture.Authorization.ChangeAsync(false, Ct);
         AnalysisAdmissionScope scope = await fixture.Store.GetAdmissionScopeAsync(Ct);
-        Assert.IsFalse(await fixture.Worker.EnqueueAsync(AnalysisExecutionStoreTests.Request(fixture.Environment, scope), Ct));
+        Assert.IsFalse(await fixture.Worker.EnqueueAsync(AnalysisExecutionStoreTests.Request(fixture.Environment, scope)
+            with { ExpectedAuthorizationId = old.ExpectedAuthorizationId }, Ct));
         await fixture.Authorization.ChangeAsync(true, Ct);
         AnalysisRequest fresh = await fixture.EnqueueAsync(Ct);
         await DrainAsync(fixture.Worker, Ct);
@@ -473,6 +514,42 @@ public sealed class CaptureAnalysisWorkerTests
         Assert.AreEqual(AnalysisRunStatus.InvalidSource, (await fixture.Store.GetWorkAsync(request.CaptureId, Ct))!.Run.Status);
     }
 
+    [TestMethod]
+    public async Task UnadmittedRequestsCannotInheritAuthorizationAfterDisableAndReenable()
+    {
+        using var fixture = new Fixture();
+        AnalysisRequest request = AnalysisExecutionStoreTests.Request(fixture.Environment, await fixture.Store.GetAdmissionScopeAsync(Ct));
+        using (var grant = await fixture.Authorization.AcquireAsync(Ct))
+            request = request with { ExpectedAuthorizationId = grant.Revision };
+        await fixture.Authorization.ChangeAsync(false, Ct);
+        await fixture.Authorization.ChangeAsync(true, Ct);
+        Assert.IsFalse(await fixture.Worker.EnqueueAsync(request, Ct));
+        Assert.IsFalse(await fixture.Worker.EnqueueAsync(request with { ExpectedAuthorizationId = null }, Ct));
+        Assert.IsNull(await fixture.Store.GetWorkAsync(request.CaptureId, Ct));
+        using (var grant = await fixture.Authorization.AcquireAsync(Ct))
+            request = request with { ExpectedAuthorizationId = grant.Revision };
+        Assert.IsTrue(await fixture.Worker.EnqueueAsync(request, Ct));
+    }
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task ProvidersReceiveTheCatalogCaptureDateOrAnExplicitUnknown(bool registered)
+    {
+        using var fixture = new Fixture();
+        var request = await fixture.EnqueueAsync(Ct);
+        DateTimeOffset capturedAt = new(2024, 3, 4, 5, 6, 7, TimeSpan.FromHours(-7));
+        if (registered)
+            await fixture.Catalog.RegisterAsync(new(request.CaptureId, CaptureFileType.Image, capturedAt,
+                request.SourcePath, CaptureSourceOwnership.Application), Ct);
+        AnalysisInput? received = null;
+        fixture.Preferred.Execute = (input, _) => { received = input; return Task.FromResult(fixture.Preferred.Success()); };
+        await DrainAsync(fixture.Worker, Ct);
+        Assert.IsNotNull(received);
+        Assert.AreEqual(registered ? capturedAt : (DateTimeOffset?)null, received.CapturedAt);
+        Assert.AreEqual(request.CaptureId, received.CaptureId);
+    }
+
     private static async Task WaitForSnapshotAsync(CaptureAnalysisWorker worker, Func<AnalysisActivitySnapshot, bool> predicate, CancellationToken ct)
     {
         using var deadline = CancellationTokenSource.CreateLinkedTokenSource(ct);
@@ -500,6 +577,7 @@ public sealed class CaptureAnalysisWorkerTests
     {
         public AnalysisTestEnvironment Environment { get; } = new();
         public LocalCaptureAnalysisStore Store { get; }
+        public LocalCaptureAssetCatalog Catalog { get; }
         public TestAuthorization Authorization { get; } = new();
         public TestSource Source { get; } = new();
         public ConcurrentQueue<string> Calls { get; } = new();
@@ -512,6 +590,7 @@ public sealed class CaptureAnalysisWorkerTests
         public Fixture(TimeSpan? timeout = null)
         {
             Store = Environment.CreateStore();
+            Catalog = Environment.CreateCatalog();
             Preferred = new("preferred", AnalysisCapability.TextRecognition, Calls);
             Fallback = new("fallback", AnalysisCapability.TextRecognition, Calls);
             Description = new("description", AnalysisCapability.Description, Calls);
@@ -519,16 +598,18 @@ public sealed class CaptureAnalysisWorkerTests
                 new(AnalysisCapability.TextRecognition, ["preferred", "fallback"], TimeSpan.FromSeconds(1), timeout ?? TimeSpan.FromSeconds(5)),
                 new(AnalysisCapability.Description, ["description"], TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(5)),
             ])]);
-            Worker = new(Store, Authorization, Source, Configuration, Adapters);
+            Worker = new(Store, Authorization, Source, Configuration, Adapters, Catalog);
         }
         public async Task<AnalysisRequest> EnqueueAsync(CancellationToken ct, string? language = null)
         {
             AnalysisRequest request = AnalysisExecutionStoreTests.Request(Environment, await Store.GetAdmissionScopeAsync(ct));
             request = request with { SourcePath = Path.Combine(Environment.Root, request.CaptureId + ".png"), Language = language };
+            using (IAnalysisAuthorizationLease grant = await Authorization.AcquireAsync(ct))
+                request = request with { ExpectedAuthorizationId = grant.Revision };
             Assert.IsTrue(await Worker.EnqueueAsync(request, ct));
             return request;
         }
-        public void Dispose() { Worker.Dispose(); Store.Dispose(); Authorization.Dispose(); Environment.Dispose(); }
+        public void Dispose() { Worker.Dispose(); Store.Dispose(); Catalog.Dispose(); Authorization.Dispose(); Environment.Dispose(); }
     }
 
     private sealed class FakeAnalyzer : IMediaAnalyzer

@@ -34,6 +34,20 @@ internal static class AnalysisDocumentMapper
             result.GeneratedAt, result.PlanVersion, null, null, null, result.ProducingRunId);
         return result.Payload switch
         {
+            FileDetailsMetadata file => document with
+            {
+                FileDetails = new((int)file.MediaKind, file.FileName, file.SizeBytes, file.ContentType,
+                    file.FileCreatedAt, file.FileModifiedAt, file.CapturedAt, file.Duration?.Ticks,
+                    file.Image is { } image ? new(new(image.Dimensions.Width, image.Dimensions.Height), image.DpiX, image.DpiY) : null,
+                    file.Video is { } video ? new(new(video.Dimensions.Width, video.Dimensions.Height), video.FrameRate, video.Bitrate, video.Codec) : null,
+                    file.Audio is { } audio ? new(audio.Channels, audio.SampleRate, audio.Bitrate, audio.Codec) : null,
+                    CaptureTimeVerified: file.CapturedAt != null),
+            },
+            QrCodeMetadata qr => document with
+            {
+                QrCodes = qr.Codes.Select(code => new QrCodeDocument(code.Value,
+                    new(code.Bounds.X, code.Bounds.Y, code.Bounds.Width, code.Bounds.Height), code.Timestamp?.Ticks)).ToArray(),
+            },
             TextRecognitionMetadata text => document with
             {
                 Text = text.Regions.Select(region => new TextDocument(region.Text,
@@ -60,11 +74,15 @@ internal static class AnalysisDocumentMapper
             throw new InvalidDataException("Unsupported or invalid analysis result.");
         AnalysisPayload payload = document switch
         {
-            { Capability: "text-recognition", Text: not null, Descriptions: null, Transcript: null } =>
+            { Capability: "file-details", FileDetails: not null, Text: null, Descriptions: null, Transcript: null, QrCodes: null } =>
+                ToFileDetails(document.FileDetails),
+            { Capability: "qr-code-detection", QrCodes: not null, Text: null, Descriptions: null, Transcript: null, FileDetails: null } =>
+                new QrCodeMetadata(document.QrCodes.Select(ToQrCode)),
+            { Capability: "text-recognition", Text: not null, Descriptions: null, Transcript: null, QrCodes: null, FileDetails: null } =>
                 new TextRecognitionMetadata(document.Text.Select(ToText)),
-            { Capability: "description", Descriptions: not null, Text: null, Transcript: null } =>
+            { Capability: "description", Descriptions: not null, Text: null, Transcript: null, QrCodes: null, FileDetails: null } =>
                 new DescriptionMetadata(document.Descriptions.Select(ToDescription)),
-            { Capability: "transcription", Transcript.Segments: not null, Text: null, Descriptions: null } =>
+            { Capability: "transcription", Transcript.Segments: not null, Text: null, Descriptions: null, QrCodes: null, FileDetails: null } =>
                 new TranscriptMetadata(document.Transcript.Language, document.Transcript.Segments.Select(ToSegment)),
             _ => throw new InvalidDataException("Unsupported or ambiguous metadata payload."),
         };
@@ -78,6 +96,27 @@ internal static class AnalysisDocumentMapper
         if (document == null) throw new InvalidDataException("Missing text region.");
         BoundsDocument? bounds = document.Bounds;
         return new(document.Text, bounds == null ? null : new(bounds.X, bounds.Y, bounds.Width, bounds.Height),
+            document.TimestampTicks is { } ticks ? TimeSpan.FromTicks(ticks) : null);
+    }
+
+    private static FileDetailsMetadata ToFileDetails(FileDetailsDocument file) =>
+        new((AnalysisMediaKind)file.MediaKind, file.FileName, file.SizeBytes, file.ContentType,
+            // Older file-details results could confuse historical activity with capture time.
+            // Keep all other facts, but expose unverified capture dates as unknown until reanalysis.
+            file.FileCreatedAt, file.FileModifiedAt, file.CaptureTimeVerified ? file.CapturedAt : null,
+            file.DurationTicks is { } ticks ? TimeSpan.FromTicks(ticks) : null,
+            file.Image is { } image ? new(ToDimensions(image.Dimensions), image.DpiX, image.DpiY) : null,
+            file.Video is { } video ? new(ToDimensions(video.Dimensions), video.FrameRate, video.Bitrate, video.Codec) : null,
+            file.Audio is { } audio ? new(audio.Channels, audio.SampleRate, audio.Bitrate, audio.Codec) : null);
+
+    private static MediaDimensions ToDimensions(DimensionsDocument dimensions) => dimensions == null
+        ? throw new InvalidDataException("Missing media dimensions.") : new(dimensions.Width, dimensions.Height);
+
+    private static DecodedQrCode ToQrCode(QrCodeDocument document)
+    {
+        if (document?.Bounds == null) throw new InvalidDataException("Missing QR code bounds.");
+        BoundsDocument bounds = document.Bounds;
+        return new(document.Value, new(bounds.X, bounds.Y, bounds.Width, bounds.Height),
             document.TimestampTicks is { } ticks ? TimeSpan.FromTicks(ticks) : null);
     }
 

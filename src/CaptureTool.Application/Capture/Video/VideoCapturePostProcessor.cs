@@ -23,6 +23,7 @@ internal sealed class VideoCapturePostProcessor
     private readonly VideoCaptureFileNameGenerator _fileNameGenerator;
     private readonly IRecentCaptureCatalog _recentCaptureCatalog;
     private readonly ITelemetryService? _telemetryService;
+    private readonly CaptureAnalysisIntake? _analysis;
 
     public VideoCapturePostProcessor(
         IClipboardService clipboardService,
@@ -34,7 +35,8 @@ internal sealed class VideoCapturePostProcessor
         ILogService logService,
         VideoCaptureFileNameGenerator fileNameGenerator,
         IRecentCaptureCatalog recentCaptureCatalog,
-        ITelemetryService? telemetryService = null)
+        ITelemetryService? telemetryService = null,
+        CaptureAnalysisIntake? analysis = null)
     {
         _clipboardService = clipboardService;
         _fileAllocator = fileAllocator;
@@ -46,12 +48,14 @@ internal sealed class VideoCapturePostProcessor
         _fileNameGenerator = fileNameGenerator;
         _recentCaptureCatalog = recentCaptureCatalog;
         _telemetryService = telemetryService;
+        _analysis = analysis;
     }
 
     public void Process(VideoFile videoFile)
     {
+        Task registration = _analysis?.RegisterAsync(videoFile.FilePath, CaptureFileType.Video) ?? Task.CompletedTask;
         _recentCaptureCatalog.RecordCaptured(videoFile.FilePath, CaptureFileType.Video);
-        AutoSaveVideo(videoFile);
+        _ = AutoSaveVideoAsync(videoFile, registration);
         AutoCopyVideo(videoFile);
     }
 
@@ -80,7 +84,7 @@ internal sealed class VideoCapturePostProcessor
         });
     }
 
-    private void AutoSaveVideo(VideoFile videoFile)
+    private async Task AutoSaveVideoAsync(VideoFile videoFile, Task registration)
     {
         try
         {
@@ -100,6 +104,7 @@ internal sealed class VideoCapturePostProcessor
                 videoFile.FilePath,
                 videosFolder,
                 _fileNameGenerator.GetNewCaptureFileName);
+            if (_analysis != null) await _analysis.SavedAsync(registration, videoFile.FilePath, newFilePath).ConfigureAwait(false);
             _recentCaptureCatalog.ReplacePath(videoFile.FilePath, newFilePath);
             TrackOutput("auto_save", TelemetryOutcomes.Succeeded);
         }

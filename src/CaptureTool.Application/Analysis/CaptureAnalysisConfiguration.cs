@@ -36,17 +36,22 @@ public sealed class CaptureAnalysisConfiguration
     }
 
     public static CaptureAnalysisConfiguration CreateDefault() => new([
-        new(AnalysisMediaKind.Image, "image-v1", [
+        new(AnalysisMediaKind.Image, "image-v4", [
+            Step(AnalysisCapability.FileDetails, ["windows-file-details"], 1),
+            Step(AnalysisCapability.QrCodeDetection, ["zxing-image-qr"], 2),
             Step(AnalysisCapability.TextRecognition, ["windows-ai-ocr-document", "windows-ocr-document"], 2),
-            Step(AnalysisCapability.Description, ["windows-image-description"], 2),
+            Step(AnalysisCapability.Description, ["windows-image-description", "foundry-local-image-description"], 2),
         ]),
-        new(AnalysisMediaKind.Audio, "audio-v1", [
+        new(AnalysisMediaKind.Audio, "audio-v2", [
+            Step(AnalysisCapability.FileDetails, ["windows-file-details"], 1),
             Step(AnalysisCapability.Transcription, ["foundry-local-nemotron-multilingual-speech-transcript", "foundry-local-speech-transcript"], 30),
         ]),
-        new(AnalysisMediaKind.Video, "video-v1", [
+        new(AnalysisMediaKind.Video, "video-v4", [
+            Step(AnalysisCapability.FileDetails, ["windows-file-details"], 1),
+            Step(AnalysisCapability.QrCodeDetection, ["zxing-video-frame-qr"], 15),
             Step(AnalysisCapability.TextRecognition, ["windows-ai-video-frame-ocr", "windows-video-frame-ocr"], 15),
             Step(AnalysisCapability.Transcription, ["foundry-local-nemotron-multilingual-speech-transcript", "foundry-local-speech-transcript"], 30),
-            Step(AnalysisCapability.Description, ["windows-video-frame-description"], 15),
+            Step(AnalysisCapability.Description, ["windows-video-frame-description", "foundry-local-image-description"], 15),
         ]),
     ]);
 
