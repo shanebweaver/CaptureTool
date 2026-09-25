@@ -1904,4 +1904,23 @@ SOFTWARE.
   <data name="CapturePane_PendingEdits.Message" xml:space="preserve"><value>Die Eigenschaften beziehen sich auf die Quelldatei. Nicht gespeicherte Änderungen sind nicht enthalten.</value></data>
   <data name="CapturePane_FileUnavailable" xml:space="preserve"><value>Dateieigenschaften sind nicht verfügbar. Aktualisieren Sie, sobald die Datei bereit ist.</value></data>
   <data name="CapturePane_FolderUnavailable" xml:space="preserve"><value>Der Ordner konnte nicht geöffnet werden.</value></data>
+  <data name="CapturePane_DetailsTab.Header" xml:space="preserve"><value>Details</value></data>
+  <data name="CapturePane_TextTab" xml:space="preserve"><value>Text</value></data>
+  <data name="CapturePane_Search.PlaceholderText" xml:space="preserve"><value>In dieser Aufnahme suchen</value></data>
+  <data name="CapturePane_Search.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>In dieser Aufnahme suchen</value></data>
+  <data name="CapturePane_SourceFilter.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Textquelle</value></data>
+  <data name="CapturePane_Previous.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Vorheriges Ergebnis</value></data>
+  <data name="CapturePane_Next.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Nächstes Ergebnis</value></data>
+  <data name="CapturePane_Occurrences.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Vorkommen</value></data>
+  <data name="CapturePane_OpenLink.Content" xml:space="preserve"><value>Link öffnen</value></data>
+  <data name="CapturePane_LoadMore.Content" xml:space="preserve"><value>Mehr anzeigen</value></data>
+  <data name="CapturePane_CopyResults.Content" xml:space="preserve"><value>Alle Ergebnisse kopieren</value></data>
+  <data name="CapturePane_AllSources" xml:space="preserve"><value>Alle Quellen</value></data>
+  <data name="CapturePane_ScreenText" xml:space="preserve"><value>Bildschirmtext</value></data>
+  <data name="CapturePane_Speech" xml:space="preserve"><value>Sprache</value></data>
+  <data name="CapturePane_Codes" xml:space="preserve"><value>QR-Codes</value></data>
+  <data name="CapturePane_PassageCount" xml:space="preserve"><value>{0} Textstellen</value></data>
+  <data name="CapturePane_MatchCount" xml:space="preserve"><value>{0} passende Textstellen</value></data>
+  <data name="CapturePane_LocationUnavailable" xml:space="preserve"><value>In der aktuellen Ansicht ist keine Position verfügbar. Das Bild wurde möglicherweise geändert oder die Textstelle liegt außerhalb des Zuschnitts.</value></data>
+  <data name="CapturePane_ActionFailed" xml:space="preserve"><value>Diese Aktion ist nicht verfügbar. Aktualisieren Sie die Aufnahmedetails.</value></data>
 </root>

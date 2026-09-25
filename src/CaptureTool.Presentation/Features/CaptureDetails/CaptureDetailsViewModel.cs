@@ -22,10 +22,14 @@ public sealed class CaptureDetailsViewModel : ViewModelBase
     private readonly CancellationToken _cancellation;
     private bool _disposed;
     private bool _readAgain;
+    private bool _readFileAgain;
     private long _revision;
     private object? _stateKey;
     private string? _path;
     private AnalysisMediaKind? _kind;
+    private string? _workingPath;
+    private bool _sourceMatches;
+    private CaptureTextNavigationContext _navigation = new(false, false);
     private readonly IFolderLauncher? _folders;
 
     public string FileName { get; private set => Set(ref field, value); } = string.Empty;
@@ -36,8 +40,12 @@ public sealed class CaptureDetailsViewModel : ViewModelBase
     public bool HasEdits { get; set => Set(ref field, value); }
     public string Summary { get; private set => Set(ref field, value); } = string.Empty;
     public bool HasSummary => Summary.Length > 0;
+    public string SummaryNotice => HasSummary ? StatusText : string.Empty;
     public IRelayCommand CopyPathCommand { get; }
     public IRelayCommand OpenFolderCommand { get; }
+    public CaptureTextViewModel TextContent { get; }
+    public string ContentTabTitle => _text.GetString(_kind == AnalysisMediaKind.Audio ? "CaptureDetails_Transcript" : "CapturePane_TextTab");
+    public IAsyncRelayCommand CopyResultsCommand { get; }
     public CaptureDetailsContent Content { get; private set => Set(ref field, value); } = new();
     public bool IsReading { get; private set => Set(ref field, value); }
     public string StatusText { get; private set => Set(ref field, value); } = string.Empty;
@@ -51,6 +59,8 @@ public sealed class CaptureDetailsViewModel : ViewModelBase
     {
         _reader = reader; _memory = memory; _clipboard = clipboard; _text = text; _ui = ui;
         _folders = folders;
+        TextContent = new(text);
+        CopyResultsCommand = new AsyncRelayCommand(() => CopyAsync(TextContent.CopyVisibleScope()));
         _cancellation = _lifetime.Token;
         RefreshCommand = new AsyncRelayCommand(RefreshAllAsync, () => !_disposed && !IsReading && !IsReadingFile);
         CopyCommand = new AsyncRelayCommand<string>(CopyAsync, value => !_disposed && !string.IsNullOrEmpty(value));
@@ -67,26 +77,33 @@ public sealed class CaptureDetailsViewModel : ViewModelBase
         return RefreshAsync();
     }
 
-    public Task OpenAsync(string path, AnalysisMediaKind kind)
+    public Task OpenAsync(string path, AnalysisMediaKind kind, string? workingPath = null)
     {
         _kind = kind;
+        _workingPath = workingPath;
+        RaisePropertyChanged(nameof(ContentTabTitle));
         Task analysis = OpenAsync(path);
         return Task.WhenAll(analysis, ReadFileAsync());
     }
 
-    private Task RefreshAllAsync() => Task.WhenAll(RefreshAsync(), ReadFileAsync());
+    public Task RefreshAllAsync() => Task.WhenAll(RefreshAsync(), ReadFileAsync());
 
     private async Task ReadFileAsync()
     {
-        if (_disposed || _path == null || _kind == null || IsReadingFile) return;
+        if (_disposed || _path == null || _kind == null) return;
+        if (IsReadingFile) { _readFileAgain = true; return; }
         IsReadingFile = true;
         RefreshCommand.NotifyCanExecuteChanged();
         try
         {
-            var file = await Task.Run(() => _reader.ReadFileAsync(_path, _kind.Value, _cancellation), _cancellation);
-            if (_disposed) return;
-            FileProperties = file == null ? new() : CaptureFileProperties.Create(file, _text);
-            FileStatus = file == null ? _text.GetString("CapturePane_FileUnavailable") : string.Empty;
+            do
+            {
+                _readFileAgain = false;
+                var file = await Task.Run(() => _reader.ReadFileAsync(_path, _kind.Value, _cancellation), _cancellation);
+                if (_disposed) return;
+                FileProperties = file == null ? new() : CaptureFileProperties.Create(file, _text);
+                FileStatus = file == null ? _text.GetString("CapturePane_FileUnavailable") : string.Empty;
+            } while (_readFileAgain && !_disposed);
         }
         catch (OperationCanceledException) when (_cancellation.IsCancellationRequested) { }
         catch (Exception) { if (!_disposed) FileStatus = _text.GetString("CapturePane_FileUnavailable"); }
@@ -113,10 +130,19 @@ public sealed class CaptureDetailsViewModel : ViewModelBase
 
     private void SetSummary(CaptureAnalysisRecord? record)
     {
-        Summary = string.Join(" ", record?.Results.Select(result => result.Payload).OfType<CaptureSynopsisMetadata>()
-            .SelectMany(synopsis => synopsis.Summary).Select(statement => statement.Text) ?? []);
+        Summary = Content.Summary;
+        TextContent.Replace(Content.Passages);
+        TextContent.SetNavigationContext(_navigation with { SourceMatches = _sourceMatches && record != null });
         RaisePropertyChanged(nameof(HasSummary));
+        RaisePropertyChanged(nameof(SummaryNotice));
     }
+
+    public void SetNavigationContext(CaptureTextNavigationContext context)
+    {
+        _navigation = context;
+        TextContent.SetNavigationContext(context with { SourceMatches = _sourceMatches });
+    }
+    public void ReportActionFailure() => CopyStatus = _text.GetString("CapturePane_ActionFailed");
 
     public async Task RefreshAsync()
     {
@@ -142,9 +168,13 @@ public sealed class CaptureDetailsViewModel : ViewModelBase
                 {
                     // Catalog discovery and payload projection can be substantial; keep them off the UI thread.
                     snapshot = await Task.Run(() => _reader.ReadAsync(_path, _cancellation), _cancellation);
+                    bool sourceMatches = snapshot.Record != null && (_workingPath == null ||
+                        string.Equals(_path, _workingPath, StringComparison.OrdinalIgnoreCase) ||
+                        await Task.Run(() => _reader.VerifySourceAsync(_workingPath, snapshot.Record.SourceRevision, _cancellation), _cancellation));
                     var content = await Task.Run(() => snapshot.Record == null ? new CaptureDetailsContent() :
                         CaptureDetailsContent.Create(snapshot.Record, _text), _cancellation);
                     if (_disposed || revision != Interlocked.Read(ref _revision)) continue;
+                    _sourceMatches = sourceMatches;
                     Content = content;
                     SetSummary(snapshot.Record);
                     SetStatus(Status(snapshot, content));
@@ -220,7 +250,7 @@ public sealed class CaptureDetailsViewModel : ViewModelBase
         catch (Exception) { if (!_disposed) CopyStatus = Text("CopyFailed"); }
     }
     private string Text(string key) => _text.GetString("CaptureDetails_" + key);
-    private void SetStatus(string value) { StatusText = value; RaisePropertyChanged(nameof(ShowStatus)); }
+    private void SetStatus(string value) { StatusText = value; RaisePropertyChanged(nameof(ShowStatus)); RaisePropertyChanged(nameof(SummaryNotice)); }
     public override void Dispose()
     {
         if (_disposed) return;

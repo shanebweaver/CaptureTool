@@ -11,6 +11,16 @@ namespace CaptureTool.Application.Library.CaptureDetails;
 public sealed class CaptureDetailsReader(ICaptureAssetCatalog catalog, ICaptureMetadataReader metadata,
     IAnalysisExecutionStore execution, IAnalysisSource files, IMediaFileDetailsReader? properties = null) : ICaptureDetailsReader
 {
+    public async Task<bool> VerifySourceAsync(string path, SourceRevision revision, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            await using var lease = await files.OpenAsync(path, cancellationToken).ConfigureAwait(false);
+            return lease.Revision == revision && await lease.VerifyAsync(cancellationToken).ConfigureAwait(false);
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException) { return false; }
+    }
+
     public async Task<FileDetailsMetadata?> ReadFileAsync(string path, AnalysisMediaKind kind, CancellationToken cancellationToken = default)
     {
         if (properties == null || !Path.IsPathFullyQualified(path)) return null;

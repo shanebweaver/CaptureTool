@@ -35,6 +35,15 @@ public sealed partial class VideoEditPage : VideoEditPageBase
     {
         InitializeComponent();
         DetailsHost.ToggleControl = DetailsToggle;
+        DetailsHost.Navigate = location =>
+        {
+            if (!ViewModel.IsMediaReady || ActiveMediaPlayer == null || location.Time is not { } time ||
+                time.TotalSeconds < ViewModel.TrimStartSeconds || time.TotalSeconds > ViewModel.TrimEndSeconds) return false;
+            PauseTrimPreview();
+            ViewModel.UpdatePlayhead(time.TotalSeconds);
+            SyncMediaPositionToPlayhead();
+            return true;
+        };
         _logService = App.Current.ServiceProvider.GetService<ILogService>();
         _scratchArtifactStore = App.Current.ServiceProvider.GetService<IScratchArtifactStore>();
         _videoFileTrimmer = App.Current.ServiceProvider.GetService<IVideoFileTrimmer>();

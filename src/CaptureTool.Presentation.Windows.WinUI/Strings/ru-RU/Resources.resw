@@ -1910,4 +1910,23 @@ SOFTWARE.
   <data name="CapturePane_PendingEdits.Message" xml:space="preserve"><value>Свойства относятся к исходному файлу и не учитывают несохранённые изменения.</value></data>
   <data name="CapturePane_FileUnavailable" xml:space="preserve"><value>Свойства файла недоступны. Обновите сведения, когда файл будет готов.</value></data>
   <data name="CapturePane_FolderUnavailable" xml:space="preserve"><value>Не удалось открыть папку.</value></data>
+  <data name="CapturePane_DetailsTab.Header" xml:space="preserve"><value>Сведения</value></data>
+  <data name="CapturePane_TextTab" xml:space="preserve"><value>Текст</value></data>
+  <data name="CapturePane_Search.PlaceholderText" xml:space="preserve"><value>Найти в этой записи</value></data>
+  <data name="CapturePane_Search.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Найти в этой записи</value></data>
+  <data name="CapturePane_SourceFilter.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Источник текста</value></data>
+  <data name="CapturePane_Previous.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Предыдущий результат</value></data>
+  <data name="CapturePane_Next.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Следующий результат</value></data>
+  <data name="CapturePane_Occurrences.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Вхождения</value></data>
+  <data name="CapturePane_OpenLink.Content" xml:space="preserve"><value>Открыть ссылку</value></data>
+  <data name="CapturePane_LoadMore.Content" xml:space="preserve"><value>Показать ещё</value></data>
+  <data name="CapturePane_CopyResults.Content" xml:space="preserve"><value>Копировать результаты</value></data>
+  <data name="CapturePane_AllSources" xml:space="preserve"><value>Все источники</value></data>
+  <data name="CapturePane_ScreenText" xml:space="preserve"><value>Текст на экране</value></data>
+  <data name="CapturePane_Speech" xml:space="preserve"><value>Речь</value></data>
+  <data name="CapturePane_Codes" xml:space="preserve"><value>QR-коды</value></data>
+  <data name="CapturePane_PassageCount" xml:space="preserve"><value>Фрагментов: {0}</value></data>
+  <data name="CapturePane_MatchCount" xml:space="preserve"><value>Совпадений: {0}</value></data>
+  <data name="CapturePane_LocationUnavailable" xml:space="preserve"><value>В текущем виде нет доступной позиции. Возможно, изображение изменено или фрагмент находится за пределами обрезки.</value></data>
+  <data name="CapturePane_ActionFailed" xml:space="preserve"><value>Действие недоступно. Обновите сведения о записи.</value></data>
 </root>

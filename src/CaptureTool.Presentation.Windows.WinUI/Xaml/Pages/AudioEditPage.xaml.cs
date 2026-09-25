@@ -38,6 +38,14 @@ public sealed partial class AudioEditPage : AudioEditPageBase
     {
         InitializeComponent();
         DetailsHost.ToggleControl = DetailsToggle;
+        DetailsHost.Navigate = location =>
+        {
+            if (!ViewModel.IsMediaReady || _mediaPlayer == null || location.Time is not { } time || time > _audioDuration) return false;
+            _mediaPlayer.Pause();
+            _mediaPlayer.PlaybackSession.Position = time;
+            UpdateWaveformPlayhead(time, scrollIntoView: true);
+            return true;
+        };
         _logService = App.Current.ServiceProvider.GetService<ILogService>();
         _mediaPlayer = CreateMediaPlayer();
         AudioPlayer.SetMediaPlayer(_mediaPlayer);
@@ -217,6 +225,7 @@ public sealed partial class AudioEditPage : AudioEditPageBase
         {
             ViewModel.ReportMediaOpened();
             _audioDuration = sender.PlaybackSession.NaturalDuration;
+            DetailsHost.EndSeconds = _audioDuration.TotalSeconds;
             bool shouldScrollToResumePosition = _resumePosition is not null;
             if (_resumePosition is { } resumePosition)
             {

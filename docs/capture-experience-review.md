@@ -12,9 +12,14 @@ Working branch: `codex/capture-details`. The three PRDs are [pane](prd-capture-e
 - Native x64 compilation passed. The first desktop run exposed a missing automation node on the pane's layout root. Visual inspection confirmed that the content rendered; an explicit pane automation peer was added. Review also removed blank status spacing and restored toolbar focus on keyboard/close-button dismissal. The isolated English native desktop flow passed after these fixes; wide light and narrow dark screenshots were inspected. Other locales will run in the final suite.
 - Reopening from Home exposed a working-copy identity issue. Audio/video now retain the original file path like images, and all editors expose a stable details source independently of their working/rendered files. Existing open-file tests now assert that original-path contract.
 
-## Step 2
+## Step 2 review — complete
 
-Implementation in progress.
+- The pane now has Details and Text/Transcript tabs. Search and source filters define the complete copy scope; visual rows load in batches of 100. Previous/next stops at the boundaries and loads only the next batch when necessary.
+- Consecutive identical video OCR frames and duplicate QR values retain their original occurrences. QR actions open only explicit HTTP(S) targets; summaries remain separate from literal source text.
+- Working-copy verification gates source locations. Image geometry changes disable region jumps; recording timestamps respect duration/trim boundaries and use the existing playback owner. Source text remains readable when only the editor's working copy has changed.
+- Refresh preserves unchanged passage objects and selection. Disposal and metadata deletion reject late reads. A media-ready transition retries early file-property reads.
+- Managed checks: 427 application tests and 288 presentation tests passed. Native review caught missing accessible names after location labels gained a source/time layout; explicit names were added. The UI harness also now resolves pane strings and keeps DPI scope on the test thread.
+- The three isolated English native image/audio/video flows passed. Screenshots confirm dense source rows, search highlights, the image outline and paused recording playback at 3 seconds. Visual review caught a recycled occurrence selection crossing row boundaries; a model guard and native filtering regression now cover it. Changing the selected passage also clears the previous image outline. Final verification will rerun all six locales.
 
 ## Step 3
 

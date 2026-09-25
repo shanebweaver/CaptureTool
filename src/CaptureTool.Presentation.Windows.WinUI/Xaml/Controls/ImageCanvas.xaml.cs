@@ -908,6 +908,23 @@ public sealed partial class ImageCanvas : UserControlBase
     }
 
     #region Zoom, Center, and Size
+
+    public bool ShowCaptureLocation(CaptureTool.Domain.Analysis.Payloads.NormalizedBounds? bounds)
+    {
+        CaptureLocationOutline.Visibility = Visibility.Collapsed;
+        if (bounds is not { Width: > 0, Height: > 0 } || CanvasSize.Width <= 0 || CanvasSize.Height <= 0) return false;
+        var region = new global::Windows.Foundation.Rect(bounds.X * CanvasSize.Width, bounds.Y * CanvasSize.Height,
+            bounds.Width * CanvasSize.Width, bounds.Height * CanvasSize.Height);
+        CaptureLocationOutline.Margin = new Thickness(region.X, region.Y, 0, 0);
+        CaptureLocationOutline.Width = region.Width;
+        CaptureLocationOutline.Height = region.Height;
+        CaptureLocationOutline.Visibility = Visibility.Visible;
+        CanvasContainer.StartBringIntoView(new BringIntoViewOptions
+        {
+            TargetRect = region, HorizontalAlignmentRatio = .5, VerticalAlignmentRatio = .5, AnimationDesired = false
+        });
+        return true;
+    }
     private void RootContainer_SizeChanged(object sender, SizeChangedEventArgs e)
     {
         InvalidateCanvas();

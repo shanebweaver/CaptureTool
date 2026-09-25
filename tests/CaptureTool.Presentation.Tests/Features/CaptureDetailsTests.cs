@@ -59,46 +59,43 @@ public sealed class CaptureDetailsTests
     }
 
     [TestMethod]
-    public void FactsShowSourceContextAndKeepSuggestionsSeparate()
+    public async Task WorkingCopyMismatchDisablesLocationsWithoutDiscardingSourceText()
     {
-        var record = Record();
-        var content = CaptureDetailsContent.Create(record, Localization());
-        Assert.AreEqual("Invoice summary", content.Overview.Single().Text);
-        var amount = content.Facts.Single();
-        Assert.AreEqual("USD 125.00", amount.Text);
-        Assert.AreEqual("Invoice total USD 125.00", amount.Evidence.Single().Text);
+        var setup = new Setup();
+        using var vm = setup.ViewModel;
+        var record = new CaptureAnalysisRecord(CaptureId.New(), AnalysisMediaKind.Image, new(new string('a', 64)), "test", Guid.NewGuid(),
+            [Result(new TextRecognitionMetadata([new("Source text", new(.1, .1, .2, .2))]), Guid.NewGuid())]);
+        setup.Reader.Setup(reader => reader.ReadAsync(It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync(new CaptureDetailsSnapshot(CaptureDetailsStatus.Available, record));
+        vm.SetNavigationContext(new(true, true));
+        await vm.OpenAsync("capture.png", AnalysisMediaKind.Image, "working.png");
+        Assert.AreEqual("Source text", vm.TextContent.CopyVisibleScope());
+        Assert.IsFalse(vm.TextContent.Visible.Single().CanNavigate);
+        setup.Reader.Setup(reader => reader.VerifySourceAsync("working.png", record.SourceRevision, It.IsAny<CancellationToken>())).ReturnsAsync(true);
+        await vm.RefreshAsync();
+        Assert.IsTrue(vm.TextContent.Visible.Single().CanNavigate);
+        setup.State = setup.State with { IsDeleting = true };
+        setup.Memory.Raise(memory => memory.StateChanged += null);
+        Assert.AreEqual(string.Empty, vm.TextContent.CopyVisibleScope());
+    }
+
+    [TestMethod]
+    public void PaneOnlyProjectsActionableSourceTextAndSummary()
+    {
+        var content = CaptureDetailsContent.Create(Record(), Localization());
+        Assert.AreEqual("Invoice total USD 125.00", content.Passages.Single().Text);
+        Assert.AreEqual(string.Empty, content.Summary); // The fixture has a suggested title, not a summary.
         Assert.IsFalse(content.HasRetainedResults);
-        Assert.Contains("Invoice total", content.Sources.Single().CopyText);
     }
 
     [TestMethod]
-    public void AudioUsesTranscriptTimesAndNeverInventsCaptureDateOrImageProperties()
+    public void FilePropertiesKeepLongDurationsAndUnknownCaptureTime()
     {
-        Guid run = Guid.NewGuid();
         var date = DateTimeOffset.UtcNow;
-        var record = new CaptureAnalysisRecord(CaptureId.New(), AnalysisMediaKind.Audio, new(new string('a', 64)), "plan", run,
-        [Result(new TranscriptMetadata("en", [new("A long recording", TimeSpan.FromHours(27), TimeSpan.FromHours(27) + TimeSpan.FromSeconds(2))]), run),
-         Result(new FileDetailsMetadata(AnalysisMediaKind.Audio, "recording.wav", 2048, "audio/wav", date, date,
-             duration: TimeSpan.FromHours(27), audio: new(channels: 2, sampleRate: 48000)), run)]);
-        var content = CaptureDetailsContent.Create(record, Localization());
-        Assert.Contains("27:00:00", content.Sources.Single().Items.Single().Label);
-        Assert.AreEqual("Unknown", content.Properties.Single(item => item.Label == "CapturedAt").Text);
-        Assert.IsFalse(content.Properties.Any(item => item.Label is "Dimensions" or "AspectRatio"));
-        Assert.AreEqual("27:00:00", content.Properties.Single(item => item.Label == "Duration").Text);
-    }
-
-    [TestMethod]
-    public void VideoShowsOriginalFrameTimestampsAndReducesAspectRatio()
-    {
-        Guid run = Guid.NewGuid();
-        var date = DateTimeOffset.UtcNow;
-        var record = new CaptureAnalysisRecord(CaptureId.New(), AnalysisMediaKind.Video, new(new string('a', 64)), "plan", run,
-        [Result(new TextRecognitionMetadata([new("Frame text", timestamp: TimeSpan.FromSeconds(65))]), run),
-         Result(new FileDetailsMetadata(AnalysisMediaKind.Video, "capture.mp4", 1, null, date, date,
-             video: new(new(1920, 1080), 29.97)), run)]);
-        var content = CaptureDetailsContent.Create(record, Localization());
-        Assert.EndsWith("1:05", content.Sources.Single().Items.Single().Label);
-        Assert.AreEqual("16:9", content.Properties.Single(item => item.Label == "AspectRatio").Text);
+        var content = CaptureFileProperties.Create(new(AnalysisMediaKind.Audio, "recording.wav", 2048, "audio/wav", date, date,
+            duration: TimeSpan.FromHours(27), audio: new(channels: 2, sampleRate: 48000)), Localization());
+        Assert.AreEqual("Unknown", content.Basic.Single(item => item.Label == "CapturedAt").Value);
+        Assert.IsFalse(content.Basic.Any(item => item.Label is "Dimensions" or "AspectRatio"));
+        Assert.AreEqual("27:00:00", content.Basic.Single(item => item.Label == "Duration").Value);
     }
 
     [TestMethod]
@@ -130,7 +127,7 @@ public sealed class CaptureDetailsTests
         setup.Clipboard.Setup(clipboard => clipboard.CopyTextAsync(It.IsAny<string>())).ThrowsAsync(new IOException());
         await vm.CopyCommand.ExecuteAsync("text");
         Assert.AreEqual("CopyFailed", vm.CopyStatus);
-        Assert.IsTrue(vm.Content.HasOverview);
+        Assert.IsTrue(vm.Content.HasContent);
         setup.Memory.Verify(memory => memory.ScanExistingAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
 

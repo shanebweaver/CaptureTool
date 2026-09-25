@@ -66,6 +66,22 @@ public sealed partial class ImageEditTextExtractionUiTests
         dialog = OpenDetails();
         WaitForElementByName(dialog, automation, "Invoice INV-2048 totals USD 125.00 and is due on 2026-10-15.", InteractionTimeout);
         Screenshot("summary");
+        Element("CapturePane_TextTab").Patterns.SelectionItem.Pattern.Select();
+        var search = Element("CapturePane_Search").AsTextBox();
+        search.Text = "INV-2048";
+        Element("CapturePane_CopyResults").Patterns.Invoke.Pattern.Invoke();
+        WaitFor(() => ReadDetailsClipboard() == "Contoso invoice. Reference: INV-2048. Total USD 125.00. Due 2026-10-15." ? dialog : null,
+            InteractionTimeout, "all matching text copied");
+        var location = WaitFor(() => dialog.FindAllDescendants(automation.ConditionFactory.ByControlType(ControlType.Button).And(automation.ConditionFactory.ByName(resources["CaptureDetails_RecognizedText"])))
+            .FirstOrDefault(item => item.IsEnabled), InteractionTimeout, "source location");
+        location.Patterns.Invoke.Pattern.Invoke();
+        Screenshot("text-location");
+        search.Text = "absent phrase";
+        WaitFor(() => !Element("CapturePane_CopyResults").IsEnabled ? dialog : null, InteractionTimeout, "empty search");
+        search.Text = string.Empty;
+        WaitFor(() => dialog.FindAllDescendants(automation.ConditionFactory.ByControlType(ControlType.Button).And(automation.ConditionFactory.ByName(resources["CaptureDetails_QrCode"]))).FirstOrDefault(item => item.IsEnabled), InteractionTimeout, "QR location after filtering");
+        Screenshot("source-text");
+        Element("CapturePane_DetailsTab").Patterns.SelectionItem.Pattern.Select();
         CloseDetails();
         OpenSettings();
         WaitForElementByName(window, automation, "AppTheme_Dark", InteractionTimeout).Patterns.SelectionItem.Pattern.Select();

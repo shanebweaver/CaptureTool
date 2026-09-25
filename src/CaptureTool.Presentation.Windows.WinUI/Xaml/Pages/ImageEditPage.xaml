@@ -17,7 +17,7 @@
         <converters:ShapeTypeToIntConverter x:Key="ShapeTypeToIntConverter" />
     </Page.Resources>
 
-    <controls:CaptureDetailsHost x:Name="DetailsHost" SourcePath="{x:Bind ViewModel.DetailsSourcePath, Mode=OneWay}" MediaKind="Image" HasEdits="{x:Bind ViewModel.HasUnsavedChanges, Mode=OneWay}">
+    <controls:CaptureDetailsHost x:Name="DetailsHost" SourcePath="{x:Bind ViewModel.DetailsSourcePath, Mode=OneWay}" MediaKind="Image" HasEdits="{x:Bind ViewModel.HasUnsavedChanges, Mode=OneWay}" WorkingPath="{x:Bind ViewModel.ImageFile.FilePath, Mode=OneWay}" IsSourceReady="{x:Bind ViewModel.IsLoaded, Mode=OneWay}" ImageEdited="{x:Bind ViewModel.IsSourceImageGeometryChanged, Mode=OneWay}" SourceVersion="{x:Bind ViewModel.DetailsSourceVersion, Mode=OneWay}">
     <Grid
         AutomationProperties.AccessibilityView="Control"
         AutomationProperties.AutomationId="ImageEditPageRoot">

@@ -13,7 +13,7 @@
     d:DataContext="{d:DesignInstance Type=audioedit:AudioEditPageViewModel}"
     mc:Ignorable="d">
 
-    <controls:CaptureDetailsHost x:Name="DetailsHost" SourcePath="{x:Bind ViewModel.DetailsSourcePath, Mode=OneWay}" MediaKind="Audio">
+    <controls:CaptureDetailsHost x:Name="DetailsHost" SourcePath="{x:Bind ViewModel.DetailsSourcePath, Mode=OneWay}" MediaKind="Audio" WorkingPath="{x:Bind ViewModel.AudioPath, Mode=OneWay}" IsSourceReady="{x:Bind ViewModel.IsMediaReady, Mode=OneWay}">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />

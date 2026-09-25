@@ -61,6 +61,11 @@
                     SelectionAreaChanged="CropOverlay_SelectionAreaChanged"
                     Visibility="{x:Bind IsCropModeEnabled, Mode=OneWay}" />
 
+                <Border x:Name="CaptureLocationOutline" HorizontalAlignment="Left" VerticalAlignment="Top"
+                        BorderBrush="{ThemeResource AccentFillColorDefaultBrush}" BorderThickness="3"
+                        IsHitTestVisible="False" Visibility="Collapsed"
+                        AutomationProperties.AccessibilityView="Control" AutomationProperties.AutomationId="CapturePane_ImageLocation" />
+
                 <Grid
                     x:Name="TextExtractionOverlayLayer"
                     IsHitTestVisible="False"

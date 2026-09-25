@@ -12,7 +12,7 @@
     d:DataContext="{d:DesignInstance Type=videoedit:VideoEditPageViewModel}"
     mc:Ignorable="d">
 
-    <controls:CaptureDetailsHost x:Name="DetailsHost" SourcePath="{x:Bind ViewModel.DetailsSourcePath, Mode=OneWay}" MediaKind="Video" HasEdits="{x:Bind ViewModel.HasUnsavedChanges, Mode=OneWay}">
+    <controls:CaptureDetailsHost x:Name="DetailsHost" SourcePath="{x:Bind ViewModel.DetailsSourcePath, Mode=OneWay}" MediaKind="Video" HasEdits="{x:Bind ViewModel.HasUnsavedChanges, Mode=OneWay}" WorkingPath="{x:Bind ViewModel.VideoPath, Mode=OneWay}" IsSourceReady="{x:Bind ViewModel.IsMediaReady, Mode=OneWay}" StartSeconds="{x:Bind ViewModel.TrimStartSeconds, Mode=OneWay}" EndSeconds="{x:Bind ViewModel.TrimEndSeconds, Mode=OneWay}">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />

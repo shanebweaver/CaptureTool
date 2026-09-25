@@ -36,6 +36,9 @@ namespace CaptureTool.Presentation.Features.ImageEdit;
 public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<ImageFile>, ISourceSaveableSession
 {
     public string? DetailsSourcePath { get; private set => Set(ref field, value); }
+    public int DetailsSourceVersion { get; private set => Set(ref field, value); }
+    public bool IsSourceImageGeometryChanged => Orientation != ImageOrientation.RotateNoneFlipNone ||
+        CropRect != new Rectangle(Point.Empty, ImageSize) || ImageFile?.FilePath != _originalImageFile?.FilePath;
 
     private enum CanvasUpdateMode
     {
@@ -166,7 +169,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     public ImageFile? ImageFile
     {
         get;
-        private set => Set(ref field, value);
+        private set { if (Set(ref field, value)) RaisePropertyChanged(nameof(IsSourceImageGeometryChanged)); }
     }
 
     public Size ImageSize
@@ -900,6 +903,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
             SyncImageGeometryFromSession();
             _originalImageFile = imageFile;
             DetailsSourcePath = imageFile.PersistentFilePath ?? imageFile.FilePath;
+            RaisePropertyChanged(nameof(IsSourceImageGeometryChanged));
             _originalImageSize = ImageSize;
             ApplyImageSizeBasedDefaults(ImageSize);
 
@@ -1463,6 +1467,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
                 RebaseToSavedSource(options.CropRect.Size);
             }
 
+            DetailsSourceVersion++;
             MarkChangesSaved();
             TrackOutput("save", TelemetryOutcomes.Succeeded);
             return true;
@@ -1784,6 +1789,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         Orientation = _editSession.Orientation;
         MirroredDisplayName = GetMirroredDisplayName(Orientation);
         RotationDisplayName = GetRotationDisplayName(Orientation);
+        RaisePropertyChanged(nameof(IsSourceImageGeometryChanged));
     }
 
     private void SyncDrawablesFromSession()

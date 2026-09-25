@@ -2191,4 +2191,23 @@ SOFTWARE.
   <data name="CapturePane_PendingEdits.Message" xml:space="preserve"><value>Properties describe the source file. Pending edits are not included.</value></data>
   <data name="CapturePane_FileUnavailable" xml:space="preserve"><value>File properties are unavailable. Try refreshing after the file is ready.</value></data>
   <data name="CapturePane_FolderUnavailable" xml:space="preserve"><value>The folder could not be opened.</value></data>
+  <data name="CapturePane_DetailsTab.Header" xml:space="preserve"><value>Details</value></data>
+  <data name="CapturePane_TextTab" xml:space="preserve"><value>Text</value></data>
+  <data name="CapturePane_Search.PlaceholderText" xml:space="preserve"><value>Find in this capture</value></data>
+  <data name="CapturePane_Search.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Find in this capture</value></data>
+  <data name="CapturePane_SourceFilter.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Text source</value></data>
+  <data name="CapturePane_Previous.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Previous result</value></data>
+  <data name="CapturePane_Next.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Next result</value></data>
+  <data name="CapturePane_Occurrences.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Occurrences</value></data>
+  <data name="CapturePane_OpenLink.Content" xml:space="preserve"><value>Open link</value></data>
+  <data name="CapturePane_LoadMore.Content" xml:space="preserve"><value>Show more</value></data>
+  <data name="CapturePane_CopyResults.Content" xml:space="preserve"><value>Copy all results</value></data>
+  <data name="CapturePane_AllSources" xml:space="preserve"><value>All sources</value></data>
+  <data name="CapturePane_ScreenText" xml:space="preserve"><value>On-screen text</value></data>
+  <data name="CapturePane_Speech" xml:space="preserve"><value>Speech</value></data>
+  <data name="CapturePane_Codes" xml:space="preserve"><value>QR codes</value></data>
+  <data name="CapturePane_PassageCount" xml:space="preserve"><value>{0} passages</value></data>
+  <data name="CapturePane_MatchCount" xml:space="preserve"><value>{0} matching passages</value></data>
+  <data name="CapturePane_LocationUnavailable" xml:space="preserve"><value>No location is available in the current view. The image may have changed or the passage may be outside the trim.</value></data>
+  <data name="CapturePane_ActionFailed" xml:space="preserve"><value>This action is unavailable. Try refreshing the capture details.</value></data>
 </root>

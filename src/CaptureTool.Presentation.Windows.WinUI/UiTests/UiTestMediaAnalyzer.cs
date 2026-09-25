@@ -24,8 +24,15 @@ internal sealed class UiTestMediaAnalyzer(MediaAnalyzerDescriptor descriptor) : 
                 ? [new("https://example.com/invoice", new(.1, .1, .2, .2))] : []), new(descriptor.Id, "ui-test", "fixture", "1"));
         if (descriptor.Capability == AnalysisCapability.TextRecognition)
             return AnalyzerOutcome.Success(new TextRecognitionMetadata(UiTestLaunchOptions.DetailsFixture ?
-                [new("Contoso invoice. Reference: INV-2048. Total USD 125.00. Due 2026-10-15."),
-                 new("Contact billing@example.com or visit https://example.com/invoice.")] : []), new(descriptor.Id, "ui-test", "fixture", "1"));
+                [new("Contoso invoice. Reference: INV-2048. Total USD 125.00. Due 2026-10-15.",
+                     input.MediaKind == AnalysisMediaKind.Image ? new(.1, .15, .5, .2) : null,
+                     input.MediaKind == AnalysisMediaKind.Video ? TimeSpan.FromSeconds(1) : null),
+                 new("Contact billing@example.com or visit https://example.com/invoice.",
+                     input.MediaKind == AnalysisMediaKind.Image ? new(.1, .5, .5, .15) : null,
+                     input.MediaKind == AnalysisMediaKind.Video ? TimeSpan.FromSeconds(2) : null)] : []), new(descriptor.Id, "ui-test", "fixture", "1"));
+        if (descriptor.Capability == AnalysisCapability.Transcription && UiTestLaunchOptions.DetailsFixture)
+            return AnalyzerOutcome.Success(new TranscriptMetadata("en", [new("First spoken passage", TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(2)),
+                new("Second spoken passage", TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(4))]), new(descriptor.Id, "ui-test", "fixture", "1"));
         if (descriptor.Capability == AnalysisCapability.Description)
             return AnalyzerOutcome.Success(new DescriptionMetadata([new("UI fixture capture")]), new(descriptor.Id, "ui-test", "fixture", "1"));
         return AnalyzerOutcome.Unsuccessful(AnalyzerOutcomeKind.Unsupported, "ui-test-media");

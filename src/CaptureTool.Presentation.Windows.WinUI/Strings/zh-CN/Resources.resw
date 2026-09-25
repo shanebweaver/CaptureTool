@@ -1910,4 +1910,23 @@ SOFTWARE.
   <data name="CapturePane_PendingEdits.Message" xml:space="preserve"><value>这些属性描述源文件，不包括尚未保存的编辑。</value></data>
   <data name="CapturePane_FileUnavailable" xml:space="preserve"><value>文件属性不可用。请在文件准备就绪后刷新。</value></data>
   <data name="CapturePane_FolderUnavailable" xml:space="preserve"><value>无法打开文件夹。</value></data>
+  <data name="CapturePane_DetailsTab.Header" xml:space="preserve"><value>详细信息</value></data>
+  <data name="CapturePane_TextTab" xml:space="preserve"><value>文本</value></data>
+  <data name="CapturePane_Search.PlaceholderText" xml:space="preserve"><value>在此捕获中查找</value></data>
+  <data name="CapturePane_Search.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>在此捕获中查找</value></data>
+  <data name="CapturePane_SourceFilter.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>文本来源</value></data>
+  <data name="CapturePane_Previous.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>上一个结果</value></data>
+  <data name="CapturePane_Next.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>下一个结果</value></data>
+  <data name="CapturePane_Occurrences.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>出现位置</value></data>
+  <data name="CapturePane_OpenLink.Content" xml:space="preserve"><value>打开链接</value></data>
+  <data name="CapturePane_LoadMore.Content" xml:space="preserve"><value>显示更多</value></data>
+  <data name="CapturePane_CopyResults.Content" xml:space="preserve"><value>复制所有结果</value></data>
+  <data name="CapturePane_AllSources" xml:space="preserve"><value>所有来源</value></data>
+  <data name="CapturePane_ScreenText" xml:space="preserve"><value>屏幕文本</value></data>
+  <data name="CapturePane_Speech" xml:space="preserve"><value>语音</value></data>
+  <data name="CapturePane_Codes" xml:space="preserve"><value>二维码</value></data>
+  <data name="CapturePane_PassageCount" xml:space="preserve"><value>{0} 个片段</value></data>
+  <data name="CapturePane_MatchCount" xml:space="preserve"><value>{0} 个匹配片段</value></data>
+  <data name="CapturePane_LocationUnavailable" xml:space="preserve"><value>当前视图中没有可用位置。图像可能已更改，或片段位于裁剪范围之外。</value></data>
+  <data name="CapturePane_ActionFailed" xml:space="preserve"><value>此操作不可用。请刷新捕获详细信息。</value></data>
 </root>

@@ -13,4 +13,5 @@ public interface ICaptureDetailsReader
 {
     Task<CaptureDetailsSnapshot> ReadAsync(string path, CancellationToken cancellationToken = default);
     Task<FileDetailsMetadata?> ReadFileAsync(string path, AnalysisMediaKind kind, CancellationToken cancellationToken = default);
+    Task<bool> VerifySourceAsync(string path, SourceRevision revision, CancellationToken cancellationToken = default);
 }

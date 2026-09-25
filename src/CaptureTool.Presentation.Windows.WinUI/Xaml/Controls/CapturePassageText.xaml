@@ -1,0 +1,10 @@
+<UserControl x:Class="CaptureTool.Presentation.Windows.WinUI.Xaml.Controls.CapturePassageText"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" IsTabStop="False">
+    <TextBlock x:Name="ContentText" TextWrapping="Wrap" IsTextSelectionEnabled="True">
+        <TextBlock.TextHighlighters>
+            <TextHighlighter Background="{ThemeResource SystemControlHighlightAccentBrush}"
+                             Foreground="{ThemeResource SystemControlHighlightAltChromeWhiteBrush}" />
+        </TextBlock.TextHighlighters>
+    </TextBlock>
+</UserControl>

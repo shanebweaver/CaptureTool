@@ -32,6 +32,9 @@ public sealed partial class ImageEditPage : ImageEditPageBase
     {
         InitializeComponent();
         DetailsHost.ToggleControl = DetailsToggle;
+        DetailsHost.Navigate = location => ViewModel.IsLoaded && !ViewModel.IsSourceImageGeometryChanged &&
+            ImageCanvas.ShowCaptureLocation(location.Bounds);
+        DetailsHost.ClearLocation = () => ImageCanvas.ShowCaptureLocation(null);
         InitializeContextMenus();
         InitializeToolbarHosts();
         ViewModel.LoadStateChanged += ViewModel_LoadStateChanged;

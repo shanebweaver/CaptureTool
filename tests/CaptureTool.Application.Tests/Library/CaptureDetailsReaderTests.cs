@@ -63,6 +63,15 @@ public sealed class CaptureDetailsReaderTests
     }
 
     [TestMethod]
+    public async Task WorkingCopyLocationsRequireTheSameVerifiedBytes()
+    {
+        var setup = new Setup();
+        Assert.IsTrue(await setup.Reader.VerifySourceAsync(Setup.Path, setup.Record.SourceRevision));
+        setup.Lease.SetupGet(lease => lease.Revision).Returns(new SourceRevision(new string('b', 64)));
+        Assert.IsFalse(await setup.Reader.VerifySourceAsync(Setup.Path, setup.Record.SourceRevision));
+    }
+
+    [TestMethod]
     public async Task GenerationChangeDuringReadDropsRecordAndRun()
     {
         var setup = new Setup();
