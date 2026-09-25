@@ -18,6 +18,20 @@ namespace CaptureTool.Presentation.Features.AudioEdit;
 public sealed partial class AudioEditPageViewModel : LoadableViewModelBase<AudioFile>
 {
     public string? DetailsSourcePath { get; private set => Set(ref field, value); }
+    private AudioFile? _loadedFile;
+
+    public void ApplyCaptureRename(CaptureTool.Application.Abstractions.Capture.Assets.CaptureFileRename rename)
+    {
+        bool Matches(string? path) => string.Equals(path, rename.OldPath, StringComparison.OrdinalIgnoreCase);
+        if (_loadedFile != null)
+        {
+            if (Matches(_loadedFile.FilePath)) _loadedFile.FilePath = rename.NewPath;
+            if (Matches(_loadedFile.PersistentFilePath)) _loadedFile.PersistentFilePath = rename.NewPath;
+        }
+        if (Matches(AudioPath)) AudioPath = rename.NewPath;
+        if (Matches(DetailsSourcePath)) DetailsSourcePath = rename.NewPath;
+    }
+
 
     private const double WaveformMinBarHeight = 0;
     private const double WaveformMaxBarHeight = 132;
@@ -134,6 +148,7 @@ public sealed partial class AudioEditPageViewModel : LoadableViewModelBase<Audio
     public override void Load(AudioFile audio)
     {
         ThrowIfNotReadyToLoad();
+        _loadedFile = audio;
         StartLoading();
 
         AudioPath = audio.FilePath;

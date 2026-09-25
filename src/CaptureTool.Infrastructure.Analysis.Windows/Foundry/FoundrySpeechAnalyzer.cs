@@ -50,9 +50,8 @@ internal sealed class FoundrySpeechAnalyzer(string id, string alias, bool stream
         if (!SupportsLanguage(input.Language)) return AnalyzerOutcome.Unsuccessful(AnalyzerOutcomeKind.Unsupported, "unsupported-language");
         IModel? model = _model;
         if (model == null) return AnalyzerOutcome.Unsuccessful(AnalyzerOutcomeKind.TemporarilyUnavailable, "model-not-prepared");
-        try
+        await using (await runtime.AcquireModelAsync(model, cancellationToken).ConfigureAwait(false))
         {
-            await model.LoadAsync(cancellationToken).ConfigureAwait(false);
             OpenAIAudioClient client = await model.GetAudioClientAsync(cancellationToken).ConfigureAwait(false);
             var transcript = new TranscriptCollector();
             string? language = null;
@@ -86,7 +85,6 @@ internal sealed class FoundrySpeechAnalyzer(string id, string alias, bool stream
             return AnalyzerOutcome.Success(new TranscriptMetadata(string.IsNullOrWhiteSpace(language) ? null : language,
                 transcript.Segments.OrderBy(segment => segment.Start)), new(id, "foundry-local", model.Id, "1", model.Info.Version.ToString(CultureInfo.InvariantCulture)));
         }
-        finally { await model.UnloadAsync(CancellationToken.None).ConfigureAwait(false); }
     }
 
     private static async Task<string?> TranscribeLiveAsync(OpenAIAudioClient client, AudioChunk chunk, ReadOnlyMemory<byte> samples,

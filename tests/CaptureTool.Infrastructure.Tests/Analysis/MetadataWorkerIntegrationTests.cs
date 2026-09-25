@@ -8,6 +8,27 @@ namespace CaptureTool.Infrastructure.Tests.Analysis;
 public sealed partial class CaptureAnalysisWorkerTests
 {
     [TestMethod]
+    public async Task ExplicitSynopsisUsesPreviouslySavedTextWithoutRerunningSourceModels()
+    {
+        var synopsis = new TestProcessor("synopsis");
+        using var fixture = new Fixture(processors: [new StructuredFactsProcessor(), synopsis]);
+        fixture.Preferred.Execute = (_, _) => Task.FromResult(SourceSuccess(fixture, "Invoice USD 12.00"));
+        var request = await fixture.EnqueueAsync(Ct, capabilities: [AnalysisCapability.TextRecognition]);
+        await DrainAsync(fixture.Worker, Ct);
+        Assert.AreEqual(0, synopsis.Probes);
+        Assert.IsTrue(await fixture.Worker.EnqueueAsync(request with { RequestId = Guid.NewGuid(),
+            ExpectedRunId = request.RequestId, Capabilities = [AnalysisCapability.CaptureSynopsis] }, Ct));
+        await DrainAsync(fixture.Worker, Ct);
+        CollectionAssert.AreEqual(new[] { "preferred" }, fixture.Calls.ToArray());
+        var record = (await fixture.Store.GetAsync(request.CaptureId, cancellationToken: Ct))!;
+        Assert.HasCount(2, record.Results);
+        Assert.AreEqual(1, synopsis.Calls);
+        var result = record.Results.Single(result => result.Payload is CaptureSynopsisMetadata);
+        Assert.IsTrue(result.Derivation!.Matches(record.Results));
+        Assert.AreEqual("Invoice USD 12.00", ((CaptureSynopsisMetadata)result.Payload).Title!.Text);
+    }
+
+    [TestMethod]
     [DataRow(AnalysisMediaKind.Image)]
     [DataRow(AnalysisMediaKind.Audio)]
     [DataRow(AnalysisMediaKind.Video)]
@@ -115,7 +136,7 @@ public sealed partial class CaptureAnalysisWorkerTests
     }
 
     [TestMethod]
-    public async Task RestartResumesEnrichmentWithoutRepeatingCommittedMediaSteps()
+    public async Task RestartDoesNotResumeEnrichmentAndKeepsCommittedMediaMetadata()
     {
         var processor = new TestProcessor("synopsis");
         using var fixture = new Fixture(processors: [processor]);
@@ -130,8 +151,9 @@ public sealed partial class CaptureAnalysisWorkerTests
         using var worker = new CaptureAnalysisWorker(reopened, fixture.Authorization, fixture.Source, fixture.Configuration, fixture.Adapters, fixture.Catalog, [processor]);
         await DrainAsync(worker, Ct);
         Assert.IsEmpty(fixture.Calls);
-        Assert.AreEqual(1, processor.Calls);
-        Assert.AreEqual(AnalysisRunStatus.Completed, (await reopened.GetWorkAsync(request.CaptureId, Ct))!.Run.Status);
+        Assert.AreEqual(0, processor.Calls);
+        Assert.AreEqual(AnalysisRunStatus.Cancelled, (await reopened.GetWorkAsync(request.CaptureId, Ct))!.Run.Status);
+        Assert.AreEqual(source.ResultId, (await reopened.GetAsync(request.CaptureId, cancellationToken: Ct))!.Results.Single().ResultId);
     }
 
     private static AnalyzerOutcome SourceSuccess(Fixture fixture, string text = "Grounded source", AnalysisMediaKind kind = AnalysisMediaKind.Image) =>

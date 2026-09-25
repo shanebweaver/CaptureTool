@@ -14,6 +14,7 @@ public static class WindowsAnalysisServiceCollectionExtensions
         services.AddSingleton<WindowsAnalysisMedia>();
         services.AddSingleton<CaptureTool.Application.Abstractions.Library.CaptureDetails.IMediaFileDetailsReader, WindowsMediaFileDetailsReader>();
         services.AddSingleton<FoundryRuntime>();
+        services.AddSingleton<IAnalysisResources>(provider => provider.GetRequiredService<FoundryRuntime>());
         foreach (var model in metadataModels ?? [])
             services.AddSingleton<IMetadataProcessor>(provider => new FoundryMetadataProcessor(
                 model.Descriptor, model.Alias, provider.GetRequiredService<FoundryRuntime>()));

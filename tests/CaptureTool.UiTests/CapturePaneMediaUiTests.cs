@@ -1,4 +1,4 @@
-using FlaUI.Core.AutomationElements;
+﻿using FlaUI.Core.AutomationElements;
 using FlaUI.Core.Definitions;
 using FlaUI.UIA3;
 using System.Text.Json;
@@ -56,21 +56,23 @@ public sealed partial class ImageEditTextExtractionUiTests
         using var app = LaunchApp(ResolveAppExecutablePath(repo), image, data, temp, "en-US", detailsFixture: true);
         using var automation = new UIA3Automation();
         var window = WaitForMainWindow(app, automation, AppLaunchTimeout);
-        MaximizeWindow(window);
         WaitForElement(window, automation, "ImageEdit_CommandBar", AppLaunchTimeout);
+        MaximizeWindow(window);
         Menu("AppMenu_HomeItem"); OpenRecording(); OpenPane();
         var pane = Element("CaptureDetailsPane");
         WaitForElementByName(pane, automation, video ? "Video" : "Audio", InteractionTimeout);
         window.CaptureToFile(Path.Combine(artifacts, "local-details.png"));
+        Element("Editor_DetailsToggle").Patterns.Toggle.Pattern.Toggle();
+        Thread.Sleep(350);
         Menu("AppMenu_SettingsItem");
-        Element("CaptureMemoryScanning").Patterns.Toggle.Pattern.Toggle();
-        Confirm("EnableScanning", "Enable scanning");
+        Element("CaptureMemoryConsent").Patterns.Toggle.Pattern.Toggle();
+        Confirm("Consent", "Allow local AI");
         // Read exact localized dialog labels from the resources rather than depending on the capture fixture.
         var resources = System.Xml.Linq.XDocument.Load(Path.Combine(repo, "src", "CaptureTool.Presentation.Windows.WinUI", "Strings", "en-US", "Resources.resw"))
             .Root!.Elements("data").ToDictionary(item => (string)item.Attribute("name")!, item => item.Element("value")!.Value);
-        Confirm("ScanExisting", resources["CaptureMemory_ScanExistingAccept"]);
         Menu("AppMenu_HomeItem"); OpenRecording(); OpenPane();
         Element("CapturePane_TextTab").Patterns.SelectionItem.Pattern.Select();
+        Element("CaptureAction_Transcript").Patterns.Invoke.Pattern.Invoke();
         var search = Element("CapturePane_Search").AsTextBox();
         search.Text = "spoken";
         WaitForElementByName(window, automation, "Second spoken passage", TimeSpan.FromSeconds(45));
@@ -84,6 +86,15 @@ public sealed partial class ImageEditTextExtractionUiTests
         string screenshot = Path.Combine(artifacts, "transcript-location.png");
         window.CaptureToFile(screenshot); TestContext.AddResultFile(screenshot);
         Assert.IsNull(window.FindFirstDescendant(automation.ConditionFactory.ByName(resources["CapturePane_ActionFailed"])));
+
+        Element("CapturePane_DetailsTab").Patterns.SelectionItem.Pattern.Select();
+        Element("CaptureName_Edit").Patterns.Invoke.Pattern.Invoke();
+        Element("CaptureName_Input").AsTextBox().Text = "Accepted recording";
+        Element("CaptureName_Save").Patterns.Invoke.Pattern.Invoke();
+        string renamed = Path.Combine(isolated, "Accepted recording" + Path.GetExtension(media));
+        WaitFor(() => File.Exists(renamed) && !File.Exists(media) ? window : null, InteractionTimeout, "rename an open recording");
+        WaitFor(() => Element("CaptureDetailsFileName").Name == Path.GetFileName(renamed) ? window : null,
+            InteractionTimeout, "recording editor tracks the renamed file");
 
         AutomationElement Element(string id) => WaitForElement(window, automation, id, InteractionTimeout);
         void Menu(string id)

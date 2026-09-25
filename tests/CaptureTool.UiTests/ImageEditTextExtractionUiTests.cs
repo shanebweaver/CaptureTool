@@ -188,6 +188,17 @@ public sealed partial class ImageEditTextExtractionUiTests
         }
     }
 
+    private static void RequireUiTestLanguage(string language)
+    {
+        string? requested = Environment.GetEnvironmentVariable("CAPTURETOOL_UI_TEST_LANGUAGE");
+        requested = string.IsNullOrWhiteSpace(requested) ? "en-US" : requested;
+        if (!string.Equals(requested, "all", StringComparison.OrdinalIgnoreCase) &&
+            !string.Equals(requested, language, StringComparison.OrdinalIgnoreCase))
+        {
+            Assert.Inconclusive("UI tests default to en-US. Set CAPTURETOOL_UI_TEST_LANGUAGE to select another language or explicitly request all.");
+        }
+    }
+
     private static bool ShouldRunUiTests()
     {
         return string.Equals(
@@ -582,6 +593,7 @@ public sealed partial class ImageEditTextExtractionUiTests
                 if (!process.HasExited)
                 {
                     process.Kill(entireProcessTree: true);
+                    process.WaitForExit(5000);
                 }
             }
             catch

@@ -23,6 +23,21 @@ namespace CaptureTool.Presentation.Features.VideoEdit;
 public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<VideoFile>, IEditableSession
 {
     public string? DetailsSourcePath { get; private set => Set(ref field, value); }
+    private VideoFile? _loadedFile;
+
+    public void ApplyCaptureRename(CaptureTool.Application.Abstractions.Capture.Assets.CaptureFileRename rename)
+    {
+        bool Matches(string? path) => string.Equals(path, rename.OldPath, StringComparison.OrdinalIgnoreCase);
+        if (_loadedFile != null)
+        {
+            if (Matches(_loadedFile.FilePath)) _loadedFile.FilePath = rename.NewPath;
+            if (Matches(_loadedFile.PersistentFilePath)) _loadedFile.PersistentFilePath = rename.NewPath;
+        }
+        if (Matches(_originalVideoPath)) _originalVideoPath = rename.NewPath;
+        if (Matches(VideoPath)) VideoPath = rename.NewPath;
+        if (Matches(DetailsSourcePath)) DetailsSourcePath = rename.NewPath;
+    }
+
 
     private const double TrimComparisonToleranceSeconds = 0.01;
 
@@ -272,6 +287,7 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
     public override void Load(VideoFile video)
     {
         ThrowIfNotReadyToLoad();
+        _loadedFile = video;
         StartLoading();
 
         _originalVideoPath = video.FilePath;

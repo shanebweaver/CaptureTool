@@ -35,6 +35,7 @@ public sealed partial class VideoEditPage : VideoEditPageBase
     {
         InitializeComponent();
         DetailsHost.ToggleControl = DetailsToggle;
+        DetailsHost.FileRenamed = ViewModel.ApplyCaptureRename;
         DetailsHost.Navigate = location =>
         {
             if (!ViewModel.IsMediaReady || ActiveMediaPlayer == null || location.Time is not { } time ||

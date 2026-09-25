@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -734,7 +734,7 @@
     <value>Лицензии сторонних разработчиков</value>
   </data>
   <data name="About_ThirdParty_DialogContent" xml:space="preserve">
-    <value>This application uses open-source software. Below are the third-party components and their licenses.
+    <value>Это приложение использует программное обеспечение с открытым исходным кодом. Ниже перечислены сторонние компоненты и их лицензии.
 
 CommunityToolkit.WinUI.Controls.Segmented
 Copyright © .NET Foundation and Contributors
@@ -1312,37 +1312,37 @@ SOFTWARE.
     <value>Фон</value>
   </data>
   <data name="ImageEdit_SuperResolutionButton.Label" xml:space="preserve">
-    <value>Super Resolution</value>
+    <value>Сверхвысокое разрешение</value>
   </data>
   <data name="ImageEdit_SuperResolutionButton.AccessKey" xml:space="preserve">
     <value>U</value>
   </data>
   <data name="ImageEdit_SuperResolutionButton.ToolTipService.ToolTip" xml:space="preserve">
-    <value>Show or hide the AI super-resolution image</value>
+    <value>Показать или скрыть изображение с повышенным с помощью ИИ разрешением</value>
   </data>
   <data name="ImageEdit_SuperResolutionProgressRing.AutomationProperties.Name" xml:space="preserve">
     <value>Улучшение изображения</value>
   </data>
   <data name="ImageSuperResolutionStatus_NotSupported" xml:space="preserve">
-    <value>Super Resolution is not supported on this PC.</value>
+    <value>Сверхвысокое разрешение не поддерживается на этом ПК.</value>
   </data>
   <data name="ImageSuperResolutionStatus_Disabled" xml:space="preserve">
-    <value>Super Resolution is disabled on this PC.</value>
+    <value>Сверхвысокое разрешение отключено на этом ПК.</value>
   </data>
   <data name="ImageSuperResolutionStatus_NotAvailable" xml:space="preserve">
-    <value>Super Resolution is not available.</value>
+    <value>Сверхвысокое разрешение недоступно.</value>
   </data>
   <data name="ImageSuperResolutionStatus_PreparationFailed" xml:space="preserve">
-    <value>Super Resolution could not be prepared.</value>
+    <value>Не удалось подготовить сверхвысокое разрешение.</value>
   </data>
   <data name="ImageSuperResolutionStatus_NotReady" xml:space="preserve">
-    <value>Super Resolution is not ready.</value>
+    <value>Сверхвысокое разрешение ещё не готово.</value>
   </data>
   <data name="ImageSuperResolutionStatus_TooLarge" xml:space="preserve">
-    <value>This image is too large for Super Resolution.</value>
+    <value>Это изображение слишком велико для повышения разрешения.</value>
   </data>
   <data name="ImageSuperResolutionStatus_Failed" xml:space="preserve">
-    <value>Super Resolution failed.</value>
+    <value>Не удалось повысить разрешение.</value>
   </data>
   <data name="ImageEdit_EditInPaintButton.Label" xml:space="preserve">
     <value>Редактировать в Paint</value>
@@ -1360,46 +1360,46 @@ SOFTWARE.
     <value>Открыть в Clipchamp</value>
   </data>
   <data name="About_SendFeedbackButton.AutomationProperties.Name" xml:space="preserve">
-    <value>Send feedback</value>
+    <value>Отправить отзыв</value>
   </data>
   <data name="About_SendFeedbackButton.ToolTipService.ToolTip" xml:space="preserve">
-    <value>Open Feedback Hub</value>
+    <value>Открыть Центр отзывов</value>
   </data>
   <data name="About_SendFeedbackButtonLabel.Text" xml:space="preserve">
-    <value>Send feedback</value>
+    <value>Отправить отзыв</value>
   </data>
   <data name="StoreReviewPrompt_Title" xml:space="preserve">
-    <value>Enjoying Capture Tool?</value>
+    <value>Вам нравится Capture Tool?</value>
   </data>
   <data name="StoreReviewPrompt_Content" xml:space="preserve">
-    <value>A quick Microsoft Store review helps other people find the app.</value>
+    <value>Краткий отзыв в Microsoft Store поможет другим найти приложение.</value>
   </data>
   <data name="StoreReviewPrompt_ReviewButton" xml:space="preserve">
-    <value>Leave a review</value>
+    <value>Оставить отзыв</value>
   </data>
   <data name="StoreReviewPrompt_RemindLaterButton" xml:space="preserve">
-    <value>Remind me later</value>
+    <value>Напомнить позже</value>
   </data>
   <data name="StoreReviewPrompt_DontShowAgainButton" xml:space="preserve">
-    <value>Don't show again</value>
+    <value>Больше не показывать</value>
   </data>
   <data name="Settings_StoreHeaderLabel.Text" xml:space="preserve">
-    <value>Store</value>
+    <value>Microsoft Store</value>
   </data>
   <data name="Settings_StoreReview_HeaderLabel.Text" xml:space="preserve">
-    <value>Store Review reminders</value>
+    <value>Напоминания об оценке в Store</value>
   </data>
   <data name="Settings_StoreReview_SubtitleLabel.Text" xml:space="preserve">
-    <value>Ask for a Microsoft Store review after enough time and app launches.</value>
+    <value>Предлагать оставить отзыв в Microsoft Store спустя некоторое время и после нескольких запусков приложения.</value>
   </data>
   <data name="Settings_StoreReview_LinkLabel.Text" xml:space="preserve">
-    <value>Leave a Microsoft Store review</value>
+    <value>Оставить отзыв в Microsoft Store</value>
   </data>
   <data name="Settings_StoreReviewReminders_Toggle.OnContent" xml:space="preserve">
-    <value>On</value>
+    <value>Вкл.</value>
   </data>
   <data name="Settings_StoreReviewReminders_Toggle.OffContent" xml:space="preserve">
-    <value>Off</value>
+    <value>Выкл.</value>
   </data>
   <data name="ImageEdit_TextExtractionButton.Label" xml:space="preserve">
     <value>Распознавание текста</value>
@@ -1729,16 +1729,13 @@ SOFTWARE.
     <value>ИИ</value>
   </data>
   <data name="CaptureMemory_Scanning.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
-    <value>Автоматически анализировать новые записи</value>
+    <value>Автоматически анализировать снимки и записи</value>
   </data>
   <data name="CaptureMemory_Consent.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>Разрешить локальные функции ИИ</value>
   </data>
   <data name="CaptureMemory_SettingsDescription.Text" xml:space="preserve">
     <value>Анализируйте записи с помощью ИИ на устройстве и безопасно сохраняйте полученную информацию.</value>
-  </data>
-  <data name="CaptureMemory_Scan.Content" xml:space="preserve">
-    <value>Анализировать</value>
   </data>
   <data name="CaptureMemory_Delete.Content" xml:space="preserve">
     <value>Удалить</value>
@@ -1750,28 +1747,19 @@ SOFTWARE.
     <value>Анализ записей…</value>
   </data>
   <data name="CaptureMemory_ConsentTitle" xml:space="preserve">
-    <value>Разрешить локальные функции ИИ?</value>
+    <value>Откройте больше в каждом снимке</value>
   </data>
   <data name="CaptureMemory_ConsentContent" xml:space="preserve">
-    <value>Включите локальные функции ИИ и автоматический анализ новых снимков и записей. Обработка выполняется на этом ПК, а результаты анализа хранятся в защищённом виде. Может потребоваться загрузка моделей. Вы можете отключить анализ или удалить его результаты в настройках.</value>
+    <value>Локальный ИИ используется только при выборе действия. Автоматического анализа нет. Результаты безопасно хранятся на этом компьютере. Может потребоваться загрузка моделей. Вы можете отозвать согласие или удалить результаты в настройках.</value>
   </data>
   <data name="CaptureMemory_ConsentAccept" xml:space="preserve">
-    <value>Разрешить</value>
-  </data>
-  <data name="CaptureMemory_ScanExistingTitle" xml:space="preserve">
-    <value>Анализировать существующие записи?</value>
-  </data>
-  <data name="CaptureMemory_ScanExistingContent" xml:space="preserve">
-    <value>Анализ новых записей включён. Также проанализировать доступные записи, ранее созданные в CaptureTool? Существующая информация сохраняется до её замены результатами успешного анализа.</value>
-  </data>
-  <data name="CaptureMemory_ScanExistingAccept" xml:space="preserve">
-    <value>Анализировать записи</value>
+    <value>Разрешить локальный ИИ</value>
   </data>
   <data name="CaptureMemory_DeleteMetadataTitle" xml:space="preserve">
     <value>Удалить данные анализа?</value>
   </data>
   <data name="CaptureMemory_DeleteMetadataContent" xml:space="preserve">
-    <value>Удалить сохранённые данные анализа и остановить ожидающие задачи? Файлы записей и настройка анализа будут сохранены.</value>
+    <value>Удалить сохранённый анализ и отменить ожидающие действия? Файлы и согласие на ИИ будут сохранены.</value>
   </data>
   <data name="CaptureMemory_DeleteMetadataAccept" xml:space="preserve">
     <value>Удалить данные</value>
@@ -1800,18 +1788,12 @@ SOFTWARE.
   <data name="AiSettings_ConsentHeader.Text" xml:space="preserve">
     <value>Разрешить локальные функции ИИ</value>
   </data>
-  <data name="AiSettings_ConsentDescription.Text" xml:space="preserve"><value>Согласие на анализ снимков и локальное редактирование с ИИ. Отдельное извлечение текста запрашивает согласие отдельно.</value></data>
+  <data name="AiSettings_ConsentDescription.Text" xml:space="preserve"><value>Разрешает запрошенные вами действия локального ИИ. Снимки и записи никогда не анализируются автоматически.</value></data>
   <data name="AiSettings_ScanningHeader.Text" xml:space="preserve">
-    <value>Автоматически анализировать новые записи</value>
+    <value>Автоматически анализировать снимки и записи</value>
   </data>
   <data name="AiSettings_ScanningDescription.Text" xml:space="preserve">
-    <value>Анализировать изображения, аудио и видео после захвата.</value>
-  </data>
-  <data name="AiSettings_ScanHeader.Text" xml:space="preserve">
-    <value>Анализировать существующие записи</value>
-  </data>
-  <data name="AiSettings_ScanDescription.Text" xml:space="preserve">
-    <value>Создать или обновить сохранённый анализ существующих записей.</value>
+    <value>Анализировать новые изображения, аудио и видео. Старые снимки и записи анализируются только при открытии.</value>
   </data>
   <data name="AiSettings_DeleteHeader.Text" xml:space="preserve">
     <value>Удалить анализ записей</value>
@@ -1830,9 +1812,7 @@ SOFTWARE.
   <data name="CaptureDetails_Evidence.Header" xml:space="preserve"><value>Показать источник</value></data>
   <data name="CaptureDetails_Copy.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Копировать текст</value></data>
   <data name="CaptureDetails_Copy.ToolTipService.ToolTip" xml:space="preserve"><value>Копировать текст</value></data>
-  <data name="CaptureDetails_Refresh.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Обновить сведения</value></data>
-  <data name="CaptureDetails_Refresh.ToolTipService.ToolTip" xml:space="preserve"><value>Обновить сохранённые сведения</value></data>
-  <data name="CaptureDetails_CopyAll.Content" xml:space="preserve"><value>Копировать весь текст</value></data>
+<data name="CaptureDetails_CopyAll.Content" xml:space="preserve"><value>Копировать весь текст</value></data>
   <data name="CaptureDetails_OverviewHeading.Text" xml:space="preserve"><value>Обзор ИИ</value></data>
   <data name="CaptureDetails_SuggestionsHint.Text" xml:space="preserve"><value>Сгенерированные предложения. При необходимости проверьте источник.</value></data>
   <data name="CaptureDetails_FactsHeading.Text" xml:space="preserve"><value>Полезная информация</value></data>
@@ -1887,9 +1867,9 @@ SOFTWARE.
   <data name="CaptureDetails_SourceChanged" xml:space="preserve"><value>Файл изменился после анализа. Повторите анализ в настройках.</value></data>
   <data name="CaptureDetails_SourceUnavailable" xml:space="preserve"><value>Файл записи недоступен. Невозможно проверить сохранённые сведения.</value></data>
   <data name="CaptureDetails_Analyzing" xml:space="preserve"><value>Анализ ожидает выполнения или уже идёт. Сведения обновляются по мере готовности.</value></data>
-  <data name="CaptureDetails_Paused" xml:space="preserve"><value>Анализ приостановлен. Включите сканирование в настройках.</value></data>
+  <data name="CaptureDetails_Paused" xml:space="preserve"><value>Анализ остановлен. Выберите действие для повторной попытки.</value></data>
   <data name="CaptureDetails_Partial" xml:space="preserve"><value>Часть анализа не завершена. Показаны доступные сохранённые результаты.</value></data>
-  <data name="CaptureDetails_Empty" xml:space="preserve"><value>Сохранённых сведений пока нет. Анализ существующих записей доступен в настройках.</value></data>
+  <data name="CaptureDetails_Empty" xml:space="preserve"><value>Сохранённого текста пока нет. Выберите действие выше, чтобы извлечь нужные данные.</value></data>
   <data name="CaptureDetails_Retained" xml:space="preserve"><value>Некоторые результаты получены при предыдущем анализе этого же файла.</value></data>
   <data name="CaptureDetails_Limited" xml:space="preserve"><value>Часть содержимого или результатов опущена. Эти сведения могут охватывать не всю запись.</value></data>
   <data name="CaptureDetails_Copied" xml:space="preserve"><value>Текст скопирован.</value></data>
@@ -1927,17 +1907,18 @@ SOFTWARE.
   <data name="CapturePane_MatchCount" xml:space="preserve"><value>Совпадений: {0}</value></data>
   <data name="CapturePane_LocationUnavailable" xml:space="preserve"><value>В текущем виде нет доступной позиции. Возможно, изображение изменено или фрагмент находится за пределами обрезки.</value></data>
   <data name="CapturePane_ActionFailed" xml:space="preserve"><value>Действие недоступно. Обновите сведения о записи.</value></data>
-  <data name="CaptureNaming_Header.Text" xml:space="preserve"><value>Автоматически называть новые снимки и записи</value></data>
-  <data name="CaptureNaming_Description.Text" xml:space="preserve"><value>Локальный ИИ-анализ создаёт имена новых снимков и записей и предлагает их при сохранении. Имена существующих файлов не меняются. Удаление анализа сохраняет выбранные имена.</value></data>
-  <data name="CaptureNaming_Toggle.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Автоматически называть новые снимки и записи</value></data>
+  <data name="CaptureNaming_Header.Text" xml:space="preserve"><value>Предлагать имена для новых записей</value></data>
+  <data name="CaptureNaming_Description.Text" xml:space="preserve"><value>ИИ предлагает имена файлов после создания записи. Имя файла не меняется, пока вы не примете предложение.</value></data>
+  <data name="CaptureNaming_Toggle.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Предлагать имена для новых записей</value></data>
   <data name="CaptureNaming_Edit.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Изменить имя</value></data>
   <data name="CaptureNaming_Input.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Имя снимка или записи</value></data>
-  <data name="CaptureNaming_EditHint.Text" xml:space="preserve"><value>Это имя используется в приложении и при сохранении. Имя существующего файла не меняется.</value></data>
-  <data name="CaptureNaming_Save.Content" xml:space="preserve"><value>Сохранить имя</value></data>
-  <data name="CaptureNaming_Cancel.Content" xml:space="preserve"><value>Отмена</value></data>
+  <data name="CaptureNaming_Save.ToolTipService.ToolTip" xml:space="preserve"><value>Переименовать файл</value></data>
+  <data name="CaptureNaming_Save.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Переименовать файл</value></data>
+  <data name="CaptureNaming_Cancel.ToolTipService.ToolTip" xml:space="preserve"><value>Отмена</value></data>
+  <data name="CaptureNaming_Cancel.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Отмена</value></data>
   <data name="CaptureNaming_FileName.Text" xml:space="preserve"><value>Имя файла</value></data>
   <data name="CaptureNaming_Invalid" xml:space="preserve"><value>Введите имя в одну строку длиной от 1 до 160 символов.</value></data>
-  <data name="CaptureNaming_SaveFailed" xml:space="preserve"><value>Не удалось сохранить имя или настройку именования. Повторите попытку.</value></data>
+  <data name="CaptureNaming_SaveFailed" xml:space="preserve"><value>Не удалось переименовать файл. Убедитесь, что имя не занято и файл доступен для записи.</value></data>
   <data name="AiFeatureConsentDialog_TextExtractionTitle" xml:space="preserve">
     <value>Разрешить распознавание текста?</value>
   </data>
@@ -1953,19 +1934,60 @@ SOFTWARE.
   <data name="AiFeatureConsentDialog_CancelButton" xml:space="preserve">
     <value>Отмена</value>
   </data>
-  <data name="CaptureMemory_EnableScanningTitle" xml:space="preserve"><value>Откройте больше в каждом снимке</value></data>
   <data name="CaptureWelcome_Eyebrow.Text" xml:space="preserve"><value>ЛОКАЛЬНЫЙ ИИ</value></data>
   <data name="CaptureWelcome_Hero.Text" xml:space="preserve"><value>Немного магии</value></data>
-  <data name="CaptureWelcome_Text.Text" xml:space="preserve"><value>Находите и копируйте слова на изображениях.</value></data>
-  <data name="CaptureWelcome_Recording.Text" xml:space="preserve"><value>Исследуйте речь и текст на экране в записях.</value></data>
-  <data name="CaptureWelcome_Names.Text" xml:space="preserve"><value>Давайте новым снимкам и записям понятные названия.</value></data>
-  <data name="CaptureWelcome_Consent.Text" xml:space="preserve"><value>Включите локальные функции ИИ и автоматический анализ новых снимков и записей. Обработка выполняется на этом ПК, а результаты анализа хранятся в защищённом виде. Может потребоваться загрузка моделей. Вы можете отключить анализ или удалить его результаты в настройках.</value></data>
-  <data name="CaptureMemory_EnableScanningAccept" xml:space="preserve"><value>Включить анализ</value></data>
+  <data name="CaptureWelcome_Text.Text" xml:space="preserve"><value>Изображения: извлекайте текст, находите QR-коды и создавайте описания.</value></data>
+  <data name="CaptureWelcome_Recording.Text" xml:space="preserve"><value>Видео: изучайте текст на экране, описания и речь.</value></data>
+  <data name="CaptureWelcome_Names.Text" xml:space="preserve"><value>Аудио: превращайте записи в читаемый текст.</value></data>
+  <data name="CaptureWelcome_Consent.Text" xml:space="preserve"><value>Локальный ИИ используется только при выборе действия. Автоматического анализа нет. Результаты безопасно хранятся на этом компьютере. Может потребоваться загрузка моделей. Вы можете отозвать согласие или удалить результаты в настройках.</value></data>
   <data name="CaptureWelcome_NotNow" xml:space="preserve"><value>Не сейчас</value></data>
-  <data name="CapturePane_EnableAnalysis.Content" xml:space="preserve"><value>Включить анализ снимков</value></data>
   <data name="TextExtractionSettings_Header.Text" xml:space="preserve"><value>Извлечение текста</value></data>
   <data name="TextExtractionSettings_Description.Text" xml:space="preserve"><value>Читайте текст и QR-коды с помощью извлечения текста в редакторе изображений.</value></data>
-  <data name="TextExtractionSettings_Consent.Content" xml:space="preserve"><value>Разрешить</value></data>
-  <data name="TextExtractionSettings_Consent.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Разрешить отдельное извлечение текста</value></data>
+<data name="TextExtractionSettings_Consent.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Разрешить отдельное извлечение текста</value></data>
   <data name="TextExtractionSettings_SaveFailed" xml:space="preserve"><value>Не удалось сохранить разрешение на извлечение текста. Повторите попытку.</value></data>
+  <data name="AddOns_ChromaKeyPurchaseNotCompletedLabel.Text" xml:space="preserve"><value>Покупка не завершена. Попробуйте ещё раз.</value></data>
+  <data name="AudioCapture_StopCaptureFailedMessage" xml:space="preserve"><value>Не удалось завершить запись. Попробуйте записать ещё раз.</value></data>
+  <data name="AudioEdit_LoadingMediaText.Text" xml:space="preserve"><value>Открытие аудио…</value></data>
+  <data name="AudioEdit_MediaFailureOpenFolderButton.Content" xml:space="preserve"><value>Открыть папку с аудиозаписями</value></data>
+  <data name="ErrorPage_ExitAppButtonLabel.Text" xml:space="preserve"><value>Выйти из приложения</value></data>
+  <data name="ErrorPage_RestartFailedLabel.Text" xml:space="preserve"><value>Не удалось перезапустить приложение. Попробуйте ещё раз или выйдите из приложения.</value></data>
+  <data name="MediaFailure_FileUnavailable" xml:space="preserve"><value>Этот медиафайл недоступен. Убедитесь, что он ещё существует, и попробуйте снова.</value></data>
+  <data name="MediaFailure_Finalization" xml:space="preserve"><value>Не удалось завершить запись. Откройте папку с записями, чтобы проверить файл.</value></data>
+  <data name="MediaFailure_Playback" xml:space="preserve"><value>Не удалось воспроизвести этот медиафайл. Попробуйте ещё раз или откройте папку с записями.</value></data>
+  <data name="MediaFailure_RetryButton.Content" xml:space="preserve"><value>Повторить</value></data>
+  <data name="MediaFailure_Unsupported" xml:space="preserve"><value>Этот формат медиафайла или кодек не поддерживается.</value></data>
+  <data name="VideoEdit_LoadingMediaText.Text" xml:space="preserve"><value>Открытие видео…</value></data>
+  <data name="VideoEdit_MediaFailureOpenFolderButton.Content" xml:space="preserve"><value>Открыть папку с записями экрана</value></data>
+  <data name="AddOns_ItemUnknown" xml:space="preserve"><value>Загрузка…</value></data>
+  <data name="ChromaKeyToolbar_KeyColorLabel.Text" xml:space="preserve"><value>Ключевой цвет</value></data>
+  <data name="Common_BackButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Назад</value></data>
+  <data name="MainWindow_DismissNotificationButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Закрыть уведомление</value></data>
+  <data name="MainWindow_DismissNotificationButton.ToolTipService.ToolTip" xml:space="preserve"><value>Закрыть</value></data>
+  <data name="AppMenu_NoRecentCaptures" xml:space="preserve"><value>Нет</value></data>
+  <data name="ImageEdit_DeleteShape" xml:space="preserve"><value>Удалить</value></data>
+  <data name="ImageCanvas_CopyQrCodeValue" xml:space="preserve"><value>Копировать содержимое QR-кода</value></data>
+  <data name="ImageCanvas_OpenQrCodeLink" xml:space="preserve"><value>Открыть ссылку из QR-кода</value></data>
+  <data name="ImageCanvas_QrCodeValue" xml:space="preserve"><value>QR-код: {0}</value></data>
+  <data name="Common_MediaType_Image" xml:space="preserve"><value>Изображение</value></data>
+  <data name="Common_MediaType_Video" xml:space="preserve"><value>Видео</value></data>
+  <data name="Common_MediaType_Audio" xml:space="preserve"><value>Аудио</value></data>
+  <data name="Common_MediaType_File" xml:space="preserve"><value>Файл</value></data>
+  <data name="CaptureNaming_Generating.Text" xml:space="preserve"><value>Подбираем имя…</value></data>
+  <data name="CaptureNaming_Suggestion.Text" xml:space="preserve"><value>Предлагаемое имя файла</value></data>
+  <data name="CaptureNaming_Accept.Content" xml:space="preserve"><value>Использовать это имя</value></data>
+  <data name="CapturePane_GeneratingSummary.Text" xml:space="preserve"><value>Подготовка сводки…</value></data>
+  <data name="CaptureAction_Description" xml:space="preserve"><value>Создать описание</value></data>
+  <data name="CaptureAction_Summary" xml:space="preserve"><value>Создать сводку</value></data>
+  <data name="CaptureAction_Name" xml:space="preserve"><value>Предложить имя</value></data>
+  <data name="CaptureAction_Text" xml:space="preserve"><value>Извлечь текст</value></data>
+  <data name="CaptureAction_Qr" xml:space="preserve"><value>Найти QR-коды</value></data>
+  <data name="CaptureAction_Transcript" xml:space="preserve"><value>Расшифровать аудио</value></data>
+  <data name="CaptureAction_DescriptionHeading.Text" xml:space="preserve"><value>Описание с помощью ИИ</value></data>
+  <data name="CaptureAction_SummaryInputs.Text" xml:space="preserve"><value>Сначала извлеките текст, расшифруйте аудио или создайте описание. Сводки и предлагаемые имена используют эти сохранённые результаты.</value></data>
+  <data name="CaptureAction_NoText" xml:space="preserve"><value>Текст не найден.</value></data>
+  <data name="CaptureAction_NoQr" xml:space="preserve"><value>QR-коды не найдены.</value></data>
+  <data name="CaptureAction_NoSpeech" xml:space="preserve"><value>Речь не найдена.</value></data>
+  <data name="CaptureAction_NoDescription" xml:space="preserve"><value>Описание не создано.</value></data>
+  <data name="CaptureAction_Unavailable" xml:space="preserve"><value>Это действие недоступно на данном устройстве.</value></data>
+  <data name="CaptureAction_Failed" xml:space="preserve"><value>Не удалось завершить действие. Попробуйте ещё раз.</value></data>
 </root>

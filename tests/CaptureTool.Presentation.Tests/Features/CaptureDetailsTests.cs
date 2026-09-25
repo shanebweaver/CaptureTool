@@ -1,4 +1,4 @@
-using CaptureTool.Application.Abstractions.Capture.Assets;
+﻿using CaptureTool.Application.Abstractions.Capture.Assets;
 using CaptureTool.Domain.Capture;
 using CaptureTool.Application.Abstractions.Analysis;
 using CaptureTool.Application.Abstractions.Clipboard;
@@ -9,6 +9,7 @@ using CaptureTool.Domain;
 using CaptureTool.Domain.Analysis;
 using CaptureTool.Domain.Analysis.Payloads;
 using CaptureTool.Presentation.Features.CaptureDetails;
+using CaptureTool.Presentation.Notifications;
 using Moq;
 
 namespace CaptureTool.Presentation.Tests.Features;
@@ -17,9 +18,108 @@ namespace CaptureTool.Presentation.Tests.Features;
 public sealed class CaptureDetailsTests
 {
     [TestMethod]
+    public async Task PendingConsentDisablesOtherActionsAndCannotQueueExtraWork()
+    {
+        var setup = new Setup();
+        setup.Reader.Setup(x => x.ReadAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new CaptureDetailsSnapshot(CaptureDetailsStatus.Empty));
+        var consent = new TaskCompletionSource<bool>();
+        setup.Memory.Setup(x => x.EnsureConsentAsync(It.IsAny<CancellationToken>())).Returns(consent.Task);
+        using var vm = setup.ViewModel;
+        await vm.OpenAsync("capture.png", AnalysisMediaKind.Image);
+        Task requested = vm.DescriptionAction.Command.ExecuteAsync(null);
+        Assert.IsFalse(vm.TextAction.Command.CanExecute(null));
+        await vm.TextAction.Command.ExecuteAsync(null);
+        consent.SetResult(true);
+        await requested;
+        setup.Memory.Verify(x => x.AnalyzeAsync("capture.png", AnalysisCapability.Description, It.IsAny<CancellationToken>()), Times.Once);
+        setup.Memory.Verify(x => x.AnalyzeAsync("capture.png", AnalysisCapability.TextRecognition, It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [TestMethod]
+    public async Task EmptySavedResultIsExplainedWithoutEnablingRepeatedInference()
+    {
+        var setup = new Setup();
+        Guid run = Guid.NewGuid();
+        var record = new CaptureAnalysisRecord(CaptureId.New(), AnalysisMediaKind.Image, new(new string('a', 64)), "plan", run,
+            [Result(new TextRecognitionMetadata([]), run)]);
+        setup.Reader.Setup(x => x.ReadAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new CaptureDetailsSnapshot(CaptureDetailsStatus.Available, record));
+        using var vm = setup.ViewModel;
+        await vm.OpenAsync("capture.png", AnalysisMediaKind.Image);
+        Assert.IsFalse(vm.TextAction.Command.CanExecute(null));
+        Assert.AreEqual("CaptureAction_NoText", vm.TextAction.Status);
+        Assert.IsTrue(vm.QrAction.Command.CanExecute(null));
+        Assert.IsFalse(vm.SummaryAction.Command.CanExecute(null));
+    }
+
+    [TestMethod]
     [DataRow(false)]
     [DataRow(true)]
-    public async Task TextTabOffersAnalysisConsentOnlyWhenNeeded(bool consent)
+    public async Task ExplicitActionRequestsOnlyItsCapabilityAfterConsent(bool accepted)
+    {
+        var memory = new Mock<ICaptureMemoryService>();
+        memory.SetupGet(x => x.State).Returns(new CaptureMemoryState(CaptureMemoryPolicy.Disabled(), true, new(false, true), new(AnalysisActivity.Idle)));
+        var onboarding = new Mock<ICaptureAnalysisOnboarding>();
+        onboarding.Setup(x => x.EnableAsync(It.IsAny<CancellationToken>())).ReturnsAsync(accepted);
+        var reader = new Mock<ICaptureDetailsReader>();
+        reader.Setup(x => x.ReadAsync(It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync(new CaptureDetailsSnapshot(CaptureDetailsStatus.Empty));
+        using var vm = new CaptureDetailsViewModel(reader.Object, memory.Object, Mock.Of<IClipboardService>(),
+            Localization(), Mock.Of<ITaskEnvironment>(), Mock.Of<IAppNotificationService>(), onboarding: onboarding.Object);
+        await vm.OpenAsync("capture.png", AnalysisMediaKind.Image);
+        Assert.IsTrue(vm.DescriptionAction.Command.CanExecute(null));
+        Assert.IsFalse(vm.SummaryAction.Command.CanExecute(null));
+        Assert.IsFalse(vm.NameAction.Command.CanExecute(null));
+        onboarding.VerifyNoOtherCalls();
+        await vm.DescriptionAction.Command.ExecuteAsync(null);
+        onboarding.Verify(x => x.EnableAsync(It.IsAny<CancellationToken>()), Times.Once);
+        memory.Verify(x => x.AnalyzeAsync("capture.png", AnalysisCapability.Description, It.IsAny<CancellationToken>()), accepted ? Times.Once() : Times.Never());
+        memory.Verify(x => x.AnalyzeAsync(It.IsAny<string>(), It.Is<AnalysisCapability>(c => c != AnalysisCapability.Description), It.IsAny<CancellationToken>()), Times.Never());
+    }
+
+    [TestMethod]
+    public async Task SummaryLoadingIsPerCaptureAndStopsOnCompletionOrRevocation()
+    {
+        var setup = new Setup();
+        using var vm = setup.ViewModel;
+        var run = new AnalysisRun(Guid.NewGuid(), Guid.NewGuid(), 1, "test", null, AnalysisRunStatus.Queued,
+            [AnalysisCapability.CaptureSynopsis], []);
+        CaptureDetailsSnapshot snapshot = new(CaptureDetailsStatus.Empty, Run: run);
+        setup.Reader.Setup(reader => reader.ReadAsync(It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync(() => snapshot);
+        await vm.OpenAsync("capture.png", AnalysisMediaKind.Image);
+        Assert.IsTrue(vm.IsGeneratingSummary);
+        snapshot = snapshot with { Run = run.Finish(AnalysisRunStatus.Failed) };
+        await vm.RefreshAsync();
+        Assert.IsFalse(vm.IsGeneratingSummary);
+        snapshot = snapshot with { Run = run };
+        await vm.RefreshAsync();
+        Assert.IsTrue(vm.IsGeneratingSummary);
+        setup.State = setup.State with { Policy = CaptureMemoryPolicy.Disabled() };
+        setup.Memory.Raise(memory => memory.StateChanged += null);
+        Assert.IsFalse(vm.IsGeneratingSummary);
+    }
+
+    [TestMethod]
+    public void MetadataOverlayProjectsTextAndQrBoundsWithoutRunningOcr()
+    {
+        var bounds = new NormalizedBounds(.1, .2, .3, .4);
+        CaptureTextPassage[] passages =
+        [
+            new("text", CaptureTextSource.ImageText, "text", "Invoice", [new("text", null, bounds)]),
+            new("qr", CaptureTextSource.QrCode, "QR", "https://example.com", [new("QR", null, bounds)]),
+            new("speech", CaptureTextSource.Speech, "speech", "Spoken words", [new("0:01", TimeSpan.FromSeconds(1), null)])
+        ];
+        var overlay = CaptureImageTextOverlay.Create(passages, new(1000, 500));
+        Assert.AreEqual(new System.Drawing.RectangleF(100, 100, 300, 200), overlay.Text.Single().Bounds);
+        Assert.AreEqual("Invoice", overlay.Text.Single().Text);
+        Assert.AreEqual("https://example.com", overlay.QrCodes.Single().Value);
+        Assert.IsEmpty(CaptureImageTextOverlay.Create(passages, System.Drawing.Size.Empty).Text);
+    }
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task PassivePaneOpeningNeverPromptsForConsent(bool consent)
     {
         var memory = new Mock<ICaptureMemoryService>();
         memory.SetupGet(x => x.State).Returns(new CaptureMemoryState(new(false, consent, Guid.NewGuid(), 0), true, new(false, true), new(AnalysisActivity.Idle)));
@@ -28,34 +128,38 @@ public sealed class CaptureDetailsTests
         var text = new Mock<ILocalizationService>();
         text.Setup(x => x.GetString(It.IsAny<string>())).Returns<string>(key => key);
         using var vm = new CaptureDetailsViewModel(Mock.Of<ICaptureDetailsReader>(), memory.Object, Mock.Of<IClipboardService>(),
-            text.Object, Mock.Of<ITaskEnvironment>(), onboarding: onboarding.Object);
+            text.Object, Mock.Of<ITaskEnvironment>(), Mock.Of<IAppNotificationService>(), onboarding: onboarding.Object);
         onboarding.VerifyNoOtherCalls();
-        await vm.OpenTextAsync();
-        onboarding.Verify(x => x.EnableAsync(It.IsAny<CancellationToken>()), consent ? Times.Never() : Times.Once());
+        await vm.OpenAsync("capture.png", AnalysisMediaKind.Image);
+        onboarding.Verify(x => x.EnableAsync(It.IsAny<CancellationToken>()), Times.Never());
     }
 
     [TestMethod]
-    public async Task DraftNameSurvivesBackgroundTitleAndUserSaveWorksWithoutConsent()
+    public async Task DraftNameSurvivesRequestedTitleAndUserSaveWorksWithoutConsent()
     {
         var names = new Mock<ICaptureNamingService>();
         CaptureName? current = null;
-        names.Setup(service => service.GetNameAsync(It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync(() => current);
-        names.Setup(service => service.SetNameAsync(It.IsAny<string>(), CaptureFileType.Image, "User draft", It.IsAny<CancellationToken>()))
-            .Callback(() => current = new("User draft", false)).ReturnsAsync(true);
+        names.Setup(service => service.GetStateAsync(It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync(() => new CaptureNamingState(current, false));
+        names.Setup(service => service.RenameAsync(It.IsAny<string>(), CaptureFileType.Image, "User draft", It.IsAny<CancellationToken>()))
+            .Callback(() => current = new("User draft", false)).ReturnsAsync(new CaptureFileRename("capture.png", "User draft.png"));
         var setup = new Setup(names.Object);
         setup.State = setup.State with { Policy = CaptureMemoryPolicy.Disabled() };
+        setup.Reader.Setup(reader => reader.ReadAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new CaptureDetailsSnapshot(CaptureDetailsStatus.Empty));
         using var vm = setup.ViewModel;
         await vm.OpenAsync("capture.png", AnalysisMediaKind.Image);
         vm.EditNameCommand.Execute(null);
         vm.NameDraft = "User draft";
-        current = new("Background suggestion", true);
-        names.Raise(service => service.Changed += null);
-        Assert.AreEqual("Background suggestion", vm.FileName);
+        setup.Reader.Setup(reader => reader.ReadAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new CaptureDetailsSnapshot(CaptureDetailsStatus.Available, Record()));
+        await vm.RefreshAsync();
+        Assert.AreEqual("capture.png", vm.FileName);
+        Assert.AreEqual("Invoice summary", vm.SuggestedName);
         Assert.AreEqual("User draft", vm.NameDraft);
         await vm.SaveNameCommand.ExecuteAsync(null);
-        Assert.AreEqual("User draft", vm.FileName);
+        Assert.AreEqual("User draft.png", vm.FileName);
         Assert.IsFalse(vm.IsEditingName);
-        Assert.AreEqual("capture.png", vm.PhysicalFileName);
+        Assert.AreEqual("User draft.png", vm.PhysicalFileName);
     }
 
     [TestMethod]
@@ -128,7 +232,6 @@ public sealed class CaptureDetailsTests
         var content = CaptureDetailsContent.Create(Record(), Localization());
         Assert.AreEqual("Invoice total USD 125.00", content.Passages.Single().Text);
         Assert.AreEqual(string.Empty, content.Summary); // The fixture has a suggested title, not a summary.
-        Assert.IsFalse(content.HasRetainedResults);
     }
 
     [TestMethod]
@@ -143,12 +246,11 @@ public sealed class CaptureDetailsTests
     }
 
     [TestMethod]
-    public void RetainedAndLimitedOutputsAreExplicit()
+    public void SavedOutputsRetainTheirCoverageAcrossIndependentActions()
     {
         var record = Record(limited: true);
         var content = CaptureDetailsContent.Create(record.StartRun(record.SourceRevision, "next", Guid.NewGuid()), Localization());
         Assert.IsTrue(content.HasLimitedCoverage);
-        Assert.IsTrue(content.HasRetainedResults);
     }
 
     [TestMethod]
@@ -156,7 +258,7 @@ public sealed class CaptureDetailsTests
     {
         var record = new CaptureAnalysisRecord(CaptureId.New(), AnalysisMediaKind.Image, new(new string('a', 64)), "plan", Guid.NewGuid(),
             [new(new TextRecognitionMetadata([new("Legacy source")]), new("test", "test", "test", "1"), DateTimeOffset.UtcNow, "plan")]);
-        Assert.IsFalse(CaptureDetailsContent.Create(record, Localization()).HasRetainedResults);
+        Assert.AreEqual("Legacy source", CaptureDetailsContent.Create(record, Localization()).Passages.Single().Text);
     }
 
     [TestMethod]
@@ -167,12 +269,12 @@ public sealed class CaptureDetailsTests
         await vm.OpenAsync("capture.png");
         await vm.CopyCommand.ExecuteAsync("USD 125.00");
         setup.Clipboard.Verify(clipboard => clipboard.CopyTextAsync("USD 125.00"), Times.Once);
-        Assert.AreEqual("Copied", vm.CopyStatus);
+        setup.Notifications.Verify(notifications => notifications.ShowInfo("Copied"), Times.Once);
         setup.Clipboard.Setup(clipboard => clipboard.CopyTextAsync(It.IsAny<string>())).ThrowsAsync(new IOException());
         await vm.CopyCommand.ExecuteAsync("text");
-        Assert.AreEqual("CopyFailed", vm.CopyStatus);
+        setup.Notifications.Verify(notifications => notifications.ShowError("CopyFailed"), Times.Once);
         Assert.IsTrue(vm.Content.HasContent);
-        setup.Memory.Verify(memory => memory.ScanExistingAsync(It.IsAny<CancellationToken>()), Times.Never);
+        setup.Memory.Verify(memory => memory.AnalyzeAsync(It.IsAny<string>(), It.IsAny<AnalysisCapability>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [TestMethod]
@@ -223,9 +325,9 @@ public sealed class CaptureDetailsTests
             .ReturnsAsync(new CaptureDetailsSnapshot(CaptureDetailsStatus.Available, Record()));
         await vm.OpenAsync("capture.png");
         Assert.AreEqual("Empty", vm.StatusText);
-        await vm.RefreshCommand.ExecuteAsync(null);
+        await vm.RefreshAsync();
         Assert.AreEqual("Unavailable", vm.StatusText);
-        await vm.RefreshCommand.ExecuteAsync(null);
+        await vm.RefreshAsync();
         Assert.IsFalse(vm.ShowStatus);
         Assert.IsTrue(vm.Content.HasContent);
     }
@@ -257,6 +359,7 @@ public sealed class CaptureDetailsTests
         public Mock<ICaptureDetailsReader> Reader { get; } = new();
         public Mock<ICaptureMemoryService> Memory { get; } = new();
         public Mock<IClipboardService> Clipboard { get; } = new();
+        public Mock<IAppNotificationService> Notifications { get; } = new();
         public CaptureMemoryState State { get; set; } = new(new(true, true, Guid.NewGuid(), 0), true,
             new(true, true), new(AnalysisActivity.Idle));
         public CaptureDetailsViewModel ViewModel { get; }
@@ -267,7 +370,7 @@ public sealed class CaptureDetailsTests
             Memory.SetupGet(memory => memory.State).Returns(() => State);
             var ui = new Mock<ITaskEnvironment>();
             ui.Setup(ui => ui.TryExecute(It.IsAny<Action>())).Returns((Action action) => { action(); return true; });
-            ViewModel = new(Reader.Object, Memory.Object, Clipboard.Object, Localization(), ui.Object, names: names);
+            ViewModel = new(Reader.Object, Memory.Object, Clipboard.Object, Localization(), ui.Object, Notifications.Object, names: names);
         }
     }
 }

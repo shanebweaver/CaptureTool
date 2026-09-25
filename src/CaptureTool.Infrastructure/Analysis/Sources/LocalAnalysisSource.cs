@@ -12,7 +12,7 @@ internal sealed class LocalAnalysisSource : IAnalysisSource
     public async Task<IAnalysisSourceLease> OpenAsync(string path, CancellationToken cancellationToken)
     {
         if (!Path.IsPathFullyQualified(path)) throw new ArgumentException("Source path must be absolute.", nameof(path));
-        var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read, 65536,
+        var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read | FileShare.Delete, 65536,
             FileOptions.Asynchronous | FileOptions.SequentialScan);
         try
         {

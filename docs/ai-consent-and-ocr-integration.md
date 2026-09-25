@@ -1,4 +1,6 @@
-# Shared local AI consent and saved OCR
+﻿# Shared local AI consent and saved OCR
+
+**Superseded behavior:** [Explicit analysis actions](capture-analysis-explicit-actions.md) replace automatic scanning, open-triggered analysis, automatic naming, and first-launch AI consent. Existing results and the independent Text Extraction flow remain.
 
 This follow-up on `codex/capture-analysis-integration` implements the decision to
 use one consent for every local AI feature. It extends the existing OCR tool;

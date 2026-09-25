@@ -1,3 +1,4 @@
+using CaptureTool.Application.Abstractions.Localization;
 using CaptureTool.Application.Abstractions.Logging;
 using CaptureTool.Domain.Capture;
 using Microsoft.UI.Xaml;
@@ -12,6 +13,7 @@ public sealed partial class AppMenuView : AppMenuViewBase
 {
     private const uint RecentCaptureThumbnailSize = 32;
     private readonly ILogService _logService = App.Current.ServiceProvider.GetService<ILogService>();
+    private readonly ILocalizationService _localization = App.Current.ServiceProvider.GetService<ILocalizationService>();
 
     public AppMenuView()
     {
@@ -48,7 +50,7 @@ public sealed partial class AppMenuView : AppMenuViewBase
                 {
                     RecentCapturesSubMenu.Items.Add(new MenuFlyoutItem()
                     {
-                        Text = "None",
+                        Text = _localization.GetString("AppMenu_NoRecentCaptures"),
                         IsEnabled = false
                     });
                     return;

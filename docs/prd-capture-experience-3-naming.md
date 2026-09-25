@@ -1,4 +1,6 @@
-# Capture experience — step 3: automatic capture names
+﻿# Capture experience — step 3: automatic capture names
+
+**Superseded behavior:** [Explicit analysis actions](capture-analysis-explicit-actions.md) replace automatic scanning, open-triggered analysis, automatic naming, and first-launch AI consent. Existing results and the independent Text Extraction flow remain.
 
 Status: Implemented; review and verification recorded in [capture-experience-review.md](capture-experience-review.md).
 

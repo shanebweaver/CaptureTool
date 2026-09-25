@@ -2,7 +2,7 @@ using System.Globalization;
 
 namespace CaptureTool.Domain.Capture;
 
-/// <summary>A durable display name, independent of analysis results and physical file paths.</summary>
+/// <summary>A saved name suggestion (IsAutomatic) or an explicitly accepted name.</summary>
 public sealed record CaptureName
 {
     public string Text { get; }
@@ -24,7 +24,7 @@ public sealed record CaptureName
         IsAutomatic = isAutomatic;
     }
 
-    /// <summary>A Windows-safe base name; the save picker owns the extension and destination.</summary>
+    /// <summary>A Windows-safe base name; the caller preserves the extension and chooses the destination.</summary>
     public string SuggestedFileName()
     {
         string name = new(Text.Select(character => "<>:\"/\\|?*".Contains(character) ||

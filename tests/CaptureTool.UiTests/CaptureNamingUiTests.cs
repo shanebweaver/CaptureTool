@@ -1,4 +1,4 @@
-using FlaUI.Core.AutomationElements;
+﻿using FlaUI.Core.AutomationElements;
 using FlaUI.Core.Definitions;
 using FlaUI.UIA3;
 using System.Xml.Linq;
@@ -9,7 +9,7 @@ public sealed partial class ImageEditTextExtractionUiTests
 {
     [TestMethod]
     [TestCategory("UI")]
-    public void CaptureNaming_SettingAutomaticTitleUserOverrideAndDeletion()
+    public void CaptureNaming_SuggestionLoadingAcceptanceRenamesFileAndSurvivesRestart()
     {
         if (!ShouldRunUiTests()) Assert.Inconclusive("Enable isolated desktop UI tests to run this check.");
         using var dpi = new DesktopDpiScope();
@@ -29,34 +29,55 @@ public sealed partial class ImageEditTextExtractionUiTests
             window = WaitForMainWindow(app, automation, AppLaunchTimeout); MaximizeWindow(window);
             Element("ImageEdit_CommandBar");
             Settings();
-            Assert.IsFalse(Element("CaptureNamingToggle").IsEnabled);
-            Element("CaptureMemoryScanning").Patterns.Toggle.Pattern.Toggle();
-            Confirm("EnableScanning", "CaptureMemory_EnableScanningAccept");
-            WaitFor(() => Element("CaptureNamingToggle").IsEnabled ? window : null, InteractionTimeout, "naming enabled by scanning consent");
-            WaitFor(() => Element("CaptureNamingToggle").Patterns.Toggle.Pattern.ToggleState.Value == ToggleState.On ? window : null,
-                InteractionTimeout, "automatic naming enabled");
+            Element("CaptureMemoryConsent").Patterns.Toggle.Pattern.Toggle();
+            Confirm("Consent", "CaptureMemory_ConsentAccept");
+            Assert.IsNull(window.FindFirstDescendant(automation.ConditionFactory.ByAutomationId("CaptureNamingToggle")));
+            Assert.IsFalse(Element("CaptureMemoryDelete").IsEnabled);
             Thread.Sleep(300); Screenshot("settings");
         }
 
-        // This opt-in harness enrolls the fixture through the production capture-memory intake.
+        // Production capture intake registers identity; only these button clicks request analysis.
         using (var app = LaunchApp(ResolveAppExecutablePath(repo), fixture, data, temp, "en-US", detailsFixture: true, captureFixture: true))
         {
             window = WaitForMainWindow(app, automation, AppLaunchTimeout); MaximizeWindow(window);
             Element("ImageEdit_CommandBar"); OpenPane();
-            WaitFor(() => Element("CaptureDetailsFileName").Name == "Contoso invoice" ? window : null,
-                TimeSpan.FromSeconds(45), "automatic capture title");
-            Screenshot("automatic-name");
+            Assert.IsFalse(Element("CaptureAction_Name").IsEnabled);
+            Element("CapturePane_TextTab").Patterns.SelectionItem.Pattern.Select();
+            Element("CaptureAction_Text").Patterns.Invoke.Pattern.Invoke();
+            WaitForElementRemoved(window, automation, "CaptureAction_Text", InteractionTimeout);
+            Element("CapturePane_DetailsTab").Patterns.SelectionItem.Pattern.Select();
+            WaitFor(() => Element("CaptureAction_Name").IsEnabled ? window : null, InteractionTimeout, "saved text enables name suggestion");
+            Element("CaptureAction_Name").Patterns.Invoke.Pattern.Invoke();
+            WaitFor(() => Element("CaptureName_Suggestion").Name == "Contoso invoice" ? window : null,
+                TimeSpan.FromSeconds(45), "suggested capture name");
+            Assert.AreEqual("capture.png", Element("CaptureDetailsFileName").Name);
+            Assert.IsTrue(File.Exists(fixture), "Suggestions must not rename a file before acceptance.");
+            Screenshot("suggested-name");
+            Element("CaptureName_Accept").Patterns.Invoke.Pattern.Invoke();
+            string suggestedPath = Path.Combine(isolated, "Contoso invoice.png");
+            WaitFor(() => File.Exists(suggestedPath) && !File.Exists(fixture) ? window : null,
+                InteractionTimeout, "acceptance renames the actual file");
+            fixture = suggestedPath;
+            WaitFor(() => Element("CaptureDetailsFileName").Name == "Contoso invoice.png" ? window : null,
+                InteractionTimeout, "editor tracks accepted filename");
+            Screenshot("accepted-name");
             EditName("Partner demo notes");
+            string editedPath = Path.Combine(isolated, "Partner demo notes.png");
+            Assert.IsFalse(File.Exists(fixture));
+            Assert.IsTrue(File.Exists(editedPath));
+            fixture = editedPath;
             Screenshot("user-name");
             WaitForElementByName(window, automation, resources["CapturePane_CopyPath.Content"], InteractionTimeout).AsButton().Invoke();
-            WaitFor(() => ReadDetailsClipboard() == fixture ? window : null, InteractionTimeout, "unchanged physical path");
+            WaitFor(() => ReadDetailsClipboard() == fixture ? window : null, InteractionTimeout, "renamed physical path");
+            WaitForElementByName(window, automation, resources["CaptureDetails_Copied"], InteractionTimeout);
+            Screenshot("copy-notification");
             Menu("AppMenu_HomeItem");
             WaitForElementByName(Element("Home_RecentCaptures"), automation, "Partner demo notes", InteractionTimeout);
             Screenshot("recent-name");
             Settings();
             Element("CaptureMemoryDelete").Patterns.Invoke.Pattern.Invoke();
             Confirm("DeleteMetadata", "CaptureMemory_DeleteMetadataAccept");
-            WaitFor(() => !Element("CaptureMemoryDelete").IsEnabled && Element("CaptureMemoryScan").IsEnabled &&
+            WaitFor(() => !Element("CaptureMemoryDelete").IsEnabled &&
                 !Directory.EnumerateFiles(Path.Combine(data, "CaptureAnalysis"), "*.analysis", SearchOption.AllDirectories).Any()
                 ? window : null, InteractionTimeout, "metadata deletion completed before restart");
         }
@@ -65,7 +86,7 @@ public sealed partial class ImageEditTextExtractionUiTests
         {
             window = WaitForMainWindow(app, automation, AppLaunchTimeout); MaximizeWindow(window);
             Element("ImageEdit_CommandBar"); OpenPane();
-            WaitFor(() => Element("CaptureDetailsFileName").Name == "Partner demo notes" ? window : null,
+            WaitFor(() => Element("CaptureDetailsFileName").Name == "Partner demo notes.png" ? window : null,
                 InteractionTimeout, "chosen name survives deletion and restart");
             Element("CapturePane_TextTab").Patterns.SelectionItem.Pattern.Select();
             WaitForElementByName(Element("CaptureDetailsPane"), automation, resources["CaptureDetails_Empty"], InteractionTimeout);
@@ -74,12 +95,8 @@ public sealed partial class ImageEditTextExtractionUiTests
                 "Invoice INV-2048 totals USD 125.00 and is due on 2026-10-15.")), "Deleted analysis must not return after restart.");
             Screenshot("after-delete-restart");
             Settings();
-            Element("CaptureMemoryScanning").Patterns.Toggle.Pattern.Toggle();
-            WaitFor(() => Element("CaptureMemoryScanning").Patterns.Toggle.Pattern.ToggleState.Value == ToggleState.Off ? window : null,
-                InteractionTimeout, "scanning disabled");
-            // A retained preference can still be switched off while scanning is off.
-            Element("CaptureNamingToggle").Patterns.Toggle.Pattern.Toggle();
-            WaitFor(() => !Element("CaptureNamingToggle").IsEnabled ? window : null, InteractionTimeout, "naming disabled without scanning");
+            Assert.IsNull(window.FindFirstDescendant(automation.ConditionFactory.ByAutomationId("CaptureMemoryScanning")));
+            Assert.IsNull(window.FindFirstDescendant(automation.ConditionFactory.ByAutomationId("CaptureNamingToggle")));
         }
         Assert.IsTrue(File.Exists(fixture));
 
@@ -92,7 +109,7 @@ public sealed partial class ImageEditTextExtractionUiTests
         void Settings()
         {
             Menu("AppMenu_SettingsItem");
-            var target = Element("CaptureNamingToggle");
+            var target = Element("CaptureMemoryConsent");
             var scroll = window.FindAllDescendants().First(item => item.Patterns.Scroll.IsSupported && item.Patterns.Scroll.Pattern.VerticallyScrollable.Value).Patterns.Scroll.Pattern;
             for (int i = 0; i < 30 && target.IsOffscreen; i++) { scroll.Scroll(ScrollAmount.NoAmount, ScrollAmount.LargeIncrement); Thread.Sleep(60); }
         }
@@ -112,8 +129,9 @@ public sealed partial class ImageEditTextExtractionUiTests
         {
             Element("CaptureName_Edit").Patterns.Invoke.Pattern.Invoke();
             Element("CaptureName_Input").AsTextBox().Text = name;
+            Screenshot("rename-input");
             Element("CaptureName_Save").Patterns.Invoke.Pattern.Invoke();
-            WaitFor(() => Element("CaptureDetailsFileName").Name == name ? window : null, InteractionTimeout, "user capture name");
+            WaitFor(() => Element("CaptureDetailsFileName").Name == name + ".png" ? window : null, InteractionTimeout, "user capture name");
         }
         void Screenshot(string name)
         {

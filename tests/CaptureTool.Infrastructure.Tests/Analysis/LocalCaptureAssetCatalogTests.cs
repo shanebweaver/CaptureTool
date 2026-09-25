@@ -130,6 +130,7 @@ public sealed class LocalCaptureAssetCatalogTests
         using var environment = new AnalysisTestEnvironment();
         var services = new ServiceCollection();
         services.AddGenericServices();
+        services.AddSingleton<CaptureTool.Application.Abstractions.Library.RecentCaptures.IRecentCapturesChangeNotifier, TestNotifier>();
         services.AddSingleton<IStorageService>(environment);
         services.AddSingleton<IUserDataProtector>(environment.Protector);
         using ServiceProvider provider = services.BuildServiceProvider();
@@ -140,4 +141,10 @@ public sealed class LocalCaptureAssetCatalogTests
 
     private static CaptureAsset Asset(AnalysisTestEnvironment environment, string name) =>
         new(CaptureId.New(), CaptureFileType.Image, DateTimeOffset.UtcNow, Path.Combine(environment.Root, name), CaptureSourceOwnership.Application);
+
+    private sealed class TestNotifier : CaptureTool.Application.Abstractions.Library.RecentCaptures.IRecentCapturesChangeNotifier
+    {
+        public event EventHandler? RecentCapturesChanged { add { } remove { } }
+        public void NotifyRecentCapturesChanged() { }
+    }
 }

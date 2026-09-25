@@ -1,4 +1,4 @@
-using CaptureTool.Presentation.Features.Settings;
+﻿using CaptureTool.Presentation.Features.Settings;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 
@@ -34,29 +34,17 @@ public sealed partial class SettingsPage : SettingsPageBase
         }
     }
 
-    private async void CaptureMemoryScanning_Toggled(object sender, RoutedEventArgs e)
-    {
-        if (sender is ToggleSwitch toggle && toggle.IsOn != CaptureMemory.ScanningEnabled)
-        {
-            await CaptureMemory.SetScanningCommand.ExecuteAsync(toggle.IsOn);
-            toggle.IsOn = CaptureMemory.ScanningEnabled;
-        }
-    }
-    private async void CaptureNaming_Toggled(object sender, RoutedEventArgs e)
-    {
-        if (sender is ToggleSwitch toggle && toggle.IsOn != CaptureMemory.NamingEnabled)
-        {
-            await CaptureMemory.SetNamingCommand.ExecuteAsync(toggle.IsOn);
-            toggle.IsOn = CaptureMemory.NamingEnabled;
-        }
-    }
-
     private async void CaptureMemoryConsent_Click(object sender, RoutedEventArgs e)
     {
         if (sender is CheckBox checkbox)
         {
-            await CaptureMemory.SetConsentCommand.ExecuteAsync(checkbox.IsChecked == true);
-            checkbox.IsChecked = CaptureMemory.ConsentGranted;
+            checkbox.IsEnabled = false;
+            try
+            {
+                await CaptureMemory.SetConsentCommand.ExecuteAsync(checkbox.IsChecked == true);
+                checkbox.IsChecked = CaptureMemory.ConsentGranted;
+            }
+            finally { checkbox.IsEnabled = true; }
         }
     }
 

@@ -306,7 +306,7 @@
                 TextForegroundColor="{x:Bind ViewModel.TextTool.TextFontColor, Mode=OneWay}" />
 
             <Button
-                x:Uid="ImageEdit_TextExtractionOverlayMarker"
+                x:Name="TextOverlayMarker" x:Uid="ImageEdit_TextExtractionOverlayMarker"
                 Width="16"
                 Height="16"
                 HorizontalAlignment="Left"
@@ -317,7 +317,7 @@
                 IsEnabled="False"
                 IsTabStop="False"
                 Opacity=".01"
-                Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.IsTextExtractionOverlayVisible), Mode=OneWay}" />
+                Visibility="Collapsed" />
 
             <Grid
                 x:Name="FloatingToolbarLayer"

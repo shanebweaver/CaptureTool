@@ -1,4 +1,6 @@
-# Metadata enrichment — slice 4: pipeline integration and verification
+﻿# Metadata enrichment — slice 4: pipeline integration and verification
+
+**Superseded behavior:** [Explicit analysis actions](capture-analysis-explicit-actions.md) replace automatic scanning, open-triggered analysis, automatic naming, and first-launch AI consent. Existing results and the independent Text Extraction flow remain.
 
 Status: Implemented and reviewed; available local verification passed. Device/environment release gates remain explicitly documented. See [integration review](metadata-enrichment-verification.md).
 

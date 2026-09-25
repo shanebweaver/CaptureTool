@@ -42,11 +42,11 @@ internal sealed class FoundryMetadataProcessor(MetadataProcessorDescriptor descr
         if (input.Entries.Count == 0) return AnalyzerOutcome.Unsuccessful(AnalyzerOutcomeKind.Unsupported, "metadata-input-empty");
         IModel? model = _model;
         if (model == null) return AnalyzerOutcome.Unsuccessful(AnalyzerOutcomeKind.TemporarilyUnavailable, "model-not-prepared");
+        await using var lease = await runtime.AcquireModelAsync(model, ct).ConfigureAwait(false);
         bool serving = false;
         try
         {
             byte[] request = FoundryMetadataProtocol.CreateRequest(model.Id, input);
-            await model.LoadAsync(ct).ConfigureAwait(false);
             Uri endpoint = await runtime.StartChatServiceAsync(ct).ConfigureAwait(false);
             serving = true;
             using var http = new HttpClient(new HttpClientHandler { UseProxy = false, AllowAutoRedirect = false })
@@ -66,8 +66,7 @@ internal sealed class FoundryMetadataProcessor(MetadataProcessorDescriptor descr
         }
         finally
         {
-            try { if (serving) await runtime.StopServiceAsync().ConfigureAwait(false); }
-            finally { await model.UnloadAsync(CancellationToken.None).ConfigureAwait(false); }
+            if (serving) await runtime.StopServiceAsync().ConfigureAwait(false);
         }
     }
 }

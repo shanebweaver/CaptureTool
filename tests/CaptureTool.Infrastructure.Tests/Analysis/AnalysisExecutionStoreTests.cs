@@ -46,7 +46,7 @@ public sealed class AnalysisExecutionStoreTests
     }
 
     [TestMethod]
-    public async Task AdmissionSurvivesRestartInFifoOrderAndStaleReplayCannotSupersedeNewWork()
+    public async Task SessionQueueIsFifoButRestartDiscardsItAndRejectsStaleReplay()
     {
         using var environment = new AnalysisTestEnvironment();
         using var store = environment.CreateStore();
@@ -56,15 +56,40 @@ public sealed class AnalysisExecutionStoreTests
         Assert.IsTrue(await store.AdmitAsync(first, Authorization, Plan, Ct));
         Assert.IsTrue(await store.AdmitAsync(second, Authorization, Plan, Ct));
         Assert.IsTrue(await store.AdmitAsync(first, Authorization, Plan, Ct));
-        using var restarted = environment.CreateStore();
-        IReadOnlyList<AnalysisWorkItem> pending = await restarted.ReadPendingAsync(Ct);
+        IReadOnlyList<AnalysisWorkItem> pending = await store.ReadPendingAsync(Ct);
         CollectionAssert.AreEqual(new[] { first.RequestId, second.RequestId }, pending.Select(work => work.Run.Id).ToArray());
+        using var restarted = environment.CreateStore();
+        Assert.IsEmpty(await restarted.ReadPendingAsync(Ct));
+        Assert.AreEqual(AnalysisRunStatus.Cancelled, (await restarted.GetWorkAsync(first.CaptureId, Ct))!.Run.Status);
+        Assert.IsFalse(await restarted.AdmitAsync(first, Authorization, Plan, Ct));
+        Assert.IsFalse(await restarted.BindSourceAsync(pending[0].Token, AnalysisTestEnvironment.Revision(), Ct));
         Assert.IsNull(await restarted.GetAsync(first.CaptureId, cancellationToken: Ct));
         AnalysisRequest newer = first with { RequestId = Guid.NewGuid(), ExpectedRunId = first.RequestId };
         Assert.IsTrue(await restarted.AdmitAsync(newer, Authorization, Plan, Ct));
         Assert.IsFalse(await restarted.AdmitAsync(first, Authorization, Plan, Ct));
         Assert.IsFalse(await restarted.BindSourceAsync(pending[0].Token, AnalysisTestEnvironment.Revision(), Ct));
         Assert.IsFalse(await restarted.AdmitAsync(newer with { SourcePath = Path.Combine(environment.Root, "other.png") }, Authorization, Plan, Ct));
+        Assert.AreEqual(newer.RequestId, (await restarted.ReadPendingAsync(Ct)).Single().Run.Id);
+    }
+
+    [TestMethod]
+    public async Task DiscardRequiresNoStorageWritesAndFencesLateResultsWithoutDeletingCommittedMetadata()
+    {
+        using var environment = new AnalysisTestEnvironment();
+        using var store = environment.CreateStore();
+        var request = Request(environment, await store.GetAdmissionScopeAsync(Ct));
+        await store.AdmitAsync(request, Authorization, Plan, Ct);
+        var token = (await store.GetWorkAsync(request.CaptureId, Ct))!.Token;
+        await store.BindSourceAsync(token, AnalysisTestEnvironment.Revision(), Ct);
+        await store.CommitStepAsync(token, new(AnalysisCapability.TextRecognition, AnalyzerOutcomeKind.Succeeded, null),
+            Result(AnalysisCapability.TextRecognition, request.RequestId), Ct);
+        environment.Files.BeforeWrite = (_, _) => throw new IOException("No writes available during shutdown.");
+        await store.DiscardPendingAsync(Ct);
+        Assert.IsEmpty(await store.ReadPendingAsync(Ct));
+        Assert.AreEqual(AnalysisRunStatus.Cancelled, (await store.GetWorkAsync(request.CaptureId, Ct))!.Run.Status);
+        Assert.IsFalse(await store.CommitStepAsync(token, new(AnalysisCapability.Description, AnalyzerOutcomeKind.Succeeded, null),
+            Result(AnalysisCapability.Description, request.RequestId), Ct));
+        Assert.AreEqual(AnalysisCapability.TextRecognition, (await store.GetAsync(request.CaptureId, cancellationToken: Ct))!.Results.Single().Payload.Capability);
     }
 
     [TestMethod]

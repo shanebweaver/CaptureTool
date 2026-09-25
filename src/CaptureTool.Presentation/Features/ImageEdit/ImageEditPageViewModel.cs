@@ -37,6 +37,20 @@ namespace CaptureTool.Presentation.Features.ImageEdit;
 public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<ImageFile>, ISourceSaveableSession
 {
     public string? DetailsSourcePath { get; private set => Set(ref field, value); }
+
+    public void ApplyCaptureRename(CaptureTool.Application.Abstractions.Capture.Assets.CaptureFileRename rename)
+    {
+        bool Matches(string? path) => string.Equals(path, rename.OldPath, StringComparison.OrdinalIgnoreCase);
+        foreach (var file in new[] { ImageFile, _originalImageFile, _superResolutionImageFile })
+        {
+            if (file == null) continue;
+            if (Matches(file.FilePath)) file.FilePath = rename.NewPath;
+            if (Matches(file.PersistentFilePath)) file.PersistentFilePath = rename.NewPath;
+        }
+        if (Matches(DetailsSourcePath)) DetailsSourcePath = rename.NewPath;
+        RaisePropertyChanged(nameof(ImageFile));
+    }
+
     public int DetailsSourceVersion { get; private set => Set(ref field, value); }
     public bool IsSourceImageGeometryChanged => Orientation != ImageOrientation.RotateNoneFlipNone ||
         CropRect != new Rectangle(Point.Empty, ImageSize) || ImageFile?.FilePath != _originalImageFile?.FilePath;

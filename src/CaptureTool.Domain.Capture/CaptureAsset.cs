@@ -43,5 +43,5 @@ public sealed record CaptureAsset
     public CaptureAsset RelocateSource(string path) =>
         new(Id, MediaType, CapturedAt, path, SourceOwnership, PreferredPath, Name);
 
-    public CaptureAsset WithName(CaptureName name) => new(Id, MediaType, CapturedAt, SourcePath, SourceOwnership, PreferredPath, name);
+    public CaptureAsset WithName(CaptureName? name) => new(Id, MediaType, CapturedAt, SourcePath, SourceOwnership, PreferredPath, name);
 }

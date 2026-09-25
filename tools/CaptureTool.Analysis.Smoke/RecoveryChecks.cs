@@ -1,4 +1,4 @@
-using CaptureTool.Application.Abstractions.Analysis;
+﻿using CaptureTool.Application.Abstractions.Analysis;
 using CaptureTool.Application.Abstractions.Capture.Assets;
 using CaptureTool.Application.Abstractions.Library.RecentCaptures;
 using CaptureTool.Application.Abstractions.Security;
@@ -102,6 +102,7 @@ internal static class RecoveryChecks
                 .AddSingleton<IStorageService>(storage).AddSingleton<IUserDataProtector>(protector)
                 .AddSingleton(new LocalCaptureAnalysisStore(storage, protector, faults))
                 .AddSingleton<IRecentCaptureCatalog>(new NoRecents()).AddSingleton<ICaptureMemoryPrompts>(new Prompts())
+                .AddSingleton<IRecentCapturesChangeNotifier>(new Notifier())
                 .AddSingleton(new CaptureAnalysisConfiguration([plan]))
                 .AddSingleton<IMediaAnalyzer>(new Analyzer("description", AnalysisCapability.Description, faults))
                 .AddSingleton<IMediaAnalyzer>(new Analyzer("text", AnalysisCapability.TextRecognition, faults))
@@ -113,16 +114,18 @@ internal static class RecoveryChecks
             var store = provider.GetRequiredService<IAnalysisExecutionStore>();
             var catalog = provider.GetRequiredService<ICaptureAssetCatalog>();
             string sourcePath = Path.Combine(root, "capture.png");
+            int callsBeforeStartup = CountCalls();
             await memory.InitializeAsync(ct);
             try
             {
                 if (!resume)
                 {
-                    await memory.SetScanningAsync(true, ct);
+                    await memory.SetConsentAsync(true, ct);
                     await File.WriteAllTextAsync(sourcePath, Source, ct);
                     faults.Armed = true;
                     await memory.RegisterCaptureAsync(new(Id, CaptureFileType.Image, DateTimeOffset.UtcNow, sourcePath,
-                        CaptureSourceOwnership.Application), memory.CaptureAuthorization, ct);
+                        CaptureSourceOwnership.Application), ct);
+                    await RequestMissingAsync();
                     await CompletedAsync(store, Id, ct);
                     if (stage == "deletion") await memory.DeleteMetadataAsync(ct);
                     throw new InvalidOperationException("Expected crash checkpoint was not reached.");
@@ -130,6 +133,8 @@ internal static class RecoveryChecks
 
                 Checkpoint checkpoint = JsonSerializer.Deserialize(await File.ReadAllTextAsync(Path.Combine(root, "checkpoint.json"), ct),
                     RecoveryJsonContext.Default.Checkpoint)!;
+                Require((await store.ReadPendingAsync(ct)).Count == 0 && CountCalls() == callsBeforeStartup,
+                    "Startup must not schedule or invoke analysis.");
                 if (stage == "deletion")
                 {
                     Require(await store.GetWorkAsync(Id, ct) == null, "Clear must not resurrect an old request.");
@@ -140,23 +145,23 @@ internal static class RecoveryChecks
                         new(new DescriptionMetadata([new(Derived)]), Producer("description"), DateTimeOffset.UtcNow, plan.Version, stale.RunId), ct),
                         "An old process cannot publish after clear.");
                     Require((await catalog.ReadAllAsync(ct)).Count == 1 && memory.State.Policy.IsAllowed, "Clear must keep catalog and policy.");
-                    await memory.ScanExistingAsync(ct);
+                    await RequestMissingAsync();
                     var replacement = await CompletedAsync(store, Id, ct);
                     Require(replacement.Token.RunId != checkpoint.RunId, "Explicit reanalysis must use a new run.");
                 }
                 else
                 {
+                    Require((await store.ReadPendingAsync(ct)).Count == 0, "Restart must discard previous scan requests.");
+                    var previous = await store.GetWorkAsync(Id, ct);
+                    Require(previous?.Run.IsPending != true, "Interrupted scans must not be shown as pending.");
+                    await RequestMissingAsync();
                     var completed = await CompletedAsync(store, Id, ct);
-                    if (stage != "registration") Require(completed.Token.RunId == checkpoint.RunId, "Restart must retain the admitted run identity.");
+                    Require(completed.Run.Status == AnalysisRunStatus.Completed, "Explicit requests complete independently.");
                     var record = await store.GetAsync(Id, Revision, ct);
                     Require(record?.Results.Count == 3, "Basic and derived steps must be available after recovery.");
                     Require(record.Results.Single(result => result.Payload is CaptureSynopsisMetadata).Derivation!.Matches(record.Results), "Recovered insights must retain current input identities.");
-                    Require(record.Results.All(result => result.ProducingRunId == completed.Token.RunId), "Results must belong to the resumed run.");
+                    Require(record.Results.Select(result => result.ProducingRunId).Distinct().Count() == 3, "Separate actions retain independent result provenance.");
                     Require((await store.ReadPendingAsync(ct)).Count == 0, "Completed work must leave the queue.");
-                    if (stage == "committed") Require(File.ReadAllLines(Path.Combine(root, "description-calls.txt")).Length == 1,
-                        "A committed step must not execute twice after restart.");
-                    if (stage.StartsWith("metadata-", StringComparison.Ordinal))
-                        Require(File.ReadAllLines(Path.Combine(root, "text-calls.txt")).Length == 1, "Enrichment restart must not repeat basic scanning.");
                     if (stage == "metadata-committed")
                         Require(File.ReadAllLines(Path.Combine(root, "synopsis-calls.txt")).Length == 1, "A committed insight must not execute twice.");
                 }
@@ -171,6 +176,18 @@ internal static class RecoveryChecks
             }
             finally { await memory.StopAsync(); }
             return 0;
+
+            async Task RequestMissingAsync()
+            {
+                foreach (var capability in plan.Steps.Select(step => step.Capability))
+                {
+                    var saved = await store.GetAsync(Id, Revision, ct);
+                    if (saved?.Results.Any(result => result.Payload.Capability == capability) == true) continue;
+                    await memory.AnalyzeAsync(sourcePath, capability, ct);
+                    await CompletedAsync(store, Id, ct);
+                }
+            }
+            int CountCalls() => Directory.GetFiles(root, "*-calls.txt").Sum(path => File.ReadAllLines(path).Length);
         }
         catch (Exception exception)
         {
@@ -240,7 +257,7 @@ internal static class RecoveryChecks
                 finally { CryptographicOperations.ZeroMemory(plaintext); }
                 _latest = new(Guid.ParseExact(Path.GetFileName(Path.GetDirectoryName(path))!, "N"), document!.Run!.Id);
                 if (Armed && (stage == "publication" && document.Run.CompletedSteps.Length == 1 ||
-                    stage == "metadata-publication" && document.Run.CompletedSteps.Length == 3))
+                    stage == "metadata-publication" && document.Run.CompletedSteps.Any(step => step.Capability.Name == AnalysisCapability.CaptureSynopsis.Name)))
                 {
                     // Simulate an interrupted encrypted temporary write before atomic replacement.
                     Directory.CreateDirectory(Path.GetDirectoryName(path)!);
@@ -255,7 +272,7 @@ internal static class RecoveryChecks
             {
                 if (run.SourceSha256 == null) await PauseAsync("admission", ct);
                 if (run.CompletedSteps.Length == 1) await PauseAsync("committed", ct);
-                if (run.CompletedSteps.Length == 3) await PauseAsync("metadata-committed", ct);
+                if (run.CompletedSteps.Any(step => step.Capability.Name == AnalysisCapability.CaptureSynopsis.Name)) await PauseAsync("metadata-committed", ct);
             }
         }
         public async Task PauseAsync(string point, CancellationToken ct)
@@ -281,7 +298,12 @@ internal static class RecoveryChecks
     }
     private sealed class Prompts : ICaptureMemoryPrompts
     {
-        public Task<bool> ConfirmAsync(CaptureMemoryPrompt prompt, CancellationToken ct) => Task.FromResult(prompt != CaptureMemoryPrompt.ScanExisting);
+        public Task<bool> ConfirmAsync(CaptureMemoryPrompt prompt, CancellationToken ct) => Task.FromResult(true);
+    }
+    private sealed class Notifier : IRecentCapturesChangeNotifier
+    {
+        public event EventHandler? RecentCapturesChanged;
+        public void NotifyRecentCapturesChanged() => RecentCapturesChanged?.Invoke(this, EventArgs.Empty);
     }
     private sealed class NoRecents : IRecentCaptureCatalog
     {

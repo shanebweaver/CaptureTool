@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -734,7 +734,7 @@
     <value>第三方许可</value>
   </data>
   <data name="About_ThirdParty_DialogContent" xml:space="preserve">
-    <value>This application uses open-source software. Below are the third-party components and their licenses.
+    <value>此应用使用开源软件。以下列出了第三方组件及其许可证。
 
 CommunityToolkit.WinUI.Controls.Segmented
 Copyright © .NET Foundation and Contributors
@@ -1312,37 +1312,37 @@ SOFTWARE.
     <value>背景</value>
   </data>
   <data name="ImageEdit_SuperResolutionButton.Label" xml:space="preserve">
-    <value>Super Resolution</value>
+    <value>超分辨率</value>
   </data>
   <data name="ImageEdit_SuperResolutionButton.AccessKey" xml:space="preserve">
     <value>U</value>
   </data>
   <data name="ImageEdit_SuperResolutionButton.ToolTipService.ToolTip" xml:space="preserve">
-    <value>Show or hide the AI super-resolution image</value>
+    <value>显示或隐藏 AI 超分辨率图像</value>
   </data>
   <data name="ImageEdit_SuperResolutionProgressRing.AutomationProperties.Name" xml:space="preserve">
     <value>正在增强图像</value>
   </data>
   <data name="ImageSuperResolutionStatus_NotSupported" xml:space="preserve">
-    <value>Super Resolution is not supported on this PC.</value>
+    <value>此电脑不支持超分辨率。</value>
   </data>
   <data name="ImageSuperResolutionStatus_Disabled" xml:space="preserve">
-    <value>Super Resolution is disabled on this PC.</value>
+    <value>此电脑已禁用超分辨率。</value>
   </data>
   <data name="ImageSuperResolutionStatus_NotAvailable" xml:space="preserve">
-    <value>Super Resolution is not available.</value>
+    <value>超分辨率不可用。</value>
   </data>
   <data name="ImageSuperResolutionStatus_PreparationFailed" xml:space="preserve">
-    <value>Super Resolution could not be prepared.</value>
+    <value>无法准备超分辨率。</value>
   </data>
   <data name="ImageSuperResolutionStatus_NotReady" xml:space="preserve">
-    <value>Super Resolution is not ready.</value>
+    <value>超分辨率尚未就绪。</value>
   </data>
   <data name="ImageSuperResolutionStatus_TooLarge" xml:space="preserve">
-    <value>This image is too large for Super Resolution.</value>
+    <value>此图像过大，无法进行超分辨率处理。</value>
   </data>
   <data name="ImageSuperResolutionStatus_Failed" xml:space="preserve">
-    <value>Super Resolution failed.</value>
+    <value>超分辨率处理失败。</value>
   </data>
   <data name="ImageEdit_EditInPaintButton.Label" xml:space="preserve">
     <value>在 Paint 中编辑</value>
@@ -1360,46 +1360,46 @@ SOFTWARE.
     <value>在 Clipchamp 中打开</value>
   </data>
   <data name="About_SendFeedbackButton.AutomationProperties.Name" xml:space="preserve">
-    <value>Send feedback</value>
+    <value>发送反馈</value>
   </data>
   <data name="About_SendFeedbackButton.ToolTipService.ToolTip" xml:space="preserve">
-    <value>Open Feedback Hub</value>
+    <value>打开反馈中心</value>
   </data>
   <data name="About_SendFeedbackButtonLabel.Text" xml:space="preserve">
-    <value>Send feedback</value>
+    <value>发送反馈</value>
   </data>
   <data name="StoreReviewPrompt_Title" xml:space="preserve">
-    <value>Enjoying Capture Tool?</value>
+    <value>喜欢 Capture Tool 吗？</value>
   </data>
   <data name="StoreReviewPrompt_Content" xml:space="preserve">
-    <value>A quick Microsoft Store review helps other people find the app.</value>
+    <value>在 Microsoft Store 中留下简短评价，有助于其他人发现此应用。</value>
   </data>
   <data name="StoreReviewPrompt_ReviewButton" xml:space="preserve">
-    <value>Leave a review</value>
+    <value>留下评价</value>
   </data>
   <data name="StoreReviewPrompt_RemindLaterButton" xml:space="preserve">
-    <value>Remind me later</value>
+    <value>稍后提醒</value>
   </data>
   <data name="StoreReviewPrompt_DontShowAgainButton" xml:space="preserve">
-    <value>Don't show again</value>
+    <value>不再显示</value>
   </data>
   <data name="Settings_StoreHeaderLabel.Text" xml:space="preserve">
-    <value>Store</value>
+    <value>Microsoft Store</value>
   </data>
   <data name="Settings_StoreReview_HeaderLabel.Text" xml:space="preserve">
-    <value>Store Review reminders</value>
+    <value>商店评价提醒</value>
   </data>
   <data name="Settings_StoreReview_SubtitleLabel.Text" xml:space="preserve">
-    <value>Ask for a Microsoft Store review after enough time and app launches.</value>
+    <value>使用一段时间并多次启动应用后，提醒在 Microsoft Store 中留下评价。</value>
   </data>
   <data name="Settings_StoreReview_LinkLabel.Text" xml:space="preserve">
-    <value>Leave a Microsoft Store review</value>
+    <value>在 Microsoft Store 中留下评价</value>
   </data>
   <data name="Settings_StoreReviewReminders_Toggle.OnContent" xml:space="preserve">
-    <value>On</value>
+    <value>开</value>
   </data>
   <data name="Settings_StoreReviewReminders_Toggle.OffContent" xml:space="preserve">
-    <value>Off</value>
+    <value>关</value>
   </data>
   <data name="ImageEdit_TextExtractionButton.Label" xml:space="preserve">
     <value>文本提取</value>
@@ -1729,16 +1729,13 @@ SOFTWARE.
     <value>AI</value>
   </data>
   <data name="CaptureMemory_Scanning.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
-    <value>自动分析新捕获的内容</value>
+    <value>自动分析截图和录制内容</value>
   </data>
   <data name="CaptureMemory_Consent.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>允许本地 AI 功能</value>
   </data>
   <data name="CaptureMemory_SettingsDescription.Text" xml:space="preserve">
     <value>使用设备端 AI 分析捕获内容，并安全保存信息以供捕获记忆使用。</value>
-  </data>
-  <data name="CaptureMemory_Scan.Content" xml:space="preserve">
-    <value>分析</value>
   </data>
   <data name="CaptureMemory_Delete.Content" xml:space="preserve">
     <value>删除</value>
@@ -1750,28 +1747,19 @@ SOFTWARE.
     <value>正在分析捕获内容…</value>
   </data>
   <data name="CaptureMemory_ConsentTitle" xml:space="preserve">
-    <value>允许本地 AI 功能？</value>
+    <value>发现每次捕获中的更多价值</value>
   </data>
   <data name="CaptureMemory_ConsentContent" xml:space="preserve">
-    <value>启用本地 AI 功能和新捕获的自动分析。所有处理均在此电脑上进行，分析数据会安全存储。可能需要下载模型。您可以在设置中关闭扫描或删除分析数据。</value>
+    <value>只有在您选择操作时才会使用本地 AI，不会自动扫描任何内容。结果会安全地存储在此电脑上。可能需要下载模型。您可以在设置中撤回同意或删除结果。</value>
   </data>
   <data name="CaptureMemory_ConsentAccept" xml:space="preserve">
-    <value>允许</value>
-  </data>
-  <data name="CaptureMemory_ScanExistingTitle" xml:space="preserve">
-    <value>分析现有捕获内容？</value>
-  </data>
-  <data name="CaptureMemory_ScanExistingContent" xml:space="preserve">
-    <value>已启用新捕获内容的分析。是否也分析以前通过 CaptureTool 创建且仍可用的捕获内容？现有信息将保留，直到成功的新分析将其替换。</value>
-  </data>
-  <data name="CaptureMemory_ScanExistingAccept" xml:space="preserve">
-    <value>分析捕获内容</value>
+    <value>允许本地 AI</value>
   </data>
   <data name="CaptureMemory_DeleteMetadataTitle" xml:space="preserve">
     <value>删除分析信息？</value>
   </data>
   <data name="CaptureMemory_DeleteMetadataContent" xml:space="preserve">
-    <value>是否删除已存储的分析信息并停止待处理的分析？捕获文件和分析偏好设置将保留。</value>
+    <value>删除已保存的分析并取消待处理的操作？捕获文件和 AI 同意设置将保留。</value>
   </data>
   <data name="CaptureMemory_DeleteMetadataAccept" xml:space="preserve">
     <value>删除信息</value>
@@ -1800,18 +1788,12 @@ SOFTWARE.
   <data name="AiSettings_ConsentHeader.Text" xml:space="preserve">
     <value>允许本地 AI 功能</value>
   </data>
-  <data name="AiSettings_ConsentDescription.Text" xml:space="preserve"><value>同意捕获分析和本地 AI 编辑。独立的文本提取功能会单独征求同意。</value></data>
+  <data name="AiSettings_ConsentDescription.Text" xml:space="preserve"><value>允许您主动请求的本地 AI 操作。绝不会自动扫描捕获内容。</value></data>
   <data name="AiSettings_ScanningHeader.Text" xml:space="preserve">
-    <value>自动分析新捕获的内容</value>
+    <value>自动分析截图和录制内容</value>
   </data>
   <data name="AiSettings_ScanningDescription.Text" xml:space="preserve">
-    <value>在捕获后分析图像、音频和视频。</value>
-  </data>
-  <data name="AiSettings_ScanHeader.Text" xml:space="preserve">
-    <value>分析现有捕获内容</value>
-  </data>
-  <data name="AiSettings_ScanDescription.Text" xml:space="preserve">
-    <value>为现有捕获内容创建或更新已保存的分析。</value>
+    <value>分析新的图像、音频和视频。旧的截图和录制内容仅在打开时进行分析。</value>
   </data>
   <data name="AiSettings_DeleteHeader.Text" xml:space="preserve">
     <value>删除捕获分析</value>
@@ -1830,9 +1812,7 @@ SOFTWARE.
   <data name="CaptureDetails_Evidence.Header" xml:space="preserve"><value>查看来源</value></data>
   <data name="CaptureDetails_Copy.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>复制文本</value></data>
   <data name="CaptureDetails_Copy.ToolTipService.ToolTip" xml:space="preserve"><value>复制文本</value></data>
-  <data name="CaptureDetails_Refresh.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>刷新详情</value></data>
-  <data name="CaptureDetails_Refresh.ToolTipService.ToolTip" xml:space="preserve"><value>刷新已保存的详情</value></data>
-  <data name="CaptureDetails_CopyAll.Content" xml:space="preserve"><value>复制全部文本</value></data>
+<data name="CaptureDetails_CopyAll.Content" xml:space="preserve"><value>复制全部文本</value></data>
   <data name="CaptureDetails_OverviewHeading.Text" xml:space="preserve"><value>AI 概览</value></data>
   <data name="CaptureDetails_SuggestionsHint.Text" xml:space="preserve"><value>以下为生成的建议。需要确保准确性时，请核对来源。</value></data>
   <data name="CaptureDetails_FactsHeading.Text" xml:space="preserve"><value>实用信息</value></data>
@@ -1887,9 +1867,9 @@ SOFTWARE.
   <data name="CaptureDetails_SourceChanged" xml:space="preserve"><value>此文件在分析后已更改。请在设置中重新运行分析以更新详情。</value></data>
   <data name="CaptureDetails_SourceUnavailable" xml:space="preserve"><value>捕获文件不可用，无法验证已保存的详情。</value></data>
   <data name="CaptureDetails_Analyzing" xml:space="preserve"><value>分析正在排队或进行中。结果可用时，详情会自动更新。</value></data>
-  <data name="CaptureDetails_Paused" xml:space="preserve"><value>分析已暂停。请在设置中启用扫描以继续。</value></data>
+  <data name="CaptureDetails_Paused" xml:space="preserve"><value>分析已停止。请选择一个操作重试。</value></data>
   <data name="CaptureDetails_Partial" xml:space="preserve"><value>部分分析未完成。此处显示可用的已保存结果。</value></data>
-  <data name="CaptureDetails_Empty" xml:space="preserve"><value>暂无已保存的详情。您可以在设置中分析现有捕获。</value></data>
+  <data name="CaptureDetails_Empty" xml:space="preserve"><value>尚无已保存的文字。请选择上方的操作以提取所需内容。</value></data>
   <data name="CaptureDetails_Retained" xml:space="preserve"><value>部分结果来自对同一文件的先前分析。</value></data>
   <data name="CaptureDetails_Limited" xml:space="preserve"><value>部分内容或结果已省略。这些见解可能未涵盖整个捕获。</value></data>
   <data name="CaptureDetails_Copied" xml:space="preserve"><value>文本已复制。</value></data>
@@ -1927,17 +1907,18 @@ SOFTWARE.
   <data name="CapturePane_MatchCount" xml:space="preserve"><value>{0} 个匹配片段</value></data>
   <data name="CapturePane_LocationUnavailable" xml:space="preserve"><value>当前视图中没有可用位置。图像可能已更改，或片段位于裁剪范围之外。</value></data>
   <data name="CapturePane_ActionFailed" xml:space="preserve"><value>此操作不可用。请刷新捕获详细信息。</value></data>
-  <data name="CaptureNaming_Header.Text" xml:space="preserve"><value>自动命名新捕获内容</value></data>
-  <data name="CaptureNaming_Description.Text" xml:space="preserve"><value>使用本地 AI 扫描为新捕获内容命名，并在“另存为”中建议文件名。现有文件保留原文件名。删除分析数据会保留已选名称。</value></data>
-  <data name="CaptureNaming_Toggle.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>自动命名新捕获内容</value></data>
+  <data name="CaptureNaming_Header.Text" xml:space="preserve"><value>为新捕获内容建议名称</value></data>
+  <data name="CaptureNaming_Description.Text" xml:space="preserve"><value>捕获后由 AI 建议文件名。在您接受建议之前，文件名称保持不变。</value></data>
+  <data name="CaptureNaming_Toggle.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>为新捕获内容建议名称</value></data>
   <data name="CaptureNaming_Edit.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>编辑捕获名称</value></data>
   <data name="CaptureNaming_Input.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>捕获名称</value></data>
-  <data name="CaptureNaming_EditHint.Text" xml:space="preserve"><value>此名称用于应用和“另存为”。现有文件保留原文件名。</value></data>
-  <data name="CaptureNaming_Save.Content" xml:space="preserve"><value>保存名称</value></data>
-  <data name="CaptureNaming_Cancel.Content" xml:space="preserve"><value>取消</value></data>
+  <data name="CaptureNaming_Save.ToolTipService.ToolTip" xml:space="preserve"><value>重命名文件</value></data>
+  <data name="CaptureNaming_Save.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>重命名文件</value></data>
+  <data name="CaptureNaming_Cancel.ToolTipService.ToolTip" xml:space="preserve"><value>取消</value></data>
+  <data name="CaptureNaming_Cancel.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>取消</value></data>
   <data name="CaptureNaming_FileName.Text" xml:space="preserve"><value>文件名</value></data>
   <data name="CaptureNaming_Invalid" xml:space="preserve"><value>请输入 1–160 个字符的单行名称。</value></data>
-  <data name="CaptureNaming_SaveFailed" xml:space="preserve"><value>无法保存名称或命名设置。请重试。</value></data>
+  <data name="CaptureNaming_SaveFailed" xml:space="preserve"><value>无法重命名文件。请检查该名称是否已被使用，以及文件是否可写。</value></data>
   <data name="AiFeatureConsentDialog_TextExtractionTitle" xml:space="preserve">
     <value>允许文本提取？</value>
   </data>
@@ -1953,19 +1934,60 @@ SOFTWARE.
   <data name="AiFeatureConsentDialog_CancelButton" xml:space="preserve">
     <value>取消</value>
   </data>
-  <data name="CaptureMemory_EnableScanningTitle" xml:space="preserve"><value>发现每次捕获中的更多价值</value></data>
   <data name="CaptureWelcome_Eyebrow.Text" xml:space="preserve"><value>设备端 AI</value></data>
   <data name="CaptureWelcome_Hero.Text" xml:space="preserve"><value>让捕获多一点魔力</value></data>
-  <data name="CaptureWelcome_Text.Text" xml:space="preserve"><value>查找并复制图像中的文字。</value></data>
-  <data name="CaptureWelcome_Recording.Text" xml:space="preserve"><value>探索录音和视频中的语音及屏幕文字。</value></data>
-  <data name="CaptureWelcome_Names.Text" xml:space="preserve"><value>为新捕获生成有意义的名称。</value></data>
-  <data name="CaptureWelcome_Consent.Text" xml:space="preserve"><value>启用本地 AI 功能和新捕获的自动分析。所有处理均在此电脑上进行，分析数据会安全存储。可能需要下载模型。您可以在设置中关闭扫描或删除分析数据。</value></data>
-  <data name="CaptureMemory_EnableScanningAccept" xml:space="preserve"><value>启用扫描</value></data>
+  <data name="CaptureWelcome_Text.Text" xml:space="preserve"><value>图像：提取文字、查找二维码并生成描述。</value></data>
+  <data name="CaptureWelcome_Recording.Text" xml:space="preserve"><value>视频：查看画面文字、描述和语音内容。</value></data>
+  <data name="CaptureWelcome_Names.Text" xml:space="preserve"><value>音频：将录音转录为可读文字。</value></data>
+  <data name="CaptureWelcome_Consent.Text" xml:space="preserve"><value>只有在您选择操作时才会使用本地 AI，不会自动扫描任何内容。结果会安全地存储在此电脑上。可能需要下载模型。您可以在设置中撤回同意或删除结果。</value></data>
   <data name="CaptureWelcome_NotNow" xml:space="preserve"><value>暂不启用</value></data>
-  <data name="CapturePane_EnableAnalysis.Content" xml:space="preserve"><value>启用捕获分析</value></data>
   <data name="TextExtractionSettings_Header.Text" xml:space="preserve"><value>文本提取</value></data>
   <data name="TextExtractionSettings_Description.Text" xml:space="preserve"><value>在图像编辑器中使用文本提取功能读取文字和二维码。</value></data>
-  <data name="TextExtractionSettings_Consent.Content" xml:space="preserve"><value>允许</value></data>
-  <data name="TextExtractionSettings_Consent.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>允许独立文本提取</value></data>
+<data name="TextExtractionSettings_Consent.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>允许独立文本提取</value></data>
   <data name="TextExtractionSettings_SaveFailed" xml:space="preserve"><value>无法保存文本提取权限。请重试。</value></data>
+  <data name="AddOns_ChromaKeyPurchaseNotCompletedLabel.Text" xml:space="preserve"><value>购买未完成。请重试。</value></data>
+  <data name="AudioCapture_StopCaptureFailedMessage" xml:space="preserve"><value>无法完成录音。请尝试重新录制。</value></data>
+  <data name="AudioEdit_LoadingMediaText.Text" xml:space="preserve"><value>正在打开音频…</value></data>
+  <data name="AudioEdit_MediaFailureOpenFolderButton.Content" xml:space="preserve"><value>打开录音文件夹</value></data>
+  <data name="ErrorPage_ExitAppButtonLabel.Text" xml:space="preserve"><value>退出应用</value></data>
+  <data name="ErrorPage_RestartFailedLabel.Text" xml:space="preserve"><value>无法重启应用。请重试或退出应用。</value></data>
+  <data name="MediaFailure_FileUnavailable" xml:space="preserve"><value>此媒体文件不可用。请检查文件是否仍然存在，然后重试。</value></data>
+  <data name="MediaFailure_Finalization" xml:space="preserve"><value>无法完成录制。请打开录制文件夹检查文件。</value></data>
+  <data name="MediaFailure_Playback" xml:space="preserve"><value>无法播放此媒体文件。请重试或打开录制文件夹。</value></data>
+  <data name="MediaFailure_RetryButton.Content" xml:space="preserve"><value>重试</value></data>
+  <data name="MediaFailure_Unsupported" xml:space="preserve"><value>不支持此媒体格式或编解码器。</value></data>
+  <data name="VideoEdit_LoadingMediaText.Text" xml:space="preserve"><value>正在打开视频…</value></data>
+  <data name="VideoEdit_MediaFailureOpenFolderButton.Content" xml:space="preserve"><value>打开屏幕录制文件夹</value></data>
+  <data name="AddOns_ItemUnknown" xml:space="preserve"><value>正在加载…</value></data>
+  <data name="ChromaKeyToolbar_KeyColorLabel.Text" xml:space="preserve"><value>键控颜色</value></data>
+  <data name="Common_BackButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>返回</value></data>
+  <data name="MainWindow_DismissNotificationButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>关闭通知</value></data>
+  <data name="MainWindow_DismissNotificationButton.ToolTipService.ToolTip" xml:space="preserve"><value>关闭</value></data>
+  <data name="AppMenu_NoRecentCaptures" xml:space="preserve"><value>无</value></data>
+  <data name="ImageEdit_DeleteShape" xml:space="preserve"><value>删除</value></data>
+  <data name="ImageCanvas_CopyQrCodeValue" xml:space="preserve"><value>复制二维码内容</value></data>
+  <data name="ImageCanvas_OpenQrCodeLink" xml:space="preserve"><value>打开二维码链接</value></data>
+  <data name="ImageCanvas_QrCodeValue" xml:space="preserve"><value>二维码：{0}</value></data>
+  <data name="Common_MediaType_Image" xml:space="preserve"><value>图像</value></data>
+  <data name="Common_MediaType_Video" xml:space="preserve"><value>视频</value></data>
+  <data name="Common_MediaType_Audio" xml:space="preserve"><value>音频</value></data>
+  <data name="Common_MediaType_File" xml:space="preserve"><value>文件</value></data>
+  <data name="CaptureNaming_Generating.Text" xml:space="preserve"><value>正在建议名称…</value></data>
+  <data name="CaptureNaming_Suggestion.Text" xml:space="preserve"><value>建议的文件名</value></data>
+  <data name="CaptureNaming_Accept.Content" xml:space="preserve"><value>使用此名称</value></data>
+  <data name="CapturePane_GeneratingSummary.Text" xml:space="preserve"><value>正在生成摘要…</value></data>
+  <data name="CaptureAction_Description" xml:space="preserve"><value>生成描述</value></data>
+  <data name="CaptureAction_Summary" xml:space="preserve"><value>生成摘要</value></data>
+  <data name="CaptureAction_Name" xml:space="preserve"><value>建议名称</value></data>
+  <data name="CaptureAction_Text" xml:space="preserve"><value>提取文字</value></data>
+  <data name="CaptureAction_Qr" xml:space="preserve"><value>查找二维码</value></data>
+  <data name="CaptureAction_Transcript" xml:space="preserve"><value>转录音频</value></data>
+  <data name="CaptureAction_DescriptionHeading.Text" xml:space="preserve"><value>AI 描述</value></data>
+  <data name="CaptureAction_SummaryInputs.Text" xml:space="preserve"><value>请先提取文字、转录音频或生成描述。摘要和名称建议将使用这些已保存的结果。</value></data>
+  <data name="CaptureAction_NoText" xml:space="preserve"><value>未找到文字。</value></data>
+  <data name="CaptureAction_NoQr" xml:space="preserve"><value>未找到二维码。</value></data>
+  <data name="CaptureAction_NoSpeech" xml:space="preserve"><value>未找到语音。</value></data>
+  <data name="CaptureAction_NoDescription" xml:space="preserve"><value>未生成描述。</value></data>
+  <data name="CaptureAction_Unavailable" xml:space="preserve"><value>此设备不支持此操作。</value></data>
+  <data name="CaptureAction_Failed" xml:space="preserve"><value>未能完成此操作。您可以重试。</value></data>
 </root>

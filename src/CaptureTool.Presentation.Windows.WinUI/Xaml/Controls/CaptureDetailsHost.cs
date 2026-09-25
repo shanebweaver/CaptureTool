@@ -1,3 +1,4 @@
+using CaptureTool.Application.Abstractions.Capture.Assets;
 using CaptureTool.Domain.Analysis;
 using CaptureTool.Presentation.Features.CaptureDetails;
 using Microsoft.UI.Xaml;
@@ -32,12 +33,16 @@ public sealed partial class CaptureDetailsHost : SplitView
     public double EndSeconds { get => (double)GetValue(EndSecondsProperty); set => SetValue(EndSecondsProperty, value); }
     public Func<CaptureTextLocation, bool>? Navigate { get; set; }
     public Action? ClearLocation { get; set; }
+    public Action<CaptureFileRename>? FileRenamed { get; set; }
+    public Action<IReadOnlyList<CaptureTextPassage>?>? TextOverlayChanged { get; set; }
 
     public CaptureDetailsHost()
     {
         _details = new CaptureDetailsPane();
         _details.Navigate = location => Navigate?.Invoke(location) == true;
+        _details.FileRenamed = rename => FileRenamed?.Invoke(rename);
         _details.ClearLocation = () => ClearLocation?.Invoke();
+        _details.TextOverlayChanged = passages => TextOverlayChanged?.Invoke(passages);
         Pane = _details;
         PanePlacement = SplitViewPanePlacement.Right;
         DisplayMode = SplitViewDisplayMode.Overlay;

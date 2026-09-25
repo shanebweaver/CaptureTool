@@ -1,4 +1,4 @@
-using CaptureTool.Application.Abstractions.Localization;
+﻿using CaptureTool.Application.Abstractions.Localization;
 using CaptureTool.Domain.Analysis;
 using CaptureTool.Domain.Analysis.Payloads;
 using System.Globalization;
@@ -9,19 +9,24 @@ namespace CaptureTool.Presentation.Features.CaptureDetails;
 public sealed class CaptureDetailsContent
 {
     public string Summary { get; private init; } = string.Empty;
+    public string SuggestedName { get; private init; } = string.Empty;
+    public string Description { get; private init; } = string.Empty;
+    public bool HasSummaryInputs => Description.Length > 0 || Passages.Any(passage => !string.IsNullOrWhiteSpace(passage.Text));
     public IReadOnlyList<CaptureTextPassage> Passages { get; private init; } = [];
     public bool HasLimitedCoverage { get; private init; }
-    public bool HasRetainedResults { get; private init; }
-    public bool HasContent => Summary.Length > 0 || Passages.Count > 0;
+    public bool HasContent => Summary.Length > 0 || Description.Length > 0 || Passages.Count > 0;
 
     public static CaptureDetailsContent Create(CaptureAnalysisRecord record, ILocalizationService localization) => new()
     {
         Summary = string.Join(" ", record.Results.Select(result => result.Payload).OfType<CaptureSynopsisMetadata>()
             .SelectMany(synopsis => synopsis.Summary).Select(statement => statement.Text)),
+        SuggestedName = record.Results.Select(result => result.Payload).OfType<CaptureSynopsisMetadata>().SingleOrDefault()?.Title?.Text ?? string.Empty,
+        Description = string.Join(Environment.NewLine, record.Results.Select(result => result.Payload).OfType<DescriptionMetadata>()
+            .SelectMany(payload => payload.Descriptions).Select(description => description.Timestamp is { } time
+                ? $"{Time(time)}  {description.Text}" : description.Text)),
         Passages = CaptureTextPassage.From(record, localization),
         HasLimitedCoverage = record.Results.Any(result => result.Payload is CaptureSynopsisMetadata { Coverage.IsComplete: false }) ||
-            record.MediaKind == AnalysisMediaKind.Video && record.Results.Any(result => result.Payload is TextRecognitionMetadata),
-        HasRetainedResults = record.Results.Any(result => result.ProducingRunId is { } producingRun && producingRun != record.RunId)
+            record.MediaKind == AnalysisMediaKind.Video && record.Results.Any(result => result.Payload is TextRecognitionMetadata)
     };
 
     internal static string Time(TimeSpan time) => time.TotalHours >= 1

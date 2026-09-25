@@ -7,6 +7,10 @@ namespace CaptureTool.Infrastructure.Analysis.Persistence;
 
 internal sealed partial class LocalCaptureAnalysisStore
 {
+    // Only requests admitted by this store instance may execute. Persisted run markers
+    // preserve provenance, but never restore a queue after process exit or a crash.
+    private readonly Dictionary<CaptureId, AnalysisRunToken> _sessionRequests = [];
+
     public async Task<AnalysisAdmissionScope> GetAdmissionScopeAsync(CancellationToken cancellationToken = default)
     {
         await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
@@ -27,7 +31,10 @@ internal sealed partial class LocalCaptureAnalysisStore
             AnalysisControlDocument? control = await ReadControlAsync(false, cancellationToken).ConfigureAwait(false);
             if (control == null) return null;
             AnalysisDocument? document = await ReadDocumentAsync(control.Generation, captureId, cancellationToken).ConfigureAwait(false);
-            return document?.Run == null ? null : ToWork(control.Generation, document);
+            if (document?.Run == null) return null;
+            AnalysisWorkItem work = ToWork(control.Generation, document);
+            return work.Run.IsPending && !OwnsRequest(work.Token)
+                ? work with { Run = work.Run.Finish(AnalysisRunStatus.Cancelled) } : work;
         }
         finally { _gate.Release(); }
     }
@@ -36,39 +43,52 @@ internal sealed partial class LocalCaptureAnalysisStore
     {
         const int batchSize = 16;
         Guid generation;
-        string[] paths;
+        AnalysisRunToken[] requests;
         await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
+            if (_sessionRequests.Count == 0) return [];
             AnalysisControlDocument? control = await ReadControlAsync(false, cancellationToken).ConfigureAwait(false);
             if (control == null) return [];
             generation = control.Generation;
-            paths = _files.GetFiles(GenerationPath(generation)).Where(path => path.EndsWith(".analysis", StringComparison.Ordinal)).ToArray();
+            requests = _sessionRequests.Values.Where(token => token.Generation == generation).ToArray();
         }
         finally { _gate.Release(); }
 
         List<AnalysisWorkItem> pending = [];
-        for (int offset = 0; offset < paths.Length; offset += batchSize)
+        for (int offset = 0; offset < requests.Length; offset += batchSize)
         {
-            // Bound each hold so settings and clear do not wait for the entire library.
+            // Bound each hold so settings and clear can interrupt a large session queue.
             await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
             try
             {
                 AnalysisControlDocument? control = await ReadControlAsync(false, cancellationToken).ConfigureAwait(false);
                 if (control?.Generation != generation) return [];
-                for (int index = offset; index < Math.Min(offset + batchSize, paths.Length); index++)
+                for (int index = offset; index < Math.Min(offset + batchSize, requests.Length); index++)
                 {
-                    if (!Guid.TryParseExact(Path.GetFileNameWithoutExtension(paths[index]), "N", out Guid id) || id == Guid.Empty)
-                        throw new InvalidDataException("Unexpected metadata filename.");
-                    AnalysisDocument? document = await ReadDocumentAsync(generation, new CaptureId(id), cancellationToken).ConfigureAwait(false);
+                    AnalysisRunToken token = requests[index];
+                    if (!OwnsRequest(token)) continue;
+                    AnalysisDocument? document = await ReadDocumentAsync(generation, token.CaptureId, cancellationToken).ConfigureAwait(false);
                     if (document?.Run?.Status is (int)AnalysisRunStatus.Queued or (int)AnalysisRunStatus.Running)
                         pending.Add(ToWork(generation, document));
                 }
             }
             finally { _gate.Release(); }
         }
-        return pending.OrderBy(work => work.Run.QueueOrder).ToArray();
+        await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try { return pending.Where(work => OwnsRequest(work.Token)).OrderBy(work => work.Run.QueueOrder).ToArray(); }
+        finally { _gate.Release(); }
     }
+
+    public async Task DiscardPendingAsync(CancellationToken cancellationToken = default)
+    {
+        await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try { _sessionRequests.Clear(); }
+        finally { _gate.Release(); }
+    }
+
+    private bool OwnsRequest(AnalysisRunToken token) =>
+        _sessionRequests.TryGetValue(token.CaptureId, out var current) && current == token;
 
     public async Task<bool> AdmitAsync(AnalysisRequest request, Guid authorizationId, MediaAnalysisPlan plan,
         CancellationToken cancellationToken = default)
@@ -88,7 +108,8 @@ internal sealed partial class LocalCaptureAnalysisStore
             if (control == null || control.Generation != request.Generation) return false;
             AnalysisDocument? prior = await ReadDocumentAsync(control.Generation, request.CaptureId, cancellationToken).ConfigureAwait(false);
             if (prior?.Run is { } existing && existing.Id == request.RequestId)
-                return existing.AuthorizationId == authorizationId && existing.PlanVersion == plan.Version &&
+                return OwnsRequest(new(request.CaptureId, control.Generation, request.RequestId)) &&
+                    existing.AuthorizationId == authorizationId && existing.PlanVersion == plan.Version &&
                     existing.SourcePath == path && existing.Language == request.Language && prior.MediaKind == (int)request.MediaKind &&
                     existing.Steps.Select(step => new AnalysisCapability(step.Name, step.SchemaVersion)).SequenceEqual(plan.Steps.Select(step => step.Capability));
             if ((prior?.Run?.Id ?? prior?.RunId) != request.ExpectedRunId) return false;
@@ -101,6 +122,7 @@ internal sealed partial class LocalCaptureAnalysisStore
             AnalysisDocument next = (prior ?? new(2, request.CaptureId.Value, (int)request.MediaKind, null,
                 plan.Version, request.RequestId, [])) with { Version = 2, Run = ToDocument(run, path, request.Language) };
             await WriteDocumentAsync(control.Generation, next, cancellationToken).ConfigureAwait(false);
+            _sessionRequests[request.CaptureId] = new(request.CaptureId, control.Generation, request.RequestId);
             return true;
         }
         finally { _gate.Release(); }
@@ -153,6 +175,7 @@ internal sealed partial class LocalCaptureAnalysisStore
                 Version = 2, Run = ToDocument(run.CompleteStep(step), document.Run!.SourcePath, document.Run.Language),
             };
             await WriteDocumentAsync(token.Generation, next, cancellationToken).ConfigureAwait(false);
+            if (!ToWork(token.Generation, next).Run.IsPending) _sessionRequests.Remove(token.CaptureId);
             return true;
         }
         finally { _gate.Release(); }
@@ -171,6 +194,7 @@ internal sealed partial class LocalCaptureAnalysisStore
             {
                 Run = ToDocument(run.Finish(status), document.Run!.SourcePath, document.Run.Language),
             }, cancellationToken).ConfigureAwait(false);
+            _sessionRequests.Remove(token.CaptureId);
             return true;
         }
         finally { _gate.Release(); }
@@ -180,6 +204,7 @@ internal sealed partial class LocalCaptureAnalysisStore
     {
         ArgumentNullException.ThrowIfNull(token);
         ValidateId(token.CaptureId);
+        if (!OwnsRequest(token)) return null;
         AnalysisControlDocument? control = await ReadControlAsync(false, cancellationToken).ConfigureAwait(false);
         if (control == null || control.Generation != token.Generation) return null;
         AnalysisDocument? document = await ReadDocumentAsync(token.Generation, token.CaptureId, cancellationToken).ConfigureAwait(false);

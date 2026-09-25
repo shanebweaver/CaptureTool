@@ -1,4 +1,6 @@
-# PRD: Capture Analysis — Slice 3, Capture and Settings Integration
+﻿# PRD: Capture Analysis — Slice 3, Capture and Settings Integration
+
+**Superseded behavior:** [Explicit analysis actions](capture-analysis-explicit-actions.md) replace automatic scanning, open-triggered analysis, automatic naming, and first-launch AI consent. Existing results and the independent Text Extraction flow remain.
 
 Status: Implemented, hardened, and reviewed; ready for slice 4 release verification.
 See the [readiness audit and evidence](capture-analysis-integration-review.md#slice-4-readiness-audit).

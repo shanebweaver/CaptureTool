@@ -1,4 +1,4 @@
-using FlaUI.Core.AutomationElements;
+﻿using FlaUI.Core.AutomationElements;
 using FlaUI.Core.Definitions;
 using FlaUI.Core.Input;
 using FlaUI.Core.WindowsAPI;
@@ -21,8 +21,7 @@ public sealed partial class ImageEditTextExtractionUiTests
     [TestCategory("UI")]
     public void CapturePane_LocalDetailsAndAnalysisLifecycle(string language)
     {
-        if (Environment.GetEnvironmentVariable("CAPTURETOOL_UI_TEST_LANGUAGE") is { Length: > 0 } requested && requested != language)
-            Assert.Inconclusive("A different UI language was requested for this targeted run.");
+        RequireUiTestLanguage(language);
         if (!ShouldRunUiTests()) Assert.Inconclusive("Set CAPTURETOOL_RUN_UI_TESTS=1 to run desktop UI automation tests.");
         using var dpi = new DesktopDpiScope();
         string repo = FindRepositoryRoot();
@@ -47,8 +46,8 @@ public sealed partial class ImageEditTextExtractionUiTests
         using var automation = new UIA3Automation();
         Window window = WaitForMainWindow(app, automation, AppLaunchTimeout);
         window.Focus();
-        MaximizeWindow(window);
         WaitForElement(window, automation, "ImageEdit_CommandBar", AppLaunchTimeout);
+        MaximizeWindow(window);
         AutomationElement dialog = OpenDetails();
         WaitForElementByName(dialog, automation, resources["CaptureDetails_Unknown"], InteractionTimeout);
         WaitForElementByName(dialog, automation, resources["CaptureDetails_Media_Image"], InteractionTimeout);
@@ -58,15 +57,26 @@ public sealed partial class ImageEditTextExtractionUiTests
         CloseDetails();
 
         OpenSettings();
-        Element("CaptureMemoryScanning").Patterns.Toggle.Pattern.Toggle();
-        Confirm("EnableScanning", "CaptureMemory_EnableScanningAccept");
-        Confirm("ScanExisting", "CaptureMemory_ScanExistingAccept");
+        Element("CaptureMemoryConsent").Patterns.Toggle.Pattern.Toggle();
+        Confirm("Consent", "CaptureMemory_ConsentAccept");
         GoHome();
         OpenCapture();
         dialog = OpenDetails();
+        Element("CapturePane_TextTab").Patterns.SelectionItem.Pattern.Select();
+        Element("CaptureAction_Text").Patterns.Invoke.Pattern.Invoke();
+        WaitForElementRemoved(window, automation, "CaptureAction_Text", InteractionTimeout);
+        Element("CaptureAction_Qr").Patterns.Invoke.Pattern.Invoke();
+        WaitForElementRemoved(window, automation, "CaptureAction_Qr", InteractionTimeout);
+        Element("CapturePane_DetailsTab").Patterns.SelectionItem.Pattern.Select();
+        WaitFor(() => Element("CaptureAction_Summary").IsEnabled ? window : null, InteractionTimeout, "summary inputs available");
+        Element("CaptureAction_Summary").Patterns.Invoke.Pattern.Invoke();
         WaitForElementByName(dialog, automation, "Invoice INV-2048 totals USD 125.00 and is due on 2026-10-15.", InteractionTimeout);
         Screenshot("summary");
         Element("CapturePane_TextTab").Patterns.SelectionItem.Pattern.Select();
+        WaitFor(() => window.FindFirstDescendant(automation.ConditionFactory.ByAutomationId("ImageEdit_TextExtractionOverlayMarker"))
+            is { IsOffscreen: false } marker ? marker : null, InteractionTimeout, "saved text uses the dimmed text-selection overlay");
+        Assert.IsFalse(Element("CapturePane_Passages").FindAllDescendants(automation.ConditionFactory.ByControlType(ControlType.Text))
+            .Any(item => item.Name == resources["CaptureDetails_RecognizedText"] && !item.IsOffscreen), "Rows should not repeat a recognized-text heading.");
         var search = Element("CapturePane_Search").AsTextBox();
         search.Text = "INV-2048";
         Element("CapturePane_CopyResults").Patterns.Invoke.Pattern.Invoke();
@@ -82,9 +92,10 @@ public sealed partial class ImageEditTextExtractionUiTests
         WaitFor(() => dialog.FindAllDescendants(automation.ConditionFactory.ByControlType(ControlType.Button).And(automation.ConditionFactory.ByName(resources["CaptureDetails_QrCode"]))).FirstOrDefault(item => item.IsEnabled), InteractionTimeout, "QR location after filtering");
         Screenshot("source-text");
         Element("CapturePane_DetailsTab").Patterns.SelectionItem.Pattern.Select();
+        WaitForElementRemoved(window, automation, "ImageEdit_TextExtractionOverlayMarker", InteractionTimeout);
         CloseDetails();
         OpenSettings();
-        WaitForElementByName(window, automation, "AppTheme_Dark", InteractionTimeout).Patterns.SelectionItem.Pattern.Select();
+        WaitForElementByName(window, automation, resources["AppTheme_Dark"], InteractionTimeout).Patterns.SelectionItem.Pattern.Select();
         GoHome(); OpenCapture();
         window.Patterns.Window.Pattern.SetWindowVisualState(WindowVisualState.Normal);
         window.Patterns.Transform.Pattern.Resize(720, 760);
@@ -93,9 +104,12 @@ public sealed partial class ImageEditTextExtractionUiTests
         CloseDetails();
         MaximizeWindow(window);
         OpenSettings();
-        Element("CaptureMemoryDelete").Patterns.Invoke.Pattern.Invoke();
+        Element("CaptureMemoryConsent").Patterns.Toggle.Pattern.Toggle();
+        Confirm("DeleteMetadata", "CaptureMemory_Cancel");
+        WaitFor(() => Element("CaptureMemoryDelete") is { IsEnabled: true } delete ? delete : null,
+            InteractionTimeout, "deletion enabled after declining deletion").Patterns.Invoke.Pattern.Invoke();
         Confirm("DeleteMetadata", "CaptureMemory_DeleteMetadataAccept");
-        WaitFor(() => !Element("CaptureMemoryDelete").IsEnabled && Element("CaptureMemoryScan").IsEnabled &&
+        WaitFor(() => !Element("CaptureMemoryDelete").IsEnabled &&
             !Directory.EnumerateFiles(Path.Combine(data, "CaptureAnalysis"), "*.analysis", SearchOption.AllDirectories).Any()
             ? window : null, InteractionTimeout, "metadata deletion completed");
         GoHome(); OpenCapture();
@@ -140,6 +154,7 @@ public sealed partial class ImageEditTextExtractionUiTests
             WaitForElementByName(dialog, automation, resources["CapturePane_Close.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name"], InteractionTimeout).AsButton().Invoke();
             WaitFor(() => Element("Editor_DetailsToggle").Patterns.Toggle.Pattern.ToggleState.Value == ToggleState.Off ? window : null,
                 InteractionTimeout, "closed details pane");
+            Thread.Sleep(350); // Let the SplitView closing transition release pointer input.
         }
         void Confirm(string prompt, string answer)
         {

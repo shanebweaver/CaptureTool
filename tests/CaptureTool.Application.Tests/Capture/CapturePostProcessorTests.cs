@@ -1,4 +1,4 @@
-using CaptureTool.Application.Abstractions.Clipboard;
+﻿using CaptureTool.Application.Abstractions.Clipboard;
 using CaptureTool.Application.Abstractions.Analysis;
 using CaptureTool.Application.Abstractions.Files;
 using CaptureTool.Application.Abstractions.Library.RecentCaptures;
@@ -177,7 +177,6 @@ public sealed class CapturePostProcessorTests
     private static Mock<ICaptureMemoryService> CreateCaptureMemory()
     {
         var memory = new Mock<ICaptureMemoryService>();
-        memory.SetupGet(value => value.CaptureAuthorization).Returns(Guid.NewGuid());
         return memory;
     }
 
@@ -185,7 +184,7 @@ public sealed class CapturePostProcessorTests
     {
         memory.Verify(value => value.RegisterCaptureAsync(It.Is<CaptureAsset>(asset => asset.SourcePath == source &&
             asset.MediaType == type && asset.SourceOwnership == CaptureSourceOwnership.Application && !asset.Id.IsEmpty),
-            memory.Object.CaptureAuthorization, default), Times.Once);
+            default), Times.Once);
         memory.Verify(value => value.SetPreferredPathAsync(source, It.Is<string>(path => path.StartsWith(destination, StringComparison.Ordinal)), default), Times.Once);
     }
 

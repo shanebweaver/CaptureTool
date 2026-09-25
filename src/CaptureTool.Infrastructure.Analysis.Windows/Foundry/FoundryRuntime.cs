@@ -1,14 +1,63 @@
+using CaptureTool.Application.Abstractions.Analysis;
 using CaptureTool.Application.Abstractions.Storage;
 using Microsoft.AI.Foundry.Local;
 using Microsoft.Extensions.Logging.Abstractions;
 
 namespace CaptureTool.Infrastructure.Analysis.Windows.Foundry;
 
-internal sealed class FoundryRuntime(IStorageService storage) : IDisposable
+internal sealed class FoundryRuntime(IStorageService storage) : IAnalysisResources, IDisposable
 {
     private readonly SemaphoreSlim _gate = new(1, 1);
+    private readonly SemaphoreSlim _modelGate = new(1, 1);
+    private IModel? _loadedModel;
+    private bool _modelReady;
     private FoundryLocalManager? _manager;
     private bool _ownsManager;
+
+    // One resident model, shared by all adapters. The lease spans native inference,
+    // including an invocation that has outlived its worker deadline.
+    internal async Task<IAsyncDisposable> AcquireModelAsync(IModel model, CancellationToken ct)
+    {
+        await _modelGate.WaitAsync(ct).ConfigureAwait(false);
+        try
+        {
+            if (!_modelReady || _loadedModel?.Id != model.Id)
+            {
+                await UnloadAsync().ConfigureAwait(false);
+                _loadedModel = model;
+                try { await model.LoadAsync(ct).ConfigureAwait(false); _modelReady = true; }
+                catch { await UnloadAsync().ConfigureAwait(false); throw; }
+            }
+            ct.ThrowIfCancellationRequested();
+            return new ModelLease(this, ct);
+        }
+        catch { _modelGate.Release(); throw; }
+    }
+
+    public async Task ReleaseAsync()
+    {
+        await _modelGate.WaitAsync().ConfigureAwait(false);
+        try { await UnloadAsync().ConfigureAwait(false); }
+        finally { _modelGate.Release(); }
+    }
+
+    private async Task UnloadAsync()
+    {
+        if (_loadedModel == null) return;
+        _modelReady = false;
+        // Keep ownership if unloading fails; never load a second model on top of it.
+        await _loadedModel.UnloadAsync(CancellationToken.None).ConfigureAwait(false);
+        _loadedModel = null;
+    }
+
+    private sealed class ModelLease(FoundryRuntime owner, CancellationToken ct) : IAsyncDisposable
+    {
+        public async ValueTask DisposeAsync()
+        {
+            try { if (ct.IsCancellationRequested) await owner.UnloadAsync().ConfigureAwait(false); }
+            finally { owner._modelGate.Release(); }
+        }
+    }
 
     // Only preparation may initialize the SDK or access its catalog. Passive probes never call here.
     public async Task<IModel?> ResolveAsync(string alias, CancellationToken ct)

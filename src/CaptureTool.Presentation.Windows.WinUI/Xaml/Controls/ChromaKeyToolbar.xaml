@@ -29,134 +29,135 @@
         </Border.Shadow>
         <Grid>
             <StackPanel Orientation="Horizontal" Spacing="4">
-            <!--  Key color  -->
-            <Button
-                x:Name="KeyColorButton"
-                MinWidth="92"
-                MinHeight="34"
-                Padding="8,4"
-                VerticalAlignment="Center"
-                Background="Transparent"
-                BorderBrush="Transparent"
-                IsEnabled="{x:Bind HasColorOptions, Mode=OneWay}">
-                <Grid VerticalAlignment="Center" ColumnSpacing="8">
+                <!--  Key color  -->
+                <Button
+                    x:Name="KeyColorButton"
+                    MinWidth="92"
+                    MinHeight="34"
+                    Padding="8,4"
+                    VerticalAlignment="Center"
+                    Background="Transparent"
+                    BorderBrush="Transparent"
+                    IsEnabled="{x:Bind HasColorOptions, Mode=OneWay}">
+                    <Grid VerticalAlignment="Center" ColumnSpacing="8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <Border
+                            Width="24"
+                            Height="24"
+                            VerticalAlignment="Center"
+                            BorderBrush="{ThemeResource ControlStrokeColorDefaultBrush}"
+                            BorderThickness="1"
+                            CornerRadius="4">
+                            <Rectangle RadiusX="3" RadiusY="3">
+                                <Rectangle.Fill>
+                                    <SolidColorBrush Color="{x:Bind SelectedColor, Mode=OneWay, Converter={StaticResource ColorTypeConverter}}" />
+                                </Rectangle.Fill>
+                            </Rectangle>
+                        </Border>
+                        <TextBlock
+                            x:Uid="ChromaKeyToolbar_KeyColorLabel"
+                            Grid.Column="1"
+                            VerticalAlignment="Center"
+                            Text="Key color" />
+                        <FontIcon
+                            Grid.Column="2"
+                            VerticalAlignment="Center"
+                            FontSize="12"
+                            Glyph="&#xE70D;" />
+                    </Grid>
+                    <Button.Flyout>
+                        <Flyout FlyoutPresenterStyle="{StaticResource ColorPaletteFlyoutPresenterStyle}">
+                            <local:ColorPalettePicker
+                                ColorOptions="{x:Bind PaletteColorOptions, Mode=OneWay}"
+                                IsOpacityVisible="False"
+                                IsThicknessVisible="False"
+                                MaximumRowsOrColumns="4"
+                                OpacityPercentage="100"
+                                SelectedColor="{x:Bind SelectedColor, Mode=OneWay}"
+                                SelectedColorChanged="KeyColorPalette_SelectedColorChanged" />
+                        </Flyout>
+                    </Button.Flyout>
+                </Button>
+
+                <!--  Tolerance  -->
+                <Grid
+                    MinHeight="34"
+                    Margin="4,0"
+                    VerticalAlignment="Center">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition />
+                        <ColumnDefinition Width="64" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock x:Uid="ChromaKeyToolbar_Tolerance" VerticalAlignment="Center" />
+                    <Slider
+                        x:Name="ToleranceSlider"
+                        Grid.Column="1"
+                        Width="150"
+                        Margin="8,0"
+                        VerticalAlignment="Center"
+                        IsEnabled="{x:Bind AreEffectOptionsEnabled, Mode=OneWay}"
+                        Maximum="100"
+                        Minimum="0"
+                        StepFrequency="1"
+                        TickFrequency="10"
+                        ValueChanged="ToleranceSlider_ValueChanged"
+                        Value="{x:Bind Tolerance, Mode=OneWay}" />
+                    <NumberBox
+                        Grid.Column="2"
+                        Width="64"
+                        VerticalAlignment="Center"
+                        IsEnabled="{x:Bind AreEffectOptionsEnabled, Mode=OneWay}"
+                        LargeChange="10"
+                        Maximum="100"
+                        Minimum="0"
+                        SmallChange="1"
+                        SpinButtonPlacementMode="Compact"
+                        ValueChanged="ToleranceNumberBox_ValueChanged"
+                        Value="{x:Bind Tolerance, Mode=OneWay}" />
+                </Grid>
+
+                <!--  Desaturation  -->
+                <Grid
+                    MinHeight="34"
+                    Margin="4,0"
+                    VerticalAlignment="Center">
+                    <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition />
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
-                    <Border
-                        Width="24"
-                        Height="24"
-                        VerticalAlignment="Center"
-                        BorderBrush="{ThemeResource ControlStrokeColorDefaultBrush}"
-                        BorderThickness="1"
-                        CornerRadius="4">
-                        <Rectangle RadiusX="3" RadiusY="3">
-                            <Rectangle.Fill>
-                                <SolidColorBrush Color="{x:Bind SelectedColor, Mode=OneWay, Converter={StaticResource ColorTypeConverter}}" />
-                            </Rectangle.Fill>
-                        </Rectangle>
-                    </Border>
-                    <TextBlock
+                    <TextBlock x:Uid="ChromaKeyToolbar_Desaturation" VerticalAlignment="Center" />
+                    <Slider
+                        x:Name="DesaturationSlider"
                         Grid.Column="1"
+                        Width="150"
+                        Margin="8,0"
                         VerticalAlignment="Center"
-                        Text="Key color" />
-                    <FontIcon
+                        IsEnabled="{x:Bind AreEffectOptionsEnabled, Mode=OneWay}"
+                        Maximum="100"
+                        Minimum="0"
+                        StepFrequency="1"
+                        TickFrequency="10"
+                        ValueChanged="DesaturationSlider_ValueChanged"
+                        Value="{x:Bind Desaturation, Mode=OneWay}" />
+                    <NumberBox
                         Grid.Column="2"
+                        Width="64"
                         VerticalAlignment="Center"
-                        FontSize="12"
-                        Glyph="&#xE70D;" />
+                        IsEnabled="{x:Bind AreEffectOptionsEnabled, Mode=OneWay}"
+                        LargeChange="10"
+                        Maximum="100"
+                        Minimum="0"
+                        SmallChange="1"
+                        SpinButtonPlacementMode="Compact"
+                        ValueChanged="DesaturationNumberBox_ValueChanged"
+                        Value="{x:Bind Desaturation, Mode=OneWay}" />
                 </Grid>
-                <Button.Flyout>
-                    <Flyout FlyoutPresenterStyle="{StaticResource ColorPaletteFlyoutPresenterStyle}">
-                        <local:ColorPalettePicker
-                            ColorOptions="{x:Bind PaletteColorOptions, Mode=OneWay}"
-                            IsOpacityVisible="False"
-                            IsThicknessVisible="False"
-                            MaximumRowsOrColumns="4"
-                            OpacityPercentage="100"
-                            SelectedColor="{x:Bind SelectedColor, Mode=OneWay}"
-                            SelectedColorChanged="KeyColorPalette_SelectedColorChanged" />
-                    </Flyout>
-                </Button.Flyout>
-            </Button>
-
-            <!--  Tolerance  -->
-            <Grid
-                MinHeight="34"
-                Margin="4,0"
-                VerticalAlignment="Center">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition />
-                    <ColumnDefinition Width="64" />
-                </Grid.ColumnDefinitions>
-                <TextBlock x:Uid="ChromaKeyToolbar_Tolerance" VerticalAlignment="Center" />
-                <Slider
-                    x:Name="ToleranceSlider"
-                    Grid.Column="1"
-                    Width="150"
-                    Margin="8,0"
-                    VerticalAlignment="Center"
-                    IsEnabled="{x:Bind AreEffectOptionsEnabled, Mode=OneWay}"
-                    Maximum="100"
-                    Minimum="0"
-                    StepFrequency="1"
-                    TickFrequency="10"
-                    ValueChanged="ToleranceSlider_ValueChanged"
-                    Value="{x:Bind Tolerance, Mode=OneWay}" />
-                <NumberBox
-                    Grid.Column="2"
-                    Width="64"
-                    VerticalAlignment="Center"
-                    IsEnabled="{x:Bind AreEffectOptionsEnabled, Mode=OneWay}"
-                    LargeChange="10"
-                    Maximum="100"
-                    Minimum="0"
-                    SmallChange="1"
-                    SpinButtonPlacementMode="Compact"
-                    ValueChanged="ToleranceNumberBox_ValueChanged"
-                    Value="{x:Bind Tolerance, Mode=OneWay}" />
-            </Grid>
-
-            <!--  Desaturation  -->
-            <Grid
-                MinHeight="34"
-                Margin="4,0"
-                VerticalAlignment="Center">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
-                <TextBlock x:Uid="ChromaKeyToolbar_Desaturation" VerticalAlignment="Center" />
-                <Slider
-                    x:Name="DesaturationSlider"
-                    Grid.Column="1"
-                    Width="150"
-                    Margin="8,0"
-                    VerticalAlignment="Center"
-                    IsEnabled="{x:Bind AreEffectOptionsEnabled, Mode=OneWay}"
-                    Maximum="100"
-                    Minimum="0"
-                    StepFrequency="1"
-                    TickFrequency="10"
-                    ValueChanged="DesaturationSlider_ValueChanged"
-                    Value="{x:Bind Desaturation, Mode=OneWay}" />
-                <NumberBox
-                    Grid.Column="2"
-                    Width="64"
-                    VerticalAlignment="Center"
-                    IsEnabled="{x:Bind AreEffectOptionsEnabled, Mode=OneWay}"
-                    LargeChange="10"
-                    Maximum="100"
-                    Minimum="0"
-                    SmallChange="1"
-                    SpinButtonPlacementMode="Compact"
-                    ValueChanged="DesaturationNumberBox_ValueChanged"
-                    Value="{x:Bind Desaturation, Mode=OneWay}" />
-            </Grid>
             </StackPanel>
         </Grid>
     </Border>

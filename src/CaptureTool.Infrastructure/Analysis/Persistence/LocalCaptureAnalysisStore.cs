@@ -139,6 +139,7 @@ internal sealed partial class LocalCaptureAnalysisStore : ICaptureAnalysisStore,
             // Publish a protected generation before touching existing analysis files, even during recovery.
             var next = new AnalysisControlDocument(2, Guid.NewGuid(), ReconciliationBoundary: reconciliationBoundary);
             await _documents.WriteAsync(_controlPath, next, AnalysisJsonContext.Default.AnalysisControlDocument, cancellationToken).ConfigureAwait(false);
+            _sessionRequests.Clear();
             // After publication, deletion is committed even if cleanup is interrupted. Do not roll back the generation.
             return CleanupObsoleteFiles(next.Generation);
         }

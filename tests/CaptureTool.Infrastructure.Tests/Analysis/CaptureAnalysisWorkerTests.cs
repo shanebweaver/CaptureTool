@@ -17,7 +17,78 @@ public sealed partial class CaptureAnalysisWorkerTests
     private CancellationToken Ct => TestContext.CancellationToken;
 
     [TestMethod]
-    public async Task WorkerHonorsFifoStepAndFallbackOrderAndReportsPreparationSeparately()
+    public async Task ExplicitCapabilitiesRunIndependentlyAndPreserveEarlierResults()
+    {
+        using var fixture = new Fixture();
+        var first = await fixture.EnqueueAsync(Ct, capabilities: [AnalysisCapability.Description]);
+        await DrainAsync(fixture.Worker, Ct);
+        CollectionAssert.AreEqual(new[] { "description" }, fixture.Calls.ToArray());
+        var description = (await fixture.Store.GetAsync(first.CaptureId, cancellationToken: Ct))!.Results.Single();
+        var second = first with { RequestId = Guid.NewGuid(), ExpectedRunId = first.RequestId,
+            Capabilities = [AnalysisCapability.TextRecognition] };
+        Assert.IsTrue(await fixture.Worker.EnqueueAsync(second, Ct));
+        await DrainAsync(fixture.Worker, Ct);
+        CollectionAssert.AreEqual(new[] { "description", "preferred" }, fixture.Calls.ToArray());
+        var results = (await fixture.Store.GetAsync(first.CaptureId, cancellationToken: Ct))!.Results;
+        Assert.HasCount(2, results);
+        Assert.AreEqual(description.ResultId, results.Single(result => result.Payload.Capability == AnalysisCapability.Description).ResultId);
+        Assert.AreEqual(second.RequestId, results.Single(result => result.Payload.Capability == AnalysisCapability.TextRecognition).ProducingRunId);
+    }
+
+    [TestMethod]
+    public async Task RejectedCommitStopsTheRunInsteadOfRepeatingExpensiveInference()
+    {
+        using var fixture = new Fixture();
+        var request = await fixture.EnqueueAsync(Ct);
+        var store = new RejectedCommitStore(fixture.Store);
+        using var worker = new CaptureAnalysisWorker(store, fixture.Authorization, fixture.Source, fixture.Configuration, fixture.Adapters, fixture.Catalog);
+        await DrainAsync(worker, Ct);
+        CollectionAssert.AreEqual(new[] { "preferred" }, fixture.Calls.ToArray());
+        Assert.AreEqual(AnalysisRunStatus.Failed, (await fixture.Store.GetWorkAsync(request.CaptureId, Ct))!.Run.Status);
+        Assert.AreEqual("commit-rejected", worker.Progress.FailureCode);
+    }
+
+    [TestMethod]
+    public async Task BatchesAreBoundedAndProviderResourcesAreReleasedAtIdle()
+    {
+        using var fixture = new Fixture();
+        for (int index = 0; index < 17; index++) await fixture.EnqueueAsync(Ct);
+        var resources = new TestResources();
+        using var worker = new CaptureAnalysisWorker(fixture.Store, fixture.Authorization, fixture.Source, fixture.Configuration, fixture.Adapters, fixture.Catalog,
+            resources: [resources]);
+        await DrainAsync(worker, Ct);
+        CollectionAssert.AreEqual(Enumerable.Repeat("preferred", 16).Concat(Enumerable.Repeat("description", 16))
+            .Concat(["preferred", "description"]).ToArray(), fixture.Calls.ToArray());
+        Assert.IsGreaterThan(0, resources.Releases);
+    }
+
+    [TestMethod]
+    public async Task ResourceReleaseFailureIsNotReportedAsUnavailableStorage()
+    {
+        using var fixture = new Fixture();
+        await fixture.EnqueueAsync(Ct);
+        var resources = new TestResources { Fail = true };
+        using var worker = new CaptureAnalysisWorker(fixture.Store, fixture.Authorization, fixture.Source, fixture.Configuration, fixture.Adapters, fixture.Catalog,
+            resources: [resources]);
+        var unavailable = new TaskCompletionSource<AnalysisActivitySnapshot>(TaskCreationOptions.RunContinuationsAsynchronously);
+        worker.ProgressChanged += value =>
+        {
+            if (value.Activity is AnalysisActivity.ProviderUnavailable or AnalysisActivity.StorageUnavailable) unavailable.TrySetResult(value);
+        };
+        using var shutdown = CancellationTokenSource.CreateLinkedTokenSource(Ct);
+        Task runner = worker.RunAsync(shutdown.Token);
+        try
+        {
+            AnalysisActivitySnapshot result = await unavailable.Task.WaitAsync(TimeSpan.FromSeconds(10), Ct);
+            Assert.AreEqual(AnalysisActivity.ProviderUnavailable, result.Activity);
+            Assert.AreEqual("model-release-failed", result.FailureCode);
+            Assert.IsFalse(runner.IsCompleted, "An unload failure must not terminate the worker.");
+        }
+        finally { await shutdown.CancelAsync(); await runner.WaitAsync(TimeSpan.FromSeconds(5), Ct); }
+    }
+
+    [TestMethod]
+    public async Task WorkerGroupsCompatibleStepsWhilePreservingCaptureAndFallbackOrder()
     {
         using var fixture = new Fixture();
         fixture.Preferred.Ready = AnalyzerAvailability.PreparationRequired;
@@ -28,7 +99,7 @@ public sealed partial class CaptureAnalysisWorkerTests
         fixture.Worker.ProgressChanged += _ => throw new InvalidOperationException("An observer failed.");
         fixture.Worker.ProgressChanged += value => progress.Enqueue(value.Activity);
         await DrainAsync(fixture.Worker, Ct);
-        CollectionAssert.AreEqual(new[] { "prepare:preferred", "preferred", "fallback", "description", "preferred", "fallback", "description" }, fixture.Calls.ToArray());
+        CollectionAssert.AreEqual(new[] { "prepare:preferred", "preferred", "fallback", "preferred", "fallback", "description", "description" }, fixture.Calls.ToArray());
         Assert.Contains(AnalysisActivity.Preparing, progress.ToArray());
         Assert.Contains(AnalysisActivity.Analyzing, progress.ToArray());
         Assert.AreEqual(AnalysisActivity.Idle, fixture.Worker.Progress.Activity);
@@ -120,7 +191,7 @@ public sealed partial class CaptureAnalysisWorkerTests
     }
 
     [TestMethod]
-    public async Task RestartSkipsCommittedStepAndRetainsRunIdentity()
+    public async Task RestartDoesNotResumeButRetainsCommittedMetadata()
     {
         using var fixture = new Fixture();
         AnalysisRequest request = await fixture.EnqueueAsync(Ct);
@@ -131,10 +202,12 @@ public sealed partial class CaptureAnalysisWorkerTests
         using LocalCaptureAnalysisStore reopened = fixture.Environment.CreateStore();
         using var restartedWorker = new CaptureAnalysisWorker(reopened, fixture.Authorization, fixture.Source, fixture.Configuration, fixture.Adapters, fixture.Catalog);
         await DrainAsync(restartedWorker, Ct);
-        CollectionAssert.AreEqual(new[] { "description" }, fixture.Calls.ToArray());
+        Assert.IsEmpty(fixture.Calls);
         AnalysisWorkItem completed = (await reopened.GetWorkAsync(request.CaptureId, Ct))!;
         Assert.AreEqual(request.RequestId, completed.Run.Id);
-        Assert.AreEqual(AnalysisRunStatus.Completed, completed.Run.Status);
+        Assert.AreEqual(AnalysisRunStatus.Cancelled, completed.Run.Status);
+        Assert.AreEqual(AnalysisCapability.TextRecognition,
+            (await reopened.GetAsync(request.CaptureId, cancellationToken: Ct))!.Results.Single().Payload.Capability);
     }
 
     [TestMethod]
@@ -264,7 +337,7 @@ public sealed partial class CaptureAnalysisWorkerTests
             if (faults) late.SetException(new InvalidOperationException("Late provider failure."));
             else late.SetResult(fixture.Preferred.Success());
             await WaitForSnapshotAsync(fixture.Worker, value => value.Activity == AnalysisActivity.Idle, Ct);
-            CollectionAssert.AreEqual(new[] { "preferred", "preferred", "description", "preferred", "description" }, fixture.Calls.ToArray());
+            CollectionAssert.AreEqual(new[] { "preferred", "preferred", "preferred", "description", "description" }, fixture.Calls.ToArray());
             Assert.IsEmpty((await fixture.Store.GetAsync(first.CaptureId, cancellationToken: Ct))!.Results);
             foreach (AnalysisRequest queued in new[] { second, third })
             {
@@ -356,7 +429,7 @@ public sealed partial class CaptureAnalysisWorkerTests
     }
 
     [TestMethod]
-    public async Task ShutdownWhileProviderIsUnavailablePreservesBacklogForRestart()
+    public async Task ShutdownWhileProviderIsUnavailableDiscardsBacklogAndLateOutput()
     {
         using var fixture = new Fixture(TimeSpan.FromMilliseconds(40));
         var late = new TaskCompletionSource<AnalyzerOutcome>(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -371,7 +444,8 @@ public sealed partial class CaptureAnalysisWorkerTests
             shutdown.Cancel();
             await runner.WaitAsync(TimeSpan.FromSeconds(5), Ct);
             Assert.IsFalse(late.Task.IsCompleted);
-            Assert.AreEqual(AnalysisRunStatus.Queued, (await fixture.Store.GetWorkAsync(second.CaptureId, Ct))!.Run.Status);
+            Assert.AreEqual(AnalysisRunStatus.Cancelled, (await fixture.Store.GetWorkAsync(second.CaptureId, Ct))!.Run.Status);
+            Assert.IsEmpty(await fixture.Store.ReadPendingAsync(Ct));
         }
         finally
         {
@@ -384,8 +458,9 @@ public sealed partial class CaptureAnalysisWorkerTests
         await DrainAsync(restartedWorker, Ct);
         AnalysisWorkItem completed = (await reopened.GetWorkAsync(second.CaptureId, Ct))!;
         Assert.AreEqual(second.RequestId, completed.Run.Id);
-        Assert.AreEqual(AnalysisRunStatus.Completed, completed.Run.Status);
-        CollectionAssert.AreEqual(new[] { "preferred", "preferred", "description" }, fixture.Calls.ToArray());
+        Assert.AreEqual(AnalysisRunStatus.Cancelled, completed.Run.Status);
+        CollectionAssert.AreEqual(new[] { "preferred" }, fixture.Calls.ToArray());
+        Assert.IsEmpty((await reopened.GetAsync(first.CaptureId, cancellationToken: Ct))!.Results);
     }
 
     [TestMethod]
@@ -434,7 +509,7 @@ public sealed partial class CaptureAnalysisWorkerTests
     }
 
     [TestMethod]
-    public async Task ShutdownBeforeCommitResumesTheSameUnfinishedRun()
+    public async Task ShutdownBeforeCommitCancelsAndForgetsTheUnfinishedRun()
     {
         using var fixture = new Fixture();
         var entered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -446,12 +521,12 @@ public sealed partial class CaptureAnalysisWorkerTests
         shutdown.Cancel();
         await runner.WaitAsync(TimeSpan.FromSeconds(5), Ct);
         AnalysisWorkItem interrupted = (await fixture.Store.GetWorkAsync(request.CaptureId, Ct))!;
-        Assert.IsTrue(interrupted.Run.IsPending);
+        Assert.AreEqual(AnalysisRunStatus.Cancelled, interrupted.Run.Status);
         Assert.IsEmpty(interrupted.Run.CompletedSteps);
         fixture.Preferred.Execute = (_, _) => Task.FromResult(fixture.Preferred.Success());
         await DrainAsync(fixture.Worker, Ct);
         Assert.AreEqual(request.RequestId, (await fixture.Store.GetWorkAsync(request.CaptureId, Ct))!.Run.Id);
-        CollectionAssert.AreEqual(new[] { "preferred", "preferred", "description" }, fixture.Calls.ToArray());
+        CollectionAssert.AreEqual(new[] { "preferred" }, fixture.Calls.ToArray());
     }
 
     [TestMethod]
@@ -573,6 +648,37 @@ public sealed partial class CaptureAnalysisWorkerTests
         }
     }
 
+    private sealed class TestResources : IAnalysisResources
+    {
+        public int Releases;
+        public bool Fail;
+        public Task ReleaseAsync()
+        {
+            Interlocked.Increment(ref Releases);
+            return Fail ? Task.FromException(new IOException("Native model unload failed.")) : Task.CompletedTask;
+        }
+    }
+
+    private sealed class RejectedCommitStore(IAnalysisExecutionStore inner) : IAnalysisExecutionStore
+    {
+        public Task<AnalysisCleanupResult> InitializeAsync(CancellationToken ct) => inner.InitializeAsync(ct);
+        public Task<IReadOnlyList<AnalysisWorkItem>> ReadPendingAsync(CancellationToken ct) => inner.ReadPendingAsync(ct);
+        public Task DiscardPendingAsync(CancellationToken ct) => inner.DiscardPendingAsync(ct);
+        public Task<AnalysisWorkItem?> GetWorkAsync(CaptureId id, CancellationToken ct) => inner.GetWorkAsync(id, ct);
+        public Task<bool> BindSourceAsync(AnalysisRunToken token, SourceRevision revision, CancellationToken ct) => inner.BindSourceAsync(token, revision, ct);
+        public Task<bool> CommitStepAsync(AnalysisRunToken token, AnalysisStepCompletion step, AnalysisResult? result, CancellationToken ct) => Task.FromResult(false);
+        public Task<bool> FinishAsync(AnalysisRunToken token, AnalysisRunStatus status, CancellationToken ct) => inner.FinishAsync(token, status, ct);
+        public Task<AnalysisAdmissionScope> GetAdmissionScopeAsync(CancellationToken ct) => inner.GetAdmissionScopeAsync(ct);
+        public Task<bool> AdmitAsync(AnalysisRequest request, Guid auth, MediaAnalysisPlan plan, CancellationToken ct) => inner.AdmitAsync(request, auth, plan, ct);
+        public Task<AnalysisCleanupResult> ClearAsync(long boundary, CancellationToken ct) => inner.ClearAsync(boundary, ct);
+        public Task<AnalysisCleanupResult> ClearAsync(CancellationToken ct) => inner.ClearAsync(ct);
+        public Task<AnalysisStorageStatus> GetStorageStatusAsync(CancellationToken ct) => inner.GetStorageStatusAsync(ct);
+        public Task<AnalysisWriteToken> BeginRunAsync(CaptureId id, AnalysisMediaKind kind, SourceRevision revision, string plan, CancellationToken ct) => inner.BeginRunAsync(id, kind, revision, plan, ct);
+        public Task<bool> TryWriteAsync(AnalysisWriteToken token, AnalysisResult result, CancellationToken ct) => inner.TryWriteAsync(token, result, ct);
+        public Task<CaptureAnalysisRecord?> GetAsync(CaptureId id, SourceRevision? revision, CancellationToken ct) => inner.GetAsync(id, revision, ct);
+        public Task<IReadOnlyList<CaptureAnalysisRecord>> ReadAllAsync(CancellationToken ct) => inner.ReadAllAsync(ct);
+    }
+
     private sealed class Fixture : IDisposable
     {
         public AnalysisTestEnvironment Environment { get; } = new();
@@ -604,10 +710,10 @@ public sealed partial class CaptureAnalysisWorkerTests
             ])]);
             Worker = new(Store, Authorization, Source, Configuration, Adapters, Catalog, metadata);
         }
-        public async Task<AnalysisRequest> EnqueueAsync(CancellationToken ct, string? language = null)
+        public async Task<AnalysisRequest> EnqueueAsync(CancellationToken ct, string? language = null, IReadOnlyList<AnalysisCapability>? capabilities = null)
         {
             AnalysisRequest request = AnalysisExecutionStoreTests.Request(Environment, await Store.GetAdmissionScopeAsync(ct));
-            request = request with { SourcePath = Path.Combine(Environment.Root, request.CaptureId + ".png"), Language = language, MediaKind = Configuration.Plans[0].MediaKind };
+            request = request with { SourcePath = Path.Combine(Environment.Root, request.CaptureId + ".png"), Language = language, MediaKind = Configuration.Plans[0].MediaKind, Capabilities = capabilities };
             using (IAnalysisAuthorizationLease grant = await Authorization.AcquireAsync(ct))
                 request = request with { ExpectedAuthorizationId = grant.Revision };
             Assert.IsTrue(await Worker.EnqueueAsync(request, ct));

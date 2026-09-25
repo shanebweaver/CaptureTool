@@ -1,4 +1,4 @@
-using CaptureTool.Application.Abstractions.Logging;
+﻿using CaptureTool.Application.Abstractions.Logging;
 using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Application.Abstractions.Shutdown;
 using CaptureTool.Application.Abstractions.Themes;
@@ -159,8 +159,6 @@ public sealed partial class MainWindow : Window
         _startupPrompts = lifetime;
         try
         {
-            await App.Current.ServiceProvider.GetService<CaptureTool.Application.Abstractions.Analysis.ICaptureAnalysisOnboarding>()
-                .ShowOnFirstLaunchAsync(lifetime.Token);
             if (_isShown && !UiTestLaunchOptions.Current.IsEnabled)
                 await _telemetryConsentDialogService.RequestConsentIfNeededAsync(lifetime.Token);
         }
@@ -192,7 +190,7 @@ public sealed partial class MainWindow : Window
                     var asset = new CaptureTool.Domain.Capture.CaptureAsset(CaptureTool.Domain.CaptureId.New(),
                         CaptureTool.Domain.Capture.CaptureFileType.Image, DateTimeOffset.UtcNow, options.ImageFilePath,
                         CaptureTool.Domain.Capture.CaptureSourceOwnership.Application);
-                    await memory.RegisterCaptureAsync(asset, memory.CaptureAuthorization);
+                    await memory.RegisterCaptureAsync(asset);
                     App.Current.ServiceProvider.GetService<CaptureTool.Application.Abstractions.Library.RecentCaptures.IRecentCaptureCatalog>()
                         .RecordCaptured(options.ImageFilePath, CaptureTool.Domain.Capture.CaptureFileType.Image);
                 }

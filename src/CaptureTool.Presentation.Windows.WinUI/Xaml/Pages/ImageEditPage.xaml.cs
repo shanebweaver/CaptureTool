@@ -1,3 +1,4 @@
+using CaptureTool.Application.Abstractions.Localization;
 using CaptureTool.Domain.Edit.Drawable;
 using CaptureTool.Domain.Edit.Operations;
 using CaptureTool.Presentation.Loading;
@@ -32,9 +33,12 @@ public sealed partial class ImageEditPage : ImageEditPageBase
     {
         InitializeComponent();
         DetailsHost.ToggleControl = DetailsToggle;
+        DetailsHost.FileRenamed = ViewModel.ApplyCaptureRename;
         DetailsHost.Navigate = location => ViewModel.IsLoaded && !ViewModel.IsSourceImageGeometryChanged &&
             ImageCanvas.ShowCaptureLocation(location.Bounds);
         DetailsHost.ClearLocation = () => ImageCanvas.ShowCaptureLocation(null);
+        DetailsHost.TextOverlayChanged = ImageCanvas.SetCaptureTextOverlay;
+        ImageCanvas.TextOverlayVisibilityChanged += visible => TextOverlayMarker.Visibility = visible ? Visibility.Visible : Visibility.Collapsed;
         InitializeContextMenus();
         InitializeToolbarHosts();
         ViewModel.LoadStateChanged += ViewModel_LoadStateChanged;
@@ -66,25 +70,26 @@ public sealed partial class ImageEditPage : ImageEditPageBase
 
     private void InitializeContextMenus()
     {
+        var localization = App.Current.ServiceProvider.GetService<ILocalizationService>();
         _imageContextMenu = new MenuFlyout();
         _saveMenuItem = CreateMenuItem(
-            "Save as",
+            localization.GetString("ImageEdit_SaveAsButton/Label"),
             new SymbolIcon(Symbol.Save),
             ViewModel.SaveCommand);
         _copyMenuItem = CreateMenuItem(
-            "Copy",
+            localization.GetString("ImageEdit_CopyButton/Label"),
             new SymbolIcon(Symbol.Copy),
             ViewModel.CopyCommand);
         _shareMenuItem = CreateMenuItem(
-            "Share",
+            localization.GetString("ImageEdit_ShareButton/Label"),
             new SymbolIcon(Symbol.Share),
             ViewModel.ShareCommand);
         _undoMenuItem = CreateMenuItem(
-            "Undo",
+            localization.GetString("ImageEdit_UndoButton/Label"),
             new SymbolIcon(Symbol.Undo),
             ViewModel.UndoCommand);
         _redoMenuItem = CreateMenuItem(
-            "Redo",
+            localization.GetString("ImageEdit_RedoButton/Label"),
             new SymbolIcon(Symbol.Redo),
             ViewModel.RedoCommand);
 
@@ -98,7 +103,7 @@ public sealed partial class ImageEditPage : ImageEditPageBase
         _shapeContextMenu = new MenuFlyout();
         var deleteMenuItem = new MenuFlyoutItem
         {
-            Text = "Delete",
+            Text = localization.GetString("ImageEdit_DeleteShape"),
             Icon = new SymbolIcon(Symbol.Delete)
         };
         deleteMenuItem.Click += (_, _) => ImageCanvas.DeleteSelectedShape();

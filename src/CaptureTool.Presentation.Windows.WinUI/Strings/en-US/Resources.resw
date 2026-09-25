@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -2010,16 +2010,13 @@ SOFTWARE.
     <value>AI</value>
   </data>
   <data name="CaptureMemory_Scanning.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
-    <value>Scan new captures automatically</value>
+    <value>Analyze captures automatically</value>
   </data>
   <data name="CaptureMemory_Consent.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>Allow local AI features</value>
   </data>
   <data name="CaptureMemory_SettingsDescription.Text" xml:space="preserve">
     <value>Use on-device AI to analyze captures and securely save information for Capture Memory.</value>
-  </data>
-  <data name="CaptureMemory_Scan.Content" xml:space="preserve">
-    <value>Analyze</value>
   </data>
   <data name="CaptureMemory_Delete.Content" xml:space="preserve">
     <value>Delete</value>
@@ -2031,28 +2028,19 @@ SOFTWARE.
     <value>Analyzing captures…</value>
   </data>
   <data name="CaptureMemory_ConsentTitle" xml:space="preserve">
-    <value>Allow local AI features?</value>
+    <value>Unlock more from every capture</value>
   </data>
   <data name="CaptureMemory_ConsentContent" xml:space="preserve">
-    <value>Enable local AI features and automatic analysis of new captures. Processing stays on this PC, and analysis is stored securely. Models may need to be downloaded. You can turn scanning off or delete analysis in Settings.</value>
+    <value>Use local AI only when you choose an action. Nothing is scanned automatically. Results stay on this PC and are stored securely. Models may need to be downloaded. You can withdraw consent or delete results in Settings.</value>
   </data>
   <data name="CaptureMemory_ConsentAccept" xml:space="preserve">
-    <value>Allow</value>
-  </data>
-  <data name="CaptureMemory_ScanExistingTitle" xml:space="preserve">
-    <value>Analyze existing captures?</value>
-  </data>
-  <data name="CaptureMemory_ScanExistingContent" xml:space="preserve">
-    <value>Scanning new captures is enabled. Also analyze available captures previously recorded by CaptureTool? Existing information is kept until successful analysis replaces it.</value>
-  </data>
-  <data name="CaptureMemory_ScanExistingAccept" xml:space="preserve">
-    <value>Analyze captures</value>
+    <value>Allow local AI</value>
   </data>
   <data name="CaptureMemory_DeleteMetadataTitle" xml:space="preserve">
     <value>Delete analysis information?</value>
   </data>
   <data name="CaptureMemory_DeleteMetadataContent" xml:space="preserve">
-    <value>Delete stored analysis information and stop pending scans? Capture files and your scanning preference will be kept.</value>
+    <value>Delete saved analysis and cancel pending actions? Capture files and AI consent will be kept.</value>
   </data>
   <data name="CaptureMemory_DeleteMetadataAccept" xml:space="preserve">
     <value>Delete information</value>
@@ -2081,18 +2069,12 @@ SOFTWARE.
   <data name="AiSettings_ConsentHeader.Text" xml:space="preserve">
     <value>Allow local AI features</value>
   </data>
-  <data name="AiSettings_ConsentDescription.Text" xml:space="preserve"><value>Consent for capture analysis and local AI editing. Standalone Text Extraction asks separately.</value></data>
+  <data name="AiSettings_ConsentDescription.Text" xml:space="preserve"><value>Allow local AI actions you request. Captures are never scanned automatically.</value></data>
   <data name="AiSettings_ScanningHeader.Text" xml:space="preserve">
-    <value>Scan new captures automatically</value>
+    <value>Analyze captures automatically</value>
   </data>
   <data name="AiSettings_ScanningDescription.Text" xml:space="preserve">
-    <value>Analyze images, audio, and video after capture.</value>
-  </data>
-  <data name="AiSettings_ScanHeader.Text" xml:space="preserve">
-    <value>Analyze existing captures</value>
-  </data>
-  <data name="AiSettings_ScanDescription.Text" xml:space="preserve">
-    <value>Create or refresh saved analysis for your existing captures.</value>
+    <value>Analyze new images, audio, and video. Older captures are analyzed only when you open them.</value>
   </data>
   <data name="AiSettings_DeleteHeader.Text" xml:space="preserve">
     <value>Delete capture analysis</value>
@@ -2111,9 +2093,7 @@ SOFTWARE.
   <data name="CaptureDetails_Evidence.Header" xml:space="preserve"><value>View source</value></data>
   <data name="CaptureDetails_Copy.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Copy text</value></data>
   <data name="CaptureDetails_Copy.ToolTipService.ToolTip" xml:space="preserve"><value>Copy text</value></data>
-  <data name="CaptureDetails_Refresh.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Refresh details</value></data>
-  <data name="CaptureDetails_Refresh.ToolTipService.ToolTip" xml:space="preserve"><value>Refresh saved details</value></data>
-  <data name="CaptureDetails_CopyAll.Content" xml:space="preserve"><value>Copy all text</value></data>
+<data name="CaptureDetails_CopyAll.Content" xml:space="preserve"><value>Copy all text</value></data>
   <data name="CaptureDetails_OverviewHeading.Text" xml:space="preserve"><value>AI overview</value></data>
   <data name="CaptureDetails_SuggestionsHint.Text" xml:space="preserve"><value>Generated suggestions. Check the source when accuracy matters.</value></data>
   <data name="CaptureDetails_FactsHeading.Text" xml:space="preserve"><value>Useful information</value></data>
@@ -2168,9 +2148,9 @@ SOFTWARE.
   <data name="CaptureDetails_SourceChanged" xml:space="preserve"><value>This file has changed since analysis. Run analysis again in Settings to update its details.</value></data>
   <data name="CaptureDetails_SourceUnavailable" xml:space="preserve"><value>The capture file is unavailable. Its saved details cannot be verified.</value></data>
   <data name="CaptureDetails_Analyzing" xml:space="preserve"><value>Analysis is queued or in progress. Details update as results become available.</value></data>
-  <data name="CaptureDetails_Paused" xml:space="preserve"><value>Analysis is paused. Enable scanning in Settings to continue.</value></data>
+  <data name="CaptureDetails_Paused" xml:space="preserve"><value>Analysis stopped. Choose an action to try again.</value></data>
   <data name="CaptureDetails_Partial" xml:space="preserve"><value>Some analysis did not complete. Available saved results are shown.</value></data>
-  <data name="CaptureDetails_Empty" xml:space="preserve"><value>No saved details yet. You can run analysis on existing captures in Settings.</value></data>
+  <data name="CaptureDetails_Empty" xml:space="preserve"><value>No saved text yet. Choose an action above to extract what you need.</value></data>
   <data name="CaptureDetails_Retained" xml:space="preserve"><value>Some results are from an earlier analysis of this same file.</value></data>
   <data name="CaptureDetails_Limited" xml:space="preserve"><value>Some content or results were omitted. These insights may not cover the entire capture.</value></data>
   <data name="CaptureDetails_Copied" xml:space="preserve"><value>Text copied.</value></data>
@@ -2208,17 +2188,18 @@ SOFTWARE.
   <data name="CapturePane_MatchCount" xml:space="preserve"><value>{0} matching passages</value></data>
   <data name="CapturePane_LocationUnavailable" xml:space="preserve"><value>No location is available in the current view. The image may have changed or the passage may be outside the trim.</value></data>
   <data name="CapturePane_ActionFailed" xml:space="preserve"><value>This action is unavailable. Try refreshing the capture details.</value></data>
-  <data name="CaptureNaming_Header.Text" xml:space="preserve"><value>Automatically name new captures</value></data>
-  <data name="CaptureNaming_Description.Text" xml:space="preserve"><value>Uses local AI scanning to name new captures and suggest Save As filenames. Existing files keep their filenames. Deleting analysis keeps chosen names.</value></data>
-  <data name="CaptureNaming_Toggle.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Automatically name new captures</value></data>
+  <data name="CaptureNaming_Header.Text" xml:space="preserve"><value>Suggest names for new captures</value></data>
+  <data name="CaptureNaming_Description.Text" xml:space="preserve"><value>Create AI filename suggestions after capture. Files keep their names until you accept a suggestion.</value></data>
+  <data name="CaptureNaming_Toggle.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Suggest names for new captures</value></data>
   <data name="CaptureNaming_Edit.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Edit capture name</value></data>
   <data name="CaptureNaming_Input.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Capture name</value></data>
-  <data name="CaptureNaming_EditHint.Text" xml:space="preserve"><value>This name appears in the app and Save As. The existing file keeps its name.</value></data>
-  <data name="CaptureNaming_Save.Content" xml:space="preserve"><value>Save name</value></data>
-  <data name="CaptureNaming_Cancel.Content" xml:space="preserve"><value>Cancel</value></data>
+  <data name="CaptureNaming_Save.ToolTipService.ToolTip" xml:space="preserve"><value>Rename file</value></data>
+  <data name="CaptureNaming_Save.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Rename file</value></data>
+  <data name="CaptureNaming_Cancel.ToolTipService.ToolTip" xml:space="preserve"><value>Cancel</value></data>
+  <data name="CaptureNaming_Cancel.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Cancel</value></data>
   <data name="CaptureNaming_FileName.Text" xml:space="preserve"><value>File name</value></data>
   <data name="CaptureNaming_Invalid" xml:space="preserve"><value>Enter a single-line name with 1–160 characters.</value></data>
-  <data name="CaptureNaming_SaveFailed" xml:space="preserve"><value>The capture name or naming preference could not be saved. Try again.</value></data>
+  <data name="CaptureNaming_SaveFailed" xml:space="preserve"><value>The file could not be renamed. Check that the name is not already in use and the file is writable.</value></data>
   <data name="AiFeatureConsentDialog_TextExtractionTitle" xml:space="preserve">
     <value>Allow Text Extraction?</value>
   </data>
@@ -2234,19 +2215,47 @@ SOFTWARE.
   <data name="AiFeatureConsentDialog_CancelButton" xml:space="preserve">
     <value>Cancel</value>
   </data>
-  <data name="CaptureMemory_EnableScanningTitle" xml:space="preserve"><value>Unlock more from every capture</value></data>
   <data name="CaptureWelcome_Eyebrow.Text" xml:space="preserve"><value>ON-DEVICE AI</value></data>
   <data name="CaptureWelcome_Hero.Text" xml:space="preserve"><value>A little capture magic</value></data>
-  <data name="CaptureWelcome_Text.Text" xml:space="preserve"><value>Find and copy words inside images.</value></data>
-  <data name="CaptureWelcome_Recording.Text" xml:space="preserve"><value>Explore speech and on-screen text in recordings.</value></data>
-  <data name="CaptureWelcome_Names.Text" xml:space="preserve"><value>Give new captures meaningful names.</value></data>
-  <data name="CaptureWelcome_Consent.Text" xml:space="preserve"><value>Enable local AI features and automatic analysis of new captures. Processing stays on this PC, and analysis is stored securely. Models may need to be downloaded. You can turn scanning off or delete analysis in Settings.</value></data>
-  <data name="CaptureMemory_EnableScanningAccept" xml:space="preserve"><value>Enable scanning</value></data>
+  <data name="CaptureWelcome_Text.Text" xml:space="preserve"><value>Images: extract text, find QR codes, and generate descriptions.</value></data>
+  <data name="CaptureWelcome_Recording.Text" xml:space="preserve"><value>Video: explore on-screen text, descriptions, and speech.</value></data>
+  <data name="CaptureWelcome_Names.Text" xml:space="preserve"><value>Audio: transcribe recordings into readable text.</value></data>
+  <data name="CaptureWelcome_Consent.Text" xml:space="preserve"><value>Use local AI only when you choose an action. Nothing is scanned automatically. Results stay on this PC and are stored securely. Models may need to be downloaded. You can withdraw consent or delete results in Settings.</value></data>
   <data name="CaptureWelcome_NotNow" xml:space="preserve"><value>Not now</value></data>
-  <data name="CapturePane_EnableAnalysis.Content" xml:space="preserve"><value>Enable capture analysis</value></data>
   <data name="TextExtractionSettings_Header.Text" xml:space="preserve"><value>Text Extraction</value></data>
   <data name="TextExtractionSettings_Description.Text" xml:space="preserve"><value>Read text and QR codes when you use Text Extraction in the image editor.</value></data>
-  <data name="TextExtractionSettings_Consent.Content" xml:space="preserve"><value>Allow</value></data>
-  <data name="TextExtractionSettings_Consent.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Allow standalone Text Extraction</value></data>
+<data name="TextExtractionSettings_Consent.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Allow standalone Text Extraction</value></data>
   <data name="TextExtractionSettings_SaveFailed" xml:space="preserve"><value>The Text Extraction permission could not be saved. Try again.</value></data>
+  <data name="AddOns_ItemUnknown" xml:space="preserve"><value>Loading…</value></data>
+  <data name="ChromaKeyToolbar_KeyColorLabel.Text" xml:space="preserve"><value>Key color</value></data>
+  <data name="Common_BackButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Back</value></data>
+  <data name="MainWindow_DismissNotificationButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Dismiss notification</value></data>
+  <data name="MainWindow_DismissNotificationButton.ToolTipService.ToolTip" xml:space="preserve"><value>Dismiss</value></data>
+  <data name="AppMenu_NoRecentCaptures" xml:space="preserve"><value>None</value></data>
+  <data name="ImageEdit_DeleteShape" xml:space="preserve"><value>Delete</value></data>
+  <data name="ImageCanvas_CopyQrCodeValue" xml:space="preserve"><value>Copy QR code value</value></data>
+  <data name="ImageCanvas_OpenQrCodeLink" xml:space="preserve"><value>Open QR code link</value></data>
+  <data name="ImageCanvas_QrCodeValue" xml:space="preserve"><value>QR code: {0}</value></data>
+  <data name="Common_MediaType_Image" xml:space="preserve"><value>Image</value></data>
+  <data name="Common_MediaType_Video" xml:space="preserve"><value>Video</value></data>
+  <data name="Common_MediaType_Audio" xml:space="preserve"><value>Audio</value></data>
+  <data name="Common_MediaType_File" xml:space="preserve"><value>File</value></data>
+  <data name="CaptureNaming_Generating.Text" xml:space="preserve"><value>Suggesting a name…</value></data>
+  <data name="CaptureNaming_Suggestion.Text" xml:space="preserve"><value>Suggested file name</value></data>
+  <data name="CaptureNaming_Accept.Content" xml:space="preserve"><value>Use this name</value></data>
+  <data name="CapturePane_GeneratingSummary.Text" xml:space="preserve"><value>Preparing a summary…</value></data>
+  <data name="CaptureAction_Description" xml:space="preserve"><value>Generate description</value></data>
+  <data name="CaptureAction_Summary" xml:space="preserve"><value>Generate summary</value></data>
+  <data name="CaptureAction_Name" xml:space="preserve"><value>Suggest a name</value></data>
+  <data name="CaptureAction_Text" xml:space="preserve"><value>Extract text</value></data>
+  <data name="CaptureAction_Qr" xml:space="preserve"><value>Find QR codes</value></data>
+  <data name="CaptureAction_Transcript" xml:space="preserve"><value>Transcribe audio</value></data>
+  <data name="CaptureAction_DescriptionHeading.Text" xml:space="preserve"><value>AI description</value></data>
+  <data name="CaptureAction_SummaryInputs.Text" xml:space="preserve"><value>Extract text, transcribe audio, or generate a description first. Summaries and name suggestions use those saved results.</value></data>
+  <data name="CaptureAction_NoText" xml:space="preserve"><value>No text found.</value></data>
+  <data name="CaptureAction_NoQr" xml:space="preserve"><value>No QR codes found.</value></data>
+  <data name="CaptureAction_NoSpeech" xml:space="preserve"><value>No speech found.</value></data>
+  <data name="CaptureAction_NoDescription" xml:space="preserve"><value>No description was generated.</value></data>
+  <data name="CaptureAction_Unavailable" xml:space="preserve"><value>This action is not available on this device.</value></data>
+  <data name="CaptureAction_Failed" xml:space="preserve"><value>This action could not finish. You can try again.</value></data>
 </root>

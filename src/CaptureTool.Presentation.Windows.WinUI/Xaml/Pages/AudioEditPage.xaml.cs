@@ -38,6 +38,7 @@ public sealed partial class AudioEditPage : AudioEditPageBase
     {
         InitializeComponent();
         DetailsHost.ToggleControl = DetailsToggle;
+        DetailsHost.FileRenamed = ViewModel.ApplyCaptureRename;
         DetailsHost.Navigate = location =>
         {
             if (!ViewModel.IsMediaReady || _mediaPlayer == null || location.Time is not { } time || time > _audioDuration) return false;

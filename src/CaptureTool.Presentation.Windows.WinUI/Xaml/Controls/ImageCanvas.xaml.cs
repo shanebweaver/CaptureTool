@@ -1,11 +1,13 @@
 using CaptureTool.Application.Abstractions.Edit.Image.Rendering;
 using CaptureTool.Application.Abstractions.Edit.Image.TextExtraction;
+using CaptureTool.Application.Abstractions.Localization;
 using CaptureTool.Application.Edit.Image.TextExtraction;
 using CaptureTool.Domain.Edit;
 using CaptureTool.Domain.Edit.Drawable;
 using CaptureTool.Domain.Edit.Operations;
 using CaptureTool.Infrastructure.Edit.Windows;
 using CaptureTool.Presentation.Features.ImageEdit;
+using CaptureTool.Presentation.Features.CaptureDetails;
 using Microsoft.Graphics.Canvas;
 using Microsoft.Graphics.Canvas.UI;
 using Microsoft.Graphics.Canvas.UI.Xaml;
@@ -18,6 +20,7 @@ using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Media.Animation;
 using System.Collections.Specialized;
 using System.Drawing;
+using System.Globalization;
 using System.Numerics;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.System;
@@ -30,6 +33,7 @@ namespace CaptureTool.Presentation.Windows.WinUI.Xaml.Controls;
 
 public sealed partial class ImageCanvas : UserControlBase
 {
+    private readonly ILocalizationService _localization = App.Current.ServiceProvider.GetService<ILocalizationService>();
     private const int TextExtractionFadeInDurationMilliseconds = 180;
     private const int TextExtractionFadeOutDurationMilliseconds = 140;
 
@@ -141,6 +145,7 @@ public sealed partial class ImageCanvas : UserControlBase
     {
         if (d is ImageCanvas control)
         {
+            control.RebuildTextExtractionLayout();
             control.UpdateTextExtractionOverlayPath();
             control.UpdateQrCodeOverlay();
             control.UpdateTouchInputLock();
@@ -391,6 +396,7 @@ public sealed partial class ImageCanvas : UserControlBase
         if (d is ImageCanvas control)
         {
             control.InvalidateCanvas();
+            if (control._capturePassages != null) control.SetCaptureTextOverlay(control._capturePassages);
         }
     }
 
@@ -635,7 +641,7 @@ public sealed partial class ImageCanvas : UserControlBase
 
     private void ImageCanvas_KeyDown(object sender, KeyRoutedEventArgs e)
     {
-        if (IsTextExtractionOverlayEnabled && _textExtractionSelection.Regions.Count > 0)
+        if (IsTextOverlayEnabled && _textExtractionSelection.Regions.Count > 0)
         {
             if (e.Key == VirtualKey.Escape)
             {
@@ -731,7 +737,7 @@ public sealed partial class ImageCanvas : UserControlBase
             IsShapesModeEnabled ||
             IsTextModeEnabled ||
             IsColorPickerModeEnabled ||
-            IsTextExtractionOverlayEnabled ||
+            IsTextOverlayEnabled ||
             _pointSelectionController.IsActive;
 
         if (shouldIgnoreTouchInput == _isIgnoringTouchInputForEditing)
@@ -1141,13 +1147,13 @@ public sealed partial class ImageCanvas : UserControlBase
 
     private void UpdateTextExtractionOverlayPath()
     {
-        if (!IsTextExtractionOverlayEnabled)
+        if (!IsTextOverlayEnabled)
         {
             HideTextExtractionOverlay(clearGeometry: false);
             return;
         }
 
-        if ((_textExtractionLayout.CutoutContours.Count == 0 && TextExtractionQrCodes.Count == 0) ||
+        if ((_textExtractionLayout.CutoutContours.Count == 0 && OverlayQrCodes.Count == 0) ||
             CanvasContainer.Width <= 0 ||
             CanvasContainer.Height <= 0)
         {
@@ -1159,13 +1165,15 @@ public sealed partial class ImageCanvas : UserControlBase
 
         TextExtractionOverlayPath.Data = geometry;
         TextExtractionOverlayPath.Visibility = Visibility.Visible;
-        TextExtractionOverlayAutomationMarker.Visibility = Visibility.Visible;
         UpdateTextExtractionSelectionPath();
         ShowTextExtractionOverlay();
     }
 
+    public event Action<bool>? TextOverlayVisibilityChanged;
+
     private void ShowTextExtractionOverlay()
     {
+        TextOverlayVisibilityChanged?.Invoke(true);
         _isTextExtractionOverlayRequested = true;
         _clearTextExtractionOverlayGeometryAfterFadeOut = false;
         if (_textExtractionOverlayAnimation is not null && !_isTextExtractionOverlayFadingOut)
@@ -1284,12 +1292,12 @@ public sealed partial class ImageCanvas : UserControlBase
 
     private void CompleteTextExtractionOverlayHide()
     {
+        TextOverlayVisibilityChanged?.Invoke(false);
         TextExtractionOverlayLayer.Opacity = 0;
         TextExtractionOverlayLayer.Visibility = Visibility.Collapsed;
         if (_clearTextExtractionOverlayGeometryAfterFadeOut)
         {
             TextExtractionOverlayPath.Visibility = Visibility.Collapsed;
-            TextExtractionOverlayAutomationMarker.Visibility = Visibility.Collapsed;
             TextExtractionOverlayPath.Data = null;
             TextExtractionSelectionPath.Data = null;
             TextExtractionSelectionPath.Visibility = Visibility.Collapsed;
@@ -1297,9 +1305,25 @@ public sealed partial class ImageCanvas : UserControlBase
         }
     }
 
+    private IReadOnlyList<CaptureTextPassage>? _capturePassages;
+    private CaptureImageTextOverlay _captureOverlay = new([], []);
+    private bool IsTextOverlayEnabled => IsTextExtractionOverlayEnabled || _capturePassages != null;
+    private IReadOnlyList<RecognizedTextRegion> OverlayRegions => IsTextExtractionOverlayEnabled ? TextExtractionRegions : _captureOverlay.Text;
+    private IReadOnlyList<RecognizedQrCodeRegion> OverlayQrCodes => IsTextExtractionOverlayEnabled ? TextExtractionQrCodes : _captureOverlay.QrCodes;
+
+    public void SetCaptureTextOverlay(IReadOnlyList<CaptureTextPassage>? passages)
+    {
+        _capturePassages = passages;
+        _captureOverlay = passages == null ? new([], []) : CaptureImageTextOverlay.Create(passages, CanvasSize);
+        RebuildTextExtractionLayout();
+        UpdateTextExtractionOverlayPath();
+        UpdateQrCodeOverlay();
+        UpdateTouchInputLock();
+    }
+
     private void RebuildTextExtractionLayout()
     {
-        _textExtractionLayout = RecognizedTextLayout.Create(TextExtractionRegions);
+        _textExtractionLayout = RecognizedTextLayout.Create(OverlayRegions);
         _textExtractionOverlayGeometry = null;
         _textExtractionOverlayGeometryWidth = 0;
         _textExtractionOverlayGeometryHeight = 0;
@@ -1329,7 +1353,7 @@ public sealed partial class ImageCanvas : UserControlBase
     private IReadOnlyList<IReadOnlyList<PointF>> GetTextExtractionCutoutContours()
     {
         List<IReadOnlyList<PointF>> contours = [.. _textExtractionLayout.CutoutContours];
-        foreach (RecognizedQrCodeRegion qrCode in TextExtractionQrCodes)
+        foreach (RecognizedQrCodeRegion qrCode in OverlayQrCodes)
         {
             RectangleF bounds = qrCode.Bounds;
             float padding = Math.Clamp(Math.Min(bounds.Width, bounds.Height) * 0.03f, 3, 12);
@@ -1355,8 +1379,8 @@ public sealed partial class ImageCanvas : UserControlBase
     private void UpdateQrCodeOverlay()
     {
         QrCodeOverlayCanvas.Children.Clear();
-        if (!IsTextExtractionOverlayEnabled ||
-            TextExtractionQrCodes.Count == 0 ||
+        if (!IsTextOverlayEnabled ||
+            OverlayQrCodes.Count == 0 ||
             CanvasContainer.Width <= 0 ||
             CanvasContainer.Height <= 0)
         {
@@ -1364,9 +1388,9 @@ public sealed partial class ImageCanvas : UserControlBase
             return;
         }
 
-        for (int index = 0; index < TextExtractionQrCodes.Count; index++)
+        for (int index = 0; index < OverlayQrCodes.Count; index++)
         {
-            AddQrCodeVisual(TextExtractionQrCodes[index], index);
+            AddQrCodeVisual(OverlayQrCodes[index], index);
         }
 
         QrCodeOverlayCanvas.Visibility = QrCodeOverlayCanvas.Children.Count > 0
@@ -1393,7 +1417,7 @@ public sealed partial class ImageCanvas : UserControlBase
         };
         actions.Children.Add(CreateQrCodeActionButton(
             "\uE8C8",
-            "Copy QR code value",
+            _localization.GetString("ImageCanvas_CopyQrCodeValue"),
             $"ImageCanvas_QrCodeCopyButton_{index}",
             () => CopyQrCodeValueAsync(qrCode.Value)));
 
@@ -1401,7 +1425,7 @@ public sealed partial class ImageCanvas : UserControlBase
         {
             actions.Children.Add(CreateQrCodeActionButton(
                 "\uE8A7",
-                "Open QR code link",
+                _localization.GetString("ImageCanvas_OpenQrCodeLink"),
                 $"ImageCanvas_QrCodeOpenButton_{index}",
                 async () =>
                 {
@@ -1428,7 +1452,8 @@ public sealed partial class ImageCanvas : UserControlBase
             CornerRadius = new CornerRadius(6),
             Child = actionSurface
         };
-        AutomationProperties.SetName(visual, $"QR code: {qrCode.Value}");
+        AutomationProperties.SetName(visual, string.Format(CultureInfo.CurrentCulture,
+            _localization.GetString("ImageCanvas_QrCodeValue"), qrCode.Value));
         AutomationProperties.SetAutomationId(visual, $"ImageCanvas_QrCodeOverlay_{index}");
         Canvas.SetLeft(visual, bounds.Left);
         Canvas.SetTop(visual, bounds.Top);
@@ -1500,7 +1525,7 @@ public sealed partial class ImageCanvas : UserControlBase
 
     private void UpdateTextExtractionSelectionPath()
     {
-        if (!IsTextExtractionOverlayEnabled || _textExtractionSelection.HighlightBounds.Count == 0)
+        if (!IsTextOverlayEnabled || _textExtractionSelection.HighlightBounds.Count == 0)
         {
             TextExtractionSelectionPath.Data = null;
             TextExtractionSelectionPath.Visibility = Visibility.Collapsed;
@@ -1987,7 +2012,7 @@ public sealed partial class ImageCanvas : UserControlBase
             return;
         }
 
-        if (IsTextExtractionOverlayEnabled && TryBeginExtractedTextSelection(e))
+        if (IsTextOverlayEnabled && TryBeginExtractedTextSelection(e))
         {
             return;
         }
@@ -2163,7 +2188,7 @@ public sealed partial class ImageCanvas : UserControlBase
             return;
         }
 
-        if (IsTextExtractionOverlayEnabled)
+        if (IsTextOverlayEnabled)
         {
             UpdateTextExtractionCursor(e.GetCurrentPoint(RenderCanvas).Position);
         }

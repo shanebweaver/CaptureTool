@@ -1,4 +1,4 @@
-using CaptureTool.Application.Abstractions.Analysis;
+﻿using CaptureTool.Application.Abstractions.Analysis;
 using CaptureTool.Presentation.Windows.WinUI.Utils;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Automation;
@@ -16,10 +16,10 @@ internal sealed class CaptureMemoryDialogService(MainWindowDialogCoordinator dia
         var result = await dialogs.ShowAsync(() =>
         {
             string name = prompt.ToString();
-            bool welcome = prompt is CaptureMemoryPrompt.Consent or CaptureMemoryPrompt.EnableScanning;
+            bool welcome = prompt == CaptureMemoryPrompt.Consent;
             var dialog = new ContentDialog
             {
-                Title = Text("CaptureMemory_" + (welcome ? "EnableScanning" : name) + "Title"),
+                Title = Text("CaptureMemory_" + name + "Title"),
                 Content = welcome
                     ? new CaptureTool.Presentation.Windows.WinUI.Xaml.Controls.CaptureAnalysisWelcome() : Text("CaptureMemory_" + name + "Content"),
                 PrimaryButtonText = Text("CaptureMemory_" + name + "Accept"),

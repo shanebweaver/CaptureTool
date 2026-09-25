@@ -47,7 +47,13 @@ var services = new ServiceCollection().AddGenericServices().AddApplicationServic
     .AddSingleton<IStorageService>(storage).AddWindowsAnalysisProviders(metadataModels);
 using ServiceProvider provider = services.BuildServiceProvider();
 if (args.Contains("--enrichment-checks", StringComparer.Ordinal))
-    return await MetadataChecks.RunAsync(provider.GetServices<IMetadataProcessor>(), output, args);
+{
+    try { return await MetadataChecks.RunAsync(provider.GetServices<IMetadataProcessor>(), output, args); }
+    finally
+    {
+        foreach (IAnalysisResources resource in provider.GetServices<IAnalysisResources>()) await resource.ReleaseAsync();
+    }
+}
 IMediaAnalyzer[] analyzers = provider.GetServices<IMediaAnalyzer>().ToArray();
 CaptureAnalysisConfiguration.CreateDefault().ValidateAnalyzers(analyzers.Select(analyzer => analyzer.Descriptor),
     provider.GetServices<IMetadataProcessor>().Select(processor => processor.Descriptor));

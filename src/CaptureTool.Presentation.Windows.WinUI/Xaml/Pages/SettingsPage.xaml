@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8" ?>
+﻿<?xml version="1.0" encoding="utf-8" ?>
 <local:SettingsPageBase
     x:Class="CaptureTool.Presentation.Windows.WinUI.Xaml.Pages.SettingsPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
@@ -132,6 +132,7 @@
                     Orientation="Horizontal"
                     Spacing="12">
                     <Button
+                        x:Uid="Common_BackButton"
                         Width="32"
                         Height="32"
                         Padding="0"
@@ -802,47 +803,6 @@
                             <CheckBox x:Uid="CaptureMemory_Consent" Grid.Column="2" MinWidth="0" HorizontalAlignment="Right"
                                       AutomationProperties.AutomationId="CaptureMemoryConsent"
                                       IsChecked="{x:Bind CaptureMemory.ConsentGranted, Mode=OneWay}" Click="CaptureMemoryConsent_Click" />
-                        </Grid>
-                        <Grid Padding="16,12" Background="{ThemeResource CardBackgroundFillColorDefault}"
-                              BorderBrush="{ThemeResource CardStrokeColorDefault}" BorderThickness="1" ColumnSpacing="16" CornerRadius="4">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto" /><ColumnDefinition /><ColumnDefinition Width="Auto" /><ColumnDefinition Width="28" />
-                            </Grid.ColumnDefinitions>
-                            <SymbolIcon Symbol="Camera" />
-                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                <TextBlock x:Uid="AiSettings_ScanningHeader" TextWrapping="WrapWholeWords" />
-                                <TextBlock x:Uid="AiSettings_ScanningDescription" FontSize="12" Opacity=".75" TextWrapping="WrapWholeWords" />
-                            </StackPanel>
-                            <ToggleSwitch x:Name="CaptureMemoryScanning" x:Uid="CaptureMemory_Scanning" Grid.Column="2" MinWidth="0" HorizontalAlignment="Right"
-                                          AutomationProperties.AutomationId="CaptureMemoryScanning"
-                                          IsOn="{x:Bind CaptureMemory.ScanningEnabled, Mode=OneWay}" Toggled="CaptureMemoryScanning_Toggled" />
-                        </Grid>
-                        <Grid Padding="16,12" Background="{ThemeResource CardBackgroundFillColorDefault}"
-                              BorderBrush="{ThemeResource CardStrokeColorDefault}" BorderThickness="1" ColumnSpacing="16" CornerRadius="4">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto" /><ColumnDefinition /><ColumnDefinition Width="Auto" /><ColumnDefinition Width="28" />
-                            </Grid.ColumnDefinitions>
-                            <SymbolIcon Symbol="Edit" />
-                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                <TextBlock x:Uid="CaptureNaming_Header" TextWrapping="WrapWholeWords" />
-                                <TextBlock x:Uid="CaptureNaming_Description" FontSize="12" Opacity=".75" TextWrapping="WrapWholeWords" />
-                            </StackPanel>
-                            <ToggleSwitch x:Uid="CaptureNaming_Toggle" Grid.Column="2" MinWidth="0" HorizontalAlignment="Right"
-                                          AutomationProperties.AutomationId="CaptureNamingToggle" IsEnabled="{x:Bind CaptureMemory.CanSetNaming, Mode=OneWay}"
-                                          IsOn="{x:Bind CaptureMemory.NamingEnabled, Mode=OneWay}" Toggled="CaptureNaming_Toggled" />
-                        </Grid>
-                        <Grid Padding="16,12" Background="{ThemeResource CardBackgroundFillColorDefault}"
-                              BorderBrush="{ThemeResource CardStrokeColorDefault}" BorderThickness="1" ColumnSpacing="16" CornerRadius="4">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto" /><ColumnDefinition /><ColumnDefinition Width="Auto" /><ColumnDefinition Width="28" />
-                            </Grid.ColumnDefinitions>
-                            <SymbolIcon Symbol="Refresh" />
-                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                <TextBlock x:Uid="AiSettings_ScanHeader" TextWrapping="WrapWholeWords" />
-                                <TextBlock x:Uid="AiSettings_ScanDescription" FontSize="12" Opacity=".75" TextWrapping="WrapWholeWords" />
-                            </StackPanel>
-                            <Button x:Uid="CaptureMemory_Scan" Grid.Column="2" HorizontalAlignment="Right" VerticalAlignment="Center"
-                                    AutomationProperties.AutomationId="CaptureMemoryScan" Command="{x:Bind CaptureMemory.ScanCommand}" />
                         </Grid>
                         <Grid Padding="16,12" Background="{ThemeResource CardBackgroundFillColorDefault}"
                               BorderBrush="{ThemeResource CardStrokeColorDefault}" BorderThickness="1" ColumnSpacing="16" CornerRadius="4">

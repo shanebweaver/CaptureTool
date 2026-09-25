@@ -42,16 +42,6 @@ internal sealed class GetRecentCapturesUseCase : IGetRecentCapturesUseCase
                 int skip = Math.Max(0, request.Skip);
                 int take = request.Take <= 0 ? 5 : request.Take;
 
-                IReadOnlyList<RecentCaptureCatalogEntry> catalogEntries = _recentCaptureCatalog.GetEntries();
-                string[] missingFilePaths = catalogEntries
-                    .Where(entry => !_fileSystem.FileExists(entry.FilePath))
-                    .Select(entry => entry.FilePath)
-                    .ToArray();
-                if (missingFilePaths.Length > 0)
-                {
-                    _recentCaptureCatalog.RemoveRange(missingFilePaths);
-                }
-
                 var names = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
                 if (_assets != null)
                 {
@@ -62,11 +52,22 @@ internal sealed class GetRecentCapturesUseCase : IGetRecentCapturesUseCase
                             .Where(path => path != null).Distinct(StringComparer.OrdinalIgnoreCase).Select(path => (Path: path!, Asset: asset)))
                             .GroupBy(item => item.Path, StringComparer.OrdinalIgnoreCase))
                         {
-                            if (group.Count() == 1 && group.First().Asset.Name is { } name) names[group.Key] = name.Text;
+                            if (group.Count() == 1 && group.First().Asset.Name is { IsAutomatic: false } name) names[group.Key] = name.Text;
                         }
                     }
                     catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or CryptographicException) { }
                 }
+                // Resolve any interrupted rename before pruning old history paths.
+                IReadOnlyList<RecentCaptureCatalogEntry> catalogEntries = _recentCaptureCatalog.GetEntries();
+                string[] missingFilePaths = catalogEntries
+                    .Where(entry => !_fileSystem.FileExists(entry.FilePath))
+                    .Select(entry => entry.FilePath)
+                    .ToArray();
+                if (missingFilePaths.Length > 0)
+                {
+                    _recentCaptureCatalog.RemoveRange(missingFilePaths);
+                }
+
                 IReadOnlyList<RecentCapture> requestedCaptures = catalogEntries
                     .Where(entry => _fileSystem.FileExists(entry.FilePath))
                     .OrderByDescending(entry => entry.LastActivityUtc)

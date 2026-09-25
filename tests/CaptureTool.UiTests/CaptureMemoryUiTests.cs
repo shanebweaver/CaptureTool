@@ -1,4 +1,4 @@
-using FlaUI.Core.AutomationElements;
+﻿using FlaUI.Core.AutomationElements;
 using FlaUI.Core.Definitions;
 using FlaUI.Core.Input;
 using FlaUI.Core.WindowsAPI;
@@ -21,6 +21,7 @@ public sealed partial class ImageEditTextExtractionUiTests
     [TestCategory("UI")]
     public void CaptureMemory_ConsentScanProgressAndDeleteRemainConsistentAfterNavigation(string language)
     {
+        RequireUiTestLanguage(language);
         if (!ShouldRunUiTests()) Assert.Inconclusive("Set CAPTURETOOL_RUN_UI_TESTS=1 to run desktop UI automation tests.");
         using var dpi = new DesktopDpiScope();
         string repo = FindRepositoryRoot();
@@ -54,34 +55,37 @@ public sealed partial class ImageEditTextExtractionUiTests
         MaximizeWindow(window);
         WaitForElement(window, automation, "ImageEdit_CommandBar", AppLaunchTimeout);
         OpenSettings();
-        AutomationElement toggle = Element("CaptureMemoryScanning");
+        Assert.IsNull(window.FindFirstDescendant(automation.ConditionFactory.ByAutomationId("CaptureMemoryScanning")));
         AutomationElement consent = Element("CaptureMemoryConsent");
-        AutomationElement scan = Element("CaptureMemoryScan");
         AutomationElement delete = Element("CaptureMemoryDelete");
         Assert.HasCount(2, window.FindAllDescendants(
             automation.ConditionFactory.ByControlType(ControlType.CheckBox)), "Analysis and standalone Text Extraction have independent consent checkboxes.");
-        Assert.AreEqual(ToggleState.Off, toggle.Patterns.Toggle.Pattern.ToggleState.Value);
-        Assert.IsFalse(scan.IsEnabled);
+        Assert.AreEqual(ToggleState.Off, consent.Patterns.Toggle.Pattern.ToggleState.Value);
         Assert.IsFalse(delete.IsEnabled);
+        Assert.IsFalse(Element("TextExtractionConsent").FindAllDescendants(automation.ConditionFactory.ByControlType(ControlType.Text))
+            .Any(item => !string.IsNullOrEmpty(item.Name) && !item.IsOffscreen), "Standalone OCR consent should be a checkbox without visible label text.");
         Assert.IsFalse(string.IsNullOrWhiteSpace(consent.Name), "Consent needs an accessible name.");
         Assert.AreEqual(resources["CaptureMemory_Consent.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name"], consent.Name);
-        Assert.AreEqual(resources["CaptureMemory_Scan.Content"], scan.Name);
         Assert.AreEqual(resources["CaptureMemory_Delete.Content"], delete.Name);
-        consent.Focus();
-        Keyboard.Type(VirtualKeyShort.TAB);
-        WaitFor(() => toggle.Properties.HasKeyboardFocus.Value ? toggle : null, InteractionTimeout,
-            "keyboard navigation from consent to automatic scanning");
-
         int progressAnnouncements = 0;
         using var announcements = window.RegisterAutomationEvent(automation.EventLibrary.Element.LiveRegionChangedEvent,
             TreeScope.Subtree, (element, _) =>
             {
                 if (element.AutomationId == "CaptureMemoryProgress") Interlocked.Increment(ref progressAnnouncements);
             });
-        toggle.Patterns.Toggle.Pattern.Toggle();
-        Confirm("EnableScanning", "CaptureMemory_EnableScanningAccept");
-        Confirm("ScanExisting", "CaptureMemory_ScanExistingAccept");
-        AutomationElement progress = Element("CaptureMemoryProgress");
+        consent.Patterns.Toggle.Pattern.Toggle();
+        Confirm("Consent", "CaptureMemory_ConsentAccept");
+        Assert.IsNull(window.FindFirstDescendant(automation.ConditionFactory.ByAutomationId("CaptureMemoryScan")));
+        WaitForElementByName(window, automation, resources["AppMenu_FileMenuItem.Title"], InteractionTimeout).Click();
+        WaitForElement(window, automation, "AppMenu_HomeItem", InteractionTimeout).Patterns.Invoke.Pattern.Invoke();
+        var recent = Element("Home_RecentCaptures");
+        WaitFor(() => recent.FindFirstDescendant(automation.ConditionFactory.ByControlType(ControlType.ListItem)), InteractionTimeout, "recent capture").DoubleClick();
+        Element("Editor_DetailsToggle").Patterns.Toggle.Pattern.Toggle();
+        Element("CapturePane_TextTab").Patterns.SelectionItem.Pattern.Select();
+        Element("CaptureAction_Text").Patterns.Invoke.Pattern.Invoke();
+        AutomationElement progress = WaitFor(() => window.FindFirstDescendant(
+            automation.ConditionFactory.ByAutomationId("CaptureMemoryProgress")) is { IsOffscreen: false } visible ? visible : null,
+            InteractionTimeout, "analysis progress visible after opening capture");
         Assert.IsFalse(progress.IsOffscreen, "Analysis progress should be visible in the shell.");
         Assert.IsFalse(progress.Patterns.Invoke.IsSupported, "Progress must be passive.");
         Assert.IsFalse(progress.Patterns.Toggle.IsSupported);
@@ -89,13 +93,14 @@ public sealed partial class ImageEditTextExtractionUiTests
         SaveScreenshot("loading");
         WaitForElementRemoved(window, automation, "CaptureMemoryProgress", InteractionTimeout);
         Assert.IsGreaterThan(0, Volatile.Read(ref progressAnnouncements), "Progress must announce itself through UI Automation.");
+        OpenSettings();
+        consent = Element("CaptureMemoryConsent");
+        delete = Element("CaptureMemoryDelete");
         Assert.AreEqual(ToggleState.On, consent.Patterns.Toggle.Pattern.ToggleState.Value);
         WaitFor(() => delete.IsEnabled ? delete : null, InteractionTimeout, "deletion enabled after analysis");
-        Assert.IsTrue(scan.IsEnabled);
 
-        toggle.Patterns.Toggle.Pattern.Toggle();
+        consent.Patterns.Toggle.Pattern.Toggle();
         Confirm("DeleteMetadata", "CaptureMemory_Cancel");
-        WaitFor(() => !scan.IsEnabled ? scan : null, InteractionTimeout, "scan disabled with scanning off");
         WaitFor(() => delete.IsEnabled ? delete : null, InteractionTimeout, "retained metadata available after declining deletion");
         delete.Patterns.Invoke.Pattern.Invoke();
         Confirm("DeleteMetadata", "CaptureMemory_DeleteMetadataAccept");
@@ -103,25 +108,20 @@ public sealed partial class ImageEditTextExtractionUiTests
             ? delete : null, InteractionTimeout, "deletion completes");
         Assert.IsTrue(File.Exists(fixture), "Deleting analysis must keep capture media.");
 
-        // Revoking consent with no metadata requires no further deletion prompt.
-        consent.Focus();
-        Keyboard.Type(VirtualKeyShort.SPACE);
-        WaitFor(() => consent.Patterns.Toggle.Pattern.ToggleState.Value == ToggleState.Off ? consent : null,
-            InteractionTimeout, "consent revoked");
-        WaitForElementByName(window, automation, resources["AppMenu_FileMenuItem.Title"], InteractionTimeout).Click();
-        WaitForElement(window, automation, "AppMenu_HomeItem", InteractionTimeout).Click();
-        OpenSettings();
-        toggle = Element("CaptureMemoryScanning");
-        consent = Element("CaptureMemoryConsent");
-        scan = Element("CaptureMemoryScan");
-        delete = Element("CaptureMemoryDelete");
-        Assert.AreEqual(ToggleState.Off, toggle.Patterns.Toggle.Pattern.ToggleState.Value);
+        // Consent was already revoked; deleting metadata does not grant it again.
         Assert.AreEqual(ToggleState.Off, consent.Patterns.Toggle.Pattern.ToggleState.Value);
-        Assert.IsFalse(scan.IsEnabled);
+        WaitForElementByName(window, automation, resources["AppMenu_FileMenuItem.Title"], InteractionTimeout).Click();
+        WaitForElement(window, automation, "AppMenu_HomeItem", InteractionTimeout).Patterns.Invoke.Pattern.Invoke();
+        Element("Home_RecentCaptures");
+        OpenSettings();
+        consent = Element("CaptureMemoryConsent");
+        delete = Element("CaptureMemoryDelete");
+        Assert.AreEqual(ToggleState.Off, consent.Patterns.Toggle.Pattern.ToggleState.Value);
+        Assert.AreEqual(ToggleState.Off, consent.Patterns.Toggle.Pattern.ToggleState.Value);
         Assert.IsFalse(delete.IsEnabled);
-        toggle.Patterns.Toggle.Pattern.Toggle();
-        Confirm("EnableScanning", "CaptureWelcome_NotNow");
-        WaitFor(() => toggle.Patterns.Toggle.Pattern.ToggleState.Value == ToggleState.Off ? toggle : null,
+        consent.Patterns.Toggle.Pattern.Toggle();
+        Confirm("Consent", "CaptureWelcome_NotNow");
+        WaitFor(() => consent.Patterns.Toggle.Pattern.ToggleState.Value == ToggleState.Off ? consent : null,
             InteractionTimeout, "cancelled enable restores off state");
         consent.Focus();
         SaveScreenshot("settings");
@@ -129,7 +129,7 @@ public sealed partial class ImageEditTextExtractionUiTests
         window.Patterns.Transform.Pattern.Resize(900, 950);
         OpenSettings();
         SaveScreenshot("settings-narrow");
-        WaitForElementByName(window, automation, "AppTheme_Dark", InteractionTimeout).Patterns.SelectionItem.Pattern.Select();
+        WaitForElementByName(window, automation, resources["AppTheme_Dark"], InteractionTimeout).Patterns.SelectionItem.Pattern.Select();
         Thread.Sleep(250); // Allow the theme change to render before the visual artifact is captured.
         SaveScreenshot("settings-dark");
 

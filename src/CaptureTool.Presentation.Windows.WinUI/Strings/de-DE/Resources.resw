@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -740,7 +740,7 @@ Passen Sie die Toleranz an, um den Hintergrund zu entfernen, und entsättigen Si
     <value>Drittanbieter-Lizenzen</value>
   </data>
   <data name="About_ThirdParty_DialogContent" xml:space="preserve">
-    <value>This application uses open-source software. Below are the third-party components and their licenses.
+    <value>Diese Anwendung verwendet Open-Source-Software. Nachfolgend finden Sie die Komponenten von Drittanbietern und ihre Lizenzen.
 
 CommunityToolkit.WinUI.Controls.Segmented
 Copyright © .NET Foundation and Contributors
@@ -1306,37 +1306,37 @@ SOFTWARE.
     <value>Hintergrund</value>
   </data>
   <data name="ImageEdit_SuperResolutionButton.Label" xml:space="preserve">
-    <value>Super Resolution</value>
+    <value>Superauflösung</value>
   </data>
   <data name="ImageEdit_SuperResolutionButton.AccessKey" xml:space="preserve">
     <value>U</value>
   </data>
   <data name="ImageEdit_SuperResolutionButton.ToolTipService.ToolTip" xml:space="preserve">
-    <value>Show or hide the AI super-resolution image</value>
+    <value>Das mit KI verbesserte Bild ein- oder ausblenden</value>
   </data>
   <data name="ImageEdit_SuperResolutionProgressRing.AutomationProperties.Name" xml:space="preserve">
     <value>Bild wird verbessert</value>
   </data>
   <data name="ImageSuperResolutionStatus_NotSupported" xml:space="preserve">
-    <value>Super Resolution is not supported on this PC.</value>
+    <value>Die Superauflösung wird auf diesem PC nicht unterstützt.</value>
   </data>
   <data name="ImageSuperResolutionStatus_Disabled" xml:space="preserve">
-    <value>Super Resolution is disabled on this PC.</value>
+    <value>Die Superauflösung ist auf diesem PC deaktiviert.</value>
   </data>
   <data name="ImageSuperResolutionStatus_NotAvailable" xml:space="preserve">
-    <value>Super Resolution is not available.</value>
+    <value>Die Superauflösung ist nicht verfügbar.</value>
   </data>
   <data name="ImageSuperResolutionStatus_PreparationFailed" xml:space="preserve">
-    <value>Super Resolution could not be prepared.</value>
+    <value>Die Superauflösung konnte nicht vorbereitet werden.</value>
   </data>
   <data name="ImageSuperResolutionStatus_NotReady" xml:space="preserve">
-    <value>Super Resolution is not ready.</value>
+    <value>Die Superauflösung ist noch nicht bereit.</value>
   </data>
   <data name="ImageSuperResolutionStatus_TooLarge" xml:space="preserve">
-    <value>This image is too large for Super Resolution.</value>
+    <value>Dieses Bild ist zu groß für die Superauflösung.</value>
   </data>
   <data name="ImageSuperResolutionStatus_Failed" xml:space="preserve">
-    <value>Super Resolution failed.</value>
+    <value>Die Superauflösung ist fehlgeschlagen.</value>
   </data>
   <data name="ImageEdit_EditInPaintButton.Label" xml:space="preserve">
     <value>In Paint bearbeiten</value>
@@ -1354,46 +1354,46 @@ SOFTWARE.
     <value>In Clipchamp öffnen</value>
   </data>
   <data name="About_SendFeedbackButton.AutomationProperties.Name" xml:space="preserve">
-    <value>Send feedback</value>
+    <value>Feedback senden</value>
   </data>
   <data name="About_SendFeedbackButton.ToolTipService.ToolTip" xml:space="preserve">
-    <value>Open Feedback Hub</value>
+    <value>Feedback-Hub öffnen</value>
   </data>
   <data name="About_SendFeedbackButtonLabel.Text" xml:space="preserve">
-    <value>Send feedback</value>
+    <value>Feedback senden</value>
   </data>
   <data name="StoreReviewPrompt_Title" xml:space="preserve">
-    <value>Enjoying Capture Tool?</value>
+    <value>Gefällt Ihnen Capture Tool?</value>
   </data>
   <data name="StoreReviewPrompt_Content" xml:space="preserve">
-    <value>A quick Microsoft Store review helps other people find the app.</value>
+    <value>Mit einer kurzen Bewertung im Microsoft Store helfen Sie anderen, die App zu entdecken.</value>
   </data>
   <data name="StoreReviewPrompt_ReviewButton" xml:space="preserve">
-    <value>Leave a review</value>
+    <value>Bewertung abgeben</value>
   </data>
   <data name="StoreReviewPrompt_RemindLaterButton" xml:space="preserve">
-    <value>Remind me later</value>
+    <value>Später erinnern</value>
   </data>
   <data name="StoreReviewPrompt_DontShowAgainButton" xml:space="preserve">
-    <value>Don't show again</value>
+    <value>Nicht mehr anzeigen</value>
   </data>
   <data name="Settings_StoreHeaderLabel.Text" xml:space="preserve">
-    <value>Store</value>
+    <value>Microsoft Store</value>
   </data>
   <data name="Settings_StoreReview_HeaderLabel.Text" xml:space="preserve">
-    <value>Store Review reminders</value>
+    <value>Erinnerungen an eine Store-Bewertung</value>
   </data>
   <data name="Settings_StoreReview_SubtitleLabel.Text" xml:space="preserve">
-    <value>Ask for a Microsoft Store review after enough time and app launches.</value>
+    <value>Nach einiger Zeit und mehreren App-Starts um eine Bewertung im Microsoft Store bitten.</value>
   </data>
   <data name="Settings_StoreReview_LinkLabel.Text" xml:space="preserve">
-    <value>Leave a Microsoft Store review</value>
+    <value>Eine Bewertung im Microsoft Store abgeben</value>
   </data>
   <data name="Settings_StoreReviewReminders_Toggle.OnContent" xml:space="preserve">
-    <value>On</value>
+    <value>Ein</value>
   </data>
   <data name="Settings_StoreReviewReminders_Toggle.OffContent" xml:space="preserve">
-    <value>Off</value>
+    <value>Aus</value>
   </data>
   <data name="ImageEdit_TextExtractionButton.Label" xml:space="preserve">
     <value>Texterkennung</value>
@@ -1723,16 +1723,13 @@ SOFTWARE.
     <value>KI</value>
   </data>
   <data name="CaptureMemory_Scanning.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
-    <value>Neue Aufnahmen automatisch analysieren</value>
+    <value>Aufnahmen automatisch analysieren</value>
   </data>
   <data name="CaptureMemory_Consent.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>Lokale KI-Funktionen erlauben</value>
   </data>
   <data name="CaptureMemory_SettingsDescription.Text" xml:space="preserve">
     <value>Aufnahmen mit KI auf diesem Gerät analysieren und Informationen sicher für das Aufnahmegedächtnis speichern.</value>
-  </data>
-  <data name="CaptureMemory_Scan.Content" xml:space="preserve">
-    <value>Analysieren</value>
   </data>
   <data name="CaptureMemory_Delete.Content" xml:space="preserve">
     <value>Löschen</value>
@@ -1744,28 +1741,19 @@ SOFTWARE.
     <value>Aufnahmen werden analysiert…</value>
   </data>
   <data name="CaptureMemory_ConsentTitle" xml:space="preserve">
-    <value>Lokale KI-Funktionen erlauben?</value>
+    <value>Mehr aus jeder Aufnahme machen</value>
   </data>
   <data name="CaptureMemory_ConsentContent" xml:space="preserve">
-    <value>Aktivieren Sie lokale KI-Funktionen und die automatische Analyse neuer Aufnahmen. Die Verarbeitung erfolgt auf diesem PC, und Analysen werden sicher gespeichert. Modelle müssen möglicherweise heruntergeladen werden. Sie können die Analyse in den Einstellungen deaktivieren oder gespeicherte Analysen löschen.</value>
+    <value>Lokale KI wird nur verwendet, wenn Sie eine Aktion auswählen. Nichts wird automatisch analysiert. Ergebnisse bleiben sicher gespeichert auf diesem PC. Modelle müssen eventuell heruntergeladen werden. Sie können die Zustimmung widerrufen oder Ergebnisse in den Einstellungen löschen.</value>
   </data>
   <data name="CaptureMemory_ConsentAccept" xml:space="preserve">
-    <value>Erlauben</value>
-  </data>
-  <data name="CaptureMemory_ScanExistingTitle" xml:space="preserve">
-    <value>Vorhandene Aufnahmen analysieren?</value>
-  </data>
-  <data name="CaptureMemory_ScanExistingContent" xml:space="preserve">
-    <value>Die Analyse neuer Aufnahmen ist aktiviert. Auch verfügbare, zuvor mit CaptureTool erstellte Aufnahmen analysieren? Vorhandene Informationen bleiben erhalten, bis eine erfolgreiche Analyse sie ersetzt.</value>
-  </data>
-  <data name="CaptureMemory_ScanExistingAccept" xml:space="preserve">
-    <value>Aufnahmen analysieren</value>
+    <value>Lokale KI erlauben</value>
   </data>
   <data name="CaptureMemory_DeleteMetadataTitle" xml:space="preserve">
     <value>Analyseinformationen löschen?</value>
   </data>
   <data name="CaptureMemory_DeleteMetadataContent" xml:space="preserve">
-    <value>Gespeicherte Analyseinformationen löschen und ausstehende Analysen stoppen? Aufnahmedateien und Ihre Analyseeinstellung bleiben erhalten.</value>
+    <value>Gespeicherte Analysen löschen und ausstehende Aktionen abbrechen? Aufnahmedateien und die KI-Zustimmung bleiben erhalten.</value>
   </data>
   <data name="CaptureMemory_DeleteMetadataAccept" xml:space="preserve">
     <value>Informationen löschen</value>
@@ -1794,18 +1782,12 @@ SOFTWARE.
   <data name="AiSettings_ConsentHeader.Text" xml:space="preserve">
     <value>Lokale KI-Funktionen erlauben</value>
   </data>
-  <data name="AiSettings_ConsentDescription.Text" xml:space="preserve"><value>Zustimmung für Aufnahmeanalyse und lokale KI-Bearbeitung. Die eigenständige Texterkennung fragt separat.</value></data>
+  <data name="AiSettings_ConsentDescription.Text" xml:space="preserve"><value>Erlaubt lokale KI-Aktionen, die Sie anfordern. Aufnahmen werden nie automatisch analysiert.</value></data>
   <data name="AiSettings_ScanningHeader.Text" xml:space="preserve">
-    <value>Neue Aufnahmen automatisch analysieren</value>
+    <value>Aufnahmen automatisch analysieren</value>
   </data>
   <data name="AiSettings_ScanningDescription.Text" xml:space="preserve">
-    <value>Bilder, Audio und Videos nach der Aufnahme analysieren.</value>
-  </data>
-  <data name="AiSettings_ScanHeader.Text" xml:space="preserve">
-    <value>Vorhandene Aufnahmen analysieren</value>
-  </data>
-  <data name="AiSettings_ScanDescription.Text" xml:space="preserve">
-    <value>Gespeicherte Analysen für vorhandene Aufnahmen erstellen oder aktualisieren.</value>
+    <value>Neue Bilder, Audio- und Videoaufnahmen analysieren. Ältere Aufnahmen werden erst analysiert, wenn Sie sie öffnen.</value>
   </data>
   <data name="AiSettings_DeleteHeader.Text" xml:space="preserve">
     <value>Aufnahmeanalysen löschen</value>
@@ -1824,9 +1806,7 @@ SOFTWARE.
   <data name="CaptureDetails_Evidence.Header" xml:space="preserve"><value>Quelle anzeigen</value></data>
   <data name="CaptureDetails_Copy.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Text kopieren</value></data>
   <data name="CaptureDetails_Copy.ToolTipService.ToolTip" xml:space="preserve"><value>Text kopieren</value></data>
-  <data name="CaptureDetails_Refresh.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Details aktualisieren</value></data>
-  <data name="CaptureDetails_Refresh.ToolTipService.ToolTip" xml:space="preserve"><value>Gespeicherte Details aktualisieren</value></data>
-  <data name="CaptureDetails_CopyAll.Content" xml:space="preserve"><value>Gesamten Text kopieren</value></data>
+<data name="CaptureDetails_CopyAll.Content" xml:space="preserve"><value>Gesamten Text kopieren</value></data>
   <data name="CaptureDetails_OverviewHeading.Text" xml:space="preserve"><value>KI-Übersicht</value></data>
   <data name="CaptureDetails_SuggestionsHint.Text" xml:space="preserve"><value>Generierte Vorschläge. Prüfen Sie bei wichtigen Angaben die Quelle.</value></data>
   <data name="CaptureDetails_FactsHeading.Text" xml:space="preserve"><value>Nützliche Informationen</value></data>
@@ -1881,9 +1861,9 @@ SOFTWARE.
   <data name="CaptureDetails_SourceChanged" xml:space="preserve"><value>Diese Datei wurde seit der Analyse geändert. Starten Sie die Analyse in den Einstellungen erneut.</value></data>
   <data name="CaptureDetails_SourceUnavailable" xml:space="preserve"><value>Die Aufnahmedatei ist nicht verfügbar. Gespeicherte Details können nicht überprüft werden.</value></data>
   <data name="CaptureDetails_Analyzing" xml:space="preserve"><value>Analyse ausstehend oder in Bearbeitung. Details werden mit neuen Ergebnissen aktualisiert.</value></data>
-  <data name="CaptureDetails_Paused" xml:space="preserve"><value>Die Analyse ist pausiert. Aktivieren Sie das Scannen in den Einstellungen.</value></data>
+  <data name="CaptureDetails_Paused" xml:space="preserve"><value>Die Analyse wurde beendet. Wählen Sie eine Aktion, um es erneut zu versuchen.</value></data>
   <data name="CaptureDetails_Partial" xml:space="preserve"><value>Einige Analysen wurden nicht abgeschlossen. Verfügbare Ergebnisse werden angezeigt.</value></data>
-  <data name="CaptureDetails_Empty" xml:space="preserve"><value>Noch keine gespeicherten Details. Sie können vorhandene Aufnahmen in den Einstellungen analysieren.</value></data>
+  <data name="CaptureDetails_Empty" xml:space="preserve"><value>Noch kein Text gespeichert. Wählen Sie oben die gewünschte Aktion.</value></data>
   <data name="CaptureDetails_Retained" xml:space="preserve"><value>Einige Ergebnisse stammen aus einer früheren Analyse derselben Datei.</value></data>
   <data name="CaptureDetails_Limited" xml:space="preserve"><value>Einige Inhalte oder Ergebnisse wurden ausgelassen. Diese Einblicke decken möglicherweise nicht die gesamte Aufnahme ab.</value></data>
   <data name="CaptureDetails_Copied" xml:space="preserve"><value>Text kopiert.</value></data>
@@ -1921,17 +1901,18 @@ SOFTWARE.
   <data name="CapturePane_MatchCount" xml:space="preserve"><value>{0} passende Textstellen</value></data>
   <data name="CapturePane_LocationUnavailable" xml:space="preserve"><value>In der aktuellen Ansicht ist keine Position verfügbar. Das Bild wurde möglicherweise geändert oder die Textstelle liegt außerhalb des Zuschnitts.</value></data>
   <data name="CapturePane_ActionFailed" xml:space="preserve"><value>Diese Aktion ist nicht verfügbar. Aktualisieren Sie die Aufnahmedetails.</value></data>
-  <data name="CaptureNaming_Header.Text" xml:space="preserve"><value>Neue Aufnahmen automatisch benennen</value></data>
-  <data name="CaptureNaming_Description.Text" xml:space="preserve"><value>Verwendet lokale KI-Analyse für Namen neuer Aufnahmen und Vorschläge beim Speichern unter. Bestehende Dateinamen bleiben erhalten. Das Löschen der Analyse behält gewählte Namen bei.</value></data>
-  <data name="CaptureNaming_Toggle.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Neue Aufnahmen automatisch benennen</value></data>
+  <data name="CaptureNaming_Header.Text" xml:space="preserve"><value>Namen für neue Aufnahmen vorschlagen</value></data>
+  <data name="CaptureNaming_Description.Text" xml:space="preserve"><value>Nach der Aufnahme schlägt die KI Dateinamen vor. Dateien behalten ihren Namen, bis Sie einen Vorschlag annehmen.</value></data>
+  <data name="CaptureNaming_Toggle.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Namen für neue Aufnahmen vorschlagen</value></data>
   <data name="CaptureNaming_Edit.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Aufnahmenamen bearbeiten</value></data>
   <data name="CaptureNaming_Input.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Aufnahmename</value></data>
-  <data name="CaptureNaming_EditHint.Text" xml:space="preserve"><value>Dieser Name wird in der App und beim Speichern unter verwendet. Der vorhandene Dateiname bleibt erhalten.</value></data>
-  <data name="CaptureNaming_Save.Content" xml:space="preserve"><value>Namen speichern</value></data>
-  <data name="CaptureNaming_Cancel.Content" xml:space="preserve"><value>Abbrechen</value></data>
+  <data name="CaptureNaming_Save.ToolTipService.ToolTip" xml:space="preserve"><value>Datei umbenennen</value></data>
+  <data name="CaptureNaming_Save.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Datei umbenennen</value></data>
+  <data name="CaptureNaming_Cancel.ToolTipService.ToolTip" xml:space="preserve"><value>Abbrechen</value></data>
+  <data name="CaptureNaming_Cancel.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Abbrechen</value></data>
   <data name="CaptureNaming_FileName.Text" xml:space="preserve"><value>Dateiname</value></data>
   <data name="CaptureNaming_Invalid" xml:space="preserve"><value>Geben Sie einen einzeiligen Namen mit 1–160 Zeichen ein.</value></data>
-  <data name="CaptureNaming_SaveFailed" xml:space="preserve"><value>Der Name oder die Benennungseinstellung konnte nicht gespeichert werden. Versuchen Sie es erneut.</value></data>
+  <data name="CaptureNaming_SaveFailed" xml:space="preserve"><value>Die Datei konnte nicht umbenannt werden. Prüfen Sie, ob der Name bereits verwendet wird und die Datei beschreibbar ist.</value></data>
   <data name="AiFeatureConsentDialog_TextExtractionTitle" xml:space="preserve">
     <value>Texterkennung zulassen?</value>
   </data>
@@ -1947,19 +1928,60 @@ SOFTWARE.
   <data name="AiFeatureConsentDialog_CancelButton" xml:space="preserve">
     <value>Abbrechen</value>
   </data>
-  <data name="CaptureMemory_EnableScanningTitle" xml:space="preserve"><value>Mehr aus jeder Aufnahme machen</value></data>
   <data name="CaptureWelcome_Eyebrow.Text" xml:space="preserve"><value>LOKALE KI</value></data>
   <data name="CaptureWelcome_Hero.Text" xml:space="preserve"><value>Ein wenig Aufnahmemagie</value></data>
-  <data name="CaptureWelcome_Text.Text" xml:space="preserve"><value>Wörter in Bildern finden und kopieren.</value></data>
-  <data name="CaptureWelcome_Recording.Text" xml:space="preserve"><value>Sprache und Bildschirmtext in Aufnahmen erkunden.</value></data>
-  <data name="CaptureWelcome_Names.Text" xml:space="preserve"><value>Geben Sie neuen Aufnahmen aussagekräftige Namen.</value></data>
-  <data name="CaptureWelcome_Consent.Text" xml:space="preserve"><value>Aktivieren Sie lokale KI-Funktionen und die automatische Analyse neuer Aufnahmen. Die Verarbeitung erfolgt auf diesem PC, und Analysen werden sicher gespeichert. Modelle müssen möglicherweise heruntergeladen werden. Sie können die Analyse in den Einstellungen deaktivieren oder gespeicherte Analysen löschen.</value></data>
-  <data name="CaptureMemory_EnableScanningAccept" xml:space="preserve"><value>Analyse aktivieren</value></data>
+  <data name="CaptureWelcome_Text.Text" xml:space="preserve"><value>Bilder: Text extrahieren, QR-Codes finden und Beschreibungen erstellen.</value></data>
+  <data name="CaptureWelcome_Recording.Text" xml:space="preserve"><value>Video: Bildschirmtext, Beschreibungen und Sprache erkunden.</value></data>
+  <data name="CaptureWelcome_Names.Text" xml:space="preserve"><value>Audio: Aufnahmen in lesbaren Text transkribieren.</value></data>
+  <data name="CaptureWelcome_Consent.Text" xml:space="preserve"><value>Lokale KI wird nur verwendet, wenn Sie eine Aktion auswählen. Nichts wird automatisch analysiert. Ergebnisse bleiben sicher gespeichert auf diesem PC. Modelle müssen eventuell heruntergeladen werden. Sie können die Zustimmung widerrufen oder Ergebnisse in den Einstellungen löschen.</value></data>
   <data name="CaptureWelcome_NotNow" xml:space="preserve"><value>Nicht jetzt</value></data>
-  <data name="CapturePane_EnableAnalysis.Content" xml:space="preserve"><value>Aufnahmeanalyse aktivieren</value></data>
   <data name="TextExtractionSettings_Header.Text" xml:space="preserve"><value>Texterkennung</value></data>
   <data name="TextExtractionSettings_Description.Text" xml:space="preserve"><value>Lesen Sie Text und QR-Codes mit der Texterkennung im Bildeditor.</value></data>
-  <data name="TextExtractionSettings_Consent.Content" xml:space="preserve"><value>Zulassen</value></data>
-  <data name="TextExtractionSettings_Consent.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Eigenständige Texterkennung zulassen</value></data>
+<data name="TextExtractionSettings_Consent.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Eigenständige Texterkennung zulassen</value></data>
   <data name="TextExtractionSettings_SaveFailed" xml:space="preserve"><value>Die Berechtigung für die Texterkennung konnte nicht gespeichert werden. Versuchen Sie es erneut.</value></data>
+  <data name="AddOns_ChromaKeyPurchaseNotCompletedLabel.Text" xml:space="preserve"><value>Der Kauf wurde nicht abgeschlossen. Versuchen Sie es erneut.</value></data>
+  <data name="AudioCapture_StopCaptureFailedMessage" xml:space="preserve"><value>Die Aufnahme konnte nicht fertiggestellt werden. Versuchen Sie erneut, eine Aufnahme zu erstellen.</value></data>
+  <data name="AudioEdit_LoadingMediaText.Text" xml:space="preserve"><value>Audio wird geöffnet…</value></data>
+  <data name="AudioEdit_MediaFailureOpenFolderButton.Content" xml:space="preserve"><value>Ordner für Audioaufnahmen öffnen</value></data>
+  <data name="ErrorPage_ExitAppButtonLabel.Text" xml:space="preserve"><value>App beenden</value></data>
+  <data name="ErrorPage_RestartFailedLabel.Text" xml:space="preserve"><value>Die App konnte nicht neu gestartet werden. Versuchen Sie es erneut oder beenden Sie die App.</value></data>
+  <data name="MediaFailure_FileUnavailable" xml:space="preserve"><value>Diese Mediendatei ist nicht verfügbar. Prüfen Sie, ob sie noch vorhanden ist, und versuchen Sie es erneut.</value></data>
+  <data name="MediaFailure_Finalization" xml:space="preserve"><value>Die Aufnahme konnte nicht fertiggestellt werden. Öffnen Sie den Aufnahmeordner, um die Datei zu überprüfen.</value></data>
+  <data name="MediaFailure_Playback" xml:space="preserve"><value>Diese Mediendatei konnte nicht wiedergegeben werden. Versuchen Sie es erneut oder öffnen Sie den Aufnahmeordner.</value></data>
+  <data name="MediaFailure_RetryButton.Content" xml:space="preserve"><value>Erneut versuchen</value></data>
+  <data name="MediaFailure_Unsupported" xml:space="preserve"><value>Dieses Medienformat oder dieser Codec wird nicht unterstützt.</value></data>
+  <data name="VideoEdit_LoadingMediaText.Text" xml:space="preserve"><value>Video wird geöffnet…</value></data>
+  <data name="VideoEdit_MediaFailureOpenFolderButton.Content" xml:space="preserve"><value>Ordner für Bildschirmaufnahmen öffnen</value></data>
+  <data name="AddOns_ItemUnknown" xml:space="preserve"><value>Wird geladen…</value></data>
+  <data name="ChromaKeyToolbar_KeyColorLabel.Text" xml:space="preserve"><value>Schlüsselfarbe</value></data>
+  <data name="Common_BackButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Zurück</value></data>
+  <data name="MainWindow_DismissNotificationButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Benachrichtigung schließen</value></data>
+  <data name="MainWindow_DismissNotificationButton.ToolTipService.ToolTip" xml:space="preserve"><value>Schließen</value></data>
+  <data name="AppMenu_NoRecentCaptures" xml:space="preserve"><value>Keine</value></data>
+  <data name="ImageEdit_DeleteShape" xml:space="preserve"><value>Löschen</value></data>
+  <data name="ImageCanvas_CopyQrCodeValue" xml:space="preserve"><value>QR-Code-Inhalt kopieren</value></data>
+  <data name="ImageCanvas_OpenQrCodeLink" xml:space="preserve"><value>QR-Code-Link öffnen</value></data>
+  <data name="ImageCanvas_QrCodeValue" xml:space="preserve"><value>QR-Code: {0}</value></data>
+  <data name="Common_MediaType_Image" xml:space="preserve"><value>Bild</value></data>
+  <data name="Common_MediaType_Video" xml:space="preserve"><value>Video</value></data>
+  <data name="Common_MediaType_Audio" xml:space="preserve"><value>Audio</value></data>
+  <data name="Common_MediaType_File" xml:space="preserve"><value>Datei</value></data>
+  <data name="CaptureNaming_Generating.Text" xml:space="preserve"><value>Name wird vorgeschlagen…</value></data>
+  <data name="CaptureNaming_Suggestion.Text" xml:space="preserve"><value>Vorgeschlagener Dateiname</value></data>
+  <data name="CaptureNaming_Accept.Content" xml:space="preserve"><value>Diesen Namen verwenden</value></data>
+  <data name="CapturePane_GeneratingSummary.Text" xml:space="preserve"><value>Zusammenfassung wird erstellt…</value></data>
+  <data name="CaptureAction_Description" xml:space="preserve"><value>Beschreibung erstellen</value></data>
+  <data name="CaptureAction_Summary" xml:space="preserve"><value>Zusammenfassung erstellen</value></data>
+  <data name="CaptureAction_Name" xml:space="preserve"><value>Namen vorschlagen</value></data>
+  <data name="CaptureAction_Text" xml:space="preserve"><value>Text extrahieren</value></data>
+  <data name="CaptureAction_Qr" xml:space="preserve"><value>QR-Codes finden</value></data>
+  <data name="CaptureAction_Transcript" xml:space="preserve"><value>Audio transkribieren</value></data>
+  <data name="CaptureAction_DescriptionHeading.Text" xml:space="preserve"><value>KI-Beschreibung</value></data>
+  <data name="CaptureAction_SummaryInputs.Text" xml:space="preserve"><value>Extrahieren Sie zuerst Text, transkribieren Sie Audio oder erstellen Sie eine Beschreibung. Zusammenfassungen und Namensvorschläge verwenden diese gespeicherten Ergebnisse.</value></data>
+  <data name="CaptureAction_NoText" xml:space="preserve"><value>Kein Text gefunden.</value></data>
+  <data name="CaptureAction_NoQr" xml:space="preserve"><value>Keine QR-Codes gefunden.</value></data>
+  <data name="CaptureAction_NoSpeech" xml:space="preserve"><value>Keine Sprache gefunden.</value></data>
+  <data name="CaptureAction_NoDescription" xml:space="preserve"><value>Es wurde keine Beschreibung erstellt.</value></data>
+  <data name="CaptureAction_Unavailable" xml:space="preserve"><value>Diese Aktion ist auf diesem Gerät nicht verfügbar.</value></data>
+  <data name="CaptureAction_Failed" xml:space="preserve"><value>Diese Aktion konnte nicht abgeschlossen werden. Versuchen Sie es erneut.</value></data>
 </root>

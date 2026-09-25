@@ -1,11 +1,14 @@
 using CaptureTool.Domain.Capture;
+using CaptureTool.Domain.Analysis;
 
 namespace CaptureTool.Application.Abstractions.Analysis;
 
 public sealed record CaptureMemoryPolicy(bool ScanningEnabled, bool ConsentGranted, Guid Revision, long EnableBoundary,
     bool? ScanningPreference = null)
 {
-    public bool IsAllowed => ScanningEnabled && ConsentGranted;
+    // The legacy automatic-scanning fields remain readable for stored-policy compatibility.
+    // Explicit actions require consent, independently of a former automation preference.
+    public bool IsAllowed => ConsentGranted;
     public static CaptureMemoryPolicy Disabled() => new(false, false, Guid.NewGuid(), 0);
 }
 
@@ -15,7 +18,7 @@ public interface ICaptureMemoryPolicyStore
     Task SaveAsync(CaptureMemoryPolicy policy, CancellationToken cancellationToken);
 }
 
-public enum CaptureMemoryPrompt { Consent, ScanExisting, DeleteMetadata, EnableScanning }
+public enum CaptureMemoryPrompt { Consent, DeleteMetadata }
 public interface ICaptureMemoryPrompts
 {
     Task<bool> ConfirmAsync(CaptureMemoryPrompt prompt, CancellationToken cancellationToken);
@@ -37,13 +40,13 @@ public interface ICaptureMemoryService
     CaptureMemoryState State { get; }
     event Action? StateChanged;
     Task InitializeAsync(CancellationToken cancellationToken = default);
-    Guid? CaptureAuthorization { get; }
-    Task RegisterCaptureAsync(CaptureAsset asset, Guid? authorization, CancellationToken cancellationToken = default);
+    /// <summary>Records capture identity only; never schedules analysis.</summary>
+    Task RegisterCaptureAsync(CaptureAsset asset, CancellationToken cancellationToken = default);
     Task SetPreferredPathAsync(string sourcePath, string preferredPath, CancellationToken cancellationToken = default);
-    Task SetScanningAsync(bool enabled, CancellationToken cancellationToken = default);
     Task SetConsentAsync(bool granted, CancellationToken cancellationToken = default);
     Task<bool> EnsureConsentAsync(CancellationToken cancellationToken = default);
-    Task ScanExistingAsync(CancellationToken cancellationToken = default);
+    /// <summary>Explicitly requests one capability; never called by capture/open/tab lifecycle events.</summary>
+    Task AnalyzeAsync(string path, AnalysisCapability capability, CancellationToken cancellationToken = default);
     Task DeleteMetadataAsync(CancellationToken cancellationToken = default);
     Task RefreshAsync(CancellationToken cancellationToken = default);
     Task StopAsync();

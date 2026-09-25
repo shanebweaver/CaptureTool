@@ -1,4 +1,4 @@
-using CaptureTool.Application.Abstractions.Analysis;
+﻿using CaptureTool.Application.Abstractions.Analysis;
 using CaptureTool.Application.Abstractions.Localization;
 using CaptureTool.Application.Abstractions.TaskEnvironment;
 using CaptureTool.Domain.Analysis;
@@ -37,7 +37,6 @@ public sealed class CaptureMemoryViewModelTests
         fixture.Change(fixture.State with { Storage = new(true, true), IsDeleting = true });
         fixture.Dispatch();
         Assert.IsFalse(fixture.ViewModel.DeleteCommand.CanExecute(null));
-        Assert.IsFalse(fixture.ViewModel.ScanCommand.CanExecute(null));
         fixture.Change(fixture.State with { IsDeleting = false, Storage = new(true, true, true), FailureCode = "cleanup-pending" });
         fixture.Dispatch();
         Assert.IsTrue(fixture.ViewModel.DeleteCommand.CanExecute(null));
@@ -48,20 +47,17 @@ public sealed class CaptureMemoryViewModelTests
     }
 
     [TestMethod]
-    public async Task CommandsUseApplicationServiceAndDisabledPolicyPreventsScan()
+    public async Task SettingsCommandsUseApplicationService()
     {
         using var fixture = new Fixture();
         fixture.Change(fixture.State with { Storage = new(true, true) });
         fixture.Dispatch();
         await fixture.ViewModel.DeleteCommand.ExecuteAsync(null);
         fixture.Memory.Verify(value => value.DeleteMetadataAsync(default), Times.Once);
-        await fixture.ViewModel.ScanCommand.ExecuteAsync(null);
-        fixture.Memory.Verify(value => value.ScanExistingAsync(default), Times.Once);
         await fixture.ViewModel.SetConsentCommand.ExecuteAsync(false);
         fixture.Memory.Verify(value => value.SetConsentAsync(false, default), Times.Once);
         fixture.Change(fixture.State with { Policy = CaptureMemoryPolicy.Disabled(), Storage = new(false, true) });
         fixture.Dispatch();
-        Assert.IsFalse(fixture.ViewModel.ScanCommand.CanExecute(null));
         Assert.IsFalse(fixture.ViewModel.DeleteCommand.CanExecute(null));
     }
 
@@ -173,7 +169,7 @@ public sealed class CaptureMemoryViewModelTests
         fixture.Change(fixture.State with { Policy = CaptureMemoryPolicy.Disabled(), FailureCode = code });
         fixture.Dispatch();
         fixture.Notifications.Verify(x => x.ShowError(It.IsAny<string>()), Times.Never);
-        await fixture.ViewModel.SetScanningCommand.ExecuteAsync(true);
+        await fixture.ViewModel.SetConsentCommand.ExecuteAsync(true);
         fixture.Dispatch();
         fixture.Notifications.Verify(x => x.ShowError(It.IsAny<string>()), Times.Once);
     }
@@ -186,12 +182,12 @@ public sealed class CaptureMemoryViewModelTests
         using var fixture = new Fixture();
         fixture.Change(fixture.State with { Policy = CaptureMemoryPolicy.Disabled() });
         fixture.Dispatch();
-        fixture.Memory.Setup(x => x.SetScanningAsync(false, default)).Callback(() =>
+        fixture.Memory.Setup(x => x.SetConsentAsync(false, default)).Callback(() =>
         {
             fixture.Change(fixture.State);
             if (dispatchDuringAction) fixture.Dispatch();
         }).Returns(Task.CompletedTask);
-        await fixture.ViewModel.SetScanningCommand.ExecuteAsync(false);
+        await fixture.ViewModel.SetConsentCommand.ExecuteAsync(false);
         fixture.Change(fixture.State with { FailureCode = "storage-unavailable" });
         fixture.Dispatch();
         await fixture.ViewModel.RefreshAsync();
@@ -205,23 +201,34 @@ public sealed class CaptureMemoryViewModelTests
         using var fixture = new Fixture();
         fixture.Change(fixture.State with { Policy = CaptureMemoryPolicy.Disabled() });
         fixture.Dispatch();
-        fixture.Memory.Setup(x => x.SetScanningAsync(true, default)).Callback(() =>
+        fixture.Memory.Setup(x => x.SetConsentAsync(true, default)).Callback(() =>
         {
             fixture.Change(fixture.State with { FailureCode = "storage-unavailable" });
             fixture.Change(fixture.State with { FailureCode = null });
         }).Returns(Task.CompletedTask);
-        await fixture.ViewModel.SetScanningCommand.ExecuteAsync(true);
+        await fixture.ViewModel.SetConsentCommand.ExecuteAsync(true);
         fixture.Dispatch();
         fixture.Notifications.Verify(x => x.ShowError("CaptureMemory_Error_Storage"), Times.Once);
     }
 
     [TestMethod]
-    public void EnabledAnalysisStillReportsStorageFailures()
+    public void RunningWorkerStillReportsStorageFailures()
+    {
+        using var fixture = new Fixture();
+        fixture.Change(fixture.State with { FailureCode = "storage-unavailable", Activity = new(AnalysisActivity.StorageUnavailable) });
+        fixture.Dispatch();
+        fixture.Notifications.Verify(x => x.ShowError("CaptureMemory_Error_Storage"), Times.Once);
+    }
+
+    [TestMethod]
+    public async Task ConsentAloneDoesNotMakeDormantStorageErrorsIntrusive()
     {
         using var fixture = new Fixture();
         fixture.Change(fixture.State with { FailureCode = "storage-unavailable" });
         fixture.Dispatch();
-        fixture.Notifications.Verify(x => x.ShowError("CaptureMemory_Error_Storage"), Times.Once);
+        await fixture.ViewModel.RefreshAsync();
+        fixture.Dispatch();
+        fixture.Notifications.Verify(x => x.ShowError(It.IsAny<string>()), Times.Never);
     }
 
     private sealed class Fixture : IDisposable

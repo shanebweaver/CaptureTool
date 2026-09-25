@@ -4,6 +4,11 @@ Status: In progress, 2026-09-24. Do not treat this report as release approval.
 The reviewed integration was merged into `codex/capture-analysis-core` at
 `bff28c4d`; verification continues on `codex/capture-analysis-verification`.
 
+The [explicit actions decision](capture-analysis-explicit-actions.md) supersedes
+automatic capture/open scanning and the restart/resume expectations below. The
+recovery harness requires idle startup after process termination and a separate
+explicit request for each missing capability; committed metadata remains readable.
+
 ## Environment and outstanding device evidence
 
 Local host: x64 Intel Core i9-9900K, Windows 11 Pro Insider Preview 10.0.26340,
@@ -119,6 +124,12 @@ publish (`localized-publish-fixed.log`) passed with none. The test-only language
 option is applied before resource loading. For this unpackaged test executable the
 [SDK language override](https://learn.microsoft.com/en-us/windows/windows-app-sdk/api/winrt/microsoft.windows.globalization.applicationlanguages.primarylanguageoverride)
 is process-local and does not persist the user's language preference.
+
+Routine desktop checks now run in English only. The parameterized capture memory,
+details, and onboarding tests default to `en-US`; set `CAPTURETOOL_UI_TEST_LANGUAGE`
+to a single locale for a targeted localization check. A full desktop language sweep
+requires explicitly setting it to `all`. Resource coverage and placeholder checks
+can still cover every locale without launching the app for each language.
 
 The MSIX build used Visual Studio 18 Community MSBuild against the app project:
 `/restore /m:1 /p:Configuration=Release /p:Platform=x64`

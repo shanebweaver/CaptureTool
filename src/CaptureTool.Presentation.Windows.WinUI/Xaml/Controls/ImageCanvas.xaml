@@ -61,10 +61,16 @@
                     SelectionAreaChanged="CropOverlay_SelectionAreaChanged"
                     Visibility="{x:Bind IsCropModeEnabled, Mode=OneWay}" />
 
-                <Border x:Name="CaptureLocationOutline" HorizontalAlignment="Left" VerticalAlignment="Top"
-                        BorderBrush="{ThemeResource AccentFillColorDefaultBrush}" BorderThickness="3"
-                        IsHitTestVisible="False" Visibility="Collapsed"
-                        AutomationProperties.AccessibilityView="Control" AutomationProperties.AutomationId="CapturePane_ImageLocation" />
+                <Border
+                    x:Name="CaptureLocationOutline"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Top"
+                    AutomationProperties.AccessibilityView="Control"
+                    AutomationProperties.AutomationId="CapturePane_ImageLocation"
+                    BorderBrush="{ThemeResource AccentFillColorDefaultBrush}"
+                    BorderThickness="3"
+                    IsHitTestVisible="False"
+                    Visibility="Collapsed" />
 
                 <Grid
                     x:Name="TextExtractionOverlayLayer"
@@ -87,16 +93,6 @@
                         Opacity=".48"
                         Visibility="Collapsed" />
 
-                    <Border
-                        x:Name="TextExtractionOverlayAutomationMarker"
-                        Width="1"
-                        Height="1"
-                        HorizontalAlignment="Left"
-                        VerticalAlignment="Top"
-                        AutomationProperties.AccessibilityView="Control"
-                        AutomationProperties.AutomationId="ImageCanvas_TextExtractionOverlayMarker"
-                        Opacity="0"
-                        Visibility="Collapsed" />
                 </Grid>
 
                 <Canvas
@@ -125,44 +121,44 @@
                     <!--  Dashed selection line visual  -->
                     <Line
                         x:Name="LineSelectionVisual"
+                        IsHitTestVisible="False"
                         Stroke="{ThemeResource AccentFillColorDefaultBrush}"
                         StrokeDashArray="4,4"
-                        StrokeThickness="1"
-                        IsHitTestVisible="False" />
+                        StrokeThickness="1" />
                     <!--  Invisible thick line for hit testing and moving  -->
                     <Line
                         x:Name="LineMoveHandle"
-                        Stroke="Transparent"
-                        StrokeThickness="20"
-                        PointerPressed="LineMoveHandle_PointerPressed"
-                        PointerMoved="LineMoveHandle_PointerMoved"
-                        PointerReleased="LineMoveHandle_PointerReleased"
                         PointerEntered="LineMoveHandle_PointerEntered"
-                        PointerExited="LineMoveHandle_PointerExited" />
+                        PointerExited="LineMoveHandle_PointerExited"
+                        PointerMoved="LineMoveHandle_PointerMoved"
+                        PointerPressed="LineMoveHandle_PointerPressed"
+                        PointerReleased="LineMoveHandle_PointerReleased"
+                        Stroke="Transparent"
+                        StrokeThickness="20" />
                     <Ellipse
                         x:Name="LineStartHandle"
                         Width="12"
                         Height="12"
                         Fill="{ThemeResource AccentFillColorDefaultBrush}"
-                        Stroke="White"
-                        StrokeThickness="2"
-                        PointerPressed="LineStartHandle_PointerPressed"
-                        PointerMoved="LineStartHandle_PointerMoved"
-                        PointerReleased="LineStartHandle_PointerReleased"
                         PointerEntered="LineStartHandle_PointerEntered"
-                        PointerExited="LineStartHandle_PointerExited" />
+                        PointerExited="LineStartHandle_PointerExited"
+                        PointerMoved="LineStartHandle_PointerMoved"
+                        PointerPressed="LineStartHandle_PointerPressed"
+                        PointerReleased="LineStartHandle_PointerReleased"
+                        Stroke="White"
+                        StrokeThickness="2" />
                     <Ellipse
                         x:Name="LineEndHandle"
                         Width="12"
                         Height="12"
                         Fill="{ThemeResource AccentFillColorDefaultBrush}"
-                        Stroke="White"
-                        StrokeThickness="2"
-                        PointerPressed="LineEndHandle_PointerPressed"
-                        PointerMoved="LineEndHandle_PointerMoved"
-                        PointerReleased="LineEndHandle_PointerReleased"
                         PointerEntered="LineEndHandle_PointerEntered"
-                        PointerExited="LineEndHandle_PointerExited" />
+                        PointerExited="LineEndHandle_PointerExited"
+                        PointerMoved="LineEndHandle_PointerMoved"
+                        PointerPressed="LineEndHandle_PointerPressed"
+                        PointerReleased="LineEndHandle_PointerReleased"
+                        Stroke="White"
+                        StrokeThickness="2" />
                 </Canvas>
 
                 <!--  Shape Resize Overlay  -->
@@ -187,9 +183,7 @@
                         BorderBrush="{ThemeResource SystemControlForegroundBaseLowBrush}"
                         BorderThickness="1"
                         CornerRadius="13">
-                        <FontIcon
-                            FontSize="14"
-                            Glyph="{StaticResource Color}" />
+                        <FontIcon FontSize="14" Glyph="{StaticResource Color}" />
                     </Border>
                 </Canvas>
             </Grid>

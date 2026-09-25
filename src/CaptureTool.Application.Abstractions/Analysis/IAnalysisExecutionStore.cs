@@ -6,16 +6,19 @@ namespace CaptureTool.Application.Abstractions.Analysis;
 public sealed record AnalysisAdmissionScope(Guid Generation, long ReconciliationBoundary);
 public sealed record AnalysisRunToken(CaptureId CaptureId, Guid Generation, Guid RunId);
 public sealed record AnalysisRequest(CaptureId CaptureId, AnalysisMediaKind MediaKind, string SourcePath,
-    Guid RequestId, Guid Generation, Guid? ExpectedRunId = null, string? Language = null, Guid? ExpectedAuthorizationId = null);
+    Guid RequestId, Guid Generation, Guid? ExpectedRunId = null, string? Language = null, Guid? ExpectedAuthorizationId = null,
+    IReadOnlyList<AnalysisCapability>? Capabilities = null);
 public sealed record AnalysisWorkItem(AnalysisRunToken Token, AnalysisMediaKind MediaKind, string SourcePath,
     string? Language, AnalysisRun Run);
 
-/// <summary>Execution operations on the same singleton protected metadata store, not another queue database.</summary>
+/// <summary>Session-only execution requests backed by the singleton protected metadata store.</summary>
 public interface IAnalysisExecutionStore : ICaptureAnalysisStore
 {
     Task<AnalysisAdmissionScope> GetAdmissionScopeAsync(CancellationToken cancellationToken = default);
     Task<AnalysisWorkItem?> GetWorkAsync(CaptureId captureId, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<AnalysisWorkItem>> ReadPendingAsync(CancellationToken cancellationToken = default);
+    /// <summary>Forgets pending requests and fences late results, retaining already committed metadata.</summary>
+    Task DiscardPendingAsync(CancellationToken cancellationToken = default);
     Task<bool> AdmitAsync(AnalysisRequest request, Guid authorizationId, MediaAnalysisPlan plan, CancellationToken cancellationToken = default);
     Task<bool> BindSourceAsync(AnalysisRunToken token, SourceRevision revision, CancellationToken cancellationToken = default);
     Task<bool> CommitStepAsync(AnalysisRunToken token, AnalysisStepCompletion step, AnalysisResult? result,

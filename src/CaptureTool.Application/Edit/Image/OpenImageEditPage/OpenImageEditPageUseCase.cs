@@ -1,4 +1,4 @@
-using CaptureTool.Application.Abstractions.Edit.Image.OpenImageEditPage;
+﻿using CaptureTool.Application.Abstractions.Edit.Image.OpenImageEditPage;
 using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Application.Abstractions.UseCases;
 using CaptureTool.Application.UseCases;

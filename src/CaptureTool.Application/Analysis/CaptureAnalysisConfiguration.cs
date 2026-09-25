@@ -7,10 +7,24 @@ namespace CaptureTool.Application.Analysis;
 public sealed class CaptureAnalysisConfiguration
 {
     public IReadOnlyList<MediaAnalysisPlan> Plans { get; }
+    public int MaximumBatchCaptures { get; }
 
-    public CaptureAnalysisConfiguration(IEnumerable<MediaAnalysisPlan> plans)
+    /// <summary>Selects only requested work; prerequisites are never implicitly scheduled.</summary>
+    public MediaAnalysisPlan SelectPlan(AnalysisMediaKind kind, IReadOnlyList<AnalysisCapability>? capabilities = null)
+    {
+        MediaAnalysisPlan configured = Plans.Single(plan => plan.MediaKind == kind);
+        if (capabilities == null) return configured;
+        if (capabilities.Count == 0 || capabilities.Distinct().Count() != capabilities.Count ||
+            capabilities.Any(capability => !configured.Steps.Any(step => step.Capability == capability)))
+            throw new ArgumentException("Request supported, distinct analysis capabilities.", nameof(capabilities));
+        return new(kind, configured.Version, configured.Steps.Where(step => capabilities.Contains(step.Capability)));
+    }
+
+    public CaptureAnalysisConfiguration(IEnumerable<MediaAnalysisPlan> plans, int maximumBatchCaptures = 16)
     {
         ArgumentNullException.ThrowIfNull(plans);
+        if (maximumBatchCaptures is < 1 or > 64) throw new ArgumentOutOfRangeException(nameof(maximumBatchCaptures));
+        MaximumBatchCaptures = maximumBatchCaptures;
         MediaAnalysisPlan[] copy = plans.ToArray();
         if (copy.Length == 0 || copy.Any(plan => plan == null) || copy.Select(plan => plan.MediaKind).Distinct().Count() != copy.Length)
             throw new ArgumentException("Specify one plan per supported media kind.", nameof(plans));

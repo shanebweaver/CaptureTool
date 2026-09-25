@@ -1,3 +1,4 @@
+using CaptureTool.Application.Abstractions.Capture.Assets;
 using CaptureTool.Domain.Analysis;
 using CaptureTool.Presentation.Features.CaptureDetails;
 using Microsoft.UI.Xaml;
@@ -22,6 +23,8 @@ public sealed partial class CaptureDetailsPane : UserControl, INotifyPropertyCha
     private static int _preferredTab;
     public Func<CaptureTextLocation, bool>? Navigate { get; set; }
     public Action? ClearLocation { get; set; }
+    public Action<CaptureFileRename>? FileRenamed { get; set; }
+    public Action<IReadOnlyList<CaptureTextPassage>?>? TextOverlayChanged { get; set; }
 
     public CaptureDetailsPane()
     {
@@ -55,6 +58,7 @@ public sealed partial class CaptureDetailsPane : UserControl, INotifyPropertyCha
     {
         if (!_active || !IsLoaded || ViewModel != null || string.IsNullOrWhiteSpace(_path)) return;
         ViewModel = App.Current.ServiceProvider.GetService<CaptureDetailsViewModel>();
+        ViewModel.FileRenamed += RenameCompleted;
         ViewModel.HasEdits = _edits;
         ViewModel.SetNavigationContext(_navigation);
         ViewModel.TextContent.ScrollRequested += ScrollToPassage;
@@ -74,18 +78,22 @@ public sealed partial class CaptureDetailsPane : UserControl, INotifyPropertyCha
             ViewModel.Dispose();
         }
         ClearLocation?.Invoke();
+        TextOverlayChanged?.Invoke(null);
         ViewModel = null;
         PropertyChanged?.Invoke(this, new(nameof(ViewModel)));
     }
 
+    private void RenameCompleted(CaptureFileRename rename) => FileRenamed?.Invoke(rename);
     private void Close_Click(object sender, RoutedEventArgs e) => CloseRequested?.Invoke(this, EventArgs.Empty);
     private void ContentTabs_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         if (!ReferenceEquals(sender, ContentTabs) || !e.AddedItems.OfType<PivotItem>().Any(item => ReferenceEquals(item, ContentTabs.SelectedItem))) return;
         _preferredTab = ContentTabs.SelectedIndex;
+        UpdateTextOverlay();
         if (_preferredTab != 1) ClearLocation?.Invoke();
-        else if (ViewModel != null) _ = ViewModel.OpenTextAsync();
     }
+    private void UpdateTextOverlay() => TextOverlayChanged?.Invoke(
+        ContentTabs.SelectedIndex == 1 && ViewModel?.CanShowImageTextOverlay == true ? ViewModel.Content.Passages : null);
     private void ScrollToPassage(CaptureTextPassage passage) => Passages.ScrollIntoView(passage, ScrollIntoViewAlignment.Leading);
     private void SelectionChanged(object? sender, PropertyChangedEventArgs e)
     {
@@ -93,6 +101,7 @@ public sealed partial class CaptureDetailsPane : UserControl, INotifyPropertyCha
     }
     private void ViewModelChanged(object? sender, PropertyChangedEventArgs e)
     {
+        if (e.PropertyName is nameof(CaptureDetailsViewModel.Content) or nameof(CaptureDetailsViewModel.CanShowImageTextOverlay)) UpdateTextOverlay();
         if (e.PropertyName == nameof(CaptureDetailsViewModel.IsEditingName) && ViewModel?.IsEditingName == true)
             DispatcherQueue.TryEnqueue(() => { NameInput.Focus(FocusState.Programmatic); NameInput.SelectAll(); });
         if (e.PropertyName == nameof(CaptureDetailsViewModel.Content) &&

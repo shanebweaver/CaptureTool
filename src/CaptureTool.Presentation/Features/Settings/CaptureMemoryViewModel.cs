@@ -1,5 +1,4 @@
-using CaptureTool.Application.Abstractions.Analysis;
-using CaptureTool.Application.Abstractions.Capture.Assets;
+﻿using CaptureTool.Application.Abstractions.Analysis;
 using CaptureTool.Application.Abstractions.Localization;
 using CaptureTool.Application.Abstractions.TaskEnvironment;
 using CaptureTool.Domain.Analysis;
@@ -13,7 +12,6 @@ namespace CaptureTool.Presentation.Features.Settings;
 public sealed class CaptureMemoryViewModel : ViewModelBase
 {
     private readonly ICaptureMemoryService _memory;
-    private readonly ICaptureNamingService? _naming;
     private readonly ITaskEnvironment _ui;
     private readonly ILocalizationService _localization;
     private readonly IAppNotificationService _notifications;
@@ -26,39 +24,23 @@ public sealed class CaptureMemoryViewModel : ViewModelBase
     private bool _disposed;
     private int _activeOperations;
 
-    public bool NamingEnabled { get; private set => Set(ref field, value); }
-    public bool CanSetNaming { get; private set => Set(ref field, value); }
-    public IAsyncRelayCommand<bool> SetNamingCommand { get; }
-    public bool ScanningEnabled { get; private set => Set(ref field, value); }
     public bool ConsentGranted { get; private set => Set(ref field, value); }
-    public bool CanScan { get; private set => Set(ref field, value); }
     public bool CanDelete { get; private set => Set(ref field, value); }
     public bool IsAnalysisActive { get; private set => Set(ref field, value); }
     public string ProgressText { get; private set => Set(ref field, value); } = string.Empty;
-    public IAsyncRelayCommand<bool> SetScanningCommand { get; }
     public IAsyncRelayCommand<bool> SetConsentCommand { get; }
-    public IAsyncRelayCommand ScanCommand { get; }
     public IAsyncRelayCommand DeleteCommand { get; }
 
     public CaptureMemoryViewModel(ICaptureMemoryService memory, ITaskEnvironment ui,
-        ILocalizationService localization, IAppNotificationService notifications, ICaptureNamingService? naming = null)
+        ILocalizationService localization, IAppNotificationService notifications)
     {
         _memory = memory;
-        _naming = naming;
         _ui = ui;
         _localization = localization;
         _notifications = notifications;
-        SetNamingCommand = new AsyncRelayCommand<bool>(value => RunAsync(async () =>
-        {
-            if (_naming != null && !await _naming.SetEnabledAsync(value))
-                _notifications.ShowError(_localization.GetString("CaptureNaming_SaveFailed"));
-        }, reportMemoryFailure: false));
-        SetScanningCommand = new AsyncRelayCommand<bool>(value => RunAsync(() => memory.SetScanningAsync(value)));
         SetConsentCommand = new AsyncRelayCommand<bool>(value => RunAsync(() => memory.SetConsentAsync(value)));
-        ScanCommand = new AsyncRelayCommand(() => RunAsync(() => memory.ScanExistingAsync()), () => CanScan);
         DeleteCommand = new AsyncRelayCommand(() => RunAsync(() => memory.DeleteMetadataAsync()), () => CanDelete);
         _memory.StateChanged += QueueUpdate;
-        if (_naming != null) _naming.Changed += QueueUpdate;
         QueueUpdate();
     }
     // Page navigation observes state; it is not an explicit analysis retry.
@@ -96,16 +78,11 @@ public sealed class CaptureMemoryViewModel : ViewModelBase
     private void ApplyState()
     {
         CaptureMemoryState state = _memory.State;
-        ScanningEnabled = state.PolicyAvailable && state.Policy.ScanningEnabled;
         ConsentGranted = state.ConsentAvailable && state.Policy.ConsentGranted;
-        NamingEnabled = _naming?.IsEnabled == true;
-        CanSetNaming = _naming?.IsAvailable == true && (NamingEnabled || state.PolicyAvailable && state.Policy.IsAllowed);
-        CanScan = state.CanScan;
         CanDelete = state.CanDelete;
         IsAnalysisActive = state.IsLoading;
         ProgressText = state.IsLoading ? _localization.GetString(state.Activity.Activity == AnalysisActivity.Preparing
             ? "CaptureMemory_Preparing" : "CaptureMemory_Analyzing") : string.Empty;
-        ScanCommand.NotifyCanExecuteChanged();
         DeleteCommand.NotifyCanExecuteChanged();
         if (Interlocked.Exchange(ref _operationRecovered, 0) != 0) _reportedOperationFailure = null;
         string? pendingOperation = Interlocked.Exchange(ref _pendingOperationFailure, null);
@@ -120,8 +97,8 @@ public sealed class CaptureMemoryViewModel : ViewModelBase
             _reportedFailure = null;
     }
     private bool ShouldReportOperationFailure(CaptureMemoryState state) =>
-        Volatile.Read(ref _activeOperations) > 0 || state.Policy.IsAllowed ||
-        state.FailureCode is "policy-save" or "capture-registration" or "cleanup-pending";
+        Volatile.Read(ref _activeOperations) > 0 || state.Activity.Activity == AnalysisActivity.StorageUnavailable ||
+        state.FailureCode is "policy-save" or "cleanup-pending";
     private void ShowFailure(string? failure, ref string? reported)
     {
         if (failure != null && failure != reported)
@@ -147,7 +124,6 @@ public sealed class CaptureMemoryViewModel : ViewModelBase
         if (_disposed) return;
         _disposed = true;
         _memory.StateChanged -= QueueUpdate;
-        if (_naming != null) _naming.Changed -= QueueUpdate;
         base.Dispose();
     }
 }

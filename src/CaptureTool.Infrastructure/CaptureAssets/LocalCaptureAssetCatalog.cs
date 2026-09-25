@@ -1,3 +1,4 @@
+using CaptureTool.Application.Abstractions.Library.RecentCaptures;
 using CaptureTool.Application.Abstractions.Capture.Assets;
 using CaptureTool.Application.Abstractions.Security;
 using CaptureTool.Application.Abstractions.Storage;
@@ -12,13 +13,15 @@ internal sealed partial class LocalCaptureAssetCatalog : ICaptureAssetCatalog, I
 {
     private readonly string _path;
     private readonly ProtectedDocumentFile _documents;
+    private readonly IRecentCaptureCatalog? _recents;
     private readonly SemaphoreSlim _gate = new(1, 1);
 
-    public LocalCaptureAssetCatalog(IStorageService storage, IUserDataProtector protector)
-        : this(storage, protector, new LocalProtectedFileSystem()) { }
+    public LocalCaptureAssetCatalog(IStorageService storage, IUserDataProtector protector, IRecentCaptureCatalog? recents = null)
+        : this(storage, protector, new LocalProtectedFileSystem(), recents) { }
 
-    internal LocalCaptureAssetCatalog(IStorageService storage, IUserDataProtector protector, IProtectedFileSystem files)
+    internal LocalCaptureAssetCatalog(IStorageService storage, IUserDataProtector protector, IProtectedFileSystem files, IRecentCaptureCatalog? recents = null)
     {
+        _recents = recents;
         _path = Path.Combine(storage.GetApplicationDataFolderPath(), "CaptureAssets", "catalog.bin");
         _documents = new(protector, files);
     }
@@ -103,7 +106,7 @@ internal sealed partial class LocalCaptureAssetCatalog : ICaptureAssetCatalog, I
         CaptureCatalogDocument? document = await _documents.ReadAsync(_path,
             CaptureCatalogJsonContext.Default.CaptureCatalogDocument, cancellationToken).ConfigureAwait(false);
         if (document == null) return new(0, []);
-        if (document.Version is not (1 or 2 or 3 or 4 or 5) || document.Assets == null) throw new InvalidDataException("Unsupported or invalid capture catalog.");
+        if (document.Version is not (1 or 2 or 3 or 4 or 5 or 6) || document.Assets == null) throw new InvalidDataException("Unsupported or invalid capture catalog.");
         Catalog state;
         try
         {
@@ -129,20 +132,20 @@ internal sealed partial class LocalCaptureAssetCatalog : ICaptureAssetCatalog, I
                 document.Version == 4 ? document.NamingEpoch != null : null;
             Guid? namingEpoch = document.Version >= 4 ? document.NamingEpoch : null;
             if ((naming == true) != (namingEpoch != null)) throw new InvalidDataException("Invalid naming preference.");
-            state = new(sequence, entries, namingEpoch, naming);
+            state = new(sequence, entries, namingEpoch, naming, document.Version >= 6 ? document.Rename : null);
         }
         catch (ArgumentException exception) { throw new InvalidDataException("Invalid capture catalog.", exception); }
         // V1 gains stable registration order. Before v3, imported dates came from recent activity,
         // not capture provenance; preserve identity/eligibility while dropping that unreliable fact.
         if (document.Version < 3) await SaveAsync(state, cancellationToken).ConfigureAwait(false);
-        return state;
+        return await RecoverRenameAsync(state, cancellationToken).ConfigureAwait(false);
     }
 
     private Task SaveAsync(Catalog state, CancellationToken cancellationToken) =>
-        _documents.WriteAsync(_path, new CaptureCatalogDocument(5, state.Entries.Select(entry =>
+        _documents.WriteAsync(_path, new CaptureCatalogDocument(6, state.Entries.Select(entry =>
             new CaptureAssetDocument(entry.Asset.Id.Value, (int)entry.Asset.MediaType, entry.Asset.CapturedAt,
                 entry.Asset.SourcePath, (int)entry.Asset.SourceOwnership, entry.Asset.PreferredPath, entry.Sequence, entry.AutomaticAuthorization,
-                entry.Asset.Name?.Text, entry.Asset.Name?.IsAutomatic ?? false, entry.NamingEpoch)).ToArray(), state.Sequence, state.NamingEpoch, state.AutomaticNamingEnabled),
+                entry.Asset.Name?.Text, entry.Asset.Name?.IsAutomatic ?? false, entry.NamingEpoch)).ToArray(), state.Sequence, state.NamingEpoch, state.AutomaticNamingEnabled, state.Rename),
             CaptureCatalogJsonContext.Default.CaptureCatalogDocument, cancellationToken);
 
     private static CaptureAsset Normalize(CaptureAsset asset) => new(asset.Id, asset.MediaType, asset.CapturedAt,
@@ -162,5 +165,5 @@ internal sealed partial class LocalCaptureAssetCatalog : ICaptureAssetCatalog, I
         if (id.IsEmpty) throw new ArgumentException("Capture identity is required.", nameof(id));
     }
     public void Dispose() => _gate.Dispose();
-    private sealed record Catalog(long Sequence, List<CaptureRegistration> Entries, Guid? NamingEpoch = null, bool? AutomaticNamingEnabled = null);
+    private sealed record Catalog(long Sequence, List<CaptureRegistration> Entries, Guid? NamingEpoch = null, bool? AutomaticNamingEnabled = null, CaptureRenameDocument? Rename = null);
 }

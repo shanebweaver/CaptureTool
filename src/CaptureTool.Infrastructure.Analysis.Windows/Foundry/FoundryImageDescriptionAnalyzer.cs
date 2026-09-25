@@ -43,10 +43,10 @@ internal sealed class FoundryImageDescriptionAnalyzer(string id, string alias, F
             return AnalyzerOutcome.Unsuccessful(AnalyzerOutcomeKind.Unsupported, "unsupported-media");
         IModel? model = _model;
         if (model == null) return AnalyzerOutcome.Unsuccessful(AnalyzerOutcomeKind.TemporarilyUnavailable, "model-not-prepared");
+        await using var lease = await runtime.AcquireModelAsync(model, ct).ConfigureAwait(false);
         bool serving = false;
         try
         {
-            await model.LoadAsync(ct).ConfigureAwait(false);
             Uri endpoint = await runtime.StartVisionServiceAsync(ct).ConfigureAwait(false);
             serving = true;
             using var http = new HttpClient(new HttpClientHandler { UseProxy = false, AllowAutoRedirect = false })
@@ -91,8 +91,7 @@ internal sealed class FoundryImageDescriptionAnalyzer(string id, string alias, F
         catch (InvalidAnalysisMediaException) { return AnalyzerOutcome.Unsuccessful(AnalyzerOutcomeKind.InvalidSource, "invalid-media"); }
         finally
         {
-            try { if (serving) await runtime.StopServiceAsync().ConfigureAwait(false); }
-            finally { await model.UnloadAsync(CancellationToken.None).ConfigureAwait(false); }
+            if (serving) await runtime.StopServiceAsync().ConfigureAwait(false);
         }
     }
 

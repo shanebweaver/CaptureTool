@@ -133,7 +133,7 @@ public sealed class CaptureMemoryStorageTests
         Assert.AreEqual(authorization, added.AutomaticAuthorization);
         Assert.AreEqual(2L, added.Sequence);
         var persisted = JsonSerializer.Deserialize(environment.Protector.Unprotect(await File.ReadAllBytesAsync(path, Ct)), CaptureCatalogJsonContext.Default.CaptureCatalogDocument);
-        Assert.AreEqual(5, persisted!.Version);
+        Assert.AreEqual(6, persisted!.Version);
     }
 
     [TestMethod]
@@ -166,7 +166,7 @@ public sealed class CaptureMemoryStorageTests
         Assert.AreEqual(version == 1 ? 2 : 12, await catalog.GetBoundaryAsync(Ct));
         using var reopened = environment.CreateCatalog();
         CollectionAssert.AreEqual(migrated.ToArray(), (await reopened.ReadRegistrationsAsync(Ct)).ToArray());
-        Assert.AreEqual(5, (await documents.ReadAsync(path, CaptureCatalogJsonContext.Default.CaptureCatalogDocument, Ct))!.Version);
+        Assert.AreEqual(6, (await documents.ReadAsync(path, CaptureCatalogJsonContext.Default.CaptureCatalogDocument, Ct))!.Version);
         var knownExternal = new CaptureAsset(CaptureId.New(), CaptureFileType.Audio, at, Path.Combine(environment.Root, "known.wav"), CaptureSourceOwnership.External);
         await reopened.RegisterAsync(knownExternal, Ct);
         Assert.AreEqual(at, (await catalog.GetAsync(knownExternal.Id, Ct))!.CapturedAt);

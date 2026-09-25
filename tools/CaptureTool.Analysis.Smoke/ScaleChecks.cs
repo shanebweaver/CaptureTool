@@ -1,3 +1,4 @@
+using CaptureTool.Application.Abstractions.Analysis;
 using CaptureTool.Domain;
 using CaptureTool.Domain.Analysis;
 using CaptureTool.Domain.Analysis.Payloads;
@@ -66,10 +67,22 @@ internal static class ScaleChecks
             var pending = await store.ReadPendingAsync(ct);
             double discoveryMs = timer.Elapsed.TotalMilliseconds;
             long discoveryAllocated = GC.GetTotalAllocatedBytes(precise: true) - allocated;
-            if (pending.Count != (queued ? 1 : 0)) throw new InvalidOperationException("Scale fixture queue state is incorrect.");
+            if (pending.Count != 0) throw new InvalidOperationException("Historical run markers must not populate the session queue.");
             timer.Restart();
             if ((await catalog.ReadRegistrationsAsync(ct)).Count != index) throw new InvalidOperationException("Scale catalog count is incorrect.");
             double catalogMs = timer.Elapsed.TotalMilliseconds;
+
+            // Measure contention against a bounded current-session batch, independent
+            // of the number of completed or interrupted historical documents.
+            var plan = new MediaAnalysisPlan(AnalysisMediaKind.Image, "scale-v1",
+                [new(AnalysisCapability.TextRecognition, ["scale-fixture"], TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(1))]);
+            foreach (var entry in assets.Take(32))
+            {
+                var current = (await store.GetWorkAsync(new CaptureId(entry.Id), ct))!;
+                if (!await store.AdmitAsync(new(current.Token.CaptureId, current.MediaKind, current.SourcePath,
+                    Guid.NewGuid(), scope.Generation, current.Run.Id), Guid.NewGuid(), plan, ct))
+                    throw new InvalidOperationException("Current-session scale request was not admitted.");
+            }
 
             files.Reset();
             Task discovery = store.ReadPendingAsync(ct);
@@ -103,6 +116,7 @@ internal static class ScaleChecks
             }
             samples.Add(new(index, discoveryMs, catalogMs, statusMs, cancellationMs, clearMs, discoveryAllocated,
                 Process.GetCurrentProcess().PeakWorkingSet64));
+            await store.DiscardPendingAsync(ct);
             Directory.CreateDirectory(output);
             await File.WriteAllTextAsync(Path.Combine(output, "scale-results.json"),
                 JsonSerializer.Serialize(samples.ToArray(), ScaleJsonContext.Default.ScaleSampleArray), ct);

@@ -1,3 +1,4 @@
+using CaptureTool.Application.Abstractions.Localization;
 using CaptureTool.Domain.Capture;
 using CaptureTool.Presentation.ViewModels;
 
@@ -23,13 +24,7 @@ public sealed partial class RecentCaptureViewModel : ViewModelBase
         private set => Set(ref field, value);
     }
 
-    public string CaptureTypeLabel => CaptureFileType switch
-    {
-        CaptureFileType.Image => "Image",
-        CaptureFileType.Video => "Video",
-        CaptureFileType.Audio => "Audio",
-        _ => "File"
-    };
+    public string CaptureTypeLabel { get; }
 
     public string IconGlyph => CaptureFileType switch
     {
@@ -43,10 +38,17 @@ public sealed partial class RecentCaptureViewModel : ViewModelBase
 
     public void SetDisplayName(string name) => FileName = name;
 
-    public RecentCaptureViewModel(string temporaryFilePath)
+    public RecentCaptureViewModel(string temporaryFilePath, ILocalizationService localization)
     {
         FilePath = temporaryFilePath;
         FileName = Path.GetFileName(temporaryFilePath);
         CaptureFileType = CaptureFileTypeDetector.DetectFileType(temporaryFilePath);
+        CaptureTypeLabel = localization.GetString(CaptureFileType switch
+        {
+            CaptureFileType.Image => "Common_MediaType_Image",
+            CaptureFileType.Video => "Common_MediaType_Video",
+            CaptureFileType.Audio => "Common_MediaType_Audio",
+            _ => "Common_MediaType_File"
+        });
     }
 }

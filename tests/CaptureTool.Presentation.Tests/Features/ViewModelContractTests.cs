@@ -357,7 +357,7 @@ public sealed class ViewModelContractTests
         var fallbackRecentCaptureViewModelFactory = new Mock<IFactoryServiceWithArgs<RecentCaptureViewModel, string>>();
         fallbackRecentCaptureViewModelFactory
             .Setup(factory => factory.Create(It.IsAny<string>()))
-            .Returns<string>(filePath => new RecentCaptureViewModel(filePath));
+            .Returns<string>(filePath => new RecentCaptureViewModel(filePath, Mock.Of<ILocalizationService>()));
 
         return new HomePageViewModel(
             openSelectionOverlayUseCase ?? Mock.Of<IOpenSelectionOverlayUseCase>(),

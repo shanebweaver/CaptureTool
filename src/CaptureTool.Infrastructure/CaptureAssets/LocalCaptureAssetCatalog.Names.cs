@@ -20,14 +20,19 @@ internal sealed partial class LocalCaptureAssetCatalog
 
     public Task SetAutomaticNamingAsync(bool enabled, CancellationToken cancellationToken = default) =>
         UpdateNamingAsync(state => state with { AutomaticNamingEnabled = enabled,
-            NamingEpoch = enabled ? state.NamingEpoch ?? Guid.NewGuid() : null }, cancellationToken);
+            NamingEpoch = enabled ? state.NamingEpoch ?? Guid.NewGuid() : null,
+            Entries = enabled ? state.Entries : WithoutSuggestions(state) }, cancellationToken);
 
     public Task EnableAutomaticNamingByDefaultAsync(CancellationToken cancellationToken = default) =>
         UpdateNamingAsync(state => state.AutomaticNamingEnabled != null ? state :
             state with { AutomaticNamingEnabled = true, NamingEpoch = Guid.NewGuid() }, cancellationToken);
 
     public Task InvalidatePendingNamesAsync(CancellationToken cancellationToken = default) =>
-        UpdateNamingAsync(state => state with { NamingEpoch = state.NamingEpoch == null ? null : Guid.NewGuid() }, cancellationToken);
+        UpdateNamingAsync(state => state with { NamingEpoch = state.NamingEpoch == null ? null : Guid.NewGuid(),
+            Entries = WithoutSuggestions(state) }, cancellationToken);
+
+    private static List<CaptureRegistration> WithoutSuggestions(Catalog state) => state.Entries.Select(entry =>
+        entry.Asset.Name?.IsAutomatic == true ? entry with { Asset = entry.Asset.WithName(null), NamingEpoch = null } : entry).ToList();
 
     private async Task UpdateNamingAsync(Func<Catalog, Catalog> update, CancellationToken ct)
     {
@@ -40,9 +45,6 @@ internal sealed partial class LocalCaptureAssetCatalog
         }
         finally { _gate.Release(); }
     }
-
-    public Task SetUserNameAsync(CaptureId id, string name, CancellationToken cancellationToken = default) =>
-        UpdateAsync(id, asset => asset.WithName(new CaptureName(name, false)), cancellationToken);
 
     public async Task<bool> TryApplyAutomaticNameAsync(CaptureId id, string name, Guid epoch, string expectedSourcePath, CancellationToken cancellationToken = default)
     {

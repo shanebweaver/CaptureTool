@@ -116,6 +116,7 @@
                         TextWrapping="WrapWholeWords" />
 
                     <Button
+                        x:Uid="MainWindow_DismissNotificationButton"
                         Grid.Column="2"
                         Width="32"
                         Height="32"

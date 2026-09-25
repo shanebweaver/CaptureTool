@@ -5,6 +5,7 @@ using CaptureTool.Application.Abstractions.EditSessions;
 using CaptureTool.Application.Abstractions.Library.RecentCaptures;
 using CaptureTool.Application.Abstractions.Library.RecentCaptures.GetRecentCaptures;
 using CaptureTool.Application.Abstractions.Library.RecentCaptures.OpenRecentCapture;
+using CaptureTool.Application.Abstractions.Localization;
 using CaptureTool.Application.Abstractions.Settings.OpenSettingsPage;
 using CaptureTool.Application.Abstractions.Shell.About.OpenAboutPage;
 using CaptureTool.Application.Abstractions.Shell.AppMenu.ExitApplication;
@@ -40,7 +41,7 @@ public sealed class AppMenuViewModelRefreshTests
             .ReturnsAsync(UseCaseResponse<GetRecentCapturesResponse>.Success(new GetRecentCapturesResponse([recentCapture])));
         recentCaptureFactory
             .Setup(factory => factory.Create(recentCapture.FilePath))
-            .Returns(new RecentCaptureViewModel(recentCapture.FilePath));
+            .Returns(new RecentCaptureViewModel(recentCapture.FilePath, Mock.Of<ILocalizationService>()));
 
         var viewModel = new AppMenuViewModel(
             Mock.Of<IOpenSelectionOverlayUseCase>(),
@@ -130,7 +131,7 @@ public sealed class AppMenuViewModelRefreshTests
                 new GetRecentCapturesResponse(refreshCount++ == 0 ? [recentCapture] : [])));
         recentCaptureFactory
             .Setup(factory => factory.Create(recentCapture.FilePath))
-            .Returns(new RecentCaptureViewModel(recentCapture.FilePath));
+            .Returns(new RecentCaptureViewModel(recentCapture.FilePath, Mock.Of<ILocalizationService>()));
 
         AppMenuViewModel viewModel = CreateViewModel(
             getRecentCapturesUseCase: getRecentCapturesUseCase.Object,
@@ -196,7 +197,7 @@ public sealed class AppMenuViewModelRefreshTests
             .Setup(useCase => useCase.ExecuteAsync(It.IsAny<OpenRecentCaptureRequest>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(UseCaseResponse<OpenRecentCaptureResponse>.Success(new OpenRecentCaptureResponse()));
         var viewModel = CreateViewModel(openRecentCaptureUseCase: openRecentCaptureUseCase.Object);
-        var recentCapture = new RecentCaptureViewModel(filePath);
+        var recentCapture = new RecentCaptureViewModel(filePath, Mock.Of<ILocalizationService>());
 
         viewModel.OpenRecentCaptureCommand.Execute(recentCapture);
         await viewModel.OpenRecentCaptureCommand.ExecutionTask!;
