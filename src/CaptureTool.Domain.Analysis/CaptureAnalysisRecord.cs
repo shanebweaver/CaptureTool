@@ -1,3 +1,5 @@
+using CaptureTool.Domain.Analysis.Payloads;
+
 namespace CaptureTool.Domain.Analysis;
 
 /// <summary>Canonical successful results for one capture revision, independent of job scheduling.</summary>
@@ -27,6 +29,14 @@ public sealed class CaptureAnalysisRecord
             throw new ArgumentException("Only one canonical result per capability is allowed.", nameof(results));
         if (Results.Any(result => !result.Payload.Supports(mediaKind)))
             throw new ArgumentException("Result does not support this media kind.", nameof(results));
+        if (Results.Select(result => result.ResultId).Distinct().Count() != Results.Count)
+            throw new ArgumentException("Result identities must be distinct.", nameof(results));
+        foreach (AnalysisResult result in Results.Where(result => result.Derivation != null))
+        {
+            if (!HasCurrentInputs(result)) throw new ArgumentException("Derived metadata refers to stale inputs.", nameof(results));
+            ((DerivedAnalysisPayload)result.Payload).ValidateEvidence(Results.Where(input =>
+                result.Derivation!.Inputs.Any(reference => reference.ResultId == input.ResultId)).ToArray());
+        }
     }
 
     public CaptureAnalysisRecord StartRun(SourceRevision revision, string planVersion, Guid runId) =>
@@ -36,7 +46,17 @@ public sealed class CaptureAnalysisRecord
     {
         ArgumentNullException.ThrowIfNull(result);
         if (result.PlanVersion != PlanVersion) throw new ArgumentException("Result belongs to a different plan version.", nameof(result));
+        if (Results.Any(existing => existing.ResultId == result.ResultId))
+            throw new ArgumentException("A replacement requires a new result identity.", nameof(result));
+        if (!HasCurrentInputs(result)) throw new ArgumentException("Derived metadata refers to stale inputs.", nameof(result));
+        AnalysisResult[] next = Results.Where(existing => existing.Payload.Capability != result.Payload.Capability).Append(result).ToArray();
         return new(CaptureId, MediaKind, SourceRevision, PlanVersion, RunId,
-            Results.Where(existing => existing.Payload.Capability != result.Payload.Capability).Append(result));
+            next.Where(existing => existing.Derivation?.Matches(next) != false));
+    }
+
+    public bool HasCurrentInputs(AnalysisResult result)
+    {
+        ArgumentNullException.ThrowIfNull(result);
+        return result.Derivation?.Matches(Results) != false;
     }
 }

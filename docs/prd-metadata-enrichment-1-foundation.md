@@ -1,6 +1,6 @@
 # Metadata enrichment — slice 1: evidence and freshness
 
-Status: planned. Parent feature branch: `codex/capture-analysis-core`.
+Status: implemented on `codex/capture-metadata-enrichment-foundation`, awaiting slice review. Parent feature branch: `codex/capture-analysis-core`. See the [foundation review](metadata-enrichment-foundation-review.md).
 
 ## Goal and delivery order
 

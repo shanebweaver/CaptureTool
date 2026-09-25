@@ -82,6 +82,7 @@ internal sealed partial class LocalCaptureAnalysisStore : ICaptureAnalysisStore,
             if ((await ReadDocumentAsync(control.Generation, token.CaptureId, cancellationToken).ConfigureAwait(false))?.Run != null) return false;
             CaptureAnalysisRecord? current = await ReadRecordAsync(control.Generation, token.CaptureId, cancellationToken).ConfigureAwait(false);
             if (current == null || current.RunId != token.RunId || current.SourceRevision != token.SourceRevision) return false;
+            if (!current.HasCurrentInputs(result)) return false;
             await WriteRecordAsync(control.Generation, current.WithResult(result), cancellationToken).ConfigureAwait(false);
             return true;
         }

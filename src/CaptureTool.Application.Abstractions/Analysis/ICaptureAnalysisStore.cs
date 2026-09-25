@@ -25,7 +25,10 @@ public interface ICaptureAnalysisStore : ICaptureMetadataReader
     Task<AnalysisWriteToken> BeginRunAsync(CaptureId captureId, AnalysisMediaKind mediaKind,
         SourceRevision sourceRevision, string planVersion, CancellationToken cancellationToken = default);
 
-    /// <summary>False means the token was superseded. IO/protection/schema errors are not successful commits.</summary>
+    /// <summary>
+    /// False means the token was superseded or a derived result's consulted inputs changed.
+    /// IO/protection/schema errors are not successful commits.
+    /// </summary>
     Task<bool> TryWriteAsync(AnalysisWriteToken token, AnalysisResult result, CancellationToken cancellationToken = default);
 
     /// <summary>
