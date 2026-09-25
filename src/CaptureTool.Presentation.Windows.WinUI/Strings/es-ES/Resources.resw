@@ -1929,4 +1929,15 @@ SOFTWARE.
   <data name="CapturePane_MatchCount" xml:space="preserve"><value>{0} pasajes coincidentes</value></data>
   <data name="CapturePane_LocationUnavailable" xml:space="preserve"><value>No hay una ubicación disponible en esta vista. La imagen puede haber cambiado o el pasaje puede estar fuera del recorte.</value></data>
   <data name="CapturePane_ActionFailed" xml:space="preserve"><value>Esta acción no está disponible. Actualice los detalles de la captura.</value></data>
+  <data name="CaptureNaming_Header.Text" xml:space="preserve"><value>Nombrar nuevas capturas automáticamente</value></data>
+  <data name="CaptureNaming_Description.Text" xml:space="preserve"><value>Usa análisis de IA local para nombrar nuevas capturas y sugerir nombres al guardar como. Los archivos existentes conservan sus nombres. Eliminar el análisis conserva los nombres elegidos.</value></data>
+  <data name="CaptureNaming_Toggle.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Nombrar nuevas capturas automáticamente</value></data>
+  <data name="CaptureNaming_Edit.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Editar nombre de captura</value></data>
+  <data name="CaptureNaming_Input.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Nombre de captura</value></data>
+  <data name="CaptureNaming_EditHint.Text" xml:space="preserve"><value>Este nombre aparece en la aplicación y al guardar como. El archivo existente conserva su nombre.</value></data>
+  <data name="CaptureNaming_Save.Content" xml:space="preserve"><value>Guardar nombre</value></data>
+  <data name="CaptureNaming_Cancel.Content" xml:space="preserve"><value>Cancelar</value></data>
+  <data name="CaptureNaming_FileName.Text" xml:space="preserve"><value>Nombre de archivo</value></data>
+  <data name="CaptureNaming_Invalid" xml:space="preserve"><value>Escribe un nombre de una línea de 1 a 160 caracteres.</value></data>
+  <data name="CaptureNaming_SaveFailed" xml:space="preserve"><value>No se pudo guardar el nombre o la preferencia de nombres. Inténtalo de nuevo.</value></data>
 </root>

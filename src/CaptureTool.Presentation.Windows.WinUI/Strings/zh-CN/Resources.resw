@@ -1929,4 +1929,15 @@ SOFTWARE.
   <data name="CapturePane_MatchCount" xml:space="preserve"><value>{0} 个匹配片段</value></data>
   <data name="CapturePane_LocationUnavailable" xml:space="preserve"><value>当前视图中没有可用位置。图像可能已更改，或片段位于裁剪范围之外。</value></data>
   <data name="CapturePane_ActionFailed" xml:space="preserve"><value>此操作不可用。请刷新捕获详细信息。</value></data>
+  <data name="CaptureNaming_Header.Text" xml:space="preserve"><value>自动命名新捕获内容</value></data>
+  <data name="CaptureNaming_Description.Text" xml:space="preserve"><value>使用本地 AI 扫描为新捕获内容命名，并在“另存为”中建议文件名。现有文件保留原文件名。删除分析数据会保留已选名称。</value></data>
+  <data name="CaptureNaming_Toggle.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>自动命名新捕获内容</value></data>
+  <data name="CaptureNaming_Edit.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>编辑捕获名称</value></data>
+  <data name="CaptureNaming_Input.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>捕获名称</value></data>
+  <data name="CaptureNaming_EditHint.Text" xml:space="preserve"><value>此名称用于应用和“另存为”。现有文件保留原文件名。</value></data>
+  <data name="CaptureNaming_Save.Content" xml:space="preserve"><value>保存名称</value></data>
+  <data name="CaptureNaming_Cancel.Content" xml:space="preserve"><value>取消</value></data>
+  <data name="CaptureNaming_FileName.Text" xml:space="preserve"><value>文件名</value></data>
+  <data name="CaptureNaming_Invalid" xml:space="preserve"><value>请输入 1–160 个字符的单行名称。</value></data>
+  <data name="CaptureNaming_SaveFailed" xml:space="preserve"><value>无法保存名称或命名设置。请重试。</value></data>
 </root>

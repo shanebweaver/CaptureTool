@@ -439,7 +439,7 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
         }
 
         var response = await _saveAction.ExecuteAsync(
-            new SaveVideoFileRequest(VideoPath, GetTrimStartForRequest(), GetTrimEndForRequest()),
+            new SaveVideoFileRequest(VideoPath, GetTrimStartForRequest(), GetTrimEndForRequest(), DetailsSourcePath),
             cancellationToken);
         bool saved = response?.Value?.Saved == true;
         TrackOutput("save", response?.Result ?? UseCaseResult.Failed, saved);

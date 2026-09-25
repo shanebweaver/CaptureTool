@@ -1929,4 +1929,15 @@ SOFTWARE.
   <data name="CapturePane_MatchCount" xml:space="preserve"><value>Совпадений: {0}</value></data>
   <data name="CapturePane_LocationUnavailable" xml:space="preserve"><value>В текущем виде нет доступной позиции. Возможно, изображение изменено или фрагмент находится за пределами обрезки.</value></data>
   <data name="CapturePane_ActionFailed" xml:space="preserve"><value>Действие недоступно. Обновите сведения о записи.</value></data>
+  <data name="CaptureNaming_Header.Text" xml:space="preserve"><value>Автоматически называть новые снимки и записи</value></data>
+  <data name="CaptureNaming_Description.Text" xml:space="preserve"><value>Локальный ИИ-анализ создаёт имена новых снимков и записей и предлагает их при сохранении. Имена существующих файлов не меняются. Удаление анализа сохраняет выбранные имена.</value></data>
+  <data name="CaptureNaming_Toggle.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Автоматически называть новые снимки и записи</value></data>
+  <data name="CaptureNaming_Edit.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Изменить имя</value></data>
+  <data name="CaptureNaming_Input.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Имя снимка или записи</value></data>
+  <data name="CaptureNaming_EditHint.Text" xml:space="preserve"><value>Это имя используется в приложении и при сохранении. Имя существующего файла не меняется.</value></data>
+  <data name="CaptureNaming_Save.Content" xml:space="preserve"><value>Сохранить имя</value></data>
+  <data name="CaptureNaming_Cancel.Content" xml:space="preserve"><value>Отмена</value></data>
+  <data name="CaptureNaming_FileName.Text" xml:space="preserve"><value>Имя файла</value></data>
+  <data name="CaptureNaming_Invalid" xml:space="preserve"><value>Введите имя в одну строку длиной от 1 до 160 символов.</value></data>
+  <data name="CaptureNaming_SaveFailed" xml:space="preserve"><value>Не удалось сохранить имя или настройку именования. Повторите попытку.</value></data>
 </root>

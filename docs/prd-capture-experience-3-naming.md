@@ -1,6 +1,6 @@
 # Capture experience — step 3: automatic capture names
 
-Status: Approved direction; follows shared pane/content review.
+Status: Implemented; review and verification recorded in [capture-experience-review.md](capture-experience-review.md).
 
 ## Outcome
 

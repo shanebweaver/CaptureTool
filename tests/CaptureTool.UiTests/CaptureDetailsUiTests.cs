@@ -95,7 +95,9 @@ public sealed partial class ImageEditTextExtractionUiTests
         OpenSettings();
         Element("CaptureMemoryDelete").Patterns.Invoke.Pattern.Invoke();
         Confirm("DeleteMetadata", "CaptureMemory_DeleteMetadataAccept");
-        WaitFor(() => !Element("CaptureMemoryDelete").IsEnabled ? window : null, InteractionTimeout, "metadata deletion");
+        WaitFor(() => !Element("CaptureMemoryDelete").IsEnabled && Element("CaptureMemoryScan").IsEnabled &&
+            !Directory.EnumerateFiles(Path.Combine(data, "CaptureAnalysis"), "*.analysis", SearchOption.AllDirectories).Any()
+            ? window : null, InteractionTimeout, "metadata deletion completed");
         GoHome(); OpenCapture();
         dialog = OpenDetails();
         WaitForElementByName(dialog, automation, resources["CaptureDetails_Media_Image"], InteractionTimeout);

@@ -1,6 +1,6 @@
 # Capture experience — step 2: find and reuse capture content
 
-Status: Approved direction; follows step 1.
+Status: Implemented; review and verification recorded in [capture-experience-review.md](capture-experience-review.md).
 
 ## Outcome
 

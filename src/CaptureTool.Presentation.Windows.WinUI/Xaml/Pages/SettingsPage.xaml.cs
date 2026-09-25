@@ -31,6 +31,15 @@ public sealed partial class SettingsPage : SettingsPageBase
             toggle.IsOn = CaptureMemory.ScanningEnabled;
         }
     }
+    private async void CaptureNaming_Toggled(object sender, RoutedEventArgs e)
+    {
+        if (sender is ToggleSwitch toggle && toggle.IsOn != CaptureMemory.NamingEnabled)
+        {
+            await CaptureMemory.SetNamingCommand.ExecuteAsync(toggle.IsOn);
+            toggle.IsOn = CaptureMemory.NamingEnabled;
+        }
+    }
+
     private async void CaptureMemoryConsent_Click(object sender, RoutedEventArgs e)
     {
         if (sender is CheckBox checkbox)

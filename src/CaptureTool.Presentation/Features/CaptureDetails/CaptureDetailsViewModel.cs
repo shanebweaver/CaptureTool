@@ -1,4 +1,6 @@
 using CaptureTool.Application.Abstractions.Analysis;
+using CaptureTool.Application.Abstractions.Capture.Assets;
+using CaptureTool.Domain.Capture;
 using CaptureTool.Application.Abstractions.Clipboard;
 using CaptureTool.Application.Abstractions.Library.CaptureDetails;
 using CaptureTool.Application.Abstractions.Localization;
@@ -14,6 +16,8 @@ namespace CaptureTool.Presentation.Features.CaptureDetails;
 public sealed class CaptureDetailsViewModel : ViewModelBase
 {
     private readonly ICaptureDetailsReader _reader;
+    private readonly ICaptureNamingService? _names;
+    private long _nameRevision;
     private readonly ICaptureMemoryService _memory;
     private readonly IClipboardService _clipboard;
     private readonly ILocalizationService _text;
@@ -32,6 +36,14 @@ public sealed class CaptureDetailsViewModel : ViewModelBase
     private CaptureTextNavigationContext _navigation = new(false, false);
     private readonly IFolderLauncher? _folders;
 
+    public string PhysicalFileName => _path == null ? string.Empty : Path.GetFileName(_path);
+    public string NameDraft { get; set => Set(ref field, value); } = string.Empty;
+    public string NameStatus { get; private set => Set(ref field, value); } = string.Empty;
+    public bool IsEditingName { get; private set => Set(ref field, value); }
+    public bool CanEditName => _names != null;
+    public IRelayCommand EditNameCommand { get; }
+    public IRelayCommand CancelNameCommand { get; }
+    public IAsyncRelayCommand SaveNameCommand { get; }
     public string FileName { get; private set => Set(ref field, value); } = string.Empty;
     public string FilePath => _path ?? string.Empty;
     public CaptureFileProperties FileProperties { get; private set => Set(ref field, value); } = new();
@@ -55,10 +67,15 @@ public sealed class CaptureDetailsViewModel : ViewModelBase
     public IAsyncRelayCommand<string> CopyCommand { get; }
 
     public CaptureDetailsViewModel(ICaptureDetailsReader reader, ICaptureMemoryService memory, IClipboardService clipboard,
-        ILocalizationService text, ITaskEnvironment ui, IFolderLauncher? folders = null)
+        ILocalizationService text, ITaskEnvironment ui, IFolderLauncher? folders = null, ICaptureNamingService? names = null)
     {
         _reader = reader; _memory = memory; _clipboard = clipboard; _text = text; _ui = ui;
         _folders = folders;
+        _names = names;
+        EditNameCommand = new RelayCommand(() => { NameDraft = FileName == PhysicalFileName ? Path.GetFileNameWithoutExtension(FileName) : FileName; NameStatus = string.Empty; IsEditingName = true; });
+        CancelNameCommand = new RelayCommand(() => { IsEditingName = false; NameStatus = string.Empty; });
+        SaveNameCommand = new AsyncRelayCommand(SaveNameAsync);
+        if (_names != null) _names.Changed += OnNamesChanged;
         TextContent = new(text);
         CopyResultsCommand = new AsyncRelayCommand(() => CopyAsync(TextContent.CopyVisibleScope()));
         _cancellation = _lifetime.Token;
@@ -73,8 +90,10 @@ public sealed class CaptureDetailsViewModel : ViewModelBase
     {
         if (_path != null) throw new InvalidOperationException("Each details view has its own lifetime.");
         _path = path;
+        RaisePropertyChanged(nameof(PhysicalFileName));
+        RaisePropertyChanged(nameof(FilePath));
         FileName = Path.GetFileName(path);
-        return RefreshAsync();
+        return Task.WhenAll(RefreshAsync(), ReadNameAsync());
     }
 
     public Task OpenAsync(string path, AnalysisMediaKind kind, string? workingPath = null)
@@ -86,7 +105,27 @@ public sealed class CaptureDetailsViewModel : ViewModelBase
         return Task.WhenAll(analysis, ReadFileAsync());
     }
 
-    public Task RefreshAllAsync() => Task.WhenAll(RefreshAsync(), ReadFileAsync());
+    public Task RefreshAllAsync() => Task.WhenAll(RefreshAsync(), ReadFileAsync(), ReadNameAsync());
+
+    private void OnNamesChanged() => _ui.TryExecute(() => { if (!_disposed) _ = ReadNameAsync(); });
+    private async Task ReadNameAsync()
+    {
+        if (_names == null || _path == null || _disposed) return;
+        long revision = Interlocked.Increment(ref _nameRevision);
+        var name = await _names.GetNameAsync(_path, _cancellation);
+        if (!_disposed && revision == Interlocked.Read(ref _nameRevision)) FileName = name?.Text ?? PhysicalFileName;
+    }
+    private async Task SaveNameAsync()
+    {
+        if (_names == null || _path == null || _kind == null || _disposed) return;
+        try { _ = new CaptureName(NameDraft, false); }
+        catch (ArgumentException) { NameStatus = _text.GetString("CaptureNaming_Invalid"); return; }
+        CaptureFileType kind = _kind switch { AnalysisMediaKind.Image => CaptureFileType.Image, AnalysisMediaKind.Audio => CaptureFileType.Audio, _ => CaptureFileType.Video };
+        bool saved = await _names.SetNameAsync(_path, kind, NameDraft, _cancellation);
+        if (_disposed) return;
+        if (saved) { IsEditingName = false; NameStatus = string.Empty; await ReadNameAsync(); }
+        else NameStatus = _text.GetString("CaptureNaming_SaveFailed");
+    }
 
     private async Task ReadFileAsync()
     {
@@ -256,6 +295,7 @@ public sealed class CaptureDetailsViewModel : ViewModelBase
         if (_disposed) return;
         _disposed = true;
         _memory.StateChanged -= OnMemoryChanged;
+        if (_names != null) _names.Changed -= OnNamesChanged;
         _lifetime.Cancel();
         _lifetime.Dispose();
         Content = new();

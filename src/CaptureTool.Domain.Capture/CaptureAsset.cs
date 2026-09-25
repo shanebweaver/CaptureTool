@@ -16,9 +16,10 @@ public sealed record CaptureAsset
     public string SourcePath { get; }
     public string? PreferredPath { get; }
     public CaptureSourceOwnership SourceOwnership { get; }
+    public CaptureName? Name { get; }
 
     public CaptureAsset(CaptureId id, CaptureFileType mediaType, DateTimeOffset? capturedAt,
-        string sourcePath, CaptureSourceOwnership sourceOwnership, string? preferredPath = null)
+        string sourcePath, CaptureSourceOwnership sourceOwnership, string? preferredPath = null, CaptureName? name = null)
     {
         if (id.IsEmpty) throw new ArgumentException("Capture identity is required.", nameof(id));
         if (mediaType is not (CaptureFileType.Image or CaptureFileType.Audio or CaptureFileType.Video))
@@ -33,11 +34,14 @@ public sealed record CaptureAsset
         SourcePath = sourcePath;
         PreferredPath = preferredPath;
         SourceOwnership = sourceOwnership;
+        Name = name;
     }
 
     public CaptureAsset WithPreferredPath(string? path) =>
-        new(Id, MediaType, CapturedAt, SourcePath, SourceOwnership, path);
+        new(Id, MediaType, CapturedAt, SourcePath, SourceOwnership, path, Name);
 
     public CaptureAsset RelocateSource(string path) =>
-        new(Id, MediaType, CapturedAt, path, SourceOwnership, PreferredPath);
+        new(Id, MediaType, CapturedAt, path, SourceOwnership, PreferredPath, Name);
+
+    public CaptureAsset WithName(CaptureName name) => new(Id, MediaType, CapturedAt, SourcePath, SourceOwnership, PreferredPath, name);
 }

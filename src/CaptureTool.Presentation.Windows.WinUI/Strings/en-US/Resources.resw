@@ -2210,4 +2210,15 @@ SOFTWARE.
   <data name="CapturePane_MatchCount" xml:space="preserve"><value>{0} matching passages</value></data>
   <data name="CapturePane_LocationUnavailable" xml:space="preserve"><value>No location is available in the current view. The image may have changed or the passage may be outside the trim.</value></data>
   <data name="CapturePane_ActionFailed" xml:space="preserve"><value>This action is unavailable. Try refreshing the capture details.</value></data>
+  <data name="CaptureNaming_Header.Text" xml:space="preserve"><value>Automatically name new captures</value></data>
+  <data name="CaptureNaming_Description.Text" xml:space="preserve"><value>Uses local AI scanning to name new captures and suggest Save As filenames. Existing files keep their filenames. Deleting analysis keeps chosen names.</value></data>
+  <data name="CaptureNaming_Toggle.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Automatically name new captures</value></data>
+  <data name="CaptureNaming_Edit.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Edit capture name</value></data>
+  <data name="CaptureNaming_Input.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Capture name</value></data>
+  <data name="CaptureNaming_EditHint.Text" xml:space="preserve"><value>This name appears in the app and Save As. The existing file keeps its name.</value></data>
+  <data name="CaptureNaming_Save.Content" xml:space="preserve"><value>Save name</value></data>
+  <data name="CaptureNaming_Cancel.Content" xml:space="preserve"><value>Cancel</value></data>
+  <data name="CaptureNaming_FileName.Text" xml:space="preserve"><value>File name</value></data>
+  <data name="CaptureNaming_Invalid" xml:space="preserve"><value>Enter a single-line name with 1–160 characters.</value></data>
+  <data name="CaptureNaming_SaveFailed" xml:space="preserve"><value>The capture name or naming preference could not be saved. Try again.</value></data>
 </root>

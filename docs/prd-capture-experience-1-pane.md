@@ -1,6 +1,6 @@
 # Capture experience — step 1: shared editor pane and local details
 
-Status: Implemented and reviewed on `codex/capture-details`. See [review notes](capture-experience-review.md).
+Status: Implemented; review and verification recorded in [capture-experience-review.md](capture-experience-review.md).
 
 ## Outcome
 

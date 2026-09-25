@@ -92,6 +92,8 @@ public sealed partial class CaptureDetailsPane : UserControl, INotifyPropertyCha
     }
     private void ViewModelChanged(object? sender, PropertyChangedEventArgs e)
     {
+        if (e.PropertyName == nameof(CaptureDetailsViewModel.IsEditingName) && ViewModel?.IsEditingName == true)
+            DispatcherQueue.TryEnqueue(() => { NameInput.Focus(FocusState.Programmatic); NameInput.SelectAll(); });
         if (e.PropertyName == nameof(CaptureDetailsViewModel.Content) &&
             (ViewModel?.TextContent.SelectedPassage is not { } selected || !ViewModel.Content.Passages.Any(passage => passage.Id == selected.Id)))
             ClearLocation?.Invoke();

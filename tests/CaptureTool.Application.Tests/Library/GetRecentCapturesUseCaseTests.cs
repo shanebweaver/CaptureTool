@@ -1,3 +1,5 @@
+using CaptureTool.Application.Abstractions.Capture.Assets;
+using CaptureTool.Domain;
 using CaptureTool.Application.Abstractions.Library.RecentCaptures;
 using CaptureTool.Application.Abstractions.Library.RecentCaptures.GetRecentCaptures;
 using CaptureTool.Application.Library.RecentCaptures.GetRecentCaptures;
@@ -9,6 +11,28 @@ namespace CaptureTool.Application.Tests.Library;
 [TestClass]
 public sealed class GetRecentCapturesUseCaseTests
 {
+    [TestMethod]
+    public async Task ChosenNamesUseProtectedIdentityAndAmbiguousPathsFallBackToFileNames()
+    {
+        string path = await CreateFileAsync("Pictures", "capture.png");
+        var recents = new Mock<IRecentCaptureCatalog>();
+        recents.Setup(value => value.GetEntries()).Returns([Entry(path, CaptureFileType.Image, RecentCaptureOrigin.Captured, 1)]);
+        var assets = new Mock<ICaptureAssetCatalog>();
+        var asset = new CaptureAsset(CaptureId.New(), CaptureFileType.Image, null, path, CaptureSourceOwnership.Application,
+            name: new("Chosen capture name", true));
+        assets.Setup(value => value.ReadAllAsync(It.IsAny<CancellationToken>())).ReturnsAsync([asset]);
+        var useCase = new GetRecentCapturesUseCase(recents.Object, TestFileSystem.Instance, TestUseCaseExecutor.Instance, assets.Object);
+        var response = (await useCase.ExecuteAsync(new(), TestContext.CancellationToken)).Value!;
+        Assert.AreEqual("Chosen capture name", response.Captures.Single().FileName);
+        assets.Setup(value => value.ReadAllAsync(It.IsAny<CancellationToken>())).ReturnsAsync([asset,
+            new(CaptureId.New(), CaptureFileType.Image, null, path + ".other", CaptureSourceOwnership.External, path)]);
+        response = (await useCase.ExecuteAsync(new(), TestContext.CancellationToken)).Value!;
+        Assert.AreEqual("capture.png", response.Captures.Single().FileName);
+        assets.Setup(value => value.ReadAllAsync(It.IsAny<CancellationToken>())).ThrowsAsync(new IOException());
+        response = (await useCase.ExecuteAsync(new(), TestContext.CancellationToken)).Value!;
+        Assert.AreEqual("capture.png", response.Captures.Single().FileName);
+    }
+
     [TestMethod]
     public async Task ExecuteAsync_ShouldCombineCapturedAndOpenedFilesAndSortByCatalogActivity()
     {

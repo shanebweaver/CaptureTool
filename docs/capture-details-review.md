@@ -1,39 +1,34 @@
-# Shared capture details
+# Capture experience review
 
 Branch: `codex/capture-details`, based on `codex/capture-analysis-core`.
 
 ## Review path
 
-On Home, right-click a recent capture and choose **Details**. Keyboard users can focus a capture and press **Shift+F10** or the context-menu key. The same dialog supports images, audio, and video. Richer Home cards and search remain separate work.
+1. Open an image, audio recording or video in its editor and select **Details** in the toolbar. The shared right pane shows current local file properties even with AI disabled. A wide window reserves space for it; a narrow window uses an overlay. Close or Escape returns focus to the toolbar.
+2. With saved analysis, use **Text** (image/video) or **Transcript** (audio). Search this capture, filter by source, copy an individual passage or all matching results, and jump to an image region or recording timestamp. Recording jumps pause playback. Repeated video text and QR values retain their occurrences. Only explicit HTTP(S) QR actions open links.
+3. In Settings, enable local AI scanning and **Automatically name new captures**. Capture something new and let its existing analysis produce a title. The name updates in the pane and recent-file label, and Save As suggests a safe filename. Turning the setting on does not rename historical captures. A missing title leaves the ordinary filename in place.
+4. Use the pencil beside the capture name to give it your own name. This works without AI. A draft is not replaced by background completion, and a saved user name wins over automatic naming.
+5. Delete capture analysis in Settings. Saved names and ordinary local file details remain. Physical files retain their existing names throughout these workflows.
 
-The dialog presents:
+The Home Details dialog has been removed. This work adds no new Home cards or search experience. Existing ad-hoc OCR remains available in the image toolbar.
 
-- AI-suggested title, summary, category, and topics, explicitly labeled as suggestions.
-- Extracted facts and QR content, with individual copy actions.
-- Expandable source evidence for suggestions and facts. Evidence includes the original source entry and video/audio timestamps where available.
-- Recognized text, transcripts, and AI descriptions, with copy-all actions and scrollable source lists.
-- Media-specific file properties, identifying the analyzed file and when its properties were recorded. Known capture time is separate from filesystem dates; unknown values are not invented.
+## Boundaries
 
-Opening or refreshing Details reads existing metadata; it never schedules analysis, downloads models, or requests another consent. Existing captures can be analyzed through Settings. Results update at analysis step boundaries while the dialog is open. Earlier successful results and limited processing coverage have explicit notices. URLs and QR values are plain, copyable text; opening links or executing actions is outside this change.
+The pane reads normalized metadata through `ICaptureDetailsReader`, verifies source identity/revision, rejects deletion-generation changes and cancels on close. Local properties use `IMediaFileDetailsReader` independently of models and consent. Long content has full-data search/copy and incrementally loaded visual rows. Edited image geometry, mismatched working-copy bytes and trimmed-out timestamps disable location jumps rather than using incorrect positions.
 
-## Architecture and edge cases
+`CaptureNamingService` consumes the worker's committed-result notifications. Notifications carry identity and capability, not captured text; they schedule work without delaying inference. Startup recovers eligible committed titles. Names, their user/automatic ownership and intake eligibility are stored in the protected capture catalog. Atomic catalog writes make user changes authoritative and fence disabled or invalidated enrollment. Source leases, authorization leases and deletion watermarks prevent stale publication. No additional inference, plaintext name cache or filesystem rename is introduced.
 
-`ICaptureDetailsReader` is the application boundary. It resolves an unambiguous asset identity, checks the current file bytes against the stored source revision, and reads normalized metadata and execution state. A generation change during the read discards the snapshot. Missing, changed, or inaccessible files do not expose unverified old results.
+## Implementation records
 
-`CaptureDetailsContent` projects typed payloads into presentation rows. The view has no knowledge of provider responses, encrypted document formats, or inference APIs. Clipboard operations use the existing service. No metadata is written to logs or added to another cache.
-
-Each dialog has a transient view model and cancellation lifetime. Reads and projection run away from the UI thread, concurrent refreshes coalesce, and closing the dialog unsubscribes observers and suppresses late completions. Deletion clears visible content and invalidates pending reads. Unknown media properties are omitted, except that an unknown capture time is explicitly shown.
+- [Step 1: shared pane and independent file details](prd-capture-experience-1-pane.md)
+- [Step 2: finding and reusing capture content](prd-capture-experience-2-content.md)
+- [Step 3: automatic capture names](prd-capture-experience-3-naming.md)
+- [Step reviews and verification](capture-experience-review.md)
 
 ## Demo preparation
 
-Prepare models in the actual demo application's data directory and analyze a small set of real captures before presenting. The isolated test harness's model cache and synthetic UI fixtures are not a prepared production library. Use a screenshot with a useful fact or QR code, a short audio recording, and a short video to review the shared view. AI suggestions can be absent even when other useful metadata is available.
+Use a few real analyzed captures in the actual demo application's data directory: a screenshot with text/QR, a short recording with speech, and a short video. Prepare models before the demo. A title is optional and depends on available analysis; this feature reuses the existing model pipeline.
 
-The UI automation fixture is enabled only with both `--capturetool-ui-test` and `--ui-test-details`; it never invokes real models. Synthetic values in its screenshots are layout and integration evidence, not a model-quality demonstration.
+UI automation uses isolated data and synthetic analysis only when `--capturetool-ui-test` and `--ui-test-details` are present. Its additional `--ui-test-capture` option enrolls the fixture through production intake for the naming lifecycle check. These screenshots demonstrate layout and integration, not model quality or prepared production data.
 
-## Verification
-
-- Application and presentation regression suites: **701 passed** (423 application, 278 presentation), including 18 new reader/presentation cases for all three media kinds, source evidence, timestamps, changed bytes, ambiguous paths, protected-storage errors, deletion races, clipboard failures, legacy results with unknown run identity, and closure during a read.
-- Native x64 publish passed the repository's diagnostic guard with only the four previously accepted vendor warnings. Empty and populated collections use the app's established bindable collection shape; no new AOT suppression or dependency was added.
-- **13 native desktop flows passed**: Details in all six languages, consent/settings in all six languages, and existing OCR. Includes keyboard entry, automatic progress-to-results updates, individual and full-source clipboard copying, source inspection, changed-file rejection, deletion, and Escape dismissal. Screenshots cover light, dark, compact, empty, changed-file, evidence, facts, source text, and file-property states. Logs/TRX files are in `artifacts/details-*` and `tests/CaptureTool.UiTests/TestResults`; screenshots are under `tests/CaptureTool.UiTests/TestResults/artifacts/capture-details/<locale>`.
-
-Physical ARM64, offline isolation, and spoken Narrator checks remain the previously documented environment gates. This change adds no model or provider dependency.
+The final x64 review build is published to `artifacts/pane/app`. Native desktop screenshots are under `tests/CaptureTool.UiTests/TestResults/artifacts/capture-details`, `capture-pane-media` and `capture-naming`. Physical ARM64, offline isolation and spoken Narrator checks remain the documented environment limitations.

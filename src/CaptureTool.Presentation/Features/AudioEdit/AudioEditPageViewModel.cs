@@ -226,7 +226,7 @@ public sealed partial class AudioEditPageViewModel : LoadableViewModelBase<Audio
         }
 
         var response = await _saveAction.ExecuteAsync(
-            new SaveAudioFileRequest(AudioPath),
+            new SaveAudioFileRequest(AudioPath, DetailsSourcePath),
             CancellationToken.None);
         TrackOutput(
             "save",

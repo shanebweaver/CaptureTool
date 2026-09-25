@@ -45,6 +45,7 @@ public sealed class CaptureAnalysisWorker : ICaptureAnalysisWorker, IDisposable
 
     public AnalysisActivitySnapshot Progress => Volatile.Read(ref _progress);
     public event Action<AnalysisActivitySnapshot>? ProgressChanged;
+    public event Action<CaptureId, AnalysisCapability>? ResultCommitted;
 
     public async Task<bool> EnqueueAsync(AnalysisRequest request, CancellationToken cancellationToken = default)
     {
@@ -232,6 +233,9 @@ public sealed class CaptureAnalysisWorker : ICaptureAnalysisWorker, IDisposable
                 AnalysisResult? result = outcome.Kind == AnalyzerOutcomeKind.Succeeded
                     ? new(outcome.Payload!, outcome.Producer!, DateTimeOffset.UtcNow, plan.Version, work.Run.Id, derivation: derivation) : null;
                 if (!await _store.CommitStepAsync(work.Token, new(plan.Steps[index].Capability, outcome.Kind, outcome.FailureCode), result, ct).ConfigureAwait(false)) return;
+                if (result != null && ResultCommitted is { } committed)
+                    foreach (Action<CaptureId, AnalysisCapability> observer in committed.GetInvocationList())
+                        try { observer(work.Token.CaptureId, result.Payload.Capability); } catch (Exception) { }
             }
         }
         catch (OperationCanceledException) when (shutdown.IsCancellationRequested) { throw; }

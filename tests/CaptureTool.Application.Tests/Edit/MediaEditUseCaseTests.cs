@@ -1,3 +1,5 @@
+using CaptureTool.Application.Abstractions.Capture.Assets;
+using CaptureTool.Domain.Capture;
 using CaptureTool.Application.Abstractions.Clipboard;
 using CaptureTool.Application.Abstractions.Edit.Audio.CopyAudioFile;
 using CaptureTool.Application.Abstractions.Edit.Audio.OpenAudioEditPage;
@@ -25,6 +27,30 @@ namespace CaptureTool.Application.Tests.Edit;
 [TestClass]
 public sealed class MediaEditUseCaseTests
 {
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task SaveUsesTheCaptureNameForItsOriginalIdentity(bool video)
+    {
+        string source = await CreateTempFileAsync(video ? "working.mp4" : "working.wav", "media");
+        string original = Path.Combine(CreateTestFolder(), "original");
+        var names = new Mock<ICaptureNamingService>();
+        names.Setup(service => service.GetNameAsync(original, It.IsAny<CancellationToken>())).ReturnsAsync(new CaptureName("Plan: résumé", true));
+        var picker = new Mock<IFilePickerService>();
+        if (video)
+        {
+            var useCase = new SaveVideoFileUseCase(picker.Object, Mock.Of<IVideoFileTrimmer>(), TestFileSystem.Instance, TestUseCaseExecutor.Instance, names.Object);
+            await useCase.ExecuteAsync(new(source, SourcePath: original), TestContext.CancellationToken);
+            picker.Verify(service => service.PickSaveFileAsync(FilePickerType.Video, UserFolder.Videos, "Plan_ résumé"), Times.Once);
+        }
+        else
+        {
+            var useCase = new SaveAudioFileUseCase(picker.Object, TestFileSystem.Instance, TestUseCaseExecutor.Instance, names.Object);
+            await useCase.ExecuteAsync(new(source, original), TestContext.CancellationToken);
+            picker.Verify(service => service.PickSaveFileAsync(FilePickerType.Audio, UserFolder.Music, "Plan_ résumé"), Times.Once);
+        }
+    }
+
     [TestMethod]
     public async Task CopyAudioFileUseCase_WithExistingFile_CopiesToClipboard()
     {

@@ -1,3 +1,5 @@
+using CaptureTool.Application.Abstractions.Capture.Assets;
+using CaptureTool.Domain.Capture;
 using CaptureTool.Application.Abstractions.Analysis;
 using CaptureTool.Application.Abstractions.Clipboard;
 using CaptureTool.Application.Abstractions.Library.CaptureDetails;
@@ -14,6 +16,30 @@ namespace CaptureTool.Presentation.Tests.Features;
 [TestClass]
 public sealed class CaptureDetailsTests
 {
+    [TestMethod]
+    public async Task DraftNameSurvivesBackgroundTitleAndUserSaveWorksWithoutConsent()
+    {
+        var names = new Mock<ICaptureNamingService>();
+        CaptureName? current = null;
+        names.Setup(service => service.GetNameAsync(It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync(() => current);
+        names.Setup(service => service.SetNameAsync(It.IsAny<string>(), CaptureFileType.Image, "User draft", It.IsAny<CancellationToken>()))
+            .Callback(() => current = new("User draft", false)).ReturnsAsync(true);
+        var setup = new Setup(names.Object);
+        setup.State = setup.State with { Policy = CaptureMemoryPolicy.Disabled() };
+        using var vm = setup.ViewModel;
+        await vm.OpenAsync("capture.png", AnalysisMediaKind.Image);
+        vm.EditNameCommand.Execute(null);
+        vm.NameDraft = "User draft";
+        current = new("Background suggestion", true);
+        names.Raise(service => service.Changed += null);
+        Assert.AreEqual("Background suggestion", vm.FileName);
+        Assert.AreEqual("User draft", vm.NameDraft);
+        await vm.SaveNameCommand.ExecuteAsync(null);
+        Assert.AreEqual("User draft", vm.FileName);
+        Assert.IsFalse(vm.IsEditingName);
+        Assert.AreEqual("capture.png", vm.PhysicalFileName);
+    }
+
     [TestMethod]
     public async Task LocalPropertiesAppearBeforeSlowAnalysisAndSurviveDeletion()
     {
@@ -216,14 +242,14 @@ public sealed class CaptureDetailsTests
         public CaptureMemoryState State { get; set; } = new(new(true, true, Guid.NewGuid(), 0), true,
             new(true, true), new(AnalysisActivity.Idle));
         public CaptureDetailsViewModel ViewModel { get; }
-        public Setup()
+        public Setup(ICaptureNamingService? names = null)
         {
             Reader.Setup(reader => reader.ReadAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new CaptureDetailsSnapshot(CaptureDetailsStatus.Available, Record()));
             Memory.SetupGet(memory => memory.State).Returns(() => State);
             var ui = new Mock<ITaskEnvironment>();
             ui.Setup(ui => ui.TryExecute(It.IsAny<Action>())).Returns((Action action) => { action(); return true; });
-            ViewModel = new(Reader.Object, Memory.Object, Clipboard.Object, Localization(), ui.Object);
+            ViewModel = new(Reader.Object, Memory.Object, Clipboard.Object, Localization(), ui.Object, names: names);
         }
     }
 }

@@ -50,6 +50,8 @@ public static class ApplicationServiceCollectionExtensions
         services.AddSingleton<CaptureMemoryAuthorization>();
         services.AddSingleton<IAnalysisAuthorization>(provider => provider.GetRequiredService<CaptureMemoryAuthorization>());
         services.AddSingleton<ICaptureAnalysisWorker, CaptureAnalysisWorker>();
+        services.AddSingleton<CaptureTool.Application.Capture.CaptureNamingService>();
+        services.AddSingleton<CaptureTool.Application.Abstractions.Capture.Assets.ICaptureNamingService>(provider => provider.GetRequiredService<CaptureTool.Application.Capture.CaptureNamingService>());
         services.AddSingleton<ICaptureMemoryService, CaptureMemoryService>();
         services.AddTransient<CaptureTool.Application.Abstractions.Library.CaptureDetails.ICaptureDetailsReader,
             CaptureTool.Application.Library.CaptureDetails.CaptureDetailsReader>();

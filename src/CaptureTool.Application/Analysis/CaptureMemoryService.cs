@@ -2,6 +2,7 @@ using CaptureTool.Application.Abstractions.Analysis;
 using CaptureTool.Application.Abstractions.Capture.Assets;
 using CaptureTool.Application.Abstractions.Files;
 using CaptureTool.Application.Abstractions.Library.RecentCaptures;
+using CaptureTool.Application.Capture;
 using CaptureTool.Domain;
 using CaptureTool.Domain.Analysis;
 using CaptureTool.Domain.Capture;
@@ -17,6 +18,7 @@ internal sealed class CaptureMemoryService : ICaptureMemoryService, IDisposable
     private readonly ICaptureMemoryPrompts _prompts;
     private readonly IRecentCaptureCatalog _recents;
     private readonly IFileSystem _files;
+    private readonly CaptureNamingService? _naming;
     private readonly SemaphoreSlim _commands = new(1, 1);
     private readonly CancellationTokenSource _lifetime = new();
     private Task? _runner;
@@ -29,7 +31,7 @@ internal sealed class CaptureMemoryService : ICaptureMemoryService, IDisposable
     private string? _failure;
 
     public CaptureMemoryService(CaptureMemoryAuthorization authorization, ICaptureAssetCatalog catalog,
-        IAnalysisExecutionStore store, ICaptureAnalysisWorker worker, ICaptureMemoryPrompts prompts, IRecentCaptureCatalog recents, IFileSystem files)
+        IAnalysisExecutionStore store, ICaptureAnalysisWorker worker, ICaptureMemoryPrompts prompts, IRecentCaptureCatalog recents, IFileSystem files, CaptureNamingService? naming = null)
     {
         _authorization = authorization;
         _catalog = catalog;
@@ -38,6 +40,7 @@ internal sealed class CaptureMemoryService : ICaptureMemoryService, IDisposable
         _prompts = prompts;
         _recents = recents;
         _files = files;
+        _naming = naming;
         _worker.ProgressChanged += OnProgress;
     }
     public CaptureMemoryState State => new(_authorization.Policy, _authorization.IsLoaded &&
@@ -54,6 +57,7 @@ internal sealed class CaptureMemoryService : ICaptureMemoryService, IDisposable
             {
                 if (_initialized) return;
                 await InitializePolicyAsync(ct).ConfigureAwait(false);
+                if (_naming != null) await _naming.InitializeAsync(ct).ConfigureAwait(false);
                 await RecoverAsync(ct).ConfigureAwait(false);
                 _initialized = true;
             }, ct).ConfigureAwait(false);
@@ -61,16 +65,19 @@ internal sealed class CaptureMemoryService : ICaptureMemoryService, IDisposable
         }, cancellationToken).ConfigureAwait(false);
     }
 
-    public Task RegisterCaptureAsync(CaptureAsset asset, Guid? authorization, CancellationToken cancellationToken = default) =>
-        GuardAsync(ct => LockedAsync(async () =>
+    public Task RegisterCaptureAsync(CaptureAsset asset, Guid? authorization, CancellationToken cancellationToken = default)
+    {
+        Guid? namingEpoch = _naming?.Enrollment;
+        return GuardAsync(ct => LockedAsync(async () =>
         {
             IReadOnlyList<CaptureRegistration> registrations = await _catalog.ReadRegistrationsAsync(ct).ConfigureAwait(false);
             CaptureRegistration? existing = registrations.FirstOrDefault(entry => SamePath(entry.Asset.SourcePath, asset.SourcePath));
             if (existing == null)
-                await _catalog.RegisterForAnalysisAsync(asset, authorization, ct).ConfigureAwait(false);
+                await _catalog.RegisterForAnalysisAsync(asset, authorization, ct, namingEpoch).ConfigureAwait(false);
             CaptureRegistration registration = existing ?? (await _catalog.ReadRegistrationsAsync(ct).ConfigureAwait(false)).Single(entry => entry.Asset.Id == asset.Id);
             await AdmitAutomaticAsync(registration, ct).ConfigureAwait(false);
         }, ct), cancellationToken, "capture-registration");
+    }
 
     public Task SetPreferredPathAsync(string sourcePath, string preferredPath, CancellationToken cancellationToken = default) =>
         GuardAsync(ct => LockedAsync(async () =>
@@ -100,6 +107,7 @@ internal sealed class CaptureMemoryService : ICaptureMemoryService, IDisposable
             {
                 if (!CanApplyPolicy(epoch, enabled)) return;
                 CaptureMemoryPolicy policy = _authorization.Policy;
+                if (!enabled && _naming != null) await _naming.InvalidatePendingAsync(ct).ConfigureAwait(false);
                 long boundary = enabled ? await _catalog.GetBoundaryAsync(ct).ConfigureAwait(false) : policy.EnableBoundary;
                 if (!CanApplyPolicy(epoch, enabled)) return;
                 await _authorization.SaveAsync(new(enabled, enabled || policy.ConsentGranted,
@@ -132,6 +140,7 @@ internal sealed class CaptureMemoryService : ICaptureMemoryService, IDisposable
             {
                 if (!CanApplyPolicy(epoch, granted)) return;
                 CaptureMemoryPolicy policy = _authorization.Policy;
+                if (!granted && _naming != null) await _naming.InvalidatePendingAsync(ct).ConfigureAwait(false);
                 await _authorization.SaveAsync(new(granted && _authorization.IsAllowed, granted,
                     granted ? policy.Revision : Guid.NewGuid(), policy.EnableBoundary), ct, grantConsent: granted).ConfigureAwait(false);
                 if (granted) _lastGrantedEpoch = epoch;
@@ -205,6 +214,7 @@ internal sealed class CaptureMemoryService : ICaptureMemoryService, IDisposable
             {
                 if (!Current(epoch)) return;
                 long boundary = await _catalog.GetBoundaryAsync(ct).ConfigureAwait(false);
+                if (_naming != null) await _naming.InvalidatePendingAsync(ct).ConfigureAwait(false);
                 await _worker.ClearAsync(boundary, ct).ConfigureAwait(false);
                 await RecoverAsync(ct).ConfigureAwait(false);
             }, ct).ConfigureAwait(false);
@@ -216,6 +226,7 @@ internal sealed class CaptureMemoryService : ICaptureMemoryService, IDisposable
     {
         if (!_authorization.IsLoaded) await InitializePolicyAsync(ct).ConfigureAwait(false);
         await RefreshStatusAsync(ct).ConfigureAwait(false);
+        if (_naming != null) await _naming.InitializeAsync(ct).ConfigureAwait(false);
     }, ct), cancellationToken);
 
     private async Task InitializePolicyAsync(CancellationToken ct)
@@ -338,6 +349,7 @@ internal sealed class CaptureMemoryService : ICaptureMemoryService, IDisposable
         _authorization.Block();
         await _lifetime.CancelAsync().ConfigureAwait(false);
         if (_runner != null) await _runner.ConfigureAwait(false);
+        if (_naming != null) await _naming.StopAsync().ConfigureAwait(false);
         await _commands.WaitAsync().ConfigureAwait(false);
         _commands.Release();
     }

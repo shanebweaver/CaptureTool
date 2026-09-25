@@ -1923,4 +1923,15 @@ SOFTWARE.
   <data name="CapturePane_MatchCount" xml:space="preserve"><value>{0} passende Textstellen</value></data>
   <data name="CapturePane_LocationUnavailable" xml:space="preserve"><value>In der aktuellen Ansicht ist keine Position verfügbar. Das Bild wurde möglicherweise geändert oder die Textstelle liegt außerhalb des Zuschnitts.</value></data>
   <data name="CapturePane_ActionFailed" xml:space="preserve"><value>Diese Aktion ist nicht verfügbar. Aktualisieren Sie die Aufnahmedetails.</value></data>
+  <data name="CaptureNaming_Header.Text" xml:space="preserve"><value>Neue Aufnahmen automatisch benennen</value></data>
+  <data name="CaptureNaming_Description.Text" xml:space="preserve"><value>Verwendet lokale KI-Analyse für Namen neuer Aufnahmen und Vorschläge beim Speichern unter. Bestehende Dateinamen bleiben erhalten. Das Löschen der Analyse behält gewählte Namen bei.</value></data>
+  <data name="CaptureNaming_Toggle.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Neue Aufnahmen automatisch benennen</value></data>
+  <data name="CaptureNaming_Edit.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Aufnahmenamen bearbeiten</value></data>
+  <data name="CaptureNaming_Input.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Aufnahmename</value></data>
+  <data name="CaptureNaming_EditHint.Text" xml:space="preserve"><value>Dieser Name wird in der App und beim Speichern unter verwendet. Der vorhandene Dateiname bleibt erhalten.</value></data>
+  <data name="CaptureNaming_Save.Content" xml:space="preserve"><value>Namen speichern</value></data>
+  <data name="CaptureNaming_Cancel.Content" xml:space="preserve"><value>Abbrechen</value></data>
+  <data name="CaptureNaming_FileName.Text" xml:space="preserve"><value>Dateiname</value></data>
+  <data name="CaptureNaming_Invalid" xml:space="preserve"><value>Geben Sie einen einzeiligen Namen mit 1–160 Zeichen ein.</value></data>
+  <data name="CaptureNaming_SaveFailed" xml:space="preserve"><value>Der Name oder die Benennungseinstellung konnte nicht gespeichert werden. Versuchen Sie es erneut.</value></data>
 </root>

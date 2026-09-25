@@ -181,6 +181,17 @@ public sealed partial class MainWindow : Window
             try
             {
                 INavigationService navigationService = App.Current.ServiceProvider.GetService<INavigationService>();
+                if (UiTestLaunchOptions.CaptureFixture)
+                {
+                    var memory = App.Current.ServiceProvider.GetService<CaptureTool.Application.Abstractions.Analysis.ICaptureMemoryService>();
+                    await memory.InitializeAsync();
+                    var asset = new CaptureTool.Domain.Capture.CaptureAsset(CaptureTool.Domain.CaptureId.New(),
+                        CaptureTool.Domain.Capture.CaptureFileType.Image, DateTimeOffset.UtcNow, options.ImageFilePath,
+                        CaptureTool.Domain.Capture.CaptureSourceOwnership.Application);
+                    await memory.RegisterCaptureAsync(asset, memory.CaptureAuthorization);
+                    App.Current.ServiceProvider.GetService<CaptureTool.Application.Abstractions.Library.RecentCaptures.IRecentCaptureCatalog>()
+                        .RecordCaptured(options.ImageFilePath, CaptureTool.Domain.Capture.CaptureFileType.Image);
+                }
                 await navigationService.NavigateAsync(
                     NavigationRoute.ImageEdit,
                     new ImageFile(options.ImageFilePath),

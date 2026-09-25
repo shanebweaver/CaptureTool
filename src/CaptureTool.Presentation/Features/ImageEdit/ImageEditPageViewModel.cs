@@ -1,3 +1,4 @@
+using CaptureTool.Application.Abstractions.Capture.Assets;
 using CaptureTool.Application.Abstractions.Ai;
 using CaptureTool.Application.Abstractions.Cancellation;
 using CaptureTool.Application.Abstractions.Clipboard;
@@ -55,6 +56,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     private readonly IImageCanvasPrinter _imageCanvasPrinter;
     private readonly IImageCanvasExporter _imageCanvasExporter;
     private readonly IFilePickerService _filePickerService;
+    private readonly ICaptureNamingService? _captureNames;
     private readonly IImageMetadataService _imageMetadataService;
     private readonly IImageSuperResolutionService _imageSuperResolutionService;
     private readonly IImageSuperResolutionFeatureAvailability _imageSuperResolutionFeatureAvailability;
@@ -756,12 +758,13 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         ITelemetryService? telemetryService = null,
         IScratchArtifactStore? scratchArtifactStore = null,
         IFileSystem? fileSystem = null,
-        ICapturedImageTextReader? capturedImageTextReader = null)
+        ICapturedImageTextReader? capturedImageTextReader = null, ICaptureNamingService? captureNames = null)
     {
         _localizationService = localizationService;
         _cancellationService = cancellationService;
         _imageCanvasPrinter = imageCanvasPrinter;
         _filePickerService = filePickerService;
+        _captureNames = captureNames;
         _imageMetadataService = imageMetadataService;
         _imageSuperResolutionService = imageSuperResolutionService;
         _imageSuperResolutionFeatureAvailability = imageSuperResolutionFeatureAvailability;
@@ -1414,7 +1417,8 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     {
         try
         {
-            FileReference? file = await _filePickerService.PickSaveFileAsync(FilePickerType.Image, UserFolder.Pictures);
+            var name = _captureNames == null || DetailsSourcePath == null ? null : await _captureNames.GetNameAsync(DetailsSourcePath);
+            FileReference? file = await _filePickerService.PickSaveFileAsync(FilePickerType.Image, UserFolder.Pictures, name?.SuggestedFileName());
 
             if (file is null)
             {

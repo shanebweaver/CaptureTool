@@ -41,6 +41,8 @@ public sealed partial class RecentCaptureViewModel : ViewModelBase
 
     public bool CanLoadThumbnail => CaptureFileType is CaptureFileType.Image or CaptureFileType.Video;
 
+    public void SetDisplayName(string name) => FileName = name;
+
     public RecentCaptureViewModel(string temporaryFilePath)
     {
         FilePath = temporaryFilePath;

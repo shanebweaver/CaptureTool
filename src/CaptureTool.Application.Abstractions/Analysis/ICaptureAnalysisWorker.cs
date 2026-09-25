@@ -13,6 +13,8 @@ public interface ICaptureAnalysisWorker
     AnalysisActivitySnapshot Progress { get; }
     /// <summary>Ordered notifications of the latest snapshot; concurrent intermediate updates may be coalesced.</summary>
     event Action<AnalysisActivitySnapshot>? ProgressChanged;
+    /// <summary>Successful durable result publication. Observers enqueue work and recover missed notifications on startup.</summary>
+    event Action<CaptureId, AnalysisCapability>? ResultCommitted;
     Task<bool> EnqueueAsync(AnalysisRequest request, CancellationToken cancellationToken = default);
     /// <summary>One application-lifetime loop. Cancellation suspends unfinished work for a future restart.</summary>
     Task RunAsync(CancellationToken cancellationToken);

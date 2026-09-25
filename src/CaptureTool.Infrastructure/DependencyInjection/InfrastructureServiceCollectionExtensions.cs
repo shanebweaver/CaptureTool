@@ -61,7 +61,9 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddSingleton<ISettingsService, LocalSettingsService>();
         services.AddSingleton<IAppMetricsService, LocalAppMetricsService>();
         services.AddSingleton<IRecentCaptureCatalog, LocalRecentCaptureCatalog>();
-        services.AddSingleton<ICaptureAssetCatalog, LocalCaptureAssetCatalog>();
+        services.AddSingleton<LocalCaptureAssetCatalog>();
+        services.AddSingleton<ICaptureAssetCatalog>(provider => provider.GetRequiredService<LocalCaptureAssetCatalog>());
+        services.AddSingleton<ICaptureNameStore>(provider => provider.GetRequiredService<LocalCaptureAssetCatalog>());
         services.AddSingleton<LocalCaptureAnalysisStore>();
         services.AddSingleton<ICaptureAnalysisStore>(provider => provider.GetRequiredService<LocalCaptureAnalysisStore>());
         services.AddSingleton<ICaptureMetadataReader>(provider => provider.GetRequiredService<LocalCaptureAnalysisStore>());

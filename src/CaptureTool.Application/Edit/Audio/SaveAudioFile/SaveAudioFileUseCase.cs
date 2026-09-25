@@ -1,5 +1,6 @@
 using CaptureTool.Application.Abstractions.Edit.Audio.SaveAudioFile;
 using CaptureTool.Application.Abstractions.Files;
+using CaptureTool.Application.Abstractions.Capture.Assets;
 using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Application.Abstractions.UseCases;
 using CaptureTool.Application.UseCases;
@@ -14,14 +15,16 @@ internal sealed class SaveAudioFileUseCase : ISaveAudioFileUseCase
     private readonly IUseCaseExecutor _useCaseExecutor;
     private readonly IFilePickerService _filePickerService;
     private readonly IFileSystem _fileSystem;
+    private readonly ICaptureNamingService? _names;
 
     public SaveAudioFileUseCase(IFilePickerService filePickerService,
         IFileSystem fileSystem,
-        IUseCaseExecutor useCaseExecutor)
+        IUseCaseExecutor useCaseExecutor, ICaptureNamingService? names = null)
     {
         _useCaseExecutor = useCaseExecutor;
         _filePickerService = filePickerService;
         _fileSystem = fileSystem;
+        _names = names;
     }
 
     public bool CanExecute(SaveAudioFileRequest request)
@@ -43,7 +46,8 @@ internal sealed class SaveAudioFileUseCase : ISaveAudioFileUseCase
                     return new SaveAudioFileResponse(false);
                 }
 
-                FileReference? file = await _filePickerService.PickSaveFileAsync(FilePickerType.Audio, UserFolder.Music);
+                var name = _names == null ? null : await _names.GetNameAsync(request.SourcePath ?? request.AudioFilePath, cancellationToken);
+                FileReference? file = await _filePickerService.PickSaveFileAsync(FilePickerType.Audio, UserFolder.Music, name?.SuggestedFileName());
                 if (file is null)
                 {
                     return new SaveAudioFileResponse(false);
