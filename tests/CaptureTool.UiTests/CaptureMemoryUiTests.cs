@@ -58,12 +58,11 @@ public sealed partial class ImageEditTextExtractionUiTests
         Assert.IsNull(window.FindFirstDescendant(automation.ConditionFactory.ByAutomationId("CaptureMemoryScanning")));
         AutomationElement consent = Element("CaptureMemoryConsent");
         AutomationElement delete = Element("CaptureMemoryDelete");
-        Assert.HasCount(2, window.FindAllDescendants(
-            automation.ConditionFactory.ByControlType(ControlType.CheckBox)), "Analysis and standalone Text Extraction have independent consent checkboxes.");
+        Assert.HasCount(1, window.FindAllDescendants(
+            automation.ConditionFactory.ByControlType(ControlType.CheckBox)), "All local AI features share one consent checkbox.");
         Assert.AreEqual(ToggleState.Off, consent.Patterns.Toggle.Pattern.ToggleState.Value);
         Assert.IsFalse(delete.IsEnabled);
-        Assert.IsFalse(Element("TextExtractionConsent").FindAllDescendants(automation.ConditionFactory.ByControlType(ControlType.Text))
-            .Any(item => !string.IsNullOrEmpty(item.Name) && !item.IsOffscreen), "Standalone OCR consent should be a checkbox without visible label text.");
+        Assert.IsNull(window.FindFirstDescendant(automation.ConditionFactory.ByAutomationId("TextExtractionConsent")));
         Assert.IsFalse(string.IsNullOrWhiteSpace(consent.Name), "Consent needs an accessible name.");
         Assert.AreEqual(resources["CaptureMemory_Consent.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name"], consent.Name);
         Assert.AreEqual(resources["CaptureMemory_Delete.Content"], delete.Name);

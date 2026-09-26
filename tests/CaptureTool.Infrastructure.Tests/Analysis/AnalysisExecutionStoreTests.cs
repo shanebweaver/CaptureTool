@@ -17,6 +17,28 @@ public sealed class AnalysisExecutionStoreTests
     ]);
 
     [TestMethod]
+    public async Task CachedCompletionMustReferenceTheCurrentResultAndCannotReviveClearedWork()
+    {
+        using var environment = new AnalysisTestEnvironment();
+        using var store = environment.CreateStore();
+        var request = Request(environment, await store.GetAdmissionScopeAsync(Ct));
+        await store.AdmitAsync(request, Authorization, Plan, Ct);
+        var first = (await store.GetWorkAsync(request.CaptureId, Ct))!.Token;
+        await store.BindSourceAsync(first, AnalysisTestEnvironment.Revision(), Ct);
+        var result = Result(AnalysisCapability.TextRecognition, request.RequestId);
+        await store.CommitStepAsync(first, new(AnalysisCapability.TextRecognition, AnalyzerOutcomeKind.Succeeded, null), result, Ct);
+        request = request with { RequestId = Guid.NewGuid(), ExpectedRunId = request.RequestId, ReuseExisting = true };
+        await store.AdmitAsync(request, Authorization, Plan, Ct);
+        var next = (await store.GetWorkAsync(request.CaptureId, Ct))!.Token;
+        await store.BindSourceAsync(next, AnalysisTestEnvironment.Revision(), Ct);
+        Assert.IsFalse(await store.CommitStepAsync(next, new(AnalysisCapability.TextRecognition, AnalyzerOutcomeKind.Succeeded, null, Guid.NewGuid()), null, Ct));
+        Assert.IsTrue(await store.CommitStepAsync(next, new(AnalysisCapability.TextRecognition, AnalyzerOutcomeKind.Succeeded, null, result.ResultId), null, Ct));
+        Assert.AreEqual(result.ProducingRunId, (await store.GetAsync(request.CaptureId, cancellationToken: Ct))!.Results.Single().ProducingRunId);
+        await store.ClearAsync(Ct);
+        Assert.IsFalse(await store.CommitStepAsync(next, new(AnalysisCapability.Description, AnalyzerOutcomeKind.Succeeded, null, result.ResultId), null, Ct));
+    }
+
+    [TestMethod]
     public async Task PendingDiscoveryYieldsToClearAndDiscardsWorkFromTheClearedGeneration()
     {
         using var environment = new AnalysisTestEnvironment();

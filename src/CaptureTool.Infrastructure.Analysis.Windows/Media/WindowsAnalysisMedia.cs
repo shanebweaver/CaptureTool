@@ -30,7 +30,11 @@ internal sealed class WindowsAnalysisMedia(IScratchArtifactStore scratch)
     private static async Task<SoftwareBitmap> DecodeAsync(IRandomAccessStream stream, CancellationToken ct)
     {
         BitmapDecoder decoder = await BitmapDecoder.CreateAsync(stream).AsTask(ct).ConfigureAwait(false);
-        if (decoder.PixelWidth == 0 || decoder.PixelHeight == 0) throw new InvalidDataException("Invalid image dimensions.");
+        if (decoder.PixelWidth == 0 || decoder.PixelHeight == 0)
+        {
+            throw new InvalidDataException("Invalid image dimensions.");
+        }
+
         double scale = Math.Min(1, MaximumImageDimension / (double)Math.Max(decoder.PixelWidth, decoder.PixelHeight));
         return await decoder.GetSoftwareBitmapAsync(BitmapPixelFormat.Bgra8, BitmapAlphaMode.Premultiplied,
             new BitmapTransform { ScaledWidth = Math.Max(1, (uint)(decoder.PixelWidth * scale)), ScaledHeight = Math.Max(1, (uint)(decoder.PixelHeight * scale)) },
@@ -44,7 +48,11 @@ internal sealed class WindowsAnalysisMedia(IScratchArtifactStore scratch)
         MediaClip clip = await DecodeSourceAsync(() => MediaClip.CreateFromFileAsync(file).AsTask(ct)).ConfigureAwait(false);
         ValidateDuration(clip.OriginalDuration);
         VideoEncodingProperties format = clip.GetVideoEncodingProperties();
-        if (format.Width == 0 || format.Height == 0) throw new InvalidAnalysisMediaException();
+        if (format.Width == 0 || format.Height == 0)
+        {
+            throw new InvalidAnalysisMediaException();
+        }
+
         double scale = Math.Min(1, MaximumImageDimension / (double)Math.Max(format.Width, format.Height));
         var composition = new MediaComposition();
         composition.Clips.Add(clip);
@@ -69,7 +77,11 @@ internal sealed class WindowsAnalysisMedia(IScratchArtifactStore scratch)
         if (mediaKind == AnalysisMediaKind.Video)
         {
             MediaClip clip = await DecodeSourceAsync(() => MediaClip.CreateFromFileAsync(source).AsTask(ct)).ConfigureAwait(false);
-            if (clip.EmbeddedAudioTracks.Count == 0) yield break;
+            if (clip.EmbeddedAudioTracks.Count == 0)
+            {
+                yield break;
+            }
+
             duration = clip.OriginalDuration;
         }
         else
@@ -95,9 +107,17 @@ internal sealed class WindowsAnalysisMedia(IScratchArtifactStore scratch)
                     MediaEncodingProfile profile = MediaEncodingProfile.CreateWav(AudioEncodingQuality.Low);
                     profile.Audio = AudioEncodingProperties.CreatePcm(16000, 1, 16);
                     PrepareTranscodeResult prepared = await transcoder.PrepareFileTranscodeAsync(source, output, profile).AsTask(ct).ConfigureAwait(false);
-                    if (!prepared.CanTranscode) throw new InvalidAnalysisMediaException();
+                    if (!prepared.CanTranscode)
+                    {
+                        throw new InvalidAnalysisMediaException();
+                    }
+
                     await prepared.TranscodeAsync().AsTask(ct).ConfigureAwait(false);
-                    if (new FileInfo(outputPath).Length > 1024 * 1024) throw new InvalidDataException("Decoded audio exceeds its chunk bound.");
+                    if (new FileInfo(outputPath).Length > 1024 * 1024)
+                    {
+                        throw new InvalidDataException("Decoded audio exceeds its chunk bound.");
+                    }
+
                     yield return new(outputPath, offset, end - offset);
                 }
                 finally { File.Delete(outputPath); }
@@ -108,7 +128,10 @@ internal sealed class WindowsAnalysisMedia(IScratchArtifactStore scratch)
 
     private static void ValidateDuration(TimeSpan duration)
     {
-        if (duration <= TimeSpan.Zero || duration > MaximumDuration) throw new InvalidAnalysisMediaException();
+        if (duration <= TimeSpan.Zero || duration > MaximumDuration)
+        {
+            throw new InvalidAnalysisMediaException();
+        }
     }
 
     private static async Task<T> DecodeSourceAsync<T>(Func<Task<T>> decode)

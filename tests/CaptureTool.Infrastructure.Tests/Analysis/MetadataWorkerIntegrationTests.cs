@@ -86,6 +86,25 @@ public sealed partial class CaptureAnalysisWorkerTests
     }
 
     [TestMethod]
+    [DataRow(AnalyzerAvailability.Ready, false)]
+    [DataRow(AnalyzerAvailability.Unsupported, true)]
+    [DataRow(AnalyzerAvailability.TemporarilyUnavailable, true)]
+    public async Task MetadataFallbackOnlyPreparesAndRunsWhenPreferredIsUnavailable(AnalyzerAvailability readiness, bool usesFallback)
+    {
+        var preferred = new TestProcessor("semantic-preferred") { Availability = readiness };
+        var fallback = new TestProcessor("semantic-fallback") { Availability = AnalyzerAvailability.PreparationRequired };
+        using var fixture = new Fixture(processors: [preferred, fallback]);
+        fixture.Preferred.Execute = (_, _) => Task.FromResult(SourceSuccess(fixture));
+        var request = await fixture.EnqueueAsync(Ct);
+        await DrainAsync(fixture.Worker, Ct);
+        Assert.AreEqual(usesFallback ? 0 : 1, preferred.Calls);
+        Assert.AreEqual(usesFallback ? 1 : 0, fallback.Calls);
+        Assert.AreEqual(usesFallback ? 1 : 0, fallback.Preparations);
+        Assert.AreEqual(usesFallback ? "semantic-fallback" : "semantic-preferred",
+            (await fixture.Store.GetAsync(request.CaptureId, cancellationToken: Ct))!.Results.Last().Producer.AnalyzerId);
+    }
+
+    [TestMethod]
     public async Task InvalidEvidenceIsRejectedBeforePublicationAndFallsBack()
     {
         var bad = new TestProcessor("bad");
@@ -199,13 +218,16 @@ public sealed partial class CaptureAnalysisWorkerTests
         public Func<MetadataProcessorInput, CancellationToken, Task<AnalyzerOutcome>> Execute { get; set; }
         public int Calls { get; private set; }
         public int Probes { get; private set; }
+        public int Preparations { get; private set; }
+        public AnalyzerAvailability Availability { get; set; } = AnalyzerAvailability.Ready;
         public TestProcessor(string id)
         {
             Descriptor = new(id, "1", AnalysisCapability.CaptureSynopsis, [AnalysisCapability.TextRecognition, AnalysisCapability.Transcription],
                 new(10, 1000, 1000, TimeSpan.FromSeconds(5)));
             Execute = (input, _) => Task.FromResult(Success(input));
         }
-        public ValueTask<AnalyzerAvailability> GetAvailabilityAsync(CancellationToken ct) { Probes++; return ValueTask.FromResult(AnalyzerAvailability.Ready); }
+        public ValueTask<AnalyzerAvailability> GetAvailabilityAsync(CancellationToken ct) { Probes++; return ValueTask.FromResult(Availability); }
+        public Task<AnalyzerAvailability> PrepareAsync(IProgress<AnalysisProgress>? progress, CancellationToken ct) { Preparations++; return Task.FromResult(AnalyzerAvailability.Ready); }
         public Task<AnalyzerOutcome> ProcessAsync(MetadataProcessorInput input, CancellationToken ct) { Calls++; return Execute(input, ct); }
         public AnalyzerOutcome Success(MetadataProcessorInput input)
         {

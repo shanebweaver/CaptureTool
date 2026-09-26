@@ -45,7 +45,7 @@ public interface ICaptureMemoryService
     Task SetPreferredPathAsync(string sourcePath, string preferredPath, CancellationToken cancellationToken = default);
     Task SetConsentAsync(bool granted, CancellationToken cancellationToken = default);
     Task<bool> EnsureConsentAsync(CancellationToken cancellationToken = default);
-    /// <summary>Explicitly requests one capability; never called by capture/open/tab lifecycle events.</summary>
+    /// <summary>Explicitly requests an action and its configured prerequisites; never called by capture/open/tab lifecycle events.</summary>
     Task AnalyzeAsync(string path, AnalysisCapability capability, CancellationToken cancellationToken = default);
     Task DeleteMetadataAsync(CancellationToken cancellationToken = default);
     Task RefreshAsync(CancellationToken cancellationToken = default);

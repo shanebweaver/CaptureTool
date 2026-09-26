@@ -1,4 +1,4 @@
-using CaptureTool.Application.Abstractions.Ai;
+﻿using CaptureTool.Application.Abstractions.Ai;
 using CaptureTool.Application.Abstractions.Analysis;
 using CaptureTool.Application.Abstractions.Edit.External;
 using CaptureTool.Application.Abstractions.EditSessions;
@@ -54,7 +54,6 @@ public static class ApplicationServiceCollectionExtensions
         services.AddSingleton<CaptureTool.Application.Abstractions.Capture.Assets.ICaptureNamingService>(provider => provider.GetRequiredService<CaptureTool.Application.Capture.CaptureNamingService>());
         services.AddSingleton<ICaptureMemoryService, CaptureMemoryService>();
         services.AddSingleton<CaptureTool.Application.Abstractions.Analysis.ICaptureAnalysisOnboarding, CaptureTool.Application.Analysis.CaptureAnalysisOnboarding>();
-        services.AddSingleton<CaptureTool.Application.Abstractions.Edit.Image.TextExtraction.ITextExtractionConsentService, CaptureTool.Application.Ai.TextExtractionConsentService>();
         services.AddTransient<CaptureTool.Application.Abstractions.Library.CaptureDetails.ICaptureDetailsReader,
             CaptureTool.Application.Library.CaptureDetails.CaptureDetailsReader>();
         services.AddSingleton<CaptureAnalysisIntake>();

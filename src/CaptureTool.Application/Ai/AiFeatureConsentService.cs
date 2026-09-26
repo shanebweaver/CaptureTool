@@ -1,10 +1,10 @@
-using CaptureTool.Application.Abstractions.Ai;
+﻿using CaptureTool.Application.Abstractions.Ai;
 using CaptureTool.Application.Abstractions.Analysis;
 using CaptureTool.Domain.Ai;
 
 namespace CaptureTool.Application.Ai;
 
-/// <summary>Editor-facing access to the same consent used by automatic capture analysis.</summary>
+/// <summary>Editor-facing access to the same consent used by all local AI actions.</summary>
 internal sealed class AiFeatureConsentService : IAiFeatureConsentService, IDisposable
 {
     private readonly ICaptureMemoryService _memory;

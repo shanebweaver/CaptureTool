@@ -16,7 +16,11 @@ internal sealed class WindowsMediaFileDetailsReader : IMediaFileDetailsReader
     public async Task<FileDetailsMetadata?> ReadAsync(string path, AnalysisMediaKind kind, DateTimeOffset? capturedAt = null, CancellationToken ct = default)
     {
         ct.ThrowIfCancellationRequested();
-        if (!Enum.IsDefined(kind)) return null;
+        if (!Enum.IsDefined(kind))
+        {
+            return null;
+        }
+
         StorageFile file;
         BasicProperties basic;
         try
@@ -41,7 +45,10 @@ internal sealed class WindowsMediaFileDetailsReader : IMediaFileDetailsReader
                     {
                         BitmapDecoder decoder = await BitmapDecoder.CreateAsync(stream).AsTask(ct).ConfigureAwait(false);
                         if (decoder.OrientedPixelWidth > 0 && decoder.OrientedPixelHeight > 0)
+                        {
                             image = new(new(decoder.OrientedPixelWidth, decoder.OrientedPixelHeight), Positive(decoder.DpiX), Positive(decoder.DpiY));
+                        }
+
                         contentType = decoder.DecoderInformation.MimeTypes.FirstOrDefault() ?? contentType;
                     }
                     break;
@@ -52,10 +59,17 @@ internal sealed class WindowsMediaFileDetailsReader : IMediaFileDetailsReader
                     VideoProperties properties = await file.Properties.GetVideoPropertiesAsync().AsTask(ct).ConfigureAwait(false);
                     bool rotated = properties.Orientation is VideoOrientation.Rotate90 or VideoOrientation.Rotate270;
                     if (format.Width > 0 && format.Height > 0)
+                    {
                         video = new(new(rotated ? format.Height : format.Width, rotated ? format.Width : format.Height),
                             format.FrameRate.Denominator > 0 ? Positive(format.FrameRate.Numerator / (double)format.FrameRate.Denominator) : null,
                             Positive(format.Bitrate), Text(format.Subtype));
-                    if (clip.EmbeddedAudioTracks.Count > 0) audio = Audio(clip.EmbeddedAudioTracks[0].GetAudioEncodingProperties());
+                    }
+
+                    if (clip.EmbeddedAudioTracks.Count > 0)
+                    {
+                        audio = Audio(clip.EmbeddedAudioTracks[0].GetAudioEncodingProperties());
+                    }
+
                     break;
                 case AnalysisMediaKind.Audio:
                     BackgroundAudioTrack track = await BackgroundAudioTrack.CreateFromFileAsync(file).AsTask(ct).ConfigureAwait(false);

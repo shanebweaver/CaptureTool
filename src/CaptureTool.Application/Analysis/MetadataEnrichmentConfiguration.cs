@@ -1,4 +1,4 @@
-using CaptureTool.Application.Abstractions.Analysis;
+﻿using CaptureTool.Application.Abstractions.Analysis;
 using CaptureTool.Domain.Analysis;
 using CaptureTool.Domain.Analysis.Payloads;
 
@@ -24,9 +24,9 @@ public sealed record StructuredFactsOptions
 /// <summary>Metadata step order, processor contracts, candidate preferences, and budgets.</summary>
 public static class MetadataEnrichmentConfiguration
 {
-    public static IEnumerable<(MetadataProcessorDescriptor Descriptor, string Alias)> SemanticModels =>
-        TextModels.SelectMany(model => new[] { AnalysisCapability.CaptureSynopsis, AnalysisCapability.CaptureClassification }
-            .Select(capability => (CreateSemantic(model.Id, capability), model.Alias)));
+    public static IEnumerable<MetadataModelRegistration> SemanticModels =>
+        TextModels.SelectMany(model => new[] { AnalysisCapability.CaptureSynopsis, AnalysisCapability.CaptureClassification, AnalysisCapability.ImageAltText }
+            .Select(capability => new MetadataModelRegistration(CreateSemantic(model.Id, capability), model.Backend, model.Alias)));
     public static IEnumerable<AnalysisStep> Steps
     {
         get
@@ -40,9 +40,14 @@ public static class MetadataEnrichmentConfiguration
             }
         }
     }
+    public static AnalysisStep AltTextStep => new(AnalysisCapability.ImageAltText,
+        TextModels.Select(model => CreateSemantic(model.Id, AnalysisCapability.ImageAltText).Id),
+        TimeSpan.FromMinutes(10), TimeSpan.FromMinutes(2));
+
     public static StructuredFactsOptions StructuredFacts { get; } = new(new(2048, 131072, 32768, TimeSpan.FromSeconds(2)), 256, 16);
     public static IReadOnlyList<LocalTextModelDefinition> TextModels { get; } = Array.AsReadOnly(new[]
     {
+        new LocalTextModelDefinition("windows-language-model", null, MetadataModelBackend.WindowsLanguageModel),
         new LocalTextModelDefinition("foundry-phi4-mini", "phi-4-mini"),
     });
 
@@ -50,9 +55,12 @@ public static class MetadataEnrichmentConfiguration
     {
         string suffix = capability == AnalysisCapability.CaptureSynopsis ? "synopsis" :
             capability == AnalysisCapability.CaptureClassification ? "classification" :
+            capability == AnalysisCapability.ImageAltText ? "alt-text" :
             throw new ArgumentException("Unsupported semantic capability.", nameof(capability));
-        return new(modelId + "-" + suffix, "1", capability,
-            [AnalysisCapability.TextRecognition, AnalysisCapability.Transcription, AnalysisCapability.Description, AnalysisCapability.QrCodeDetection],
+        return new(modelId + "-" + suffix, "3", capability,
+            capability == AnalysisCapability.ImageAltText
+                ? [AnalysisCapability.Description, AnalysisCapability.TextRecognition]
+                : [AnalysisCapability.Description, AnalysisCapability.TextRecognition, AnalysisCapability.Transcription, AnalysisCapability.QrCodeDetection],
             new(64, 4096, 1024, TimeSpan.FromMinutes(2)));
     }
 
@@ -62,4 +70,4 @@ public static class MetadataEnrichmentConfiguration
             limits);
 }
 
-public sealed record LocalTextModelDefinition(string Id, string Alias);
+public sealed record LocalTextModelDefinition(string Id, string? Alias, MetadataModelBackend Backend = MetadataModelBackend.FoundryLocal);

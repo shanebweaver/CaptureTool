@@ -1,4 +1,4 @@
-using CaptureTool.Application.Abstractions.Analysis;
+﻿using CaptureTool.Application.Abstractions.Analysis;
 using CaptureTool.Application.Abstractions.Capture.Assets;
 using CaptureTool.Application.Abstractions.Logging;
 using CaptureTool.Domain;
@@ -296,6 +296,24 @@ public sealed class CaptureAnalysisWorker : ICaptureAnalysisWorker, IDisposable
             ct.ThrowIfCancellationRequested();
             AnalysisWorkItem? current = await _store.GetWorkAsync(work.Token.CaptureId, ct).ConfigureAwait(false);
             if (current?.Token != work.Token || !current.Run.IsPending) return;
+            if (work.ReuseExisting)
+            {
+                CaptureAnalysisRecord? saved = await _store.GetAsync(work.Token.CaptureId, source.Revision, ct).ConfigureAwait(false);
+                AnalysisResult? reusable = saved?.Results.SingleOrDefault(result => result.Payload.Capability == plan.Steps[index].Capability);
+                if (reusable != null)
+                {
+                    if (!await VerifySourceAsync(source, ct).ConfigureAwait(false))
+                    {
+                        await _store.FinishAsync(work.Token, AnalysisRunStatus.InvalidSource, shutdown).ConfigureAwait(false);
+                        return;
+                    }
+                    using IAnalysisAuthorizationLease reuseGrant = await _authorization.AcquireAsync(ct).ConfigureAwait(false);
+                    if (Permits(reuseGrant, work))
+                        await _store.CommitStepAsync(work.Token, new(plan.Steps[index].Capability,
+                            AnalyzerOutcomeKind.Succeeded, null, reusable.ResultId), null, ct).ConfigureAwait(false);
+                    return;
+                }
+            }
             CaptureAnalysisRecord? metadata = _processors.ContainsKey(plan.Steps[index].Candidates[0])
                 ? await _store.GetAsync(work.Token.CaptureId, source.Revision, ct).ConfigureAwait(false) : null;
             var (outcome, derivation) = await ExecuteStepAsync(plan.Steps[index], work, input, metadata, remaining, index, plan.Steps.Count, ct).ConfigureAwait(false);
@@ -481,7 +499,12 @@ public sealed class CaptureAnalysisWorker : ICaptureAnalysisWorker, IDisposable
         // Revocation is immediate; third-party callbacks must not block or fail a clear/cancel command.
         try { if (source != null) _ = ObserveAsync(source.CancelAsync()); } catch (ObjectDisposedException) { }
     }
-    private void Signal() { try { _signal.Release(); } catch (SemaphoreFullException) { } }
+    private void Signal()
+    {
+        // Serialize producers; the consumer can only lower the count. Coalesce wakeups
+        // without throwing a first-chance exception for an already pending signal.
+        lock (_signal) { if (_signal.CurrentCount == 0) _signal.Release(); }
+    }
     private long AdvanceProgressVersion()
     {
         lock (_progressLock) { return ++_progressVersion; }

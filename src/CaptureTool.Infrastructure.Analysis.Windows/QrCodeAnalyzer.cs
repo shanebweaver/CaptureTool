@@ -28,7 +28,11 @@ internal sealed class QrCodeAnalyzer(string id, AnalysisMediaKind mediaKind, Win
     public async Task<AnalyzerOutcome> AnalyzeAsync(AnalysisInput input, IProgress<AnalysisProgress>? progress, CancellationToken ct)
     {
         ct.ThrowIfCancellationRequested();
-        if (input.MediaKind != mediaKind) return AnalyzerOutcome.Unsuccessful(AnalyzerOutcomeKind.Unsupported, "unsupported-media");
+        if (input.MediaKind != mediaKind)
+        {
+            return AnalyzerOutcome.Unsuccessful(AnalyzerOutcomeKind.Unsupported, "unsupported-media");
+        }
+
         try
         {
             List<DecodedQrCode> codes = [];
@@ -41,15 +45,23 @@ internal sealed class QrCodeAnalyzer(string id, AnalysisMediaKind mediaKind, Win
             {
                 const int maximumFrames = 64;
                 int count = 0;
-                await foreach (var frame in media.ReadFramesAsync(input.SourcePath, maximumFrames, TimeSpan.FromSeconds(5), ct).ConfigureAwait(false))
+                await foreach (var (Bitmap, Timestamp) in media.ReadFramesAsync(input.SourcePath, maximumFrames, TimeSpan.FromSeconds(5), ct).ConfigureAwait(false))
                 {
-                    codes.AddRange(Decode(frame.Bitmap, frame.Timestamp, ct));
-                    if (codes.Count > MaximumCodes) return AnalyzerOutcome.Unsuccessful(AnalyzerOutcomeKind.Failed, "output-limit");
+                    codes.AddRange(Decode(Bitmap, Timestamp, ct));
+                    if (codes.Count > MaximumCodes)
+                    {
+                        return AnalyzerOutcome.Unsuccessful(AnalyzerOutcomeKind.Failed, "output-limit");
+                    }
+
                     progress?.Report(new(AnalysisProgressStage.Analyzing, ++count / (double)maximumFrames));
                 }
             }
             ct.ThrowIfCancellationRequested();
-            if (codes.Count > MaximumCodes) return AnalyzerOutcome.Unsuccessful(AnalyzerOutcomeKind.Failed, "output-limit");
+            if (codes.Count > MaximumCodes)
+            {
+                return AnalyzerOutcome.Unsuccessful(AnalyzerOutcomeKind.Failed, "output-limit");
+            }
+
             return AnalyzerOutcome.Success(new QrCodeMetadata(codes),
                 new(id, "zxing", "qr-code-decoder", "1", typeof(ZXing.BarcodeReaderGeneric).Assembly.GetName().Version?.ToString()));
         }

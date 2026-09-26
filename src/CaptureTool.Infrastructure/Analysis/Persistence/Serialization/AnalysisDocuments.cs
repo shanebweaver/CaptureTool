@@ -17,7 +17,8 @@ internal sealed record ResultDocument(string Capability, int SchemaVersion, Prod
     [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] FactDocument[]? Facts = null,
     [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] CoverageDocument? Coverage = null,
     [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] SynopsisDocument? Synopsis = null,
-    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] ClassificationDocument? Classification = null);
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] ClassificationDocument? Classification = null,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] AltTextDocument? AltText = null);
 
 internal sealed record InputReferenceDocument(CapabilityDocument Capability, Guid? ResultId);
 internal sealed record EvidenceDocument(Guid ResultId, int EntryIndex, int Start, int Length);
@@ -25,13 +26,15 @@ internal sealed record FactDocument(int Kind, string Value, EvidenceDocument[] E
 internal sealed record CoverageDocument(long AvailableEntries, int IncludedEntries, int IncludedCharacters, int Limits);
 internal sealed record SuggestedTextDocument(string Text, EvidenceDocument[] Evidence);
 internal sealed record SynopsisDocument(SuggestedTextDocument? Title, SuggestedTextDocument[] Summary);
+internal sealed record AltTextDocument(SuggestedTextDocument? Suggestion);
 internal sealed record ClassificationDocument(string VocabularyVersion, int? Category, EvidenceDocument[] Evidence, SuggestedTextDocument[] Topics);
 
 internal sealed record RunDocument(Guid Id, Guid AuthorizationId, long QueueOrder, string PlanVersion,
     string SourcePath, string? Language, string? SourceSha256, int Status, CapabilityDocument[] Steps,
-    StepCompletionDocument[] CompletedSteps);
+    StepCompletionDocument[] CompletedSteps, bool ReuseExisting = false);
 internal sealed record CapabilityDocument(string Name, int SchemaVersion);
-internal sealed record StepCompletionDocument(CapabilityDocument Capability, int Outcome, string? FailureCode);
+internal sealed record StepCompletionDocument(CapabilityDocument Capability, int Outcome, string? FailureCode,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] Guid? ReusedResultId = null);
 
 internal sealed record ProducerDocument(string AnalyzerId, string ProviderId, string ModelId,
     string AdapterVersion, string? ModelVersion);

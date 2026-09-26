@@ -24,7 +24,10 @@ internal sealed class FileDetailsAnalyzer(CaptureTool.Application.Abstractions.L
     public async Task<AnalyzerOutcome> AnalyzeAsync(AnalysisInput input, IProgress<AnalysisProgress>? progress, CancellationToken ct)
     {
         if (!Descriptor.SupportedMedia.Contains(input.MediaKind))
+        {
             return AnalyzerOutcome.Unsuccessful(AnalyzerOutcomeKind.Unsupported, "unsupported-media");
+        }
+
         FileDetailsMetadata? properties = await (files ?? new WindowsMediaFileDetailsReader())
             .ReadAsync(input.SourcePath, input.MediaKind, input.CapturedAt, ct).ConfigureAwait(false);
         return properties == null

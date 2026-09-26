@@ -1,4 +1,4 @@
-using CaptureTool.Application.Abstractions.Edit.Image.Rendering;
+﻿using CaptureTool.Application.Abstractions.Edit.Image.Rendering;
 using CaptureTool.Application.Abstractions.Edit.Image.TextExtraction;
 using CaptureTool.Application.Abstractions.Localization;
 using CaptureTool.Application.Abstractions.Logging;
@@ -32,7 +32,7 @@ internal static class UiTestServiceCollectionExtensions
         services.AddSingleton<IMetadataProcessor, StructuredFactsProcessor>();
         foreach (var model in MetadataEnrichmentConfiguration.SemanticModels)
             services.AddSingleton<IMetadataProcessor>(new UiTestMetadataProcessor(model.Descriptor));
-        var metadataIds = MetadataEnrichmentConfiguration.Steps.SelectMany(step => step.Candidates).ToHashSet(StringComparer.Ordinal);
+        var metadataIds = MetadataEnrichmentConfiguration.Steps.Append(MetadataEnrichmentConfiguration.AltTextStep).SelectMany(step => step.Candidates).ToHashSet(StringComparer.Ordinal);
         foreach (var group in CaptureAnalysisConfiguration.CreateDefault().Plans
             .SelectMany(plan => plan.Steps.SelectMany(step => step.Candidates.Select(id => new { Id = id, step.Capability, plan.MediaKind })))
             .Where(candidate => !metadataIds.Contains(candidate.Id))
@@ -55,6 +55,8 @@ internal static class UiTestServiceCollectionExtensions
             AnalysisPayload payload = descriptor.Capability == AnalysisCapability.CaptureSynopsis
                 ? new CaptureSynopsisMetadata(new("Contoso invoice", evidence),
                     [new("Invoice INV-2048 totals USD 125.00 and is due on 2026-10-15.", evidence)], input.Coverage)
+                : descriptor.Capability == AnalysisCapability.ImageAltText
+                ? new ImageAltTextMetadata(new("Invoice INV-2048 from Contoso showing a total of USD 125.00, due October 15, 2026.", evidence), input.Coverage)
                 : new CaptureClassificationMetadata(CaptureCategory.Document, evidence, [new("invoice", evidence)], input.Coverage);
             return Task.FromResult(AnalyzerOutcome.Success(payload, new(descriptor.Id, "ui-test", "fixture", "1")));
         }

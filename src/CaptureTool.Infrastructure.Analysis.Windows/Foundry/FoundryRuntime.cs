@@ -5,7 +5,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 
 namespace CaptureTool.Infrastructure.Analysis.Windows.Foundry;
 
-internal sealed class FoundryRuntime(IStorageService storage) : IAnalysisResources, IDisposable
+internal sealed partial class FoundryRuntime(IStorageService storage) : IAnalysisResources, IDisposable
 {
     private readonly SemaphoreSlim _gate = new(1, 1);
     private readonly SemaphoreSlim _modelGate = new(1, 1);
@@ -43,7 +43,11 @@ internal sealed class FoundryRuntime(IStorageService storage) : IAnalysisResourc
 
     private async Task UnloadAsync()
     {
-        if (_loadedModel == null) return;
+        if (_loadedModel == null)
+        {
+            return;
+        }
+
         _modelReady = false;
         // Keep ownership if unloading fails; never load a second model on top of it.
         await _loadedModel.UnloadAsync(CancellationToken.None).ConfigureAwait(false);
@@ -54,7 +58,11 @@ internal sealed class FoundryRuntime(IStorageService storage) : IAnalysisResourc
     {
         public async ValueTask DisposeAsync()
         {
-            try { if (ct.IsCancellationRequested) await owner.UnloadAsync().ConfigureAwait(false); }
+            try { if (ct.IsCancellationRequested)
+                {
+                    await owner.UnloadAsync().ConfigureAwait(false);
+                }
+            }
             finally { owner._modelGate.Release(); }
         }
     }
@@ -83,7 +91,11 @@ internal sealed class FoundryRuntime(IStorageService storage) : IAnalysisResourc
             ICatalog catalog = await _manager.GetCatalogAsync(ct).ConfigureAwait(false);
             IModel? model = await catalog.GetModelAsync(alias, ct).ConfigureAwait(false);
             IModel? cpu = model?.Variants.FirstOrDefault(variant => variant.Info.Runtime?.DeviceType == DeviceType.CPU);
-            if (model == null || cpu == null) return null;
+            if (model == null || cpu == null)
+            {
+                return null;
+            }
+
             model.SelectVariant(cpu);
             return model;
         }
@@ -97,14 +109,21 @@ internal sealed class FoundryRuntime(IStorageService storage) : IAnalysisResourc
 
     private async Task<Uri> StartServiceAsync(string path, CancellationToken ct)
     {
-        if (!_ownsManager || _manager == null) throw new InvalidOperationException("Inference requires an application-owned runtime.");
+        if (!_ownsManager || _manager == null)
+        {
+            throw new InvalidOperationException("Inference requires an application-owned runtime.");
+        }
+
         try
         {
             await _manager.StartWebServiceAsync(ct).ConfigureAwait(false);
             string address = _manager.Urls?.Single() ?? throw new InvalidOperationException("Inference endpoint is unavailable.");
             var endpoint = new Uri(address, UriKind.Absolute);
             if (endpoint.Scheme != "http" || endpoint.Host != "127.0.0.1" || endpoint.Port <= 0)
+            {
                 throw new InvalidOperationException("Inference endpoint must be local.");
+            }
+
             return new Uri(endpoint, path);
         }
         catch { await StopServiceAsync().ConfigureAwait(false); throw; }
@@ -114,7 +133,11 @@ internal sealed class FoundryRuntime(IStorageService storage) : IAnalysisResourc
 
     public void Dispose()
     {
-        if (_ownsManager) _manager?.Dispose();
+        if (_ownsManager)
+        {
+            _manager?.Dispose();
+        }
+
         _gate.Dispose();
     }
 }

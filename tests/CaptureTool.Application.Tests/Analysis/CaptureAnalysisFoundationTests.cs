@@ -52,9 +52,12 @@ public sealed class CaptureAnalysisFoundationTests
         CollectionAssert.AreEqual(new[] { "windows-image-description", "foundry-local-image-description" }, image.Steps.Single(step => step.Capability == AnalysisCapability.Description).Candidates.ToArray());
         Assert.AreEqual(AnalysisCapability.QrCodeDetection, image.Steps[1].Capability);
         Assert.AreEqual("zxing-image-qr", image.Steps[1].Candidates.Single());
-        Assert.AreEqual("image-v5", image.Version);
-        Assert.AreEqual("video-v5", video.Version);
-        Assert.AreEqual("audio-v3", configuration.Plans.Single(plan => plan.MediaKind == AnalysisMediaKind.Audio).Version);
+        Assert.AreEqual("image-v8", image.Version);
+        Assert.AreEqual(AnalysisCapability.ImageAltText, image.Steps.Last().Capability);
+        CollectionAssert.AreEqual(new[] { AnalysisCapability.TextRecognition, AnalysisCapability.Description, AnalysisCapability.CaptureSynopsis },
+            configuration.SelectPlan(AnalysisMediaKind.Image, CaptureAnalysisConfiguration.ForAction(AnalysisMediaKind.Image, AnalysisCapability.CaptureSynopsis)).Steps.Select(step => step.Capability).ToArray());
+        Assert.AreEqual("video-v7", video.Version);
+        Assert.AreEqual("audio-v5", configuration.Plans.Single(plan => plan.MediaKind == AnalysisMediaKind.Audio).Version);
         foreach (var plan in configuration.Plans)
         {
             Assert.AreEqual(AnalysisCapability.FileDetails, plan.Steps[0].Capability);

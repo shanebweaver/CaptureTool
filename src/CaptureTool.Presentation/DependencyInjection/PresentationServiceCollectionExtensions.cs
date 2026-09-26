@@ -1,4 +1,4 @@
-using CaptureTool.Application.Abstractions.Localization;
+﻿using CaptureTool.Application.Abstractions.Localization;
 using CaptureTool.Application.Abstractions.Themes;
 using CaptureTool.Domain.Capture;
 using CaptureTool.Presentation.Factories;
@@ -31,7 +31,6 @@ public static class PresentationServiceCollectionExtensions
         services.AddSingleton<IAudioWaveformHistory, AudioWaveformHistory>();
         services.AddSingleton<IAppNotificationService, AppNotificationService>();
         services.AddSingleton<CaptureMemoryViewModel>();
-        services.AddSingleton<TextExtractionConsentViewModel>();
 
         // ViewModels
         services.AddTransient<MainWindowViewModel>();

@@ -1,4 +1,4 @@
-using CaptureTool.Application.Abstractions.Analysis;
+﻿using CaptureTool.Application.Abstractions.Analysis;
 using CaptureTool.Domain;
 using CaptureTool.Domain.Analysis;
 using CaptureTool.Infrastructure.Analysis.Persistence.Serialization;
@@ -110,7 +110,7 @@ internal sealed partial class LocalCaptureAnalysisStore
             if (prior?.Run is { } existing && existing.Id == request.RequestId)
                 return OwnsRequest(new(request.CaptureId, control.Generation, request.RequestId)) &&
                     existing.AuthorizationId == authorizationId && existing.PlanVersion == plan.Version &&
-                    existing.SourcePath == path && existing.Language == request.Language && prior.MediaKind == (int)request.MediaKind &&
+                    existing.ReuseExisting == request.ReuseExisting && existing.SourcePath == path && existing.Language == request.Language && prior.MediaKind == (int)request.MediaKind &&
                     existing.Steps.Select(step => new AnalysisCapability(step.Name, step.SchemaVersion)).SequenceEqual(plan.Steps.Select(step => step.Capability));
             if ((prior?.Run?.Id ?? prior?.RunId) != request.ExpectedRunId) return false;
             if (prior != null && prior.MediaKind != (int)request.MediaKind) throw new InvalidOperationException("Capture media kind cannot change.");
@@ -120,7 +120,7 @@ internal sealed partial class LocalCaptureAnalysisStore
             await _documents.WriteAsync(_controlPath, control with { Version = 2, QueueOrder = run.QueueOrder },
                 AnalysisJsonContext.Default.AnalysisControlDocument, cancellationToken).ConfigureAwait(false);
             AnalysisDocument next = (prior ?? new(2, request.CaptureId.Value, (int)request.MediaKind, null,
-                plan.Version, request.RequestId, [])) with { Version = 2, Run = ToDocument(run, path, request.Language) };
+                plan.Version, request.RequestId, [])) with { Version = 2, Run = ToDocument(run, path, request.Language, request.ReuseExisting) };
             await WriteDocumentAsync(control.Generation, next, cancellationToken).ConfigureAwait(false);
             _sessionRequests[request.CaptureId] = new(request.CaptureId, control.Generation, request.RequestId);
             return true;
@@ -144,7 +144,7 @@ internal sealed partial class LocalCaptureAnalysisStore
                 : AnalysisDocumentMapper.ToRecord(document).StartRun(revision, run.PlanVersion, run.Id);
             AnalysisDocument next = AnalysisDocumentMapper.ToDocument(record) with
             {
-                Version = 2, Run = ToDocument(run.BindSource(revision), document.Run!.SourcePath, document.Run.Language),
+                Version = 2, Run = ToDocument(run.BindSource(revision), document.Run!.SourcePath, document.Run.Language, document.Run.ReuseExisting),
             };
             await WriteDocumentAsync(token.Generation, next, cancellationToken).ConfigureAwait(false);
             return true;
@@ -156,7 +156,7 @@ internal sealed partial class LocalCaptureAnalysisStore
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(step);
-        if (step.Outcome == AnalyzerOutcomeKind.Succeeded ? result == null : result != null)
+        if (step.ReusedResultId != null ? result != null : step.Outcome == AnalyzerOutcomeKind.Succeeded ? result == null : result != null)
             throw new ArgumentException("Only success must publish a payload.", nameof(result));
         if (result != null && (result.Payload.Capability != step.Capability || result.ProducingRunId != token.RunId))
             throw new ArgumentException("Result does not belong to this step/run.", nameof(result));
@@ -168,11 +168,13 @@ internal sealed partial class LocalCaptureAnalysisStore
             AnalysisRun run = ToWork(token.Generation, document).Run;
             if (run.Status != AnalysisRunStatus.Running || run.Steps[run.CompletedSteps.Count] != step.Capability) return false;
             CaptureAnalysisRecord record = AnalysisDocumentMapper.ToRecord(document);
+            if (step.ReusedResultId != null && (!document.Run!.ReuseExisting ||
+                !record.Results.Any(saved => saved.ResultId == step.ReusedResultId && saved.Payload.Capability == step.Capability))) return false;
             if (result != null && !record.HasCurrentInputs(result)) return false;
             if (result != null) record = record.WithResult(result);
             AnalysisDocument next = AnalysisDocumentMapper.ToDocument(record) with
             {
-                Version = 2, Run = ToDocument(run.CompleteStep(step), document.Run!.SourcePath, document.Run.Language),
+                Version = 2, Run = ToDocument(run.CompleteStep(step), document.Run!.SourcePath, document.Run.Language, document.Run.ReuseExisting),
             };
             await WriteDocumentAsync(token.Generation, next, cancellationToken).ConfigureAwait(false);
             if (!ToWork(token.Generation, next).Run.IsPending) _sessionRequests.Remove(token.CaptureId);
@@ -192,7 +194,7 @@ internal sealed partial class LocalCaptureAnalysisStore
             if (!run.IsPending) return false;
             await WriteDocumentAsync(token.Generation, document with
             {
-                Run = ToDocument(run.Finish(status), document.Run!.SourcePath, document.Run.Language),
+                Run = ToDocument(run.Finish(status), document.Run!.SourcePath, document.Run.Language, document.Run.ReuseExisting),
             }, cancellationToken).ConfigureAwait(false);
             _sessionRequests.Remove(token.CaptureId);
             return true;
@@ -230,7 +232,7 @@ internal sealed partial class LocalCaptureAnalysisStore
                 throw new InvalidDataException("Execution and metadata disagree.");
             foreach (AnalysisStepCompletion step in run.CompletedSteps.Where(step => step.Outcome == AnalyzerOutcomeKind.Succeeded))
                 if (!document.Results.Any(result => result.Capability == step.Capability.Name && result.SchemaVersion == step.Capability.SchemaVersion &&
-                    result.ProducingRunId == run.Id && result.PlanVersion == run.PlanVersion))
+                    (step.ReusedResultId != null ? result.ResultId == step.ReusedResultId : result.ProducingRunId == run.Id && result.PlanVersion == run.PlanVersion)))
                     throw new InvalidDataException("A completed successful step requires its atomic result.");
         }
         return document;
@@ -254,14 +256,14 @@ internal sealed partial class LocalCaptureAnalysisStore
                     run.SourceSha256 == null ? null : new SourceRevision(run.SourceSha256), (AnalysisRunStatus)run.Status,
                     run.Steps.Select(step => new AnalysisCapability(step.Name, step.SchemaVersion)),
                     run.CompletedSteps.Select(step => new AnalysisStepCompletion(new(step.Capability.Name, step.Capability.SchemaVersion),
-                        (AnalyzerOutcomeKind)step.Outcome, step.FailureCode))));
+                        (AnalyzerOutcomeKind)step.Outcome, step.FailureCode, step.ReusedResultId))), run.ReuseExisting);
         }
         catch (ArgumentException exception) { throw new InvalidDataException("Invalid execution state.", exception); }
     }
 
-    private static RunDocument ToDocument(AnalysisRun run, string sourcePath, string? language) =>
+    private static RunDocument ToDocument(AnalysisRun run, string sourcePath, string? language, bool reuseExisting) =>
         new(run.Id, run.AuthorizationId, run.QueueOrder, run.PlanVersion, sourcePath, language, run.SourceRevision?.Sha256,
             (int)run.Status, run.Steps.Select(step => new CapabilityDocument(step.Name, step.SchemaVersion)).ToArray(),
             run.CompletedSteps.Select(step => new StepCompletionDocument(new(step.Capability.Name, step.Capability.SchemaVersion),
-                (int)step.Outcome, step.FailureCode)).ToArray());
+                (int)step.Outcome, step.FailureCode, step.ReusedResultId)).ToArray(), reuseExisting);
 }

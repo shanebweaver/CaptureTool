@@ -37,7 +37,7 @@
                 <TextBlock Grid.Column="1" x:Uid="CaptureWelcome_Recording" TextWrapping="Wrap" />
             </Grid>
             <Grid ColumnSpacing="12"><Grid.ColumnDefinitions><ColumnDefinition Width="28" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
-                <FontIcon Glyph="&#xE70F;" FontSize="20" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
+                <FontIcon Glyph="&#xE8D6;" FontSize="20" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
                 <TextBlock Grid.Column="1" x:Uid="CaptureWelcome_Names" TextWrapping="Wrap" />
             </Grid>
         </StackPanel>

@@ -772,24 +772,9 @@
                         </Grid>
                     </StackPanel>
 
-                    <!-- Capture analysis and the independent image-toolbar tool have separate consent. -->
+                    <!-- One consent controls all local AI features. -->
                     <StackPanel Spacing="4" AutomationProperties.AutomationId="CaptureMemorySettings">
                         <TextBlock x:Uid="CaptureMemory_SettingsHeader" Margin="0,4" />
-                        <Grid Padding="16,12" Background="{ThemeResource CardBackgroundFillColorDefault}"
-                              BorderBrush="{ThemeResource CardStrokeColorDefault}" BorderThickness="1" ColumnSpacing="16" CornerRadius="4"
-                              Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(TextExtractionConsent.IsVisible), Mode=OneWay}">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto" /><ColumnDefinition /><ColumnDefinition Width="Auto" /><ColumnDefinition Width="28" />
-                            </Grid.ColumnDefinitions>
-                            <FontIcon Glyph="&#xE8D2;" />
-                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                <TextBlock x:Uid="TextExtractionSettings_Header" TextWrapping="WrapWholeWords" />
-                                <TextBlock x:Uid="TextExtractionSettings_Description" FontSize="12" Opacity=".75" TextWrapping="WrapWholeWords" />
-                            </StackPanel>
-                            <CheckBox x:Uid="TextExtractionSettings_Consent" Grid.Column="2" MinWidth="0" HorizontalAlignment="Right"
-                                      AutomationProperties.AutomationId="TextExtractionConsent"
-                                      IsChecked="{x:Bind TextExtractionConsent.ConsentGranted, Mode=OneWay}" Click="TextExtractionConsent_Click" />
-                        </Grid>
                         <Grid Padding="16,12" Background="{ThemeResource CardBackgroundFillColorDefault}"
                               BorderBrush="{ThemeResource CardStrokeColorDefault}" BorderThickness="1" ColumnSpacing="16" CornerRadius="4">
                             <Grid.ColumnDefinitions>

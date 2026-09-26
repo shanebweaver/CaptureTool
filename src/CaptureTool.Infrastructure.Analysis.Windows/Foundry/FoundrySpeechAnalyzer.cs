@@ -23,7 +23,10 @@ internal sealed class FoundrySpeechAnalyzer(string id, string alias, bool stream
         if (mediaKind is not (AnalysisMediaKind.Audio or AnalysisMediaKind.Video) ||
             !OperatingSystem.IsWindowsVersionAtLeast(10, 0, 26100) ||
             RuntimeInformation.ProcessArchitecture is not (Architecture.X64 or Architecture.Arm64) || !SupportsLanguage(language))
+        {
             return AnalyzerAvailability.Unsupported;
+        }
+
         return _model != null && await _model.IsCachedAsync(cancellationToken).ConfigureAwait(false)
             ? AnalyzerAvailability.Ready : AnalyzerAvailability.PreparationRequired;
     }
@@ -31,10 +34,17 @@ internal sealed class FoundrySpeechAnalyzer(string id, string alias, bool stream
     public async Task<AnalyzerAvailability> PrepareAsync(IProgress<AnalysisProgress>? progress, CancellationToken cancellationToken)
     {
         _model = await runtime.ResolveAsync(alias, cancellationToken).ConfigureAwait(false);
-        if (_model == null) return AnalyzerAvailability.Unsupported;
+        if (_model == null)
+        {
+            return AnalyzerAvailability.Unsupported;
+        }
+
         if (!await _model.IsCachedAsync(cancellationToken).ConfigureAwait(false))
+        {
             await _model.DownloadAsync(value => progress?.Report(new(AnalysisProgressStage.Preparing,
                 double.IsFinite(value) ? Math.Clamp(value / 100d, 0, 1) : null)), cancellationToken).ConfigureAwait(false);
+        }
+
         progress?.Report(new(AnalysisProgressStage.Preparing, 1));
         return AnalyzerAvailability.Ready;
     }
@@ -47,9 +57,17 @@ internal sealed class FoundrySpeechAnalyzer(string id, string alias, bool stream
 
     private async Task<AnalyzerOutcome> AnalyzeCoreAsync(AnalysisInput input, IProgress<AnalysisProgress>? progress, CancellationToken cancellationToken)
     {
-        if (!SupportsLanguage(input.Language)) return AnalyzerOutcome.Unsuccessful(AnalyzerOutcomeKind.Unsupported, "unsupported-language");
+        if (!SupportsLanguage(input.Language))
+        {
+            return AnalyzerOutcome.Unsuccessful(AnalyzerOutcomeKind.Unsupported, "unsupported-language");
+        }
+
         IModel? model = _model;
-        if (model == null) return AnalyzerOutcome.Unsuccessful(AnalyzerOutcomeKind.TemporarilyUnavailable, "model-not-prepared");
+        if (model == null)
+        {
+            return AnalyzerOutcome.Unsuccessful(AnalyzerOutcomeKind.TemporarilyUnavailable, "model-not-prepared");
+        }
+
         await using (await runtime.AcquireModelAsync(model, cancellationToken).ConfigureAwait(false))
         {
             OpenAIAudioClient client = await model.GetAudioClientAsync(cancellationToken).ConfigureAwait(false);
@@ -75,10 +93,16 @@ internal sealed class FoundrySpeechAnalyzer(string id, string alias, bool stream
                     client.Settings.Language = string.IsNullOrWhiteSpace(input.Language) ? "auto" : NeutralLanguage(input.Language);
                     client.Settings.Temperature = 0;
                     var response = await client.TranscribeAudioAsync(chunk.Path, cancellationToken).ConfigureAwait(false);
-                    if (!response.Successful || response.Text == null) return AnalyzerOutcome.Unsuccessful(AnalyzerOutcomeKind.Failed, "invalid-transcript");
+                    if (!response.Successful || response.Text == null)
+                    {
+                        return AnalyzerOutcome.Unsuccessful(AnalyzerOutcomeKind.Failed, "invalid-transcript");
+                    }
+
                     language ??= response.Language;
                     if (!string.IsNullOrWhiteSpace(response.Text))
+                    {
                         transcript.Add(response.Text.Trim(), chunk.Offset, chunk.Offset + chunk.Duration);
+                    }
                 }
                 progress?.Report(new(AnalysisProgressStage.Analyzing));
             }
@@ -106,7 +130,10 @@ internal sealed class FoundrySpeechAnalyzer(string id, string alias, bool stream
             // one-second pushes, even after StopAsync completes.
             const int blockBytes = 16000 * 2 / 10;
             for (int offset = 0; offset < samples.Length; offset += blockBytes)
+            {
                 await session.AppendAsync(samples.Slice(offset, Math.Min(blockBytes, samples.Length - offset)), streamCancellation.Token).ConfigureAwait(false);
+            }
+
             await session.StopAsync(streamCancellation.Token).ConfigureAwait(false);
             await consume.ConfigureAwait(false);
         }
@@ -123,9 +150,17 @@ internal sealed class FoundrySpeechAnalyzer(string id, string alias, bool stream
             {
                 await foreach (LiveAudioTranscriptionResponse response in session.GetStream(streamCancellation.Token).ConfigureAwait(false))
                 {
-                    if (!response.IsFinal) continue;
+                    if (!response.IsFinal)
+                    {
+                        continue;
+                    }
+
                     string? text = response.Content?.FirstOrDefault()?.Text;
-                    if (string.IsNullOrWhiteSpace(text)) continue;
+                    if (string.IsNullOrWhiteSpace(text))
+                    {
+                        continue;
+                    }
+
                     double start = response.StartTime is { } s && double.IsFinite(s) ? Math.Clamp(s, 0, chunk.Duration.TotalSeconds) : 0;
                     double end = response.EndTime is { } e && double.IsFinite(e) ? Math.Clamp(e, start, chunk.Duration.TotalSeconds) : chunk.Duration.TotalSeconds;
                     transcript.Add(text.Trim(), chunk.Offset + TimeSpan.FromSeconds(start), chunk.Offset + TimeSpan.FromSeconds(end));
@@ -138,7 +173,11 @@ internal sealed class FoundrySpeechAnalyzer(string id, string alias, bool stream
 
     private bool SupportsLanguage(string? language)
     {
-        if (string.IsNullOrWhiteSpace(language)) return true;
+        if (string.IsNullOrWhiteSpace(language))
+        {
+            return true;
+        }
+
         string neutral = NeutralLanguage(language);
         // Published Nemotron locales and Whisper tiny's 99 language tokens (Whisper tokenizer.py).
         return streaming ? " ar bg cs da de el en es et fi fr he hi hr hu it ja ko lt lv mt nl no pl pt ro ru sk sl sv th tr uk vi zh ".Contains(" " + neutral + " ", StringComparison.Ordinal)
@@ -154,7 +193,10 @@ internal sealed class FoundrySpeechAnalyzer(string id, string alias, bool stream
         public void Add(string text, TimeSpan start, TimeSpan end)
         {
             if (Segments.Count >= MaximumSegments || text.Length > MaximumCharacters - _characters)
+            {
                 throw new InvalidDataException("Transcript limit exceeded.");
+            }
+
             _characters += text.Length;
             Segments.Add(new(text, start, end));
         }

@@ -1,4 +1,4 @@
-namespace CaptureTool.Domain.Analysis;
+﻿namespace CaptureTool.Domain.Analysis;
 
 public sealed record AnalysisCapability
 {
@@ -9,8 +9,12 @@ public sealed record AnalysisCapability
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(name);
         if (name.Length > 80 || name.Any(c => !(char.IsAsciiLetterLower(c) || char.IsAsciiDigit(c) || c == '-')))
+        {
             throw new ArgumentException("Use a bounded lowercase capability name.", nameof(name));
-        if (schemaVersion < 1) throw new ArgumentOutOfRangeException(nameof(schemaVersion));
+        }
+
+        ArgumentOutOfRangeException.ThrowIfLessThan(schemaVersion, 1);
+
         Name = name;
         SchemaVersion = schemaVersion;
     }
@@ -21,6 +25,7 @@ public sealed record AnalysisCapability
     public static AnalysisCapability Description { get; } = new("description", 1);
     public static AnalysisCapability Transcription { get; } = new("transcription", 1);
     public static AnalysisCapability StructuredFacts { get; } = new("structured-facts", 1);
+    public static AnalysisCapability ImageAltText { get; } = new("image-alt-text", 1);
     public static AnalysisCapability CaptureSynopsis { get; } = new("capture-synopsis", 1);
     public static AnalysisCapability CaptureClassification { get; } = new("capture-classification", 1);
     public override string ToString() => $"{Name}/v{SchemaVersion}";

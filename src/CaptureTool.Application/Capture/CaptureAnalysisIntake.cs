@@ -4,7 +4,7 @@ using CaptureTool.Domain.Capture;
 
 namespace CaptureTool.Application.Capture;
 
-/// <summary>Capture completion records authorization before handing work to asynchronous intake.</summary>
+/// <summary>Records capture identity and saved aliases without scheduling analysis.</summary>
 internal sealed class CaptureAnalysisIntake(ICaptureMemoryService memory)
 {
     public Task RegisterAsync(string path, CaptureFileType media) => memory.RegisterCaptureAsync(

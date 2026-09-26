@@ -21,13 +21,15 @@ internal static class MetadataChecks
             new Fixture("limited", AnalysisMediaKind.Image, new string('x', 1500), false, "Notice: Road closed for repairs."),
         };
         List<MetadataCheckResult> results = [];
-        foreach (IMetadataProcessor processor in processors.Where(processor => processor.Descriptor.Id.StartsWith("foundry-", StringComparison.Ordinal)))
+        foreach (IMetadataProcessor processor in processors.Where(processor => processor.Descriptor.Capability == AnalysisCapability.CaptureSynopsis ||
+            processor.Descriptor.Capability == AnalysisCapability.ImageAltText || processor.Descriptor.Capability == AnalysisCapability.CaptureClassification))
         {
             using var preparation = new CancellationTokenSource(TimeSpan.FromMinutes(15));
             AnalyzerAvailability availability = await processor.GetAvailabilityAsync(preparation.Token);
             if (availability == AnalyzerAvailability.PreparationRequired) availability = await processor.PrepareAsync(null, preparation.Token);
             foreach (Fixture fixture in args.Contains("--enrichment-first", StringComparer.Ordinal) ? fixtures.Take(1) : fixtures)
             {
+                if (processor.Descriptor.Capability == AnalysisCapability.ImageAltText && fixture.Kind != AnalysisMediaKind.Image) continue;
                 using var budget = new CancellationTokenSource(TimeSpan.FromMinutes(3));
                 var producer = new AnalyzerProvenance("synthetic", "fixture", "none", "1");
                 AnalysisPayload sourcePayload = fixture.Kind == AnalysisMediaKind.Audio
@@ -47,7 +49,7 @@ internal static class MetadataChecks
                         AnalyzerOutcome outcome = await processor.ProcessAsync(input, budget.Token);
                         status = outcome.Kind + (outcome.FailureCode == null ? "" : ":" + outcome.FailureCode);
                         meetsFixture = fixture.Abstain && (outcome.Kind == AnalyzerOutcomeKind.ContentRejected ||
-                            outcome.Kind == AnalyzerOutcomeKind.Failed && outcome.FailureCode == "invalid-text-output");
+                            outcome.Kind == AnalyzerOutcomeKind.Failed && outcome.FailureCode?.StartsWith("invalid-text-", StringComparison.Ordinal) == true);
                         model = outcome.Producer?.ModelId;
                         if (outcome.Payload != null)
                         {
@@ -59,6 +61,12 @@ internal static class MetadataChecks
                                 summary = synopsis.Summary.Select(item => item.Text).ToArray();
                                 evidence = (synopsis.Title?.Evidence ?? []).Concat(synopsis.Summary.SelectMany(item => item.Evidence));
                                 if (fixture.Name != "conflict" && (fixture.Abstain ? title != null || summary.Length != 0 : title == null || summary.Length == 0)) status = "FixtureMismatch";
+                            }
+                            if (outcome.Payload is ImageAltTextMetadata alt)
+                            {
+                                title = alt.Suggestion?.Text;
+                                evidence = alt.Suggestion?.Evidence ?? [];
+                                if (fixture.Abstain ? title != null : title == null) status = "FixtureMismatch";
                             }
                             if (outcome.Payload is CaptureClassificationMetadata classification)
                             {

@@ -1,6 +1,15 @@
 # Metadata enrichment local text provider decision
 
-Status: selected for the initial semantic configuration after local x64 evaluation. See [verification and review](metadata-enrichment-verification.md).
+Status: historical Foundry evaluation. The preferred provider is now the
+[Windows language-model provider](windows-language-model-provider.md), with the
+evaluated Phi-4 CPU model restored as the on-demand backup for unsupported PCs.
+Its high peak memory use remains a tradeoff. See [verification and review](metadata-enrichment-verification.md)
+for the initial Foundry qualification.
+
+The current screenshot workflow and adapter version 3 are described in
+[explicit actions](capture-analysis-explicit-actions.md) and
+[repeatability hardening](metadata-enrichment-stability.md). These supersede the
+initial input ordering and output-generation protocol below.
 
 Use the existing stable `Microsoft.AI.Foundry.Local.WinML` **1.2.4** dependency with the CPU `phi-4-mini` alias. The evaluated resolved model is **`Phi-4-mini-instruct-generic-cpu:5`**. Record the actual model/version on every successful result; an alias is not provenance. The model weights occupy about 5.6 GB in the isolated test cache. Preparation can download models/runtime components under the existing local-AI consent.
 
@@ -19,7 +28,7 @@ Use the existing stable `Microsoft.AI.Foundry.Local.WinML` **1.2.4** dependency 
 
 Initial free-form/quotation-copying protocols were not reliable enough. Qwen `qwen3.5-0.8b-generic-cpu:3` omitted evidence; `qwen2.5-1.5b-instruct-generic-cpu:4` and `qwen3.5-2b-text-generic-cpu:1` also produced wrong categories or failed abstention. Phi initially produced malformed JSON. Simplifying citations and constraining the output format resolved that mechanical problem in the measured Phi run. The Qwen candidates were not requalified against the final protocol; this is a workload/configuration decision, not a general ranking of those models.
 
-Only Phi is configured initially. Candidate ordering and fallback remain generic and tested. A second semantic candidate can be added in `MetadataEnrichmentConfiguration.TextModels` after passing the same corpus and runtime checks. If Phi is unavailable, first-level results and deterministic facts remain available; there is no cloud fallback or forced low-quality semantic fallback.
+Only Phi was configured in this initial evaluation. The current configuration prefers Windows, followed by Phi as the CPU backup. Candidate ordering and fallback remain generic and tested. Additional candidates can be added in `MetadataEnrichmentConfiguration.TextModels` after passing the same corpus and runtime checks. If all candidates are unavailable, first-level results and deterministic facts remain available; there is no cloud fallback or forced low-quality semantic fallback.
 
 Review meaning separately from valid schemas: the measured summaries preserved invoice values, an undecided plan, missing-file errors, contradictory statuses, and limited source coverage. Noise abstained and hostile input either abstained or was rejected before publication. German input sometimes yielded English summaries. Categories/topics are coarse suggestions: `next week meeting` was broader than the conversation's actual `compare options next week`, and conflicting status entries were categorized `error`. Consumers must not turn these inferred labels into observed facts, obligations, appointments, or automatic actions. A larger real-capture precision review remains prudent before adding user-facing consumers.
 

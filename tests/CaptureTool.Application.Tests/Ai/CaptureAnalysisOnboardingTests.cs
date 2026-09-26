@@ -1,5 +1,4 @@
 ﻿using CaptureTool.Application.Abstractions.Analysis;
-using CaptureTool.Application.Abstractions.Settings;
 using CaptureTool.Application.Analysis;
 using Moq;
 namespace CaptureTool.Application.Tests.Ai;
@@ -7,7 +6,7 @@ namespace CaptureTool.Application.Tests.Ai;
 public sealed class CaptureAnalysisOnboardingTests
 {
     [TestMethod]
-    public async Task DeclinedWelcomeIsRememberedButExplicitEntryCanAskAgain()
+    public async Task OnlyExplicitEntryPromptsAndDeclinedConsentCanBeRequestedAgain()
     {
         var memory = new Mock<ICaptureMemoryService>();
         memory.SetupGet(x => x.State).Returns(State());
@@ -25,10 +24,10 @@ public sealed class CaptureAnalysisOnboardingTests
         memory.SetupGet(x => x.State).Returns(State());
         memory.Setup(x => x.SetConsentAsync(true, It.IsAny<CancellationToken>())).Returns(pending.Task);
         using var service = new CaptureAnalysisOnboarding(memory.Object);
-        var startup = service.EnableAsync();
+        var first = service.EnableAsync();
         var feature = service.EnableAsync();
         pending.SetResult();
-        await Task.WhenAll(startup, feature);
+        await Task.WhenAll(first, feature);
         memory.Verify(x => x.SetConsentAsync(true, It.IsAny<CancellationToken>()), Times.Once);
     }
     [TestMethod]

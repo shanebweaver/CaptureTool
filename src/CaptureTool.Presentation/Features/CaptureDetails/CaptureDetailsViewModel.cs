@@ -27,19 +27,21 @@ public sealed class CaptureDetailsViewModel : ViewModelBase
     public IAsyncRelayCommand AcceptNameCommand { get; }
     private readonly ICaptureMemoryService _memory;
     private readonly ICaptureAnalysisOnboarding? _onboarding;
-    public CaptureAnalysisAction DescriptionAction { get; }
+    public CaptureAnalysisAction AltTextAction { get; }
     public CaptureAnalysisAction SummaryAction { get; }
     public CaptureAnalysisAction NameAction { get; }
     public CaptureAnalysisAction TextAction { get; }
     public CaptureAnalysisAction QrAction { get; }
     public CaptureAnalysisAction TranscriptAction { get; }
-    private IEnumerable<CaptureAnalysisAction> Actions => [DescriptionAction, SummaryAction, NameAction, TextAction, QrAction, TranscriptAction];
+    private IEnumerable<CaptureAnalysisAction> Actions => [AltTextAction, SummaryAction, NameAction, TextAction, QrAction, TranscriptAction];
     private CaptureDetailsSnapshot? _snapshot;
     private bool _requesting;
+    private readonly HashSet<AnalysisCapability> _unavailableActions = [];
     private bool _acceptedName;
     public bool HasVisualMedia => _kind is AnalysisMediaKind.Image or AnalysisMediaKind.Video;
     public bool HasAudio => _kind is AnalysisMediaKind.Audio or AnalysisMediaKind.Video;
-    public bool NeedsSummaryInputs => !Content.HasSummaryInputs;
+    public bool IsImage => _kind == AnalysisMediaKind.Image;
+    public bool NeedsSummaryInputs => !IsImage && !Content.HasSummaryInputs;
     private readonly IClipboardService _clipboard;
     private readonly ILocalizationService _text;
     private readonly ITaskEnvironment _ui;
@@ -97,7 +99,7 @@ public sealed class CaptureDetailsViewModel : ViewModelBase
         _folders = folders;
         _names = names;
         _onboarding = onboarding;
-        DescriptionAction = Action(AnalysisCapability.Description, "Description");
+        AltTextAction = Action(AnalysisCapability.ImageAltText, "AltText");
         SummaryAction = Action(AnalysisCapability.CaptureSynopsis, "Summary");
         NameAction = Action(AnalysisCapability.CaptureSynopsis, "Name");
         TextAction = Action(AnalysisCapability.TextRecognition, "Text");
@@ -123,8 +125,9 @@ public sealed class CaptureDetailsViewModel : ViewModelBase
     private async Task RequestAnalysisAsync(AnalysisCapability capability)
     {
         if (_disposed || _path == null || _requesting || _memory.State.IsDeleting || _snapshot?.Run?.IsPending == true) return;
-        if (capability == AnalysisCapability.CaptureSynopsis && !Content.HasSummaryInputs) return;
+        if (capability == AnalysisCapability.CaptureSynopsis && NeedsSummaryInputs) return;
         _requesting = true;
+        _unavailableActions.Remove(capability);
         UpdateActions();
         try
         {
@@ -136,7 +139,15 @@ public sealed class CaptureDetailsViewModel : ViewModelBase
                 return;
             }
             await _memory.AnalyzeAsync(_path, capability, _cancellation);
-            if (_memory.State.FailureCode != null && !_disposed) _notifications.ShowError(Text("Unavailable"));
+            if (_memory.State.FailureCode is { } failure && !_disposed)
+            {
+                if (failure == "model-unavailable")
+                {
+                    _unavailableActions.Add(capability);
+                    _notifications.ShowInfo(_text.GetString("CaptureAction_Unavailable"));
+                }
+                else _notifications.ShowError(Text("Unavailable"));
+            }
             await RefreshAsync();
         }
         catch (OperationCanceledException) when (_cancellation.IsCancellationRequested) { }
@@ -158,15 +169,23 @@ public sealed class CaptureDetailsViewModel : ViewModelBase
                 QrCodeMetadata { Codes.Count: 0 } => "NoQr",
                 TranscriptMetadata { Segments.Count: 0 } => "NoSpeech",
                 DescriptionMetadata { Descriptions.Count: 0 } => "NoDescription",
+                ImageAltTextMetadata { Suggestion: null } => "NoSuggestion",
+                CaptureSynopsisMetadata { Summary.Count: 0 } when action == SummaryAction => "NoSuggestion",
+                CaptureSynopsisMetadata { Title: null } when action == NameAction && !_acceptedName => "NoSuggestion",
                 _ => null
             };
             var outcome = _snapshot?.Run?.CompletedSteps.SingleOrDefault(step => step.Capability == action.Capability)?.Outcome;
             if (result == null && !running && outcome != null)
                 status = outcome == AnalyzerOutcomeKind.Unsupported ? "Unavailable" : "Failed";
-            action.Update(running, result != null, !_disposed && !_requesting && !pending && !_memory.State.IsDeleting &&
-                (action.Capability != AnalysisCapability.CaptureSynopsis || Content.HasSummaryInputs),
+            if (result == null && !running && _unavailableActions.Contains(action.Capability)) status = "Unavailable";
+            action.Update(running, result != null || action == NameAction && _acceptedName,
+                !_disposed && !_requesting && !pending && !_memory.State.IsDeleting &&
+                (action.Capability != AnalysisCapability.CaptureSynopsis || !NeedsSummaryInputs) &&
+                (action.Capability != AnalysisCapability.ImageAltText || IsImage),
                 status == null ? string.Empty : _text.GetString("CaptureAction_" + status));
         }
+        SummaryAction.Label = _text.GetString(IsImage ? "CaptureAction_ScreenshotSummary" : "CaptureAction_Summary");
+        RaisePropertyChanged(nameof(IsImage));
         IsGeneratingSummary = SummaryAction.IsRunning;
         IsGeneratingName = NameAction.IsRunning;
         RaisePropertyChanged(nameof(HasVisualMedia));
@@ -209,6 +228,7 @@ public sealed class CaptureDetailsViewModel : ViewModelBase
             ? new CaptureName(Content.SuggestedName, true).SuggestedFileName()
             : state?.Name is { IsAutomatic: true } name ? name.SuggestedFileName() : string.Empty;
         RaisePropertyChanged(nameof(HasSuggestedName));
+        UpdateActions();
     }
     private async Task RenameAsync(string name)
     {

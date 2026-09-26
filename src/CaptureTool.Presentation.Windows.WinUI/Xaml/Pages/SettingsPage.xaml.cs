@@ -7,7 +7,6 @@ namespace CaptureTool.Presentation.Windows.WinUI.Xaml.Pages;
 public sealed partial class SettingsPage : SettingsPageBase
 {
     public CaptureMemoryViewModel CaptureMemory { get; } = ViewModelLocator.GetViewModel<CaptureMemoryViewModel>();
-    public TextExtractionConsentViewModel TextExtractionConsent { get; } = ViewModelLocator.GetViewModel<TextExtractionConsentViewModel>();
     public SettingsPage()
     {
         InitializeComponent();
@@ -21,17 +20,7 @@ public sealed partial class SettingsPage : SettingsPageBase
     private async void SettingsPage_Loaded(object sender, RoutedEventArgs e)
     {
         SettingsAmbientMotionStoryboard.Begin();
-        TextExtractionConsent.Refresh();
         await CaptureMemory.RefreshAsync();
-    }
-
-    private async void TextExtractionConsent_Click(object sender, RoutedEventArgs e)
-    {
-        if (sender is CheckBox checkbox)
-        {
-            await TextExtractionConsent.SetConsentCommand.ExecuteAsync(checkbox.IsChecked == true);
-            checkbox.IsChecked = TextExtractionConsent.ConsentGranted;
-        }
     }
 
     private async void CaptureMemoryConsent_Click(object sender, RoutedEventArgs e)

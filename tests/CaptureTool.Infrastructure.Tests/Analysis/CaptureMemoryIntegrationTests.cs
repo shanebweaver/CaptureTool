@@ -20,6 +20,99 @@ public sealed class CaptureMemoryIntegrationTests
     private CancellationToken Ct => TestContext.CancellationToken;
 
     [TestMethod]
+    public async Task UnavailableSemanticModelDoesNotScheduleItsMediaPrerequisites()
+    {
+        using var environment = new AnalysisTestEnvironment();
+        var unavailable = new ReadinessProcessor();
+        await using var app = new App(environment, [unavailable]);
+        await app.EnableAsync(Ct);
+        var asset = app.Asset();
+        await app.Memory.AnalyzeAsync(asset.SourcePath, AnalysisCapability.CaptureSynopsis, Ct);
+        Assert.AreEqual("model-unavailable", app.Memory.State.FailureCode);
+        Assert.AreEqual(1, unavailable.Probes);
+        Assert.AreEqual(0, app.Analyzer.Calls);
+        Assert.IsEmpty(await app.Store.ReadPendingAsync(Ct));
+        Assert.IsEmpty(await app.Catalog.ReadAllAsync(Ct));
+    }
+
+    [TestMethod]
+    [DataRow(AnalyzerAvailability.Ready)]
+    [DataRow(AnalyzerAvailability.PreparationRequired)]
+    public async Task AvailableFallbackAllowsExplicitScreenshotRequestPastPreflight(AnalyzerAvailability readiness)
+    {
+        using var environment = new AnalysisTestEnvironment();
+        using var store = environment.CreateStore();
+        using var catalog = environment.CreateCatalog();
+        using var authorization = new CaptureMemoryAuthorization(new LocalCaptureMemoryPolicyStore(environment, environment.Protector, environment.Files));
+        var unavailable = new ReadinessProcessor();
+        var fallback = new ReadinessProcessor("foundry-test", readiness);
+        var worker = new AdmissionWorker();
+        using var memory = new CaptureMemoryService(authorization, catalog, store, worker, new Prompts(), new LocalFileSystem(),
+            processors: [unavailable, fallback]);
+        try
+        {
+            await memory.InitializeAsync(Ct);
+            await memory.SetConsentAsync(true, Ct);
+            Assert.AreEqual(0, unavailable.Probes);
+            Assert.AreEqual(0, fallback.Probes);
+            Assert.IsNull(worker.Admitted);
+            Directory.CreateDirectory(environment.Root);
+            string path = Path.Combine(environment.Root, "explicit.png");
+            File.WriteAllText(path, "retained source media");
+            await memory.AnalyzeAsync(path, AnalysisCapability.CaptureSynopsis, Ct);
+            Assert.IsNull(memory.State.FailureCode);
+            Assert.AreEqual(1, unavailable.Probes);
+            Assert.AreEqual(1, fallback.Probes);
+            Assert.IsNotNull(worker.Admitted);
+            CollectionAssert.AreEqual(new[] { AnalysisCapability.TextRecognition, AnalysisCapability.Description, AnalysisCapability.CaptureSynopsis },
+                worker.Admitted.Capabilities!.ToArray());
+        }
+        finally { await memory.StopAsync(); }
+    }
+
+    private sealed class AdmissionWorker : ICaptureAnalysisWorker
+    {
+        public AnalysisRequest? Admitted { get; private set; }
+        public AnalysisActivitySnapshot Progress { get; } = new(AnalysisActivity.Idle);
+        public event Action<AnalysisActivitySnapshot>? ProgressChanged { add { } remove { } }
+        public event Action<CaptureId, AnalysisCapability>? ResultCommitted { add { } remove { } }
+        public Task<bool> EnqueueAsync(AnalysisRequest request, CancellationToken ct) { Admitted = request; return Task.FromResult(true); }
+        public Task RunAsync(CancellationToken ct) => Task.CompletedTask;
+        public Task CancelAsync(CaptureId id, CancellationToken ct) => throw new NotSupportedException();
+        public Task<AnalysisCleanupResult> ClearAsync(long boundary, CancellationToken ct) => throw new NotSupportedException();
+    }
+
+    private sealed class ReadinessProcessor(string id = "windows-test", AnalyzerAvailability availability = AnalyzerAvailability.Unsupported) : IMetadataProcessor
+    {
+        public int Probes;
+        public MetadataProcessorDescriptor Descriptor { get; } = MetadataEnrichmentConfiguration.CreateSemantic(id, AnalysisCapability.CaptureSynopsis);
+        public ValueTask<AnalyzerAvailability> GetAvailabilityAsync(CancellationToken ct) { Probes++; return ValueTask.FromResult(availability); }
+        public Task<AnalyzerAvailability> PrepareAsync(IProgress<AnalysisProgress>? progress, CancellationToken ct) => throw new InvalidOperationException("Preflight cannot prepare models.");
+        public Task<AnalyzerOutcome> ProcessAsync(MetadataProcessorInput input, CancellationToken ct) => throw new InvalidOperationException("Preflight cannot run models.");
+    }
+
+    [TestMethod]
+    [DataRow(true)]
+    [DataRow(false)]
+    public async Task OverlappingFeatureConsentRequestsShareOneDecision(bool approved)
+    {
+        using var environment = new AnalysisTestEnvironment();
+        await using var app = new App(environment);
+        await app.Memory.InitializeAsync(Ct);
+        int prompts = 0;
+        var decision = new TaskCompletionSource<bool>();
+        app.Prompts.Override = (_, _) => { prompts++; return decision.Task; };
+        Task<bool> first = app.Memory.EnsureConsentAsync(Ct);
+        Task<bool> second = app.Memory.EnsureConsentAsync(Ct);
+        Assert.AreEqual(1, prompts);
+        decision.SetResult(approved);
+        Assert.AreEqual(approved, await first);
+        Assert.AreEqual(approved, await second);
+        Assert.AreEqual(1, prompts);
+        Assert.AreEqual(approved, app.Memory.State.Policy.ConsentGranted);
+    }
+
+    [TestMethod]
     public async Task SharedOnUseConsentIsPersistedOnceAndRevocationRequiresFreshApproval()
     {
         using var environment = new AnalysisTestEnvironment();
@@ -616,7 +709,7 @@ public sealed class CaptureMemoryIntegrationTests
         public Prompts Prompts { get; } = new();
         public Recents Recents { get; } = new();
         public Analyzer Analyzer { get; } = new();
-        public App(AnalysisTestEnvironment environment)
+        public App(AnalysisTestEnvironment environment, IEnumerable<IMetadataProcessor>? processors = null)
         {
             _environment = environment;
             Store = environment.CreateStore();
@@ -626,7 +719,7 @@ public sealed class CaptureMemoryIntegrationTests
                 [new(AnalysisCapability.Description, ["test"], TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(5))])]);
             Worker = new(Store, Authorization, new LocalAnalysisSource(), configuration, [Analyzer], Catalog);
             Names = new(Catalog, Catalog, new NameNotifier(), new LocalFileSystem());
-            Memory = new(Authorization, Catalog, Store, Worker, Prompts, new LocalFileSystem(), Names);
+            Memory = new(Authorization, Catalog, Store, Worker, Prompts, new LocalFileSystem(), Names, processors);
         }
         public CaptureAsset Asset()
         {

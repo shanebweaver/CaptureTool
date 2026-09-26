@@ -69,7 +69,7 @@ public sealed partial class ImageEditTextExtractionUiTests
         for (int visit = 0; visit < 2; visit++)
         {
             Menu("AppMenu_SettingsItem");
-            Assert.AreEqual(ToggleState.Off, Element("CaptureMemoryConsent").Patterns.Toggle.Pattern.ToggleState.Value);
+            Assert.AreEqual(ToggleState.On, Element("CaptureMemoryConsent").Patterns.Toggle.Pattern.ToggleState.Value);
             WaitFor(() => Element("CaptureMemoryDelete").IsEnabled ? window : null, InteractionTimeout, "storage status refreshed");
             Thread.Sleep(300);
             Assert.IsNull(window.FindFirstDescendant(automation.ConditionFactory.ByName(strings["CaptureMemory_Error_Storage"])),
@@ -100,7 +100,7 @@ public sealed partial class ImageEditTextExtractionUiTests
     [DataRow("ru-RU")]
     [DataRow("zh-CN")]
     [TestCategory("UI")]
-    public void CaptureOnboarding_ExplicitActionConsentAndIndependentOcr(string language)
+    public void CaptureOnboarding_SharedConsentAndIndependentOcr(string language)
     {
         RequireUiTestLanguage(language);
         if (!ShouldRunUiTests()) Assert.Inconclusive("Enable isolated desktop UI tests.");
@@ -130,10 +130,10 @@ public sealed partial class ImageEditTextExtractionUiTests
             foreach (var key in strings.Keys.Where(key => key.StartsWith("CaptureMemory_Error_")))
                 Assert.IsNull(window.FindFirstDescendant(automation.ConditionFactory.ByName(strings[key])), "No startup analysis error before opting in.");
             Element("ImageEdit_TextExtractionButton").Click();
-            Answer("AiFeatureConsentDialog", "AiFeatureConsentDialog_AllowButton");
+            Answer("CaptureMemoryConsentDialog", "CaptureMemory_ConsentAccept");
             Element("ImageEdit_TextExtractionOverlayMarker"); Element("ImageCanvas_QrCodeCopyButton_0");
             Element("ImageEdit_TextExtractionCopyAllButton").Patterns.Invoke.Pattern.Invoke();
-            WaitFor(() => ReadDetailsClipboard()?.Contains("OCR MODE") == true ? window : null, InteractionTimeout, "standalone OCR before analysis consent");
+            WaitFor(() => ReadDetailsClipboard()?.Contains("OCR MODE") == true ? window : null, InteractionTimeout, "standalone OCR with shared consent");
             Screenshot("standalone-ocr");
         }
         using (var app = LaunchApp(ResolveAppExecutablePath(repo), fixture, data, temp, language, detailsFixture: true, onboarding: true))
@@ -142,20 +142,20 @@ public sealed partial class ImageEditTextExtractionUiTests
             Element("ImageEdit_CommandBar"); Thread.Sleep(500);
             Assert.IsNull(window.FindFirstDescendant(automation.ConditionFactory.ByAutomationId("CaptureMemoryConsentDialog")), "Dismissed welcome must stay dismissed after restart.");
             Menu("AppMenu_SettingsItem");
-            Assert.AreEqual(ToggleState.On, Element("TextExtractionConsent").Patterns.Toggle.Pattern.ToggleState.Value);
-            Element("TextExtractionConsent").Patterns.Toggle.Pattern.Toggle();
-            WaitFor(() => Element("TextExtractionConsent").Patterns.Toggle.Pattern.ToggleState.Value == ToggleState.Off ? window : null,
-                InteractionTimeout, "standalone OCR revoked from Settings");
-            Element("TextExtractionConsent").Patterns.Toggle.Pattern.Toggle();
-            Answer("AiFeatureConsentDialog", "AiFeatureConsentDialog_DontAllowButton");
-            WaitFor(() => Element("TextExtractionConsent").Patterns.Toggle.Pattern.ToggleState.Value == ToggleState.Off ? window : null,
+            Assert.AreEqual(ToggleState.On, Element("CaptureMemoryConsent").Patterns.Toggle.Pattern.ToggleState.Value);
+            Element("CaptureMemoryConsent").Patterns.Toggle.Pattern.Toggle();
+            WaitFor(() => Element("CaptureMemoryConsent").IsEnabled && Element("CaptureMemoryConsent").Patterns.Toggle.Pattern.ToggleState.Value == ToggleState.Off ? window : null,
+                InteractionTimeout, "shared consent revoked from Settings");
+            Element("CaptureMemoryConsent").Patterns.Toggle.Pattern.Toggle();
+            Answer("CaptureMemoryConsentDialog", "CaptureWelcome_NotNow");
+            WaitFor(() => Element("CaptureMemoryConsent").IsEnabled && Element("CaptureMemoryConsent").Patterns.Toggle.Pattern.ToggleState.Value == ToggleState.Off ? window : null,
                 InteractionTimeout, "declined standalone OCR stays off");
-            Element("TextExtractionConsent").Patterns.Toggle.Pattern.Toggle();
-            Answer("AiFeatureConsentDialog", "AiFeatureConsentDialog_AllowButton");
-            WaitFor(() => Element("TextExtractionConsent").Patterns.Toggle.Pattern.ToggleState.Value == ToggleState.On ? window : null,
-                InteractionTimeout, "standalone OCR granted from Settings");
-            Assert.AreEqual(ToggleState.Off, Element("CaptureMemoryConsent").Patterns.Toggle.Pattern.ToggleState.Value);
-            Assert.AreEqual(ToggleState.Off, Element("CaptureMemoryConsent").Patterns.Toggle.Pattern.ToggleState.Value);
+            Element("CaptureMemoryConsent").Patterns.Toggle.Pattern.Toggle();
+            Answer("CaptureMemoryConsentDialog", "CaptureMemory_ConsentAccept");
+            WaitFor(() => Element("CaptureMemoryConsent").IsEnabled && Element("CaptureMemoryConsent").Patterns.Toggle.Pattern.ToggleState.Value == ToggleState.On ? window : null,
+                InteractionTimeout, "shared consent granted from Settings");
+            Assert.AreEqual(ToggleState.On, Element("CaptureMemoryConsent").Patterns.Toggle.Pattern.ToggleState.Value);
+            Assert.AreEqual(ToggleState.On, Element("CaptureMemoryConsent").Patterns.Toggle.Pattern.ToggleState.Value);
             WaitForElementByName(window, automation, strings["AppTheme_Dark"], InteractionTimeout).Patterns.SelectionItem.Pattern.Select();
             Menu("AppMenu_HomeItem");
             WaitFor(() => Element("Home_RecentCaptures").FindFirstDescendant(automation.ConditionFactory.ByControlType(ControlType.ListItem)), InteractionTimeout, "recent capture").DoubleClick();
@@ -170,10 +170,8 @@ public sealed partial class ImageEditTextExtractionUiTests
             Screenshot("text-invitation");
             Assert.IsNull(window.FindFirstDescendant(automation.ConditionFactory.ByAutomationId("CaptureMemoryConsentDialog")), "Opening Text only reads saved results.");
             Element("CaptureAction_Text").Patterns.Invoke.Pattern.Invoke();
-            Element("CaptureMemoryConsentDialog"); Screenshot("welcome-dark");
-            Answer("CaptureMemoryConsentDialog", "CaptureWelcome_NotNow");
-            WaitFor(() => Element("CaptureAction_Text").IsEnabled ? Element("CaptureAction_Text") : null, InteractionTimeout, "invitation command completed").Patterns.Invoke.Pattern.Invoke();
-            Answer("CaptureMemoryConsentDialog", "CaptureMemory_ConsentAccept");
+            WaitForElementRemoved(window, automation, "CaptureAction_Text", InteractionTimeout);
+            Assert.IsNull(window.FindFirstDescendant(automation.ConditionFactory.ByAutomationId("CaptureMemoryConsentDialog")), "Consent from standalone OCR also covers pipeline actions.");
             var search = Element("CapturePane_Search").AsTextBox(); search.Text = "INV-2048";
             WaitFor(() => Element("CapturePane_CopyResults").IsEnabled ? window : null, InteractionTimeout, "saved analysis text");
             Element("CapturePane_CopyResults").Patterns.Invoke.Pattern.Invoke();
@@ -181,7 +179,7 @@ public sealed partial class ImageEditTextExtractionUiTests
             MaximizeWindow(window);
             Element("ImageEdit_TextExtractionButton").Click();
             Element("ImageEdit_TextExtractionOverlayMarker");
-            Assert.IsNull(window.FindFirstDescendant(automation.ConditionFactory.ByAutomationId("AiFeatureConsentDialog")), "Standalone consent persists independently.");
+            Assert.IsNull(window.FindFirstDescendant(automation.ConditionFactory.ByAutomationId("CaptureMemoryConsentDialog")), "All AI actions share the same persisted consent.");
         }
         AutomationElement Element(string id) => WaitForElement(window, automation, id, InteractionTimeout);
         void Answer(string id, string key)

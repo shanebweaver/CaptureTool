@@ -108,6 +108,7 @@ public sealed class CaptureMemoryViewModel : ViewModelBase
                 "policy-save" or "policy-unavailable" => "CaptureMemory_Error_Policy",
                 "capture-registration" => "CaptureMemory_Error_Registration",
                 "provider-unavailable" => "CaptureMemory_Error_Provider",
+                "model-unavailable" => "CaptureAction_Unavailable",
                 "cleanup-pending" => "CaptureMemory_Error_Cleanup",
                 "analysis-failed" => "CaptureMemory_Error_Analysis",
                 _ => "CaptureMemory_Error_Storage"

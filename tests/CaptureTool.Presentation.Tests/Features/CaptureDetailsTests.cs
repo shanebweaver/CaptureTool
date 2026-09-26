@@ -1,4 +1,4 @@
-﻿using CaptureTool.Application.Abstractions.Capture.Assets;
+using CaptureTool.Application.Abstractions.Capture.Assets;
 using CaptureTool.Domain.Capture;
 using CaptureTool.Application.Abstractions.Analysis;
 using CaptureTool.Application.Abstractions.Clipboard;
@@ -18,6 +18,25 @@ namespace CaptureTool.Presentation.Tests.Features;
 public sealed class CaptureDetailsTests
 {
     [TestMethod]
+    public async Task UnavailableModelShowsDeviceAvailabilityWithoutImplyingUnreadableDetails()
+    {
+        var setup = new Setup();
+        setup.Reader.Setup(x => x.ReadAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new CaptureDetailsSnapshot(CaptureDetailsStatus.Empty));
+        setup.Memory.Setup(x => x.EnsureConsentAsync(It.IsAny<CancellationToken>())).ReturnsAsync(true);
+        setup.Memory.Setup(x => x.AnalyzeAsync(It.IsAny<string>(), AnalysisCapability.CaptureSynopsis, It.IsAny<CancellationToken>()))
+            .Callback(() => setup.State = setup.State with { FailureCode = "model-unavailable" }).Returns(Task.CompletedTask);
+        using var vm = setup.ViewModel;
+        await vm.OpenAsync("capture.png", AnalysisMediaKind.Image);
+        await vm.SummaryAction.Command.ExecuteAsync(null);
+        Assert.AreEqual("CaptureAction_Unavailable", vm.SummaryAction.Status);
+        Assert.IsFalse(vm.IsGeneratingSummary);
+        Assert.AreEqual(string.Empty, vm.TextAction.Status);
+        setup.Notifications.Verify(x => x.ShowInfo("CaptureAction_Unavailable"), Times.Once);
+        setup.Notifications.Verify(x => x.ShowError(It.IsAny<string>()), Times.Never);
+    }
+
+    [TestMethod]
     public async Task PendingConsentDisablesOtherActionsAndCannotQueueExtraWork()
     {
         var setup = new Setup();
@@ -27,12 +46,12 @@ public sealed class CaptureDetailsTests
         setup.Memory.Setup(x => x.EnsureConsentAsync(It.IsAny<CancellationToken>())).Returns(consent.Task);
         using var vm = setup.ViewModel;
         await vm.OpenAsync("capture.png", AnalysisMediaKind.Image);
-        Task requested = vm.DescriptionAction.Command.ExecuteAsync(null);
+        Task requested = vm.AltTextAction.Command.ExecuteAsync(null);
         Assert.IsFalse(vm.TextAction.Command.CanExecute(null));
         await vm.TextAction.Command.ExecuteAsync(null);
         consent.SetResult(true);
         await requested;
-        setup.Memory.Verify(x => x.AnalyzeAsync("capture.png", AnalysisCapability.Description, It.IsAny<CancellationToken>()), Times.Once);
+        setup.Memory.Verify(x => x.AnalyzeAsync("capture.png", AnalysisCapability.ImageAltText, It.IsAny<CancellationToken>()), Times.Once);
         setup.Memory.Verify(x => x.AnalyzeAsync("capture.png", AnalysisCapability.TextRecognition, It.IsAny<CancellationToken>()), Times.Never);
     }
 
@@ -50,7 +69,7 @@ public sealed class CaptureDetailsTests
         Assert.IsFalse(vm.TextAction.Command.CanExecute(null));
         Assert.AreEqual("CaptureAction_NoText", vm.TextAction.Status);
         Assert.IsTrue(vm.QrAction.Command.CanExecute(null));
-        Assert.IsFalse(vm.SummaryAction.Command.CanExecute(null));
+        Assert.IsTrue(vm.SummaryAction.Command.CanExecute(null));
     }
 
     [TestMethod]
@@ -67,14 +86,14 @@ public sealed class CaptureDetailsTests
         using var vm = new CaptureDetailsViewModel(reader.Object, memory.Object, Mock.Of<IClipboardService>(),
             Localization(), Mock.Of<ITaskEnvironment>(), Mock.Of<IAppNotificationService>(), onboarding: onboarding.Object);
         await vm.OpenAsync("capture.png", AnalysisMediaKind.Image);
-        Assert.IsTrue(vm.DescriptionAction.Command.CanExecute(null));
-        Assert.IsFalse(vm.SummaryAction.Command.CanExecute(null));
-        Assert.IsFalse(vm.NameAction.Command.CanExecute(null));
+        Assert.IsTrue(vm.AltTextAction.Command.CanExecute(null));
+        Assert.IsTrue(vm.SummaryAction.Command.CanExecute(null));
+        Assert.IsTrue(vm.NameAction.Command.CanExecute(null));
         onboarding.VerifyNoOtherCalls();
-        await vm.DescriptionAction.Command.ExecuteAsync(null);
+        await vm.AltTextAction.Command.ExecuteAsync(null);
         onboarding.Verify(x => x.EnableAsync(It.IsAny<CancellationToken>()), Times.Once);
-        memory.Verify(x => x.AnalyzeAsync("capture.png", AnalysisCapability.Description, It.IsAny<CancellationToken>()), accepted ? Times.Once() : Times.Never());
-        memory.Verify(x => x.AnalyzeAsync(It.IsAny<string>(), It.Is<AnalysisCapability>(c => c != AnalysisCapability.Description), It.IsAny<CancellationToken>()), Times.Never());
+        memory.Verify(x => x.AnalyzeAsync("capture.png", AnalysisCapability.ImageAltText, It.IsAny<CancellationToken>()), accepted ? Times.Once() : Times.Never());
+        memory.Verify(x => x.AnalyzeAsync(It.IsAny<string>(), It.Is<AnalysisCapability>(c => c != AnalysisCapability.ImageAltText), It.IsAny<CancellationToken>()), Times.Never());
     }
 
     [TestMethod]

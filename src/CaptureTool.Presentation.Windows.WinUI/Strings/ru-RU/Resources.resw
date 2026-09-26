@@ -1919,32 +1919,13 @@ SOFTWARE.
   <data name="CaptureNaming_FileName.Text" xml:space="preserve"><value>Имя файла</value></data>
   <data name="CaptureNaming_Invalid" xml:space="preserve"><value>Введите имя в одну строку длиной от 1 до 160 символов.</value></data>
   <data name="CaptureNaming_SaveFailed" xml:space="preserve"><value>Не удалось переименовать файл. Убедитесь, что имя не занято и файл доступен для записи.</value></data>
-  <data name="AiFeatureConsentDialog_TextExtractionTitle" xml:space="preserve">
-    <value>Разрешить распознавание текста?</value>
-  </data>
-  <data name="AiFeatureConsentDialog_TextExtractionContent" xml:space="preserve">
-    <value>Функция распознавания текста использует локальную модель ИИ для обнаружения текста и его расположения на текущем изображении.</value>
-  </data>
-  <data name="AiFeatureConsentDialog_AllowButton" xml:space="preserve">
-    <value>Разрешить</value>
-  </data>
-  <data name="AiFeatureConsentDialog_DontAllowButton" xml:space="preserve">
-    <value>Не разрешать</value>
-  </data>
-  <data name="AiFeatureConsentDialog_CancelButton" xml:space="preserve">
-    <value>Отмена</value>
-  </data>
   <data name="CaptureWelcome_Eyebrow.Text" xml:space="preserve"><value>ЛОКАЛЬНЫЙ ИИ</value></data>
   <data name="CaptureWelcome_Hero.Text" xml:space="preserve"><value>Немного магии</value></data>
-  <data name="CaptureWelcome_Text.Text" xml:space="preserve"><value>Изображения: извлекайте текст, находите QR-коды и создавайте описания.</value></data>
+  <data name="CaptureWelcome_Text.Text" xml:space="preserve"><value>Изображения: извлекайте текст, создавайте сводки и альтернативные описания.</value></data>
   <data name="CaptureWelcome_Recording.Text" xml:space="preserve"><value>Видео: изучайте текст на экране, описания и речь.</value></data>
   <data name="CaptureWelcome_Names.Text" xml:space="preserve"><value>Аудио: превращайте записи в читаемый текст.</value></data>
   <data name="CaptureWelcome_Consent.Text" xml:space="preserve"><value>Локальный ИИ используется только при выборе действия. Автоматического анализа нет. Результаты безопасно хранятся на этом компьютере. Может потребоваться загрузка моделей. Вы можете отозвать согласие или удалить результаты в настройках.</value></data>
   <data name="CaptureWelcome_NotNow" xml:space="preserve"><value>Не сейчас</value></data>
-  <data name="TextExtractionSettings_Header.Text" xml:space="preserve"><value>Извлечение текста</value></data>
-  <data name="TextExtractionSettings_Description.Text" xml:space="preserve"><value>Читайте текст и QR-коды с помощью извлечения текста в редакторе изображений.</value></data>
-<data name="TextExtractionSettings_Consent.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Разрешить отдельное извлечение текста</value></data>
-  <data name="TextExtractionSettings_SaveFailed" xml:space="preserve"><value>Не удалось сохранить разрешение на извлечение текста. Повторите попытку.</value></data>
   <data name="AddOns_ChromaKeyPurchaseNotCompletedLabel.Text" xml:space="preserve"><value>Покупка не завершена. Попробуйте ещё раз.</value></data>
   <data name="AudioCapture_StopCaptureFailedMessage" xml:space="preserve"><value>Не удалось завершить запись. Попробуйте записать ещё раз.</value></data>
   <data name="AudioEdit_LoadingMediaText.Text" xml:space="preserve"><value>Открытие аудио…</value></data>
@@ -1990,4 +1971,13 @@ SOFTWARE.
   <data name="CaptureAction_NoDescription" xml:space="preserve"><value>Описание не создано.</value></data>
   <data name="CaptureAction_Unavailable" xml:space="preserve"><value>Это действие недоступно на данном устройстве.</value></data>
   <data name="CaptureAction_Failed" xml:space="preserve"><value>Не удалось завершить действие. Попробуйте ещё раз.</value></data>
+  <data name="CapturePane_SummaryTab.Header" xml:space="preserve"><value>Сводка</value></data>
+  <data name="CaptureAction_ScreenshotSummary" xml:space="preserve"><value>Кратко описать снимок экрана</value></data>
+  <data name="CaptureAction_AltText" xml:space="preserve"><value>Создать альтернативный текст</value></data>
+  <data name="CaptureSummary_Hint.Text" xml:space="preserve"><value>Узнайте главное об этом изображении. Текст и визуальные детали считываются только при необходимости.</value></data>
+  <data name="CaptureSummary_AltText.Text" xml:space="preserve"><value>Альтернативный текст</value></data>
+  <data name="CaptureSummary_AltTextHint.Text" xml:space="preserve"><value>Создайте краткое описание для тех, кто не может видеть изображение. Проверьте его перед публикацией.</value></data>
+  <data name="CaptureSummary_CopySummary.Content" xml:space="preserve"><value>Копировать сводку</value></data>
+  <data name="CaptureSummary_CopyAltText.Content" xml:space="preserve"><value>Копировать альтернативный текст</value></data>
+  <data name="CaptureAction_NoSuggestion" xml:space="preserve"><value>Недостаточно информации для предложения.</value></data>
 </root>

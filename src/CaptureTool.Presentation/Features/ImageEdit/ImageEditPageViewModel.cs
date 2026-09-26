@@ -1,4 +1,4 @@
-using CaptureTool.Application.Abstractions.Capture.Assets;
+﻿using CaptureTool.Application.Abstractions.Capture.Assets;
 using CaptureTool.Application.Abstractions.Ai;
 using CaptureTool.Application.Abstractions.Cancellation;
 using CaptureTool.Application.Abstractions.Clipboard;
@@ -75,7 +75,6 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     private readonly IImageSuperResolutionService _imageSuperResolutionService;
     private readonly IImageSuperResolutionFeatureAvailability _imageSuperResolutionFeatureAvailability;
     private readonly ITextExtractionService _textExtractionService;
-    private readonly ITextExtractionConsentService? _textExtractionConsent;
     private readonly ITextExtractionFeatureAvailability _textExtractionFeatureAvailability;
     private readonly IImageDescriptionService _imageDescriptionService;
     private readonly IImageDescriptionFeatureAvailability _imageDescriptionFeatureAvailability;
@@ -771,7 +770,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         ITelemetryService? telemetryService = null,
         IScratchArtifactStore? scratchArtifactStore = null,
         IFileSystem? fileSystem = null,
-        ITextExtractionConsentService? textExtractionConsent = null, ICaptureNamingService? captureNames = null)
+        ICaptureNamingService? captureNames = null)
     {
         _localizationService = localizationService;
         _cancellationService = cancellationService;
@@ -782,7 +781,6 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         _imageSuperResolutionService = imageSuperResolutionService;
         _imageSuperResolutionFeatureAvailability = imageSuperResolutionFeatureAvailability;
         _textExtractionService = textExtractionService ?? new NullTextExtractionService();
-        _textExtractionConsent = textExtractionConsent;
         _textExtractionFeatureAvailability = textExtractionFeatureAvailability ?? new DisabledTextExtractionFeatureAvailability();
         _imageDescriptionService = imageDescriptionService ?? new NullImageDescriptionService();
         _imageDescriptionFeatureAvailability = imageDescriptionFeatureAvailability ?? new DisabledImageDescriptionFeatureAvailability();
@@ -2312,7 +2310,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
     private async Task EnsureTextExtractionCurrentAsync()
     {
-        if (_textExtractionProcessedRevision == _editRevision && _textExtractionConsent?.State == AiFeatureConsentState.Granted)
+        if (_textExtractionProcessedRevision == _editRevision && _aiFeatureConsentService.GetConsentState(AiFeatureId.TextExtraction) == AiFeatureConsentState.Granted)
         {
             return;
         }
@@ -2342,7 +2340,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         try
         {
             IsTextExtractionRunning = false;
-            bool consented = _textExtractionConsent != null && await _textExtractionConsent.EnsureConsentAsync(cancellationToken);
+            bool consented = await _aiFeatureConsentService.EnsureConsentAsync(cancellationToken);
             cancellationToken.ThrowIfCancellationRequested();
             if (!operation.IsCurrent || processedRevision != _editRevision) return;
             if (!consented)
@@ -2352,7 +2350,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
                 return;
             }
             IsTextExtractionRunning = true;
-            authorization = CancellationTokenSource.CreateLinkedTokenSource(operation.Token, _textExtractionConsent!.Revoked);
+            authorization = CancellationTokenSource.CreateLinkedTokenSource(operation.Token, _aiFeatureConsentService.Revoked);
             cancellationToken = authorization.Token;
             cancellationToken.ThrowIfCancellationRequested();
             TextExtractionReadyState readyState = _textExtractionService.GetReadyState();

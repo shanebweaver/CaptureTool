@@ -1,4 +1,4 @@
-using CaptureTool.Application.Abstractions.Ai;
+﻿using CaptureTool.Application.Abstractions.Ai;
 using CaptureTool.Application.Abstractions.Cancellation;
 using CaptureTool.Application.Abstractions.Clipboard;
 using CaptureTool.Application.Abstractions.Edit.External;
@@ -29,21 +29,19 @@ namespace CaptureTool.Presentation.Tests.Features;
 public sealed class ImageEditPageViewModelTextExtractionTests
 {
     [TestMethod]
-    public async Task StandaloneOcrDoesNotAskCaptureAnalysisForConsent()
+    public async Task StandaloneOcrUsesSharedConsentAndItsOwnExtractionService()
     {
-        var shared = new Mock<IAiFeatureConsentService>(MockBehavior.Strict);
-        var consent = new Mock<ITextExtractionConsentService>();
+        var consent = new Mock<IAiFeatureConsentService>();
         consent.Setup(x => x.EnsureConsentAsync(It.IsAny<CancellationToken>())).ReturnsAsync(true);
         var extraction = new Mock<ITextExtractionService>();
         extraction.Setup(x => x.GetReadyState()).Returns(TextExtractionReadyState.Ready);
         extraction.Setup(x => x.ExtractAsync(It.IsAny<TextExtractionRequest>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(TextExtractionResult.Success(new("fresh OCR", new(100, 50), [])));
         using var vm = CreateViewModel(imageCanvasExporter: CreateExporter().Object, textExtractionService: extraction.Object,
-            textExtractionConsent: consent.Object, sharedConsent: shared.Object);
+            textExtractionConsent: consent.Object);
         await vm.LoadAsync(new ImageFile("new-capture.png"), CancellationToken.None);
         await vm.ToggleTextExtractionModeCommand.ExecuteAsync(null);
         Assert.AreEqual("fresh OCR", vm.TextExtractionTool.Text);
-        shared.VerifyNoOtherCalls();
         consent.Verify(x => x.EnsureConsentAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -51,8 +49,8 @@ public sealed class ImageEditPageViewModelTextExtractionTests
     public async Task RevokingConsentDuringAdHocOcrDiscardsEvenANonCooperativeProviderResult()
     {
         using var revoked = new CancellationTokenSource();
-        var consent = new Mock<ITextExtractionConsentService>();
-        consent.SetupGet(x => x.State).Returns(AiFeatureConsentState.Granted);
+        var consent = new Mock<IAiFeatureConsentService>();
+        consent.Setup(x => x.GetConsentState(AiFeatureId.TextExtraction)).Returns(AiFeatureConsentState.Granted);
         consent.Setup(x => x.EnsureConsentAsync(It.IsAny<CancellationToken>())).ReturnsAsync(true);
         consent.SetupGet(x => x.Revoked).Returns(revoked.Token);
         var extraction = new Mock<ITextExtractionService>();
@@ -98,11 +96,11 @@ public sealed class ImageEditPageViewModelTextExtractionTests
     public async Task ToggleTextExtractionMode_WhenFirstUseConsentDenied_ShouldPersistDenialAndNotExtract()
     {
         AiFeatureConsentState consentState = AiFeatureConsentState.Unknown;
-        var consent = new Mock<ITextExtractionConsentService>();
+        var consent = new Mock<IAiFeatureConsentService>();
         var textExtraction = new Mock<ITextExtractionService>();
 
         consent
-            .SetupGet(service => service.State)
+            .Setup(service => service.GetConsentState(AiFeatureId.TextExtraction))
             .Returns(() => consentState);
         consent
             .Setup(service => service.EnsureConsentAsync(It.IsAny<CancellationToken>()))
@@ -134,12 +132,12 @@ public sealed class ImageEditPageViewModelTextExtractionTests
     public async Task ToggleTextExtractionMode_WhenConsentWasDenied_ShouldPromptAgainAndExtractWhenAccepted()
     {
         AiFeatureConsentState consentState = AiFeatureConsentState.Denied;
-        var consent = new Mock<ITextExtractionConsentService>();
+        var consent = new Mock<IAiFeatureConsentService>();
         var exporter = new Mock<IImageCanvasExporter>();
         var textExtraction = new Mock<ITextExtractionService>();
 
         consent
-            .SetupGet(service => service.State)
+            .Setup(service => service.GetConsentState(AiFeatureId.TextExtraction))
             .Returns(() => consentState);
         consent
             .Setup(service => service.EnsureConsentAsync(It.IsAny<CancellationToken>()))
@@ -531,7 +529,7 @@ public sealed class ImageEditPageViewModelTextExtractionTests
         IStorageService? storageService = null,
         ITextExtractionService? textExtractionService = null,
         ITextExtractionFeatureAvailability? textExtractionFeatureAvailability = null,
-        ITextExtractionConsentService? textExtractionConsent = null,
+        IAiFeatureConsentService? textExtractionConsent = null,
         IClipboardService? clipboardService = null,
         ILocalizationService? localizationService = null,
         IAppNotificationService? notificationService = null,
@@ -580,10 +578,10 @@ public sealed class ImageEditPageViewModelTextExtractionTests
                 clipboardService ?? Mock.Of<IClipboardService>(),
                 localization,
                 notifications),
-            sharedConsent ?? Mock.Of<IAiFeatureConsentService>(),
+            sharedConsent ?? textExtractionConsent ?? Mock.Of<IAiFeatureConsentService>(
+                service => service.GetConsentState(AiFeatureId.TextExtraction) == AiFeatureConsentState.Granted &&
+                service.EnsureConsentAsync(It.IsAny<CancellationToken>()) == Task.FromResult(true)),
             textExtractionService ?? Mock.Of<ITextExtractionService>(service => service.GetReadyState() == TextExtractionReadyState.Ready),
-            textExtractionFeatureAvailability ?? Mock.Of<ITextExtractionFeatureAvailability>(service => service.IsTextExtractionEnabled == true),
-            textExtractionConsent: textExtractionConsent ?? Mock.Of<ITextExtractionConsentService>(
-                service => service.State == AiFeatureConsentState.Granted && service.EnsureConsentAsync(It.IsAny<CancellationToken>()) == Task.FromResult(true)));
+            textExtractionFeatureAvailability ?? Mock.Of<ITextExtractionFeatureAvailability>(service => service.IsTextExtractionEnabled == true));
     }
 }

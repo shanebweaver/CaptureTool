@@ -8,6 +8,8 @@ using Moq;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using System.Runtime.InteropServices.WindowsRuntime;
+using Windows.Graphics.Imaging;
 
 namespace CaptureTool.Infrastructure.Windows.Tests.Analysis;
 
@@ -18,6 +20,22 @@ public sealed class FoundryVisionTests
     public TestContext TestContext { get; set; } = null!;
 
     [TestMethod]
+    [DataRow(1920, 1080, 1024, 576)]
+    [DataRow(1080, 1920, 576, 1024)]
+    [DataRow(2048, 2048, 1024, 1024)]
+    [DataRow(200, 100, 200, 100)]
+    public async Task EncodedVisionInputFitsTokenBudgetWithoutUpscalingOrDistorting(int width, int height, int expectedWidth, int expectedHeight)
+    {
+        using var bitmap = new SoftwareBitmap(BitmapPixelFormat.Bgra8, width, height, BitmapAlphaMode.Premultiplied);
+        byte[] bytes = await FoundryImageDescriptionAnalyzer.EncodeAsync(bitmap, TestContext.CancellationToken);
+        using var memory = new MemoryStream(bytes);
+        using var stream = memory.AsRandomAccessStream();
+        var decoded = await BitmapDecoder.CreateAsync(stream);
+        Assert.AreEqual((uint)expectedWidth, decoded.PixelWidth);
+        Assert.AreEqual((uint)expectedHeight, decoded.PixelHeight);
+    }
+
+    [TestMethod]
     public void RequestContainsInlineMediaAndDisablesResponseStorage()
     {
         using var request = JsonDocument.Parse(FoundryVisionProtocol.CreateRequest(Model, [1, 2, 3]));
@@ -25,7 +43,7 @@ public sealed class FoundryVisionTests
         Assert.AreEqual(Model, root.GetProperty("model").GetString());
         Assert.IsFalse(root.GetProperty("store").GetBoolean());
         Assert.IsFalse(root.GetProperty("stream").GetBoolean());
-        Assert.IsLessThanOrEqualTo(512, root.GetProperty("max_output_tokens").GetInt32());
+        Assert.AreEqual(1536, root.GetProperty("max_output_tokens").GetInt32());
         JsonElement image = root.GetProperty("input")[0].GetProperty("content")[1];
         Assert.AreEqual("image/jpeg", image.GetProperty("media_type").GetString());
         CollectionAssert.AreEqual(new byte[] { 1, 2, 3 }, image.GetProperty("image_data").GetBytesFromBase64());
@@ -46,14 +64,15 @@ public sealed class FoundryVisionTests
     }
 
     [TestMethod]
-    [DataRow("model", "another-model")]
-    [DataRow("status", "incomplete")]
-    [DataRow("error", "failure")]
-    public void MismatchedFailedOrIncompleteResponsesAreNotSuccessful(string property, string value)
+    [DataRow("model", "another-model", "vision-model-mismatch")]
+    [DataRow("status", "incomplete", "vision-incomplete")]
+    [DataRow("error", "failure", "vision-server-error")]
+    public void MismatchedFailedOrIncompleteResponsesAreNotSuccessful(string property, string value, string code)
     {
         JsonObject response = Response();
         response[property] = value;
         Assert.AreEqual((AnalyzerOutcomeKind.Failed, (string?)null), Parse(response));
+        Assert.AreEqual(code, FoundryVisionProtocol.ParseResponse(Encoding.UTF8.GetBytes(response.ToJsonString()), Model).FailureCode);
     }
 
     [TestMethod]
@@ -103,6 +122,9 @@ public sealed class FoundryVisionTests
           {"type":"message","role":"assistant","status":"completed","content":[
             {"type":"output_text","text":" A red square. "}]}]}
         """)!.AsObject();
-    private static (AnalyzerOutcomeKind Status, string? Text) Parse(JsonObject response) =>
-        FoundryVisionProtocol.ParseResponse(Encoding.UTF8.GetBytes(response.ToJsonString()), Model);
+    private static (AnalyzerOutcomeKind Status, string? Text) Parse(JsonObject response)
+    {
+        var result = FoundryVisionProtocol.ParseResponse(Encoding.UTF8.GetBytes(response.ToJsonString()), Model);
+        return (result.Status, result.Text);
+    }
 }

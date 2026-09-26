@@ -1,4 +1,4 @@
-using CaptureTool.Domain;
+﻿using CaptureTool.Domain;
 using CaptureTool.Domain.Analysis;
 using CaptureTool.Domain.Analysis.Payloads;
 using System.Security.Cryptography;
@@ -39,6 +39,11 @@ internal static class AnalysisDocumentMapper
                 new(input.Capability.Name, input.Capability.SchemaVersion), input.ResultId)).ToArray());
         return result.Payload switch
         {
+            ImageAltTextMetadata alt => document with
+            {
+                AltText = new(alt.Suggestion == null ? null : ToDocument(alt.Suggestion)),
+                Coverage = ToDocument(alt.Coverage),
+            },
             CaptureSynopsisMetadata synopsis => document with
             {
                 Synopsis = new(synopsis.Title == null ? null : ToDocument(synopsis.Title), synopsis.Summary.Select(ToDocument).ToArray()),
@@ -97,17 +102,19 @@ internal static class AnalysisDocumentMapper
     {
         if (document == null || document.SchemaVersion != 1 || document.Producer == null)
             throw new InvalidDataException("Unsupported or invalid analysis result.");
-        int payloads = (document.Facts != null ? 1 : 0) + (document.Synopsis != null ? 1 : 0) + (document.Classification != null ? 1 : 0) +
+        int payloads = (document.AltText != null ? 1 : 0) + (document.Facts != null ? 1 : 0) + (document.Synopsis != null ? 1 : 0) + (document.Classification != null ? 1 : 0) +
             (document.FileDetails != null ? 1 : 0) + (document.Text != null ? 1 : 0) + (document.Descriptions != null ? 1 : 0) +
             (document.Transcript != null ? 1 : 0) + (document.QrCodes != null ? 1 : 0);
         if (payloads != 1) throw new InvalidDataException("Unsupported or ambiguous metadata payload.");
-        bool derived = document.Facts != null || document.Synopsis != null || document.Classification != null;
+        bool derived = document.AltText != null || document.Facts != null || document.Synopsis != null || document.Classification != null;
         if (derived && document.ResultId == null)
             throw new InvalidDataException("Derived metadata requires a persisted result identity.");
         if (!derived && document.Coverage != null)
             throw new InvalidDataException("Processing coverage belongs to derived metadata.");
         AnalysisPayload payload = document switch
         {
+            { Capability: "image-alt-text", AltText: not null, Coverage: not null } =>
+                new ImageAltTextMetadata(document.AltText.Suggestion == null ? null : ToSuggestedText(document.AltText.Suggestion), ToCoverage(document.Coverage)),
             { Capability: "capture-synopsis", Synopsis.Summary: not null, Coverage: not null } =>
                 new CaptureSynopsisMetadata(document.Synopsis.Title == null ? null : ToSuggestedText(document.Synopsis.Title),
                     document.Synopsis.Summary.Select(ToSuggestedText), ToCoverage(document.Coverage)),

@@ -17,7 +17,10 @@ internal sealed class CaptureMemoryService : ICaptureMemoryService, IDisposable
     private readonly ICaptureMemoryPrompts _prompts;
     private readonly IFileSystem _files;
     private readonly CaptureNamingService? _naming;
+    private readonly IReadOnlyList<IMetadataProcessor> _processors;
     private readonly SemaphoreSlim _commands = new(1, 1);
+    private readonly SemaphoreSlim _consentRequests = new(1, 1);
+    private long _consentAttempt;
     private readonly CancellationTokenSource _lifetime = new();
     private Task? _runner;
     private bool _initialized;
@@ -28,7 +31,8 @@ internal sealed class CaptureMemoryService : ICaptureMemoryService, IDisposable
     private string? _failure;
 
     public CaptureMemoryService(CaptureMemoryAuthorization authorization, ICaptureAssetCatalog catalog,
-        IAnalysisExecutionStore store, ICaptureAnalysisWorker worker, ICaptureMemoryPrompts prompts, IFileSystem files, CaptureNamingService? naming = null)
+        IAnalysisExecutionStore store, ICaptureAnalysisWorker worker, ICaptureMemoryPrompts prompts, IFileSystem files,
+        CaptureNamingService? naming = null, IEnumerable<IMetadataProcessor>? processors = null)
     {
         _authorization = authorization;
         _catalog = catalog;
@@ -37,6 +41,7 @@ internal sealed class CaptureMemoryService : ICaptureMemoryService, IDisposable
         _prompts = prompts;
         _files = files;
         _naming = naming;
+        _processors = processors?.ToArray() ?? [];
         _worker.ProgressChanged += OnProgress;
     }
     public CaptureMemoryState State => new(_authorization.Policy, _authorization.IsLoaded &&
@@ -77,6 +82,22 @@ internal sealed class CaptureMemoryService : ICaptureMemoryService, IDisposable
         }, ct), cancellationToken, "capture-registration");
 
     public Task SetConsentAsync(bool granted, CancellationToken cancellationToken = default)
+        => granted ? GrantConsentAsync(cancellationToken) : UpdateConsentAsync(false, cancellationToken);
+
+    private async Task GrantConsentAsync(CancellationToken ct)
+    {
+        long attempt = Interlocked.Read(ref _consentAttempt);
+        await _consentRequests.WaitAsync(ct).ConfigureAwait(false);
+        try
+        {
+            if (_authorization.IsConsentAllowed || attempt != Interlocked.Read(ref _consentAttempt)) return;
+            await UpdateConsentAsync(true, ct).ConfigureAwait(false);
+            Interlocked.Increment(ref _consentAttempt);
+        }
+        finally { _consentRequests.Release(); }
+    }
+
+    private Task UpdateConsentAsync(bool granted, CancellationToken cancellationToken)
     {
         if (granted && _authorization.IsConsentAllowed) return Task.CompletedTask;
         long epoch = Interlocked.Increment(ref _epoch);
@@ -116,12 +137,27 @@ internal sealed class CaptureMemoryService : ICaptureMemoryService, IDisposable
         long epoch = Interlocked.Read(ref _epoch);
         return GuardAsync(ct => LockedAsync(async () =>
         {
-            // Only an explicit UI action enters this method. It requests one capability,
-            // without rescheduling other scans or implicitly satisfying dependencies.
+            // Only an explicit UI action enters this method. Screenshot insight actions
+            // include their declared prerequisites; cached results are reused by the worker.
             if (!Current(epoch) || !_authorization.IsAllowed || Volatile.Read(ref _deleting) != 0 ||
                 !Path.IsPathFullyQualified(path) || !_files.FileExists(path)) return;
             CaptureFileType media = CaptureFileTypeDetector.DetectFileType(path);
             if (media is not (CaptureFileType.Image or CaptureFileType.Audio or CaptureFileType.Video)) return;
+            // Check the requested semantic output before scheduling expensive prerequisites.
+            // Probes cannot download/load models or inspect the capture.
+            IMetadataProcessor[] candidates = _processors.Where(processor => processor.Descriptor.Capability == capability).ToArray();
+            if (candidates.Length != 0)
+            {
+                bool available = false;
+                foreach (var candidate in candidates)
+                {
+                    AnalyzerAvailability readiness;
+                    try { readiness = await candidate.GetAvailabilityAsync(ct).AsTask().WaitAsync(TimeSpan.FromSeconds(10), ct).ConfigureAwait(false); }
+                    catch (Exception) when (!ct.IsCancellationRequested) { continue; }
+                    if (readiness is AnalyzerAvailability.Ready or AnalyzerAvailability.PreparationRequired) { available = true; break; }
+                }
+                if (!available) { SetFailure("model-unavailable"); return; }
+            }
             var assets = await _catalog.ReadAllAsync(ct).ConfigureAwait(false);
             CaptureAsset? asset = assets.FirstOrDefault(item => SamePath(item.SourcePath, path)) ??
                 assets.FirstOrDefault(item => SamePath(item.PreferredPath, path));
@@ -194,7 +230,7 @@ internal sealed class CaptureMemoryService : ICaptureMemoryService, IDisposable
             _ => throw new InvalidOperationException("Unsupported capture media.")
         };
         if (await _worker.EnqueueAsync(new(asset.Id, media, asset.SourcePath, Guid.NewGuid(), generation, prior,
-            ExpectedAuthorizationId: authorization, Capabilities: [capability]), ct).ConfigureAwait(false))
+            ExpectedAuthorizationId: authorization, Capabilities: CaptureAnalysisConfiguration.ForAction(media, capability), ReuseExisting: true), ct).ConfigureAwait(false))
         {
             _storage = _storage with { HasData = true };
             Publish();
@@ -268,5 +304,6 @@ internal sealed class CaptureMemoryService : ICaptureMemoryService, IDisposable
         _worker.ProgressChanged -= OnProgress;
         _lifetime.Dispose();
         _commands.Dispose();
+        _consentRequests.Dispose();
     }
 }

@@ -26,6 +26,7 @@ public sealed partial class MetadataEnrichmentStoreTests
         var classification = (CaptureClassificationMetadata)record.Results.Single(result => result.Payload is CaptureClassificationMetadata).Payload;
         Assert.AreEqual(CaptureCategory.WebContent, classification.Category);
         Assert.AreEqual("website", classification.Topics[0].Text);
+        Assert.AreEqual("A visible link.", ((ImageAltTextMetadata)record.Results.Single(result => result.Payload is ImageAltTextMetadata).Payload).Suggestion!.Text);
         foreach (var bytes in environment.Files.PublishedBytes) Assert.DoesNotContain("Private link", Encoding.UTF8.GetString(bytes));
         await store.TryWriteAsync(token, Ocr(), Ct);
         Assert.HasCount(1, (await store.GetAsync(id, cancellationToken: Ct))!.Results);
@@ -77,6 +78,8 @@ public sealed partial class MetadataEnrichmentStoreTests
             new(new CaptureSynopsisMetadata(new("Private link", [evidence]), [new("A link is visible.", [evidence])], coverage),
                 AnalysisTestEnvironment.Producer(), DateTimeOffset.UtcNow, "v1", derivation: derivation),
             new(new CaptureClassificationMetadata(CaptureCategory.WebContent, [evidence], [new("website", [evidence])], coverage),
+                AnalysisTestEnvironment.Producer(), DateTimeOffset.UtcNow, "v1", derivation: derivation),
+            new(new ImageAltTextMetadata(new("A visible link.", [evidence]), coverage),
                 AnalysisTestEnvironment.Producer(), DateTimeOffset.UtcNow, "v1", derivation: derivation),
         ];
     }

@@ -7,9 +7,9 @@ public sealed record AnalysisAdmissionScope(Guid Generation, long Reconciliation
 public sealed record AnalysisRunToken(CaptureId CaptureId, Guid Generation, Guid RunId);
 public sealed record AnalysisRequest(CaptureId CaptureId, AnalysisMediaKind MediaKind, string SourcePath,
     Guid RequestId, Guid Generation, Guid? ExpectedRunId = null, string? Language = null, Guid? ExpectedAuthorizationId = null,
-    IReadOnlyList<AnalysisCapability>? Capabilities = null);
+    IReadOnlyList<AnalysisCapability>? Capabilities = null, bool ReuseExisting = false);
 public sealed record AnalysisWorkItem(AnalysisRunToken Token, AnalysisMediaKind MediaKind, string SourcePath,
-    string? Language, AnalysisRun Run);
+    string? Language, AnalysisRun Run, bool ReuseExisting = false);
 
 /// <summary>Session-only execution requests backed by the singleton protected metadata store.</summary>
 public interface IAnalysisExecutionStore : ICaptureAnalysisStore

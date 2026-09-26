@@ -1,4 +1,4 @@
-using CaptureTool.Application.Abstractions.Ai;
+﻿using CaptureTool.Application.Abstractions.Ai;
 using CaptureTool.Application.Abstractions.Analysis;
 using CaptureTool.Presentation.Windows.WinUI.Analysis;
 using CaptureTool.Application.Abstractions.Capture;
@@ -30,7 +30,6 @@ public static class WindowsPresentationServiceCollectionExtensions
         services.AddSingleton<ICaptureDiscardConfirmationService>(sp => sp.GetRequiredService<WinUICaptureDiscardConfirmationService>());
         services.AddSingleton<TelemetryConsentDialogService>();
         services.AddSingleton<CaptureTool.Presentation.Windows.WinUI.Utils.MainWindowDialogCoordinator>();
-        services.AddSingleton<CaptureTool.Application.Abstractions.Edit.Image.TextExtraction.ITextExtractionConsentPrompt, CaptureTool.Presentation.Windows.WinUI.Edit.TextExtractionConsentDialogService>();
         services.AddSingleton<CaptureMemoryDialogService>();
         services.AddSingleton<ICaptureMemoryPrompts>(sp => sp.GetRequiredService<CaptureMemoryDialogService>());
         return services;

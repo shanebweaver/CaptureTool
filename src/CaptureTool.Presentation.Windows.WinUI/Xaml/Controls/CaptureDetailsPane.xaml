@@ -24,7 +24,7 @@
                     <Button
                         AutomationProperties.AutomationId="{x:Bind Id}"
                         Command="{x:Bind Command}"
-                        Content="{x:Bind Label}" />
+                        Content="{x:Bind Label, Mode=OneWay}" />
                 </StackPanel>
                 <TextBlock
                     FontSize="12"
@@ -214,36 +214,6 @@
                             <ItemsControl ItemTemplate="{StaticResource PropertyTemplate}" ItemsSource="{x:Bind ViewModel.FileProperties.Technical, Mode=OneWay}" />
                         </Expander>
 
-                        <StackPanel Spacing="6" Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.HasVisualMedia), Mode=OneWay}">
-                            <TextBlock x:Uid="CaptureAction_DescriptionHeading" FontWeight="SemiBold" />
-                            <ContentControl Content="{x:Bind ViewModel.DescriptionAction, Mode=OneWay}" ContentTemplate="{StaticResource AnalysisActionTemplate}" />
-                            <TextBlock
-                                IsTextSelectionEnabled="True"
-                                Text="{x:Bind ViewModel.Content.Description, Mode=OneWay}"
-                                TextWrapping="Wrap"
-                                Visibility="{x:Bind TextVisibility(ViewModel.Content.Description), Mode=OneWay}" />
-                        </StackPanel>
-                        <StackPanel Spacing="6">
-                            <TextBlock x:Uid="CapturePane_Summary" FontWeight="SemiBold" />
-                            <ContentControl Content="{x:Bind ViewModel.SummaryAction, Mode=OneWay}" ContentTemplate="{StaticResource AnalysisActionTemplate}" />
-                            <TextBlock
-                                x:Uid="CaptureAction_SummaryInputs"
-                                FontSize="12"
-                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                                TextWrapping="Wrap"
-                                Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.NeedsSummaryInputs), Mode=OneWay}" />
-                            <TextBlock
-                                IsTextSelectionEnabled="True"
-                                Text="{x:Bind ViewModel.Summary, Mode=OneWay}"
-                                TextWrapping="Wrap" />
-                        </StackPanel>
-                        <TextBlock
-                            AutomationProperties.AutomationId="CaptureDetailsStatus"
-                            FontSize="12"
-                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                            Text="{x:Bind ViewModel.SummaryNotice, Mode=OneWay}"
-                            TextWrapping="Wrap"
-                            Visibility="{x:Bind TextVisibility(ViewModel.SummaryNotice), Mode=OneWay}" />
 
                     </StackPanel>
                 </ScrollViewer>
@@ -421,6 +391,72 @@
                             IsEnabled="{x:Bind ViewModel.TextContent.HasText, Mode=OneWay}" />
                     </StackPanel>
                 </Grid>
+            </PivotItem>
+            <PivotItem x:Uid="CapturePane_SummaryTab" AutomationProperties.AutomationId="CapturePane_SummaryTab">
+                <ScrollViewer HorizontalScrollMode="Disabled" VerticalScrollBarVisibility="Auto">
+                    <StackPanel Padding="0,0,8,8" Spacing="16">
+                        <InfoBar
+                            x:Uid="CapturePane_PendingEdits"
+                            IsClosable="False"
+                            IsOpen="{x:Bind ViewModel.HasEdits, Mode=OneWay}"
+                            Severity="Informational"
+                            Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.HasEdits), Mode=OneWay}" />
+                        <StackPanel Spacing="8">
+                            <TextBlock x:Uid="CapturePane_Summary" FontWeight="SemiBold" />
+                            <TextBlock
+                                x:Uid="CaptureSummary_Hint"
+                                FontSize="12"
+                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                TextWrapping="Wrap"
+                                Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.IsImage), Mode=OneWay}" />
+                            <ContentControl Content="{x:Bind ViewModel.SummaryAction, Mode=OneWay}" ContentTemplate="{StaticResource AnalysisActionTemplate}" />
+                            <TextBlock
+                                x:Uid="CaptureAction_SummaryInputs"
+                                FontSize="12"
+                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                TextWrapping="Wrap"
+                                Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.NeedsSummaryInputs), Mode=OneWay}" />
+                            <TextBlock
+                                AutomationProperties.AutomationId="CaptureSummary_Result"
+                                IsTextSelectionEnabled="True"
+                                Text="{x:Bind ViewModel.Summary, Mode=OneWay}"
+                                TextWrapping="Wrap" />
+                            <Button
+                                x:Uid="CaptureSummary_CopySummary"
+                                AutomationProperties.AutomationId="CaptureSummary_CopySummary"
+                                Command="{x:Bind ViewModel.CopyCommand, Mode=OneWay}"
+                                CommandParameter="{x:Bind ViewModel.Summary, Mode=OneWay}"
+                                Visibility="{x:Bind TextVisibility(ViewModel.Summary), Mode=OneWay}" />
+                        </StackPanel>
+                        <StackPanel Spacing="8" Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.IsImage), Mode=OneWay}">
+                            <TextBlock x:Uid="CaptureSummary_AltText" FontWeight="SemiBold" />
+                            <TextBlock
+                                x:Uid="CaptureSummary_AltTextHint"
+                                FontSize="12"
+                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                TextWrapping="Wrap" />
+                            <ContentControl Content="{x:Bind ViewModel.AltTextAction, Mode=OneWay}" ContentTemplate="{StaticResource AnalysisActionTemplate}" />
+                            <TextBlock
+                                AutomationProperties.AutomationId="CaptureSummary_AltTextResult"
+                                IsTextSelectionEnabled="True"
+                                Text="{x:Bind ViewModel.Content.AltText, Mode=OneWay}"
+                                TextWrapping="Wrap" />
+                            <Button
+                                x:Uid="CaptureSummary_CopyAltText"
+                                AutomationProperties.AutomationId="CaptureSummary_CopyAltText"
+                                Command="{x:Bind ViewModel.CopyCommand, Mode=OneWay}"
+                                CommandParameter="{x:Bind ViewModel.Content.AltText, Mode=OneWay}"
+                                Visibility="{x:Bind TextVisibility(ViewModel.Content.AltText), Mode=OneWay}" />
+                        </StackPanel>
+                        <TextBlock
+                            AutomationProperties.AutomationId="CaptureDetailsStatus"
+                            FontSize="12"
+                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                            Text="{x:Bind ViewModel.StatusText, Mode=OneWay}"
+                            TextWrapping="Wrap"
+                            Visibility="{x:Bind TextVisibility(ViewModel.StatusText), Mode=OneWay}" />
+                    </StackPanel>
+                </ScrollViewer>
             </PivotItem>
         </Pivot>
     </Grid>

@@ -1,4 +1,4 @@
-using CaptureTool.Domain.Analysis;
+﻿using CaptureTool.Domain.Analysis;
 using CaptureTool.Presentation.ViewModels;
 using CommunityToolkit.Mvvm.Input;
 
@@ -7,7 +7,7 @@ namespace CaptureTool.Presentation.Features.CaptureDetails;
 public sealed class CaptureAnalysisAction : ViewModelBase
 {
     public AnalysisCapability Capability { get; }
-    public string Label { get; }
+    public string Label { get; internal set => Set(ref field, value); }
     public string Id { get; }
     public bool IsRunning { get; private set => Set(ref field, value); }
     public bool HasResult { get; private set => Set(ref field, value); }

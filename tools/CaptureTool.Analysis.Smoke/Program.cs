@@ -33,14 +33,37 @@ if (args.Contains("--recovery-child", StringComparer.Ordinal)) return await Reco
 if (args.Contains("--recovery-resume", StringComparer.Ordinal)) return await RecoveryChecks.ChildAsync(output, args[^1], resume: true);
 if (args.Contains("--scale-checks", StringComparer.Ordinal)) return await ScaleChecks.RunAsync(output);
 var storage = new SmokeStorage(output);
-IEnumerable<(MetadataProcessorDescriptor Descriptor, string Alias)> metadataModels = MetadataEnrichmentConfiguration.SemanticModels;
+if (args.Contains("--windows-language-probe", StringComparer.Ordinal))
+{
+    AppDomain.CurrentDomain.FirstChanceException += (_, observed) =>
+    {
+        if (observed.Exception is ArgumentException)
+            Console.WriteLine($"Readiness first-chance diagnostic: {observed.Exception.GetType().Name}, 0x{observed.Exception.HResult:X8}\n{observed.Exception.StackTrace}");
+    };
+    using var runtime = new CaptureTool.Infrastructure.Analysis.Windows.Foundry.FoundryRuntime(storage);
+    var client = new CaptureTool.Infrastructure.Analysis.Windows.WindowsLanguageModelClient(runtime, null);
+    Console.WriteLine($"Windows language model: {client.GetAvailability()} (passive probe; no model preparation or generation).");
+    try { Console.WriteLine($"Native readiness: {Microsoft.Windows.AI.Text.LanguageModel.GetReadyState()}"); }
+    catch (Exception exception)
+    {
+        // Types/HRESULTs only: no exception messages, paths, credentials, or capture text.
+        for (Exception? error = exception; error != null; error = error.InnerException)
+            Console.WriteLine($"Native readiness error: {error.GetType().Name}, 0x{error.HResult:X8}");
+    }
+    return 0;
+}
+if (args.Contains("--stability-checks", StringComparer.Ordinal))
+    return await MetadataStabilityChecks.RunAsync(storage, Path.Combine(output, "stability", DateTime.UtcNow.ToString("yyyyMMdd-HHmmss")), 3);
+if (args.Contains("--screenshot-checks", StringComparer.Ordinal))
+    return await ScreenshotChecks.RunAsync(storage, Path.Combine(output, "screenshots", DateTime.UtcNow.ToString("yyyyMMdd-HHmmss")));
+IEnumerable<MetadataModelRegistration> metadataModels = MetadataEnrichmentConfiguration.SemanticModels;
 int modelOption = Array.IndexOf(args, "--enrichment-model");
 if (modelOption >= 0)
 {
     if (modelOption + 1 == args.Length) return 2;
     string alias = args[modelOption + 1];
     metadataModels = new[] { AnalysisCapability.CaptureSynopsis, AnalysisCapability.CaptureClassification }
-        .Select(capability => (MetadataEnrichmentConfiguration.CreateSemantic("foundry-evaluation", capability), alias));
+        .Select(capability => new MetadataModelRegistration(MetadataEnrichmentConfiguration.CreateSemantic("foundry-evaluation", capability), MetadataModelBackend.FoundryLocal, alias));
     if (args.Contains("--enrichment-probe", StringComparer.Ordinal)) return await MetadataProbe.RunAsync(storage, output, alias);
 }
 var services = new ServiceCollection().AddGenericServices().AddApplicationServices()

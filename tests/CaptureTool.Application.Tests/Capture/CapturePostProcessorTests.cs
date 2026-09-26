@@ -186,6 +186,8 @@ public sealed class CapturePostProcessorTests
             asset.MediaType == type && asset.SourceOwnership == CaptureSourceOwnership.Application && !asset.Id.IsEmpty),
             default), Times.Once);
         memory.Verify(value => value.SetPreferredPathAsync(source, It.Is<string>(path => path.StartsWith(destination, StringComparison.Ordinal)), default), Times.Once);
+        memory.Verify(value => value.AnalyzeAsync(It.IsAny<string>(), It.IsAny<CaptureTool.Domain.Analysis.AnalysisCapability>(),
+            It.IsAny<CancellationToken>()), Times.Never);
     }
 
     private static Mock<ISettingsService> CreateSettings(

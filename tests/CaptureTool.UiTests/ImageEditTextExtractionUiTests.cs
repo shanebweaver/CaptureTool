@@ -1,4 +1,4 @@
-using FlaUI.Core.AutomationElements;
+﻿using FlaUI.Core.AutomationElements;
 using FlaUI.Core.Definitions;
 using FlaUI.UIA3;
 using System.Diagnostics;
@@ -77,15 +77,15 @@ public sealed partial class ImageEditTextExtractionUiTests
             WaitForElement(
                 mainWindow,
                 automation,
-                "AiFeatureConsentDialog",
+                "CaptureMemoryConsentDialog",
                 InteractionTimeout);
             AutomationElement allowButton = WaitForElementByName(
                 mainWindow,
                 automation,
-                "Allow",
+                "Allow local AI",
                 InteractionTimeout);
             allowButton.Click();
-            WaitForElementRemoved(mainWindow, automation, "AiFeatureConsentDialog", InteractionTimeout);
+            WaitForElementRemoved(mainWindow, automation, "CaptureMemoryConsentDialog", InteractionTimeout);
 
             WaitForElement(
                 mainWindow,

@@ -12,6 +12,66 @@ namespace CaptureTool.UiTests;
 public sealed partial class ImageEditTextExtractionUiTests
 {
     [TestMethod]
+    [TestCategory("UI")]
+    public void CapturePane_SummaryAndAltTextReuseScansAndShareConsent()
+    {
+        if (!ShouldRunUiTests()) Assert.Inconclusive("Enable isolated desktop UI tests.");
+        using var dpi = new DesktopDpiScope();
+        string repo = FindRepositoryRoot();
+        string isolated = Path.Combine(repo, "tests", "CaptureTool.UiTests", "TestResults", "artifacts", "screenshot-summary", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(isolated);
+        string fixture = Path.Combine(isolated, "capture.png"); CreateOcrFixtureImage(fixture);
+        using var app = LaunchApp(ResolveAppExecutablePath(repo), fixture, Path.Combine(isolated, "data"), Path.Combine(isolated, "temp"), "en-US", detailsFixture: true);
+        using var automation = new UIA3Automation();
+        var window = WaitForMainWindow(app, automation, AppLaunchTimeout);
+        Element("ImageEdit_CommandBar"); MaximizeWindow(window);
+        Element("Editor_DetailsToggle").Patterns.Toggle.Pattern.Toggle();
+        Element("CapturePane_SummaryTab").Patterns.SelectionItem.Pattern.Select();
+        Assert.IsNull(window.FindFirstDescendant(automation.ConditionFactory.ByAutomationId("CaptureMemoryConsentDialog")));
+        Element("CaptureAction_Summary").Patterns.Invoke.Pattern.Invoke();
+        Answer("Not now");
+        WaitFor(() => Element("CaptureAction_Summary").IsEnabled ? window : null, InteractionTimeout, "declined action remains available");
+        Element("CaptureAction_Summary").Patterns.Invoke.Pattern.Invoke();
+        Answer("Allow local AI");
+        WaitForElementRemoved(window, automation, "CaptureAction_Summary", InteractionTimeout);
+        const string summary = "Invoice INV-2048 totals USD 125.00 and is due on 2026-10-15.";
+        WaitForElementByName(window, automation, summary, InteractionTimeout);
+        Element("CaptureSummary_CopySummary").Patterns.Invoke.Pattern.Invoke();
+        WaitFor(() => ReadDetailsClipboard() == summary ? window : null, InteractionTimeout, "summary copied");
+        Element("CapturePane_TextTab").Patterns.SelectionItem.Pattern.Select();
+        Assert.IsNull(window.FindFirstDescendant(automation.ConditionFactory.ByAutomationId("CaptureAction_Text")), "Summary saves missing OCR for later use.");
+        Assert.IsTrue(Element("CaptureAction_Qr").IsEnabled, "Summary does not run unrelated QR detection.");
+        Element("CapturePane_SummaryTab").Patterns.SelectionItem.Pattern.Select();
+        WaitForElementRemoved(window, automation, "ImageEdit_TextExtractionOverlayMarker", InteractionTimeout);
+        Element("CaptureAction_AltText").Patterns.Invoke.Pattern.Invoke();
+        WaitForElementRemoved(window, automation, "CaptureAction_AltText", InteractionTimeout);
+        const string alt = "Invoice INV-2048 from Contoso showing a total of USD 125.00, due October 15, 2026.";
+        WaitForElementByName(window, automation, alt, InteractionTimeout);
+        Assert.IsNull(window.FindFirstDescendant(automation.ConditionFactory.ByAutomationId("CaptureMemoryConsentDialog")), "Alt text reuses shared consent.");
+        Element("CaptureSummary_CopyAltText").Patterns.Invoke.Pattern.Invoke();
+        WaitFor(() => ReadDetailsClipboard() == alt ? window : null, InteractionTimeout, "alt text copied");
+        WaitForElementByName(window, automation, summary, InteractionTimeout);
+        Thread.Sleep(350);
+        string screenshot = Path.Combine(isolated, "summary-and-alt-text.png"); window.CaptureToFile(screenshot); TestContext.AddResultFile(screenshot);
+        window.Patterns.Window.Pattern.SetWindowVisualState(WindowVisualState.Normal);
+        window.Patterns.Transform.Pattern.Resize(720, 760);
+        Thread.Sleep(350);
+        if (Element("Editor_DetailsToggle").Patterns.Toggle.Pattern.ToggleState.Value == ToggleState.Off)
+            Element("Editor_DetailsToggle").Patterns.Toggle.Pattern.Toggle();
+        Element("CapturePane_SummaryTab").Patterns.SelectionItem.Pattern.Select();
+        WaitForElementByName(window, automation, alt, InteractionTimeout);
+        Thread.Sleep(350);
+        screenshot = Path.Combine(isolated, "summary-compact.png"); window.CaptureToFile(screenshot); TestContext.AddResultFile(screenshot);
+        AutomationElement Element(string id) => WaitForElement(window, automation, id, InteractionTimeout);
+        void Answer(string label)
+        {
+            var consent = Element("CaptureMemoryConsentDialog");
+            WaitForElementByName(consent, automation, label, InteractionTimeout).AsButton().Invoke();
+            WaitForElementRemoved(window, automation, "CaptureMemoryConsentDialog", InteractionTimeout);
+        }
+    }
+
+    [TestMethod]
     [DataRow("en-US")]
     [DataRow("de-DE")]
     [DataRow("es-ES")]
@@ -67,7 +127,7 @@ public sealed partial class ImageEditTextExtractionUiTests
         WaitForElementRemoved(window, automation, "CaptureAction_Text", InteractionTimeout);
         Element("CaptureAction_Qr").Patterns.Invoke.Pattern.Invoke();
         WaitForElementRemoved(window, automation, "CaptureAction_Qr", InteractionTimeout);
-        Element("CapturePane_DetailsTab").Patterns.SelectionItem.Pattern.Select();
+        Element("CapturePane_SummaryTab").Patterns.SelectionItem.Pattern.Select();
         WaitFor(() => Element("CaptureAction_Summary").IsEnabled ? window : null, InteractionTimeout, "summary inputs available");
         Element("CaptureAction_Summary").Patterns.Invoke.Pattern.Invoke();
         WaitForElementByName(dialog, automation, "Invoice INV-2048 totals USD 125.00 and is due on 2026-10-15.", InteractionTimeout);

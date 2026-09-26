@@ -757,6 +757,7 @@ public sealed partial class CaptureAnalysisWorkerTests
 
     private sealed class TestSource : IAnalysisSource
     {
+        public SourceRevision Revision { get; set; } = AnalysisTestEnvironment.Revision();
         public bool Unchanged { get; set; } = true;
         public string? FailPath { get; set; }
         public int Disposals { get; private set; }
@@ -765,7 +766,7 @@ public sealed partial class CaptureAnalysisWorkerTests
         private sealed class Lease(TestSource source, string path) : IAnalysisSourceLease
         {
             public string Path => path;
-            public SourceRevision Revision => AnalysisTestEnvironment.Revision();
+            public SourceRevision Revision => source.Revision;
             public Task<bool> VerifyAsync(CancellationToken ct) => Task.FromResult(source.Unchanged);
             public ValueTask DisposeAsync() { source.Disposals++; return ValueTask.CompletedTask; }
         }

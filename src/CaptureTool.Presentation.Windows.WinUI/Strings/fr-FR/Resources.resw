@@ -1919,32 +1919,13 @@ SOFTWARE.
   <data name="CaptureNaming_FileName.Text" xml:space="preserve"><value>Nom du fichier</value></data>
   <data name="CaptureNaming_Invalid" xml:space="preserve"><value>Saisissez un nom sur une seule ligne de 1 à 160 caractères.</value></data>
   <data name="CaptureNaming_SaveFailed" xml:space="preserve"><value>Le fichier n’a pas pu être renommé. Vérifiez que le nom n’est pas déjà utilisé et que le fichier est accessible en écriture.</value></data>
-  <data name="AiFeatureConsentDialog_TextExtractionTitle" xml:space="preserve">
-    <value>Autoriser l’extraction de texte ?</value>
-  </data>
-  <data name="AiFeatureConsentDialog_TextExtractionContent" xml:space="preserve">
-    <value>L’extraction de texte utilise un modèle d’IA sur l’appareil pour détecter le texte et sa position dans l’image actuelle.</value>
-  </data>
-  <data name="AiFeatureConsentDialog_AllowButton" xml:space="preserve">
-    <value>Autoriser</value>
-  </data>
-  <data name="AiFeatureConsentDialog_DontAllowButton" xml:space="preserve">
-    <value>Ne pas autoriser</value>
-  </data>
-  <data name="AiFeatureConsentDialog_CancelButton" xml:space="preserve">
-    <value>Annuler</value>
-  </data>
   <data name="CaptureWelcome_Eyebrow.Text" xml:space="preserve"><value>IA SUR L’APPAREIL</value></data>
   <data name="CaptureWelcome_Hero.Text" xml:space="preserve"><value>Un peu de magie</value></data>
-  <data name="CaptureWelcome_Text.Text" xml:space="preserve"><value>Images : extrayez du texte, trouvez des codes QR et générez des descriptions.</value></data>
+  <data name="CaptureWelcome_Text.Text" xml:space="preserve"><value>Images : extrayez du texte, résumez des captures et créez du texte alternatif.</value></data>
   <data name="CaptureWelcome_Recording.Text" xml:space="preserve"><value>Vidéo : explorez le texte à l’écran, les descriptions et la parole.</value></data>
   <data name="CaptureWelcome_Names.Text" xml:space="preserve"><value>Audio : transcrivez vos enregistrements en texte lisible.</value></data>
   <data name="CaptureWelcome_Consent.Text" xml:space="preserve"><value>L’IA locale s’utilise uniquement lorsque vous choisissez une action. Rien n’est analysé automatiquement. Les résultats restent stockés de manière sécurisée sur ce PC. Des modèles devront peut-être être téléchargés. Vous pouvez retirer votre consentement ou supprimer les résultats dans les paramètres.</value></data>
   <data name="CaptureWelcome_NotNow" xml:space="preserve"><value>Pas maintenant</value></data>
-  <data name="TextExtractionSettings_Header.Text" xml:space="preserve"><value>Extraction de texte</value></data>
-  <data name="TextExtractionSettings_Description.Text" xml:space="preserve"><value>Lisez le texte et les codes QR avec l’extraction de texte dans l’éditeur d’images.</value></data>
-<data name="TextExtractionSettings_Consent.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Autoriser l’extraction de texte autonome</value></data>
-  <data name="TextExtractionSettings_SaveFailed" xml:space="preserve"><value>L’autorisation d’extraction de texte n’a pas pu être enregistrée. Réessayez.</value></data>
   <data name="AddOns_ChromaKeyPurchaseNotCompletedLabel.Text" xml:space="preserve"><value>L’achat n’a pas été finalisé. Réessayez.</value></data>
   <data name="AudioCapture_StopCaptureFailedMessage" xml:space="preserve"><value>L’enregistrement n’a pas pu être finalisé. Essayez d’enregistrer à nouveau.</value></data>
   <data name="AudioEdit_LoadingMediaText.Text" xml:space="preserve"><value>Ouverture de l’audio…</value></data>
@@ -1990,4 +1971,13 @@ SOFTWARE.
   <data name="CaptureAction_NoDescription" xml:space="preserve"><value>Aucune description générée.</value></data>
   <data name="CaptureAction_Unavailable" xml:space="preserve"><value>Cette action n’est pas disponible sur cet appareil.</value></data>
   <data name="CaptureAction_Failed" xml:space="preserve"><value>Cette action n’a pas pu aboutir. Vous pouvez réessayer.</value></data>
+  <data name="CapturePane_SummaryTab.Header" xml:space="preserve"><value>Résumé</value></data>
+  <data name="CaptureAction_ScreenshotSummary" xml:space="preserve"><value>Résumer la capture d’écran</value></data>
+  <data name="CaptureAction_AltText" xml:space="preserve"><value>Générer un texte alternatif</value></data>
+  <data name="CaptureSummary_Hint.Text" xml:space="preserve"><value>Retrouvez les points essentiels de cette image. Le texte et les détails visuels ne sont lus que si nécessaire.</value></data>
+  <data name="CaptureSummary_AltText.Text" xml:space="preserve"><value>Texte alternatif</value></data>
+  <data name="CaptureSummary_AltTextHint.Text" xml:space="preserve"><value>Créez une courte description pour les personnes qui ne peuvent pas voir l’image. Vérifiez-la avant de la partager.</value></data>
+  <data name="CaptureSummary_CopySummary.Content" xml:space="preserve"><value>Copier le résumé</value></data>
+  <data name="CaptureSummary_CopyAltText.Content" xml:space="preserve"><value>Copier le texte alternatif</value></data>
+  <data name="CaptureAction_NoSuggestion" xml:space="preserve"><value>Les informations sont insuffisantes pour proposer une suggestion.</value></data>
 </root>

@@ -1,10 +1,10 @@
-using CaptureTool.Domain.Ai;
+﻿using CaptureTool.Domain.Ai;
 
 namespace CaptureTool.Application.Abstractions.Ai;
 
 public interface IAiFeatureConsentService
 {
-    /// <summary>Consent for capture analysis and other AI editing tools. Standalone Text Extraction uses ITextExtractionConsentService.</summary>
+    /// <summary>Shared consent for every local AI feature, including standalone Text Extraction.</summary>
     AiFeatureConsentState GetConsentState(AiFeatureId featureId);
     Task<bool> EnsureConsentAsync(CancellationToken cancellationToken = default);
     CancellationToken Revoked { get; }

@@ -2200,32 +2200,13 @@ SOFTWARE.
   <data name="CaptureNaming_FileName.Text" xml:space="preserve"><value>File name</value></data>
   <data name="CaptureNaming_Invalid" xml:space="preserve"><value>Enter a single-line name with 1–160 characters.</value></data>
   <data name="CaptureNaming_SaveFailed" xml:space="preserve"><value>The file could not be renamed. Check that the name is not already in use and the file is writable.</value></data>
-  <data name="AiFeatureConsentDialog_TextExtractionTitle" xml:space="preserve">
-    <value>Allow Text Extraction?</value>
-  </data>
-  <data name="AiFeatureConsentDialog_TextExtractionContent" xml:space="preserve">
-    <value>Text Extraction uses an on-device AI model to detect text and text locations in the current image.</value>
-  </data>
-  <data name="AiFeatureConsentDialog_AllowButton" xml:space="preserve">
-    <value>Allow</value>
-  </data>
-  <data name="AiFeatureConsentDialog_DontAllowButton" xml:space="preserve">
-    <value>Don't allow</value>
-  </data>
-  <data name="AiFeatureConsentDialog_CancelButton" xml:space="preserve">
-    <value>Cancel</value>
-  </data>
   <data name="CaptureWelcome_Eyebrow.Text" xml:space="preserve"><value>ON-DEVICE AI</value></data>
   <data name="CaptureWelcome_Hero.Text" xml:space="preserve"><value>A little capture magic</value></data>
-  <data name="CaptureWelcome_Text.Text" xml:space="preserve"><value>Images: extract text, find QR codes, and generate descriptions.</value></data>
+  <data name="CaptureWelcome_Text.Text" xml:space="preserve"><value>Images: extract text, summarize screenshots, and create alt text.</value></data>
   <data name="CaptureWelcome_Recording.Text" xml:space="preserve"><value>Video: explore on-screen text, descriptions, and speech.</value></data>
   <data name="CaptureWelcome_Names.Text" xml:space="preserve"><value>Audio: transcribe recordings into readable text.</value></data>
   <data name="CaptureWelcome_Consent.Text" xml:space="preserve"><value>Use local AI only when you choose an action. Nothing is scanned automatically. Results stay on this PC and are stored securely. Models may need to be downloaded. You can withdraw consent or delete results in Settings.</value></data>
   <data name="CaptureWelcome_NotNow" xml:space="preserve"><value>Not now</value></data>
-  <data name="TextExtractionSettings_Header.Text" xml:space="preserve"><value>Text Extraction</value></data>
-  <data name="TextExtractionSettings_Description.Text" xml:space="preserve"><value>Read text and QR codes when you use Text Extraction in the image editor.</value></data>
-<data name="TextExtractionSettings_Consent.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Allow standalone Text Extraction</value></data>
-  <data name="TextExtractionSettings_SaveFailed" xml:space="preserve"><value>The Text Extraction permission could not be saved. Try again.</value></data>
   <data name="AddOns_ItemUnknown" xml:space="preserve"><value>Loading…</value></data>
   <data name="ChromaKeyToolbar_KeyColorLabel.Text" xml:space="preserve"><value>Key color</value></data>
   <data name="Common_BackButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Back</value></data>
@@ -2258,4 +2239,13 @@ SOFTWARE.
   <data name="CaptureAction_NoDescription" xml:space="preserve"><value>No description was generated.</value></data>
   <data name="CaptureAction_Unavailable" xml:space="preserve"><value>This action is not available on this device.</value></data>
   <data name="CaptureAction_Failed" xml:space="preserve"><value>This action could not finish. You can try again.</value></data>
+  <data name="CapturePane_SummaryTab.Header" xml:space="preserve"><value>Summary</value></data>
+  <data name="CaptureAction_ScreenshotSummary" xml:space="preserve"><value>Summarize screenshot</value></data>
+  <data name="CaptureAction_AltText" xml:space="preserve"><value>Generate alt text</value></data>
+  <data name="CaptureSummary_Hint.Text" xml:space="preserve"><value>Get the main points from this image. Text and visual details are read only when needed.</value></data>
+  <data name="CaptureSummary_AltText.Text" xml:space="preserve"><value>Alt text</value></data>
+  <data name="CaptureSummary_AltTextHint.Text" xml:space="preserve"><value>Create a short description for people who cannot see the image. Review it before sharing.</value></data>
+  <data name="CaptureSummary_CopySummary.Content" xml:space="preserve"><value>Copy summary</value></data>
+  <data name="CaptureSummary_CopyAltText.Content" xml:space="preserve"><value>Copy alt text</value></data>
+  <data name="CaptureAction_NoSuggestion" xml:space="preserve"><value>There is not enough information for a suggestion.</value></data>
 </root>

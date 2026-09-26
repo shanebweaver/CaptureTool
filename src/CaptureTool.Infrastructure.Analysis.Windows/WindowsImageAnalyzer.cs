@@ -27,11 +27,17 @@ internal sealed class WindowsImageAnalyzer(string id, WindowsImageModel model, A
     {
         cancellationToken.ThrowIfCancellationRequested();
         if (kind != mediaKind || !OperatingSystem.IsWindowsVersionAtLeast(10, 0, model == WindowsImageModel.LegacyOcr ? 17763 : 26100))
+        {
             return ValueTask.FromResult(AnalyzerAvailability.Unsupported);
+        }
+
         try
         {
             if (model == WindowsImageModel.LegacyOcr)
+            {
                 return ValueTask.FromResult(CreateLegacy(language) == null ? AnalyzerAvailability.Unsupported : AnalyzerAvailability.Ready);
+            }
+
             return ValueTask.FromResult(MapReady(model == WindowsImageModel.Ocr ? TextRecognizer.GetReadyState() : ImageDescriptionGenerator.GetReadyState()));
         }
         catch (Exception) { return ValueTask.FromResult(AnalyzerAvailability.Unsupported); }
@@ -40,7 +46,11 @@ internal sealed class WindowsImageAnalyzer(string id, WindowsImageModel model, A
     public async Task<AnalyzerAvailability> PrepareAsync(IProgress<AnalysisProgress>? progress, CancellationToken cancellationToken)
     {
         progress?.Report(new(AnalysisProgressStage.Preparing));
-        if (model == WindowsImageModel.LegacyOcr) return AnalyzerAvailability.Ready;
+        if (model == WindowsImageModel.LegacyOcr)
+        {
+            return AnalyzerAvailability.Ready;
+        }
+
         AIFeatureReadyResult ready = model == WindowsImageModel.Ocr
             ? await TextRecognizer.EnsureReadyAsync().AsTask(cancellationToken).ConfigureAwait(false)
             : await ImageDescriptionGenerator.EnsureReadyAsync().AsTask(cancellationToken).ConfigureAwait(false);
@@ -56,14 +66,21 @@ internal sealed class WindowsImageAnalyzer(string id, WindowsImageModel model, A
 
     private async Task<AnalyzerOutcome> AnalyzeCoreAsync(AnalysisInput input, IProgress<AnalysisProgress>? progress, CancellationToken cancellationToken)
     {
-        if (input.MediaKind != mediaKind) return AnalyzerOutcome.Unsuccessful(AnalyzerOutcomeKind.Unsupported, "unsupported-media");
+        if (input.MediaKind != mediaKind)
+        {
+            return AnalyzerOutcome.Unsuccessful(AnalyzerOutcomeKind.Unsupported, "unsupported-media");
+        }
+
         List<RecognizedText> text = [];
         List<MediaDescription> descriptions = [];
         if (mediaKind == AnalysisMediaKind.Image)
         {
             using SoftwareBitmap bitmap = await WindowsAnalysisMedia.LoadImageAsync(input.SourcePath, cancellationToken).ConfigureAwait(false);
             AnalyzerOutcomeKind status = await AnalyzeFrameAsync(bitmap, null, input.Language, text, descriptions, cancellationToken).ConfigureAwait(false);
-            if (status != AnalyzerOutcomeKind.Succeeded) return AnalyzerOutcome.Unsuccessful(status, "windows-image-rejected");
+            if (status != AnalyzerOutcomeKind.Succeeded)
+            {
+                return AnalyzerOutcome.Unsuccessful(status, "windows-image-rejected");
+            }
         }
         else
         {
@@ -73,8 +90,16 @@ internal sealed class WindowsImageAnalyzer(string id, WindowsImageModel model, A
                 TimeSpan.FromSeconds(model == WindowsImageModel.Description ? 30 : 5), cancellationToken).ConfigureAwait(false))
             {
                 AnalyzerOutcomeKind status = await AnalyzeFrameAsync(frame.Bitmap, frame.Timestamp, input.Language, text, descriptions, cancellationToken).ConfigureAwait(false);
-                if (status != AnalyzerOutcomeKind.Succeeded) return AnalyzerOutcome.Unsuccessful(status, "windows-frame-rejected");
-                if (text.Count > MaximumRegions) return AnalyzerOutcome.Unsuccessful(AnalyzerOutcomeKind.Failed, "output-limit");
+                if (status != AnalyzerOutcomeKind.Succeeded)
+                {
+                    return AnalyzerOutcome.Unsuccessful(status, "windows-frame-rejected");
+                }
+
+                if (text.Count > MaximumRegions)
+                {
+                    return AnalyzerOutcome.Unsuccessful(AnalyzerOutcomeKind.Failed, "output-limit");
+                }
+
                 progress?.Report(new(AnalysisProgressStage.Analyzing, ++count / (double)maximum));
             }
         }
@@ -89,14 +114,25 @@ internal sealed class WindowsImageAnalyzer(string id, WindowsImageModel model, A
         if (model == WindowsImageModel.LegacyOcr)
         {
             OcrEngine? engine = CreateLegacy(language);
-            if (engine == null) return AnalyzerOutcomeKind.Unsupported;
+            if (engine == null)
+            {
+                return AnalyzerOutcomeKind.Unsupported;
+            }
+
             OcrResult recognized = await engine.RecognizeAsync(bitmap).AsTask(ct).ConfigureAwait(false);
             foreach (OcrWord word in recognized.Lines.SelectMany(line => line.Words))
             {
-                if (string.IsNullOrWhiteSpace(word.Text)) continue;
+                if (string.IsNullOrWhiteSpace(word.Text))
+                {
+                    continue;
+                }
+
                 var bounds = word.BoundingRect;
                 text.Add(new(word.Text, Bounds(bounds.X, bounds.Y, bounds.Right, bounds.Bottom, bitmap), timestamp));
-                if (text.Count > MaximumRegions) return AnalyzerOutcomeKind.Failed;
+                if (text.Count > MaximumRegions)
+                {
+                    return AnalyzerOutcomeKind.Failed;
+                }
             }
         }
         else
@@ -108,14 +144,21 @@ internal sealed class WindowsImageAnalyzer(string id, WindowsImageModel model, A
                 var recognized = await recognizer.RecognizeTextFromImageAsync(image).AsTask(ct).ConfigureAwait(false);
                 foreach (RecognizedWord word in recognized.Lines.SelectMany(line => line.Words))
                 {
-                    if (string.IsNullOrWhiteSpace(word.Text)) continue;
+                    if (string.IsNullOrWhiteSpace(word.Text))
+                    {
+                        continue;
+                    }
+
                     var box = word.BoundingBox;
                     double left = Math.Min(Math.Min(box.TopLeft.X, box.TopRight.X), Math.Min(box.BottomLeft.X, box.BottomRight.X));
                     double top = Math.Min(Math.Min(box.TopLeft.Y, box.TopRight.Y), Math.Min(box.BottomLeft.Y, box.BottomRight.Y));
                     double right = Math.Max(Math.Max(box.TopLeft.X, box.TopRight.X), Math.Max(box.BottomLeft.X, box.BottomRight.X));
                     double bottom = Math.Max(Math.Max(box.TopLeft.Y, box.TopRight.Y), Math.Max(box.BottomLeft.Y, box.BottomRight.Y));
                     text.Add(new(word.Text, Bounds(left, top, right, bottom, bitmap), timestamp));
-                    if (text.Count > MaximumRegions) return AnalyzerOutcomeKind.Failed;
+                    if (text.Count > MaximumRegions)
+                    {
+                        return AnalyzerOutcomeKind.Failed;
+                    }
                 }
             }
             else
@@ -124,9 +167,19 @@ internal sealed class WindowsImageAnalyzer(string id, WindowsImageModel model, A
                 var description = await generator.DescribeAsync(image, ImageDescriptionKind.BriefDescription, new ContentFilterOptions()).AsTask(ct).ConfigureAwait(false);
                 if (description.Status is ImageDescriptionResultStatus.BlockedByPolicy or ImageDescriptionResultStatus.ImageBlockedByContentModeration or
                     ImageDescriptionResultStatus.TextInImageBlockedByContentModeration or ImageDescriptionResultStatus.DescriptionTextBlockedByContentModeration)
+                {
                     return AnalyzerOutcomeKind.ContentRejected;
-                if (description.Status != ImageDescriptionResultStatus.Complete || description.Description == null) return AnalyzerOutcomeKind.Failed;
-                if (!string.IsNullOrWhiteSpace(description.Description)) descriptions.Add(new(description.Description, timestamp));
+                }
+
+                if (description.Status != ImageDescriptionResultStatus.Complete || description.Description == null)
+                {
+                    return AnalyzerOutcomeKind.Failed;
+                }
+
+                if (!string.IsNullOrWhiteSpace(description.Description))
+                {
+                    descriptions.Add(new(description.Description, timestamp));
+                }
             }
         }
         return AnalyzerOutcomeKind.Succeeded;
@@ -139,11 +192,13 @@ internal sealed class WindowsImageAnalyzer(string id, WindowsImageModel model, A
         double x = Math.Clamp(left / bitmap.PixelWidth, 0, 1), y = Math.Clamp(top / bitmap.PixelHeight, 0, 1);
         return new(x, y, Math.Clamp(right / bitmap.PixelWidth - x, 0, 1 - x), Math.Clamp(bottom / bitmap.PixelHeight - y, 0, 1 - y));
     }
-    private static AnalyzerAvailability MapReady(AIFeatureReadyState ready) => ready switch
+    internal static AnalyzerAvailability MapReady(AIFeatureReadyState ready) => ready switch
     {
         AIFeatureReadyState.Ready => AnalyzerAvailability.Ready,
         AIFeatureReadyState.NotReady => AnalyzerAvailability.PreparationRequired,
-        AIFeatureReadyState.NotSupportedOnCurrentSystem or AIFeatureReadyState.DisabledByUser => AnalyzerAvailability.Unsupported,
+        AIFeatureReadyState.NotSupportedOnCurrentSystem or AIFeatureReadyState.DisabledByUser or
+            AIFeatureReadyState.CapabilityMissing or AIFeatureReadyState.NotCompatibleWithSystemHardware or
+            AIFeatureReadyState.OSUpdateNeeded => AnalyzerAvailability.Unsupported,
         _ => AnalyzerAvailability.TemporarilyUnavailable,
     };
 }
