@@ -161,6 +161,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     public TextToolViewModel TextTool { get; }
 
     public TextExtractionToolViewModel TextExtractionTool { get; }
+    public CaptureTool.Presentation.Features.CaptureDetails.CaptureEditorTextSession EditorText { get; }
 
     public bool HasUndoStack
     {
@@ -209,6 +210,8 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         get;
         private set => Set(ref field, value);
     }
+
+    public bool HasActiveEditMode { get; private set => Set(ref field, value); }
 
     public bool IsCropModeActive
     {
@@ -555,7 +558,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     public string TextExtractionStatusMessage
     {
         get;
-        private set => Set(ref field, value);
+        private set { if (Set(ref field, value)) EditorText.SetStatus(value); }
     } = string.Empty;
 
     public IReadOnlyList<RecognizedTextRegion> TextExtractionRegions
@@ -773,6 +776,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         ICaptureNamingService? captureNames = null)
     {
         _localizationService = localizationService;
+        EditorText = new(EnsureTextExtractionCurrentAsync, CancelTextExtractionWork);
         _cancellationService = cancellationService;
         _imageCanvasPrinter = imageCanvasPrinter;
         _filePickerService = filePickerService;
@@ -986,6 +990,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         CancelForegroundExtractionWork();
         CancelObjectEraseWork();
         CancelObjectExtractionWork();
+        EditorText.Invalidate(false);
         _operationCoordinator.Dispose();
         ChromaKeyTool.SettingsChanged -= ChromaKeyTool_SettingsChanged;
         ChromaKeyTool.InteractionCommitted -= ChromaKeyTool_InteractionCommitted;
@@ -1251,6 +1256,8 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         ApplyActiveMode(_modeStateMachine.Toggle(ImageEditMode.ColorPicker));
     }
 
+    public void ExitEditMode() => ApplyActiveMode(_modeStateMachine.Reset());
+
     private void ApplyActiveMode(ImageEditMode mode)
     {
         bool wasTextExtractionModeActive = IsTextExtractionModeActive;
@@ -1268,6 +1275,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         IsForegroundExtractionModeActive = mode == ImageEditMode.ForegroundExtraction;
         IsObjectEraseModeActive = mode == ImageEditMode.ObjectErase;
         IsObjectExtractionModeActive = mode == ImageEditMode.ObjectExtraction;
+        HasActiveEditMode = mode != ImageEditMode.Normal;
 
         if (wasTextExtractionModeActive && !IsTextExtractionModeActive)
         {
@@ -2310,7 +2318,8 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
     private async Task EnsureTextExtractionCurrentAsync()
     {
-        if (_textExtractionProcessedRevision == _editRevision && _aiFeatureConsentService.GetConsentState(AiFeatureId.TextExtraction) == AiFeatureConsentState.Granted)
+        if (_textExtractionProcessedRevision == _editRevision && EditorText.Document != null &&
+            _aiFeatureConsentService.GetConsentState(AiFeatureId.TextExtraction) == AiFeatureConsentState.Granted)
         {
             return;
         }
@@ -2415,6 +2424,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
     private void ApplyTextExtractionDocument(RecognizedTextDocument document, int processedRevision)
     {
+        EditorText.SetDocument(document);
         TextExtractionRegions = NormalizeTextExtractionRegions(document.Regions, document.ImageSize);
         TextExtractionQrCodes = NormalizeQrCodeRegions(document.QrCodes, document.ImageSize);
         TextExtractionTool.SetText(document.Text);
@@ -2825,6 +2835,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         CanToggleTextExtraction = IsLoaded &&
             IsTextExtractionFeatureEnabled &&
             IsTextExtractionAvailable;
+        EditorText.SetAvailability(CanToggleTextExtraction);
     }
 
     private void UpdateImageDescriptionAvailability()
@@ -2956,6 +2967,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
     private void InvalidateTextExtractionResult()
     {
+        EditorText.Invalidate(_editRevision > 0);
         _textExtractionProcessedRevision = null;
         TextExtractionRegions = [];
         TextExtractionQrCodes = [];

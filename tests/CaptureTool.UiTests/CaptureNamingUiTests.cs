@@ -41,19 +41,36 @@ public sealed partial class ImageEditTextExtractionUiTests
         {
             window = WaitForMainWindow(app, automation, AppLaunchTimeout); MaximizeWindow(window);
             Element("ImageEdit_CommandBar"); OpenPane();
-            Assert.IsFalse(Element("CaptureAction_Name").IsEnabled);
-            Element("CapturePane_TextTab").Patterns.SelectionItem.Pattern.Select();
-            Element("CaptureAction_Text").Patterns.Invoke.Pattern.Invoke();
-            WaitForElementRemoved(window, automation, "CaptureAction_Text", InteractionTimeout);
-            Element("CapturePane_DetailsTab").Patterns.SelectionItem.Pattern.Select();
-            WaitFor(() => Element("CaptureAction_Name").IsEnabled ? window : null, InteractionTimeout, "saved text enables name suggestion");
+            Assert.IsTrue(Element("CaptureAction_Name").IsEnabled, "The explicit name action can obtain missing image inputs.");
+            double tabsTop = Element("CapturePane_DetailsTab").BoundingRectangle.Top;
+            var nameBounds = Element("CaptureDetailsFileName").BoundingRectangle;
+            var actionBounds = Element("CaptureAction_Name").BoundingRectangle;
+            Screenshot("filename-idle");
             Element("CaptureAction_Name").Patterns.Invoke.Pattern.Invoke();
-            WaitFor(() => Element("CaptureName_Suggestion").Name == "Contoso invoice" ? window : null,
-                TimeSpan.FromSeconds(45), "suggested capture name");
-            Assert.AreEqual("capture.png", Element("CaptureDetailsFileName").Name);
+            var loading = Element("CaptureAction_Name_Loading");
+            Assert.IsTrue(actionBounds.Contains(loading.BoundingRectangle), "Loading stays inside the AI button.");
+            Assert.AreEqual(tabsTop, Element("CapturePane_DetailsTab").BoundingRectangle.Top, 1);
+            Screenshot("filename-loading");
+            try
+            {
+                WaitFor(() => window.FindFirstDescendant(automation.ConditionFactory.ByAutomationId("CaptureName_Input"))?.AsTextBox().Text == "Contoso invoice" ? window : null,
+                    TimeSpan.FromSeconds(45), "suggested capture name");
+            }
+            catch { Screenshot("suggestion-timeout"); throw; }
+            Assert.IsNull(window.FindFirstDescendant(automation.ConditionFactory.ByAutomationId("CaptureDetailsFileName")));
+            Assert.AreEqual(tabsTop, Element("CapturePane_DetailsTab").BoundingRectangle.Top, 1);
+            Assert.AreEqual(nameBounds.Right, Element("CaptureName_Input").BoundingRectangle.Right, 1);
             Assert.IsTrue(File.Exists(fixture), "Suggestions must not rename a file before acceptance.");
+            Element("CapturePane_SummaryTab").Patterns.SelectionItem.Pattern.Select();
+            Assert.IsTrue(Element("CaptureAction_Summary").IsEnabled, "Name generation must leave summary generation available.");
+            Element("CapturePane_DetailsTab").Patterns.SelectionItem.Pattern.Select();
             Screenshot("suggested-name");
-            Element("CaptureName_Accept").Patterns.Invoke.Pattern.Invoke();
+            Element("CaptureName_Cancel").Patterns.Invoke.Pattern.Invoke();
+            Assert.AreEqual("capture.png", Element("CaptureDetailsFileName").Name);
+            Assert.AreEqual(tabsTop, Element("CapturePane_DetailsTab").BoundingRectangle.Top, 1);
+            Element("CaptureAction_Name").Patterns.Invoke.Pattern.Invoke();
+            Assert.AreEqual("Contoso invoice", Element("CaptureName_Input").AsTextBox().Text);
+            Element("CaptureName_Save").Patterns.Invoke.Pattern.Invoke();
             string suggestedPath = Path.Combine(isolated, "Contoso invoice.png");
             WaitFor(() => File.Exists(suggestedPath) && !File.Exists(fixture) ? window : null,
                 InteractionTimeout, "acceptance renames the actual file");
@@ -127,11 +144,17 @@ public sealed partial class ImageEditTextExtractionUiTests
         }
         void EditName(string name)
         {
+            double tabsTop = Element("CapturePane_DetailsTab").BoundingRectangle.Top;
+            var nameBounds = Element("CaptureDetailsFileName").BoundingRectangle;
             Element("CaptureName_Edit").Patterns.Invoke.Pattern.Invoke();
             Element("CaptureName_Input").AsTextBox().Text = name;
+            Assert.IsNull(window.FindFirstDescendant(automation.ConditionFactory.ByAutomationId("CaptureDetailsFileName")));
+            Assert.AreEqual(tabsTop, Element("CapturePane_DetailsTab").BoundingRectangle.Top, 1);
+            Assert.AreEqual(nameBounds.Right, Element("CaptureName_Input").BoundingRectangle.Right, 1);
             Screenshot("rename-input");
             Element("CaptureName_Save").Patterns.Invoke.Pattern.Invoke();
             WaitFor(() => Element("CaptureDetailsFileName").Name == name + ".png" ? window : null, InteractionTimeout, "user capture name");
+            Assert.AreEqual(tabsTop, Element("CapturePane_DetailsTab").BoundingRectangle.Top, 1);
         }
         void Screenshot(string name)
         {

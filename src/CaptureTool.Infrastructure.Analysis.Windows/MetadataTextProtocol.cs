@@ -18,12 +18,17 @@ internal static class MetadataTextProtocol
         "Every suggestion needs evidence: ONE numeric source id identifying the most relevant supplied source. " +
         "The evidence value must be an integer, never an array or list. Never invent a source id. " +
         "Return ONLY one JSON object, no markdown or explanation. Use the sources' language for text.";
-    private const string SynopsisRules = "Suggest a concise title (at most 160 characters) and one short summary paragraph (at most 400 characters). " +
+    private const string SynopsisRules = "Summarize the main subject in ONE short sentence, preferably under 240 characters; the hard maximum is 400. " +
+        "Select the essential point instead of listing every visible detail. " +
         "Summarize subject matter without naming people or attributing statements to speakers. Preserve uncertainty; undecided is not decided. " +
-        "Write the title AND summary in the language of the source text, including German when the source is German. " +
-        "Use exactly this flat schema: {\"title\":\"short title\",\"summary\":\"short summary paragraph\",\"evidence\":0}. " +
-        "title and summary are strings, never objects or arrays. Cite the primary source for the title and summary. " +
-        "Abstain with {\"title\":null,\"summary\":null,\"evidence\":null}. An incomplete source selection only supports a summary of supplied excerpts, not the entire recording.";
+        "Write the summary in the language of the source text, including German when the source is German. " +
+        "Use exactly this flat schema: {\"summary\":\"short summary paragraph\",\"evidence\":0}. " +
+        "summary is a string, never an object or array. Cite its primary source. " +
+        "Abstain with {\"summary\":null,\"evidence\":null}. An incomplete source selection only supports a summary of supplied excerpts, not the entire recording.";
+    private const string NameRules = "Suggest one concise, descriptive capture name in 3 to 8 words, preferably under 80 characters; the hard maximum is 160. " +
+        "Name the main subject so the capture is easy to recognize later. Do not include a file extension, path, or quotation marks. " +
+        "Use the language of the source text. Use exactly this flat schema: {\"name\":\"short capture name\",\"evidence\":0}. " +
+        "name is a string, never an object or array. Cite its primary source. Abstain with {\"name\":null,\"evidence\":null}.";
     private const string ClassificationRules = "Choose at most one primary category from document, conversation, code, error, web-content, media, other. " +
         "document means invoices, receipts, forms, notices, letters and reports; conversation means dialogue or messages; " +
         "code means programming source code; error means a failure message; web-content requires visible webpage or website content; " +
@@ -47,6 +52,7 @@ internal static class MetadataTextProtocol
     internal static string CreateInstructions(MetadataProcessorInput input, bool correction, bool disableThinking = false)
     {
         string instruction = input.Descriptor.Capability == AnalysisCapability.CaptureSynopsis ? SynopsisRules :
+            input.Descriptor.Capability == AnalysisCapability.CaptureName ? NameRules :
             input.Descriptor.Capability == AnalysisCapability.ImageAltText ? AltTextRules :
             input.Descriptor.Capability == AnalysisCapability.CaptureClassification ? ClassificationRules : throw new ArgumentException("Unsupported insight capability.");
         return Rules + (disableThinking ? " /no_think\n" : "\n") + instruction + (correction
@@ -116,17 +122,25 @@ internal static class MetadataTextProtocol
             AnalysisPayload payload;
             if (input.Descriptor.Capability == AnalysisCapability.CaptureSynopsis)
             {
-                Fields(value, "title", "summary", "evidence");
-                string? title = value.GetProperty("title").GetString();
+                Fields(value, "summary", "evidence");
                 string? summary = value.GetProperty("summary").GetString();
                 var evidence = Evidence(value.GetProperty("evidence")).ToArray();
-                if (evidence.Length != (title == null && summary == null ? 0 : 1))
+                if (evidence.Length != (summary == null ? 0 : 1))
                 {
                     throw new InvalidOutputException("evidence");
                 }
 
-                payload = new CaptureSynopsisMetadata(title == null ? null : new SuggestedText(title, evidence),
+                payload = new CaptureSynopsisMetadata(null,
                     summary == null ? [] : [new SuggestedText(summary, evidence)], input.Coverage);
+            }
+            else if (input.Descriptor.Capability == AnalysisCapability.CaptureName)
+            {
+                Fields(value, "name", "evidence");
+                if (value.GetProperty("name").ValueKind == JsonValueKind.Null && value.GetProperty("evidence").ValueKind != JsonValueKind.Null)
+                    throw new InvalidOutputException("evidence");
+                var suggestion = value.GetProperty("name").ValueKind == JsonValueKind.Null ? null : Suggestion(value, textField: "name");
+                if (suggestion?.Text.Length > 160) throw new InvalidOutputException("text-bounds");
+                payload = new CaptureNameMetadata(suggestion, input.Coverage);
             }
             else if (input.Descriptor.Capability == AnalysisCapability.ImageAltText)
             {

@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -1402,13 +1402,13 @@ SOFTWARE.
     <value>Выкл.</value>
   </data>
   <data name="ImageEdit_TextExtractionButton.Label" xml:space="preserve">
-    <value>Распознавание текста</value>
+    <value>Извлечь текст</value>
   </data>
   <data name="ImageEdit_TextExtractionButton.AutomationProperties.Name" xml:space="preserve">
-    <value>Распознать текст на изображении</value>
+    <value>Извлечь текст</value>
   </data>
   <data name="ImageEdit_TextExtractionButton.ToolTipService.ToolTip" xml:space="preserve">
-    <value>Распознать и выделить текст на изображении</value>
+    <value>Поиск и копирование текста на вкладке «Текст»</value>
   </data>
   <data name="ImageEdit_TextExtractionOverlayMarker.AutomationProperties.Name" xml:space="preserve">
     <value>Слой распознавания текста готов</value>
@@ -1740,12 +1740,6 @@ SOFTWARE.
   <data name="CaptureMemory_Delete.Content" xml:space="preserve">
     <value>Удалить</value>
   </data>
-  <data name="CaptureMemory_Preparing" xml:space="preserve">
-    <value>Подготовка ИИ на устройстве…</value>
-  </data>
-  <data name="CaptureMemory_Analyzing" xml:space="preserve">
-    <value>Анализ записей…</value>
-  </data>
   <data name="CaptureMemory_ConsentTitle" xml:space="preserve">
     <value>Откройте больше в каждом снимке</value>
   </data>
@@ -1980,4 +1974,7 @@ SOFTWARE.
   <data name="CaptureSummary_CopySummary.Content" xml:space="preserve"><value>Копировать сводку</value></data>
   <data name="CaptureSummary_CopyAltText.Content" xml:space="preserve"><value>Копировать альтернативный текст</value></data>
   <data name="CaptureAction_NoSuggestion" xml:space="preserve"><value>Недостаточно информации для предложения.</value></data>
+  <data name="CaptureNaming_Suggest" xml:space="preserve"><value>Предложить имя файла с помощью ИИ. Проверьте и измените его перед сохранением.</value></data>
+  <data name="CaptureNaming_AiGenerating" xml:space="preserve"><value>ИИ подбирает имя…</value></data>
+  <data name="CaptureNaming_Edit.ToolTipService.ToolTip" xml:space="preserve"><value>Изменить имя снимка</value></data>
 </root>

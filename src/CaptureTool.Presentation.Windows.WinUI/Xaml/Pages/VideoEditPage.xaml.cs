@@ -35,10 +35,14 @@ public sealed partial class VideoEditPage : VideoEditPageBase
     {
         InitializeComponent();
         DetailsHost.ToggleControl = DetailsToggle;
-        DetailsHost.FileRenamed = ViewModel.ApplyCaptureRename;
-        DetailsHost.Navigate = location =>
+        DetailsHost.ActivateMode = () =>
         {
-            if (!ViewModel.IsMediaReady || ActiveMediaPlayer == null || location.Time is not { } time ||
+            if (ViewModel.IsInTrimMode) ViewModel.ToggleTrimModeCommand.Execute(null);
+        };
+        DetailsHost.FileRenamed = ViewModel.ApplyCaptureRename;
+        DetailsHost.Navigate = passage =>
+        {
+            if (!ViewModel.IsMediaReady || ActiveMediaPlayer == null || passage.SelectedLocation?.Time is not { } time ||
                 time.TotalSeconds < ViewModel.TrimStartSeconds || time.TotalSeconds > ViewModel.TrimEndSeconds) return false;
             PauseTrimPreview();
             ViewModel.UpdatePlayhead(time.TotalSeconds);
@@ -171,6 +175,7 @@ public sealed partial class VideoEditPage : VideoEditPageBase
 
         if (e.PropertyName == nameof(VideoEditPageViewModel.IsInTrimMode))
         {
+            if (ViewModel.IsInTrimMode) DetailsHost.IsPaneOpen = false;
             _ = UpdateRenderedTrimPreviewAsync();
         }
 

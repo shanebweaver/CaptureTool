@@ -62,7 +62,7 @@ if (modelOption >= 0)
 {
     if (modelOption + 1 == args.Length) return 2;
     string alias = args[modelOption + 1];
-    metadataModels = new[] { AnalysisCapability.CaptureSynopsis, AnalysisCapability.CaptureClassification }
+    metadataModels = new[] { AnalysisCapability.CaptureSynopsis, AnalysisCapability.CaptureName, AnalysisCapability.CaptureClassification }
         .Select(capability => new MetadataModelRegistration(MetadataEnrichmentConfiguration.CreateSemantic("foundry-evaluation", capability), MetadataModelBackend.FoundryLocal, alias));
     if (args.Contains("--enrichment-probe", StringComparer.Ordinal)) return await MetadataProbe.RunAsync(storage, output, alias);
 }

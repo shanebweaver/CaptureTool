@@ -26,7 +26,7 @@ public sealed class WindowsLanguageModelTests
         using var services = new ServiceCollection().AddSingleton(Mock.Of<IStorageService>()).AddSingleton(Mock.Of<IScratchArtifactStore>())
             .AddWindowsAnalysisProviders(MetadataEnrichmentConfiguration.SemanticModels).BuildServiceProvider();
         var processors = services.GetServices<IMetadataProcessor>().ToArray();
-        Assert.HasCount(6, processors);
+        Assert.HasCount(8, processors);
         var byId = processors.ToDictionary(processor => processor.Descriptor.Id);
         foreach (var step in MetadataEnrichmentConfiguration.Steps.Skip(1).Append(MetadataEnrichmentConfiguration.AltTextStep))
         {

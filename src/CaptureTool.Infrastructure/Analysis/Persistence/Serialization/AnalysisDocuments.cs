@@ -18,7 +18,8 @@ internal sealed record ResultDocument(string Capability, int SchemaVersion, Prod
     [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] CoverageDocument? Coverage = null,
     [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] SynopsisDocument? Synopsis = null,
     [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] ClassificationDocument? Classification = null,
-    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] AltTextDocument? AltText = null);
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] AltTextDocument? AltText = null,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] NameDocument? Name = null);
 
 internal sealed record InputReferenceDocument(CapabilityDocument Capability, Guid? ResultId);
 internal sealed record EvidenceDocument(Guid ResultId, int EntryIndex, int Start, int Length);
@@ -27,6 +28,7 @@ internal sealed record CoverageDocument(long AvailableEntries, int IncludedEntri
 internal sealed record SuggestedTextDocument(string Text, EvidenceDocument[] Evidence);
 internal sealed record SynopsisDocument(SuggestedTextDocument? Title, SuggestedTextDocument[] Summary);
 internal sealed record AltTextDocument(SuggestedTextDocument? Suggestion);
+internal sealed record NameDocument(SuggestedTextDocument? Suggestion);
 internal sealed record ClassificationDocument(string VocabularyVersion, int? Category, EvidenceDocument[] Evidence, SuggestedTextDocument[] Topics);
 
 internal sealed record RunDocument(Guid Id, Guid AuthorizationId, long QueueOrder, string PlanVersion,
@@ -40,7 +42,9 @@ internal sealed record ProducerDocument(string AnalyzerId, string ProviderId, st
     string AdapterVersion, string? ModelVersion);
 
 internal sealed record BoundsDocument(double X, double Y, double Width, double Height);
-internal sealed record TextDocument(string Text, BoundsDocument? Bounds, long? TimestampTicks);
+internal sealed record TextDocument(string Text, BoundsDocument? Bounds, long? TimestampTicks,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] int? LineIndex = null,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] int? WordIndex = null);
 internal sealed record QrCodeDocument(string Value, BoundsDocument Bounds, long? TimestampTicks);
 internal sealed record DescriptionDocument(string Text, long? TimestampTicks);
 internal sealed record TranscriptDocument(string? Language, SegmentDocument[] Segments);

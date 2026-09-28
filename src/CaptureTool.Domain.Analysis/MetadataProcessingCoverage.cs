@@ -83,7 +83,10 @@ public sealed record MetadataProcessingCoverage
         var entries = evidence.GroupBy(span => (span.ResultId, span.EntryIndex)).ToArray();
         if (AvailableEntries != available || entries.Length > IncludedEntries ||
             entries.Sum(entry => entry.Max(span => (long)span.Start + span.Length)) > IncludedCharacters)
+        {
             throw new ArgumentException("Coverage does not match declared sources and evidence.", nameof(inputs));
+        }
+
         if (IncludedEntries == available)
         {
             long characters = inputs.Sum(input => input.Payload switch
@@ -95,7 +98,9 @@ public sealed record MetadataProcessingCoverage
                 _ => 0,
             });
             if (IncludedCharacters != characters)
+            {
                 throw new ArgumentException("Complete input coverage must account for all source characters.", nameof(inputs));
+            }
         }
     }
 }

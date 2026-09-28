@@ -43,7 +43,7 @@ public sealed class CaptureAnalysisFoundationTests
         CaptureAnalysisConfiguration configuration = CaptureAnalysisConfiguration.CreateDefault();
         Assert.HasCount(3, configuration.Plans);
         MediaAnalysisPlan video = configuration.Plans.Single(plan => plan.MediaKind == AnalysisMediaKind.Video);
-        CollectionAssert.AreEqual(new[] { AnalysisCapability.FileDetails, AnalysisCapability.QrCodeDetection, AnalysisCapability.TextRecognition, AnalysisCapability.Transcription, AnalysisCapability.Description, AnalysisCapability.StructuredFacts, AnalysisCapability.CaptureSynopsis, AnalysisCapability.CaptureClassification },
+        CollectionAssert.AreEqual(new[] { AnalysisCapability.FileDetails, AnalysisCapability.QrCodeDetection, AnalysisCapability.TextRecognition, AnalysisCapability.Transcription, AnalysisCapability.Description, AnalysisCapability.StructuredFacts, AnalysisCapability.CaptureSynopsis, AnalysisCapability.CaptureName, AnalysisCapability.CaptureClassification },
             video.Steps.Select(step => step.Capability).ToArray());
         CollectionAssert.AreEqual(new[] { "zxing-video-frame-qr" }, video.Steps[1].Candidates.ToArray());
         CollectionAssert.AreEqual(new[] { "windows-ai-video-frame-ocr", "windows-video-frame-ocr" }, video.Steps[2].Candidates.ToArray());
@@ -52,12 +52,14 @@ public sealed class CaptureAnalysisFoundationTests
         CollectionAssert.AreEqual(new[] { "windows-image-description", "foundry-local-image-description" }, image.Steps.Single(step => step.Capability == AnalysisCapability.Description).Candidates.ToArray());
         Assert.AreEqual(AnalysisCapability.QrCodeDetection, image.Steps[1].Capability);
         Assert.AreEqual("zxing-image-qr", image.Steps[1].Candidates.Single());
-        Assert.AreEqual("image-v8", image.Version);
+        Assert.AreEqual("image-v9", image.Version);
         Assert.AreEqual(AnalysisCapability.ImageAltText, image.Steps.Last().Capability);
         CollectionAssert.AreEqual(new[] { AnalysisCapability.TextRecognition, AnalysisCapability.Description, AnalysisCapability.CaptureSynopsis },
             configuration.SelectPlan(AnalysisMediaKind.Image, CaptureAnalysisConfiguration.ForAction(AnalysisMediaKind.Image, AnalysisCapability.CaptureSynopsis)).Steps.Select(step => step.Capability).ToArray());
-        Assert.AreEqual("video-v7", video.Version);
-        Assert.AreEqual("audio-v5", configuration.Plans.Single(plan => plan.MediaKind == AnalysisMediaKind.Audio).Version);
+        CollectionAssert.AreEqual(new[] { AnalysisCapability.TextRecognition, AnalysisCapability.Description, AnalysisCapability.CaptureName },
+            configuration.SelectPlan(AnalysisMediaKind.Image, CaptureAnalysisConfiguration.ForAction(AnalysisMediaKind.Image, AnalysisCapability.CaptureName)).Steps.Select(step => step.Capability).ToArray());
+        Assert.AreEqual("video-v8", video.Version);
+        Assert.AreEqual("audio-v6", configuration.Plans.Single(plan => plan.MediaKind == AnalysisMediaKind.Audio).Version);
         foreach (var plan in configuration.Plans)
         {
             Assert.AreEqual(AnalysisCapability.FileDetails, plan.Steps[0].Capability);

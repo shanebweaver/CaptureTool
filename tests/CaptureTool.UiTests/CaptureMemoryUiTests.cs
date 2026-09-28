@@ -19,7 +19,7 @@ public sealed partial class ImageEditTextExtractionUiTests
     [DataRow("ru-RU")]
     [DataRow("zh-CN")]
     [TestCategory("UI")]
-    public void CaptureMemory_ConsentScanProgressAndDeleteRemainConsistentAfterNavigation(string language)
+    public void CaptureMemory_ConsentLocalProgressAndDeleteRemainConsistentAfterNavigation(string language)
     {
         RequireUiTestLanguage(language);
         if (!ShouldRunUiTests()) Assert.Inconclusive("Set CAPTURETOOL_RUN_UI_TESTS=1 to run desktop UI automation tests.");
@@ -66,12 +66,6 @@ public sealed partial class ImageEditTextExtractionUiTests
         Assert.IsFalse(string.IsNullOrWhiteSpace(consent.Name), "Consent needs an accessible name.");
         Assert.AreEqual(resources["CaptureMemory_Consent.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name"], consent.Name);
         Assert.AreEqual(resources["CaptureMemory_Delete.Content"], delete.Name);
-        int progressAnnouncements = 0;
-        using var announcements = window.RegisterAutomationEvent(automation.EventLibrary.Element.LiveRegionChangedEvent,
-            TreeScope.Subtree, (element, _) =>
-            {
-                if (element.AutomationId == "CaptureMemoryProgress") Interlocked.Increment(ref progressAnnouncements);
-            });
         consent.Patterns.Toggle.Pattern.Toggle();
         Confirm("Consent", "CaptureMemory_ConsentAccept");
         Assert.IsNull(window.FindFirstDescendant(automation.ConditionFactory.ByAutomationId("CaptureMemoryScan")));
@@ -83,15 +77,16 @@ public sealed partial class ImageEditTextExtractionUiTests
         Element("CapturePane_TextTab").Patterns.SelectionItem.Pattern.Select();
         Element("CaptureAction_Text").Patterns.Invoke.Pattern.Invoke();
         AutomationElement progress = WaitFor(() => window.FindFirstDescendant(
-            automation.ConditionFactory.ByAutomationId("CaptureMemoryProgress")) is { IsOffscreen: false } visible ? visible : null,
-            InteractionTimeout, "analysis progress visible after opening capture");
-        Assert.IsFalse(progress.IsOffscreen, "Analysis progress should be visible in the shell.");
+            automation.ConditionFactory.ByAutomationId("CaptureAction_Text_Loading")) is { IsOffscreen: false } visible ? visible : null,
+            InteractionTimeout, "text action progress visible in the pane");
+        Assert.IsFalse(progress.IsOffscreen, "Analysis progress should be visible beside the text action.");
         Assert.IsFalse(progress.Patterns.Invoke.IsSupported, "Progress must be passive.");
         Assert.IsFalse(progress.Patterns.Toggle.IsSupported);
         Assert.IsFalse(progress.Properties.IsKeyboardFocusable.Value, "Passive progress must not enter the tab order.");
+        Assert.IsNull(window.FindFirstDescendant(automation.ConditionFactory.ByAutomationId("CaptureMemoryProgress")),
+            "Local AI actions should not show a global analysis snackbar.");
         SaveScreenshot("loading");
-        WaitForElementRemoved(window, automation, "CaptureMemoryProgress", InteractionTimeout);
-        Assert.IsGreaterThan(0, Volatile.Read(ref progressAnnouncements), "Progress must announce itself through UI Automation.");
+        WaitForElementRemoved(window, automation, "CaptureAction_Text_Loading", InteractionTimeout);
         OpenSettings();
         consent = Element("CaptureMemoryConsent");
         delete = Element("CaptureMemoryDelete");

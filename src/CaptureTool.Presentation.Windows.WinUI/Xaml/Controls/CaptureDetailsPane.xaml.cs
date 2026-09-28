@@ -4,6 +4,7 @@ using CaptureTool.Presentation.Features.CaptureDetails;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Automation.Peers;
+using Microsoft.UI.Xaml.Input;
 using System.ComponentModel;
 
 namespace CaptureTool.Presentation.Windows.WinUI.Xaml.Controls;
@@ -21,7 +22,12 @@ public sealed partial class CaptureDetailsPane : UserControl, INotifyPropertyCha
     private int _sourceVersion;
     private CaptureTextNavigationContext _navigation = new(false, false);
     private static int _preferredTab;
-    public Func<CaptureTextLocation, bool>? Navigate { get; set; }
+    private CaptureTextPassage? _selectedPassage;
+    private bool _navigationQueued;
+    private Task _openTask = Task.CompletedTask;
+    private bool _extractTextRequested;
+    public CaptureEditorTextSession? EditorText { get; set; }
+    public Func<CaptureTextPassage, bool>? Navigate { get; set; }
     public Action? ClearLocation { get; set; }
     public Action<CaptureFileRename>? FileRenamed { get; set; }
     public Action<IReadOnlyList<CaptureTextPassage>?>? TextOverlayChanged { get; set; }
@@ -44,7 +50,13 @@ public sealed partial class CaptureDetailsPane : UserControl, INotifyPropertyCha
         _workingPath = workingPath; _sourceVersion = sourceVersion;
         bool becameReady = !_navigation.IsReady && navigation.IsReady;
         _navigation = navigation;
-        if (changed || !active) Release();
+        // Preserve filters and item bindings while the pane is temporarily closed.
+        if (changed) Release();
+        if (!active)
+        {
+            EditorText?.Cancel();
+            TextOverlayChanged?.Invoke(null);
+        }
         if (ViewModel != null)
         {
             ViewModel.HasEdits = edits;
@@ -60,16 +72,43 @@ public sealed partial class CaptureDetailsPane : UserControl, INotifyPropertyCha
         ViewModel = App.Current.ServiceProvider.GetService<CaptureDetailsViewModel>();
         ViewModel.FileRenamed += RenameCompleted;
         ViewModel.HasEdits = _edits;
+        ViewModel.SetEditorText(EditorText);
         ViewModel.SetNavigationContext(_navigation);
         ViewModel.TextContent.ScrollRequested += ScrollToPassage;
         ViewModel.TextContent.PropertyChanged += SelectionChanged;
         ViewModel.PropertyChanged += ViewModelChanged;
         PropertyChanged?.Invoke(this, new(nameof(ViewModel)));
-        _ = ViewModel.OpenAsync(_path, _kind, _workingPath);
+        _openTask = ViewModel.OpenAsync(_path, _kind, _workingPath);
+        _ = ExtractRequestedTextAsync();
+    }
+
+    public void OpenText()
+    {
+        ContentTabs.SelectedIndex = 1;
+        _extractTextRequested = true;
+        Open();
+        _ = ExtractRequestedTextAsync();
+    }
+
+    private async Task ExtractRequestedTextAsync()
+    {
+        if (!_extractTextRequested || ViewModel == null) return;
+        _extractTextRequested = false;
+        var model = ViewModel;
+        try
+        {
+            await _openTask;
+            if (_active && ContentTabs.SelectedIndex == 1 && ReferenceEquals(model, ViewModel)) await model.EnsureTextAsync();
+        }
+        catch (OperationCanceledException) { }
     }
 
     private void Release()
     {
+        _extractTextRequested = false;
+        EditorText?.Cancel();
+        if (_selectedPassage != null) _selectedPassage.PropertyChanged -= SelectedPassageChanged;
+        _selectedPassage = null;
         if (ViewModel != null)
         {
             ViewModel.TextContent.ScrollRequested -= ScrollToPassage;
@@ -89,35 +128,78 @@ public sealed partial class CaptureDetailsPane : UserControl, INotifyPropertyCha
     {
         if (!ReferenceEquals(sender, ContentTabs) || !e.AddedItems.OfType<PivotItem>().Any(item => ReferenceEquals(item, ContentTabs.SelectedItem))) return;
         _preferredTab = ContentTabs.SelectedIndex;
+        if (_preferredTab != 1) EditorText?.Cancel();
         UpdateTextOverlay();
         if (_preferredTab != 1) ClearLocation?.Invoke();
     }
-    private void UpdateTextOverlay() => TextOverlayChanged?.Invoke(
-        ContentTabs.SelectedIndex == 1 && ViewModel?.CanShowImageTextOverlay == true ? ViewModel.Content.Passages : null);
+    private void UpdateTextOverlay()
+    {
+        bool show = _active && ContentTabs.SelectedIndex == 1 && ViewModel?.CanShowImageTextOverlay == true;
+        TextOverlayChanged?.Invoke(show ? ViewModel!.TextPassages : null);
+        if (show) RequestNavigation();
+    }
     private void ScrollToPassage(CaptureTextPassage passage) => Passages.ScrollIntoView(passage, ScrollIntoViewAlignment.Leading);
     private void SelectionChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (e.PropertyName == nameof(CaptureTextViewModel.SelectedPassage)) ClearLocation?.Invoke();
+        if (e.PropertyName != nameof(CaptureTextViewModel.SelectedPassage)) return;
+        if (_selectedPassage != null) _selectedPassage.PropertyChanged -= SelectedPassageChanged;
+        _selectedPassage = ViewModel?.TextContent.SelectedPassage;
+        if (_selectedPassage != null) _selectedPassage.PropertyChanged += SelectedPassageChanged;
+        RequestNavigation();
+    }
+    private void SelectedPassageChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName is nameof(CaptureTextPassage.SelectedLocation) or nameof(CaptureTextPassage.CanNavigate)) RequestNavigation();
+    }
+    private void RequestNavigation()
+    {
+        // ItemClick and selection bindings can both fire for the same interaction.
+        if (_navigationQueued) return;
+        _navigationQueued = DispatcherQueue.TryEnqueue(() =>
+        {
+            _navigationQueued = false;
+            if (!_active || ContentTabs.SelectedIndex != 1) return;
+            ClearLocation?.Invoke();
+            if (ViewModel?.TextContent.SelectedPassage is { CanNavigate: true } passage &&
+                Navigate?.Invoke(passage) != true)
+                ViewModel.ReportActionFailure();
+        });
     }
     private void ViewModelChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (e.PropertyName is nameof(CaptureDetailsViewModel.Content) or nameof(CaptureDetailsViewModel.CanShowImageTextOverlay)) UpdateTextOverlay();
+        if (e.PropertyName is nameof(CaptureDetailsViewModel.TextPassages) or nameof(CaptureDetailsViewModel.CanShowImageTextOverlay)) UpdateTextOverlay();
         if (e.PropertyName == nameof(CaptureDetailsViewModel.IsEditingName) && ViewModel?.IsEditingName == true)
-            DispatcherQueue.TryEnqueue(() => { NameInput.Focus(FocusState.Programmatic); NameInput.SelectAll(); });
-        if (e.PropertyName == nameof(CaptureDetailsViewModel.Content) &&
-            (ViewModel?.TextContent.SelectedPassage is not { } selected || !ViewModel.Content.Passages.Any(passage => passage.Id == selected.Id)))
+            DispatcherQueue.TryEnqueue(() => { if (_active && ViewModel?.IsEditingName == true) { NameInput.Focus(FocusState.Programmatic); NameInput.SelectAll(); } });
+        else if (e.PropertyName == nameof(CaptureDetailsViewModel.IsEditingName))
+            DispatcherQueue.TryEnqueue(() => { if (_active) EditNameButton.Focus(FocusState.Programmatic); });
+        if (e.PropertyName == nameof(CaptureDetailsViewModel.TextPassages) &&
+            (ViewModel?.TextContent.SelectedPassage is not { } selected || !ViewModel.TextPassages.Any(passage => passage.Id == selected.Id)))
             ClearLocation?.Invoke();
+    }
+    private async void NameInput_KeyDown(object sender, KeyRoutedEventArgs e)
+    {
+        if (ViewModel == null) return;
+        if (e.Key == global::Windows.System.VirtualKey.Enter && ViewModel.SaveNameCommand.CanExecute(null))
+        {
+            e.Handled = true;
+            await ViewModel.SaveNameCommand.ExecuteAsync(null);
+        }
+        else if (e.Key == global::Windows.System.VirtualKey.Escape)
+        {
+            e.Handled = true;
+            ViewModel.CancelNameCommand.Execute(null);
+        }
     }
     private async void Copy_Click(object sender, RoutedEventArgs e)
     {
         if (sender is FrameworkElement { Tag: string value } && ViewModel != null) await ViewModel.CopyCommand.ExecuteAsync(value);
     }
-    private void Navigate_Click(object sender, RoutedEventArgs e)
+    private void Passages_ItemClick(object sender, ItemClickEventArgs e)
     {
-        if (sender is FrameworkElement { Tag: CaptureTextPassage { CanNavigate: true, SelectedLocation: { } location } passage })
+        if (e.ClickedItem is CaptureTextPassage passage && ViewModel != null)
         {
-            if (ViewModel != null) ViewModel.TextContent.SelectedPassage = passage;
-            if (Navigate?.Invoke(location) != true) ViewModel?.ReportActionFailure();
+            ViewModel.TextContent.SelectedPassage = passage;
+            RequestNavigation();
         }
     }
     private async void OpenLink_Click(object sender, RoutedEventArgs e)

@@ -58,7 +58,21 @@ public sealed class CaptureTextViewModel : ViewModelBase
         foreach (var passage in _all) passage.SetNavigationContext(context, Text("LocationUnavailable"));
     }
 
-    public string CopyVisibleScope() => string.Join(Environment.NewLine, _filtered.Select(passage => passage.Text));
+    public string CopyVisibleScope()
+    {
+        var text = new System.Text.StringBuilder();
+        for (int i = 0; i < _filtered.Length; i++)
+        {
+            if (i > 0)
+            {
+                text.AppendLine();
+                if (_filtered[i - 1].Source == CaptureTextSource.ImageText && _filtered[i].Source == CaptureTextSource.ImageText)
+                    text.AppendLine();
+            }
+            text.Append(_filtered[i].Text);
+        }
+        return text.ToString();
+    }
 
     private void Filter()
     {

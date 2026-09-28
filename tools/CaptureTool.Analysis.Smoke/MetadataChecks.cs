@@ -22,6 +22,7 @@ internal static class MetadataChecks
         };
         List<MetadataCheckResult> results = [];
         foreach (IMetadataProcessor processor in processors.Where(processor => processor.Descriptor.Capability == AnalysisCapability.CaptureSynopsis ||
+            processor.Descriptor.Capability == AnalysisCapability.CaptureName ||
             processor.Descriptor.Capability == AnalysisCapability.ImageAltText || processor.Descriptor.Capability == AnalysisCapability.CaptureClassification))
         {
             using var preparation = new CancellationTokenSource(TimeSpan.FromMinutes(15));
@@ -60,7 +61,13 @@ internal static class MetadataChecks
                                 title = synopsis.Title?.Text;
                                 summary = synopsis.Summary.Select(item => item.Text).ToArray();
                                 evidence = (synopsis.Title?.Evidence ?? []).Concat(synopsis.Summary.SelectMany(item => item.Evidence));
-                                if (fixture.Name != "conflict" && (fixture.Abstain ? title != null || summary.Length != 0 : title == null || summary.Length == 0)) status = "FixtureMismatch";
+                                if (fixture.Name != "conflict" && (fixture.Abstain ? summary.Length != 0 : summary.Length == 0)) status = "FixtureMismatch";
+                            }
+                            if (outcome.Payload is CaptureNameMetadata name)
+                            {
+                                title = name.Suggestion?.Text;
+                                evidence = name.Suggestion?.Evidence ?? [];
+                                if (fixture.Name != "conflict" && (fixture.Abstain ? title != null : title == null)) status = "FixtureMismatch";
                             }
                             if (outcome.Payload is ImageAltTextMetadata alt)
                             {

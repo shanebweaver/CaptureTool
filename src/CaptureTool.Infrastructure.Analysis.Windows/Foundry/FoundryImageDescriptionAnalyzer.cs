@@ -36,7 +36,12 @@ internal sealed class FoundryImageDescriptionAnalyzer(
     public async Task<AnalyzerAvailability> PrepareAsync(IProgress<AnalysisProgress>? progress, CancellationToken ct)
     {
         _model = await runtime.ResolveAsync(alias, ct).ConfigureAwait(false);
-        if (_model?.Info.Task != "vision-language-chat") { _model = null; return AnalyzerAvailability.Unsupported; }
+        if (_model?.Info.Task != "vision-language-chat") 
+        { 
+            _model = null; 
+            return AnalyzerAvailability.Unsupported;
+        }
+
         if (!await _model.IsCachedAsync(ct).ConfigureAwait(false))
         {
             await _model.DownloadAsync(value => progress?.Report(new(AnalysisProgressStage.Preparing,
@@ -117,7 +122,10 @@ internal sealed class FoundryImageDescriptionAnalyzer(
                 return FoundryVisionProtocol.ParseResponse(bytes, model.Id);
             }
         }
-        catch (InvalidAnalysisMediaException) { return AnalyzerOutcome.Unsuccessful(AnalyzerOutcomeKind.InvalidSource, "invalid-media"); }
+        catch (InvalidAnalysisMediaException) 
+        { 
+            return AnalyzerOutcome.Unsuccessful(AnalyzerOutcomeKind.InvalidSource, "invalid-media"); 
+        }
         finally
         {
             if (serving)

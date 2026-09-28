@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -1402,13 +1402,13 @@ SOFTWARE.
     <value>Désactivé</value>
   </data>
   <data name="ImageEdit_TextExtractionButton.Label" xml:space="preserve">
-    <value>Extraction de texte</value>
+    <value>Extraire le texte</value>
   </data>
   <data name="ImageEdit_TextExtractionButton.AutomationProperties.Name" xml:space="preserve">
-    <value>Extraire le texte de l’image</value>
+    <value>Extraire le texte</value>
   </data>
   <data name="ImageEdit_TextExtractionButton.ToolTipService.ToolTip" xml:space="preserve">
-    <value>Extraire et sélectionner le texte de l’image</value>
+    <value>Rechercher et copier du texte dans l&apos;onglet Texte</value>
   </data>
   <data name="ImageEdit_TextExtractionOverlayMarker.AutomationProperties.Name" xml:space="preserve">
     <value>La superposition d’extraction de texte est prête</value>
@@ -1740,12 +1740,6 @@ SOFTWARE.
   <data name="CaptureMemory_Delete.Content" xml:space="preserve">
     <value>Supprimer</value>
   </data>
-  <data name="CaptureMemory_Preparing" xml:space="preserve">
-    <value>Préparation de l’IA sur l’appareil…</value>
-  </data>
-  <data name="CaptureMemory_Analyzing" xml:space="preserve">
-    <value>Analyse des captures…</value>
-  </data>
   <data name="CaptureMemory_ConsentTitle" xml:space="preserve">
     <value>Découvrez plus dans chaque capture</value>
   </data>
@@ -1980,4 +1974,7 @@ SOFTWARE.
   <data name="CaptureSummary_CopySummary.Content" xml:space="preserve"><value>Copier le résumé</value></data>
   <data name="CaptureSummary_CopyAltText.Content" xml:space="preserve"><value>Copier le texte alternatif</value></data>
   <data name="CaptureAction_NoSuggestion" xml:space="preserve"><value>Les informations sont insuffisantes pour proposer une suggestion.</value></data>
+  <data name="CaptureNaming_Suggest" xml:space="preserve"><value>Suggérer un nom de fichier avec l’IA. Vérifiez et modifiez-le avant d’enregistrer.</value></data>
+  <data name="CaptureNaming_AiGenerating" xml:space="preserve"><value>Suggestion d’un nom avec l’IA…</value></data>
+  <data name="CaptureNaming_Edit.ToolTipService.ToolTip" xml:space="preserve"><value>Modifier le nom de la capture</value></data>
 </root>

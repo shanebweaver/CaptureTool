@@ -1,6 +1,14 @@
 # Repeated summary and alt-text generation
 
-## Current screenshot contract (adapter version 3)
+## Independent name and summary actions
+
+Names now use a separate `capture-name` capability and prompt contract (version 1).
+Summary contract version 4 produces only `{"summary":"short paragraph","evidence":0}`;
+names use `{"name":"short capture name","evidence":0}`. Alt text keeps version 3.
+Each has independent loading, failure, and saved-result state. Existing combined
+results remain readable. See [action and cache behavior](capture-action-caching.md).
+
+## Screenshot stability work (adapter version 3)
 
 Testing actual screenshot prerequisites uncovered failures missed by the original
 prepared-metadata corpus below. A 1920x1080 synthetic development screenshot failed
@@ -10,7 +18,7 @@ for alt text on both attempts, despite the four-citation limit. The dense image
 also produced malformed alt-text JSON and a summary copied from the prompt's
 unrelated library example.
 
-The current implementation:
+Version 3 introduced the following changes:
 
 - Encodes a separate vision input with its longest edge at most 1,024 pixels,
   preserving aspect ratio and never upscaling. OCR keeps its existing decode size.
@@ -42,7 +50,7 @@ The current implementation:
 
 The opt-in `CaptureTool.Analysis.Smoke <absolute-output-directory> --screenshot-checks`
 command generates an invoice and a dense
-development screenshot, then runs native OCR, image description, summary/title,
+development screenshot, then runs native OCR, image description, name, summary,
 and alt text. It requires cached models and never reads user captures or enables
 application scanning. Raw synthetic responses are saved only by this diagnostic.
 It also checks expected fixture subjects, so valid JSON about the unrelated example

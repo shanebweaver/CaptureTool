@@ -12,22 +12,19 @@ namespace CaptureTool.Presentation.Tests.Features;
 public sealed class CaptureMemoryViewModelTests
 {
     [TestMethod]
-    public void CoalescesProgressOnDispatcherAndNeverShowsStaleLoadingAfterIdle()
+    public void CoalescesSettingsStateOnDispatcher()
     {
         using var fixture = new Fixture();
-        fixture.Change(fixture.State with { Activity = new(AnalysisActivity.Analyzing) });
-        fixture.Change(fixture.State with { Activity = new(AnalysisActivity.Idle) });
+        fixture.Change(fixture.State with { Storage = new(true, true), IsDeleting = true });
+        fixture.Change(fixture.State with { IsDeleting = false });
         Assert.HasCount(1, fixture.Updates);
         fixture.Dispatch();
-        Assert.IsFalse(fixture.ViewModel.IsAnalysisActive);
-        Assert.AreEqual(string.Empty, fixture.ViewModel.ProgressText);
-        fixture.Change(fixture.State with { Activity = new(AnalysisActivity.Preparing) });
+        Assert.IsTrue(fixture.ViewModel.ConsentGranted);
+        Assert.IsTrue(fixture.ViewModel.CanDelete);
+        fixture.Change(fixture.State with { Policy = CaptureMemoryPolicy.Disabled(), Storage = new(false, true) });
         fixture.Dispatch();
-        Assert.IsTrue(fixture.ViewModel.IsAnalysisActive);
-        Assert.AreEqual("CaptureMemory_Preparing", fixture.ViewModel.ProgressText);
-        fixture.Change(fixture.State with { PolicyAvailable = false });
-        fixture.Dispatch();
-        Assert.IsFalse(fixture.ViewModel.IsAnalysisActive);
+        Assert.IsFalse(fixture.ViewModel.ConsentGranted);
+        Assert.IsFalse(fixture.ViewModel.CanDelete);
     }
 
     [TestMethod]
@@ -90,7 +87,6 @@ public sealed class CaptureMemoryViewModelTests
             LastRunStatus: nextActivity == AnalysisActivity.Idle ? AnalysisRunStatus.Completed : null) });
         fixture.Dispatch();
         fixture.Notifications.Verify(value => value.ShowError("CaptureMemory_Error_Analysis"), Times.Once);
-        Assert.AreEqual(nextActivity == AnalysisActivity.Analyzing, fixture.ViewModel.IsAnalysisActive);
     }
 
     [TestMethod]
@@ -140,7 +136,7 @@ public sealed class CaptureMemoryViewModelTests
         fixture.Dispatch();
         fixture.Change(fixture.State with { Activity = new(AnalysisActivity.Analyzing) });
         Assert.IsEmpty(fixture.Updates);
-        Assert.IsFalse(fixture.ViewModel.IsAnalysisActive);
+        Assert.IsFalse(fixture.ViewModel.ConsentGranted);
     }
 
     [TestMethod]

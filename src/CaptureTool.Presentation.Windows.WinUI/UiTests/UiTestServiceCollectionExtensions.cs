@@ -46,19 +46,22 @@ internal static class UiTestServiceCollectionExtensions
     private sealed class UiTestMetadataProcessor(MetadataProcessorDescriptor descriptor) : IMetadataProcessor
     {
         public MetadataProcessorDescriptor Descriptor => descriptor;
-        public Task<AnalyzerOutcome> ProcessAsync(MetadataProcessorInput input, CancellationToken cancellationToken)
+        public async Task<AnalyzerOutcome> ProcessAsync(MetadataProcessorInput input, CancellationToken cancellationToken)
         {
             if (!UiTestLaunchOptions.DetailsFixture || input.Entries.Count == 0)
-                return Task.FromResult(AnalyzerOutcome.Unsuccessful(AnalyzerOutcomeKind.Unsupported, "ui-test-provider"));
+                return AnalyzerOutcome.Unsuccessful(AnalyzerOutcomeKind.Unsupported, "ui-test-provider");
+            await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken);
             MetadataTextEntry entry = input.Entries[0];
             AnalysisEvidence[] evidence = [new(entry.ResultId, entry.EntryIndex, 0, entry.Text.Length)];
             AnalysisPayload payload = descriptor.Capability == AnalysisCapability.CaptureSynopsis
-                ? new CaptureSynopsisMetadata(new("Contoso invoice", evidence),
+                ? new CaptureSynopsisMetadata(null,
                     [new("Invoice INV-2048 totals USD 125.00 and is due on 2026-10-15.", evidence)], input.Coverage)
+                : descriptor.Capability == AnalysisCapability.CaptureName
+                ? new CaptureNameMetadata(new("Contoso invoice", evidence), input.Coverage)
                 : descriptor.Capability == AnalysisCapability.ImageAltText
                 ? new ImageAltTextMetadata(new("Invoice INV-2048 from Contoso showing a total of USD 125.00, due October 15, 2026.", evidence), input.Coverage)
                 : new CaptureClassificationMetadata(CaptureCategory.Document, evidence, [new("invoice", evidence)], input.Coverage);
-            return Task.FromResult(AnalyzerOutcome.Success(payload, new(descriptor.Id, "ui-test", "fixture", "1")));
+            return AnalyzerOutcome.Success(payload, new(descriptor.Id, "ui-test", "fixture", "1"));
         }
     }
 }

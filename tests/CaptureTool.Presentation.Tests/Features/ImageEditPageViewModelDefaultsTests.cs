@@ -149,6 +149,22 @@ public sealed class ImageEditPageViewModelDefaultsTests
     }
 
     [TestMethod]
+    public void EnteringDetailsCanExitAnEditModeWithoutApplyingAnEdit()
+    {
+        var viewModel = CreateViewModel();
+        viewModel.ToggleCropModeCommand.Execute(null);
+        viewModel.HasActiveEditMode.Should().BeTrue();
+        viewModel.ExitEditMode();
+        viewModel.HasActiveEditMode.Should().BeFalse();
+        viewModel.IsCropModeActive.Should().BeFalse();
+        viewModel.HasUnsavedChanges.Should().BeFalse();
+        viewModel.ToggleTextModeCommand.Execute(null);
+        viewModel.HasActiveEditMode.Should().BeTrue();
+        viewModel.ExitEditMode();
+        viewModel.IsTextModeActive.Should().BeFalse();
+    }
+
+    [TestMethod]
     public void EditModeCommands_ShouldIgnoreInactiveModeDeactivation()
     {
         var viewModel = CreateViewModel();

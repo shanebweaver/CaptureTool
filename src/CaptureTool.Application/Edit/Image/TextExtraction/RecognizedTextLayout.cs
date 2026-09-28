@@ -1,4 +1,6 @@
 using CaptureTool.Application.Abstractions.Edit.Image.TextExtraction;
+using CaptureTool.Domain.Analysis.Payloads;
+using CaptureTool.Domain.Analysis.TextLayout;
 using System.Drawing;
 
 namespace CaptureTool.Application.Edit.Image.TextExtraction;
@@ -47,54 +49,21 @@ public sealed class RecognizedTextLayout
             return Empty;
         }
 
-        IReadOnlyList<LineCandidate> sourceLines = CreateSourceLines(validRegions);
-        List<LineCandidate> logicalLines = [];
-        foreach (LineCandidate sourceLine in sourceLines)
-        {
-            logicalLines.AddRange(SplitAtLargeHorizontalGaps(sourceLine));
-        }
-
-        List<List<LineCandidate>> blockCandidates = [];
-        foreach (LineCandidate line in logicalLines)
-        {
-            if (blockCandidates.Count == 0 ||
-                !AreRelatedLines(blockCandidates[^1][^1], line))
-            {
-                blockCandidates.Add([line]);
-            }
-            else
-            {
-                blockCandidates[^1].Add(line);
-            }
-        }
-
+        var paragraphs = CreateParagraphs(validRegions);
         List<RecognizedTextLayoutBlock> blocks = [];
         List<WordPlacement> readingOrder = [];
-        for (int blockIndex = 0; blockIndex < blockCandidates.Count; blockIndex++)
+        foreach (var paragraph in paragraphs)
         {
-            List<LineCandidate> candidateLines = blockCandidates[blockIndex];
+            int blockIndex = blocks.Count;
             List<RecognizedTextLayoutLine> lines = [];
-            for (int lineIndex = 0; lineIndex < candidateLines.Count; lineIndex++)
+            foreach (var words in paragraph)
             {
-                LineCandidate candidate = candidateLines[lineIndex];
-                RecognizedTextLayoutLine line = new(
-                    lineIndex,
-                    candidate.Bounds,
-                    candidate.Regions);
-                lines.Add(line);
-
-                foreach (RecognizedTextRegion region in candidate.Regions)
-                {
-                    readingOrder.Add(new WordPlacement(region, blockIndex, lineIndex));
-                }
+                int lineIndex = lines.Count;
+                lines.Add(new(lineIndex, Union(words.Select(word => word.Bounds)), words));
+                readingOrder.AddRange(words.Select(word => new WordPlacement(word, blockIndex, lineIndex)));
             }
-
-            blocks.Add(new RecognizedTextLayoutBlock(
-                blockIndex,
-                Union(candidateLines.Select(candidate => candidate.Bounds)),
-                lines));
+            blocks.Add(new(blockIndex, Union(lines.Select(line => line.Bounds)), lines));
         }
-
         return new RecognizedTextLayout(
             blocks,
             readingOrder,
@@ -388,129 +357,30 @@ public sealed class RecognizedTextLayout
             highlightBounds);
     }
 
-    private static IReadOnlyList<LineCandidate> CreateSourceLines(RecognizedTextRegion[] regions)
+    private static IReadOnlyList<IReadOnlyList<IReadOnlyList<RecognizedTextRegion>>> CreateParagraphs(RecognizedTextRegion[] regions)
     {
-        if (regions.All(region => region.LineIndex >= 0))
+        // Pane overlays already carry the shared layout. Keep those exact paragraph/line boundaries
+        // so a clicked passage, drag selection, and copied text all describe the same words.
+        if (regions.All(region => region.ParagraphIndex >= 0 && region.LineIndex >= 0))
+            return regions.GroupBy(region => region.ParagraphIndex).Select(paragraph =>
+                (IReadOnlyList<IReadOnlyList<RecognizedTextRegion>>)paragraph.GroupBy(region => region.LineIndex)
+                    .Select(line => (IReadOnlyList<RecognizedTextRegion>)line.ToArray()).ToArray()).ToArray();
+
+        double left = regions.Min(region => (double)region.Bounds.Left);
+        double top = regions.Min(region => (double)region.Bounds.Top);
+        double width = regions.Max(region => (double)region.Bounds.Right) - left;
+        double height = regions.Max(region => (double)region.Bounds.Bottom) - top;
+        var words = regions.Select(region =>
         {
-            return regions
-                .GroupBy(region => region.LineIndex)
-                .OrderBy(group => group.Key)
-                .Select(group => CreateLineCandidate(group
-                    .OrderBy(region => region.WordIndex >= 0 ? region.WordIndex : int.MaxValue)
-                    .ThenBy(region => region.Bounds.Left)))
-                .ToArray();
-        }
-
-        List<LineCandidate> lines = [];
-        foreach (RecognizedTextRegion region in regions
-            .OrderBy(region => region.Bounds.Top)
-            .ThenBy(region => region.Bounds.Left))
-        {
-            int matchingLineIndex = FindBestGeometricLine(lines, region);
-            if (matchingLineIndex < 0)
-            {
-                lines.Add(CreateLineCandidate([region]));
-                continue;
-            }
-
-            RecognizedTextRegion[] lineRegions = [.. lines[matchingLineIndex].Regions, region];
-            lines[matchingLineIndex] = CreateLineCandidate(lineRegions.OrderBy(item => item.Bounds.Left));
-        }
-
-        return lines
-            .OrderBy(line => line.Bounds.Top)
-            .ThenBy(line => line.Bounds.Left)
-            .ToArray();
+            double x = (region.Bounds.Left - left) / width, y = (region.Bounds.Top - top) / height;
+            return new RecognizedText(region.Text,
+                new(x, y, Math.Min(1 - x, region.Bounds.Width / width), Math.Min(1 - y, region.Bounds.Height / height)),
+                lineIndex: region.LineIndex >= 0 ? region.LineIndex : null, wordIndex: region.WordIndex >= 0 ? region.WordIndex : null);
+        }).ToArray();
+        return RecognizedTextGrouping.Create(words).Select(paragraph =>
+            (IReadOnlyList<IReadOnlyList<RecognizedTextRegion>>)paragraph.Lines.Select(line =>
+                (IReadOnlyList<RecognizedTextRegion>)line.WordIndices.Select(index => regions[index]).ToArray()).ToArray()).ToArray();
     }
-
-    private static int FindBestGeometricLine(
-        IReadOnlyList<LineCandidate> lines,
-        RecognizedTextRegion region)
-    {
-        int bestLineIndex = -1;
-        float smallestCenterDistance = float.MaxValue;
-        float regionCenter = region.Bounds.Top + (region.Bounds.Height / 2);
-
-        for (int index = 0; index < lines.Count; index++)
-        {
-            RectangleF lineBounds = lines[index].Bounds;
-            float overlap = Math.Min(lineBounds.Bottom, region.Bounds.Bottom) -
-                Math.Max(lineBounds.Top, region.Bounds.Top);
-            float minimumHeight = Math.Min(lineBounds.Height, region.Bounds.Height);
-            float lineCenter = lineBounds.Top + (lineBounds.Height / 2);
-            float centerDistance = Math.Abs(lineCenter - regionCenter);
-            bool isSameLine = overlap >= minimumHeight * 0.45f ||
-                centerDistance <= Math.Max(lineBounds.Height, region.Bounds.Height) * 0.45f;
-            if (isSameLine && centerDistance < smallestCenterDistance)
-            {
-                smallestCenterDistance = centerDistance;
-                bestLineIndex = index;
-            }
-        }
-
-        return bestLineIndex;
-    }
-
-    private static IReadOnlyList<LineCandidate> SplitAtLargeHorizontalGaps(LineCandidate sourceLine)
-    {
-        if (sourceLine.Regions.Count < 2)
-        {
-            return [sourceLine];
-        }
-
-        float averageCharacterWidth = sourceLine.Regions.Average(region =>
-            region.Bounds.Width / Math.Max(1, region.Text.Length));
-        float gapThreshold = Math.Max(
-            sourceLine.Bounds.Height * 2.5f,
-            averageCharacterWidth * 5);
-        List<LineCandidate> segments = [];
-        List<RecognizedTextRegion> currentSegment = [sourceLine.Regions[0]];
-
-        for (int index = 1; index < sourceLine.Regions.Count; index++)
-        {
-            RecognizedTextRegion current = sourceLine.Regions[index];
-            RecognizedTextRegion previous = sourceLine.Regions[index - 1];
-            if (current.Bounds.Left - previous.Bounds.Right > gapThreshold)
-            {
-                segments.Add(CreateLineCandidate(currentSegment));
-                currentSegment = [];
-            }
-
-            currentSegment.Add(current);
-        }
-
-        segments.Add(CreateLineCandidate(currentSegment));
-        return segments;
-    }
-
-    private static bool AreRelatedLines(LineCandidate previous, LineCandidate current)
-    {
-        float maximumHeight = Math.Max(previous.Bounds.Height, current.Bounds.Height);
-        float minimumHeight = Math.Min(previous.Bounds.Height, current.Bounds.Height);
-        if (minimumHeight <= 0 || maximumHeight / minimumHeight > 1.8f)
-        {
-            return false;
-        }
-
-        float verticalGap = current.Bounds.Top - previous.Bounds.Bottom;
-        if (verticalGap < -minimumHeight * 0.35f || verticalGap > maximumHeight * 1.15f)
-        {
-            return false;
-        }
-
-        float horizontalOverlap = Math.Min(previous.Bounds.Right, current.Bounds.Right) -
-            Math.Max(previous.Bounds.Left, current.Bounds.Left);
-        float leftEdgeDifference = Math.Abs(previous.Bounds.Left - current.Bounds.Left);
-        bool sharesTextColumn = horizontalOverlap >= minimumHeight ||
-            leftEdgeDifference <= maximumHeight * 1.5f;
-        if (!sharesTextColumn)
-        {
-            return false;
-        }
-
-        return true;
-    }
-
     private static string CreateSelectedText(IReadOnlyList<SelectedWord> words)
     {
         if (words.Count == 0)
@@ -579,12 +449,6 @@ public sealed class RecognizedTextLayout
         return !string.IsNullOrWhiteSpace(region.Text) &&
             region.Bounds.Width > 0 &&
             region.Bounds.Height > 0;
-    }
-
-    private static LineCandidate CreateLineCandidate(IEnumerable<RecognizedTextRegion> regions)
-    {
-        RecognizedTextRegion[] regionArray = regions.ToArray();
-        return new LineCandidate(regionArray, Union(regionArray.Select(region => region.Bounds)));
     }
 
     private static RectangleF Union(IEnumerable<RectangleF> bounds)
@@ -887,10 +751,6 @@ public sealed class RecognizedTextLayout
             false,
             false);
     }
-
-    private sealed record LineCandidate(
-        IReadOnlyList<RecognizedTextRegion> Regions,
-        RectangleF Bounds);
 
     private sealed record WordPlacement(
         RecognizedTextRegion Region,

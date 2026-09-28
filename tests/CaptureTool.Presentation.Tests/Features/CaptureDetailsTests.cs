@@ -18,6 +18,99 @@ namespace CaptureTool.Presentation.Tests.Features;
 public sealed class CaptureDetailsTests
 {
     [TestMethod]
+    public async Task TextShortcutReusesMatchingSavedResultsWithoutRenderingOrRequestingAnalysis()
+    {
+        var setup = new Setup();
+        int calls = 0;
+        var editor = new CaptureEditorTextSession(() => { calls++; return Task.CompletedTask; }, () => { });
+        editor.SetAvailability(true);
+        using var vm = setup.ViewModel;
+        vm.SetEditorText(editor);
+        vm.SetNavigationContext(new(true, true));
+        await vm.OpenAsync("capture.png", AnalysisMediaKind.Image);
+        await vm.EnsureTextAsync();
+        Assert.AreEqual(0, calls);
+        Assert.IsTrue(vm.CanShowImageTextOverlay);
+        Assert.AreEqual("Invoice total USD 125.00", vm.TextContent.CopyVisibleScope());
+        setup.Memory.Verify(x => x.AnalyzeAsync(It.IsAny<string>(), It.IsAny<AnalysisCapability>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [TestMethod]
+    public async Task EditedImageUsesSessionTextAndNeverPublishesItAsSavedCaptureAnalysis()
+    {
+        var setup = new Setup();
+        var complete = new TaskCompletionSource();
+        CaptureEditorTextSession? editor = null;
+        editor = new(async () =>
+        {
+            await complete.Task;
+            editor!.SetDocument(new("Current image", new(200, 100), [new("Current image", new(20, 10, 100, 20))], []));
+        }, () => { });
+        editor.Invalidate(true);
+        editor.SetAvailability(true);
+        using var vm = setup.ViewModel;
+        vm.SetEditorText(editor);
+        vm.SetNavigationContext(new(true, true, ImageEdited: true));
+        await vm.OpenAsync("capture.png", AnalysisMediaKind.Image);
+        Assert.IsEmpty(vm.TextPassages);
+        Assert.IsFalse(vm.CanShowImageTextOverlay);
+        Assert.IsFalse(editor.IsRunning, "Opening the pane does not start extraction.");
+        Task extraction = vm.EnsureTextAsync();
+        Assert.IsTrue(vm.TextAction.IsRunning);
+        Assert.IsFalse(vm.TextAction.Command.CanExecute(null));
+        complete.SetResult();
+        await extraction;
+        Assert.IsTrue(vm.CanShowImageTextOverlay);
+        Assert.AreEqual("Current image", vm.TextContent.CopyVisibleScope());
+        Assert.IsTrue(vm.TextPassages.Single().CanNavigate);
+        var bounds = vm.TextPassages.Single().SelectedLocation!.Bounds!;
+        Assert.AreEqual(.1, bounds.X, .000001);
+        Assert.AreEqual(.1, bounds.Y, .000001);
+        Assert.AreEqual(.5, bounds.Width, .000001);
+        Assert.AreEqual(.2, bounds.Height, .000001);
+        Assert.AreEqual("Invoice total USD 125.00", vm.Content.Passages.Single().Text);
+        editor.Invalidate(true);
+        Assert.IsEmpty(vm.TextPassages);
+        Assert.IsFalse(vm.CanShowImageTextOverlay);
+        setup.Memory.Verify(x => x.AnalyzeAsync(It.IsAny<string>(), It.IsAny<AnalysisCapability>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [TestMethod]
+    public async Task SessionEmptyResultsSurviveReopeningWithoutRepeatedExtraction()
+    {
+        int calls = 0;
+        CaptureEditorTextSession? editor = null;
+        editor = new(() => { calls++; editor!.SetDocument(new(string.Empty, new(100, 50), [], [])); return Task.CompletedTask; }, () => { });
+        editor.Invalidate(true);
+        editor.SetAvailability(true);
+        foreach (int _ in Enumerable.Range(0, 2))
+        {
+            using var vm = new Setup().ViewModel;
+            vm.SetEditorText(editor);
+            await vm.OpenAsync("capture.png", AnalysisMediaKind.Image);
+            await vm.EnsureTextAsync();
+            Assert.AreEqual("CaptureAction_NoText", vm.TextAction.Status);
+            Assert.IsFalse(vm.TextAction.Command.CanExecute(null));
+        }
+        Assert.AreEqual(1, calls);
+    }
+
+    [TestMethod]
+    public async Task MismatchedWorkingImageUsesCurrentImageEvenWithSavedText()
+    {
+        var setup = new Setup();
+        int calls = 0;
+        var editor = new CaptureEditorTextSession(() => { calls++; return Task.CompletedTask; }, () => { });
+        editor.SetAvailability(true);
+        using var vm = setup.ViewModel;
+        vm.SetEditorText(editor);
+        await vm.OpenAsync("capture.png", AnalysisMediaKind.Image, "different-working.png");
+        await vm.EnsureTextAsync();
+        Assert.AreEqual(1, calls);
+        Assert.IsEmpty(vm.TextPassages);
+    }
+
+    [TestMethod]
     public async Task UnavailableModelShowsDeviceAvailabilityWithoutImplyingUnreadableDetails()
     {
         var setup = new Setup();
@@ -107,6 +200,7 @@ public sealed class CaptureDetailsTests
         setup.Reader.Setup(reader => reader.ReadAsync(It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync(() => snapshot);
         await vm.OpenAsync("capture.png", AnalysisMediaKind.Image);
         Assert.IsTrue(vm.IsGeneratingSummary);
+        Assert.IsFalse(vm.IsGeneratingName);
         snapshot = snapshot with { Run = run.Finish(AnalysisRunStatus.Failed) };
         await vm.RefreshAsync();
         Assert.IsFalse(vm.IsGeneratingSummary);
@@ -116,6 +210,68 @@ public sealed class CaptureDetailsTests
         setup.State = setup.State with { Policy = CaptureMemoryPolicy.Disabled() };
         setup.Memory.Raise(memory => memory.StateChanged += null);
         Assert.IsFalse(vm.IsGeneratingSummary);
+    }
+
+    [TestMethod]
+    public async Task NameAndSummaryHaveIndependentRequestsLoadingResultsAndFailures()
+    {
+        var setup = new Setup();
+        CaptureDetailsSnapshot snapshot = new(CaptureDetailsStatus.Empty);
+        setup.Reader.Setup(reader => reader.ReadAsync(It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync(() => snapshot);
+        setup.Memory.Setup(memory => memory.EnsureConsentAsync(It.IsAny<CancellationToken>())).ReturnsAsync(true);
+        using var vm = setup.ViewModel;
+        await vm.OpenAsync("capture.png", AnalysisMediaKind.Image);
+        await vm.NameAction.Command.ExecuteAsync(null);
+        setup.Memory.Verify(memory => memory.AnalyzeAsync("capture.png", AnalysisCapability.CaptureName, It.IsAny<CancellationToken>()), Times.Once);
+        setup.Memory.Verify(memory => memory.AnalyzeAsync(It.IsAny<string>(), AnalysisCapability.CaptureSynopsis, It.IsAny<CancellationToken>()), Times.Never);
+        var run = new AnalysisRun(Guid.NewGuid(), Guid.NewGuid(), 1, "test", null, AnalysisRunStatus.Queued,
+            [AnalysisCapability.TextRecognition, AnalysisCapability.Description, AnalysisCapability.CaptureName], []);
+        snapshot = snapshot with { Run = run };
+        await vm.RefreshAsync();
+        Assert.IsTrue(vm.IsGeneratingName);
+        Assert.IsFalse(vm.IsGeneratingSummary);
+        snapshot = snapshot with { Run = run.BindSource(new(new string('a', 64)))
+            .CompleteStep(new(AnalysisCapability.TextRecognition, AnalyzerOutcomeKind.Unsupported, "model-unavailable"))
+            .CompleteStep(new(AnalysisCapability.Description, AnalyzerOutcomeKind.Unsupported, "model-unavailable"))
+            .CompleteStep(new(AnalysisCapability.CaptureName, AnalyzerOutcomeKind.Failed, "model-failed")) };
+        await vm.RefreshAsync();
+        Assert.IsFalse(vm.IsGeneratingName);
+        Assert.AreEqual("CaptureAction_Failed", vm.NameAction.Status);
+        Assert.AreEqual(string.Empty, vm.SummaryAction.Status);
+
+        var source = Result(new TextRecognitionMetadata([new("Invoice")]), run.Id);
+        var coverage = new MetadataProcessingCoverage(1, 1, 7, MetadataProcessingLimit.None);
+        var name = Result(new CaptureNameMetadata(new("Invoice name", [new(source.ResultId, 0, 0, 7)]), coverage), run.Id,
+            new([new(source.Payload.Capability, source.ResultId)]));
+        var record = new CaptureAnalysisRecord(CaptureId.New(), AnalysisMediaKind.Image, new(new string('a', 64)), "plan", run.Id, [source, name]);
+        snapshot = new(CaptureDetailsStatus.Available, record);
+        await vm.RefreshAsync();
+        Assert.IsTrue(vm.NameAction.HasResult);
+        Assert.IsFalse(vm.NameAction.Command.CanExecute(null));
+        Assert.IsFalse(vm.HasSummary);
+        Assert.IsTrue(vm.SummaryAction.Command.CanExecute(null));
+        await vm.SummaryAction.Command.ExecuteAsync(null);
+        setup.Memory.Verify(memory => memory.AnalyzeAsync("capture.png", AnalysisCapability.CaptureSynopsis, It.IsAny<CancellationToken>()), Times.Once);
+        var summary = Result(new CaptureSynopsisMetadata(null, [new("Invoice summary", [new(source.ResultId, 0, 0, 7)])], coverage), run.Id,
+            new([new(source.Payload.Capability, source.ResultId)]));
+        snapshot = snapshot with { Record = new(record.CaptureId, record.MediaKind, record.SourceRevision, record.PlanVersion, record.RunId, [source, summary]) };
+        await vm.RefreshAsync();
+        Assert.IsTrue(vm.HasSummary);
+        Assert.IsFalse(vm.SummaryAction.Command.CanExecute(null));
+        Assert.IsTrue(vm.NameAction.Command.CanExecute(null));
+        Assert.IsFalse(vm.NameAction.HasResult);
+    }
+
+    [TestMethod]
+    public async Task PreviouslySavedCombinedTitleRemainsAvailableWithoutNewInference()
+    {
+        var setup = new Setup();
+        using var vm = setup.ViewModel;
+        await vm.OpenAsync("capture.png", AnalysisMediaKind.Image);
+        Assert.AreEqual("Invoice summary", vm.Content.SuggestedName);
+        Assert.IsTrue(vm.NameAction.HasResult);
+        Assert.IsFalse(vm.NameAction.Command.CanExecute(null));
+        setup.Memory.Verify(memory => memory.AnalyzeAsync(It.IsAny<string>(), It.IsAny<AnalysisCapability>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [TestMethod]
@@ -151,6 +307,82 @@ public sealed class CaptureDetailsTests
         onboarding.VerifyNoOtherCalls();
         await vm.OpenAsync("capture.png", AnalysisMediaKind.Image);
         onboarding.Verify(x => x.EnableAsync(It.IsAny<CancellationToken>()), Times.Never());
+    }
+
+    [TestMethod]
+    public async Task CachedNameSuggestionOpensEditableDraftOnlyOnRequestAndCanBeReopenedAfterCancel()
+    {
+        var names = new Mock<ICaptureNamingService>();
+        var setup = new Setup(names.Object);
+        using var vm = setup.ViewModel;
+        await vm.OpenAsync("capture.png", AnalysisMediaKind.Image);
+        Assert.IsFalse(vm.IsEditingName);
+        Assert.IsTrue(vm.SuggestNameCommand.CanExecute(null));
+        await vm.SuggestNameCommand.ExecuteAsync(null);
+        Assert.IsTrue(vm.IsEditingName);
+        Assert.AreEqual("Invoice summary", vm.NameDraft);
+        Assert.AreEqual("capture.png", vm.FileName);
+        vm.CancelNameCommand.Execute(null);
+        Assert.IsFalse(vm.IsEditingName);
+        await vm.SuggestNameCommand.ExecuteAsync(null);
+        Assert.AreEqual("Invoice summary", vm.NameDraft);
+        names.Verify(service => service.RenameAsync(It.IsAny<string>(), It.IsAny<CaptureFileType>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+        setup.Memory.Verify(memory => memory.AnalyzeAsync(It.IsAny<string>(), It.IsAny<AnalysisCapability>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task RequestedNameSuggestionOpensDraftUnlessUserStartedEditing(bool editWhileGenerating)
+    {
+        var setup = new Setup(Mock.Of<ICaptureNamingService>());
+        CaptureDetailsSnapshot snapshot = new(CaptureDetailsStatus.Empty);
+        var run = new AnalysisRun(Guid.NewGuid(), Guid.NewGuid(), 1, "test", null, AnalysisRunStatus.Queued,
+            [AnalysisCapability.CaptureName], []);
+        setup.Reader.Setup(reader => reader.ReadAsync(It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync(() => snapshot);
+        setup.Memory.Setup(memory => memory.EnsureConsentAsync(It.IsAny<CancellationToken>())).ReturnsAsync(true);
+        setup.Memory.Setup(memory => memory.AnalyzeAsync("capture.png", AnalysisCapability.CaptureName, It.IsAny<CancellationToken>()))
+            .Callback(() => snapshot = snapshot with { Run = run }).Returns(Task.CompletedTask);
+        using var vm = setup.ViewModel;
+        await vm.OpenAsync("capture.png", AnalysisMediaKind.Image);
+        await vm.SuggestNameCommand.ExecuteAsync(null);
+        Assert.IsTrue(vm.IsGeneratingName);
+        Assert.IsFalse(vm.SuggestNameCommand.CanExecute(null));
+        Assert.IsFalse(vm.IsEditingName);
+        Assert.AreEqual("CaptureNaming_AiGenerating", vm.NameSuggestionToolTip);
+        if (editWhileGenerating)
+        {
+            vm.EditNameCommand.Execute(null);
+            vm.NameDraft = "My own name";
+        }
+        snapshot = new(CaptureDetailsStatus.Available, Record());
+        await vm.RefreshAsync();
+        Assert.IsFalse(vm.IsGeneratingName);
+        Assert.IsTrue(vm.IsEditingName);
+        Assert.AreEqual(editWhileGenerating ? "My own name" : "Invoice summary", vm.NameDraft);
+        Assert.AreEqual("capture.png", vm.FileName);
+    }
+
+    [TestMethod]
+    public async Task SuggestedNameOpensAfterAnAlreadyRunningRefreshCompletes()
+    {
+        var setup = new Setup(Mock.Of<ICaptureNamingService>());
+        setup.Reader.Setup(reader => reader.ReadAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new CaptureDetailsSnapshot(CaptureDetailsStatus.Empty));
+        using var vm = setup.ViewModel;
+        await vm.OpenAsync("capture.png", AnalysisMediaKind.Image);
+        var result = new TaskCompletionSource<CaptureDetailsSnapshot>(TaskCreationOptions.RunContinuationsAsynchronously);
+        setup.Reader.Setup(reader => reader.ReadAsync(It.IsAny<string>(), It.IsAny<CancellationToken>())).Returns(result.Task);
+        setup.Memory.Setup(memory => memory.EnsureConsentAsync(It.IsAny<CancellationToken>())).ReturnsAsync(true);
+        Task refresh = Task.CompletedTask;
+        setup.Memory.Setup(memory => memory.AnalyzeAsync("capture.png", AnalysisCapability.CaptureName, It.IsAny<CancellationToken>()))
+            .Callback(() => refresh = vm.RefreshAsync()).Returns(Task.CompletedTask);
+        await vm.SuggestNameCommand.ExecuteAsync(null);
+        Assert.IsTrue(vm.IsReading);
+        result.SetResult(new(CaptureDetailsStatus.Available, Record()));
+        await refresh;
+        Assert.IsTrue(vm.IsEditingName);
+        Assert.AreEqual("Invoice summary", vm.NameDraft);
     }
 
     [TestMethod]

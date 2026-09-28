@@ -1,4 +1,4 @@
-﻿using CaptureTool.Application.Abstractions.Analysis;
+using CaptureTool.Application.Abstractions.Analysis;
 using CaptureTool.Application.Abstractions.Capture.Assets;
 using CaptureTool.Domain.Capture;
 using CaptureTool.Application.Abstractions.Clipboard;
@@ -11,6 +11,7 @@ using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Presentation.Notifications;
 using CaptureTool.Presentation.ViewModels;
 using CommunityToolkit.Mvvm.Input;
+using CaptureTool.Application.Abstractions.Edit.Image.TextExtraction;
 
 namespace CaptureTool.Presentation.Features.CaptureDetails;
 
@@ -24,7 +25,6 @@ public sealed class CaptureDetailsViewModel : ViewModelBase
     public bool HasSuggestedName => SuggestedName.Length > 0;
     public bool IsGeneratingName { get; private set => Set(ref field, value); }
     public bool IsGeneratingSummary { get; private set => Set(ref field, value); }
-    public IAsyncRelayCommand AcceptNameCommand { get; }
     private readonly ICaptureMemoryService _memory;
     private readonly ICaptureAnalysisOnboarding? _onboarding;
     public CaptureAnalysisAction AltTextAction { get; }
@@ -38,6 +38,7 @@ public sealed class CaptureDetailsViewModel : ViewModelBase
     private bool _requesting;
     private readonly HashSet<AnalysisCapability> _unavailableActions = [];
     private bool _acceptedName;
+    private bool _reviewSuggestedName;
     public bool HasVisualMedia => _kind is AnalysisMediaKind.Image or AnalysisMediaKind.Video;
     public bool HasAudio => _kind is AnalysisMediaKind.Audio or AnalysisMediaKind.Video;
     public bool IsImage => _kind == AnalysisMediaKind.Image;
@@ -59,6 +60,16 @@ public sealed class CaptureDetailsViewModel : ViewModelBase
     private bool _sourceMatches;
     private CaptureTextNavigationContext _navigation = new(false, false);
     private readonly IFolderLauncher? _folders;
+    private CaptureEditorTextSession? _editorText;
+    private RecognizedTextDocument? _editorDocument;
+    private IReadOnlyList<CaptureTextPassage> _editorPassages = [];
+    private bool _wasPolicyAllowed;
+    private bool UsesEditorText => IsImage && _editorText != null && (_editorText.HasChanges || _editorText.Document != null ||
+        _snapshot?.Status is CaptureDetailsStatus.SourceChanged or CaptureDetailsStatus.SourceUnavailable ||
+        _snapshot?.Record != null && !_sourceMatches);
+    public bool ShowQrAction => HasVisualMedia && !UsesEditorText;
+    public IReadOnlyList<CaptureTextPassage> TextPassages => UsesEditorText ? _editorPassages : Content.Passages;
+    public string TextStatus => UsesEditorText ? string.Empty : StatusText;
 
     public string PhysicalFileName => _path == null ? string.Empty : Path.GetFileName(_path);
     public string NameDraft { get; set => Set(ref field, value); } = string.Empty;
@@ -68,14 +79,17 @@ public sealed class CaptureDetailsViewModel : ViewModelBase
     public IRelayCommand EditNameCommand { get; }
     public IRelayCommand CancelNameCommand { get; }
     public IAsyncRelayCommand SaveNameCommand { get; }
+    public IAsyncRelayCommand SuggestNameCommand { get; }
+    public string NameSuggestionToolTip => IsGeneratingName ? _text.GetString("CaptureNaming_AiGenerating")
+        : NameAction.HasStatus ? NameAction.Status : _text.GetString("CaptureNaming_Suggest");
     public string FileName { get; private set => Set(ref field, value); } = string.Empty;
     public string FilePath => _path ?? string.Empty;
     public CaptureFileProperties FileProperties { get; private set => Set(ref field, value); } = new();
     public string FileStatus { get; private set => Set(ref field, value); } = string.Empty;
     public bool IsReadingFile { get; private set => Set(ref field, value); }
     public bool HasEdits { get; set => Set(ref field, value); }
-    public bool CanShowImageTextOverlay => _kind == AnalysisMediaKind.Image && _sourceMatches &&
-        _navigation.IsReady && !_navigation.ImageEdited && !_memory.State.IsDeleting;
+    public bool CanShowImageTextOverlay => IsImage && _navigation.IsReady && !_memory.State.IsDeleting &&
+        (UsesEditorText ? _editorText!.Document != null : _sourceMatches && !_navigation.ImageEdited);
     public string Summary { get; private set => Set(ref field, value); } = string.Empty;
     public bool HasSummary => Summary.Length > 0;
     public string SummaryNotice => HasSummary ? StatusText : string.Empty;
@@ -95,20 +109,22 @@ public sealed class CaptureDetailsViewModel : ViewModelBase
         IFolderLauncher? folders = null, ICaptureNamingService? names = null, ICaptureAnalysisOnboarding? onboarding = null)
     {
         _reader = reader; _memory = memory; _clipboard = clipboard; _text = text; _ui = ui;
+        _wasPolicyAllowed = memory.State.Policy.IsAllowed;
         _notifications = notifications;
         _folders = folders;
         _names = names;
         _onboarding = onboarding;
         AltTextAction = Action(AnalysisCapability.ImageAltText, "AltText");
         SummaryAction = Action(AnalysisCapability.CaptureSynopsis, "Summary");
-        NameAction = Action(AnalysisCapability.CaptureSynopsis, "Name");
+        NameAction = Action(AnalysisCapability.CaptureName, "Name");
         TextAction = Action(AnalysisCapability.TextRecognition, "Text");
         QrAction = Action(AnalysisCapability.QrCodeDetection, "Qr");
         TranscriptAction = Action(AnalysisCapability.Transcription, "Transcript");
-        EditNameCommand = new RelayCommand(() => { NameDraft = FileName == PhysicalFileName ? Path.GetFileNameWithoutExtension(FileName) : FileName; NameStatus = string.Empty; IsEditingName = true; });
-        CancelNameCommand = new RelayCommand(() => { IsEditingName = false; NameStatus = string.Empty; });
+        EditNameCommand = new RelayCommand(() => { _reviewSuggestedName = false; EditName(FileName == PhysicalFileName ? Path.GetFileNameWithoutExtension(FileName) : FileName); });
+        CancelNameCommand = new RelayCommand(() => { _reviewSuggestedName = false; IsEditingName = false; NameStatus = string.Empty; });
         SaveNameCommand = new AsyncRelayCommand(() => RenameAsync(NameDraft));
-        AcceptNameCommand = new AsyncRelayCommand(() => RenameAsync(SuggestedName));
+        SuggestNameCommand = new AsyncRelayCommand(SuggestNameAsync, () => !_disposed && CanEditName &&
+            !_memory.State.IsDeleting && !IsGeneratingName && (HasSuggestedName || NameAction.Command.CanExecute(null)));
         if (_names != null) _names.Changed += OnNamesChanged;
         TextContent = new(text);
         CopyResultsCommand = new AsyncRelayCommand(() => CopyAsync(TextContent.CopyVisibleScope()));
@@ -122,10 +138,31 @@ public sealed class CaptureDetailsViewModel : ViewModelBase
             new(capability, "CaptureAction_" + key, _text.GetString("CaptureAction_" + key), () => RequestAnalysisAsync(capability));
     }
 
+    private void EditName(string name)
+    {
+        NameDraft = name;
+        NameStatus = string.Empty;
+        IsEditingName = true;
+    }
+
+    private async Task SuggestNameAsync()
+    {
+        if (HasSuggestedName) { EditName(SuggestedName); return; }
+        _reviewSuggestedName = true;
+        await NameAction.Command.ExecuteAsync(null);
+        // A memory update may already be reading the queued run or its result.
+        if (!IsReading && !IsGeneratingName) _reviewSuggestedName = false;
+    }
+
     private async Task RequestAnalysisAsync(AnalysisCapability capability)
     {
+        if (!_disposed && UsesEditorText && (capability == AnalysisCapability.TextRecognition || capability == AnalysisCapability.QrCodeDetection))
+        {
+            await _editorText!.ExtractAsync();
+            return;
+        }
         if (_disposed || _path == null || _requesting || _memory.State.IsDeleting || _snapshot?.Run?.IsPending == true) return;
-        if (capability == AnalysisCapability.CaptureSynopsis && NeedsSummaryInputs) return;
+        if (NeedsSummaryInputs && (capability == AnalysisCapability.CaptureSynopsis || capability == AnalysisCapability.CaptureName)) return;
         _requesting = true;
         _unavailableActions.Remove(capability);
         UpdateActions();
@@ -160,6 +197,20 @@ public sealed class CaptureDetailsViewModel : ViewModelBase
         bool pending = _snapshot?.Run?.IsPending == true;
         foreach (var action in Actions)
         {
+            if (UsesEditorText && (action == TextAction || action == QrAction))
+            {
+                var document = _editorText!.Document;
+                bool isText = action == TextAction;
+                bool hasResult = isText ? document?.HasTextResults == true : document?.HasQrCodeResults == true;
+                string editorStatus = isText ? _editorText.Status : string.Empty;
+                if (!hasResult && !_editorText.CanExtract && editorStatus.Length == 0)
+                    editorStatus = _text.GetString("CaptureAction_Unavailable");
+                if (hasResult && (isText ? !_editorPassages.Any(passage => passage.Source == CaptureTextSource.ImageText) : document!.QrCodes.Count == 0))
+                    editorStatus = _text.GetString(isText ? "CaptureAction_NoText" : "CaptureAction_NoQr");
+                action.Update(isText && _editorText.IsRunning, hasResult,
+                    !_disposed && !_memory.State.IsDeleting && _editorText.CanExtract && !_editorText.IsRunning, editorStatus);
+                continue;
+            }
             bool running = pending && _memory.State.Policy.IsAllowed && _snapshot!.Run!.Steps.Contains(action.Capability) &&
                 !_snapshot.Run.CompletedSteps.Any(step => step.Capability == action.Capability);
             var result = _snapshot?.Record?.Results.SingleOrDefault(result => result.Payload.Capability == action.Capability);
@@ -171,16 +222,16 @@ public sealed class CaptureDetailsViewModel : ViewModelBase
                 DescriptionMetadata { Descriptions.Count: 0 } => "NoDescription",
                 ImageAltTextMetadata { Suggestion: null } => "NoSuggestion",
                 CaptureSynopsisMetadata { Summary.Count: 0 } when action == SummaryAction => "NoSuggestion",
-                CaptureSynopsisMetadata { Title: null } when action == NameAction && !_acceptedName => "NoSuggestion",
+                CaptureNameMetadata { Suggestion: null } when !_acceptedName => "NoSuggestion",
                 _ => null
             };
             var outcome = _snapshot?.Run?.CompletedSteps.SingleOrDefault(step => step.Capability == action.Capability)?.Outcome;
             if (result == null && !running && outcome != null)
                 status = outcome == AnalyzerOutcomeKind.Unsupported ? "Unavailable" : "Failed";
             if (result == null && !running && _unavailableActions.Contains(action.Capability)) status = "Unavailable";
-            action.Update(running, result != null || action == NameAction && _acceptedName,
+            action.Update(running, result != null || action == NameAction && (_acceptedName || Content.SuggestedName.Length > 0),
                 !_disposed && !_requesting && !pending && !_memory.State.IsDeleting &&
-                (action.Capability != AnalysisCapability.CaptureSynopsis || !NeedsSummaryInputs) &&
+                (!(action.Capability == AnalysisCapability.CaptureSynopsis || action.Capability == AnalysisCapability.CaptureName) || !NeedsSummaryInputs) &&
                 (action.Capability != AnalysisCapability.ImageAltText || IsImage),
                 status == null ? string.Empty : _text.GetString("CaptureAction_" + status));
         }
@@ -188,6 +239,8 @@ public sealed class CaptureDetailsViewModel : ViewModelBase
         RaisePropertyChanged(nameof(IsImage));
         IsGeneratingSummary = SummaryAction.IsRunning;
         IsGeneratingName = NameAction.IsRunning;
+        RaisePropertyChanged(nameof(NameSuggestionToolTip));
+        SuggestNameCommand.NotifyCanExecuteChanged();
         RaisePropertyChanged(nameof(HasVisualMedia));
         RaisePropertyChanged(nameof(HasAudio));
         RaisePropertyChanged(nameof(NeedsSummaryInputs));
@@ -228,6 +281,11 @@ public sealed class CaptureDetailsViewModel : ViewModelBase
             ? new CaptureName(Content.SuggestedName, true).SuggestedFileName()
             : state?.Name is { IsAutomatic: true } name ? name.SuggestedFileName() : string.Empty;
         RaisePropertyChanged(nameof(HasSuggestedName));
+        if (_reviewSuggestedName && HasSuggestedName)
+        {
+            _reviewSuggestedName = false;
+            EditName(SuggestedName);
+        }
         UpdateActions();
     }
     private async Task RenameAsync(string name)
@@ -294,9 +352,7 @@ public sealed class CaptureDetailsViewModel : ViewModelBase
     private void SetSummary(CaptureAnalysisRecord? record)
     {
         Summary = Content.Summary;
-        TextContent.Replace(Content.Passages);
-        TextContent.SetNavigationContext(_navigation with { SourceMatches = _sourceMatches && record != null });
-        RaisePropertyChanged(nameof(CanShowImageTextOverlay));
+        RefreshText();
         RaisePropertyChanged(nameof(HasSummary));
         RaisePropertyChanged(nameof(SummaryNotice));
         UpdateActions();
@@ -305,7 +361,45 @@ public sealed class CaptureDetailsViewModel : ViewModelBase
     public void SetNavigationContext(CaptureTextNavigationContext context)
     {
         _navigation = context;
-        TextContent.SetNavigationContext(context with { SourceMatches = _sourceMatches });
+        RefreshText();
+    }
+
+    public void SetEditorText(CaptureEditorTextSession? session)
+    {
+        if (ReferenceEquals(_editorText, session)) return;
+        if (_editorText != null) _editorText.Changed -= EditorTextChanged;
+        _editorText = session;
+        if (_editorText != null) _editorText.Changed += EditorTextChanged;
+        EditorTextChanged();
+    }
+
+    public async Task EnsureTextAsync()
+    {
+        if (_disposed || TextAction.HasResult || TextAction.IsRunning) return;
+        if (TextAction.Command.CanExecute(null)) await TextAction.Command.ExecuteAsync(null);
+    }
+
+    private void EditorTextChanged()
+    {
+        if (_disposed) return;
+        if (!ReferenceEquals(_editorDocument, _editorText?.Document))
+        {
+            _editorDocument = _editorText?.Document;
+            _editorPassages = _editorDocument == null ? [] : CaptureTextPassage.From(_editorDocument, _text);
+        }
+        RefreshText();
+        UpdateActions();
+    }
+
+    private void RefreshText()
+    {
+        TextContent.Replace(TextPassages);
+        TextContent.SetNavigationContext(UsesEditorText
+            ? new(_navigation.IsReady, _editorText!.Document != null)
+            : _navigation with { SourceMatches = _sourceMatches });
+        RaisePropertyChanged(nameof(TextPassages));
+        RaisePropertyChanged(nameof(TextStatus));
+        RaisePropertyChanged(nameof(ShowQrAction));
         RaisePropertyChanged(nameof(CanShowImageTextOverlay));
     }
     public void ReportActionFailure()
@@ -403,6 +497,10 @@ public sealed class CaptureDetailsViewModel : ViewModelBase
         _ui.TryExecute(() =>
         {
             if (_disposed) return;
+            bool revoked = _wasPolicyAllowed && !state.Policy.IsAllowed;
+            _wasPolicyAllowed = state.Policy.IsAllowed;
+            if ((state.IsDeleting || revoked) && _editorText is { } editor && (editor.Document != null || editor.IsRunning))
+                editor.Invalidate(editor.HasChanges);
             if (!state.Policy.IsAllowed) { IsGeneratingName = false; IsGeneratingSummary = false; }
             if (state.IsDeleting || state.Storage.HasData == false)
             {
@@ -427,11 +525,12 @@ public sealed class CaptureDetailsViewModel : ViewModelBase
         catch (Exception) { if (!_disposed) _notifications.ShowError(Text("CopyFailed")); }
     }
     private string Text(string key) => _text.GetString("CaptureDetails_" + key);
-    private void SetStatus(string value) { StatusText = value; RaisePropertyChanged(nameof(ShowStatus)); RaisePropertyChanged(nameof(SummaryNotice)); }
+    private void SetStatus(string value) { StatusText = value; RaisePropertyChanged(nameof(ShowStatus)); RaisePropertyChanged(nameof(SummaryNotice)); RaisePropertyChanged(nameof(TextStatus)); }
     public override void Dispose()
     {
         if (_disposed) return;
         _disposed = true;
+        if (_editorText != null) _editorText.Changed -= EditorTextChanged;
         _memory.StateChanged -= OnMemoryChanged;
         if (_names != null) _names.Changed -= OnNamesChanged;
         _lifetime.Cancel();

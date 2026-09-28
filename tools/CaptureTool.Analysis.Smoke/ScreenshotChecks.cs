@@ -58,7 +58,7 @@ internal static class ScreenshotChecks
                 }
                 var revision = new SourceRevision(Convert.ToHexStringLower(SHA256.HashData(await File.ReadAllBytesAsync(path, lifetime.Token))));
                 var capture = new CaptureAnalysisRecord(CaptureId.New(), AnalysisMediaKind.Image, revision, plan.Version, Guid.NewGuid(), []);
-                foreach (var capability in new[] { AnalysisCapability.TextRecognition, AnalysisCapability.Description, AnalysisCapability.CaptureSynopsis, AnalysisCapability.ImageAltText })
+                foreach (var capability in new[] { AnalysisCapability.TextRecognition, AnalysisCapability.Description, AnalysisCapability.CaptureName, AnalysisCapability.CaptureSynopsis, AnalysisCapability.ImageAltText })
                 {
                     var timer = Stopwatch.StartNew();
                     AnalyzerOutcome? outcome = null;
@@ -126,11 +126,13 @@ internal static class ScreenshotChecks
                     capture = capture.WithResult(new(outcome.Payload!, outcome.Producer!, DateTimeOffset.UtcNow, plan.Version, derivation: snapshot?.Derivation));
                     if (outcome.Payload is TextRecognitionMetadata ocr) Console.WriteLine($"{label}: {ocr.Regions.Count} OCR entries");
                     if (outcome.Payload is DescriptionMetadata description) Console.WriteLine($"{label} description: {description.Descriptions[0].Text}");
-                    if (outcome.Payload is CaptureSynopsisMetadata synopsis) Console.WriteLine($"{label} title: {synopsis.Title?.Text}; summary: {string.Join(" ", synopsis.Summary.Select(item => item.Text))}");
+                    if (outcome.Payload is CaptureNameMetadata name) Console.WriteLine($"{label} name: {name.Suggestion?.Text}");
+                    if (outcome.Payload is CaptureSynopsisMetadata synopsis) Console.WriteLine($"{label} summary: {string.Join(" ", synopsis.Summary.Select(item => item.Text))}");
                     if (outcome.Payload is ImageAltTextMetadata alt) Console.WriteLine($"{label} alt text: {alt.Suggestion?.Text}");
                     string? generated = outcome.Payload switch
                     {
-                        CaptureSynopsisMetadata value => value.Title?.Text + " " + string.Join(" ", value.Summary.Select(item => item.Text)),
+                        CaptureNameMetadata value => value.Suggestion?.Text ?? string.Empty,
+                        CaptureSynopsisMetadata value => string.Join(" ", value.Summary.Select(item => item.Text)),
                         ImageAltTextMetadata value => value.Suggestion?.Text ?? string.Empty,
                         _ => null,
                     };

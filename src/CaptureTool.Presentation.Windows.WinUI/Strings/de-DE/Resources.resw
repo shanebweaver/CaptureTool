@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -1396,13 +1396,13 @@ SOFTWARE.
     <value>Aus</value>
   </data>
   <data name="ImageEdit_TextExtractionButton.Label" xml:space="preserve">
-    <value>Texterkennung</value>
+    <value>Text extrahieren</value>
   </data>
   <data name="ImageEdit_TextExtractionButton.AutomationProperties.Name" xml:space="preserve">
-    <value>Text im Bild erkennen</value>
+    <value>Text extrahieren</value>
   </data>
   <data name="ImageEdit_TextExtractionButton.ToolTipService.ToolTip" xml:space="preserve">
-    <value>Text im Bild erkennen und auswählen</value>
+    <value>Text auf der Registerkarte Text suchen und kopieren</value>
   </data>
   <data name="ImageEdit_TextExtractionOverlayMarker.AutomationProperties.Name" xml:space="preserve">
     <value>Überlagerung für die Texterkennung ist bereit</value>
@@ -1734,12 +1734,6 @@ SOFTWARE.
   <data name="CaptureMemory_Delete.Content" xml:space="preserve">
     <value>Löschen</value>
   </data>
-  <data name="CaptureMemory_Preparing" xml:space="preserve">
-    <value>Lokale KI wird vorbereitet…</value>
-  </data>
-  <data name="CaptureMemory_Analyzing" xml:space="preserve">
-    <value>Aufnahmen werden analysiert…</value>
-  </data>
   <data name="CaptureMemory_ConsentTitle" xml:space="preserve">
     <value>Mehr aus jeder Aufnahme machen</value>
   </data>
@@ -1974,4 +1968,7 @@ SOFTWARE.
   <data name="CaptureSummary_CopySummary.Content" xml:space="preserve"><value>Zusammenfassung kopieren</value></data>
   <data name="CaptureSummary_CopyAltText.Content" xml:space="preserve"><value>Alternativtext kopieren</value></data>
   <data name="CaptureAction_NoSuggestion" xml:space="preserve"><value>Für einen Vorschlag sind nicht genügend Informationen vorhanden.</value></data>
+  <data name="CaptureNaming_Suggest" xml:space="preserve"><value>Mit KI einen Dateinamen vorschlagen. Vor dem Speichern prüfen und bearbeiten.</value></data>
+  <data name="CaptureNaming_AiGenerating" xml:space="preserve"><value>KI schlägt einen Namen vor…</value></data>
+  <data name="CaptureNaming_Edit.ToolTipService.ToolTip" xml:space="preserve"><value>Aufnahmenamen bearbeiten</value></data>
 </root>

@@ -1,5 +1,9 @@
 ﻿<Project Sdk="MSTest.Sdk/4.0.2">
 
+  <ItemGroup>
+    <None Include="..\Fixtures\TextLayout\text-layout.json" Link="Fixtures\text-layout.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
   <!-- Project properties -->
   <PropertyGroup>
     <UseVSTest>true</UseVSTest>

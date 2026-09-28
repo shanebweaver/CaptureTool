@@ -13,21 +13,22 @@
     d:DataContext="{d:DesignInstance Type=audioedit:AudioEditPageViewModel}"
     mc:Ignorable="d">
 
-    <controls:CaptureDetailsHost x:Name="DetailsHost" SourcePath="{x:Bind ViewModel.DetailsSourcePath, Mode=OneWay}" MediaKind="Audio" WorkingPath="{x:Bind ViewModel.AudioPath, Mode=OneWay}" IsSourceReady="{x:Bind ViewModel.IsMediaReady, Mode=OneWay}">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
         <!--  Toolbar  -->
         <CommandBar
+            AutomationProperties.AutomationId="AudioEdit_CommandBar"
             HorizontalAlignment="Stretch"
             DefaultLabelPosition="Right"
             IsOpen="False">
             <AppBarToggleButton x:Name="DetailsToggle" x:Uid="CapturePane_Toggle" Icon="Bullets"
                 AutomationProperties.AutomationId="Editor_DetailsToggle"
-                IsChecked="{x:Bind DetailsHost.IsPaneOpen, Mode=TwoWay}" />
+                IsChecked="{x:Bind DetailsHost.IsPaneOpen, Mode=OneWay}" />
             <!--  Open in Clipchamp  -->
             <AppBarButton
                 x:Uid="AudioEdit_OpenInClipchampButton"
@@ -67,135 +68,137 @@
                 Icon="Folder" />
         </CommandBar>
 
-        <Grid Grid.Row="1" Padding="0">
-            <Grid.RowDefinitions>
-                <RowDefinition />
-                <RowDefinition Height="Auto" />
-            </Grid.RowDefinitions>
+        <controls:CaptureDetailsHost
+            Grid.Row="1"
+            x:Name="DetailsHost"
+            SourcePath="{x:Bind ViewModel.DetailsSourcePath, Mode=OneWay}"
+            MediaKind="Audio"
+            WorkingPath="{x:Bind ViewModel.AudioPath, Mode=OneWay}"
+            IsSourceReady="{x:Bind ViewModel.IsMediaReady, Mode=OneWay}">
+            <Grid Padding="0">
 
-            <Border
-                Padding="20,0"
-                HorizontalAlignment="Stretch"
-                VerticalAlignment="Stretch"
-                Background="{ThemeResource CardBackgroundFillColorDefault}"
-                BorderBrush="{ThemeResource CardStrokeColorDefault}"
-                BorderThickness="0,1"
-                Visibility="{x:Bind ViewModel.IsMediaReady, Mode=OneWay}">
-                <Grid
-                    x:Name="WaveformSurface"
-                    Grid.Row="1"
-                    MaxHeight="300"
-                    SizeChanged="WaveformSurface_SizeChanged">
-                    <ScrollViewer
-                        x:Name="WaveformScrollViewer"
-                        HorizontalScrollBarVisibility="Auto"
-                        HorizontalScrollMode="Enabled"
-                        VerticalScrollBarVisibility="Disabled"
-                        VerticalScrollMode="Disabled"
-                        ZoomMode="Disabled">
-                        <Grid x:Name="WaveformScrollContent" VerticalAlignment="Stretch">
-                            <Grid
-                                x:Name="WaveformTrack"
-                                HorizontalAlignment="Center"
-                                VerticalAlignment="Stretch"
-                                PointerPressed="WaveformSurface_PointerPressed">
-                                <ItemsRepeater
-                                    x:Name="WaveformBarsRepeater"
-                                    HorizontalAlignment="Stretch"
-                                    VerticalAlignment="Center"
-                                    ItemsSource="{x:Bind ViewModel.WaveformBars, Mode=OneWay}"
-                                    SizeChanged="WaveformBarsRepeater_SizeChanged">
-                                    <ItemsRepeater.Layout>
-                                        <StackLayout Orientation="Horizontal" Spacing="4" />
-                                    </ItemsRepeater.Layout>
-                                    <ItemsRepeater.ItemTemplate>
-                                        <DataTemplate x:DataType="audio:AudioWaveformBarViewModel">
-                                            <Border
-                                                Width="{x:Bind Width, Mode=OneWay}"
-                                                Height="{x:Bind Height, Mode=OneWay}"
-                                                VerticalAlignment="Center"
-                                                Background="{ThemeResource AccentFillColorDefaultBrush}"
-                                                CornerRadius="2" />
-                                        </DataTemplate>
-                                    </ItemsRepeater.ItemTemplate>
-                                </ItemsRepeater>
-
-                                <Border
-                                    x:Name="WaveformPlayhead"
-                                    Width="2"
-                                    HorizontalAlignment="Left"
+                <Border
+                    Padding="20,0"
+                    HorizontalAlignment="Stretch"
+                    VerticalAlignment="Stretch"
+                    Background="{ThemeResource CardBackgroundFillColorDefault}"
+                    BorderBrush="{ThemeResource CardStrokeColorDefault}"
+                    BorderThickness="0,1"
+                    Visibility="{x:Bind ViewModel.IsMediaReady, Mode=OneWay}">
+                    <Grid
+                        x:Name="WaveformSurface"
+                        Grid.Row="1"
+                        MaxHeight="300"
+                        SizeChanged="WaveformSurface_SizeChanged">
+                        <ScrollViewer
+                            x:Name="WaveformScrollViewer"
+                            HorizontalScrollBarVisibility="Auto"
+                            HorizontalScrollMode="Enabled"
+                            VerticalScrollBarVisibility="Disabled"
+                            VerticalScrollMode="Disabled"
+                            ZoomMode="Disabled">
+                            <Grid x:Name="WaveformScrollContent" VerticalAlignment="Stretch">
+                                <Grid
+                                    x:Name="WaveformTrack"
+                                    HorizontalAlignment="Center"
                                     VerticalAlignment="Stretch"
-                                    Background="{ThemeResource TextFillColorPrimaryBrush}"
-                                    IsHitTestVisible="False">
-                                    <Border.RenderTransform>
-                                        <TranslateTransform x:Name="WaveformPlayheadTransform" />
-                                    </Border.RenderTransform>
-                                </Border>
+                                    PointerPressed="WaveformSurface_PointerPressed">
+                                    <ItemsRepeater
+                                        x:Name="WaveformBarsRepeater"
+                                        HorizontalAlignment="Stretch"
+                                        VerticalAlignment="Center"
+                                        ItemsSource="{x:Bind ViewModel.WaveformBars, Mode=OneWay}"
+                                        SizeChanged="WaveformBarsRepeater_SizeChanged">
+                                        <ItemsRepeater.Layout>
+                                            <StackLayout Orientation="Horizontal" Spacing="4" />
+                                        </ItemsRepeater.Layout>
+                                        <ItemsRepeater.ItemTemplate>
+                                            <DataTemplate x:DataType="audio:AudioWaveformBarViewModel">
+                                                <Border
+                                                    Width="{x:Bind Width, Mode=OneWay}"
+                                                    Height="{x:Bind Height, Mode=OneWay}"
+                                                    VerticalAlignment="Center"
+                                                    Background="{ThemeResource AccentFillColorDefaultBrush}"
+                                                    CornerRadius="2" />
+                                            </DataTemplate>
+                                        </ItemsRepeater.ItemTemplate>
+                                    </ItemsRepeater>
+
+                                    <Border
+                                        x:Name="WaveformPlayhead"
+                                        Width="2"
+                                        HorizontalAlignment="Left"
+                                        VerticalAlignment="Stretch"
+                                        Background="{ThemeResource TextFillColorPrimaryBrush}"
+                                        IsHitTestVisible="False">
+                                        <Border.RenderTransform>
+                                            <TranslateTransform x:Name="WaveformPlayheadTransform" />
+                                        </Border.RenderTransform>
+                                    </Border>
+                                </Grid>
                             </Grid>
-                        </Grid>
-                    </ScrollViewer>
-                </Grid>
-            </Border>
+                        </ScrollViewer>
+                    </Grid>
+                </Border>
 
-            <MediaPlayerElement
-                x:Name="AudioPlayer"
-                Grid.Row="1"
-                AreTransportControlsEnabled="True"
-                Visibility="{x:Bind ViewModel.IsMediaReady, Mode=OneWay}" />
 
-            <Grid
-                Grid.RowSpan="2"
-                Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.IsMediaLoading), Mode=OneWay}">
-                <StackPanel
-                    HorizontalAlignment="Center"
-                    VerticalAlignment="Center"
-                    Spacing="16">
-                    <ProgressRing
-                        Width="48"
-                        Height="48"
-                        IsActive="True" />
-                    <TextBlock
-                        x:Uid="AudioEdit_LoadingMediaText"
-                        HorizontalAlignment="Center"
-                        FontSize="16"
-                        Opacity="0.7"
-                        Text="Opening audio..." />
-                </StackPanel>
-            </Grid>
-
-            <Grid
-                Grid.RowSpan="2"
-                Background="{ThemeResource AcrylicBackgroundFillColorBaseBrush}"
-                Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.HasMediaFailure), Mode=OneWay}">
-                <StackPanel
-                    MaxWidth="520"
-                    HorizontalAlignment="Center"
-                    VerticalAlignment="Center"
-                    Spacing="16">
-                    <FontIcon FontSize="32" Glyph="&#xE783;" />
-                    <TextBlock
-                        HorizontalAlignment="Center"
-                        FontSize="16"
-                        Text="{x:Bind ViewModel.MediaFailureMessage, Mode=OneWay}"
-                        TextAlignment="Center"
-                        TextWrapping="Wrap" />
+                <Grid
+                    Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.IsMediaLoading), Mode=OneWay}">
                     <StackPanel
                         HorizontalAlignment="Center"
-                        Orientation="Horizontal"
-                        Spacing="8">
-                        <Button
-                            x:Uid="MediaFailure_RetryButton"
-                            Command="{x:Bind ViewModel.RetryMediaCommand}"
-                            Content="Try again" />
-                        <Button
-                            x:Uid="AudioEdit_MediaFailureOpenFolderButton"
-                            Command="{x:Bind ViewModel.OpenAudioFolderCommand}"
-                            Content="Open audio recordings folder" />
+                        VerticalAlignment="Center"
+                        Spacing="16">
+                        <ProgressRing
+                            Width="48"
+                            Height="48"
+                            IsActive="True" />
+                        <TextBlock
+                            x:Uid="AudioEdit_LoadingMediaText"
+                            HorizontalAlignment="Center"
+                            FontSize="16"
+                            Opacity="0.7"
+                            Text="Opening audio..." />
                     </StackPanel>
-                </StackPanel>
+                </Grid>
+
+                <Grid
+                    Background="{ThemeResource AcrylicBackgroundFillColorBaseBrush}"
+                    Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.HasMediaFailure), Mode=OneWay}">
+                    <StackPanel
+                        MaxWidth="520"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Spacing="16">
+                        <FontIcon FontSize="32" Glyph="&#xE783;" />
+                        <TextBlock
+                            HorizontalAlignment="Center"
+                            FontSize="16"
+                            Text="{x:Bind ViewModel.MediaFailureMessage, Mode=OneWay}"
+                            TextAlignment="Center"
+                            TextWrapping="Wrap" />
+                        <StackPanel
+                            HorizontalAlignment="Center"
+                            Orientation="Horizontal"
+                            Spacing="8">
+                            <Button
+                                x:Uid="MediaFailure_RetryButton"
+                                Command="{x:Bind ViewModel.RetryMediaCommand}"
+                                Content="Try again" />
+                            <Button
+                                x:Uid="AudioEdit_MediaFailureOpenFolderButton"
+                                Command="{x:Bind ViewModel.OpenAudioFolderCommand}"
+                                Content="Open audio recordings folder" />
+                        </StackPanel>
+                    </StackPanel>
+                </Grid>
             </Grid>
-        </Grid>
+        </controls:CaptureDetailsHost>
+
+        <MediaPlayerElement
+            x:Name="AudioPlayer"
+            Grid.Row="2"
+            AreTransportControlsEnabled="True"
+            Visibility="{x:Bind ViewModel.IsMediaReady, Mode=OneWay}" />
     </Grid>
-    </controls:CaptureDetailsHost>
 
 </local:AudioEditPageBase>

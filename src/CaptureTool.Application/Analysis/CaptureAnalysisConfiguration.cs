@@ -71,13 +71,13 @@ public sealed class CaptureAnalysisConfiguration
         }
     }
 
-    /// <summary>Dependencies explicitly authorized by a screenshot summary or alt-text action.</summary>
+    /// <summary>Dependencies explicitly authorized by a screenshot summary, name, or alt-text action.</summary>
     public static IReadOnlyList<AnalysisCapability> ForAction(AnalysisMediaKind kind, AnalysisCapability capability) =>
-        kind == AnalysisMediaKind.Image && (capability == AnalysisCapability.CaptureSynopsis || capability == AnalysisCapability.ImageAltText)
+        kind == AnalysisMediaKind.Image && (capability == AnalysisCapability.CaptureSynopsis || capability == AnalysisCapability.CaptureName || capability == AnalysisCapability.ImageAltText)
             ? [AnalysisCapability.TextRecognition, AnalysisCapability.Description, capability] : [capability];
 
     public static CaptureAnalysisConfiguration CreateDefault() => new([
-        new(AnalysisMediaKind.Image, "image-v8", [
+        new(AnalysisMediaKind.Image, "image-v9", [
             Step(AnalysisCapability.FileDetails, ["windows-file-details"], 1),
             Step(AnalysisCapability.QrCodeDetection, ["zxing-image-qr"], 2),
             Step(AnalysisCapability.TextRecognition, ["windows-ai-ocr-document", "windows-ocr-document"], 2),
@@ -85,12 +85,12 @@ public sealed class CaptureAnalysisConfiguration
             .. MetadataEnrichmentConfiguration.Steps,
             MetadataEnrichmentConfiguration.AltTextStep,
         ]),
-        new(AnalysisMediaKind.Audio, "audio-v5", [
+        new(AnalysisMediaKind.Audio, "audio-v6", [
             Step(AnalysisCapability.FileDetails, ["windows-file-details"], 1),
             Step(AnalysisCapability.Transcription, ["foundry-local-nemotron-multilingual-speech-transcript", "foundry-local-speech-transcript"], 30),
             .. MetadataEnrichmentConfiguration.Steps,
         ]),
-        new(AnalysisMediaKind.Video, "video-v7", [
+        new(AnalysisMediaKind.Video, "video-v8", [
             Step(AnalysisCapability.FileDetails, ["windows-file-details"], 1),
             Step(AnalysisCapability.QrCodeDetection, ["zxing-video-frame-qr"], 15),
             Step(AnalysisCapability.TextRecognition, ["windows-ai-video-frame-ocr", "windows-video-frame-ocr"], 15),

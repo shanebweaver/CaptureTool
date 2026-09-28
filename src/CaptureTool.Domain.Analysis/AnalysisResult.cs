@@ -21,11 +21,22 @@ public sealed record AnalysisResult
         Producer = producer;
         GeneratedAt = generatedAt;
         PlanVersion = AnalysisGuard.Identifier(planVersion, nameof(planVersion));
-        if (producingRunId == Guid.Empty) throw new ArgumentException("Run identity cannot be empty.", nameof(producingRunId));
+        if (producingRunId == Guid.Empty)
+        {
+            throw new ArgumentException("Run identity cannot be empty.", nameof(producingRunId));
+        }
+
         ProducingRunId = producingRunId;
-        if (resultId == Guid.Empty) throw new ArgumentException("Result identity cannot be empty.", nameof(resultId));
+        if (resultId == Guid.Empty)
+        {
+            throw new ArgumentException("Result identity cannot be empty.", nameof(resultId));
+        }
+
         if ((payload is DerivedAnalysisPayload) != (derivation != null))
+        {
             throw new ArgumentException("Only derived payloads require an input snapshot.", nameof(derivation));
+        }
+
         ResultId = resultId ?? Guid.NewGuid();
         Derivation = derivation;
     }

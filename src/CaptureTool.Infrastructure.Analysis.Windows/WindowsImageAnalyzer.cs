@@ -120,7 +120,8 @@ internal sealed class WindowsImageAnalyzer(string id, WindowsImageModel model, A
             }
 
             OcrResult recognized = await engine.RecognizeAsync(bitmap).AsTask(ct).ConfigureAwait(false);
-            foreach (OcrWord word in recognized.Lines.SelectMany(line => line.Words))
+            foreach (var (line, lineIndex) in recognized.Lines.Select((line, index) => (line, index)))
+            foreach (var (word, wordIndex) in line.Words.Select((word, index) => (word, index)))
             {
                 if (string.IsNullOrWhiteSpace(word.Text))
                 {
@@ -128,7 +129,7 @@ internal sealed class WindowsImageAnalyzer(string id, WindowsImageModel model, A
                 }
 
                 var bounds = word.BoundingRect;
-                text.Add(new(word.Text, Bounds(bounds.X, bounds.Y, bounds.Right, bounds.Bottom, bitmap), timestamp));
+                text.Add(new(word.Text, Bounds(bounds.X, bounds.Y, bounds.Right, bounds.Bottom, bitmap), timestamp, lineIndex, wordIndex));
                 if (text.Count > MaximumRegions)
                 {
                     return AnalyzerOutcomeKind.Failed;
@@ -142,7 +143,8 @@ internal sealed class WindowsImageAnalyzer(string id, WindowsImageModel model, A
             {
                 using TextRecognizer recognizer = await TextRecognizer.CreateAsync().AsTask(ct).ConfigureAwait(false);
                 var recognized = await recognizer.RecognizeTextFromImageAsync(image).AsTask(ct).ConfigureAwait(false);
-                foreach (RecognizedWord word in recognized.Lines.SelectMany(line => line.Words))
+                foreach (var (line, lineIndex) in recognized.Lines.Select((line, index) => (line, index)))
+                foreach (var (word, wordIndex) in line.Words.Select((word, index) => (word, index)))
                 {
                     if (string.IsNullOrWhiteSpace(word.Text))
                     {
@@ -154,7 +156,7 @@ internal sealed class WindowsImageAnalyzer(string id, WindowsImageModel model, A
                     double top = Math.Min(Math.Min(box.TopLeft.Y, box.TopRight.Y), Math.Min(box.BottomLeft.Y, box.BottomRight.Y));
                     double right = Math.Max(Math.Max(box.TopLeft.X, box.TopRight.X), Math.Max(box.BottomLeft.X, box.BottomRight.X));
                     double bottom = Math.Max(Math.Max(box.TopLeft.Y, box.TopRight.Y), Math.Max(box.BottomLeft.Y, box.BottomRight.Y));
-                    text.Add(new(word.Text, Bounds(left, top, right, bottom, bitmap), timestamp));
+                    text.Add(new(word.Text, Bounds(left, top, right, bottom, bitmap), timestamp, lineIndex, wordIndex));
                     if (text.Count > MaximumRegions)
                     {
                         return AnalyzerOutcomeKind.Failed;

@@ -1,0 +1,1515 @@
+{
+  "Width": 1440,
+  "Height": 964,
+  "Words": [
+    {
+      "Text": "A",
+      "X": 72.0,
+      "Y": 52.0,
+      "Width": 30.9375,
+      "Height": 58.523438,
+      "LineIndex": 0,
+      "WordIndex": 0
+    },
+    {
+      "Text": "morning",
+      "X": 115.076171875,
+      "Y": 52.0,
+      "Width": 177.69727,
+      "Height": 58.523438,
+      "LineIndex": 0,
+      "WordIndex": 1
+    },
+    {
+      "Text": "in",
+      "X": 304.912109375,
+      "Y": 52.0,
+      "Width": 39.123047,
+      "Height": 58.523438,
+      "LineIndex": 0,
+      "WordIndex": 2
+    },
+    {
+      "Text": "the",
+      "X": 356.173828125,
+      "Y": 52.0,
+      "Width": 67.41797,
+      "Height": 58.523438,
+      "LineIndex": 0,
+      "WordIndex": 3
+    },
+    {
+      "Text": "studio",
+      "X": 435.73046875,
+      "Y": 52.0,
+      "Width": 129.74414,
+      "Height": 58.523438,
+      "LineIndex": 0,
+      "WordIndex": 4
+    },
+    {
+      "Text": "Notes",
+      "X": 72.0,
+      "Y": 116.0,
+      "Width": 52.402344,
+      "Height": 26.601562,
+      "LineIndex": 1,
+      "WordIndex": 0
+    },
+    {
+      "Text": "from",
+      "X": 129.880859375,
+      "Y": 116.0,
+      "Width": 42.158203,
+      "Height": 26.601562,
+      "LineIndex": 1,
+      "WordIndex": 1
+    },
+    {
+      "Text": "a",
+      "X": 177.517578125,
+      "Y": 116.0,
+      "Width": 10.175781,
+      "Height": 26.601562,
+      "LineIndex": 1,
+      "WordIndex": 2
+    },
+    {
+      "Text": "photography",
+      "X": 193.171875,
+      "Y": 116.0,
+      "Width": 114.95117,
+      "Height": 26.601562,
+      "LineIndex": 1,
+      "WordIndex": 3
+    },
+    {
+      "Text": "review",
+      "X": 313.6015625,
+      "Y": 116.0,
+      "Width": 56.748047,
+      "Height": 26.601562,
+      "LineIndex": 1,
+      "WordIndex": 4
+    },
+    {
+      "Text": "Project",
+      "X": 72.0,
+      "Y": 192.0,
+      "Width": 99.53613,
+      "Height": 39.902344,
+      "LineIndex": 2,
+      "WordIndex": 0
+    },
+    {
+      "Text": "update",
+      "X": 179.8125,
+      "Y": 192.0,
+      "Width": 99.375,
+      "Height": 39.902344,
+      "LineIndex": 2,
+      "WordIndex": 1
+    },
+    {
+      "Text": "Review",
+      "X": 784.0,
+      "Y": 192.0,
+      "Width": 100.75195,
+      "Height": 39.902344,
+      "LineIndex": 3,
+      "WordIndex": 0
+    },
+    {
+      "Text": "checklist",
+      "X": 893.0283203125,
+      "Y": 192.0,
+      "Width": 121.78711,
+      "Height": 39.902344,
+      "LineIndex": 3,
+      "WordIndex": 1
+    },
+    {
+      "Text": "Morning",
+      "X": 72.0,
+      "Y": 252.0,
+      "Width": 91.06641,
+      "Height": 31.921875,
+      "LineIndex": 4,
+      "WordIndex": 0
+    },
+    {
+      "Text": "light",
+      "X": 169.640625,
+      "Y": 252.0,
+      "Width": 47.472656,
+      "Height": 31.921875,
+      "LineIndex": 4,
+      "WordIndex": 1
+    },
+    {
+      "Text": "filled",
+      "X": 223.6875,
+      "Y": 252.0,
+      "Width": 51.632812,
+      "Height": 31.921875,
+      "LineIndex": 4,
+      "WordIndex": 2
+    },
+    {
+      "Text": "the",
+      "X": 281.89453125,
+      "Y": 252.0,
+      "Width": 34.265625,
+      "Height": 31.921875,
+      "LineIndex": 4,
+      "WordIndex": 3
+    },
+    {
+      "Text": "studio",
+      "X": 322.734375,
+      "Y": 252.0,
+      "Width": 65.90625,
+      "Height": 31.921875,
+      "LineIndex": 4,
+      "WordIndex": 4
+    },
+    {
+      "Text": "as",
+      "X": 395.21484375,
+      "Y": 252.0,
+      "Width": 22.394531,
+      "Height": 31.921875,
+      "LineIndex": 4,
+      "WordIndex": 5
+    },
+    {
+      "Text": "the",
+      "X": 424.18359375,
+      "Y": 252.0,
+      "Width": 34.265625,
+      "Height": 31.921875,
+      "LineIndex": 4,
+      "WordIndex": 6
+    },
+    {
+      "Text": "team",
+      "X": 465.0234375,
+      "Y": 252.0,
+      "Width": 53.566406,
+      "Height": 31.921875,
+      "LineIndex": 4,
+      "WordIndex": 7
+    },
+    {
+      "Text": "1.",
+      "X": 784.0,
+      "Y": 252.0,
+      "Width": 18.140625,
+      "Height": 31.921875,
+      "LineIndex": 5,
+      "WordIndex": 0
+    },
+    {
+      "Text": "Keep",
+      "X": 808.71484375,
+      "Y": 252.0,
+      "Width": 53.132812,
+      "Height": 31.921875,
+      "LineIndex": 5,
+      "WordIndex": 1
+    },
+    {
+      "Text": "related",
+      "X": 868.421875,
+      "Y": 252.0,
+      "Width": 73.734375,
+      "Height": 31.921875,
+      "LineIndex": 5,
+      "WordIndex": 2
+    },
+    {
+      "Text": "lines",
+      "X": 948.73046875,
+      "Y": 252.0,
+      "Width": 47.941406,
+      "Height": 31.921875,
+      "LineIndex": 5,
+      "WordIndex": 3
+    },
+    {
+      "Text": "in",
+      "X": 1003.24609375,
+      "Y": 252.0,
+      "Width": 19.394531,
+      "Height": 31.921875,
+      "LineIndex": 5,
+      "WordIndex": 4
+    },
+    {
+      "Text": "one",
+      "X": 1029.21484375,
+      "Y": 252.0,
+      "Width": 40.195312,
+      "Height": 31.921875,
+      "LineIndex": 5,
+      "WordIndex": 5
+    },
+    {
+      "Text": "paragraph.",
+      "X": 1075.984375,
+      "Y": 252.0,
+      "Width": 114.45703,
+      "Height": 31.921875,
+      "LineIndex": 5,
+      "WordIndex": 6
+    },
+    {
+      "Text": "reviewed",
+      "X": 72.0,
+      "Y": 288.0,
+      "Width": 94.78125,
+      "Height": 31.921875,
+      "LineIndex": 6,
+      "WordIndex": 0
+    },
+    {
+      "Text": "a",
+      "X": 173.35546875,
+      "Y": 288.0,
+      "Width": 12.2109375,
+      "Height": 31.921875,
+      "LineIndex": 6,
+      "WordIndex": 1
+    },
+    {
+      "Text": "new",
+      "X": 192.140625,
+      "Y": 288.0,
+      "Width": 43.476562,
+      "Height": 31.921875,
+      "LineIndex": 6,
+      "WordIndex": 2
+    },
+    {
+      "Text": "collection",
+      "X": 242.19140625,
+      "Y": 288.0,
+      "Width": 102.0,
+      "Height": 31.921875,
+      "LineIndex": 6,
+      "WordIndex": 3
+    },
+    {
+      "Text": "of",
+      "X": 350.765625,
+      "Y": 288.0,
+      "Width": 21.574219,
+      "Height": 31.921875,
+      "LineIndex": 6,
+      "WordIndex": 4
+    },
+    {
+      "Text": "photographs.",
+      "X": 378.9140625,
+      "Y": 288.0,
+      "Width": 141.71484,
+      "Height": 31.921875,
+      "LineIndex": 6,
+      "WordIndex": 5
+    },
+    {
+      "Text": "Wrapped",
+      "X": 812.0,
+      "Y": 288.0,
+      "Width": 97.875,
+      "Height": 31.921875,
+      "LineIndex": 7,
+      "WordIndex": 0
+    },
+    {
+      "Text": "text",
+      "X": 916.44921875,
+      "Y": 288.0,
+      "Width": 39.83203,
+      "Height": 31.921875,
+      "LineIndex": 7,
+      "WordIndex": 1
+    },
+    {
+      "Text": "should",
+      "X": 962.85546875,
+      "Y": 288.0,
+      "Width": 71.35547,
+      "Height": 31.921875,
+      "LineIndex": 7,
+      "WordIndex": 2
+    },
+    {
+      "Text": "stay",
+      "X": 1040.78515625,
+      "Y": 288.0,
+      "Width": 42.140625,
+      "Height": 31.921875,
+      "LineIndex": 7,
+      "WordIndex": 3
+    },
+    {
+      "Text": "with",
+      "X": 1089.5,
+      "Y": 288.0,
+      "Width": 44.871094,
+      "Height": 31.921875,
+      "LineIndex": 7,
+      "WordIndex": 4
+    },
+    {
+      "Text": "its",
+      "X": 1140.9453125,
+      "Y": 288.0,
+      "Width": 24.128906,
+      "Height": 31.921875,
+      "LineIndex": 7,
+      "WordIndex": 5
+    },
+    {
+      "Text": "item.",
+      "X": 1171.6484375,
+      "Y": 288.0,
+      "Width": 52.371094,
+      "Height": 31.921875,
+      "LineIndex": 7,
+      "WordIndex": 6
+    },
+    {
+      "Text": "Each",
+      "X": 72.0,
+      "Y": 324.0,
+      "Width": 49.01953,
+      "Height": 31.921875,
+      "LineIndex": 8,
+      "WordIndex": 0
+    },
+    {
+      "Text": "image",
+      "X": 127.59375,
+      "Y": 324.0,
+      "Width": 65.37891,
+      "Height": 31.921875,
+      "LineIndex": 8,
+      "WordIndex": 1
+    },
+    {
+      "Text": "told",
+      "X": 199.546875,
+      "Y": 324.0,
+      "Width": 42.140625,
+      "Height": 31.921875,
+      "LineIndex": 8,
+      "WordIndex": 2
+    },
+    {
+      "Text": "a",
+      "X": 248.26171875,
+      "Y": 324.0,
+      "Width": 12.2109375,
+      "Height": 31.921875,
+      "LineIndex": 8,
+      "WordIndex": 3
+    },
+    {
+      "Text": "small",
+      "X": 267.046875,
+      "Y": 324.0,
+      "Width": 54.691406,
+      "Height": 31.921875,
+      "LineIndex": 8,
+      "WordIndex": 4
+    },
+    {
+      "Text": "part",
+      "X": 328.3125,
+      "Y": 324.0,
+      "Width": 42.796875,
+      "Height": 31.921875,
+      "LineIndex": 8,
+      "WordIndex": 5
+    },
+    {
+      "Text": "of",
+      "X": 377.68359375,
+      "Y": 324.0,
+      "Width": 21.574219,
+      "Height": 31.921875,
+      "LineIndex": 8,
+      "WordIndex": 6
+    },
+    {
+      "Text": "the",
+      "X": 405.83203125,
+      "Y": 324.0,
+      "Width": 34.265625,
+      "Height": 31.921875,
+      "LineIndex": 8,
+      "WordIndex": 7
+    },
+    {
+      "Text": "story.",
+      "X": 446.671875,
+      "Y": 324.0,
+      "Width": 57.539062,
+      "Height": 31.921875,
+      "LineIndex": 8,
+      "WordIndex": 8
+    },
+    {
+      "Text": "2.",
+      "X": 784.0,
+      "Y": 362.0,
+      "Width": 18.140625,
+      "Height": 31.921875,
+      "LineIndex": 9,
+      "WordIndex": 0
+    },
+    {
+      "Text": "Leave",
+      "X": 808.71484375,
+      "Y": 362.0,
+      "Width": 60.10547,
+      "Height": 31.921875,
+      "LineIndex": 9,
+      "WordIndex": 1
+    },
+    {
+      "Text": "a",
+      "X": 875.39453125,
+      "Y": 362.0,
+      "Width": 12.2109375,
+      "Height": 31.921875,
+      "LineIndex": 9,
+      "WordIndex": 2
+    },
+    {
+      "Text": "clear",
+      "X": 894.1796875,
+      "Y": 362.0,
+      "Width": 50.003906,
+      "Height": 31.921875,
+      "LineIndex": 9,
+      "WordIndex": 3
+    },
+    {
+      "Text": "gap",
+      "X": 950.7578125,
+      "Y": 362.0,
+      "Width": 40.453125,
+      "Height": 31.921875,
+      "LineIndex": 9,
+      "WordIndex": 4
+    },
+    {
+      "Text": "before",
+      "X": 997.78515625,
+      "Y": 362.0,
+      "Width": 69.12891,
+      "Height": 31.921875,
+      "LineIndex": 9,
+      "WordIndex": 5
+    },
+    {
+      "Text": "the",
+      "X": 1073.48828125,
+      "Y": 362.0,
+      "Width": 34.265625,
+      "Height": 31.921875,
+      "LineIndex": 9,
+      "WordIndex": 6
+    },
+    {
+      "Text": "next",
+      "X": 1114.328125,
+      "Y": 362.0,
+      "Width": 45.28125,
+      "Height": 31.921875,
+      "LineIndex": 9,
+      "WordIndex": 7
+    },
+    {
+      "Text": "idea.",
+      "X": 1166.18359375,
+      "Y": 362.0,
+      "Width": 49.910156,
+      "Height": 31.921875,
+      "LineIndex": 9,
+      "WordIndex": 8
+    },
+    {
+      "Text": "The",
+      "X": 72.0,
+      "Y": 398.0,
+      "Width": 38.70703,
+      "Height": 31.921875,
+      "LineIndex": 10,
+      "WordIndex": 0
+    },
+    {
+      "Text": "first",
+      "X": 117.28125,
+      "Y": 398.0,
+      "Width": 39.984375,
+      "Height": 31.921875,
+      "LineIndex": 10,
+      "WordIndex": 1
+    },
+    {
+      "Text": "review",
+      "X": 163.83984375,
+      "Y": 398.0,
+      "Width": 68.09766,
+      "Height": 31.921875,
+      "LineIndex": 10,
+      "WordIndex": 2
+    },
+    {
+      "Text": "focused",
+      "X": 238.51171875,
+      "Y": 398.0,
+      "Width": 83.109375,
+      "Height": 31.921875,
+      "LineIndex": 10,
+      "WordIndex": 3
+    },
+    {
+      "Text": "on",
+      "X": 328.1953125,
+      "Y": 398.0,
+      "Width": 27.644531,
+      "Height": 31.921875,
+      "LineIndex": 10,
+      "WordIndex": 4
+    },
+    {
+      "Text": "composition.",
+      "X": 362.4140625,
+      "Y": 398.0,
+      "Width": 136.78125,
+      "Height": 31.921875,
+      "LineIndex": 10,
+      "WordIndex": 5
+    },
+    {
+      "Text": "Preserve",
+      "X": 812.0,
+      "Y": 398.0,
+      "Width": 89.46094,
+      "Height": 31.921875,
+      "LineIndex": 11,
+      "WordIndex": 0
+    },
+    {
+      "Text": "the",
+      "X": 908.03515625,
+      "Y": 398.0,
+      "Width": 34.265625,
+      "Height": 31.921875,
+      "LineIndex": 11,
+      "WordIndex": 1
+    },
+    {
+      "Text": "original",
+      "X": 948.875,
+      "Y": 398.0,
+      "Width": 79.76953,
+      "Height": 31.921875,
+      "LineIndex": 11,
+      "WordIndex": 2
+    },
+    {
+      "Text": "reading",
+      "X": 1035.21875,
+      "Y": 398.0,
+      "Width": 80.765625,
+      "Height": 31.921875,
+      "LineIndex": 11,
+      "WordIndex": 3
+    },
+    {
+      "Text": "order.",
+      "X": 1122.55859375,
+      "Y": 398.0,
+      "Width": 62.63672,
+      "Height": 31.921875,
+      "LineIndex": 11,
+      "WordIndex": 4
+    },
+    {
+      "Text": "We",
+      "X": 72.0,
+      "Y": 434.0,
+      "Width": 34.96875,
+      "Height": 31.921875,
+      "LineIndex": 12,
+      "WordIndex": 0
+    },
+    {
+      "Text": "compared",
+      "X": 113.54296875,
+      "Y": 434.0,
+      "Width": 107.16797,
+      "Height": 31.921875,
+      "LineIndex": 12,
+      "WordIndex": 1
+    },
+    {
+      "Text": "the",
+      "X": 227.28515625,
+      "Y": 434.0,
+      "Width": 34.265625,
+      "Height": 31.921875,
+      "LineIndex": 12,
+      "WordIndex": 2
+    },
+    {
+      "Text": "balance",
+      "X": 268.125,
+      "Y": 434.0,
+      "Width": 81.5625,
+      "Height": 31.921875,
+      "LineIndex": 12,
+      "WordIndex": 3
+    },
+    {
+      "Text": "of",
+      "X": 356.26171875,
+      "Y": 434.0,
+      "Width": 21.574219,
+      "Height": 31.921875,
+      "LineIndex": 12,
+      "WordIndex": 4
+    },
+    {
+      "Text": "light",
+      "X": 384.41015625,
+      "Y": 434.0,
+      "Width": 47.472656,
+      "Height": 31.921875,
+      "LineIndex": 12,
+      "WordIndex": 5
+    },
+    {
+      "Text": "and",
+      "X": 438.45703125,
+      "Y": 434.0,
+      "Width": 39.92578,
+      "Height": 31.921875,
+      "LineIndex": 12,
+      "WordIndex": 6
+    },
+    {
+      "Text": "shadow,",
+      "X": 72.0,
+      "Y": 470.0,
+      "Width": 86.71875,
+      "Height": 31.921875,
+      "LineIndex": 13,
+      "WordIndex": 0
+    },
+    {
+      "Text": "then",
+      "X": 165.29296875,
+      "Y": 470.0,
+      "Width": 47.847656,
+      "Height": 31.921875,
+      "LineIndex": 13,
+      "WordIndex": 1
+    },
+    {
+      "Text": "wrote",
+      "X": 219.71484375,
+      "Y": 470.0,
+      "Width": 60.433594,
+      "Height": 31.921875,
+      "LineIndex": 13,
+      "WordIndex": 2
+    },
+    {
+      "Text": "a",
+      "X": 286.72265625,
+      "Y": 470.0,
+      "Width": 12.2109375,
+      "Height": 31.921875,
+      "LineIndex": 13,
+      "WordIndex": 3
+    },
+    {
+      "Text": "few",
+      "X": 305.5078125,
+      "Y": 470.0,
+      "Width": 37.40625,
+      "Height": 31.921875,
+      "LineIndex": 13,
+      "WordIndex": 4
+    },
+    {
+      "Text": "practical",
+      "X": 349.48828125,
+      "Y": 470.0,
+      "Width": 88.80469,
+      "Height": 31.921875,
+      "LineIndex": 13,
+      "WordIndex": 5
+    },
+    {
+      "Text": "notes.",
+      "X": 444.8671875,
+      "Y": 470.0,
+      "Width": 63.714844,
+      "Height": 31.921875,
+      "LineIndex": 13,
+      "WordIndex": 6
+    },
+    {
+      "Text": "3.",
+      "X": 784.0,
+      "Y": 472.0,
+      "Width": 18.140625,
+      "Height": 31.921875,
+      "LineIndex": 14,
+      "WordIndex": 0
+    },
+    {
+      "Text": "Keep",
+      "X": 808.71484375,
+      "Y": 472.0,
+      "Width": 53.132812,
+      "Height": 31.921875,
+      "LineIndex": 14,
+      "WordIndex": 1
+    },
+    {
+      "Text": "the",
+      "X": 868.421875,
+      "Y": 472.0,
+      "Width": 34.265625,
+      "Height": 31.921875,
+      "LineIndex": 14,
+      "WordIndex": 2
+    },
+    {
+      "Text": "two",
+      "X": 909.26171875,
+      "Y": 472.0,
+      "Width": 39.539062,
+      "Height": 31.921875,
+      "LineIndex": 14,
+      "WordIndex": 3
+    },
+    {
+      "Text": "columns",
+      "X": 955.375,
+      "Y": 472.0,
+      "Width": 88.98047,
+      "Height": 31.921875,
+      "LineIndex": 14,
+      "WordIndex": 4
+    },
+    {
+      "Text": "separate.",
+      "X": 1050.9296875,
+      "Y": 472.0,
+      "Width": 95.49609,
+      "Height": 31.921875,
+      "LineIndex": 14,
+      "WordIndex": 5
+    },
+    {
+      "Text": "Selecting",
+      "X": 812.0,
+      "Y": 508.0,
+      "Width": 96.41016,
+      "Height": 31.921875,
+      "LineIndex": 15,
+      "WordIndex": 0
+    },
+    {
+      "Text": "a",
+      "X": 914.984375,
+      "Y": 508.0,
+      "Width": 12.2109375,
+      "Height": 31.921875,
+      "LineIndex": 15,
+      "WordIndex": 1
+    },
+    {
+      "Text": "passage",
+      "X": 933.76953125,
+      "Y": 508.0,
+      "Width": 85.58203,
+      "Height": 31.921875,
+      "LineIndex": 15,
+      "WordIndex": 2
+    },
+    {
+      "Text": "should",
+      "X": 1025.92578125,
+      "Y": 508.0,
+      "Width": 71.35547,
+      "Height": 31.921875,
+      "LineIndex": 15,
+      "WordIndex": 3
+    },
+    {
+      "Text": "highlight",
+      "X": 1103.85546875,
+      "Y": 508.0,
+      "Width": 94.58203,
+      "Height": 31.921875,
+      "LineIndex": 15,
+      "WordIndex": 4
+    },
+    {
+      "Text": "Later,",
+      "X": 108.0,
+      "Y": 544.0,
+      "Width": 57.73828,
+      "Height": 31.921875,
+      "LineIndex": 16,
+      "WordIndex": 0
+    },
+    {
+      "Text": "we",
+      "X": 172.3125,
+      "Y": 544.0,
+      "Width": 29.894531,
+      "Height": 31.921875,
+      "LineIndex": 16,
+      "WordIndex": 1
+    },
+    {
+      "Text": "returned",
+      "X": 208.78125,
+      "Y": 544.0,
+      "Width": 91.21875,
+      "Height": 31.921875,
+      "LineIndex": 16,
+      "WordIndex": 2
+    },
+    {
+      "Text": "to",
+      "X": 306.57421875,
+      "Y": 544.0,
+      "Width": 22.195312,
+      "Height": 31.921875,
+      "LineIndex": 16,
+      "WordIndex": 3
+    },
+    {
+      "Text": "the",
+      "X": 335.34375,
+      "Y": 544.0,
+      "Width": 34.265625,
+      "Height": 31.921875,
+      "LineIndex": 16,
+      "WordIndex": 4
+    },
+    {
+      "Text": "strongest",
+      "X": 376.18359375,
+      "Y": 544.0,
+      "Width": 99.30469,
+      "Height": 31.921875,
+      "LineIndex": 16,
+      "WordIndex": 5
+    },
+    {
+      "Text": "ideas.",
+      "X": 482.0625,
+      "Y": 544.0,
+      "Width": 60.09375,
+      "Height": 31.921875,
+      "LineIndex": 16,
+      "WordIndex": 6
+    },
+    {
+      "Text": "only",
+      "X": 812.0,
+      "Y": 544.0,
+      "Width": 45.070312,
+      "Height": 31.921875,
+      "LineIndex": 17,
+      "WordIndex": 0
+    },
+    {
+      "Text": "the",
+      "X": 863.64453125,
+      "Y": 544.0,
+      "Width": 34.265625,
+      "Height": 31.921875,
+      "LineIndex": 17,
+      "WordIndex": 1
+    },
+    {
+      "Text": "words",
+      "X": 904.484375,
+      "Y": 544.0,
+      "Width": 64.06641,
+      "Height": 31.921875,
+      "LineIndex": 17,
+      "WordIndex": 2
+    },
+    {
+      "Text": "that",
+      "X": 975.125,
+      "Y": 544.0,
+      "Width": 42.058594,
+      "Height": 31.921875,
+      "LineIndex": 17,
+      "WordIndex": 3
+    },
+    {
+      "Text": "belong",
+      "X": 1023.7578125,
+      "Y": 544.0,
+      "Width": 74.25,
+      "Height": 31.921875,
+      "LineIndex": 17,
+      "WordIndex": 4
+    },
+    {
+      "Text": "to",
+      "X": 1104.58203125,
+      "Y": 544.0,
+      "Width": 22.195312,
+      "Height": 31.921875,
+      "LineIndex": 17,
+      "WordIndex": 5
+    },
+    {
+      "Text": "it.",
+      "X": 1133.3515625,
+      "Y": 544.0,
+      "Width": 19.148438,
+      "Height": 31.921875,
+      "LineIndex": 17,
+      "WordIndex": 6
+    },
+    {
+      "Text": "Small",
+      "X": 72.0,
+      "Y": 580.0,
+      "Width": 57.257812,
+      "Height": 31.921875,
+      "LineIndex": 18,
+      "WordIndex": 0
+    },
+    {
+      "Text": "changes",
+      "X": 135.83203125,
+      "Y": 580.0,
+      "Width": 87.328125,
+      "Height": 31.921875,
+      "LineIndex": 18,
+      "WordIndex": 1
+    },
+    {
+      "Text": "made",
+      "X": 229.734375,
+      "Y": 580.0,
+      "Width": 59.566406,
+      "Height": 31.921875,
+      "LineIndex": 18,
+      "WordIndex": 2
+    },
+    {
+      "Text": "the",
+      "X": 295.875,
+      "Y": 580.0,
+      "Width": 34.265625,
+      "Height": 31.921875,
+      "LineIndex": 18,
+      "WordIndex": 3
+    },
+    {
+      "Text": "images",
+      "X": 336.71484375,
+      "Y": 580.0,
+      "Width": 75.5625,
+      "Height": 31.921875,
+      "LineIndex": 18,
+      "WordIndex": 4
+    },
+    {
+      "Text": "easier",
+      "X": 418.8515625,
+      "Y": 580.0,
+      "Width": 61.652344,
+      "Height": 31.921875,
+      "LineIndex": 18,
+      "WordIndex": 5
+    },
+    {
+      "Text": "to",
+      "X": 487.078125,
+      "Y": 580.0,
+      "Width": 22.195312,
+      "Height": 31.921875,
+      "LineIndex": 18,
+      "WordIndex": 6
+    },
+    {
+      "Text": "read",
+      "X": 72.0,
+      "Y": 616.0,
+      "Width": 47.23828,
+      "Height": 31.921875,
+      "LineIndex": 19,
+      "WordIndex": 0
+    },
+    {
+      "Text": "without",
+      "X": 125.8125,
+      "Y": 616.0,
+      "Width": 80.64844,
+      "Height": 31.921875,
+      "LineIndex": 19,
+      "WordIndex": 1
+    },
+    {
+      "Text": "changing",
+      "X": 213.03515625,
+      "Y": 616.0,
+      "Width": 98.12109,
+      "Height": 31.921875,
+      "LineIndex": 19,
+      "WordIndex": 2
+    },
+    {
+      "Text": "their",
+      "X": 317.73046875,
+      "Y": 616.0,
+      "Width": 48.421875,
+      "Height": 31.921875,
+      "LineIndex": 19,
+      "WordIndex": 3
+    },
+    {
+      "Text": "character.",
+      "X": 372.7265625,
+      "Y": 616.0,
+      "Width": 102.75,
+      "Height": 31.921875,
+      "LineIndex": 19,
+      "WordIndex": 4
+    },
+    {
+      "Text": "The",
+      "X": 784.0,
+      "Y": 618.0,
+      "Width": 38.70703,
+      "Height": 31.921875,
+      "LineIndex": 20,
+      "WordIndex": 0
+    },
+    {
+      "Text": "review",
+      "X": 829.28125,
+      "Y": 618.0,
+      "Width": 68.09766,
+      "Height": 31.921875,
+      "LineIndex": 20,
+      "WordIndex": 1
+    },
+    {
+      "Text": "ended",
+      "X": 903.953125,
+      "Y": 618.0,
+      "Width": 66.94922,
+      "Height": 31.921875,
+      "LineIndex": 20,
+      "WordIndex": 2
+    },
+    {
+      "Text": "with",
+      "X": 977.4765625,
+      "Y": 618.0,
+      "Width": 44.871094,
+      "Height": 31.921875,
+      "LineIndex": 20,
+      "WordIndex": 3
+    },
+    {
+      "Text": "a",
+      "X": 1028.921875,
+      "Y": 618.0,
+      "Width": 12.2109375,
+      "Height": 31.921875,
+      "LineIndex": 20,
+      "WordIndex": 4
+    },
+    {
+      "Text": "short",
+      "X": 1047.70703125,
+      "Y": 618.0,
+      "Width": 54.304688,
+      "Height": 31.921875,
+      "LineIndex": 20,
+      "WordIndex": 5
+    },
+    {
+      "Text": "list",
+      "X": 1108.5859375,
+      "Y": 618.0,
+      "Width": 29.941406,
+      "Height": 31.921875,
+      "LineIndex": 20,
+      "WordIndex": 6
+    },
+    {
+      "Text": "of",
+      "X": 1145.1015625,
+      "Y": 618.0,
+      "Width": 21.574219,
+      "Height": 31.921875,
+      "LineIndex": 20,
+      "WordIndex": 7
+    },
+    {
+      "Text": "changes",
+      "X": 784.0,
+      "Y": 654.0,
+      "Width": 87.328125,
+      "Height": 31.921875,
+      "LineIndex": 21,
+      "WordIndex": 0
+    },
+    {
+      "Text": "to",
+      "X": 877.90234375,
+      "Y": 654.0,
+      "Width": 22.195312,
+      "Height": 31.921875,
+      "LineIndex": 21,
+      "WordIndex": 1
+    },
+    {
+      "Text": "try",
+      "X": 906.671875,
+      "Y": 654.0,
+      "Width": 28.089844,
+      "Height": 31.921875,
+      "LineIndex": 21,
+      "WordIndex": 2
+    },
+    {
+      "Text": "during",
+      "X": 941.3359375,
+      "Y": 654.0,
+      "Width": 69.58594,
+      "Height": 31.921875,
+      "LineIndex": 21,
+      "WordIndex": 3
+    },
+    {
+      "Text": "the",
+      "X": 1017.49609375,
+      "Y": 654.0,
+      "Width": 34.265625,
+      "Height": 31.921875,
+      "LineIndex": 21,
+      "WordIndex": 4
+    },
+    {
+      "Text": "next",
+      "X": 1058.3359375,
+      "Y": 654.0,
+      "Width": 45.28125,
+      "Height": 31.921875,
+      "LineIndex": 21,
+      "WordIndex": 5
+    },
+    {
+      "Text": "session.",
+      "X": 1110.19140625,
+      "Y": 654.0,
+      "Width": 81.76172,
+      "Height": 31.921875,
+      "LineIndex": 21,
+      "WordIndex": 6
+    },
+    {
+      "Text": "Field",
+      "X": 72.0,
+      "Y": 766.0,
+      "Width": 67.456055,
+      "Height": 39.902344,
+      "LineIndex": 22,
+      "WordIndex": 0
+    },
+    {
+      "Text": "notes",
+      "X": 147.732421875,
+      "Y": 766.0,
+      "Width": 77.59277,
+      "Height": 39.902344,
+      "LineIndex": 22,
+      "WordIndex": 1
+    },
+    {
+      "Text": "A",
+      "X": 72.0,
+      "Y": 826.0,
+      "Width": 15.480469,
+      "Height": 31.921875,
+      "LineIndex": 23,
+      "WordIndex": 0
+    },
+    {
+      "Text": "good",
+      "X": 94.0546875,
+      "Y": 826.0,
+      "Width": 56.390625,
+      "Height": 31.921875,
+      "LineIndex": 23,
+      "WordIndex": 1
+    },
+    {
+      "Text": "extract",
+      "X": 157.01953125,
+      "Y": 826.0,
+      "Width": 71.47266,
+      "Height": 31.921875,
+      "LineIndex": 23,
+      "WordIndex": 2
+    },
+    {
+      "Text": "preserves",
+      "X": 235.06640625,
+      "Y": 826.0,
+      "Width": 100.3125,
+      "Height": 31.921875,
+      "LineIndex": 23,
+      "WordIndex": 3
+    },
+    {
+      "Text": "the",
+      "X": 341.953125,
+      "Y": 826.0,
+      "Width": 34.265625,
+      "Height": 31.921875,
+      "LineIndex": 23,
+      "WordIndex": 4
+    },
+    {
+      "Text": "words,",
+      "X": 382.79296875,
+      "Y": 826.0,
+      "Width": 69.26953,
+      "Height": 31.921875,
+      "LineIndex": 23,
+      "WordIndex": 5
+    },
+    {
+      "Text": "the",
+      "X": 458.63671875,
+      "Y": 826.0,
+      "Width": 34.265625,
+      "Height": 31.921875,
+      "LineIndex": 23,
+      "WordIndex": 6
+    },
+    {
+      "Text": "order",
+      "X": 499.4765625,
+      "Y": 826.0,
+      "Width": 57.433594,
+      "Height": 31.921875,
+      "LineIndex": 23,
+      "WordIndex": 7
+    },
+    {
+      "Text": "of",
+      "X": 563.484375,
+      "Y": 826.0,
+      "Width": 21.574219,
+      "Height": 31.921875,
+      "LineIndex": 23,
+      "WordIndex": 8
+    },
+    {
+      "Text": "the",
+      "X": 591.6328125,
+      "Y": 826.0,
+      "Width": 34.265625,
+      "Height": 31.921875,
+      "LineIndex": 23,
+      "WordIndex": 9
+    },
+    {
+      "Text": "ideas,",
+      "X": 632.47265625,
+      "Y": 826.0,
+      "Width": 60.09375,
+      "Height": 31.921875,
+      "LineIndex": 23,
+      "WordIndex": 10
+    },
+    {
+      "Text": "and",
+      "X": 699.140625,
+      "Y": 826.0,
+      "Width": 39.92578,
+      "Height": 31.921875,
+      "LineIndex": 23,
+      "WordIndex": 11
+    },
+    {
+      "Text": "the",
+      "X": 745.640625,
+      "Y": 826.0,
+      "Width": 34.265625,
+      "Height": 31.921875,
+      "LineIndex": 23,
+      "WordIndex": 12
+    },
+    {
+      "Text": "space",
+      "X": 786.48046875,
+      "Y": 826.0,
+      "Width": 60.140625,
+      "Height": 31.921875,
+      "LineIndex": 23,
+      "WordIndex": 13
+    },
+    {
+      "Text": "between",
+      "X": 853.1953125,
+      "Y": 826.0,
+      "Width": 90.82031,
+      "Height": 31.921875,
+      "LineIndex": 23,
+      "WordIndex": 14
+    },
+    {
+      "Text": "paragraphs.",
+      "X": 950.58984375,
+      "Y": 826.0,
+      "Width": 124.640625,
+      "Height": 31.921875,
+      "LineIndex": 23,
+      "WordIndex": 15
+    },
+    {
+      "Text": "Headings",
+      "X": 72.0,
+      "Y": 862.0,
+      "Width": 99.64453,
+      "Height": 31.921875,
+      "LineIndex": 24,
+      "WordIndex": 0
+    },
+    {
+      "Text": "and",
+      "X": 178.21875,
+      "Y": 862.0,
+      "Width": 39.92578,
+      "Height": 31.921875,
+      "LineIndex": 24,
+      "WordIndex": 1
+    },
+    {
+      "Text": "lists",
+      "X": 224.71875,
+      "Y": 862.0,
+      "Width": 40.125,
+      "Height": 31.921875,
+      "LineIndex": 24,
+      "WordIndex": 2
+    },
+    {
+      "Text": "add",
+      "X": 271.41796875,
+      "Y": 862.0,
+      "Width": 40.476562,
+      "Height": 31.921875,
+      "LineIndex": 24,
+      "WordIndex": 3
+    },
+    {
+      "Text": "structure;",
+      "X": 318.46875,
+      "Y": 862.0,
+      "Width": 99.140625,
+      "Height": 31.921875,
+      "LineIndex": 24,
+      "WordIndex": 4
+    },
+    {
+      "Text": "the",
+      "X": 424.18359375,
+      "Y": 862.0,
+      "Width": 34.265625,
+      "Height": 31.921875,
+      "LineIndex": 24,
+      "WordIndex": 5
+    },
+    {
+      "Text": "source",
+      "X": 465.0234375,
+      "Y": 862.0,
+      "Width": 69.80859,
+      "Height": 31.921875,
+      "LineIndex": 24,
+      "WordIndex": 6
+    },
+    {
+      "Text": "image",
+      "X": 541.40625,
+      "Y": 862.0,
+      "Width": 65.37891,
+      "Height": 31.921875,
+      "LineIndex": 24,
+      "WordIndex": 7
+    },
+    {
+      "Text": "supplies",
+      "X": 613.359375,
+      "Y": 862.0,
+      "Width": 86.34375,
+      "Height": 31.921875,
+      "LineIndex": 24,
+      "WordIndex": 8
+    },
+    {
+      "Text": "the",
+      "X": 706.27734375,
+      "Y": 862.0,
+      "Width": 34.265625,
+      "Height": 31.921875,
+      "LineIndex": 24,
+      "WordIndex": 9
+    },
+    {
+      "Text": "evidence.",
+      "X": 747.1171875,
+      "Y": 862.0,
+      "Width": 98.96484,
+      "Height": 31.921875,
+      "LineIndex": 24,
+      "WordIndex": 10
+    }
+  ],
+  "Paragraphs": [
+    "A morning in the studio",
+    "Notes from a photography review",
+    "Project update",
+    "Morning light filled the studio as the team\nreviewed a new collection of photographs.\nEach image told a small part of the story.",
+    "The first review focused on composition.\nWe compared the balance of light and\nshadow, then wrote a few practical notes.",
+    "Later, we returned to the strongest ideas.\nSmall changes made the images easier to\nread without changing their character.",
+    "Review checklist",
+    "1. Keep related lines in one paragraph.\nWrapped text should stay with its item.",
+    "2. Leave a clear gap before the next idea.\nPreserve the original reading order.",
+    "3. Keep the two columns separate.\nSelecting a passage should highlight\nonly the words that belong to it.",
+    "The review ended with a short list of\nchanges to try during the next session.",
+    "Field notes",
+    "A good extract preserves the words, the order of the ideas, and the space between paragraphs.\nHeadings and lists add structure; the source image supplies the evidence."
+  ]
+}

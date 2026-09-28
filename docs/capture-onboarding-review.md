@@ -1,6 +1,6 @@
 ﻿# Capture onboarding and standalone Text Extraction
 
-**Superseded behavior:** [Explicit analysis actions](capture-analysis-explicit-actions.md) replace automatic scanning, open-triggered analysis, automatic naming, and first-launch AI consent. Existing results and the independent Text Extraction flow remain.
+**Superseded behavior:** [Explicit analysis actions](capture-analysis-explicit-actions.md) replace automatic scanning, open-triggered analysis, automatic naming, and first-launch AI consent. The [unified text experience](unified-text-experience.md) now brings saved results and current-image extraction into the Text tab. The sections below describe earlier implementations.
 
 The capture-analysis invitation appears the first time the main window is shown without analysis consent. Its aurora and spark artwork introduces practical text, recording and naming features. Allow grants analysis consent and defaults scanning and automatic names on, while preserving explicit opt-outs. Not now leaves scanning off and is remembered across restarts. The Details Text/Transcript tab can reopen this invitation, and its Enable capture analysis button remains available after dismissal. Settings and other shared-consent entry points use the same invitation.
 

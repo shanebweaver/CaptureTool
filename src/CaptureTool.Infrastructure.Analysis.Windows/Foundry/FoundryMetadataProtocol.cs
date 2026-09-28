@@ -22,6 +22,7 @@ internal static class FoundryMetadataProtocol
             json.WritePropertyName("json_schema"); json.WriteStartObject(); json.WriteString("name", input.Descriptor.Capability.Name.Replace('-', '_')); json.WriteBoolean("strict", true);
             json.WritePropertyName("schema");
             string schemaText = input.Descriptor.Capability == AnalysisCapability.CaptureSynopsis ? SynopsisSchema :
+                input.Descriptor.Capability == AnalysisCapability.CaptureName ? NameSchema :
                 input.Descriptor.Capability == AnalysisCapability.ImageAltText ? AltTextSchema : ClassificationSchema;
             // Foundry Local 1.2.4's schema transport accepts string enums only. Use numeric
             // bounds for citation IDs; the parser independently verifies every reference.
@@ -102,9 +103,13 @@ internal static class FoundryMetadataProtocol
           "text":{"type":"string","minLength":1,"maxLength":400},"evidence":{"type":"integer","minimum":0,"maximum":LAST_SOURCE_ID}}}
         """;
     private const string SynopsisSchema = """
-        {"type":"object","additionalProperties":false,"required":["title","summary","evidence"],"properties":{
-          "title":{"anyOf":[{"type":"null"},{"type":"string","minLength":1,"maxLength":160}]},
+        {"type":"object","additionalProperties":false,"required":["summary","evidence"],"properties":{
           "summary":{"anyOf":[{"type":"null"},{"type":"string","minLength":1,"maxLength":400}]},
+          "evidence":{"anyOf":[{"type":"null"},{"type":"integer","minimum":0,"maximum":LAST_SOURCE_ID}]}}}
+        """;
+    private const string NameSchema = """
+        {"type":"object","additionalProperties":false,"required":["name","evidence"],"properties":{
+          "name":{"anyOf":[{"type":"null"},{"type":"string","minLength":1,"maxLength":160}]},
           "evidence":{"anyOf":[{"type":"null"},{"type":"integer","minimum":0,"maximum":LAST_SOURCE_ID}]}}}
         """;
     private const string AltTextSchema = """

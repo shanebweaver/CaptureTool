@@ -18,7 +18,6 @@ using Microsoft.UI;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
-using Microsoft.UI.Xaml.Automation.Peers;
 using Microsoft.UI.Xaml.Media;
 using System.Runtime.InteropServices;
 using Windows.ApplicationModel;
@@ -44,8 +43,6 @@ public sealed partial class MainWindow : Window
     private readonly TelemetryConsentDialogService _telemetryConsentDialogService;
     private readonly DispatcherQueueTimer _notificationTimer;
     private readonly CaptureMemoryDialogService _captureMemoryDialogs;
-    private readonly DispatcherQueueTimer _analysisAnnouncementTimer;
-    public CaptureMemoryViewModel CaptureMemory { get; } = ViewModelLocator.GetViewModel<CaptureMemoryViewModel>();
 
     public MainWindowViewModel ViewModel { get; } = ViewModelLocator.GetViewModel<MainWindowViewModel>();
     private bool _closeConfirmed;
@@ -74,11 +71,8 @@ public sealed partial class MainWindow : Window
         }
 
         InitializeComponent();
-        _analysisAnnouncementTimer = DispatcherQueue.CreateTimer();
-        _analysisAnnouncementTimer.Interval = TimeSpan.FromSeconds(2);
-        _analysisAnnouncementTimer.IsRepeating = false;
-        _analysisAnnouncementTimer.Tick += AnnounceAnalysisProgress;
-        CaptureMemory.PropertyChanged += OnCaptureMemoryChanged;
+        // Keep the shared observer active for metadata and consent error notifications.
+        _ = ViewModelLocator.GetViewModel<CaptureMemoryViewModel>();
         _notificationTimer = DispatcherQueue.CreateTimer();
         _notificationTimer.Interval = TimeSpan.FromSeconds(6);
         _notificationTimer.Tick += NotificationTimer_Tick;
@@ -113,18 +107,6 @@ public sealed partial class MainWindow : Window
         {
             RequestStartupPromptsIfNeeded();
         }
-    }
-
-    private void OnCaptureMemoryChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
-    {
-        if (!CaptureMemory.IsAnalysisActive) _analysisAnnouncementTimer.Stop();
-        else if (e.PropertyName == nameof(CaptureMemoryViewModel.ProgressText) && !_analysisAnnouncementTimer.IsRunning)
-            _analysisAnnouncementTimer.Start();
-    }
-    private void AnnounceAnalysisProgress(DispatcherQueueTimer sender, object args)
-    {
-        if (CaptureMemory.IsAnalysisActive)
-            FrameworkElementAutomationPeer.CreatePeerForElement(CaptureMemoryProgressLabel)?.RaiseAutomationEvent(AutomationEvents.LiveRegionChanged);
     }
 
     internal void NotifyShown()
@@ -389,9 +371,6 @@ public sealed partial class MainWindow : Window
         AppTitleBar.SizeChanged -= AppTitleBar_SizeChanged;
         _notificationTimer.Stop();
         _notificationTimer.Tick -= NotificationTimer_Tick;
-        _analysisAnnouncementTimer.Stop();
-        _analysisAnnouncementTimer.Tick -= AnnounceAnalysisProgress;
-        CaptureMemory.PropertyChanged -= OnCaptureMemoryChanged;
         _captureMemoryDialogs.XamlRoot = null;
 
         ViewModel.PropertyChanged -= OnViewModelPropertyChanged;

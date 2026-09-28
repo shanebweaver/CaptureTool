@@ -9,6 +9,7 @@ public sealed class CaptureAnalysisAction : ViewModelBase
     public AnalysisCapability Capability { get; }
     public string Label { get; internal set => Set(ref field, value); }
     public string Id { get; }
+    public string LoadingId => Id + "_Loading";
     public bool IsRunning { get; private set => Set(ref field, value); }
     public bool HasResult { get; private set => Set(ref field, value); }
     public string Status { get; private set => Set(ref field, value); } = string.Empty;

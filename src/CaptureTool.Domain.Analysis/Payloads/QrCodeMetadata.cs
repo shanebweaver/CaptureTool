@@ -10,8 +10,16 @@ public sealed record DecodedQrCode
     {
         ArgumentException.ThrowIfNullOrEmpty(value);
         ArgumentNullException.ThrowIfNull(bounds);
-        if (bounds.Width <= 0 || bounds.Height <= 0) throw new ArgumentOutOfRangeException(nameof(bounds));
-        if (timestamp < TimeSpan.Zero) throw new ArgumentOutOfRangeException(nameof(timestamp));
+        if (bounds.Width <= 0 || bounds.Height <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(bounds));
+        }
+
+        if (timestamp < TimeSpan.Zero)
+        {
+            throw new ArgumentOutOfRangeException(nameof(timestamp));
+        }
+
         Value = value;
         Bounds = bounds;
         Timestamp = timestamp;

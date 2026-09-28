@@ -1,4 +1,5 @@
 using CaptureTool.Application.Abstractions.Localization;
+using CaptureTool.Application.Abstractions.Edit.Image.TextExtraction;
 using CaptureTool.Domain.Analysis;
 using CaptureTool.Domain.Analysis.Payloads;
 using CaptureTool.Presentation.ViewModels;
@@ -15,6 +16,9 @@ public sealed class CaptureTextPassage : ViewModelBase
     public CaptureTextSource Source { get; }
     public string Label { get; }
     public string Text { get; }
+    /// <summary>Original word bounds for image selection; passage bounds are only for navigation.</summary>
+    public IReadOnlyList<RecognizedText> TextRegions { get; }
+    public IReadOnlyList<IReadOnlyList<RecognizedText>> TextLines { get; }
     public ObservableCollection<CaptureTextLocation> Locations { get; }
     public bool HasOccurrences => Locations.Count > 1;
     public string Query { get; set => Set(ref field, value); } = string.Empty;
@@ -43,9 +47,12 @@ public sealed class CaptureTextPassage : ViewModelBase
     private CaptureTextNavigationContext _context = new(false, false);
     private string _unavailable = string.Empty;
 
-    public CaptureTextPassage(string id, CaptureTextSource source, string label, string text, IEnumerable<CaptureTextLocation> locations)
+    public CaptureTextPassage(string id, CaptureTextSource source, string label, string text, IEnumerable<CaptureTextLocation> locations,
+        IReadOnlyList<RecognizedText>? textRegions = null, IReadOnlyList<IReadOnlyList<RecognizedText>>? textLines = null)
     {
         Id = id; Source = source; Label = label; Text = text; Locations = new(locations);
+        TextRegions = textRegions ?? [];
+        TextLines = textLines ?? [];
         SelectedLocation = Locations.FirstOrDefault();
     }
 
@@ -64,7 +71,33 @@ public sealed class CaptureTextPassage : ViewModelBase
     }
 
     internal bool SameContent(CaptureTextPassage other) => Id == other.Id && Source == other.Source &&
-        Text == other.Text && Locations.SequenceEqual(other.Locations);
+        Text == other.Text && Locations.SequenceEqual(other.Locations) && TextRegions.SequenceEqual(other.TextRegions);
+
+    public static IReadOnlyList<CaptureTextPassage> From(RecognizedTextDocument document, ILocalizationService localization)
+    {
+        string textLabel = localization.GetString("CaptureDetails_RecognizedText");
+        string qrLabel = localization.GetString("CaptureDetails_QrCode");
+        NormalizedBounds? Normalize(System.Drawing.RectangleF bounds)
+        {
+            if (document.ImageSize.Width <= 0 || document.ImageSize.Height <= 0) return null;
+            var clipped = System.Drawing.RectangleF.Intersect(bounds, new(0, 0, document.ImageSize.Width, document.ImageSize.Height));
+            if (clipped.Width <= 0 || clipped.Height <= 0) return null;
+            double x = (double)clipped.X / document.ImageSize.Width, y = (double)clipped.Y / document.ImageSize.Height;
+            return new(x, y, Math.Min(1 - x, (double)clipped.Width / document.ImageSize.Width),
+                Math.Min(1 - y, (double)clipped.Height / document.ImageSize.Height));
+        }
+        var regions = document.Regions.Select(region => new RecognizedText(region.Text, Normalize(region.Bounds),
+            lineIndex: region.LineIndex >= 0 ? region.LineIndex : null, wordIndex: region.WordIndex >= 0 ? region.WordIndex : null)).ToArray();
+        var passages = CaptureTextGrouping.Create(regions).Select(group => new CaptureTextPassage($"editor:text:{group.FirstIndex}",
+            CaptureTextSource.ImageText, textLabel, group.Text, [new(textLabel, null, group.Bounds)], group.Regions, group.Lines)).ToList();
+        if (regions.Length == 0 && document.QrCodes.Count == 0 && !string.IsNullOrWhiteSpace(document.Text))
+            passages.Add(new("editor:text", CaptureTextSource.ImageText, textLabel, document.Text, []));
+        int index = 0;
+        foreach (var codes in document.QrCodes.GroupBy(code => code.Value, StringComparer.Ordinal))
+            passages.Add(new($"editor:qr:{index++}", CaptureTextSource.QrCode, qrLabel, codes.Key,
+                codes.Select(code => new CaptureTextLocation(qrLabel, null, Normalize(code.Bounds)))));
+        return passages;
+    }
 
     public static IReadOnlyList<CaptureTextPassage> From(CaptureAnalysisRecord record, ILocalizationService localization)
     {
@@ -79,7 +112,8 @@ public sealed class CaptureTextPassage : ViewModelBase
                     foreach (var frame in text.Regions.Select((region, index) => (region, index))
                         .GroupBy(item => item.region.Timestamp).OrderBy(group => group.Key))
                     {
-                        string content = string.Join(Environment.NewLine, frame.Select(item => item.region.Text));
+                        string content = string.Join(Environment.NewLine + Environment.NewLine,
+                            CaptureTextGrouping.Create(frame.Select(item => item.region).ToArray()).Select(group => group.Text));
                         var location = Location(frame.Key, null, Label("RecognizedText"));
                         if (previous?.Text == content && frame.Key != null) previous.Locations.Add(location);
                         else
@@ -91,9 +125,9 @@ public sealed class CaptureTextPassage : ViewModelBase
                     }
                     break;
                 case TextRecognitionMetadata text:
-                    passages.AddRange(text.Regions.Select((region, index) => new CaptureTextPassage($"{result.ResultId}:{index}",
-                        CaptureTextSource.ImageText, Label("RecognizedText"), region.Text,
-                        [Location(region.Timestamp, region.Bounds, Label("RecognizedText"))])));
+                    passages.AddRange(CaptureTextGrouping.Create(text.Regions).Select(group => new CaptureTextPassage($"{result.ResultId}:{group.FirstIndex}",
+                        CaptureTextSource.ImageText, Label("RecognizedText"), group.Text,
+                        [Location(group.Regions[0].Timestamp, group.Bounds, Label("RecognizedText"))], group.Regions, group.Lines)));
                     break;
                 case TranscriptMetadata transcript:
                     passages.AddRange(transcript.Segments.Select((segment, index) => new CaptureTextPassage($"{result.ResultId}:{index}",

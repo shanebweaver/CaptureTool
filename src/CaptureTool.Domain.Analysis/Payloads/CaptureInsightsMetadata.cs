@@ -17,6 +17,7 @@ public sealed class SuggestedText
 public sealed class CaptureSynopsisMetadata : DerivedAnalysisPayload
 {
     public override AnalysisCapability Capability => AnalysisCapability.CaptureSynopsis;
+    /// <summary>Legacy combined results may have a title; new names use CaptureNameMetadata.</summary>
     public SuggestedText? Title { get; }
     public IReadOnlyList<SuggestedText> Summary { get; }
     public MetadataProcessingCoverage Coverage { get; }
@@ -24,10 +25,17 @@ public sealed class CaptureSynopsisMetadata : DerivedAnalysisPayload
     public CaptureSynopsisMetadata(SuggestedText? title, IEnumerable<SuggestedText> summary, MetadataProcessingCoverage coverage)
     {
         ArgumentNullException.ThrowIfNull(coverage);
-        if (title?.Text.Length > 160) throw new ArgumentException("Suggested title is too long.", nameof(title));
+        if (title?.Text.Length > 160)
+        {
+            throw new ArgumentException("Suggested title is too long.", nameof(title));
+        }
+
         Summary = AnalysisGuard.Freeze(summary);
         if (Summary.Count > 3 || Summary.Select(item => item.Text).Distinct(StringComparer.OrdinalIgnoreCase).Count() != Summary.Count)
+        {
             throw new ArgumentException("Specify at most three distinct summary statements.", nameof(summary));
+        }
+
         Title = title;
         Coverage = coverage;
     }
@@ -61,13 +69,24 @@ public sealed class CaptureClassificationMetadata : DerivedAnalysisPayload
         IEnumerable<SuggestedText> topics, MetadataProcessingCoverage coverage)
     {
         ArgumentNullException.ThrowIfNull(coverage);
-        if (category is { } value && !Enum.IsDefined(value)) throw new ArgumentOutOfRangeException(nameof(category));
+        if (category is { } value && !Enum.IsDefined(value))
+        {
+            throw new ArgumentOutOfRangeException(nameof(category));
+        }
+
         CategoryEvidence = InsightValidation.Evidence(categoryEvidence, required: category != null);
-        if (category == null && CategoryEvidence.Count != 0) throw new ArgumentException("An abstention has no category evidence.", nameof(categoryEvidence));
+        if (category == null && CategoryEvidence.Count != 0)
+        {
+            throw new ArgumentException("An abstention has no category evidence.", nameof(categoryEvidence));
+        }
+
         Topics = AnalysisGuard.Freeze(topics);
         if (Topics.Count > 5 || Topics.Any(topic => topic.Text.Length > 48 || topic.Text != topic.Text.ToLowerInvariant()) ||
             Topics.Select(topic => topic.Text).Distinct(StringComparer.OrdinalIgnoreCase).Count() != Topics.Count)
+        {
             throw new ArgumentException("Specify at most five distinct lowercase topics of at most 48 characters.", nameof(topics));
+        }
+
         Category = category;
         Coverage = coverage;
     }
@@ -83,10 +102,18 @@ internal static class InsightValidation
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(text);
         if (text.Length > maximum || text != text.Trim() || text.Any(char.IsControl))
+        {
             throw new ArgumentException("Insight text must be bounded plain text without control characters.", nameof(text));
+        }
+
         for (int index = 0; index < text.Length; index++)
+        {
             if (char.IsSurrogate(text[index]) && (!char.IsHighSurrogate(text[index]) || index + 1 == text.Length || !char.IsLowSurrogate(text[++index])))
+            {
                 throw new ArgumentException("Insight text contains invalid Unicode.", nameof(text));
+            }
+        }
+
         return text;
     }
 
@@ -94,7 +121,10 @@ internal static class InsightValidation
     {
         IReadOnlyList<AnalysisEvidence> copy = AnalysisGuard.Freeze(evidence);
         if (copy.Count > 4 || required && copy.Count == 0 || copy.Distinct().Count() != copy.Count)
+        {
             throw new ArgumentException("Specify distinct evidence, with one to four spans for every suggestion.", nameof(evidence));
+        }
+
         return copy;
     }
 
@@ -106,7 +136,11 @@ internal static class InsightValidation
         foreach (AnalysisEvidence span in spans)
         {
             AnalysisResult? source = inputs.SingleOrDefault(input => input.ResultId == span.ResultId);
-            if (source == null) throw new ArgumentException("Insight evidence uses an undeclared source.", nameof(evidence));
+            if (source == null)
+            {
+                throw new ArgumentException("Insight evidence uses an undeclared source.", nameof(evidence));
+            }
+
             _ = span.ResolveText(source);
         }
     }

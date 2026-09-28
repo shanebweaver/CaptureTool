@@ -37,11 +37,13 @@ internal sealed class UiTestLaunchOptions
     public static bool DetailsFixture { get; private set; }
     public static bool CaptureFixture { get; private set; }
     public static bool Onboarding { get; private set; }
+    public static string? TextFixturePath { get; private set; }
 
     public static void Initialize(string[] args)
     {
         bool isEnabled = args.Contains("--capturetool-ui-test", StringComparer.OrdinalIgnoreCase);
         Onboarding = isEnabled && args.Contains("--ui-test-onboarding", StringComparer.OrdinalIgnoreCase);
+        TextFixturePath = isEnabled ? GetOptionValue(args, "--ui-test-text-fixture") : null;
         DetailsFixture = isEnabled && args.Contains("--ui-test-details", StringComparer.OrdinalIgnoreCase);
         CaptureFixture = DetailsFixture && args.Contains("--ui-test-capture", StringComparer.OrdinalIgnoreCase);
 

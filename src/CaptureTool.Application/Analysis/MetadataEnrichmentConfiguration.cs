@@ -25,7 +25,7 @@ public sealed record StructuredFactsOptions
 public static class MetadataEnrichmentConfiguration
 {
     public static IEnumerable<MetadataModelRegistration> SemanticModels =>
-        TextModels.SelectMany(model => new[] { AnalysisCapability.CaptureSynopsis, AnalysisCapability.CaptureClassification, AnalysisCapability.ImageAltText }
+        TextModels.SelectMany(model => new[] { AnalysisCapability.CaptureSynopsis, AnalysisCapability.CaptureName, AnalysisCapability.CaptureClassification, AnalysisCapability.ImageAltText }
             .Select(capability => new MetadataModelRegistration(CreateSemantic(model.Id, capability), model.Backend, model.Alias)));
     public static IEnumerable<AnalysisStep> Steps
     {
@@ -33,7 +33,7 @@ public static class MetadataEnrichmentConfiguration
         {
             MetadataProcessorDescriptor facts = CreateStructuredFacts(StructuredFacts.Limits);
             yield return new(facts.Capability, [facts.Id], TimeSpan.FromSeconds(10), facts.Limits.ExecutionTimeout);
-            foreach (AnalysisCapability capability in new[] { AnalysisCapability.CaptureSynopsis, AnalysisCapability.CaptureClassification })
+            foreach (AnalysisCapability capability in new[] { AnalysisCapability.CaptureSynopsis, AnalysisCapability.CaptureName, AnalysisCapability.CaptureClassification })
             {
                 MetadataProcessorDescriptor[] candidates = TextModels.Select(model => CreateSemantic(model.Id, capability)).ToArray();
                 yield return new(capability, candidates.Select(candidate => candidate.Id), TimeSpan.FromMinutes(10), candidates[0].Limits.ExecutionTimeout);
@@ -54,12 +54,16 @@ public static class MetadataEnrichmentConfiguration
     public static MetadataProcessorDescriptor CreateSemantic(string modelId, AnalysisCapability capability)
     {
         string suffix = capability == AnalysisCapability.CaptureSynopsis ? "synopsis" :
+            capability == AnalysisCapability.CaptureName ? "name" :
             capability == AnalysisCapability.CaptureClassification ? "classification" :
             capability == AnalysisCapability.ImageAltText ? "alt-text" :
             throw new ArgumentException("Unsupported semantic capability.", nameof(capability));
-        return new(modelId + "-" + suffix, "3", capability,
+        return new(modelId + "-" + suffix, capability == AnalysisCapability.CaptureName ? "1" :
+            capability == AnalysisCapability.CaptureSynopsis ? "4" : "3", capability,
             capability == AnalysisCapability.ImageAltText
                 ? [AnalysisCapability.Description, AnalysisCapability.TextRecognition]
+                : capability == AnalysisCapability.CaptureSynopsis || capability == AnalysisCapability.CaptureName
+                ? [AnalysisCapability.Description, AnalysisCapability.TextRecognition, AnalysisCapability.Transcription]
                 : [AnalysisCapability.Description, AnalysisCapability.TextRecognition, AnalysisCapability.Transcription, AnalysisCapability.QrCodeDetection],
             new(64, 4096, 1024, TimeSpan.FromMinutes(2)));
     }

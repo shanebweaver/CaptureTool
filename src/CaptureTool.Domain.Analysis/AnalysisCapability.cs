@@ -27,6 +27,7 @@ public sealed record AnalysisCapability
     public static AnalysisCapability StructuredFacts { get; } = new("structured-facts", 1);
     public static AnalysisCapability ImageAltText { get; } = new("image-alt-text", 1);
     public static AnalysisCapability CaptureSynopsis { get; } = new("capture-synopsis", 1);
+    public static AnalysisCapability CaptureName { get; } = new("capture-name", 1);
     public static AnalysisCapability CaptureClassification { get; } = new("capture-classification", 1);
     public override string ToString() => $"{Name}/v{SchemaVersion}";
 }

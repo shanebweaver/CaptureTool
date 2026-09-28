@@ -29,6 +29,56 @@ namespace CaptureTool.Presentation.Tests.Features;
 public sealed class ImageEditPageViewModelTextExtractionTests
 {
     [TestMethod]
+    public async Task PaneExtractionUsesRenderedEditsAndCachesForTheSessionWithoutEnteringAnotherMode()
+    {
+        var exporter = CreateExporter();
+        var extraction = new Mock<ITextExtractionService>();
+        extraction.Setup(x => x.GetReadyState()).Returns(TextExtractionReadyState.Ready);
+        extraction.Setup(x => x.ExtractAsync(It.IsAny<TextExtractionRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(TextExtractionResult.Success(new("Cropped text", new(60, 30), [new("Cropped text", new(5, 4, 40, 10))], [])));
+        using var vm = CreateViewModel(imageCanvasExporter: exporter.Object, textExtractionService: extraction.Object);
+        await vm.LoadAsync(new ImageFile("capture.png"), CancellationToken.None);
+        var oldCrop = vm.CropRect;
+        vm.UpdateCropRectCommand.Execute(new Rectangle(10, 10, 60, 30));
+        vm.OnCropInteractionComplete(oldCrop);
+        await vm.EditorText.ExtractAsync();
+        await vm.EditorText.ExtractAsync();
+        Assert.IsTrue(vm.EditorText.HasChanges);
+        Assert.AreEqual("Cropped text", vm.EditorText.Document!.Text);
+        Assert.IsFalse(vm.HasActiveEditMode);
+        exporter.Verify(x => x.RenderToStreamAsync(It.IsAny<IDrawable[]>(),
+            It.Is<ImageCanvasRenderOptions>(options => options.CropRect == new Rectangle(10, 10, 60, 30))), Times.Once);
+        extraction.Verify(x => x.ExtractAsync(It.IsAny<TextExtractionRequest>(), It.IsAny<CancellationToken>()), Times.Once);
+        vm.RotateCommand.Execute(null);
+        Assert.IsNull(vm.EditorText.Document);
+        await vm.EditorText.ExtractAsync();
+        extraction.Verify(x => x.ExtractAsync(It.IsAny<TextExtractionRequest>(), It.IsAny<CancellationToken>()), Times.Exactly(2));
+    }
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task PaneCloseOrImageEditRejectsLateExtractionResults(bool edit)
+    {
+        var pending = new TaskCompletionSource<TextExtractionResult>();
+        var extraction = new Mock<ITextExtractionService>();
+        extraction.Setup(x => x.GetReadyState()).Returns(TextExtractionReadyState.Ready);
+        CancellationToken token = default;
+        extraction.Setup(x => x.ExtractAsync(It.IsAny<TextExtractionRequest>(), It.IsAny<CancellationToken>()))
+            .Returns((TextExtractionRequest _, CancellationToken ct) => { token = ct; return pending.Task; });
+        using var vm = CreateViewModel(imageCanvasExporter: CreateExporter().Object, textExtractionService: extraction.Object);
+        await vm.LoadAsync(new ImageFile("capture.png"), CancellationToken.None);
+        Task operation = vm.EditorText.ExtractAsync();
+        if (edit) vm.RotateCommand.Execute(null);
+        else vm.EditorText.Cancel();
+        Assert.IsTrue(token.IsCancellationRequested);
+        pending.SetResult(TextExtractionResult.Success(new("Late text", new(100, 50), [], [])));
+        await operation;
+        Assert.IsNull(vm.EditorText.Document);
+        Assert.IsFalse(vm.EditorText.IsRunning);
+    }
+
+    [TestMethod]
     public async Task StandaloneOcrUsesSharedConsentAndItsOwnExtractionService()
     {
         var consent = new Mock<IAiFeatureConsentService>();

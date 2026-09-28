@@ -26,8 +26,6 @@ public sealed class CaptureMemoryViewModel : ViewModelBase
 
     public bool ConsentGranted { get; private set => Set(ref field, value); }
     public bool CanDelete { get; private set => Set(ref field, value); }
-    public bool IsAnalysisActive { get; private set => Set(ref field, value); }
-    public string ProgressText { get; private set => Set(ref field, value); } = string.Empty;
     public IAsyncRelayCommand<bool> SetConsentCommand { get; }
     public IAsyncRelayCommand DeleteCommand { get; }
 
@@ -80,9 +78,6 @@ public sealed class CaptureMemoryViewModel : ViewModelBase
         CaptureMemoryState state = _memory.State;
         ConsentGranted = state.ConsentAvailable && state.Policy.ConsentGranted;
         CanDelete = state.CanDelete;
-        IsAnalysisActive = state.IsLoading;
-        ProgressText = state.IsLoading ? _localization.GetString(state.Activity.Activity == AnalysisActivity.Preparing
-            ? "CaptureMemory_Preparing" : "CaptureMemory_Analyzing") : string.Empty;
         DeleteCommand.NotifyCanExecuteChanged();
         if (Interlocked.Exchange(ref _operationRecovered, 0) != 0) _reportedOperationFailure = null;
         string? pendingOperation = Interlocked.Exchange(ref _pendingOperationFailure, null);

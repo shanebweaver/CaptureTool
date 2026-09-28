@@ -11,6 +11,180 @@ namespace CaptureTool.Presentation.Tests.Features;
 public sealed class CaptureTextTests
 {
     [TestMethod]
+    public void SavedAndEditorTextShareParagraphsCopySpacingAndExactOverlayLineMembership()
+    {
+        var source = new (string Text, int X, int Y)[] { ("Left first", 100, 100), ("Right first", 600, 100),
+            ("Left second", 100, 128), ("Right second", 600, 128) };
+        var words = source.Select((item, index) => new RecognizedText(item.Text,
+            new(item.X / 1000d, item.Y / 1000d, .3, .02), lineIndex: index, wordIndex: 0)).ToArray();
+        var saved = ImageRows(words);
+        var document = new CaptureTool.Application.Abstractions.Edit.Image.TextExtraction.RecognizedTextDocument("unused", new(1000, 1000),
+            source.Select((item, index) => new CaptureTool.Application.Abstractions.Edit.Image.TextExtraction.RecognizedTextRegion(
+                item.Text, new(item.X, item.Y, 300, 20), index, 0)).ToArray());
+        var editor = CaptureTextPassage.From(document, Text());
+        CollectionAssert.AreEqual(saved.Select(passage => passage.Text).ToArray(), editor.Select(passage => passage.Text).ToArray());
+        Assert.HasCount(2, saved);
+        CollectionAssert.AreEqual(new int?[] { 0, 2 }, saved[0].TextRegions.Select(word => word.LineIndex).ToArray());
+        foreach (var passages in new[] { saved, editor })
+        {
+            var overlay = CaptureImageTextOverlay.Create(passages, new(1000, 1000));
+            CollectionAssert.AreEqual(new[] { "Left first", "Left second", "Right first", "Right second" }, overlay.Text.Select(word => word.Text).ToArray());
+            CollectionAssert.AreEqual(new[] { 0, 0, 1, 1 }, overlay.Text.Select(word => word.ParagraphIndex).ToArray());
+            CollectionAssert.AreEqual(new[] { 0, 1, 0, 1 }, overlay.Text.Select(word => word.LineIndex).ToArray());
+            Assert.AreEqual(new System.Drawing.RectangleF(100, 128, 300, 20), overlay.Text[1].Bounds);
+            var viewModel = new CaptureTextViewModel(Text());
+            viewModel.Replace(passages);
+            Assert.AreEqual(string.Join(Environment.NewLine + Environment.NewLine, saved.Select(passage => passage.Text)), viewModel.CopyVisibleScope());
+        }
+    }
+
+    [TestMethod]
+    public void PassageSelectionUsesOnlyItsOriginalWords()
+    {
+        var rows = ImageRows([Word("Invoice", .1, .1, .07), Word("total", .18, .102, .05),
+            Word("Pay", .1, .128, .03), Word("today.", .14, .128, .06), Word("Other column", .6, .1, .2)]);
+        var passage = rows.First();
+        var regions = CaptureImageTextOverlay.CreateSelectionRegions(passage, new(1000, 500));
+
+        CollectionAssert.AreEqual(new[] { "Invoice", "total", "Pay", "today." }, regions.Select(region => region.Text).ToArray());
+        CollectionAssert.AreEqual(new[] { new System.Drawing.RectangleF(100, 50, 70, 10), new System.Drawing.RectangleF(180, 51, 50, 10),
+            new System.Drawing.RectangleF(100, 64, 30, 10), new System.Drawing.RectangleF(140, 64, 60, 10) }, regions.Select(region => region.Bounds).ToArray());
+    }
+
+    [TestMethod]
+    public void QrSelectionHighlightsOnlyTheChosenOccurrence()
+    {
+        var passage = new CaptureTextPassage("qr", CaptureTextSource.QrCode, "QR", "https://example.com",
+            [new("First", null, new(.1, .1, .2, .2)), new("Second", null, new(.6, .5, .2, .2))]);
+        passage.SelectedLocation = passage.Locations[1];
+        var regions = CaptureImageTextOverlay.CreateSelectionRegions(passage, new(1000, 500));
+
+        Assert.HasCount(1, regions);
+        Assert.AreEqual(passage.Text, regions[0].Text);
+        Assert.AreEqual(new System.Drawing.RectangleF(600, 250, 200, 100), regions[0].Bounds);
+    }
+
+    [TestMethod]
+    public void ImageSelectionDoesNotInventBoundsForTimedOrUnlocatedText()
+    {
+        var image = ImageRows([new("No bounds")]).Single();
+        Assert.IsEmpty(CaptureImageTextOverlay.CreateSelectionRegions(image, new(1000, 500)));
+        Assert.IsEmpty(CaptureImageTextOverlay.CreateSelectionRegions(Passage("speech", "Transcript"), new(1000, 500)));
+        var located = ImageRows([Word("Word", .1, .1, .1)]).Single();
+        Assert.IsEmpty(CaptureImageTextOverlay.CreateSelectionRegions(located, System.Drawing.Size.Empty));
+    }
+
+    [TestMethod]
+    public void ImageWordsBecomeSearchableParagraphsWithOriginalOverlayBounds()
+    {
+        RecognizedText[] words = [Word("Invoice", .1, .1, .07), Word("total", .18, .102, .05),
+            Word("Pay", .1, .128, .03), Word("today.", .14, .128, .06)];
+        var record = Record(AnalysisMediaKind.Image, new TextRecognitionMetadata(words));
+        var rows = CaptureTextPassage.From(record, Text());
+        Assert.HasCount(1, rows);
+        Assert.AreEqual("Invoice total" + Environment.NewLine + "Pay today.", rows[0].Text);
+        Assert.HasCount(1, rows[0].Locations);
+        Assert.IsFalse(rows[0].HasOccurrences);
+        var bounds = rows[0].Locations[0].Bounds!;
+        Assert.AreEqual(.1, bounds.X, .000001);
+        Assert.AreEqual(.13, bounds.Width, .000001);
+        Assert.AreEqual(.048, bounds.Height, .000001);
+        CollectionAssert.AreEqual(words, rows[0].TextRegions.ToArray());
+        CollectionAssert.AreEqual(words, ((TextRecognitionMetadata)record.Results[0].Payload).Regions.ToArray());
+
+        var overlay = CaptureImageTextOverlay.Create(rows, new(1000, 500));
+        Assert.HasCount(4, overlay.Text);
+        Assert.AreEqual("total", overlay.Text[1].Text);
+        Assert.AreEqual(new System.Drawing.RectangleF(180, 51, 50, 10), overlay.Text[1].Bounds);
+        var vm = new CaptureTextViewModel(Text());
+        vm.Replace(rows);
+        vm.Query = "Invoice total";
+        Assert.HasCount(1, vm.Visible);
+        Assert.AreEqual(rows[0].Text, vm.CopyVisibleScope());
+    }
+
+    [TestMethod]
+    public void ColumnsHeadingsParagraphBreaksAndListItemsRemainSeparate()
+    {
+        var rows = ImageRows([
+            Word("Heading", .1, .02, .21, .04),
+            Word("Left", .1, .08, .04), Word("column", .15, .08, .06),
+            Word("Right", .6, .08, .05), Word("column", .66, .08, .06),
+            Word("New paragraph", .1, .18, .13),
+            Word("• First item", .1, .208, .12),
+            Word("• Second item", .1, .236, .13),
+            Word("1. Numbered item", .1, .264, .16)]);
+        CollectionAssert.AreEqual(new[] { "Heading", "Left column", "Right column", "New paragraph",
+            "• First item", "• Second item", "1. Numbered item" }, rows.Select(row => row.Text).ToArray());
+    }
+
+    [TestMethod]
+    public void ColumnMajorProviderOrderAndRightToLeftWordOrderArePreserved()
+    {
+        var columns = ImageRows([Word("Left first", .1, .1, .1), Word("Left second", .1, .128, .11),
+            Word("Right first", .6, .1, .11), Word("Right second", .6, .128, .12)]);
+        CollectionAssert.AreEqual(new[] { "Left first" + Environment.NewLine + "Left second",
+            "Right first" + Environment.NewLine + "Right second" }, columns.Select(row => row.Text).ToArray());
+        var rtl = ImageRows([Word("שלום", .6, .1, .04), Word("עולם", .55, .1, .04)]);
+        Assert.AreEqual("שלום עולם", rtl.Single().Text);
+    }
+
+    [TestMethod]
+    public void UnknownBoundsAndAlreadyMultilineTextRemainCopyableWithoutInventedLocations()
+    {
+        const string multiline = "Already grouped\nwith line breaks";
+        var rows = ImageRows([Word("Before", .1, .1, .06), new("Unknown"),
+            new("Empty bounds", new(.1, .128, 0, .02)), Word(multiline, .1, .156, .2), Word("After", .1, .184, .05)]);
+        CollectionAssert.AreEqual(new[] { "Before", "Unknown", "Empty bounds", multiline, "After" }, rows.Select(row => row.Text).ToArray());
+        Assert.IsNull(rows[1].Locations[0].Bounds);
+        Assert.IsNull(rows[2].Locations[0].Bounds);
+        Assert.HasCount(3, CaptureImageTextOverlay.Create(rows, new(1000, 500)).Text);
+    }
+
+    [TestMethod]
+    public void GroupingUsesEachNormalizedAxisIndependently()
+    {
+        foreach (double height in new[] { .002, .2 })
+        {
+            var rows = ImageRows([Word("Wide", .1, .1, .04, height), Word("screen", .15, .1, .06, height),
+                Word("Sidebar", .8, .1, .07, height)]);
+            CollectionAssert.AreEqual(new[] { "Wide screen", "Sidebar" }, rows.Select(row => row.Text).ToArray());
+        }
+        var edge = ImageRows([Word("At", .9, .98, .02), Word("edge", .93, .98, .07)]).Single();
+        Assert.AreEqual("At edge", edge.Text);
+        Assert.AreEqual(1, edge.Locations[0].Bounds!.X + edge.Locations[0].Bounds!.Width, .000001);
+    }
+
+    [TestMethod]
+    public void VideoWordsAreGroupedWithinFramesAndRepeatedFramesStillDeduplicate()
+    {
+        var regions = new[] { 1, 2, 3 }.SelectMany(second => new[] {
+            Word("Frame", .1, .1, .05), Word(second == 3 ? "changed" : "text", .16, .1, .07)
+        }.Select(word => new RecognizedText(word.Text, word.Bounds, TimeSpan.FromSeconds(second))));
+        var rows = CaptureTextPassage.From(Record(AnalysisMediaKind.Video, new TextRecognitionMetadata(regions)), Text());
+        Assert.HasCount(2, rows);
+        Assert.AreEqual("Frame text", rows[0].Text);
+        CollectionAssert.AreEqual(new[] { TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(2) }, rows[0].Locations.Select(location => location.Time!.Value).ToArray());
+        Assert.AreEqual("Frame changed", rows[1].Text);
+        Assert.AreEqual(TimeSpan.FromSeconds(3), rows[1].Locations[0].Time);
+        Assert.IsEmpty(CaptureImageTextOverlay.Create(rows, new(1000, 500)).Text);
+    }
+
+    [TestMethod]
+    public void WordBoundsChangesRefreshOverlayEvenWhenParagraphTextAndUnionAreUnchanged()
+    {
+        var vm = new CaptureTextViewModel(Text());
+        var words = new[] { Word("First", .1, .1, .05), Word("second", .16, .1, .06) };
+        var record = Record(AnalysisMediaKind.Image, new TextRecognitionMetadata(words));
+        var row = CaptureTextPassage.From(record, Text()).Single();
+        vm.Replace([row]);
+        var changed = new CaptureTextPassage(row.Id, row.Source, row.Label, row.Text, row.Locations,
+            [Word("First", .1, .1, .06), words[1]]);
+        vm.Replace([changed]);
+        Assert.AreSame(changed, vm.Visible.Single());
+    }
+
+    [TestMethod]
     public void RepeatedVideoFramesAreGroupedWithoutLosingOccurrences()
     {
         var record = Record(AnalysisMediaKind.Video, new TextRecognitionMetadata([
@@ -19,7 +193,7 @@ public sealed class CaptureTextTests
             new("Changed", timestamp: TimeSpan.FromSeconds(3)), new("First", timestamp: TimeSpan.FromSeconds(4))]));
         var passages = CaptureTextPassage.From(record, Text());
         Assert.HasCount(3, passages);
-        Assert.AreEqual("First" + Environment.NewLine + "Second", passages[0].Text);
+        Assert.AreEqual("First" + Environment.NewLine + Environment.NewLine + "Second", passages[0].Text);
         CollectionAssert.AreEqual(new[] { TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(2) }, passages[0].Locations.Select(location => location.Time!.Value).ToArray());
         Assert.HasCount(1, passages[2].Locations);
     }
@@ -138,6 +312,10 @@ public sealed class CaptureTextTests
 
     private static CaptureTextPassage Passage(string id, string text, TimeSpan? time = null) =>
         new(id, CaptureTextSource.Speech, "Speech", text, [new("Position", time ?? TimeSpan.Zero, null)]);
+    private static RecognizedText Word(string text, double x, double y, double width, double height = .02) =>
+        new(text, new(x, y, width, height));
+    private static IReadOnlyList<CaptureTextPassage> ImageRows(RecognizedText[] words) =>
+        CaptureTextPassage.From(Record(AnalysisMediaKind.Image, new TextRecognitionMetadata(words)), Text());
     private static CaptureAnalysisRecord Record(AnalysisMediaKind kind, AnalysisPayload payload) =>
         new(CaptureId.New(), kind, new(new string('a', 64)), "test", Guid.NewGuid(),
             [new(payload, new("test", "test", "test", "1"), DateTimeOffset.UtcNow, "test")]);

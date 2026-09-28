@@ -39,6 +39,11 @@ internal static class AnalysisDocumentMapper
                 new(input.Capability.Name, input.Capability.SchemaVersion), input.ResultId)).ToArray());
         return result.Payload switch
         {
+            CaptureNameMetadata name => document with
+            {
+                Name = new(name.Suggestion == null ? null : ToDocument(name.Suggestion)),
+                Coverage = ToDocument(name.Coverage),
+            },
             ImageAltTextMetadata alt => document with
             {
                 AltText = new(alt.Suggestion == null ? null : ToDocument(alt.Suggestion)),
@@ -82,7 +87,7 @@ internal static class AnalysisDocumentMapper
             {
                 Text = text.Regions.Select(region => new TextDocument(region.Text,
                     region.Bounds is { } bounds ? new(bounds.X, bounds.Y, bounds.Width, bounds.Height) : null,
-                    region.Timestamp?.Ticks)).ToArray(),
+                    region.Timestamp?.Ticks, region.LineIndex, region.WordIndex)).ToArray(),
             },
             DescriptionMetadata descriptions => document with
             {
@@ -102,17 +107,19 @@ internal static class AnalysisDocumentMapper
     {
         if (document == null || document.SchemaVersion != 1 || document.Producer == null)
             throw new InvalidDataException("Unsupported or invalid analysis result.");
-        int payloads = (document.AltText != null ? 1 : 0) + (document.Facts != null ? 1 : 0) + (document.Synopsis != null ? 1 : 0) + (document.Classification != null ? 1 : 0) +
+        int payloads = (document.Name != null ? 1 : 0) + (document.AltText != null ? 1 : 0) + (document.Facts != null ? 1 : 0) + (document.Synopsis != null ? 1 : 0) + (document.Classification != null ? 1 : 0) +
             (document.FileDetails != null ? 1 : 0) + (document.Text != null ? 1 : 0) + (document.Descriptions != null ? 1 : 0) +
             (document.Transcript != null ? 1 : 0) + (document.QrCodes != null ? 1 : 0);
         if (payloads != 1) throw new InvalidDataException("Unsupported or ambiguous metadata payload.");
-        bool derived = document.AltText != null || document.Facts != null || document.Synopsis != null || document.Classification != null;
+        bool derived = document.Name != null || document.AltText != null || document.Facts != null || document.Synopsis != null || document.Classification != null;
         if (derived && document.ResultId == null)
             throw new InvalidDataException("Derived metadata requires a persisted result identity.");
         if (!derived && document.Coverage != null)
             throw new InvalidDataException("Processing coverage belongs to derived metadata.");
         AnalysisPayload payload = document switch
         {
+            { Capability: "capture-name", Name: not null, Coverage: not null } =>
+                new CaptureNameMetadata(document.Name.Suggestion == null ? null : ToSuggestedText(document.Name.Suggestion), ToCoverage(document.Coverage)),
             { Capability: "image-alt-text", AltText: not null, Coverage: not null } =>
                 new ImageAltTextMetadata(document.AltText.Suggestion == null ? null : ToSuggestedText(document.AltText.Suggestion), ToCoverage(document.Coverage)),
             { Capability: "capture-synopsis", Synopsis.Summary: not null, Coverage: not null } =>
@@ -178,7 +185,7 @@ internal static class AnalysisDocumentMapper
         if (document == null) throw new InvalidDataException("Missing text region.");
         BoundsDocument? bounds = document.Bounds;
         return new(document.Text, bounds == null ? null : new(bounds.X, bounds.Y, bounds.Width, bounds.Height),
-            document.TimestampTicks is { } ticks ? TimeSpan.FromTicks(ticks) : null);
+            document.TimestampTicks is { } ticks ? TimeSpan.FromTicks(ticks) : null, document.LineIndex, document.WordIndex);
     }
 
     private static FileDetailsMetadata ToFileDetails(FileDetailsDocument file) =>

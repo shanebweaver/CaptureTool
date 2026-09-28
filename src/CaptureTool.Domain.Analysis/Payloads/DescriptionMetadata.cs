@@ -8,7 +8,11 @@ public sealed record MediaDescription
     public MediaDescription(string text, TimeSpan? timestamp = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(text);
-        if (timestamp < TimeSpan.Zero) throw new ArgumentOutOfRangeException(nameof(timestamp));
+        if (timestamp < TimeSpan.Zero)
+        {
+            throw new ArgumentOutOfRangeException(nameof(timestamp));
+        }
+
         Text = text;
         Timestamp = timestamp;
     }

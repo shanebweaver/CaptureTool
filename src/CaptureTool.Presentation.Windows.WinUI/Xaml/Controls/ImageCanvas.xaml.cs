@@ -641,7 +641,7 @@ public sealed partial class ImageCanvas : UserControlBase
 
     private void ImageCanvas_KeyDown(object sender, KeyRoutedEventArgs e)
     {
-        if (IsTextOverlayEnabled && _textExtractionSelection.Regions.Count > 0)
+        if (IsTextOverlayEnabled && _textExtractionSelection.HighlightBounds.Count > 0)
         {
             if (e.Key == VirtualKey.Escape)
             {
@@ -915,16 +915,17 @@ public sealed partial class ImageCanvas : UserControlBase
 
     #region Zoom, Center, and Size
 
-    public bool ShowCaptureLocation(CaptureTool.Domain.Analysis.Payloads.NormalizedBounds? bounds)
+    public bool ShowCapturePassage(CaptureTextPassage? passage)
     {
-        CaptureLocationOutline.Visibility = Visibility.Collapsed;
-        if (bounds is not { Width: > 0, Height: > 0 } || CanvasSize.Width <= 0 || CanvasSize.Height <= 0) return false;
-        var region = new global::Windows.Foundation.Rect(bounds.X * CanvasSize.Width, bounds.Y * CanvasSize.Height,
-            bounds.Width * CanvasSize.Width, bounds.Height * CanvasSize.Height);
-        CaptureLocationOutline.Margin = new Thickness(region.X, region.Y, 0, 0);
-        CaptureLocationOutline.Width = region.Width;
-        CaptureLocationOutline.Height = region.Height;
-        CaptureLocationOutline.Visibility = Visibility.Visible;
+        ClearExtractedTextSelection();
+        if (passage?.SelectedLocation?.Bounds is not { Width: > 0, Height: > 0 } bounds || _capturePassages == null) return false;
+        var selection = CreateCaptureSelection(passage);
+        if (selection.HighlightBounds.Count == 0) return false;
+        _selectedCapturePassage = passage;
+        SetExtractedTextSelection(selection);
+        TryGetImageRenderSize(out Size renderSize);
+        var region = new global::Windows.Foundation.Rect(bounds.X * renderSize.Width, bounds.Y * renderSize.Height,
+            bounds.Width * renderSize.Width, bounds.Height * renderSize.Height);
         CanvasContainer.StartBringIntoView(new BringIntoViewOptions
         {
             TargetRect = region, HorizontalAlignmentRatio = .5, VerticalAlignmentRatio = .5, AnimationDesired = false
@@ -1306,6 +1307,7 @@ public sealed partial class ImageCanvas : UserControlBase
     }
 
     private IReadOnlyList<CaptureTextPassage>? _capturePassages;
+    private CaptureTextPassage? _selectedCapturePassage;
     private CaptureImageTextOverlay _captureOverlay = new([], []);
     private bool IsTextOverlayEnabled => IsTextExtractionOverlayEnabled || _capturePassages != null;
     private IReadOnlyList<RecognizedTextRegion> OverlayRegions => IsTextExtractionOverlayEnabled ? TextExtractionRegions : _captureOverlay.Text;
@@ -1313,12 +1315,28 @@ public sealed partial class ImageCanvas : UserControlBase
 
     public void SetCaptureTextOverlay(IReadOnlyList<CaptureTextPassage>? passages)
     {
+        var selected = _selectedCapturePassage;
         _capturePassages = passages;
-        _captureOverlay = passages == null ? new([], []) : CaptureImageTextOverlay.Create(passages, CanvasSize);
+        TryGetImageRenderSize(out Size renderSize);
+        _captureOverlay = passages == null ? new([], []) : CaptureImageTextOverlay.Create(passages, renderSize);
         RebuildTextExtractionLayout();
+        if (selected != null && passages?.Contains(selected) == true)
+        {
+            _selectedCapturePassage = selected;
+            SetExtractedTextSelection(CreateCaptureSelection(selected));
+        }
         UpdateTextExtractionOverlayPath();
         UpdateQrCodeOverlay();
         UpdateTouchInputLock();
+    }
+
+    private RecognizedTextSelection CreateCaptureSelection(CaptureTextPassage passage)
+    {
+        TryGetImageRenderSize(out Size renderSize);
+        var regions = CaptureImageTextOverlay.CreateSelectionRegions(passage, renderSize);
+        var layout = RecognizedTextLayout.Create(regions, includeCutoutContours: false);
+        var selection = layout.Select(0, layout.ReadingOrder.Count - 1);
+        return selection.HighlightBounds.Count > 0 ? selection with { Text = passage.Text } : RecognizedTextSelection.Empty;
     }
 
     private void RebuildTextExtractionLayout()
@@ -1688,6 +1706,7 @@ public sealed partial class ImageCanvas : UserControlBase
 
     private void ClearExtractedTextSelection()
     {
+        _selectedCapturePassage = null;
         _textSelectionAnchor = null;
         _isTextSelectionPointerDown = false;
         _hasTextSelectionDrag = false;

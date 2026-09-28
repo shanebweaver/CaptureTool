@@ -115,7 +115,7 @@ public sealed class LocalCaptureAnalysisStoreTests
         AnalysisWriteToken token = await store.BeginRunAsync(id, AnalysisMediaKind.Video, AnalysisTestEnvironment.Revision(), "v1", Cancellation);
         var timestamp = TimeSpan.FromSeconds(3);
         AnalysisResult text = new(new TextRecognitionMetadata([
-            new("private OCR", new(0.1, 0.2, 0.3, 0.4), timestamp)]), AnalysisTestEnvironment.Producer(), DateTimeOffset.UtcNow, "v1");
+            new("private OCR", new(0.1, 0.2, 0.3, 0.4), timestamp, 3, 2)]), AnalysisTestEnvironment.Producer(), DateTimeOffset.UtcNow, "v1");
         AnalysisResult transcript = new(new TranscriptMetadata("fr", [new("private speech", timestamp, TimeSpan.FromSeconds(4))]),
             AnalysisTestEnvironment.Producer(), DateTimeOffset.UtcNow, "v1");
         Assert.IsTrue(await store.TryWriteAsync(token, text, Cancellation));
@@ -133,6 +133,8 @@ public sealed class LocalCaptureAnalysisStoreTests
         RecognizedText region = ((TextRecognitionMetadata)loadedText.Payload).Regions.Single();
         Assert.AreEqual("private OCR", region.Text);
         Assert.AreEqual(timestamp, region.Timestamp);
+        Assert.AreEqual(3, region.LineIndex);
+        Assert.AreEqual(2, region.WordIndex);
         Assert.AreEqual(new NormalizedBounds(0.1, 0.2, 0.3, 0.4), region.Bounds);
         TranscriptMetadata speech = (TranscriptMetadata)record.Results.Single(result => result.Payload is TranscriptMetadata).Payload;
         Assert.AreEqual("fr", speech.Language);

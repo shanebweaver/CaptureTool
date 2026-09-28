@@ -1,4 +1,4 @@
-﻿using FlaUI.Core.AutomationElements;
+using FlaUI.Core.AutomationElements;
 using FlaUI.Core.Definitions;
 using FlaUI.UIA3;
 using System.Text.Json;
@@ -61,8 +61,26 @@ public sealed partial class ImageEditTextExtractionUiTests
         Menu("AppMenu_HomeItem"); OpenRecording(); OpenPane();
         var pane = Element("CaptureDetailsPane");
         WaitForElementByName(pane, automation, video ? "Video" : "Audio", InteractionTimeout);
+        AssertDetailsLayout(window, automation, video ? "VideoEdit_CommandBar" : "AudioEdit_CommandBar",
+            video ? null : "ProgressSlider");
+        window.Patterns.Window.Pattern.SetWindowVisualState(WindowVisualState.Normal);
+        window.Patterns.Transform.Pattern.Resize(720, 760);
+        Thread.Sleep(350);
+        AssertDetailsLayout(window, automation, video ? "VideoEdit_CommandBar" : "AudioEdit_CommandBar",
+            video ? null : "ProgressSlider");
+        string compact = Path.Combine(artifacts, "compact-details.png");
+        window.CaptureToFile(compact); TestContext.AddResultFile(compact);
+        MaximizeWindow(window);
+        if (video)
+        {
+            Element("VideoEdit_TrimButton").Patterns.Toggle.Pattern.Toggle();
+            WaitForElementRemoved(window, automation, "CaptureDetailsPane", InteractionTimeout);
+            Assert.IsFalse(Element("VideoEdit_TrimStartTime").IsOffscreen);
+            OpenPane();
+            Assert.AreEqual(ToggleState.Off, Element("VideoEdit_TrimButton").Patterns.Toggle.Pattern.ToggleState.Value);
+        }
         window.CaptureToFile(Path.Combine(artifacts, "local-details.png"));
-        Element("Editor_DetailsToggle").Patterns.Toggle.Pattern.Toggle();
+        Element("CapturePane_Close").Patterns.Invoke.Pattern.Invoke();
         Thread.Sleep(350);
         Menu("AppMenu_SettingsItem");
         Element("CaptureMemoryConsent").Patterns.Toggle.Pattern.Toggle();
@@ -79,9 +97,14 @@ public sealed partial class ImageEditTextExtractionUiTests
         Element("CapturePane_CopyResults").Patterns.Invoke.Pattern.Invoke();
         WaitFor(() => ReadDetailsClipboard() == "First spoken passage" + Environment.NewLine + "Second spoken passage" ? window : null,
             InteractionTimeout, "complete filtered transcript");
-        var location = WaitFor(() => window.FindAllDescendants(automation.ConditionFactory.ByControlType(ControlType.Button).And(automation.ConditionFactory.ByName(resources["CaptureDetails_Transcript"] + " 0:03")))
-            .FirstOrDefault(item => item.IsEnabled), InteractionTimeout, "recording location");
-        location.Patterns.Invoke.Pattern.Invoke();
+        WaitForElementByName(Element("CapturePane_Passages"), automation, "Second spoken passage", InteractionTimeout).Click();
+        WaitFor(() =>
+        {
+            var progress = Element("ProgressSlider").Patterns.RangeValue.Pattern;
+            double fraction = (progress.Value.Value - progress.Minimum.Value) / (progress.Maximum.Value - progress.Minimum.Value);
+            return Math.Abs(fraction - .6) < .02 ? window : null;
+        },
+            InteractionTimeout, "clicking a transcript row seeks to its timestamp");
         Thread.Sleep(250);
         string screenshot = Path.Combine(artifacts, "transcript-location.png");
         window.CaptureToFile(screenshot); TestContext.AddResultFile(screenshot);

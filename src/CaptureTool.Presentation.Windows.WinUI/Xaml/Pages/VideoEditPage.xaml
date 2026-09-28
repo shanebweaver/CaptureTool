@@ -12,7 +12,6 @@
     d:DataContext="{d:DesignInstance Type=videoedit:VideoEditPageViewModel}"
     mc:Ignorable="d">
 
-    <controls:CaptureDetailsHost x:Name="DetailsHost" SourcePath="{x:Bind ViewModel.DetailsSourcePath, Mode=OneWay}" MediaKind="Video" HasEdits="{x:Bind ViewModel.HasUnsavedChanges, Mode=OneWay}" WorkingPath="{x:Bind ViewModel.VideoPath, Mode=OneWay}" IsSourceReady="{x:Bind ViewModel.IsMediaReady, Mode=OneWay}" StartSeconds="{x:Bind ViewModel.TrimStartSeconds, Mode=OneWay}" EndSeconds="{x:Bind ViewModel.TrimEndSeconds, Mode=OneWay}">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -22,15 +21,17 @@
 
         <!--  Toolbar  -->
         <CommandBar
+            AutomationProperties.AutomationId="VideoEdit_CommandBar"
             HorizontalAlignment="Stretch"
             DefaultLabelPosition="Right"
             IsOpen="False">
             <AppBarToggleButton x:Name="DetailsToggle" x:Uid="CapturePane_Toggle" Icon="Bullets"
                 AutomationProperties.AutomationId="Editor_DetailsToggle"
-                IsChecked="{x:Bind DetailsHost.IsPaneOpen, Mode=TwoWay}" />
+                IsChecked="{x:Bind DetailsHost.IsPaneOpen, Mode=OneWay}" />
             <!--  Trim  -->
             <AppBarToggleButton
                 x:Uid="VideoEdit_TrimButton"
+                AutomationProperties.AutomationId="VideoEdit_TrimButton"
                 Command="{x:Bind ViewModel.ToggleTrimModeCommand}"
                 Icon="Trim"
                 IsChecked="{x:Bind ViewModel.IsInTrimMode, Mode=OneWay}"
@@ -90,123 +91,142 @@
         </CommandBar>
 
         <!--  Content  -->
-        <Grid Grid.Row="1" Padding="8,0,8,8">
-            <MediaPlayerElement
-                x:Name="OriginalVideoPlayer"
-                AreTransportControlsEnabled="{x:Bind ViewModel.AreTransportControlsVisible, Mode=OneWay}"
-                Visibility="{x:Bind ViewModel.IsMediaReady, Mode=OneWay}" />
-            <MediaPlayerElement
-                x:Name="RenderedTrimVideoPlayer"
-                AreTransportControlsEnabled="{x:Bind ViewModel.AreTransportControlsVisible, Mode=OneWay}"
-                Visibility="Collapsed" />
+        <controls:CaptureDetailsHost
+            Grid.Row="1"
+            x:Name="DetailsHost"
+            SourcePath="{x:Bind ViewModel.DetailsSourcePath, Mode=OneWay}"
+            MediaKind="Video"
+            HasEdits="{x:Bind ViewModel.HasUnsavedChanges, Mode=OneWay}"
+            WorkingPath="{x:Bind ViewModel.VideoPath, Mode=OneWay}"
+            IsSourceReady="{x:Bind ViewModel.IsMediaReady, Mode=OneWay}"
+            StartSeconds="{x:Bind ViewModel.TrimStartSeconds, Mode=OneWay}"
+            EndSeconds="{x:Bind ViewModel.TrimEndSeconds, Mode=OneWay}">
+            <Grid Padding="8,0,8,8">
+                <MediaPlayerElement
+                    x:Name="OriginalVideoPlayer"
+                    AreTransportControlsEnabled="{x:Bind ViewModel.AreTransportControlsVisible, Mode=OneWay}"
+                    Visibility="{x:Bind ViewModel.IsMediaReady, Mode=OneWay}">
+                    <MediaPlayerElement.TransportControls>
+                        <MediaTransportControls MinWidth="0" />
+                    </MediaPlayerElement.TransportControls>
+                </MediaPlayerElement>
+                <MediaPlayerElement
+                    x:Name="RenderedTrimVideoPlayer"
+                    AreTransportControlsEnabled="{x:Bind ViewModel.AreTransportControlsVisible, Mode=OneWay}"
+                    Visibility="Collapsed">
+                    <MediaPlayerElement.TransportControls>
+                        <MediaTransportControls MinWidth="0" />
+                    </MediaPlayerElement.TransportControls>
+                </MediaPlayerElement>
 
-            <Grid
-                x:Name="TrimPreviewLoadingOverlay"
-                Background="{ThemeResource AcrylicBackgroundFillColorBaseBrush}"
-                Visibility="Collapsed">
-                <StackPanel
-                    HorizontalAlignment="Center"
-                    VerticalAlignment="Center"
-                    Spacing="16">
-                    <ProgressRing
-                        Width="48"
-                        Height="48"
-                        IsActive="True" />
-                    <TextBlock
-                        x:Uid="VideoEdit_RenderingTrimPreviewText"
-                        HorizontalAlignment="Center"
-                        FontSize="16"
-                        Opacity="0.7"
-                        Text="Preparing preview..." />
-                </StackPanel>
-            </Grid>
-
-            <Grid Background="{ThemeResource AcrylicBackgroundFillColorBaseBrush}" Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.IsVideoSuperResolutionGenerating), Mode=OneWay}">
-                <StackPanel
-                    HorizontalAlignment="Center"
-                    VerticalAlignment="Center"
-                    Spacing="16">
-                    <controls:AiLoadingIndicator
-                        x:Uid="VideoEdit_SuperResolutionProgressRing"
-                        IsActive="{x:Bind ViewModel.IsVideoSuperResolutionGenerating, Mode=OneWay}" />
-                    <TextBlock
-                        x:Uid="VideoEdit_SuperResolutionProgressText"
-                        HorizontalAlignment="Center"
-                        FontSize="16"
-                        Opacity="0.7"
-                        Text="Enhancing video..." />
-                </StackPanel>
-            </Grid>
-
-            <!--  Loading indicator for video finalization  -->
-            <Grid Visibility="{x:Bind ViewModel.IsFinalizingVideo, Mode=OneWay}">
-                <StackPanel
-                    HorizontalAlignment="Center"
-                    VerticalAlignment="Center"
-                    Spacing="16">
-                    <ProgressRing
-                        Width="48"
-                        Height="48"
-                        IsActive="True" />
-                    <TextBlock
-                        x:Uid="VideoEdit_FinalizingText"
-                        HorizontalAlignment="Center"
-                        FontSize="16"
-                        Opacity="0.7"
-                        Text="Finalizing video..." />
-                </StackPanel>
-            </Grid>
-
-            <Grid Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.IsMediaLoading), Mode=OneWay}">
-                <StackPanel
-                    HorizontalAlignment="Center"
-                    VerticalAlignment="Center"
-                    Spacing="16">
-                    <ProgressRing
-                        Width="48"
-                        Height="48"
-                        IsActive="True" />
-                    <TextBlock
-                        x:Uid="VideoEdit_LoadingMediaText"
-                        HorizontalAlignment="Center"
-                        FontSize="16"
-                        Opacity="0.7"
-                        Text="Opening video..." />
-                </StackPanel>
-            </Grid>
-
-            <Grid
-                Background="{ThemeResource AcrylicBackgroundFillColorBaseBrush}"
-                Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.HasMediaFailure), Mode=OneWay}">
-                <StackPanel
-                    MaxWidth="520"
-                    HorizontalAlignment="Center"
-                    VerticalAlignment="Center"
-                    Spacing="16">
-                    <FontIcon FontSize="32" Glyph="&#xE783;" />
-                    <TextBlock
-                        HorizontalAlignment="Center"
-                        FontSize="16"
-                        Text="{x:Bind ViewModel.MediaFailureMessage, Mode=OneWay}"
-                        TextAlignment="Center"
-                        TextWrapping="Wrap" />
+                <Grid
+                    x:Name="TrimPreviewLoadingOverlay"
+                    Background="{ThemeResource AcrylicBackgroundFillColorBaseBrush}"
+                    Visibility="Collapsed">
                     <StackPanel
                         HorizontalAlignment="Center"
-                        Orientation="Horizontal"
-                        Spacing="8">
-                        <Button
-                            x:Uid="MediaFailure_RetryButton"
-                            Command="{x:Bind ViewModel.RetryMediaCommand}"
-                            Content="Try again"
-                            Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.CanRetryMedia), Mode=OneWay}" />
-                        <Button
-                            x:Uid="VideoEdit_MediaFailureOpenFolderButton"
-                            Command="{x:Bind ViewModel.OpenVideosFolderCommand}"
-                            Content="Open screen recordings folder" />
+                        VerticalAlignment="Center"
+                        Spacing="16">
+                        <ProgressRing
+                            Width="48"
+                            Height="48"
+                            IsActive="True" />
+                        <TextBlock
+                            x:Uid="VideoEdit_RenderingTrimPreviewText"
+                            HorizontalAlignment="Center"
+                            FontSize="16"
+                            Opacity="0.7"
+                            Text="Preparing preview..." />
                     </StackPanel>
-                </StackPanel>
+                </Grid>
+
+                <Grid Background="{ThemeResource AcrylicBackgroundFillColorBaseBrush}" Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.IsVideoSuperResolutionGenerating), Mode=OneWay}">
+                    <StackPanel
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Spacing="16">
+                        <controls:AiLoadingIndicator
+                            x:Uid="VideoEdit_SuperResolutionProgressRing"
+                            IsActive="{x:Bind ViewModel.IsVideoSuperResolutionGenerating, Mode=OneWay}" />
+                        <TextBlock
+                            x:Uid="VideoEdit_SuperResolutionProgressText"
+                            HorizontalAlignment="Center"
+                            FontSize="16"
+                            Opacity="0.7"
+                            Text="Enhancing video..." />
+                    </StackPanel>
+                </Grid>
+
+                <!--  Loading indicator for video finalization  -->
+                <Grid Visibility="{x:Bind ViewModel.IsFinalizingVideo, Mode=OneWay}">
+                    <StackPanel
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Spacing="16">
+                        <ProgressRing
+                            Width="48"
+                            Height="48"
+                            IsActive="True" />
+                        <TextBlock
+                            x:Uid="VideoEdit_FinalizingText"
+                            HorizontalAlignment="Center"
+                            FontSize="16"
+                            Opacity="0.7"
+                            Text="Finalizing video..." />
+                    </StackPanel>
+                </Grid>
+
+                <Grid Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.IsMediaLoading), Mode=OneWay}">
+                    <StackPanel
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Spacing="16">
+                        <ProgressRing
+                            Width="48"
+                            Height="48"
+                            IsActive="True" />
+                        <TextBlock
+                            x:Uid="VideoEdit_LoadingMediaText"
+                            HorizontalAlignment="Center"
+                            FontSize="16"
+                            Opacity="0.7"
+                            Text="Opening video..." />
+                    </StackPanel>
+                </Grid>
+
+                <Grid
+                    Background="{ThemeResource AcrylicBackgroundFillColorBaseBrush}"
+                    Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.HasMediaFailure), Mode=OneWay}">
+                    <StackPanel
+                        MaxWidth="520"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Spacing="16">
+                        <FontIcon FontSize="32" Glyph="&#xE783;" />
+                        <TextBlock
+                            HorizontalAlignment="Center"
+                            FontSize="16"
+                            Text="{x:Bind ViewModel.MediaFailureMessage, Mode=OneWay}"
+                            TextAlignment="Center"
+                            TextWrapping="Wrap" />
+                        <StackPanel
+                            HorizontalAlignment="Center"
+                            Orientation="Horizontal"
+                            Spacing="8">
+                            <Button
+                                x:Uid="MediaFailure_RetryButton"
+                                Command="{x:Bind ViewModel.RetryMediaCommand}"
+                                Content="Try again"
+                                Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.CanRetryMedia), Mode=OneWay}" />
+                            <Button
+                                x:Uid="VideoEdit_MediaFailureOpenFolderButton"
+                                Command="{x:Bind ViewModel.OpenVideosFolderCommand}"
+                                Content="Open screen recordings folder" />
+                        </StackPanel>
+                    </StackPanel>
+                </Grid>
             </Grid>
-        </Grid>
+        </controls:CaptureDetailsHost>
 
         <Grid
             Grid.Row="2"
@@ -239,6 +259,7 @@
                     </Grid.ColumnDefinitions>
                     <TextBlock
                         x:Uid="VideoEdit_TrimStartTimeText"
+                        AutomationProperties.AutomationId="VideoEdit_TrimStartTime"
                         MinWidth="56"
                         FontSize="12"
                         Text="{x:Bind FormatTime(ViewModel.TrimStartSeconds), Mode=OneWay}" />
@@ -299,5 +320,4 @@
             </Grid>
         </Grid>
     </Grid>
-    </controls:CaptureDetailsHost>
 </local:VideoEditPageBase>

@@ -33,10 +33,12 @@ public sealed partial class ImageEditPage : ImageEditPageBase
     {
         InitializeComponent();
         DetailsHost.ToggleControl = DetailsToggle;
+        DetailsHost.ActivateMode = ViewModel.ExitEditMode;
+        DetailsHost.EditorText = ViewModel.EditorText;
         DetailsHost.FileRenamed = ViewModel.ApplyCaptureRename;
-        DetailsHost.Navigate = location => ViewModel.IsLoaded && !ViewModel.IsSourceImageGeometryChanged &&
-            ImageCanvas.ShowCaptureLocation(location.Bounds);
-        DetailsHost.ClearLocation = () => ImageCanvas.ShowCaptureLocation(null);
+        DetailsHost.Navigate = passage => ViewModel.IsLoaded &&
+            ImageCanvas.ShowCapturePassage(passage);
+        DetailsHost.ClearLocation = () => ImageCanvas.ShowCapturePassage(null);
         DetailsHost.TextOverlayChanged = ImageCanvas.SetCaptureTextOverlay;
         ImageCanvas.TextOverlayVisibilityChanged += visible => TextOverlayMarker.Visibility = visible ? Visibility.Visible : Visibility.Collapsed;
         InitializeContextMenus();
@@ -116,7 +118,6 @@ public sealed partial class ImageEditPage : ImageEditPageBase
         SetToolbarHostState(ShapeToolbarHost, ViewModel.IsShapesModeActive);
         SetToolbarHostState(TextToolbarHost, ViewModel.IsTextModeActive);
         SetToolbarHostState(ColorPickerToolbarHost, ViewModel.IsColorPickerModeActive);
-        SetToolbarHostState(TextExtractionToolbarHost, ViewModel.IsTextExtractionModeActive);
         SetToolbarHostState(ImageDescriptionToolbarHost, ViewModel.IsImageDescriptionModeActive);
         SetToolbarHostState(ForegroundExtractionToolbarHost, ViewModel.IsForegroundExtractionModeActive);
         SetToolbarHostState(ObjectEraseToolbarHost, ViewModel.IsObjectEraseModeActive);
@@ -125,6 +126,8 @@ public sealed partial class ImageEditPage : ImageEditPageBase
 
     private void ViewModel_PropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
+        if (e.PropertyName == nameof(ViewModel.HasActiveEditMode) && ViewModel.HasActiveEditMode)
+            DetailsHost.IsPaneOpen = false;
         switch (e.PropertyName)
         {
             case nameof(ViewModel.IsChromaKeyModeActive):
@@ -138,9 +141,6 @@ public sealed partial class ImageEditPage : ImageEditPageBase
                 break;
             case nameof(ViewModel.IsColorPickerModeActive):
                 AnimateToolbarHost(ColorPickerToolbarHost, ViewModel.IsColorPickerModeActive);
-                break;
-            case nameof(ViewModel.IsTextExtractionModeActive):
-                AnimateToolbarHost(TextExtractionToolbarHost, ViewModel.IsTextExtractionModeActive);
                 break;
             case nameof(ViewModel.IsImageDescriptionModeActive):
                 AnimateToolbarHost(ImageDescriptionToolbarHost, ViewModel.IsImageDescriptionModeActive);
@@ -156,6 +156,8 @@ public sealed partial class ImageEditPage : ImageEditPageBase
                 break;
         }
     }
+
+    private void ExtractText_Click(object sender, RoutedEventArgs e) => DetailsHost.OpenText();
 
     private void SetToolbarHostState(FrameworkElement host, bool isVisible)
     {

@@ -12,8 +12,15 @@ public sealed record AnalysisInputReference
         if (capability != AnalysisCapability.FileDetails && capability != AnalysisCapability.TextRecognition &&
             capability != AnalysisCapability.QrCodeDetection && capability != AnalysisCapability.Description &&
             capability != AnalysisCapability.Transcription)
+        {
             throw new ArgumentException("Derived inputs must be supported first-level capabilities.", nameof(capability));
-        if (resultId == Guid.Empty) throw new ArgumentException("Result identity cannot be empty.", nameof(resultId));
+        }
+
+        if (resultId == Guid.Empty)
+        {
+            throw new ArgumentException("Result identity cannot be empty.", nameof(resultId));
+        }
+
         Capability = capability;
         ResultId = resultId;
     }

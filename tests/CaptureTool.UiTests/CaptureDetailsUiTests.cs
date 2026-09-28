@@ -1,4 +1,4 @@
-﻿using FlaUI.Core.AutomationElements;
+using FlaUI.Core.AutomationElements;
 using FlaUI.Core.Definitions;
 using FlaUI.Core.Input;
 using FlaUI.Core.WindowsAPI;
@@ -33,8 +33,19 @@ public sealed partial class ImageEditTextExtractionUiTests
         WaitFor(() => Element("CaptureAction_Summary").IsEnabled ? window : null, InteractionTimeout, "declined action remains available");
         Element("CaptureAction_Summary").Patterns.Invoke.Pattern.Invoke();
         Answer("Allow local AI");
+        Element("CaptureAction_Summary_Loading");
+        Assert.IsFalse(window.FindFirstDescendant(automation.ConditionFactory.ByAutomationId("CaptureAction_Name_Loading")) is { IsOffscreen: false },
+            "Summary work must not activate the name loading indicator.");
         WaitForElementRemoved(window, automation, "CaptureAction_Summary", InteractionTimeout);
         const string summary = "Invoice INV-2048 totals USD 125.00 and is due on 2026-10-15.";
+        WaitForElementByName(window, automation, summary, InteractionTimeout);
+        Assert.IsTrue(Element("CaptureAction_Name").IsEnabled, "Summary generation must leave name suggestion available.");
+        Element("CaptureAction_Name").Patterns.Invoke.Pattern.Invoke();
+        Element("CaptureAction_Name_Loading");
+        Assert.IsFalse(window.FindFirstDescendant(automation.ConditionFactory.ByAutomationId("CaptureAction_Summary_Loading")) is { IsOffscreen: false },
+            "Name work must not activate the summary loading indicator.");
+        WaitForElementRemoved(window, automation, "CaptureAction_Name", InteractionTimeout);
+        WaitForElementByName(window, automation, "Contoso invoice", InteractionTimeout);
         WaitForElementByName(window, automation, summary, InteractionTimeout);
         Element("CaptureSummary_CopySummary").Patterns.Invoke.Pattern.Invoke();
         WaitFor(() => ReadDetailsClipboard() == summary ? window : null, InteractionTimeout, "summary copied");
@@ -56,8 +67,7 @@ public sealed partial class ImageEditTextExtractionUiTests
         window.Patterns.Window.Pattern.SetWindowVisualState(WindowVisualState.Normal);
         window.Patterns.Transform.Pattern.Resize(720, 760);
         Thread.Sleep(350);
-        if (Element("Editor_DetailsToggle").Patterns.Toggle.Pattern.ToggleState.Value == ToggleState.Off)
-            Element("Editor_DetailsToggle").Patterns.Toggle.Pattern.Toggle();
+        AssertDetailsLayout(window, automation, "ImageEdit_CommandBar", "ZoomSlider");
         Element("CapturePane_SummaryTab").Patterns.SelectionItem.Pattern.Select();
         WaitForElementByName(window, automation, alt, InteractionTimeout);
         Thread.Sleep(350);
@@ -137,19 +147,34 @@ public sealed partial class ImageEditTextExtractionUiTests
             is { IsOffscreen: false } marker ? marker : null, InteractionTimeout, "saved text uses the dimmed text-selection overlay");
         Assert.IsFalse(Element("CapturePane_Passages").FindAllDescendants(automation.ConditionFactory.ByControlType(ControlType.Text))
             .Any(item => item.Name == resources["CaptureDetails_RecognizedText"] && !item.IsOffscreen), "Rows should not repeat a recognized-text heading.");
+        Assert.HasCount(3, Element("CapturePane_Passages").FindAllChildren(automation.ConditionFactory.ByControlType(ControlType.ListItem)),
+            "Word-level OCR should display as two readable passages and one QR code.");
         var search = Element("CapturePane_Search").AsTextBox();
-        search.Text = "INV-2048";
+        search.Text = "Reference: INV-2048";
         Element("CapturePane_CopyResults").Patterns.Invoke.Pattern.Invoke();
         WaitFor(() => ReadDetailsClipboard() == "Contoso invoice. Reference: INV-2048. Total USD 125.00. Due 2026-10-15." ? dialog : null,
             InteractionTimeout, "all matching text copied");
-        var location = WaitFor(() => dialog.FindAllDescendants(automation.ConditionFactory.ByControlType(ControlType.Button).And(automation.ConditionFactory.ByName(resources["CaptureDetails_RecognizedText"])))
-            .FirstOrDefault(item => item.IsEnabled), InteractionTimeout, "source location");
-        location.Patterns.Invoke.Pattern.Invoke();
+        const string firstPassage = "Contoso invoice. Reference: INV-2048. Total USD 125.00. Due 2026-10-15.";
+        const string secondPassage = "Contact billing@example.com or visit https://example.com/invoice.";
+        WaitForElementByName(Element("CapturePane_Passages"), automation, firstPassage, InteractionTimeout).Click();
+        WaitFor(() => Element("CapturePane_Passages").FindFirstChild(automation.ConditionFactory.ByControlType(ControlType.ListItem))
+            is { } row && row.Patterns.SelectionItem.Pattern.IsSelected.Value ? row : null, InteractionTimeout, "clicked passage selected");
         Screenshot("text-location");
         search.Text = "absent phrase";
         WaitFor(() => !Element("CapturePane_CopyResults").IsEnabled ? dialog : null, InteractionTimeout, "empty search");
         search.Text = string.Empty;
-        WaitFor(() => dialog.FindAllDescendants(automation.ConditionFactory.ByControlType(ControlType.Button).And(automation.ConditionFactory.ByName(resources["CaptureDetails_QrCode"]))).FirstOrDefault(item => item.IsEnabled), InteractionTimeout, "QR location after filtering");
+        WaitForElementByName(Element("CapturePane_Passages"), automation, firstPassage, InteractionTimeout).Click();
+        AssertCanvasSelection(firstPassage);
+        Element("CapturePane_Next").Patterns.Invoke.Pattern.Invoke();
+        AssertCanvasSelection(secondPassage);
+        Element("CapturePane_Previous").Patterns.Invoke.Pattern.Invoke();
+        AssertCanvasSelection(firstPassage);
+        // Clicking an already-selected row restores the highlight after clearing it on the canvas.
+        Keyboard.Type(VirtualKeyShort.ESCAPE);
+        WaitForElementByName(Element("CapturePane_Passages"), automation, firstPassage, InteractionTimeout).Click();
+        AssertCanvasSelection(firstPassage);
+        WaitForElementByName(Element("CapturePane_Passages"), automation, "https://example.com/invoice", InteractionTimeout).Click();
+        AssertCanvasSelection("https://example.com/invoice");
         Screenshot("source-text");
         Element("CapturePane_DetailsTab").Patterns.SelectionItem.Pattern.Select();
         WaitForElementRemoved(window, automation, "ImageEdit_TextExtractionOverlayMarker", InteractionTimeout);
@@ -180,6 +205,15 @@ public sealed partial class ImageEditTextExtractionUiTests
         CloseDetails();
 
         AutomationElement Element(string id) => WaitForElement(window, automation, id, InteractionTimeout);
+        void AssertCanvasSelection(string expected)
+        {
+            Element("CapturePane_CopyResults").Patterns.Invoke.Pattern.Invoke();
+            WaitFor(() => ReadDetailsClipboard()?.Contains(firstPassage + Environment.NewLine) == true ? window : null,
+                InteractionTimeout, "all results copied before checking the canvas selection");
+            Element("PART_ScrollPresenter").Focus();
+            Keyboard.TypeSimultaneously(VirtualKeyShort.CONTROL, VirtualKeyShort.KEY_C);
+            WaitFor(() => ReadDetailsClipboard() == expected ? window : null, InteractionTimeout, "selected passage uses the text extraction selection");
+        }
         void Menu(string id)
         {
             window.Focus();

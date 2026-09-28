@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -1402,13 +1402,13 @@ SOFTWARE.
     <value>关</value>
   </data>
   <data name="ImageEdit_TextExtractionButton.Label" xml:space="preserve">
-    <value>文本提取</value>
+    <value>提取文本</value>
   </data>
   <data name="ImageEdit_TextExtractionButton.AutomationProperties.Name" xml:space="preserve">
-    <value>从图像中提取文本</value>
+    <value>提取文本</value>
   </data>
   <data name="ImageEdit_TextExtractionButton.ToolTipService.ToolTip" xml:space="preserve">
-    <value>提取并选择图像中的文本</value>
+    <value>在“文本”选项卡中查找和复制文本</value>
   </data>
   <data name="ImageEdit_TextExtractionOverlayMarker.AutomationProperties.Name" xml:space="preserve">
     <value>文本提取叠加层已就绪</value>
@@ -1740,12 +1740,6 @@ SOFTWARE.
   <data name="CaptureMemory_Delete.Content" xml:space="preserve">
     <value>删除</value>
   </data>
-  <data name="CaptureMemory_Preparing" xml:space="preserve">
-    <value>正在准备设备端 AI…</value>
-  </data>
-  <data name="CaptureMemory_Analyzing" xml:space="preserve">
-    <value>正在分析捕获内容…</value>
-  </data>
   <data name="CaptureMemory_ConsentTitle" xml:space="preserve">
     <value>发现每次捕获中的更多价值</value>
   </data>
@@ -1980,4 +1974,7 @@ SOFTWARE.
   <data name="CaptureSummary_CopySummary.Content" xml:space="preserve"><value>复制摘要</value></data>
   <data name="CaptureSummary_CopyAltText.Content" xml:space="preserve"><value>复制替代文本</value></data>
   <data name="CaptureAction_NoSuggestion" xml:space="preserve"><value>没有足够的信息来生成建议。</value></data>
+  <data name="CaptureNaming_Suggest" xml:space="preserve"><value>使用 AI 建议文件名。保存前可查看和编辑。</value></data>
+  <data name="CaptureNaming_AiGenerating" xml:space="preserve"><value>AI 正在建议名称…</value></data>
+  <data name="CaptureNaming_Edit.ToolTipService.ToolTip" xml:space="preserve"><value>编辑捕获名称</value></data>
 </root>

@@ -22,12 +22,23 @@ public sealed class StructuredFact
 
     public StructuredFact(StructuredFactKind kind, string value, IEnumerable<AnalysisEvidence> evidence)
     {
-        if (!Enum.IsDefined(kind)) throw new ArgumentOutOfRangeException(nameof(kind));
+        if (!Enum.IsDefined(kind))
+        {
+            throw new ArgumentOutOfRangeException(nameof(kind));
+        }
+
         ArgumentException.ThrowIfNullOrWhiteSpace(value);
-        if (value.Length > MaximumValueLength) throw new ArgumentException("Fact value is too long.", nameof(value));
+        if (value.Length > MaximumValueLength)
+        {
+            throw new ArgumentException("Fact value is too long.", nameof(value));
+        }
+
         Evidence = AnalysisGuard.Freeze(evidence);
         if (Evidence.Count is < 1 or > MaximumEvidenceCount || Evidence.Distinct().Count() != Evidence.Count)
+        {
             throw new ArgumentException("Specify between one and sixteen distinct evidence spans.", nameof(evidence));
+        }
+
         Kind = kind;
         Value = value;
     }
@@ -45,9 +56,15 @@ public sealed class StructuredFactsMetadata : DerivedAnalysisPayload
     {
         Facts = AnalysisGuard.Freeze(facts);
         if (Facts.Count > MaximumFactCount || Facts.Select(fact => (fact.Kind, fact.Value)).Distinct().Count() != Facts.Count)
+        {
             throw new ArgumentException("Specify at most 256 distinct facts.", nameof(facts));
+        }
+
         if (Facts.Count != 0 && coverage?.IncludedEntries == 0)
+        {
             throw new ArgumentException("Facts require included source entries.", nameof(coverage));
+        }
+
         Coverage = coverage;
     }
 
@@ -58,12 +75,16 @@ public sealed class StructuredFactsMetadata : DerivedAnalysisPayload
         ArgumentNullException.ThrowIfNull(inputs);
         Coverage?.Validate(inputs, Facts.SelectMany(fact => fact.Evidence));
         foreach (StructuredFact fact in Facts)
-        foreach (AnalysisEvidence evidence in fact.Evidence)
+        {
+            foreach (AnalysisEvidence evidence in fact.Evidence)
         {
             AnalysisResult? source = inputs.SingleOrDefault(input => input.ResultId == evidence.ResultId);
             if (source?.Payload is not (TextRecognitionMetadata or QrCodeMetadata or TranscriptMetadata) ||
                 !string.Equals(fact.Value, evidence.ResolveText(source), StringComparison.Ordinal))
-                throw new ArgumentException("Observed facts require matching evidence in OCR, QR values, or transcripts.", nameof(inputs));
+                {
+                    throw new ArgumentException("Observed facts require matching evidence in OCR, QR values, or transcripts.", nameof(inputs));
+                }
+            }
         }
     }
 }
