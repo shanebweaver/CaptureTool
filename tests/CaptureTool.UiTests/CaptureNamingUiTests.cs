@@ -70,7 +70,9 @@ public sealed partial class ImageEditTextExtractionUiTests
             Assert.AreEqual(nameBounds.Right, Element("CaptureName_Input").BoundingRectangle.Right, 1);
             Assert.IsTrue(File.Exists(fixture), "Suggestions must not rename a file before acceptance.");
             Element("CapturePane_SummaryTab").Patterns.SelectionItem.Pattern.Select();
-            Assert.IsTrue(Element("CaptureAction_Summary").IsEnabled, "Name generation must leave summary generation available.");
+            WaitForElementByName(window, automation, "Invoice INV-2048 totals USD 125.00 and is due on 2026-10-15.", InteractionTimeout);
+            Assert.IsNull(window.FindFirstDescendant(automation.ConditionFactory.ByAutomationId("CaptureAction_Summary")),
+                "Name generation also prepares the summary.");
             Element("CapturePane_DetailsTab").Patterns.SelectionItem.Pattern.Select();
             Screenshot("suggested-name");
             Element("CaptureName_Cancel").Patterns.Invoke.Pattern.Invoke();

@@ -216,6 +216,43 @@ public sealed class CaptureDetailsTests
     }
 
     [TestMethod]
+    public async Task CachedOutputDoesNotShowLoadingWhileCompanionsArePending()
+    {
+        var setup = new Setup();
+        var record = Record();
+        var run = new AnalysisRun(Guid.NewGuid(), Guid.NewGuid(), 1, "test", null, AnalysisRunStatus.Queued,
+            [AnalysisCapability.ImageAltText, AnalysisCapability.CaptureSynopsis, AnalysisCapability.CaptureName], []);
+        setup.Reader.Setup(reader => reader.ReadAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new CaptureDetailsSnapshot(CaptureDetailsStatus.Available, record, run));
+        using var vm = setup.ViewModel;
+        await vm.OpenAsync("capture.png", AnalysisMediaKind.Image);
+        Assert.IsTrue(vm.AltTextAction.IsRunning);
+        Assert.IsTrue(vm.SummaryAction.HasResult);
+        Assert.IsFalse(vm.IsGeneratingSummary, "Cached results are reused without showing another loading state.");
+        Assert.IsFalse(vm.IsEditingName, "Only an explicit name request should open the filename editor.");
+    }
+
+    [TestMethod]
+    public async Task CompanionFailuresDoNotRepeatTheSameSnackbar()
+    {
+        var setup = new Setup();
+        AnalysisCapability[] steps = [AnalysisCapability.ImageAltText, AnalysisCapability.CaptureSynopsis, AnalysisCapability.CaptureName];
+        var run = new AnalysisRun(Guid.NewGuid(), Guid.NewGuid(), 1, "test", null, AnalysisRunStatus.Queued, steps, [])
+            .BindSource(new(new string('a', 64)));
+        CaptureDetailsSnapshot snapshot = new(CaptureDetailsStatus.Empty, Run: run);
+        setup.Reader.Setup(x => x.ReadAsync(It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync(() => snapshot);
+        using var vm = setup.ViewModel;
+        await vm.OpenAsync("capture.png", AnalysisMediaKind.Image);
+        foreach (var capability in steps)
+        {
+            run = run.CompleteStep(new(capability, AnalyzerOutcomeKind.Unsupported, "metadata-input-empty"));
+            snapshot = snapshot with { Run = run };
+            await vm.RefreshAsync();
+        }
+        setup.Notifications.Verify(x => x.ShowInfo("CaptureAction_Unavailable"), Times.Once);
+    }
+
+    [TestMethod]
     public async Task NameAndSummaryHaveIndependentRequestsLoadingResultsAndFailures()
     {
         var setup = new Setup();
@@ -352,7 +389,8 @@ public sealed class CaptureDetailsTests
         Assert.IsTrue(vm.IsGeneratingName);
         Assert.IsFalse(vm.SuggestNameCommand.CanExecute(null));
         Assert.IsFalse(vm.IsEditingName);
-        Assert.AreEqual("CaptureNaming_Suggest", vm.NameSuggestionToolTip, "The AI tooltip stays unchanged during loading.");
+        Assert.AreEqual("CaptureNaming_Suggest" + Environment.NewLine + "CaptureAction_RelatedResults", vm.NameSuggestionToolTip,
+            "The AI tooltip stays unchanged during loading.");
         if (editWhileGenerating)
         {
             vm.EditNameCommand.Execute(null);

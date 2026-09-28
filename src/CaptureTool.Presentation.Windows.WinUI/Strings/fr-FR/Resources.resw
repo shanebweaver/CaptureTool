@@ -1979,4 +1979,5 @@ SOFTWARE.
   <data name="CaptureNaming_Edit.ToolTipService.ToolTip" xml:space="preserve"><value>Renommer</value></data>
   <data name="CaptureAction_SummaryAudioInputs" xml:space="preserve"><value>Transcrivez l’audio pour créer un résumé.</value></data>
   <data name="CapturePane_Loading.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Chargement des détails</value></data>
+  <data name="CaptureAction_RelatedResults" xml:space="preserve"><value>Prépare aussi d’autres suggestions d’IA pour cette capture.</value></data>
 </root>

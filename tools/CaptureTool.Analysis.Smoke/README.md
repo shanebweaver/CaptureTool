@@ -81,6 +81,13 @@ An opt-in `--enrichment-probe --enrichment-model <catalog-alias>` diagnostic wri
 raw responses for one hard-coded synthetic invoice only. It never reads captures.
 Production adapters do not log source text, prompts, or raw responses.
 
+`--screenshot-checks` runs the requested name batch, including companion summary,
+alt text, and classification, on generated development and invoice screenshots.
+It requires cached vision and Phi models and never downloads them. Add
+`--classification-only` to repeat just OCR, description, and classification when
+investigating its prompt or parser. Reports retain synthetic responses and per-step
+timings under `screenshots`; no user captures are read.
+
 Scale checks seed 100, 1,000, and 10,000 DPAPI-protected records with 200 OCR regions
 each. Reports measure discovery, settings contention, cancellation, deletion,
 catalog reads, managed allocations, and peak working set. They retain isolated

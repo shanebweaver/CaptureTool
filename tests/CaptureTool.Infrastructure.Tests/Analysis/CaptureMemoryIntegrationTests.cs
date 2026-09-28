@@ -64,7 +64,8 @@ public sealed class CaptureMemoryIntegrationTests
             Assert.AreEqual(1, unavailable.Probes);
             Assert.AreEqual(1, fallback.Probes);
             Assert.IsNotNull(worker.Admitted);
-            CollectionAssert.AreEqual(new[] { AnalysisCapability.TextRecognition, AnalysisCapability.Description, AnalysisCapability.CaptureSynopsis },
+            CollectionAssert.AreEqual(new[] { AnalysisCapability.TextRecognition, AnalysisCapability.Description, AnalysisCapability.CaptureSynopsis,
+                AnalysisCapability.CaptureName, AnalysisCapability.ImageAltText, AnalysisCapability.CaptureClassification },
                 worker.Admitted.Capabilities!.ToArray());
         }
         finally { await memory.StopAsync(); }

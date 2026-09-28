@@ -432,6 +432,14 @@ public sealed class CaptureAnalysisWorker : ICaptureAnalysisWorker, IDisposable
                 if (last.Kind == AnalyzerOutcomeKind.Unsupported) break;
             }
             catch (OperationCanceledException) when (ct.IsCancellationRequested) { throw; }
+            catch (ProviderBusyException) when (processor != null && !ct.IsCancellationRequested)
+            {
+                // A timed-out metadata call must not discard independent companion steps.
+                // Commit its failure, then let the worker wait for native ownership to end
+                // before starting the next step. Late output remains fenced out.
+                last = AnalyzerOutcome.Unsuccessful(AnalyzerOutcomeKind.Failed, "provider-not-stopped");
+                return (last, null);
+            }
             catch (ProviderBusyException) { throw; }
             catch (TimeoutException) { last = AnalyzerOutcome.Unsuccessful(AnalyzerOutcomeKind.Failed, "model-timeout"); }
             catch (OperationCanceledException) { return (AnalyzerOutcome.Unsuccessful(AnalyzerOutcomeKind.Cancelled, "model-cancelled"), null); }

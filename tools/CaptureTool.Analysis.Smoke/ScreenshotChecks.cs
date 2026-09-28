@@ -20,7 +20,7 @@ using CaptureTool.Infrastructure.Analysis.Windows.Media;
 // adapters using generated screenshots; no user capture or application policy is read.
 internal static class ScreenshotChecks
 {
-    internal static async Task<int> RunAsync(IStorageService storage, string output)
+    internal static async Task<int> RunAsync(IStorageService storage, string output, bool classificationOnly = false)
     {
         Directory.CreateDirectory(output);
         using var services = new ServiceCollection().AddGenericServices().AddApplicationServices().AddSingleton(storage)
@@ -58,7 +58,10 @@ internal static class ScreenshotChecks
                 }
                 var revision = new SourceRevision(Convert.ToHexStringLower(SHA256.HashData(await File.ReadAllBytesAsync(path, lifetime.Token))));
                 var capture = new CaptureAnalysisRecord(CaptureId.New(), AnalysisMediaKind.Image, revision, plan.Version, Guid.NewGuid(), []);
-                foreach (var capability in new[] { AnalysisCapability.TextRecognition, AnalysisCapability.Description, AnalysisCapability.CaptureName, AnalysisCapability.CaptureSynopsis, AnalysisCapability.ImageAltText })
+                IReadOnlyList<AnalysisCapability> capabilities = classificationOnly
+                    ? [AnalysisCapability.TextRecognition, AnalysisCapability.Description, AnalysisCapability.CaptureClassification]
+                    : CaptureAnalysisConfiguration.ForAction(AnalysisMediaKind.Image, AnalysisCapability.CaptureName);
+                foreach (var capability in capabilities)
                 {
                     var timer = Stopwatch.StartNew();
                     AnalyzerOutcome? outcome = null;
@@ -129,6 +132,15 @@ internal static class ScreenshotChecks
                     if (outcome.Payload is CaptureNameMetadata name) Console.WriteLine($"{label} name: {name.Suggestion?.Text}");
                     if (outcome.Payload is CaptureSynopsisMetadata synopsis) Console.WriteLine($"{label} summary: {string.Join(" ", synopsis.Summary.Select(item => item.Text))}");
                     if (outcome.Payload is ImageAltTextMetadata alt) Console.WriteLine($"{label} alt text: {alt.Suggestion?.Text}");
+                    if (outcome.Payload is CaptureClassificationMetadata classification)
+                    {
+                        Console.WriteLine($"{label} category: {classification.Category}; topics: {string.Join(", ", classification.Topics.Select(topic => topic.Text))}");
+                        if (dense ? classification.Category is not (CaptureCategory.Error or CaptureCategory.Code) : classification.Category != CaptureCategory.Document)
+                        {
+                            failures++;
+                            Console.WriteLine($"{label}: classification does not match the synthetic fixture.");
+                        }
+                    }
                     string? generated = outcome.Payload switch
                     {
                         CaptureNameMetadata value => value.Suggestion?.Text ?? string.Empty,

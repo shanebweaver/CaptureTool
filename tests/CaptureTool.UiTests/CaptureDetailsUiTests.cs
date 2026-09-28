@@ -13,7 +13,7 @@ public sealed partial class ImageEditTextExtractionUiTests
 {
     [TestMethod]
     [TestCategory("UI")]
-    public void CapturePane_SummaryAndAltTextReuseScansAndShareConsent()
+    public void CapturePane_AltTextAlsoPreparesSummaryAndNameWithSharedConsent()
     {
         if (!ShouldRunUiTests()) Assert.Inconclusive("Enable isolated desktop UI tests.");
         using var dpi = new DesktopDpiScope();
@@ -28,35 +28,40 @@ public sealed partial class ImageEditTextExtractionUiTests
         Element("Editor_DetailsToggle").Patterns.Toggle.Pattern.Toggle();
         Element("CapturePane_SummaryTab").Patterns.SelectionItem.Pattern.Select();
         Assert.IsNull(window.FindFirstDescendant(automation.ConditionFactory.ByAutomationId("CaptureMemoryConsentDialog")));
-        Element("CaptureAction_Summary").Patterns.Invoke.Pattern.Invoke();
+        Element("CaptureAction_AltText").Patterns.Invoke.Pattern.Invoke();
         Answer("Not now");
-        WaitFor(() => Element("CaptureAction_Summary").IsEnabled ? window : null, InteractionTimeout, "declined action remains available");
-        Element("CaptureAction_Summary").Patterns.Invoke.Pattern.Invoke();
+        WaitFor(() => Element("CaptureAction_AltText").IsEnabled ? window : null, InteractionTimeout, "declined action remains available");
+        Element("CaptureAction_AltText").Patterns.Invoke.Pattern.Invoke();
         Answer("Allow local AI");
+        Element("CaptureAction_AltText_Loading");
         Element("CaptureAction_Summary_Loading");
-        Assert.IsFalse(window.FindFirstDescendant(automation.ConditionFactory.ByAutomationId("CaptureAction_Name_Loading")) is { IsOffscreen: false },
-            "Summary work must not activate the name loading indicator.");
+        Element("CaptureAction_Name_Loading");
+        WaitForElementRemoved(window, automation, "CaptureAction_AltText", InteractionTimeout);
+        const string alt = "Invoice INV-2048 from Contoso showing a total of USD 125.00, due October 15, 2026.";
+        WaitForElementByName(window, automation, alt, InteractionTimeout);
         WaitForElementRemoved(window, automation, "CaptureAction_Summary", InteractionTimeout);
         const string summary = "Invoice INV-2048 totals USD 125.00 and is due on 2026-10-15.";
         WaitForElementByName(window, automation, summary, InteractionTimeout);
-        Assert.IsTrue(Element("CaptureAction_Name").IsEnabled, "Summary generation must leave name suggestion available.");
+        WaitFor(() => Element("CaptureAction_Name").IsEnabled ? window : null, InteractionTimeout, "companion name suggestion ready");
+        Assert.IsNull(window.FindFirstDescendant(automation.ConditionFactory.ByAutomationId("CaptureName_Input")),
+            "A companion name must not enter rename mode automatically.");
+        Assert.IsTrue(File.Exists(fixture), "Companion generation must not rename the file.");
         Element("CaptureAction_Name").Patterns.Invoke.Pattern.Invoke();
-        Element("CaptureAction_Name_Loading");
-        Assert.IsFalse(window.FindFirstDescendant(automation.ConditionFactory.ByAutomationId("CaptureAction_Summary_Loading")) is { IsOffscreen: false },
-            "Name work must not activate the summary loading indicator.");
+        Assert.IsNull(window.FindFirstDescendant(automation.ConditionFactory.ByAutomationId("CaptureAction_Name_Loading")),
+            "Reviewing the cached name must not run the model again.");
         WaitForElementRemoved(window, automation, "CaptureAction_Name", InteractionTimeout);
-        WaitForElementByName(window, automation, "Contoso invoice", InteractionTimeout);
+        WaitFor(() => Element("CaptureName_Input").AsTextBox().Text == "Contoso invoice" ? window : null,
+            InteractionTimeout, "cached filename suggestion opened for review");
         WaitForElementByName(window, automation, summary, InteractionTimeout);
         Element("CaptureSummary_CopySummary").Patterns.Invoke.Pattern.Invoke();
         WaitFor(() => ReadDetailsClipboard() == summary ? window : null, InteractionTimeout, "summary copied");
         Element("CapturePane_TextTab").Patterns.SelectionItem.Pattern.Select();
         Assert.IsNull(window.FindFirstDescendant(automation.ConditionFactory.ByAutomationId("CaptureAction_Text")), "Summary saves missing OCR for later use.");
-        Assert.IsTrue(Element("CaptureAction_Qr").IsEnabled, "Summary does not run unrelated QR detection.");
+        WaitFor(() => Element("CaptureAction_Qr").IsEnabled ? window : null, InteractionTimeout,
+            "the LLM batch finishes without running unrelated QR detection");
         Element("CapturePane_SummaryTab").Patterns.SelectionItem.Pattern.Select();
         WaitForElementRemoved(window, automation, "ImageEdit_TextExtractionOverlayMarker", InteractionTimeout);
-        Element("CaptureAction_AltText").Patterns.Invoke.Pattern.Invoke();
-        WaitForElementRemoved(window, automation, "CaptureAction_AltText", InteractionTimeout);
-        const string alt = "Invoice INV-2048 from Contoso showing a total of USD 125.00, due October 15, 2026.";
+        Assert.IsNull(window.FindFirstDescendant(automation.ConditionFactory.ByAutomationId("CaptureAction_AltText")));
         WaitForElementByName(window, automation, alt, InteractionTimeout);
         Assert.IsNull(window.FindFirstDescendant(automation.ConditionFactory.ByAutomationId("CaptureMemoryConsentDialog")), "Alt text reuses shared consent.");
         Element("CaptureSummary_CopyAltText").Patterns.Invoke.Pattern.Invoke();

@@ -24,8 +24,13 @@ public sealed record StructuredFactsOptions
 /// <summary>Metadata step order, processor contracts, candidate preferences, and budgets.</summary>
 public static class MetadataEnrichmentConfiguration
 {
+    public static IReadOnlyList<AnalysisCapability> LanguageModelCapabilities { get; } = Array.AsReadOnly(new[]
+    {
+        AnalysisCapability.CaptureSynopsis, AnalysisCapability.CaptureName,
+        AnalysisCapability.ImageAltText, AnalysisCapability.CaptureClassification,
+    });
     public static IEnumerable<MetadataModelRegistration> SemanticModels =>
-        TextModels.SelectMany(model => new[] { AnalysisCapability.CaptureSynopsis, AnalysisCapability.CaptureName, AnalysisCapability.CaptureClassification, AnalysisCapability.ImageAltText }
+        TextModels.SelectMany(model => LanguageModelCapabilities
             .Select(capability => new MetadataModelRegistration(CreateSemantic(model.Id, capability), model.Backend, model.Alias)));
     public static IEnumerable<AnalysisStep> Steps
     {
@@ -33,7 +38,7 @@ public static class MetadataEnrichmentConfiguration
         {
             MetadataProcessorDescriptor facts = CreateStructuredFacts(StructuredFacts.Limits);
             yield return new(facts.Capability, [facts.Id], TimeSpan.FromSeconds(10), facts.Limits.ExecutionTimeout);
-            foreach (AnalysisCapability capability in new[] { AnalysisCapability.CaptureSynopsis, AnalysisCapability.CaptureName, AnalysisCapability.CaptureClassification })
+            foreach (AnalysisCapability capability in LanguageModelCapabilities.Where(capability => capability != AnalysisCapability.ImageAltText))
             {
                 MetadataProcessorDescriptor[] candidates = TextModels.Select(model => CreateSemantic(model.Id, capability)).ToArray();
                 yield return new(capability, candidates.Select(candidate => candidate.Id), TimeSpan.FromMinutes(10), candidates[0].Limits.ExecutionTimeout);
@@ -59,7 +64,7 @@ public static class MetadataEnrichmentConfiguration
             capability == AnalysisCapability.ImageAltText ? "alt-text" :
             throw new ArgumentException("Unsupported semantic capability.", nameof(capability));
         return new(modelId + "-" + suffix, capability == AnalysisCapability.CaptureName ? "1" :
-            capability == AnalysisCapability.CaptureSynopsis ? "4" : "3", capability,
+            capability == AnalysisCapability.CaptureSynopsis || capability == AnalysisCapability.CaptureClassification ? "4" : "3", capability,
             capability == AnalysisCapability.ImageAltText
                 ? [AnalysisCapability.Description, AnalysisCapability.TextRecognition]
                 : capability == AnalysisCapability.CaptureSynopsis || capability == AnalysisCapability.CaptureName

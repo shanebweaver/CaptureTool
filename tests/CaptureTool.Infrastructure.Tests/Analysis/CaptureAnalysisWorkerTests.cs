@@ -693,7 +693,8 @@ public sealed partial class CaptureAnalysisWorkerTests
         public IMediaAnalyzer[] Adapters => [Preferred, Fallback, Description];
         public CaptureAnalysisConfiguration Configuration { get; }
         public CaptureAnalysisWorker Worker { get; }
-        public Fixture(TimeSpan? timeout = null, IEnumerable<IMetadataProcessor>? processors = null, AnalysisMediaKind kind = AnalysisMediaKind.Image)
+        public Fixture(TimeSpan? timeout = null, IEnumerable<IMetadataProcessor>? processors = null, AnalysisMediaKind kind = AnalysisMediaKind.Image,
+            IEnumerable<IAnalysisResources>? resources = null)
         {
             Store = Environment.CreateStore();
             Catalog = Environment.CreateCatalog();
@@ -708,7 +709,7 @@ public sealed partial class CaptureAnalysisWorkerTests
                 .. metadata.GroupBy(processor => processor.Descriptor.Capability).Select(group => new AnalysisStep(group.Key,
                     group.Select(processor => processor.Descriptor.Id), TimeSpan.FromSeconds(1), timeout ?? group.First().Descriptor.Limits.ExecutionTimeout)),
             ])]);
-            Worker = new(Store, Authorization, Source, Configuration, Adapters, Catalog, metadata);
+            Worker = new(Store, Authorization, Source, Configuration, Adapters, Catalog, metadata, resources);
         }
         public async Task<AnalysisRequest> EnqueueAsync(CancellationToken ct, string? language = null, IReadOnlyList<AnalysisCapability>? capabilities = null)
         {

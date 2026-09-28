@@ -1979,4 +1979,5 @@ SOFTWARE.
   <data name="CaptureNaming_Edit.ToolTipService.ToolTip" xml:space="preserve"><value>Переименовать</value></data>
   <data name="CaptureAction_SummaryAudioInputs" xml:space="preserve"><value>Расшифруйте аудио, чтобы создать сводку.</value></data>
   <data name="CapturePane_Loading.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Загрузка сведений</value></data>
+  <data name="CaptureAction_RelatedResults" xml:space="preserve"><value>Также создаёт другие предложения ИИ для этого снимка.</value></data>
 </root>

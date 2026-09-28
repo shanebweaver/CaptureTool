@@ -98,10 +98,6 @@ internal static class FoundryMetadataProtocol
 
     private static AnalyzerOutcome Rejected(string reason) => MetadataTextProtocol.Rejected(reason);
 
-    private const string SuggestionSchema = """
-        {"type":"object","additionalProperties":false,"required":["text","evidence"],"properties":{
-          "text":{"type":"string","minLength":1,"maxLength":400},"evidence":{"type":"integer","minimum":0,"maximum":LAST_SOURCE_ID}}}
-        """;
     private const string SynopsisSchema = """
         {"type":"object","additionalProperties":false,"required":["summary","evidence"],"properties":{
           "summary":{"anyOf":[{"type":"null"},{"type":"string","minLength":1,"maxLength":400}]},
@@ -117,9 +113,10 @@ internal static class FoundryMetadataProtocol
           "altText":{"anyOf":[{"type":"null"},{"type":"string","minLength":1,"maxLength":400}]},
           "evidence":{"anyOf":[{"type":"null"},{"type":"integer","minimum":0,"maximum":LAST_SOURCE_ID}]}}}
         """;
-    private static readonly string ClassificationSchema = """
+    private const string ClassificationSchema = """
         {"type":"object","additionalProperties":false,"required":["category","evidence","topics"],"properties":{
-          "category":{"enum":[null,"document","conversation","code","error","web-content","media","other"]},
-          "evidence":{"anyOf":[{"type":"null"},{"type":"integer","minimum":0,"maximum":LAST_SOURCE_ID}]},"topics":{"type":"array","maxItems":5,"items":SUGGESTION}}}
-        """.Replace("SUGGESTION", SuggestionSchema.Replace("\"maxLength\":400", "\"maxLength\":48", StringComparison.Ordinal), StringComparison.Ordinal);
+          "category":{"anyOf":[{"type":"null"},{"type":"string","enum":["document","conversation","code","error","web-content","media","other"]}]},
+          "evidence":{"anyOf":[{"type":"null"},{"type":"integer","minimum":0,"maximum":LAST_SOURCE_ID}]},
+          "topics":{"type":"array","maxItems":5,"uniqueItems":true,"items":{"type":"string","minLength":1,"maxLength":48}}}}
+        """;
 }

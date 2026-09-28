@@ -55,7 +55,8 @@ if (args.Contains("--windows-language-probe", StringComparer.Ordinal))
 if (args.Contains("--stability-checks", StringComparer.Ordinal))
     return await MetadataStabilityChecks.RunAsync(storage, Path.Combine(output, "stability", DateTime.UtcNow.ToString("yyyyMMdd-HHmmss")), 3);
 if (args.Contains("--screenshot-checks", StringComparer.Ordinal))
-    return await ScreenshotChecks.RunAsync(storage, Path.Combine(output, "screenshots", DateTime.UtcNow.ToString("yyyyMMdd-HHmmss")));
+    return await ScreenshotChecks.RunAsync(storage, Path.Combine(output, "screenshots", DateTime.UtcNow.ToString("yyyyMMdd-HHmmss")),
+        args.Contains("--classification-only", StringComparer.Ordinal));
 IEnumerable<MetadataModelRegistration> metadataModels = MetadataEnrichmentConfiguration.SemanticModels;
 int modelOption = Array.IndexOf(args, "--enrichment-model");
 if (modelOption >= 0)

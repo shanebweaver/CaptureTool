@@ -215,12 +215,59 @@ public sealed class FoundryMetadataTests
     public void ClassificationVocabularyAndTopicsAreValidated()
     {
         var input = Input(AnalysisCapability.CaptureClassification);
-        const string classification = """{"category":"document","evidence":0,"topics":[{"text":"Invoices","evidence":0}]}""";
+        const string classification = """{"category":"document","evidence":0,"topics":["Invoices"]}""";
         var outcome = Parse(classification, input);
         Assert.AreEqual(CaptureCategory.Document, ((CaptureClassificationMetadata)outcome.Payload!).Category);
         Assert.AreEqual("invoices", ((CaptureClassificationMetadata)outcome.Payload!).Topics[0].Text);
+        Assert.AreEqual(input.Entries[0].ResultId, ((CaptureClassificationMetadata)outcome.Payload!).Topics[0].Evidence[0].ResultId);
         Assert.AreEqual(AnalyzerOutcomeKind.Failed, Parse(classification.Replace("document", "personality"), input).Kind);
         Assert.AreEqual(AnalyzerOutcomeKind.Failed, Parse(classification.Replace("\"document\"", "null"), input).Kind);
+    }
+
+    [TestMethod]
+    public void ClassificationUsesFlatTopicsAndStringOnlyEnums()
+    {
+        using var request = JsonDocument.Parse(FoundryMetadataProtocol.CreateRequest("model", Input(AnalysisCapability.CaptureClassification)));
+        var properties = request.RootElement.GetProperty("response_format").GetProperty("json_schema").GetProperty("schema").GetProperty("properties");
+        Assert.AreEqual("string", properties.GetProperty("topics").GetProperty("items").GetProperty("type").GetString());
+        Assert.AreEqual(5, properties.GetProperty("topics").GetProperty("maxItems").GetInt32());
+        var category = properties.GetProperty("category").GetProperty("anyOf");
+        Assert.AreEqual("null", category[0].GetProperty("type").GetString());
+        Assert.IsTrue(category[1].GetProperty("enum").EnumerateArray().All(value => value.ValueKind == JsonValueKind.String));
+    }
+
+    [TestMethod]
+    [DataRow("[\"invoice\"]", "99")]
+    [DataRow("[\"invoice\"]", "null")]
+    [DataRow("[null]", "0")]
+    [DataRow("[\"\"]", "0")]
+    [DataRow("[{\"text\":\"invoice\",\"evidence\":0}]", "0")]
+    public void MalformedTopicsAndMissingOrFabricatedSharedEvidenceAreRejected(string topics, string evidence)
+    {
+        string output = "{\"category\":\"document\",\"topics\":" + topics + ",\"evidence\":" + evidence + "}";
+        Assert.AreEqual(AnalyzerOutcomeKind.Failed, Parse(output, Input(AnalysisCapability.CaptureClassification)).Kind);
+    }
+
+    [TestMethod]
+    public void ClassificationTopicBoundsAndAbstentionAreValidated()
+    {
+        var input = Input(AnalysisCapability.CaptureClassification);
+        string output = "{\"category\":\"document\",\"topics\":[\"" + new string('x', 49) + "\"],\"evidence\":0}";
+        Assert.AreEqual("invalid-text-topics", Parse(output, input).FailureCode);
+        Assert.AreEqual("invalid-text-topics", Parse("""{"category":null,"evidence":null,"topics":["invoice"]}""", input).FailureCode);
+    }
+
+    [TestMethod]
+    public void RepeatedAndExcessTopicsAreReducedWithoutAnotherInference()
+    {
+        var input = Input(AnalysisCapability.CaptureClassification);
+        var result = Parse("""{"category":"document","evidence":0,"topics":["Invoice","invoice","billing","payment","deadline","total","document","accounting"]}""", input);
+        Assert.AreEqual(AnalyzerOutcomeKind.Succeeded, result.Kind);
+        var classification = (CaptureClassificationMetadata)result.Payload!;
+        CollectionAssert.AreEqual(new[] { "invoice", "billing", "payment", "deadline", "total" }, classification.Topics.Select(topic => topic.Text).ToArray());
+        Assert.IsTrue(classification.Topics.All(topic => topic.Evidence.Single().ResultId == input.Entries[0].ResultId));
+        // Invalid content must not be hidden behind the selection limit.
+        Assert.AreEqual(AnalyzerOutcomeKind.Failed, Parse("""{"category":"document","evidence":0,"topics":["one","two","three","four","five",""]}""", input).Kind);
     }
 
     [TestMethod]

@@ -158,7 +158,7 @@
                     Command="{x:Bind ViewModel.CancelNameCommand, Mode=OneWay}"
                     Style="{StaticResource SubtleButtonStyle}"
                     Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.IsEditingName), Mode=OneWay}">
-                    <FontIcon FontSize="14" Glyph="&#xE711;" />
+                    <FontIcon FontSize="14" Glyph="&#xE74D;" />
                 </Button>
             </Grid>
         </StackPanel>

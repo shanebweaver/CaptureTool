@@ -37,6 +37,8 @@ public sealed class CaptureDetailsViewModel : ViewModelBase
     private CaptureDetailsSnapshot? _snapshot;
     private bool _requesting;
     private AnalysisCapability? _requestedAction;
+    private Guid? _actionNoticeRun;
+    private readonly HashSet<(string Message, bool Error)> _actionNotices = [];
     private string? _readNotice;
     private bool _fileUnavailable;
     private readonly Dictionary<AnalysisCapability, string> _requestFailures = [];
@@ -81,7 +83,8 @@ public sealed class CaptureDetailsViewModel : ViewModelBase
     public IRelayCommand CancelNameCommand { get; }
     public IAsyncRelayCommand SaveNameCommand { get; }
     public IAsyncRelayCommand SuggestNameCommand { get; }
-    public string NameSuggestionToolTip => _text.GetString("CaptureNaming_Suggest");
+    public string NameSuggestionToolTip => _text.GetString("CaptureNaming_Suggest") + Environment.NewLine + RelatedResultsHint;
+    private string RelatedResultsHint => _text.GetString("CaptureAction_RelatedResults");
     public string FileName { get; private set => Set(ref field, value); } = string.Empty;
     public string FilePath => _path ?? string.Empty;
     public CaptureFileProperties FileProperties { get; private set => Set(ref field, value); } = new();
@@ -166,6 +169,7 @@ public sealed class CaptureDetailsViewModel : ViewModelBase
         if (NeedsSummaryInputs && (capability == AnalysisCapability.CaptureSynopsis || capability == AnalysisCapability.CaptureName)) return;
         _requesting = true;
         _requestedAction = capability;
+        _actionNotices.Clear();
         _requestFailures.Remove(capability);
         UpdateActions();
         try
@@ -191,6 +195,11 @@ public sealed class CaptureDetailsViewModel : ViewModelBase
 
     private void UpdateActions()
     {
+        if (_actionNoticeRun != _snapshot?.Run?.Id)
+        {
+            _actionNoticeRun = _snapshot?.Run?.Id;
+            _actionNotices.Clear();
+        }
         bool pending = _snapshot?.Run?.IsPending == true;
         foreach (var action in Actions)
         {
@@ -211,9 +220,9 @@ public sealed class CaptureDetailsViewModel : ViewModelBase
                     !_disposed && !_memory.State.IsDeleting && _editorText.CanExtract && !_editorText.IsRunning, editorStatus);
                 continue;
             }
-            bool running = pending && _memory.State.Policy.IsAllowed && _snapshot!.Run!.Steps.Contains(action.Capability) &&
-                !_snapshot.Run.CompletedSteps.Any(step => step.Capability == action.Capability);
             var result = _snapshot?.Record?.Results.SingleOrDefault(result => result.Payload.Capability == action.Capability);
+            bool running = result == null && pending && _memory.State.Policy.IsAllowed && _snapshot!.Run!.Steps.Contains(action.Capability) &&
+                !_snapshot.Run.CompletedSteps.Any(step => step.Capability == action.Capability);
             string? status = result?.Payload switch
             {
                 TextRecognitionMetadata { Regions.Count: 0 } => "NoText",
@@ -233,7 +242,8 @@ public sealed class CaptureDetailsViewModel : ViewModelBase
             if (result == null && !running && _requestFailures.TryGetValue(action.Capability, out string? failure)) status = failure;
             string message = status == null ? string.Empty : _text.GetString("CaptureAction_" + status);
             if (!running && message.Length > 0 && message != action.Status &&
-                (action.IsRunning || _requestedAction == action.Capability))
+                (action.IsRunning || _requestedAction == action.Capability) &&
+                _actionNotices.Add((message, status == "Failed")))
                 Notify(message, error: status == "Failed");
             action.Update(running, result != null || action == NameAction && (_acceptedName || Content.SuggestedName.Length > 0),
                 !_disposed && !_requesting && !pending && !_memory.State.IsDeleting &&
@@ -242,8 +252,9 @@ public sealed class CaptureDetailsViewModel : ViewModelBase
                 message);
         }
         SummaryAction.Label = _text.GetString(IsImage ? "CaptureAction_ScreenshotSummary" : "CaptureAction_Summary");
+        AltTextAction.ToolTip = AltTextAction.Label + Environment.NewLine + RelatedResultsHint;
         SummaryAction.ToolTip = NeedsSummaryInputs ? _text.GetString(HasVisualMedia
-            ? "CaptureAction_SummaryInputs" : "CaptureAction_SummaryAudioInputs") : SummaryAction.Label;
+            ? "CaptureAction_SummaryInputs" : "CaptureAction_SummaryAudioInputs") : SummaryAction.Label + Environment.NewLine + RelatedResultsHint;
         RaisePropertyChanged(nameof(IsImage));
         IsGeneratingSummary = SummaryAction.IsRunning;
         IsGeneratingName = NameAction.IsRunning;

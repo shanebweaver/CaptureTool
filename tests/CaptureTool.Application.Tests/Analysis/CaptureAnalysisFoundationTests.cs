@@ -54,9 +54,11 @@ public sealed class CaptureAnalysisFoundationTests
         Assert.AreEqual("zxing-image-qr", image.Steps[1].Candidates.Single());
         Assert.AreEqual("image-v9", image.Version);
         Assert.AreEqual(AnalysisCapability.ImageAltText, image.Steps.Last().Capability);
-        CollectionAssert.AreEqual(new[] { AnalysisCapability.TextRecognition, AnalysisCapability.Description, AnalysisCapability.CaptureSynopsis },
+        CollectionAssert.AreEqual(new[] { AnalysisCapability.TextRecognition, AnalysisCapability.Description, AnalysisCapability.CaptureSynopsis,
+            AnalysisCapability.CaptureName, AnalysisCapability.ImageAltText, AnalysisCapability.CaptureClassification },
             configuration.SelectPlan(AnalysisMediaKind.Image, CaptureAnalysisConfiguration.ForAction(AnalysisMediaKind.Image, AnalysisCapability.CaptureSynopsis)).Steps.Select(step => step.Capability).ToArray());
-        CollectionAssert.AreEqual(new[] { AnalysisCapability.TextRecognition, AnalysisCapability.Description, AnalysisCapability.CaptureName },
+        CollectionAssert.AreEqual(new[] { AnalysisCapability.TextRecognition, AnalysisCapability.Description, AnalysisCapability.CaptureName,
+            AnalysisCapability.CaptureSynopsis, AnalysisCapability.ImageAltText, AnalysisCapability.CaptureClassification },
             configuration.SelectPlan(AnalysisMediaKind.Image, CaptureAnalysisConfiguration.ForAction(AnalysisMediaKind.Image, AnalysisCapability.CaptureName)).Steps.Select(step => step.Capability).ToArray());
         Assert.AreEqual("video-v8", video.Version);
         Assert.AreEqual("audio-v6", configuration.Plans.Single(plan => plan.MediaKind == AnalysisMediaKind.Audio).Version);
@@ -65,6 +67,29 @@ public sealed class CaptureAnalysisFoundationTests
             Assert.AreEqual(AnalysisCapability.FileDetails, plan.Steps[0].Capability);
             Assert.AreEqual("windows-file-details", plan.Steps[0].Candidates.Single());
         }
+    }
+
+    [TestMethod]
+    public void LlmBatchesPrioritizeTheRequestedOutputAndKeepSourceActionsSeparate()
+    {
+        var configuration = CaptureAnalysisConfiguration.CreateDefault();
+        foreach (var kind in Enum.GetValues<AnalysisMediaKind>())
+        foreach (var requested in MetadataEnrichmentConfiguration.LanguageModelCapabilities
+            .Where(capability => kind == AnalysisMediaKind.Image || capability != AnalysisCapability.ImageAltText))
+        {
+            var plan = configuration.SelectPlan(kind, CaptureAnalysisConfiguration.ForAction(kind, requested));
+            var outputs = plan.Steps.Where(step => MetadataEnrichmentConfiguration.LanguageModelCapabilities.Contains(step.Capability)).ToArray();
+            Assert.AreEqual(requested, outputs[0].Capability);
+            Assert.HasCount(kind == AnalysisMediaKind.Image ? 4 : 3, outputs);
+            if (requested != AnalysisCapability.CaptureClassification)
+                Assert.AreEqual(AnalysisCapability.CaptureClassification, outputs[^1].Capability,
+                    "Background classification must not delay name, summary, or alt text.");
+            CollectionAssert.AreEqual(plan.Steps.Select(step => step.Capability).ToArray(),
+                configuration.SelectPlan(kind, plan.Steps.Select(step => step.Capability).ToArray()).Steps.Select(step => step.Capability).ToArray(),
+                "Persisted execution order must survive reconstruction between steps.");
+        }
+        foreach (var requested in new[] { AnalysisCapability.TextRecognition, AnalysisCapability.QrCodeDetection, AnalysisCapability.Transcription })
+            CollectionAssert.AreEqual(new[] { requested }, CaptureAnalysisConfiguration.ForAction(AnalysisMediaKind.Video, requested).ToArray());
     }
 
     [TestMethod]

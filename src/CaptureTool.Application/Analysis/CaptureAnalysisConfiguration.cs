@@ -9,7 +9,7 @@ public sealed class CaptureAnalysisConfiguration
     public IReadOnlyList<MediaAnalysisPlan> Plans { get; }
     public int MaximumBatchCaptures { get; }
 
-    /// <summary>Selects only requested work; prerequisites are never implicitly scheduled.</summary>
+    /// <summary>Selects requested work. Sources keep their configured order; independent LLM outputs follow request order.</summary>
     public MediaAnalysisPlan SelectPlan(AnalysisMediaKind kind, IReadOnlyList<AnalysisCapability>? capabilities = null)
     {
         MediaAnalysisPlan configured = Plans.Single(plan => plan.MediaKind == kind);
@@ -17,7 +17,11 @@ public sealed class CaptureAnalysisConfiguration
         if (capabilities.Count == 0 || capabilities.Distinct().Count() != capabilities.Count ||
             capabilities.Any(capability => !configured.Steps.Any(step => step.Capability == capability)))
             throw new ArgumentException("Request supported, distinct analysis capabilities.", nameof(capabilities));
-        return new(kind, configured.Version, configured.Steps.Where(step => capabilities.Contains(step.Capability)));
+        var selected = configured.Steps.Where(step => capabilities.Contains(step.Capability)).ToArray();
+        return new(kind, configured.Version,
+            selected.Where(step => !MetadataEnrichmentConfiguration.LanguageModelCapabilities.Contains(step.Capability))
+                .Concat(capabilities.Where(MetadataEnrichmentConfiguration.LanguageModelCapabilities.Contains)
+                    .Select(capability => selected.Single(step => step.Capability == capability))));
     }
 
     public CaptureAnalysisConfiguration(IEnumerable<MediaAnalysisPlan> plans, int maximumBatchCaptures = 16)
@@ -71,10 +75,16 @@ public sealed class CaptureAnalysisConfiguration
         }
     }
 
-    /// <summary>Dependencies explicitly authorized by a screenshot summary, name, or alt-text action.</summary>
-    public static IReadOnlyList<AnalysisCapability> ForAction(AnalysisMediaKind kind, AnalysisCapability capability) =>
-        kind == AnalysisMediaKind.Image && (capability == AnalysisCapability.CaptureSynopsis || capability == AnalysisCapability.CaptureName || capability == AnalysisCapability.ImageAltText)
-            ? [AnalysisCapability.TextRecognition, AnalysisCapability.Description, capability] : [capability];
+    /// <summary>One LLM action prepares the capture's other supported LLM outputs while the model is resident.</summary>
+    public static IReadOnlyList<AnalysisCapability> ForAction(AnalysisMediaKind kind, AnalysisCapability capability)
+    {
+        var outputs = MetadataEnrichmentConfiguration.LanguageModelCapabilities
+            .Where(output => kind == AnalysisMediaKind.Image || output != AnalysisCapability.ImageAltText).ToArray();
+        if (!outputs.Contains(capability)) return [capability];
+        // Publish the requested output first. Remaining outputs reuse the same source evidence and model.
+        return [.. kind == AnalysisMediaKind.Image ? new[] { AnalysisCapability.TextRecognition, AnalysisCapability.Description } : [],
+            capability, .. outputs.Where(output => output != capability)];
+    }
 
     public static CaptureAnalysisConfiguration CreateDefault() => new([
         new(AnalysisMediaKind.Image, "image-v9", [

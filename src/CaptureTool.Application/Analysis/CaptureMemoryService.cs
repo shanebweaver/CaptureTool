@@ -137,8 +137,8 @@ internal sealed class CaptureMemoryService : ICaptureMemoryService, IDisposable
         long epoch = Interlocked.Read(ref _epoch);
         return GuardAsync(ct => LockedAsync(async () =>
         {
-            // Only an explicit UI action enters this method. Screenshot insight actions
-            // include their declared prerequisites; cached results are reused by the worker.
+            // An explicit LLM action admits one batch with its prerequisites and companion
+            // outputs, keeping the model resident. The worker reuses each cached result.
             if (!Current(epoch) || !_authorization.IsAllowed || Volatile.Read(ref _deleting) != 0 ||
                 !Path.IsPathFullyQualified(path) || !_files.FileExists(path)) return;
             CaptureFileType media = CaptureFileTypeDetector.DetectFileType(path);

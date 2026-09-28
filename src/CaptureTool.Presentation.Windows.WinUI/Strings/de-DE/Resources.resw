@@ -1973,4 +1973,5 @@ SOFTWARE.
   <data name="CaptureNaming_Edit.ToolTipService.ToolTip" xml:space="preserve"><value>Umbenennen</value></data>
   <data name="CaptureAction_SummaryAudioInputs" xml:space="preserve"><value>Transkribieren Sie Audio, um eine Zusammenfassung zu erstellen.</value></data>
   <data name="CapturePane_Loading.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Details werden geladen</value></data>
+  <data name="CaptureAction_RelatedResults" xml:space="preserve"><value>Erstellt auch weitere KI-Vorschläge für diese Aufnahme.</value></data>
 </root>
