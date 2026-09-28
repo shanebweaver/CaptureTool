@@ -2138,16 +2138,16 @@ SOFTWARE.
   <data name="CaptureDetails_AudioBitrate" xml:space="preserve"><value>Audio bitrate</value></data>
   <data name="CaptureDetails_AudioCodec" xml:space="preserve"><value>Audio codec</value></data>
   <data name="CaptureDetails_Deleting" xml:space="preserve"><value>Saved analysis is being deleted.</value></data>
-  <data name="CaptureDetails_Unavailable" xml:space="preserve"><value>Details could not be read. Try refreshing.</value></data>
-  <data name="CaptureDetails_SourceChanged" xml:space="preserve"><value>This file has changed since analysis. Run analysis again in Settings to update its details.</value></data>
-  <data name="CaptureDetails_SourceUnavailable" xml:space="preserve"><value>The capture file is unavailable. Its saved details cannot be verified.</value></data>
+  <data name="CaptureDetails_Unavailable" xml:space="preserve"><value>Couldn&apos;t load capture details.</value></data>
+  <data name="CaptureDetails_SourceChanged" xml:space="preserve"><value>The file has changed since these results were saved.</value></data>
+  <data name="CaptureDetails_SourceUnavailable" xml:space="preserve"><value>Couldn&apos;t open the file.</value></data>
   <data name="CaptureDetails_Analyzing" xml:space="preserve"><value>Analysis is queued or in progress. Details update as results become available.</value></data>
   <data name="CaptureDetails_Paused" xml:space="preserve"><value>Analysis stopped. Choose an action to try again.</value></data>
   <data name="CaptureDetails_Partial" xml:space="preserve"><value>Some analysis did not complete. Available saved results are shown.</value></data>
   <data name="CaptureDetails_Empty" xml:space="preserve"><value>No saved text yet. Choose an action above to extract what you need.</value></data>
   <data name="CaptureDetails_Retained" xml:space="preserve"><value>Some results are from an earlier analysis of this same file.</value></data>
-  <data name="CaptureDetails_Limited" xml:space="preserve"><value>Some content or results were omitted. These insights may not cover the entire capture.</value></data>
-  <data name="CaptureDetails_Copied" xml:space="preserve"><value>Text copied.</value></data>
+  <data name="CaptureDetails_Limited" xml:space="preserve"><value>Some content was skipped. Results may be incomplete.</value></data>
+  <data name="CaptureDetails_Copied" xml:space="preserve"><value>Copied to clipboard.</value></data>
   <data name="CaptureDetails_CopyFailed" xml:space="preserve"><value>Could not copy text. Please try again.</value></data>
   <data name="HomePage_RecentCaptureDetailsMenuItem.Text" xml:space="preserve"><value>Details</value></data>
   <data name="CaptureDetails_AnalyzedFile" xml:space="preserve"><value>Analyzed file</value></data>
@@ -2160,13 +2160,13 @@ SOFTWARE.
   <data name="CapturePane_OpenFolder.Content" xml:space="preserve"><value>Open folder</value></data>
   <data name="CapturePane_Technical.Header" xml:space="preserve"><value>Technical details</value></data>
   <data name="CapturePane_Summary.Text" xml:space="preserve"><value>AI summary</value></data>
-  <data name="CapturePane_PendingEdits.Message" xml:space="preserve"><value>Properties describe the source file. Pending edits are not included.</value></data>
-  <data name="CapturePane_FileUnavailable" xml:space="preserve"><value>File properties are unavailable. Try refreshing after the file is ready.</value></data>
+  <data name="CapturePane_PendingEdits" xml:space="preserve"><value>Details and summaries reflect the saved file.</value></data>
+  <data name="CapturePane_FileUnavailable" xml:space="preserve"><value>Couldn&apos;t read file properties.</value></data>
   <data name="CapturePane_FolderUnavailable" xml:space="preserve"><value>The folder could not be opened.</value></data>
   <data name="CapturePane_DetailsTab.Header" xml:space="preserve"><value>Details</value></data>
   <data name="CapturePane_TextTab" xml:space="preserve"><value>Text</value></data>
-  <data name="CapturePane_Search.PlaceholderText" xml:space="preserve"><value>Find in this capture</value></data>
-  <data name="CapturePane_Search.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Find in this capture</value></data>
+  <data name="CapturePane_Search.PlaceholderText" xml:space="preserve"><value>Find text</value></data>
+  <data name="CapturePane_Search.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Find text</value></data>
   <data name="CapturePane_SourceFilter.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Text source</value></data>
   <data name="CapturePane_Previous.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Previous result</value></data>
   <data name="CapturePane_Next.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Next result</value></data>
@@ -2178,15 +2178,15 @@ SOFTWARE.
   <data name="CapturePane_ScreenText" xml:space="preserve"><value>On-screen text</value></data>
   <data name="CapturePane_Speech" xml:space="preserve"><value>Speech</value></data>
   <data name="CapturePane_Codes" xml:space="preserve"><value>QR codes</value></data>
-  <data name="CapturePane_PassageCount" xml:space="preserve"><value>{0} passages</value></data>
-  <data name="CapturePane_MatchCount" xml:space="preserve"><value>{0} matching passages</value></data>
-  <data name="CapturePane_LocationUnavailable" xml:space="preserve"><value>No location is available in the current view. The image may have changed or the passage may be outside the trim.</value></data>
-  <data name="CapturePane_ActionFailed" xml:space="preserve"><value>This action is unavailable. Try refreshing the capture details.</value></data>
+  <data name="CapturePane_PassageCount" xml:space="preserve"><value>Results: {0}</value></data>
+  <data name="CapturePane_MatchCount" xml:space="preserve"><value>Matches: {0}</value></data>
+  <data name="CapturePane_LocationUnavailable" xml:space="preserve"><value>This text can&apos;t be located in the current view.</value></data>
+  <data name="CapturePane_ActionFailed" xml:space="preserve"><value>Couldn&apos;t open this result.</value></data>
   <data name="CaptureNaming_Header.Text" xml:space="preserve"><value>Suggest names for new captures</value></data>
   <data name="CaptureNaming_Description.Text" xml:space="preserve"><value>Create AI filename suggestions after capture. Files keep their names until you accept a suggestion.</value></data>
   <data name="CaptureNaming_Toggle.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Suggest names for new captures</value></data>
-  <data name="CaptureNaming_Edit.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Edit capture name</value></data>
-  <data name="CaptureNaming_Input.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Capture name</value></data>
+  <data name="CaptureNaming_Edit.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Rename</value></data>
+  <data name="CaptureNaming_Input.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>File name</value></data>
   <data name="CaptureNaming_Save.ToolTipService.ToolTip" xml:space="preserve"><value>Rename file</value></data>
   <data name="CaptureNaming_Save.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Rename file</value></data>
   <data name="CaptureNaming_Cancel.ToolTipService.ToolTip" xml:space="preserve"><value>Cancel</value></data>
@@ -2226,7 +2226,7 @@ SOFTWARE.
   <data name="CaptureAction_Qr" xml:space="preserve"><value>Find QR codes</value></data>
   <data name="CaptureAction_Transcript" xml:space="preserve"><value>Transcribe audio</value></data>
   <data name="CaptureAction_DescriptionHeading.Text" xml:space="preserve"><value>AI description</value></data>
-  <data name="CaptureAction_SummaryInputs.Text" xml:space="preserve"><value>Extract text, transcribe audio, or generate a description first. Summaries and name suggestions use those saved results.</value></data>
+  <data name="CaptureAction_SummaryInputs" xml:space="preserve"><value>Extract text or transcribe audio to create a summary.</value></data>
   <data name="CaptureAction_NoText" xml:space="preserve"><value>No text found.</value></data>
   <data name="CaptureAction_NoQr" xml:space="preserve"><value>No QR codes found.</value></data>
   <data name="CaptureAction_NoSpeech" xml:space="preserve"><value>No speech found.</value></data>
@@ -2234,15 +2234,17 @@ SOFTWARE.
   <data name="CaptureAction_Unavailable" xml:space="preserve"><value>This action is not available on this device.</value></data>
   <data name="CaptureAction_Failed" xml:space="preserve"><value>This action could not finish. You can try again.</value></data>
   <data name="CapturePane_SummaryTab.Header" xml:space="preserve"><value>Summary</value></data>
-  <data name="CaptureAction_ScreenshotSummary" xml:space="preserve"><value>Summarize screenshot</value></data>
+  <data name="CaptureAction_ScreenshotSummary" xml:space="preserve"><value>Summarize image</value></data>
   <data name="CaptureAction_AltText" xml:space="preserve"><value>Generate alt text</value></data>
-  <data name="CaptureSummary_Hint.Text" xml:space="preserve"><value>Get the main points from this image. Text and visual details are read only when needed.</value></data>
+  <data name="CaptureSummary_Hint.Text" xml:space="preserve"><value>Create an AI summary of this image.</value></data>
   <data name="CaptureSummary_AltText.Text" xml:space="preserve"><value>Alt text</value></data>
-  <data name="CaptureSummary_AltTextHint.Text" xml:space="preserve"><value>Create a short description for people who cannot see the image. Review it before sharing.</value></data>
+  <data name="CaptureSummary_AltTextHint.Text" xml:space="preserve"><value>Create a brief description for screen readers. Review it before sharing.</value></data>
   <data name="CaptureSummary_CopySummary.Content" xml:space="preserve"><value>Copy summary</value></data>
   <data name="CaptureSummary_CopyAltText.Content" xml:space="preserve"><value>Copy alt text</value></data>
   <data name="CaptureAction_NoSuggestion" xml:space="preserve"><value>There is not enough information for a suggestion.</value></data>
-  <data name="CaptureNaming_Suggest" xml:space="preserve"><value>Suggest a file name with AI. Review and edit it before saving.</value></data>
+  <data name="CaptureNaming_Suggest" xml:space="preserve"><value>Suggest a file name with AI</value></data>
   <data name="CaptureNaming_AiGenerating" xml:space="preserve"><value>Suggesting a name with AI…</value></data>
-  <data name="CaptureNaming_Edit.ToolTipService.ToolTip" xml:space="preserve"><value>Edit capture name</value></data>
+  <data name="CaptureNaming_Edit.ToolTipService.ToolTip" xml:space="preserve"><value>Rename</value></data>
+  <data name="CaptureAction_SummaryAudioInputs" xml:space="preserve"><value>Transcribe audio to create a summary.</value></data>
+  <data name="CapturePane_Loading.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Loading details</value></data>
 </root>

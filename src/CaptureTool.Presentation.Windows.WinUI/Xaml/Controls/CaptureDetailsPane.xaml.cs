@@ -24,6 +24,7 @@ public sealed partial class CaptureDetailsPane : UserControl, INotifyPropertyCha
     private static int _preferredTab;
     private CaptureTextPassage? _selectedPassage;
     private bool _navigationQueued;
+    private bool _userNavigationQueued;
     private Task _openTask = Task.CompletedTask;
     private bool _extractTextRequested;
     public CaptureEditorTextSession? EditorText { get; set; }
@@ -59,6 +60,7 @@ public sealed partial class CaptureDetailsPane : UserControl, INotifyPropertyCha
         }
         if (ViewModel != null)
         {
+            ViewModel.IsActive = active;
             ViewModel.HasEdits = edits;
             ViewModel.SetNavigationContext(navigation);
             if (becameReady) _ = ViewModel.RefreshAllAsync();
@@ -138,31 +140,41 @@ public sealed partial class CaptureDetailsPane : UserControl, INotifyPropertyCha
         TextOverlayChanged?.Invoke(show ? ViewModel!.TextPassages : null);
         if (show) RequestNavigation();
     }
-    private void ScrollToPassage(CaptureTextPassage passage) => Passages.ScrollIntoView(passage, ScrollIntoViewAlignment.Leading);
+    private void ScrollToPassage(CaptureTextPassage passage)
+    {
+        Passages.ScrollIntoView(passage, ScrollIntoViewAlignment.Leading);
+        RequestNavigation(userInitiated: true);
+    }
     private void SelectionChanged(object? sender, PropertyChangedEventArgs e)
     {
         if (e.PropertyName != nameof(CaptureTextViewModel.SelectedPassage)) return;
         if (_selectedPassage != null) _selectedPassage.PropertyChanged -= SelectedPassageChanged;
         _selectedPassage = ViewModel?.TextContent.SelectedPassage;
         if (_selectedPassage != null) _selectedPassage.PropertyChanged += SelectedPassageChanged;
-        RequestNavigation();
+        RequestNavigation(userInitiated: _selectedPassage != null);
     }
     private void SelectedPassageChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (e.PropertyName is nameof(CaptureTextPassage.SelectedLocation) or nameof(CaptureTextPassage.CanNavigate)) RequestNavigation();
+        if (e.PropertyName is nameof(CaptureTextPassage.SelectedLocation) or nameof(CaptureTextPassage.CanNavigate))
+            RequestNavigation(userInitiated: e.PropertyName == nameof(CaptureTextPassage.SelectedLocation));
     }
-    private void RequestNavigation()
+    private void RequestNavigation(bool userInitiated = false)
     {
+        _userNavigationQueued |= userInitiated;
         // ItemClick and selection bindings can both fire for the same interaction.
         if (_navigationQueued) return;
         _navigationQueued = DispatcherQueue.TryEnqueue(() =>
         {
             _navigationQueued = false;
+            bool requested = _userNavigationQueued;
+            _userNavigationQueued = false;
             if (!_active || ContentTabs.SelectedIndex != 1) return;
             ClearLocation?.Invoke();
             if (ViewModel?.TextContent.SelectedPassage is { CanNavigate: true } passage &&
                 Navigate?.Invoke(passage) != true)
                 ViewModel.ReportActionFailure();
+            else if (requested && ViewModel?.TextContent.SelectedPassage is { CanNavigate: false })
+                ViewModel.ReportLocationUnavailable();
         });
     }
     private void ViewModelChanged(object? sender, PropertyChangedEventArgs e)
@@ -199,7 +211,7 @@ public sealed partial class CaptureDetailsPane : UserControl, INotifyPropertyCha
         if (e.ClickedItem is CaptureTextPassage passage && ViewModel != null)
         {
             ViewModel.TextContent.SelectedPassage = passage;
-            RequestNavigation();
+            RequestNavigation(userInitiated: true);
         }
     }
     private async void OpenLink_Click(object sender, RoutedEventArgs e)

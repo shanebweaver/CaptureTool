@@ -41,6 +41,21 @@ public sealed partial class ImageEditTextExtractionUiTests
         Assert.AreEqual(expectedCopy, ReadDetailsClipboard(), "Paragraphs should read down each column, with blank lines between groups.");
         Screenshot("all-paragraphs");
 
+        var qrBounds = Element("CaptureAction_Qr").BoundingRectangle;
+        var searchBounds = Element("CapturePane_Search").BoundingRectangle;
+        string qrLabel = Element("CaptureAction_Qr").Name;
+        Element("CaptureAction_Qr").Patterns.Invoke.Pattern.Invoke();
+        var qrLoading = Element("CaptureAction_Qr_Loading");
+        Assert.IsTrue(qrBounds.Contains(qrLoading.BoundingRectangle), "Progress stays inside the action button.");
+        Assert.AreEqual(qrBounds, Element("CaptureAction_Qr").BoundingRectangle, "Loading must not resize the button.");
+        Assert.AreEqual(qrLabel, Element("CaptureAction_Qr").Name, "Loading keeps the action label.");
+        Assert.AreEqual(searchBounds, Element("CapturePane_Search").BoundingRectangle, "Loading must not shift the search field.");
+        Screenshot("action-loading");
+        WaitForElementByName(window, automation, "No QR codes found.", InteractionTimeout);
+        Assert.IsNull(Element("CaptureDetailsPane").FindFirstDescendant(automation.ConditionFactory.ByName("No QR codes found.")),
+            "Empty-result feedback belongs in the snackbar.");
+        Screenshot("empty-result-notification");
+
         CheckPassage("Morning light", paragraphs[3], "paragraph-selection");
         CheckPassage("Later,", paragraphs[5], "indented-paragraph-selection");
         CheckPassage("3. Keep", paragraphs[9], "wrapped-list-selection");

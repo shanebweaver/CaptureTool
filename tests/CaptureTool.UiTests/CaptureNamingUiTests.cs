@@ -45,6 +45,14 @@ public sealed partial class ImageEditTextExtractionUiTests
             double tabsTop = Element("CapturePane_DetailsTab").BoundingRectangle.Top;
             var nameBounds = Element("CaptureDetailsFileName").BoundingRectangle;
             var actionBounds = Element("CaptureAction_Name").BoundingRectangle;
+            Element("CaptureName_Edit").Patterns.Invoke.Pattern.Invoke();
+            Element("CaptureName_Input").AsTextBox().Text = string.Empty;
+            Element("CaptureName_Save").Patterns.Invoke.Pattern.Invoke();
+            WaitForElementByName(window, automation, resources["CaptureNaming_Invalid"], InteractionTimeout);
+            Assert.IsNull(Element("CaptureDetailsPane").FindFirstDescendant(automation.ConditionFactory.ByName(resources["CaptureNaming_Invalid"])));
+            Assert.AreEqual(tabsTop, Element("CapturePane_DetailsTab").BoundingRectangle.Top, 1, "Rename feedback must not shift the pane.");
+            Screenshot("rename-validation");
+            Element("CaptureName_Cancel").Patterns.Invoke.Pattern.Invoke();
             Screenshot("filename-idle");
             Element("CaptureAction_Name").Patterns.Invoke.Pattern.Invoke();
             var loading = Element("CaptureAction_Name_Loading");
@@ -106,7 +114,9 @@ public sealed partial class ImageEditTextExtractionUiTests
             WaitFor(() => Element("CaptureDetailsFileName").Name == "Partner demo notes.png" ? window : null,
                 InteractionTimeout, "chosen name survives deletion and restart");
             Element("CapturePane_TextTab").Patterns.SelectionItem.Pattern.Select();
-            WaitForElementByName(Element("CaptureDetailsPane"), automation, resources["CaptureDetails_Empty"], InteractionTimeout);
+            Assert.IsTrue(Element("CaptureAction_Text").IsEnabled);
+            Assert.IsFalse(Element("CapturePane_CopyResults").IsEnabled);
+            Assert.IsEmpty(Element("CapturePane_Passages").FindAllChildren(automation.ConditionFactory.ByControlType(ControlType.ListItem)));
             Element("CapturePane_DetailsTab").Patterns.SelectionItem.Pattern.Select();
             Assert.IsNull(Element("CaptureDetailsPane").FindFirstDescendant(automation.ConditionFactory.ByName(
                 "Invoice INV-2048 totals USD 125.00 and is due on 2026-10-15.")), "Deleted analysis must not return after restart.");

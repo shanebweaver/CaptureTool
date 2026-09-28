@@ -1857,16 +1857,16 @@ SOFTWARE.
   <data name="CaptureDetails_AudioBitrate" xml:space="preserve"><value>音频比特率</value></data>
   <data name="CaptureDetails_AudioCodec" xml:space="preserve"><value>音频编解码器</value></data>
   <data name="CaptureDetails_Deleting" xml:space="preserve"><value>正在删除已保存的分析。</value></data>
-  <data name="CaptureDetails_Unavailable" xml:space="preserve"><value>无法读取详情，请尝试刷新。</value></data>
-  <data name="CaptureDetails_SourceChanged" xml:space="preserve"><value>此文件在分析后已更改。请在设置中重新运行分析以更新详情。</value></data>
-  <data name="CaptureDetails_SourceUnavailable" xml:space="preserve"><value>捕获文件不可用，无法验证已保存的详情。</value></data>
+  <data name="CaptureDetails_Unavailable" xml:space="preserve"><value>无法加载捕获详细信息。</value></data>
+  <data name="CaptureDetails_SourceChanged" xml:space="preserve"><value>保存这些结果后，文件已更改。</value></data>
+  <data name="CaptureDetails_SourceUnavailable" xml:space="preserve"><value>无法打开文件。</value></data>
   <data name="CaptureDetails_Analyzing" xml:space="preserve"><value>分析正在排队或进行中。结果可用时，详情会自动更新。</value></data>
   <data name="CaptureDetails_Paused" xml:space="preserve"><value>分析已停止。请选择一个操作重试。</value></data>
   <data name="CaptureDetails_Partial" xml:space="preserve"><value>部分分析未完成。此处显示可用的已保存结果。</value></data>
   <data name="CaptureDetails_Empty" xml:space="preserve"><value>尚无已保存的文字。请选择上方的操作以提取所需内容。</value></data>
   <data name="CaptureDetails_Retained" xml:space="preserve"><value>部分结果来自对同一文件的先前分析。</value></data>
-  <data name="CaptureDetails_Limited" xml:space="preserve"><value>部分内容或结果已省略。这些见解可能未涵盖整个捕获。</value></data>
-  <data name="CaptureDetails_Copied" xml:space="preserve"><value>文本已复制。</value></data>
+  <data name="CaptureDetails_Limited" xml:space="preserve"><value>部分内容已跳过，结果可能不完整。</value></data>
+  <data name="CaptureDetails_Copied" xml:space="preserve"><value>已复制到剪贴板。</value></data>
   <data name="CaptureDetails_CopyFailed" xml:space="preserve"><value>无法复制文本，请重试。</value></data>
   <data name="HomePage_RecentCaptureDetailsMenuItem.Text" xml:space="preserve"><value>详情</value></data>
   <data name="CaptureDetails_AnalyzedFile" xml:space="preserve"><value>已分析的文件</value></data>
@@ -1879,13 +1879,13 @@ SOFTWARE.
   <data name="CapturePane_OpenFolder.Content" xml:space="preserve"><value>打开文件夹</value></data>
   <data name="CapturePane_Technical.Header" xml:space="preserve"><value>技术详细信息</value></data>
   <data name="CapturePane_Summary.Text" xml:space="preserve"><value>AI 摘要</value></data>
-  <data name="CapturePane_PendingEdits.Message" xml:space="preserve"><value>这些属性描述源文件，不包括尚未保存的编辑。</value></data>
-  <data name="CapturePane_FileUnavailable" xml:space="preserve"><value>文件属性不可用。请在文件准备就绪后刷新。</value></data>
+  <data name="CapturePane_PendingEdits" xml:space="preserve"><value>详细信息和摘要基于已保存的文件。</value></data>
+  <data name="CapturePane_FileUnavailable" xml:space="preserve"><value>无法读取文件属性。</value></data>
   <data name="CapturePane_FolderUnavailable" xml:space="preserve"><value>无法打开文件夹。</value></data>
   <data name="CapturePane_DetailsTab.Header" xml:space="preserve"><value>详细信息</value></data>
   <data name="CapturePane_TextTab" xml:space="preserve"><value>文本</value></data>
-  <data name="CapturePane_Search.PlaceholderText" xml:space="preserve"><value>在此捕获中查找</value></data>
-  <data name="CapturePane_Search.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>在此捕获中查找</value></data>
+  <data name="CapturePane_Search.PlaceholderText" xml:space="preserve"><value>查找文本</value></data>
+  <data name="CapturePane_Search.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>查找文本</value></data>
   <data name="CapturePane_SourceFilter.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>文本来源</value></data>
   <data name="CapturePane_Previous.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>上一个结果</value></data>
   <data name="CapturePane_Next.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>下一个结果</value></data>
@@ -1897,15 +1897,15 @@ SOFTWARE.
   <data name="CapturePane_ScreenText" xml:space="preserve"><value>屏幕文本</value></data>
   <data name="CapturePane_Speech" xml:space="preserve"><value>语音</value></data>
   <data name="CapturePane_Codes" xml:space="preserve"><value>二维码</value></data>
-  <data name="CapturePane_PassageCount" xml:space="preserve"><value>{0} 个片段</value></data>
-  <data name="CapturePane_MatchCount" xml:space="preserve"><value>{0} 个匹配片段</value></data>
-  <data name="CapturePane_LocationUnavailable" xml:space="preserve"><value>当前视图中没有可用位置。图像可能已更改，或片段位于裁剪范围之外。</value></data>
-  <data name="CapturePane_ActionFailed" xml:space="preserve"><value>此操作不可用。请刷新捕获详细信息。</value></data>
+  <data name="CapturePane_PassageCount" xml:space="preserve"><value>结果：{0}</value></data>
+  <data name="CapturePane_MatchCount" xml:space="preserve"><value>匹配项：{0}</value></data>
+  <data name="CapturePane_LocationUnavailable" xml:space="preserve"><value>无法在当前视图中定位此文本。</value></data>
+  <data name="CapturePane_ActionFailed" xml:space="preserve"><value>无法打开此结果。</value></data>
   <data name="CaptureNaming_Header.Text" xml:space="preserve"><value>为新捕获内容建议名称</value></data>
   <data name="CaptureNaming_Description.Text" xml:space="preserve"><value>捕获后由 AI 建议文件名。在您接受建议之前，文件名称保持不变。</value></data>
   <data name="CaptureNaming_Toggle.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>为新捕获内容建议名称</value></data>
-  <data name="CaptureNaming_Edit.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>编辑捕获名称</value></data>
-  <data name="CaptureNaming_Input.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>捕获名称</value></data>
+  <data name="CaptureNaming_Edit.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>重命名</value></data>
+  <data name="CaptureNaming_Input.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>文件名</value></data>
   <data name="CaptureNaming_Save.ToolTipService.ToolTip" xml:space="preserve"><value>重命名文件</value></data>
   <data name="CaptureNaming_Save.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>重命名文件</value></data>
   <data name="CaptureNaming_Cancel.ToolTipService.ToolTip" xml:space="preserve"><value>取消</value></data>
@@ -1958,7 +1958,7 @@ SOFTWARE.
   <data name="CaptureAction_Qr" xml:space="preserve"><value>查找二维码</value></data>
   <data name="CaptureAction_Transcript" xml:space="preserve"><value>转录音频</value></data>
   <data name="CaptureAction_DescriptionHeading.Text" xml:space="preserve"><value>AI 描述</value></data>
-  <data name="CaptureAction_SummaryInputs.Text" xml:space="preserve"><value>请先提取文字、转录音频或生成描述。摘要和名称建议将使用这些已保存的结果。</value></data>
+  <data name="CaptureAction_SummaryInputs" xml:space="preserve"><value>提取文本或转录音频以创建摘要。</value></data>
   <data name="CaptureAction_NoText" xml:space="preserve"><value>未找到文字。</value></data>
   <data name="CaptureAction_NoQr" xml:space="preserve"><value>未找到二维码。</value></data>
   <data name="CaptureAction_NoSpeech" xml:space="preserve"><value>未找到语音。</value></data>
@@ -1966,15 +1966,17 @@ SOFTWARE.
   <data name="CaptureAction_Unavailable" xml:space="preserve"><value>此设备不支持此操作。</value></data>
   <data name="CaptureAction_Failed" xml:space="preserve"><value>未能完成此操作。您可以重试。</value></data>
   <data name="CapturePane_SummaryTab.Header" xml:space="preserve"><value>摘要</value></data>
-  <data name="CaptureAction_ScreenshotSummary" xml:space="preserve"><value>总结屏幕截图</value></data>
+  <data name="CaptureAction_ScreenshotSummary" xml:space="preserve"><value>生成图像摘要</value></data>
   <data name="CaptureAction_AltText" xml:space="preserve"><value>生成替代文本</value></data>
-  <data name="CaptureSummary_Hint.Text" xml:space="preserve"><value>了解此图像的要点。仅在需要时读取文本和视觉细节。</value></data>
+  <data name="CaptureSummary_Hint.Text" xml:space="preserve"><value>使用 AI 为此图像生成摘要。</value></data>
   <data name="CaptureSummary_AltText.Text" xml:space="preserve"><value>替代文本</value></data>
-  <data name="CaptureSummary_AltTextHint.Text" xml:space="preserve"><value>为无法看到图像的人生成简短描述。分享前请检查内容。</value></data>
+  <data name="CaptureSummary_AltTextHint.Text" xml:space="preserve"><value>为屏幕阅读器创建简短描述。分享前请检查。</value></data>
   <data name="CaptureSummary_CopySummary.Content" xml:space="preserve"><value>复制摘要</value></data>
   <data name="CaptureSummary_CopyAltText.Content" xml:space="preserve"><value>复制替代文本</value></data>
   <data name="CaptureAction_NoSuggestion" xml:space="preserve"><value>没有足够的信息来生成建议。</value></data>
-  <data name="CaptureNaming_Suggest" xml:space="preserve"><value>使用 AI 建议文件名。保存前可查看和编辑。</value></data>
+  <data name="CaptureNaming_Suggest" xml:space="preserve"><value>使用 AI 建议文件名</value></data>
   <data name="CaptureNaming_AiGenerating" xml:space="preserve"><value>AI 正在建议名称…</value></data>
-  <data name="CaptureNaming_Edit.ToolTipService.ToolTip" xml:space="preserve"><value>编辑捕获名称</value></data>
+  <data name="CaptureNaming_Edit.ToolTipService.ToolTip" xml:space="preserve"><value>重命名</value></data>
+  <data name="CaptureAction_SummaryAudioInputs" xml:space="preserve"><value>转录音频以创建摘要。</value></data>
+  <data name="CapturePane_Loading.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>正在加载详细信息</value></data>
 </root>

@@ -1857,16 +1857,16 @@ SOFTWARE.
   <data name="CaptureDetails_AudioBitrate" xml:space="preserve"><value>Битрейт аудио</value></data>
   <data name="CaptureDetails_AudioCodec" xml:space="preserve"><value>Аудиокодек</value></data>
   <data name="CaptureDetails_Deleting" xml:space="preserve"><value>Сохранённый анализ удаляется.</value></data>
-  <data name="CaptureDetails_Unavailable" xml:space="preserve"><value>Не удалось прочитать сведения. Попробуйте обновить.</value></data>
-  <data name="CaptureDetails_SourceChanged" xml:space="preserve"><value>Файл изменился после анализа. Повторите анализ в настройках.</value></data>
-  <data name="CaptureDetails_SourceUnavailable" xml:space="preserve"><value>Файл записи недоступен. Невозможно проверить сохранённые сведения.</value></data>
+  <data name="CaptureDetails_Unavailable" xml:space="preserve"><value>Не удалось загрузить сведения о снимке.</value></data>
+  <data name="CaptureDetails_SourceChanged" xml:space="preserve"><value>Файл изменён после сохранения этих результатов.</value></data>
+  <data name="CaptureDetails_SourceUnavailable" xml:space="preserve"><value>Не удалось открыть файл.</value></data>
   <data name="CaptureDetails_Analyzing" xml:space="preserve"><value>Анализ ожидает выполнения или уже идёт. Сведения обновляются по мере готовности.</value></data>
   <data name="CaptureDetails_Paused" xml:space="preserve"><value>Анализ остановлен. Выберите действие для повторной попытки.</value></data>
   <data name="CaptureDetails_Partial" xml:space="preserve"><value>Часть анализа не завершена. Показаны доступные сохранённые результаты.</value></data>
   <data name="CaptureDetails_Empty" xml:space="preserve"><value>Сохранённого текста пока нет. Выберите действие выше, чтобы извлечь нужные данные.</value></data>
   <data name="CaptureDetails_Retained" xml:space="preserve"><value>Некоторые результаты получены при предыдущем анализе этого же файла.</value></data>
-  <data name="CaptureDetails_Limited" xml:space="preserve"><value>Часть содержимого или результатов опущена. Эти сведения могут охватывать не всю запись.</value></data>
-  <data name="CaptureDetails_Copied" xml:space="preserve"><value>Текст скопирован.</value></data>
+  <data name="CaptureDetails_Limited" xml:space="preserve"><value>Часть содержимого пропущена. Результаты могут быть неполными.</value></data>
+  <data name="CaptureDetails_Copied" xml:space="preserve"><value>Скопировано в буфер обмена.</value></data>
   <data name="CaptureDetails_CopyFailed" xml:space="preserve"><value>Не удалось скопировать текст. Попробуйте ещё раз.</value></data>
   <data name="HomePage_RecentCaptureDetailsMenuItem.Text" xml:space="preserve"><value>Сведения</value></data>
   <data name="CaptureDetails_AnalyzedFile" xml:space="preserve"><value>Проанализированный файл</value></data>
@@ -1879,13 +1879,13 @@ SOFTWARE.
   <data name="CapturePane_OpenFolder.Content" xml:space="preserve"><value>Открыть папку</value></data>
   <data name="CapturePane_Technical.Header" xml:space="preserve"><value>Технические сведения</value></data>
   <data name="CapturePane_Summary.Text" xml:space="preserve"><value>Сводка ИИ</value></data>
-  <data name="CapturePane_PendingEdits.Message" xml:space="preserve"><value>Свойства относятся к исходному файлу и не учитывают несохранённые изменения.</value></data>
-  <data name="CapturePane_FileUnavailable" xml:space="preserve"><value>Свойства файла недоступны. Обновите сведения, когда файл будет готов.</value></data>
+  <data name="CapturePane_PendingEdits" xml:space="preserve"><value>Сведения и сводки относятся к сохранённому файлу.</value></data>
+  <data name="CapturePane_FileUnavailable" xml:space="preserve"><value>Не удалось прочитать свойства файла.</value></data>
   <data name="CapturePane_FolderUnavailable" xml:space="preserve"><value>Не удалось открыть папку.</value></data>
   <data name="CapturePane_DetailsTab.Header" xml:space="preserve"><value>Сведения</value></data>
   <data name="CapturePane_TextTab" xml:space="preserve"><value>Текст</value></data>
-  <data name="CapturePane_Search.PlaceholderText" xml:space="preserve"><value>Найти в этой записи</value></data>
-  <data name="CapturePane_Search.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Найти в этой записи</value></data>
+  <data name="CapturePane_Search.PlaceholderText" xml:space="preserve"><value>Найти текст</value></data>
+  <data name="CapturePane_Search.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Найти текст</value></data>
   <data name="CapturePane_SourceFilter.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Источник текста</value></data>
   <data name="CapturePane_Previous.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Предыдущий результат</value></data>
   <data name="CapturePane_Next.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Следующий результат</value></data>
@@ -1897,15 +1897,15 @@ SOFTWARE.
   <data name="CapturePane_ScreenText" xml:space="preserve"><value>Текст на экране</value></data>
   <data name="CapturePane_Speech" xml:space="preserve"><value>Речь</value></data>
   <data name="CapturePane_Codes" xml:space="preserve"><value>QR-коды</value></data>
-  <data name="CapturePane_PassageCount" xml:space="preserve"><value>Фрагментов: {0}</value></data>
-  <data name="CapturePane_MatchCount" xml:space="preserve"><value>Совпадений: {0}</value></data>
-  <data name="CapturePane_LocationUnavailable" xml:space="preserve"><value>В текущем виде нет доступной позиции. Возможно, изображение изменено или фрагмент находится за пределами обрезки.</value></data>
-  <data name="CapturePane_ActionFailed" xml:space="preserve"><value>Действие недоступно. Обновите сведения о записи.</value></data>
+  <data name="CapturePane_PassageCount" xml:space="preserve"><value>Результаты: {0}</value></data>
+  <data name="CapturePane_MatchCount" xml:space="preserve"><value>Совпадения: {0}</value></data>
+  <data name="CapturePane_LocationUnavailable" xml:space="preserve"><value>Не удалось найти этот текст в текущем представлении.</value></data>
+  <data name="CapturePane_ActionFailed" xml:space="preserve"><value>Не удалось открыть этот результат.</value></data>
   <data name="CaptureNaming_Header.Text" xml:space="preserve"><value>Предлагать имена для новых записей</value></data>
   <data name="CaptureNaming_Description.Text" xml:space="preserve"><value>ИИ предлагает имена файлов после создания записи. Имя файла не меняется, пока вы не примете предложение.</value></data>
   <data name="CaptureNaming_Toggle.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Предлагать имена для новых записей</value></data>
-  <data name="CaptureNaming_Edit.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Изменить имя</value></data>
-  <data name="CaptureNaming_Input.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Имя снимка или записи</value></data>
+  <data name="CaptureNaming_Edit.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Переименовать</value></data>
+  <data name="CaptureNaming_Input.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Имя файла</value></data>
   <data name="CaptureNaming_Save.ToolTipService.ToolTip" xml:space="preserve"><value>Переименовать файл</value></data>
   <data name="CaptureNaming_Save.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Переименовать файл</value></data>
   <data name="CaptureNaming_Cancel.ToolTipService.ToolTip" xml:space="preserve"><value>Отмена</value></data>
@@ -1958,7 +1958,7 @@ SOFTWARE.
   <data name="CaptureAction_Qr" xml:space="preserve"><value>Найти QR-коды</value></data>
   <data name="CaptureAction_Transcript" xml:space="preserve"><value>Расшифровать аудио</value></data>
   <data name="CaptureAction_DescriptionHeading.Text" xml:space="preserve"><value>Описание с помощью ИИ</value></data>
-  <data name="CaptureAction_SummaryInputs.Text" xml:space="preserve"><value>Сначала извлеките текст, расшифруйте аудио или создайте описание. Сводки и предлагаемые имена используют эти сохранённые результаты.</value></data>
+  <data name="CaptureAction_SummaryInputs" xml:space="preserve"><value>Извлеките текст или расшифруйте аудио, чтобы создать сводку.</value></data>
   <data name="CaptureAction_NoText" xml:space="preserve"><value>Текст не найден.</value></data>
   <data name="CaptureAction_NoQr" xml:space="preserve"><value>QR-коды не найдены.</value></data>
   <data name="CaptureAction_NoSpeech" xml:space="preserve"><value>Речь не найдена.</value></data>
@@ -1966,15 +1966,17 @@ SOFTWARE.
   <data name="CaptureAction_Unavailable" xml:space="preserve"><value>Это действие недоступно на данном устройстве.</value></data>
   <data name="CaptureAction_Failed" xml:space="preserve"><value>Не удалось завершить действие. Попробуйте ещё раз.</value></data>
   <data name="CapturePane_SummaryTab.Header" xml:space="preserve"><value>Сводка</value></data>
-  <data name="CaptureAction_ScreenshotSummary" xml:space="preserve"><value>Кратко описать снимок экрана</value></data>
+  <data name="CaptureAction_ScreenshotSummary" xml:space="preserve"><value>Создать сводку изображения</value></data>
   <data name="CaptureAction_AltText" xml:space="preserve"><value>Создать альтернативный текст</value></data>
-  <data name="CaptureSummary_Hint.Text" xml:space="preserve"><value>Узнайте главное об этом изображении. Текст и визуальные детали считываются только при необходимости.</value></data>
+  <data name="CaptureSummary_Hint.Text" xml:space="preserve"><value>Создать сводку изображения с помощью ИИ.</value></data>
   <data name="CaptureSummary_AltText.Text" xml:space="preserve"><value>Альтернативный текст</value></data>
-  <data name="CaptureSummary_AltTextHint.Text" xml:space="preserve"><value>Создайте краткое описание для тех, кто не может видеть изображение. Проверьте его перед публикацией.</value></data>
+  <data name="CaptureSummary_AltTextHint.Text" xml:space="preserve"><value>Создать краткое описание для программ чтения с экрана. Проверьте его перед публикацией.</value></data>
   <data name="CaptureSummary_CopySummary.Content" xml:space="preserve"><value>Копировать сводку</value></data>
   <data name="CaptureSummary_CopyAltText.Content" xml:space="preserve"><value>Копировать альтернативный текст</value></data>
   <data name="CaptureAction_NoSuggestion" xml:space="preserve"><value>Недостаточно информации для предложения.</value></data>
-  <data name="CaptureNaming_Suggest" xml:space="preserve"><value>Предложить имя файла с помощью ИИ. Проверьте и измените его перед сохранением.</value></data>
+  <data name="CaptureNaming_Suggest" xml:space="preserve"><value>Предложить имя файла с помощью ИИ</value></data>
   <data name="CaptureNaming_AiGenerating" xml:space="preserve"><value>ИИ подбирает имя…</value></data>
-  <data name="CaptureNaming_Edit.ToolTipService.ToolTip" xml:space="preserve"><value>Изменить имя снимка</value></data>
+  <data name="CaptureNaming_Edit.ToolTipService.ToolTip" xml:space="preserve"><value>Переименовать</value></data>
+  <data name="CaptureAction_SummaryAudioInputs" xml:space="preserve"><value>Расшифруйте аудио, чтобы создать сводку.</value></data>
+  <data name="CapturePane_Loading.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Загрузка сведений</value></data>
 </root>

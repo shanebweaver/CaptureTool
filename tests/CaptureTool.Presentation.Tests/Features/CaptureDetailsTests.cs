@@ -85,12 +85,14 @@ public sealed class CaptureDetailsTests
         editor.SetAvailability(true);
         foreach (int _ in Enumerable.Range(0, 2))
         {
-            using var vm = new Setup().ViewModel;
+            var setup = new Setup();
+            using var vm = setup.ViewModel;
             vm.SetEditorText(editor);
             await vm.OpenAsync("capture.png", AnalysisMediaKind.Image);
             await vm.EnsureTextAsync();
             Assert.AreEqual("CaptureAction_NoText", vm.TextAction.Status);
             Assert.IsFalse(vm.TextAction.Command.CanExecute(null));
+            setup.Notifications.Verify(x => x.ShowInfo("CaptureAction_NoText"), _ == 0 ? Times.Once() : Times.Never());
         }
         Assert.AreEqual(1, calls);
     }
@@ -163,6 +165,7 @@ public sealed class CaptureDetailsTests
         Assert.AreEqual("CaptureAction_NoText", vm.TextAction.Status);
         Assert.IsTrue(vm.QrAction.Command.CanExecute(null));
         Assert.IsTrue(vm.SummaryAction.Command.CanExecute(null));
+        setup.Notifications.Verify(x => x.ShowInfo(It.IsAny<string>()), Times.Never, "Opening cached empty results should stay quiet.");
     }
 
     [TestMethod]
@@ -349,7 +352,7 @@ public sealed class CaptureDetailsTests
         Assert.IsTrue(vm.IsGeneratingName);
         Assert.IsFalse(vm.SuggestNameCommand.CanExecute(null));
         Assert.IsFalse(vm.IsEditingName);
-        Assert.AreEqual("CaptureNaming_AiGenerating", vm.NameSuggestionToolTip);
+        Assert.AreEqual("CaptureNaming_Suggest", vm.NameSuggestionToolTip, "The AI tooltip stays unchanged during loading.");
         if (editWhileGenerating)
         {
             vm.EditNameCommand.Execute(null);
@@ -560,7 +563,7 @@ public sealed class CaptureDetailsTests
         ready.SetResult(new(CaptureDetailsStatus.Available, Record()));
         await loading;
         Assert.IsFalse(vm.Content.HasContent);
-        Assert.AreEqual("Deleting", vm.StatusText);
+        Assert.IsFalse(vm.IsReadingDetails);
         await vm.CopyCommand.ExecuteAsync("old value");
         setup.Clipboard.Verify(clipboard => clipboard.CopyTextAsync(It.IsAny<string>()), Times.Never);
     }
@@ -575,12 +578,93 @@ public sealed class CaptureDetailsTests
             .ReturnsAsync(new CaptureDetailsSnapshot(CaptureDetailsStatus.Unavailable))
             .ReturnsAsync(new CaptureDetailsSnapshot(CaptureDetailsStatus.Available, Record()));
         await vm.OpenAsync("capture.png");
-        Assert.AreEqual("Empty", vm.StatusText);
+        setup.Notifications.VerifyNoOtherCalls();
         await vm.RefreshAsync();
-        Assert.AreEqual("Unavailable", vm.StatusText);
+        setup.Notifications.Verify(x => x.ShowError("Unavailable"), Times.Once);
         await vm.RefreshAsync();
-        Assert.IsFalse(vm.ShowStatus);
+        Assert.IsFalse(vm.IsReadingDetails);
         Assert.IsTrue(vm.Content.HasContent);
+    }
+
+    [TestMethod]
+    public async Task CompletedEmptyResultsNotifyOnceAndLoadingKeepsItsLabel()
+    {
+        var setup = new Setup();
+        var run = new AnalysisRun(Guid.NewGuid(), Guid.NewGuid(), 1, "test", null, AnalysisRunStatus.Queued,
+            [AnalysisCapability.TextRecognition], []);
+        CaptureDetailsSnapshot snapshot = new(CaptureDetailsStatus.Empty, Run: run);
+        setup.Reader.Setup(x => x.ReadAsync(It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync(() => snapshot);
+        using var vm = setup.ViewModel;
+        await vm.OpenAsync("capture.png", AnalysisMediaKind.Image);
+        string label = vm.TextAction.Label;
+        Assert.IsTrue(vm.TextAction.IsRunning);
+        setup.Notifications.VerifyNoOtherCalls();
+        snapshot = new(CaptureDetailsStatus.Available, new CaptureAnalysisRecord(CaptureId.New(), AnalysisMediaKind.Image,
+            new(new string('a', 64)), "plan", run.Id, [Result(new TextRecognitionMetadata([]), run.Id)]));
+        await vm.RefreshAsync();
+        await vm.RefreshAsync();
+        Assert.IsFalse(vm.TextAction.IsRunning);
+        Assert.AreEqual(label, vm.TextAction.Label);
+        setup.Notifications.Verify(x => x.ShowInfo("CaptureAction_NoText"), Times.Once);
+    }
+
+    [TestMethod]
+    public async Task RepeatedReadFailuresNotifyOnceUntilRecoveryAndStayQuietWhenHidden()
+    {
+        var setup = new Setup();
+        CaptureDetailsSnapshot snapshot = new(CaptureDetailsStatus.Unavailable);
+        setup.Reader.Setup(x => x.ReadAsync(It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync(() => snapshot);
+        using var vm = setup.ViewModel;
+        await vm.OpenAsync("capture.png");
+        await vm.RefreshAsync();
+        setup.Notifications.Verify(x => x.ShowError("Unavailable"), Times.Once);
+        snapshot = new(CaptureDetailsStatus.Empty);
+        await vm.RefreshAsync();
+        vm.IsActive = false;
+        snapshot = new(CaptureDetailsStatus.Unavailable);
+        await vm.RefreshAsync();
+        setup.Notifications.Verify(x => x.ShowError("Unavailable"), Times.Once);
+    }
+
+    [TestMethod]
+    public async Task FailedRequestsNotifyOncePerAttemptAndRemainRetryable()
+    {
+        var setup = new Setup();
+        setup.Reader.Setup(x => x.ReadAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new CaptureDetailsSnapshot(CaptureDetailsStatus.Empty));
+        setup.Memory.Setup(x => x.EnsureConsentAsync(It.IsAny<CancellationToken>())).ReturnsAsync(true);
+        setup.Memory.Setup(x => x.AnalyzeAsync(It.IsAny<string>(), AnalysisCapability.TextRecognition, It.IsAny<CancellationToken>()))
+            .Callback(() => setup.State = setup.State with { FailureCode = "model-failed" }).Returns(Task.CompletedTask);
+        using var vm = setup.ViewModel;
+        await vm.OpenAsync("capture.png", AnalysisMediaKind.Image);
+        await vm.TextAction.Command.ExecuteAsync(null);
+        await vm.RefreshAsync();
+        setup.Notifications.Verify(x => x.ShowError("CaptureAction_Failed"), Times.Once);
+        Assert.IsTrue(vm.TextAction.Command.CanExecute(null));
+        await vm.TextAction.Command.ExecuteAsync(null);
+        setup.Notifications.Verify(x => x.ShowError("CaptureAction_Failed"), Times.Exactly(2));
+    }
+
+    [TestMethod]
+    public async Task RenameValidationAndFilesystemFailuresUseSnackbarsAndKeepTheDraft()
+    {
+        var names = new Mock<ICaptureNamingService>();
+        var setup = new Setup(names.Object);
+        using var vm = setup.ViewModel;
+        await vm.OpenAsync("capture.png", AnalysisMediaKind.Image);
+        vm.EditNameCommand.Execute(null);
+        vm.NameDraft = string.Empty;
+        await vm.SaveNameCommand.ExecuteAsync(null);
+        setup.Notifications.Verify(x => x.ShowError("CaptureNaming_Invalid"), Times.Once);
+        Assert.IsTrue(vm.IsEditingName);
+        names.Setup(x => x.RenameAsync(It.IsAny<string>(), It.IsAny<CaptureFileType>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new IOException());
+        vm.NameDraft = "New name";
+        await vm.SaveNameCommand.ExecuteAsync(null);
+        setup.Notifications.Verify(x => x.ShowError("CaptureNaming_SaveFailed"), Times.Once);
+        Assert.AreEqual("New name", vm.NameDraft);
+        Assert.IsTrue(vm.IsEditingName);
+        Assert.AreEqual("capture.png", vm.FileName);
     }
 
     private static CaptureAnalysisRecord Record(bool limited = false)
@@ -618,6 +702,8 @@ public sealed class CaptureDetailsTests
         {
             Reader.Setup(reader => reader.ReadAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new CaptureDetailsSnapshot(CaptureDetailsStatus.Available, Record()));
+            Reader.Setup(reader => reader.ReadFileAsync(It.IsAny<string>(), It.IsAny<AnalysisMediaKind>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new FileDetailsMetadata(AnalysisMediaKind.Image, "capture.png", 100, "image/png", DateTimeOffset.UtcNow, DateTimeOffset.UtcNow));
             Memory.SetupGet(memory => memory.State).Returns(() => State);
             var ui = new Mock<ITaskEnvironment>();
             ui.Setup(ui => ui.TryExecute(It.IsAny<Action>())).Returns((Action action) => { action(); return true; });
