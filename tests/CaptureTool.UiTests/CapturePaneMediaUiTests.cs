@@ -63,6 +63,12 @@ public sealed partial class ImageEditTextExtractionUiTests
         WaitForElementByName(pane, automation, video ? "Video" : "Audio", InteractionTimeout);
         AssertDetailsLayout(window, automation, video ? "VideoEdit_CommandBar" : "AudioEdit_CommandBar",
             video ? null : "ProgressSlider");
+        Element("Editor_DetailsToggle").Click();
+        WaitForElementRemoved(window, automation, "CaptureDetailsPane", InteractionTimeout);
+        Assert.AreEqual(ToggleState.Off, Element("Editor_DetailsToggle").Patterns.Toggle.Pattern.ToggleState.Value);
+        Element("Editor_DetailsToggle").Click();
+        AssertDetailsLayout(window, automation, video ? "VideoEdit_CommandBar" : "AudioEdit_CommandBar",
+            video ? null : "ProgressSlider");
         window.Patterns.Window.Pattern.SetWindowVisualState(WindowVisualState.Normal);
         window.Patterns.Transform.Pattern.Resize(720, 760);
         Thread.Sleep(350);

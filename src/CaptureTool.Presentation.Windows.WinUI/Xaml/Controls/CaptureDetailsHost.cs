@@ -77,7 +77,7 @@ public sealed partial class CaptureDetailsHost : SplitView
     public void OpenPane()
     {
         IsPaneOpen = true;
-        // Selecting the current mode keeps it selected, just like opening it from another mode.
+        // Shortcuts open the pane without toggling an already-open pane.
         if (ToggleControl is AppBarToggleButton toggle) toggle.IsChecked = true;
     }
 
@@ -90,7 +90,7 @@ public sealed partial class CaptureDetailsHost : SplitView
     private void ToggleChanged(object sender, RoutedEventArgs e)
     {
         if (ToggleControl?.IsChecked == true) OpenPane();
-        else if (IsPaneOpen && ToggleControl != null) ToggleControl.IsChecked = true;
+        else IsPaneOpen = false;
     }
 
     private static void Changed(DependencyObject sender, DependencyPropertyChangedEventArgs args) => ((CaptureDetailsHost)sender).Update();

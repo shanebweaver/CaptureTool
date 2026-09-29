@@ -17,7 +17,7 @@ Rename validation, unavailable locations, empty extraction results, and failures
 - Current-image results survive closing and reopening the pane during that editing session. They never replace the saved capture's analysis. An image edit invalidates them and cancels any pending extraction. Unknown text bounds remain copyable without a fabricated location.
 - Closing the pane, leaving the Text tab, or choosing another edit mode cancels current-image extraction. Cancellation and edit-revision checks reject late provider results. Previously completed session results remain reusable.
 
-Switching to Details or Summary clears the text overlay and keeps the pane open. X closes the pane; tools such as Crop switch away from Details. The command bar and footer remain outside the pane's content area.
+Switching to the Details or Summary tab clears the text overlay and keeps the pane open. The Details command-bar button toggles the pane open or closed in all editors. X also closes it; tools such as Crop switch away from Details. The Extract text shortcut always opens the Text tab, including when the pane is already open. The command bar and footer remain outside the pane's content area.
 
 Validation covers saved-result reuse, edited-image projection, empty-result caching, source mismatch, cancellation, and desktop navigation across saved and rotated images.
 

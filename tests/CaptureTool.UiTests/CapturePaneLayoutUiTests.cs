@@ -10,7 +10,7 @@ public sealed partial class ImageEditTextExtractionUiTests
 {
     [TestMethod]
     [TestCategory("UI")]
-    public void CapturePane_StaysOpenUntilClosedOrAnotherEditModeIsSelected()
+    public void CapturePane_TogglesFromCommandBarAndPreservesLayout()
     {
         if (!ShouldRunUiTests()) Assert.Inconclusive("Enable isolated desktop UI tests.");
         using var dpi = new DesktopDpiScope();
@@ -25,9 +25,12 @@ public sealed partial class ImageEditTextExtractionUiTests
         using var automation = new UIA3Automation();
         var window = WaitForMainWindow(app, automation, AppLaunchTimeout);
         Element("ImageEdit_CommandBar"); MaximizeWindow(window);
-        Element("Editor_DetailsToggle").Patterns.Toggle.Pattern.Toggle();
+        Element("Editor_DetailsToggle").Click();
         Layout();
-        Element("Editor_DetailsToggle").Patterns.Toggle.Pattern.Toggle();
+        Element("Editor_DetailsToggle").Click();
+        AssertClosed();
+        Element("Editor_DetailsToggle").Focus();
+        Keyboard.Type(VirtualKeyShort.SPACE);
         Layout();
         Element("PART_ScrollPresenter").Click();
         Layout();
@@ -42,6 +45,10 @@ public sealed partial class ImageEditTextExtractionUiTests
         window.Patterns.Window.Pattern.SetWindowVisualState(WindowVisualState.Normal);
         window.Patterns.Transform.Pattern.Resize(720, 760);
         Thread.Sleep(350);
+        Layout();
+        Element("Editor_DetailsToggle").Click();
+        AssertClosed();
+        Element("Editor_DetailsToggle").Click();
         Layout();
         Element("PART_ScrollPresenter").Click();
         Layout();
@@ -63,11 +70,15 @@ public sealed partial class ImageEditTextExtractionUiTests
         Assert.IsTrue(Element("CapturePane_TextTab").Patterns.SelectionItem.Pattern.IsSelected.Value);
         Assert.IsFalse(Element("ImageEdit_TextExtractionButton").Patterns.Toggle.IsSupported);
         Element("CapturePane_Close").Patterns.Invoke.Pattern.Invoke();
-        WaitForElementRemoved(window, automation, "CaptureDetailsPane", InteractionTimeout);
-        Assert.AreEqual(ToggleState.Off, Element("Editor_DetailsToggle").Patterns.Toggle.Pattern.ToggleState.Value);
+        AssertClosed();
 
         AutomationElement Element(string id) => WaitForElement(window, automation, id, InteractionTimeout);
         void Layout() => AssertDetailsLayout(window, automation, "ImageEdit_CommandBar", "ZoomSlider");
+        void AssertClosed()
+        {
+            WaitForElementRemoved(window, automation, "CaptureDetailsPane", InteractionTimeout);
+            Assert.AreEqual(ToggleState.Off, Element("Editor_DetailsToggle").Patterns.Toggle.Pattern.ToggleState.Value);
+        }
         void Screenshot(string name)
         {
             string path = Path.Combine(artifacts, name + ".png");
