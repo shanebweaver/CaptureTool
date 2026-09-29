@@ -1882,7 +1882,7 @@ SOFTWARE.
   <data name="CapturePane_FileUnavailable" xml:space="preserve"><value>Не удалось прочитать свойства файла.</value></data>
   <data name="CapturePane_FolderUnavailable" xml:space="preserve"><value>Не удалось открыть папку.</value></data>
   <data name="CapturePane_DetailsTab.Header" xml:space="preserve"><value>Сведения</value></data>
-  <data name="CapturePane_TextTab" xml:space="preserve"><value>Текст</value></data>
+  <data name="CapturePane_TextTab.Header" xml:space="preserve"><value>Текст</value></data>
   <data name="CapturePane_Search.PlaceholderText" xml:space="preserve"><value>Найти текст</value></data>
   <data name="CapturePane_Search.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Найти текст</value></data>
   <data name="CapturePane_SourceFilter.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Источник текста</value></data>
@@ -1985,4 +1985,14 @@ SOFTWARE.
   <data name="CaptureText_Title.Text" xml:space="preserve"><value>Текст и QR-коды</value></data>
   <data name="CaptureText_Info.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>О тексте и QR-кодах</value></data>
   <data name="CaptureText_Hint.Text" xml:space="preserve"><value>Найдите текст и QR-коды в этом снимке. Выберите результат, чтобы найти его в снимке, или скопируйте текст для использования в другом месте.</value></data>
+  <data name="CapturePane_SpeechTab.Header" xml:space="preserve"><value>Речь</value></data>
+  <data name="CaptureSpeech_Title.Text" xml:space="preserve"><value>Речь в текст</value></data>
+  <data name="CaptureSpeech_Info.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>О преобразовании речи в текст</value></data>
+  <data name="CaptureSpeech_Hint.Text" xml:space="preserve"><value>Преобразуйте речь в этой записи в текст. Выберите результат, чтобы перейти к соответствующему моменту, или скопируйте расшифровку для использования в другом месте.</value></data>
+  <data name="CaptureSpeech_Search.PlaceholderText" xml:space="preserve"><value>Поиск в расшифровке</value></data>
+  <data name="CaptureSpeech_Search.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Поиск в расшифровке</value></data>
+  <data name="CaptureSpeech_EmptyTitle.Text" xml:space="preserve"><value>Речь не найдена</value></data>
+  <data name="CaptureSpeech_EmptyDescription.Text" xml:space="preserve"><value>В этой записи не обнаружена речь.</value></data>
+  <data name="CaptureSummary_VideoHint" xml:space="preserve"><value>Создайте ИИ-сводку на основе текста и речи в этом видео. Сначала найдите текст или расшифруйте аудио.</value></data>
+  <data name="CaptureSummary_AudioHint" xml:space="preserve"><value>Создайте ИИ-сводку на основе расшифровки этой записи. Сначала расшифруйте аудио.</value></data>
 </root>

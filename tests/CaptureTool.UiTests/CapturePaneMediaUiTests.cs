@@ -58,6 +58,11 @@ public sealed partial class ImageEditTextExtractionUiTests
         var window = WaitForMainWindow(app, automation, AppLaunchTimeout);
         WaitForElement(window, automation, "ImageEdit_CommandBar", AppLaunchTimeout);
         MaximizeWindow(window);
+        OpenPane();
+        Element("CapturePane_TextTab");
+        Assert.IsNull(window.FindFirstDescendant(automation.ConditionFactory.ByAutomationId("CapturePane_SpeechTab")),
+            "Images have a Text tab and no Speech tab.");
+        Element("CapturePane_Close").Patterns.Invoke.Pattern.Invoke();
         Menu("AppMenu_HomeItem"); OpenRecording(); OpenPane();
         var pane = Element("CaptureDetailsPane");
         WaitForElementByName(pane, automation, video ? "Video" : "Audio", InteractionTimeout);
@@ -95,17 +100,43 @@ public sealed partial class ImageEditTextExtractionUiTests
         var resources = System.Xml.Linq.XDocument.Load(Path.Combine(repo, "src", "CaptureTool.Presentation.Windows.WinUI", "Strings", "en-US", "Resources.resw"))
             .Root!.Elements("data").ToDictionary(item => (string)item.Attribute("name")!, item => item.Element("value")!.Value);
         Menu("AppMenu_HomeItem"); OpenRecording(); OpenPane();
-        Element("CapturePane_TextTab").Patterns.SelectionItem.Pattern.Select();
+        Assert.AreEqual(video, window.FindFirstDescendant(automation.ConditionFactory.ByAutomationId("CapturePane_TextTab")) != null,
+            "Only videos have a Text tab alongside Speech.");
+        Element("CapturePane_SummaryTab").Patterns.SelectionItem.Pattern.Select();
+        var summaryInfo = Element("CaptureSummary_Info");
+        Assert.AreEqual(resources[video ? "CaptureSummary_VideoHint" : "CaptureSummary_AudioHint"], summaryInfo.Properties.HelpText.Value);
+        Assert.IsTrue(summaryInfo.Properties.IsKeyboardFocusable.Value);
+        Assert.IsFalse(summaryInfo.IsOffscreen);
+        Element("CapturePane_SpeechTab").Patterns.SelectionItem.Pattern.Select();
+        foreach (string tabId in video
+            ? new[] { "CapturePane_DetailsTab", "CapturePane_TextTab", "CapturePane_SpeechTab", "CapturePane_SummaryTab" }
+            : new[] { "CapturePane_DetailsTab", "CapturePane_SpeechTab", "CapturePane_SummaryTab" })
+        {
+            WaitFor(() =>
+            {
+                var tab = Element(tabId);
+                return !tab.IsOffscreen && tab.BoundingRectangle.Right <= Element("CaptureDetailsPane").BoundingRectangle.Right ? tab : null;
+            }, InteractionTimeout, "all media tabs fit in the details pane");
+        }
+        Assert.AreEqual(resources["CaptureSpeech_Hint.Text"], Element("CaptureSpeech_Info").Properties.HelpText.Value);
+        Assert.IsTrue(Element("CaptureSpeech_Info").Properties.IsKeyboardFocusable.Value);
+        Assert.IsNull(window.FindFirstDescendant(automation.ConditionFactory.ByAutomationId("CaptureSpeech_Search")),
+            "Transcript search is only shown after results arrive.");
         Element("CaptureAction_Transcript").Patterns.Invoke.Pattern.Invoke();
-        var search = Element("CapturePane_Search").AsTextBox();
+        Element("CaptureAction_Transcript_Loading");
+        Assert.IsFalse(Element("CaptureAction_Transcript").IsEnabled);
+        var search = Element("CaptureSpeech_Search").AsTextBox();
         search.Text = "spoken";
         WaitForElementByName(window, automation, "Second spoken passage", TimeSpan.FromSeconds(45));
         Assert.IsNull(window.FindFirstDescendant(automation.ConditionFactory.ByAutomationId("CapturePane_SourceFilter")),
             "A recording with only speech results should not show a source selector.");
-        Element("CapturePane_CopyResults").Patterns.Invoke.Pattern.Invoke();
+        Assert.IsNull(window.FindFirstDescendant(automation.ConditionFactory.ByAutomationId("CaptureAction_Transcript")));
+        Element("CaptureSpeech_CopyResults").Patterns.Invoke.Pattern.Invoke();
         WaitFor(() => ReadDetailsClipboard() == "First spoken passage" + Environment.NewLine + "Second spoken passage" ? window : null,
             InteractionTimeout, "complete filtered transcript");
-        WaitForElementByName(Element("CapturePane_Passages"), automation, "Second spoken passage", InteractionTimeout).Click();
+        string resultsScreenshot = Path.Combine(artifacts, "transcript-results.png");
+        window.CaptureToFile(resultsScreenshot); TestContext.AddResultFile(resultsScreenshot);
+        WaitForElementByName(Element("CaptureSpeech_Passages"), automation, "Second spoken passage", InteractionTimeout).Click();
         WaitFor(() =>
         {
             var progress = Element("ProgressSlider").Patterns.RangeValue.Pattern;
@@ -113,10 +144,31 @@ public sealed partial class ImageEditTextExtractionUiTests
             return Math.Abs(fraction - .6) < .02 ? window : null;
         },
             InteractionTimeout, "clicking a transcript row seeks to its timestamp");
-        Thread.Sleep(250);
+        Thread.Sleep(750);
         string screenshot = Path.Combine(artifacts, "transcript-location.png");
         window.CaptureToFile(screenshot); TestContext.AddResultFile(screenshot);
         Assert.IsNull(window.FindFirstDescendant(automation.ConditionFactory.ByName(resources["CapturePane_ActionFailed"])));
+
+        if (video)
+        {
+            Element("CapturePane_TextTab").Patterns.SelectionItem.Pattern.Select();
+            Assert.IsNull(window.FindFirstDescendant(automation.ConditionFactory.ByAutomationId("CaptureAction_Transcript")));
+            Assert.IsNull(window.FindFirstDescendant(automation.ConditionFactory.ByAutomationId("CapturePane_Search")),
+                "Speech results do not complete the Text scan.");
+            Element("CaptureAction_ScanText").Patterns.Invoke.Pattern.Invoke();
+            var textSearch = Element("CapturePane_Search").AsTextBox();
+            textSearch.Text = "Contoso";
+            WaitForElementByName(Element("CapturePane_Passages"), automation,
+                "Contoso invoice. Reference: INV-2048. Total USD 125.00. Due 2026-10-15.", InteractionTimeout);
+            Element("CapturePane_CopyResults").Patterns.Invoke.Pattern.Invoke();
+            WaitFor(() => ReadDetailsClipboard() == "Contoso invoice. Reference: INV-2048. Total USD 125.00. Due 2026-10-15." ? window : null,
+                InteractionTimeout, "Text copies only visible text, not speech");
+            Element("CapturePane_SpeechTab").Patterns.SelectionItem.Pattern.Select();
+            Assert.AreEqual("spoken", Element("CaptureSpeech_Search").AsTextBox().Text);
+            WaitForElementByName(Element("CaptureSpeech_Passages"), automation, "Second spoken passage", InteractionTimeout);
+            Element("CapturePane_TextTab").Patterns.SelectionItem.Pattern.Select();
+            Assert.AreEqual("Contoso", Element("CapturePane_Search").AsTextBox().Text);
+        }
 
         Element("CapturePane_DetailsTab").Patterns.SelectionItem.Pattern.Select();
         Element("CaptureName_Edit").Patterns.Invoke.Pattern.Invoke();

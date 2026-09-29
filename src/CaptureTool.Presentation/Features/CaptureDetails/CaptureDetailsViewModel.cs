@@ -49,6 +49,8 @@ public sealed class CaptureDetailsViewModel : ViewModelBase
     public bool HasAudio => _kind is AnalysisMediaKind.Audio or AnalysisMediaKind.Video;
     public bool IsImage => _kind == AnalysisMediaKind.Image;
     public bool NeedsSummaryInputs => !IsImage && !Content.HasSummaryInputs;
+    public string SummaryHint => _text.GetString(IsImage ? "CaptureSummary_Hint/Text" :
+        HasVisualMedia ? "CaptureSummary_VideoHint" : "CaptureSummary_AudioHint");
     private readonly IClipboardService _clipboard;
     private readonly ILocalizationService _text;
     private readonly ITaskEnvironment _ui;
@@ -73,13 +75,15 @@ public sealed class CaptureDetailsViewModel : ViewModelBase
     private bool UsesEditorText => IsImage && _editorText != null && (_editorText.HasChanges || _editorText.Document != null ||
         _snapshot?.Status is CaptureDetailsStatus.SourceChanged or CaptureDetailsStatus.SourceUnavailable ||
         _snapshot?.Record != null && !_sourceMatches);
-    public IReadOnlyList<CaptureTextPassage> TextPassages => UsesEditorText ? _editorPassages : Content.Passages;
+    public IReadOnlyList<CaptureTextPassage> TextPassages => TextContent.All;
+    public IReadOnlyList<CaptureTextPassage> SpeechPassages => SpeechContent.All;
     public bool ShowTextResults => !ScanTextAction.IsRunning && TextPassages.Count > 0;
-    public bool ShowTextEmptyState => !ScanTextAction.IsRunning && !TranscriptAction.IsRunning && TextPassages.Count == 0 &&
-        (HasVisualMedia ? ScanTextAction.HasResult : HasAudio && TranscriptAction.HasResult);
-    public string TextEmptyDescription => _text.GetString(HasVisualMedia ? "CapturePane_EmptyTextDescription" : "CaptureAction_NoSpeech");
+    public bool ShowTextEmptyState => HasVisualMedia && !ScanTextAction.IsRunning && TextPassages.Count == 0 && ScanTextAction.HasResult;
+    public string TextEmptyDescription => _text.GetString("CapturePane_EmptyTextDescription");
     public bool ShowScanTextAction => HasVisualMedia && !ScanTextAction.HasResult && !ShowTextResults;
-    public bool ShowTextActions => ShowScanTextAction || HasAudio && !TranscriptAction.HasResult;
+    public bool ShowSpeechResults => !TranscriptAction.IsRunning && SpeechPassages.Count > 0;
+    public bool ShowSpeechEmptyState => HasAudio && !TranscriptAction.IsRunning && SpeechPassages.Count == 0 && TranscriptAction.HasResult;
+    public bool ShowSpeechAction => HasAudio && !TranscriptAction.HasResult && !ShowSpeechResults;
 
     public string PhysicalFileName => _path == null ? string.Empty : Path.GetFileName(_path);
     public string NameDraft { get; set => Set(ref field, value); } = string.Empty;
@@ -107,8 +111,9 @@ public sealed class CaptureDetailsViewModel : ViewModelBase
     public IRelayCommand CopyPathCommand { get; }
     public IRelayCommand OpenFolderCommand { get; }
     public CaptureTextViewModel TextContent { get; }
-    public string ContentTabTitle => _text.GetString(_kind == AnalysisMediaKind.Audio ? "CaptureDetails_Transcript" : "CapturePane_TextTab");
+    public CaptureTextViewModel SpeechContent { get; }
     public IAsyncRelayCommand CopyResultsCommand { get; }
+    public IAsyncRelayCommand CopySpeechResultsCommand { get; }
     public CaptureDetailsContent Content { get; private set => Set(ref field, value); } = new();
     public bool IsReading { get; private set { if (Set(ref field, value)) RaisePropertyChanged(nameof(IsReadingDetails)); } }
     public bool IsReadingDetails => IsReading || IsReadingFile;
@@ -139,7 +144,9 @@ public sealed class CaptureDetailsViewModel : ViewModelBase
             !_memory.State.IsDeleting && !IsGeneratingName && (HasSuggestedName || NameAction.Command.CanExecute(null)));
         if (_names != null) _names.Changed += OnNamesChanged;
         TextContent = new(text);
+        SpeechContent = new(text);
         CopyResultsCommand = new AsyncRelayCommand(() => CopyAsync(TextContent.CopyVisibleScope()));
+        CopySpeechResultsCommand = new AsyncRelayCommand(() => CopyAsync(SpeechContent.CopyVisibleScope()));
         _cancellation = _lifetime.Token;
         CopyCommand = new AsyncRelayCommand<string>(CopyAsync, value => !_disposed && !string.IsNullOrEmpty(value));
         CopyPathCommand = new RelayCommand(() => _ = CopyPathAsync());
@@ -267,11 +274,14 @@ public sealed class CaptureDetailsViewModel : ViewModelBase
         RaisePropertyChanged(nameof(HasVisualMedia));
         RaisePropertyChanged(nameof(HasAudio));
         RaisePropertyChanged(nameof(NeedsSummaryInputs));
+        RaisePropertyChanged(nameof(SummaryHint));
         RaisePropertyChanged(nameof(ShowTextResults));
         RaisePropertyChanged(nameof(ShowTextEmptyState));
         RaisePropertyChanged(nameof(TextEmptyDescription));
         RaisePropertyChanged(nameof(ShowScanTextAction));
-        RaisePropertyChanged(nameof(ShowTextActions));
+        RaisePropertyChanged(nameof(ShowSpeechResults));
+        RaisePropertyChanged(nameof(ShowSpeechEmptyState));
+        RaisePropertyChanged(nameof(ShowSpeechAction));
     }
 
     public Task OpenAsync(string path)
@@ -290,7 +300,6 @@ public sealed class CaptureDetailsViewModel : ViewModelBase
         _kind = kind;
         UpdateActions();
         _workingPath = workingPath;
-        RaisePropertyChanged(nameof(ContentTabTitle));
         Task analysis = OpenAsync(path);
         return Task.WhenAll(analysis, ReadFileAsync());
     }
@@ -422,11 +431,15 @@ public sealed class CaptureDetailsViewModel : ViewModelBase
 
     private void RefreshText()
     {
-        TextContent.Replace(TextPassages);
+        var passages = UsesEditorText ? _editorPassages : Content.Passages;
+        TextContent.Replace(passages.Where(passage => passage.Source != CaptureTextSource.Speech).ToArray());
+        SpeechContent.Replace(passages.Where(passage => passage.Source == CaptureTextSource.Speech).ToArray());
         TextContent.SetNavigationContext(UsesEditorText
             ? new(_navigation.IsReady, _editorText!.Document != null)
             : _navigation with { SourceMatches = _sourceMatches });
+        SpeechContent.SetNavigationContext(_navigation with { SourceMatches = _sourceMatches });
         RaisePropertyChanged(nameof(TextPassages));
+        RaisePropertyChanged(nameof(SpeechPassages));
         RaisePropertyChanged(nameof(CanShowImageTextOverlay));
     }
     public void ReportActionFailure()

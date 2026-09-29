@@ -2163,7 +2163,7 @@ SOFTWARE.
   <data name="CapturePane_FileUnavailable" xml:space="preserve"><value>Couldn&apos;t read file properties.</value></data>
   <data name="CapturePane_FolderUnavailable" xml:space="preserve"><value>The folder could not be opened.</value></data>
   <data name="CapturePane_DetailsTab.Header" xml:space="preserve"><value>Details</value></data>
-  <data name="CapturePane_TextTab" xml:space="preserve"><value>Text</value></data>
+  <data name="CapturePane_TextTab.Header" xml:space="preserve"><value>Text</value></data>
   <data name="CapturePane_Search.PlaceholderText" xml:space="preserve"><value>Find text</value></data>
   <data name="CapturePane_Search.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Find text</value></data>
   <data name="CapturePane_SourceFilter.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Text source</value></data>
@@ -2253,4 +2253,14 @@ SOFTWARE.
   <data name="CaptureText_Title.Text" xml:space="preserve"><value>Text and QR codes</value></data>
   <data name="CaptureText_Info.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>About text and QR codes</value></data>
   <data name="CaptureText_Hint.Text" xml:space="preserve"><value>Find text and QR codes in this capture. Select a result to locate it, or copy the text to use elsewhere.</value></data>
+  <data name="CapturePane_SpeechTab.Header" xml:space="preserve"><value>Speech</value></data>
+  <data name="CaptureSpeech_Title.Text" xml:space="preserve"><value>Speech to text</value></data>
+  <data name="CaptureSpeech_Info.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>About speech to text</value></data>
+  <data name="CaptureSpeech_Hint.Text" xml:space="preserve"><value>Transcribe speech in this recording. Select a result to jump to that moment, or copy the transcript to use elsewhere.</value></data>
+  <data name="CaptureSpeech_Search.PlaceholderText" xml:space="preserve"><value>Find in transcript</value></data>
+  <data name="CaptureSpeech_Search.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Find in transcript</value></data>
+  <data name="CaptureSpeech_EmptyTitle.Text" xml:space="preserve"><value>No speech found</value></data>
+  <data name="CaptureSpeech_EmptyDescription.Text" xml:space="preserve"><value>No speech was detected in this recording.</value></data>
+  <data name="CaptureSummary_VideoHint" xml:space="preserve"><value>Create an AI summary from text and speech in this video. Find text or transcribe audio first.</value></data>
+  <data name="CaptureSummary_AudioHint" xml:space="preserve"><value>Create an AI summary from this recording&apos;s transcript. Transcribe audio first.</value></data>
 </root>

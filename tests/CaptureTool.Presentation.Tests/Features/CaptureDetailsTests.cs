@@ -18,6 +18,102 @@ namespace CaptureTool.Presentation.Tests.Features;
 public sealed class CaptureDetailsTests
 {
     [TestMethod]
+    public async Task VideoTextAndSpeechKeepIndependentSearchCopyAndNavigationState()
+    {
+        var setup = new Setup();
+        Guid run = Guid.NewGuid();
+        var record = new CaptureAnalysisRecord(CaptureId.New(), AnalysisMediaKind.Video,
+            new(new string('a', 64)), "plan", run,
+            [Result(new TranscriptMetadata("en", [new("Spoken invoice", TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(4))]), run)]);
+        setup.Reader.Setup(x => x.ReadAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(() => new CaptureDetailsSnapshot(CaptureDetailsStatus.Available, record));
+        using var vm = setup.ViewModel;
+        vm.SetNavigationContext(new(true, true));
+        await vm.OpenAsync("capture.mp4", AnalysisMediaKind.Video);
+        Assert.IsTrue(vm.ShowSpeechResults);
+        Assert.IsFalse(vm.ShowSpeechAction);
+        Assert.IsFalse(vm.ShowTextResults);
+        Assert.IsFalse(vm.ShowTextEmptyState);
+        Assert.IsTrue(vm.ShowScanTextAction, "Transcribing a video does not complete its text scan.");
+        Assert.IsFalse(vm.NeedsSummaryInputs, "A transcript is still available to the summary feature.");
+        vm.SpeechContent.Query = "spoken";
+        var speech = vm.SpeechPassages.Single();
+        vm.SpeechContent.SelectedPassage = speech;
+        Assert.IsTrue(speech.CanNavigate);
+        Assert.AreEqual(TimeSpan.FromSeconds(3), speech.SelectedLocation!.Time);
+
+        record = record.WithResult(Result(new TextRecognitionMetadata([new("Visible invoice", timestamp: TimeSpan.FromSeconds(1))]), run))
+            .WithResult(Result(new QrCodeMetadata([new("https://example.com", new(.1, .1, .2, .2))]), run));
+        await vm.RefreshAsync();
+        Assert.IsTrue(vm.ShowTextResults);
+        Assert.IsTrue(vm.ShowSpeechResults);
+        Assert.HasCount(2, vm.TextPassages);
+        Assert.HasCount(1, vm.SpeechPassages);
+        Assert.HasCount(3, vm.Content.Passages, "Summary inputs retain all sources.");
+        Assert.AreSame(speech, vm.SpeechContent.SelectedPassage);
+        Assert.AreEqual("spoken", vm.SpeechContent.Query);
+        Assert.IsFalse(vm.TextContent.Filters.Any(filter => filter.Source == CaptureTextSource.Speech));
+        Assert.IsFalse(vm.SpeechContent.HasSources);
+        vm.TextContent.Query = "visible";
+        vm.TextContent.SelectedPassage = vm.TextContent.Visible.Single();
+        await vm.CopyResultsCommand.ExecuteAsync(null);
+        setup.Clipboard.Verify(x => x.CopyTextAsync("Visible invoice"), Times.Once);
+        await vm.CopySpeechResultsCommand.ExecuteAsync(null);
+        setup.Clipboard.Verify(x => x.CopyTextAsync("Spoken invoice"), Times.Once);
+        vm.SpeechContent.Query = "no matching speech";
+        Assert.IsFalse(vm.SpeechContent.HasText);
+        Assert.IsTrue(vm.ShowSpeechResults);
+        Assert.IsFalse(vm.ShowSpeechEmptyState, "An empty search is not an empty transcription.");
+        Assert.AreEqual("Visible invoice", vm.TextContent.CopyVisibleScope());
+    }
+
+    [TestMethod]
+    [DataRow(AnalysisMediaKind.Audio)]
+    [DataRow(AnalysisMediaKind.Video)]
+    public async Task SpeechHasItsOwnInitialLoadingAndEmptyStates(AnalysisMediaKind kind)
+    {
+        var setup = new Setup();
+        CaptureDetailsSnapshot snapshot = new(CaptureDetailsStatus.Empty);
+        setup.Reader.Setup(x => x.ReadAsync(It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync(() => snapshot);
+        using var vm = setup.ViewModel;
+        await vm.OpenAsync("capture", kind);
+        Assert.IsTrue(vm.ShowSpeechAction);
+        Assert.IsFalse(vm.ShowSpeechResults);
+        Assert.IsFalse(vm.ShowSpeechEmptyState);
+        Assert.AreEqual(kind == AnalysisMediaKind.Video, vm.ShowScanTextAction);
+        var run = new AnalysisRun(Guid.NewGuid(), Guid.NewGuid(), 1, "plan", null, AnalysisRunStatus.Queued,
+            [AnalysisCapability.Transcription], []);
+        snapshot = new(CaptureDetailsStatus.Empty, Run: run);
+        await vm.RefreshAsync();
+        Assert.IsTrue(vm.TranscriptAction.IsRunning);
+        Assert.IsTrue(vm.ShowSpeechAction);
+        Assert.IsFalse(vm.TranscriptAction.Command.CanExecute(null));
+        Assert.IsFalse(vm.ShowSpeechResults);
+        Assert.IsFalse(vm.ShowSpeechEmptyState);
+        snapshot = new(CaptureDetailsStatus.Available, new CaptureAnalysisRecord(CaptureId.New(), kind,
+            new(new string('a', 64)), "plan", run.Id, [Result(new TranscriptMetadata("en", []), run.Id)]));
+        await vm.RefreshAsync();
+        Assert.IsFalse(vm.ShowSpeechAction);
+        Assert.IsFalse(vm.TranscriptAction.IsRunning);
+        Assert.IsFalse(vm.ShowSpeechResults);
+        Assert.IsTrue(vm.ShowSpeechEmptyState);
+        Assert.IsFalse(vm.ShowTextEmptyState);
+        Assert.AreEqual(kind == AnalysisMediaKind.Video, vm.ShowScanTextAction);
+    }
+
+    [TestMethod]
+    [DataRow(AnalysisMediaKind.Image, "CaptureSummary_Hint/Text")]
+    [DataRow(AnalysisMediaKind.Video, "CaptureSummary_VideoHint")]
+    [DataRow(AnalysisMediaKind.Audio, "CaptureSummary_AudioHint")]
+    public async Task SummaryHelpDescribesTheMediaKind(AnalysisMediaKind kind, string key)
+    {
+        var setup = new Setup();
+        using var vm = setup.ViewModel;
+        await vm.OpenAsync("capture", kind);
+        Assert.AreEqual(key, vm.SummaryHint);
+    }
+
+    [TestMethod]
     [DataRow(false)]
     [DataRow(true)]
     public async Task CombinedScanWaitsForBothResultsAndRetriesOnlyWhenIncomplete(bool textFails)
@@ -91,7 +187,6 @@ public sealed class CaptureDetailsTests
         Assert.IsTrue(vm.ShowTextResults);
         Assert.IsFalse(vm.ShowTextEmptyState);
         Assert.IsFalse(vm.ShowScanTextAction);
-        Assert.IsFalse(vm.ShowTextActions);
 
         vm.TextContent.Query = "no matching text";
         Assert.IsFalse(vm.TextContent.HasText);

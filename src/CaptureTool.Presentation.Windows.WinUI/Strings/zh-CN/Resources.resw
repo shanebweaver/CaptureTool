@@ -1882,7 +1882,7 @@ SOFTWARE.
   <data name="CapturePane_FileUnavailable" xml:space="preserve"><value>无法读取文件属性。</value></data>
   <data name="CapturePane_FolderUnavailable" xml:space="preserve"><value>无法打开文件夹。</value></data>
   <data name="CapturePane_DetailsTab.Header" xml:space="preserve"><value>详细信息</value></data>
-  <data name="CapturePane_TextTab" xml:space="preserve"><value>文本</value></data>
+  <data name="CapturePane_TextTab.Header" xml:space="preserve"><value>文本</value></data>
   <data name="CapturePane_Search.PlaceholderText" xml:space="preserve"><value>查找文本</value></data>
   <data name="CapturePane_Search.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>查找文本</value></data>
   <data name="CapturePane_SourceFilter.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>文本来源</value></data>
@@ -1985,4 +1985,14 @@ SOFTWARE.
   <data name="CaptureText_Title.Text" xml:space="preserve"><value>文字和二维码</value></data>
   <data name="CaptureText_Info.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>关于文字和二维码</value></data>
   <data name="CaptureText_Hint.Text" xml:space="preserve"><value>查找此捕获内容中的文字和二维码。选择结果以定位其位置，或复制文字以在其他地方使用。</value></data>
+  <data name="CapturePane_SpeechTab.Header" xml:space="preserve"><value>语音</value></data>
+  <data name="CaptureSpeech_Title.Text" xml:space="preserve"><value>语音转文字</value></data>
+  <data name="CaptureSpeech_Info.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>关于语音转文字</value></data>
+  <data name="CaptureSpeech_Hint.Text" xml:space="preserve"><value>将此录制中的语音转写为文字。选择结果可跳转到对应时刻，也可复制转写文本以在其他位置使用。</value></data>
+  <data name="CaptureSpeech_Search.PlaceholderText" xml:space="preserve"><value>在转写文本中查找</value></data>
+  <data name="CaptureSpeech_Search.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>在转写文本中查找</value></data>
+  <data name="CaptureSpeech_EmptyTitle.Text" xml:space="preserve"><value>未找到语音</value></data>
+  <data name="CaptureSpeech_EmptyDescription.Text" xml:space="preserve"><value>未在此录制中检测到语音。</value></data>
+  <data name="CaptureSummary_VideoHint" xml:space="preserve"><value>根据此视频中的文字和语音创建 AI 摘要。请先查找文字或转写音频。</value></data>
+  <data name="CaptureSummary_AudioHint" xml:space="preserve"><value>根据此录制的转写文本创建 AI 摘要。请先转写音频。</value></data>
 </root>

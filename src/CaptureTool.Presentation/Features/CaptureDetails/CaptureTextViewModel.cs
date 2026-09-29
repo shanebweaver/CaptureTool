@@ -15,6 +15,7 @@ public sealed class CaptureTextViewModel : ViewModelBase
     private readonly ILocalizationService _text;
     private readonly CaptureTextFilter[] _sourceFilters;
     private IReadOnlyList<CaptureTextPassage> _all = [];
+    internal IReadOnlyList<CaptureTextPassage> All => _all;
     private CaptureTextPassage[] _filtered = [];
     private CaptureTextNavigationContext _context = new(false, false);
     public ObservableCollection<CaptureTextPassage> Visible { get; } = [];

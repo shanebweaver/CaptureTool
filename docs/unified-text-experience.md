@@ -4,9 +4,11 @@ The image editor's **Extract text** command opens the capture pane's **Text** ta
 
 Opening Details or switching to Text only reads available results. The shortcut requests extraction when text is missing. Existing matching results, including completed empty results, are reused. The pane holds search, passage navigation, copy, QR actions, and progress. Image selection uses the same renderer for saved and current-image text.
 
+Images have a **Text** tab, audio recordings have a **Speech** tab, and videos have both. Text contains on-screen text and QR codes. Speech contains the **Transcribe audio** action and its transcript. Each tab keeps its own search, selection, copy scope, and empty state. Selecting a transcript passage seeks to its timestamp. Available text and speech still contribute to recording summaries, whose info tooltip explains the inputs.
+
 ## Feedback and progress
 
-Action buttons keep their labels and reserve space for a progress ring. Reading file details uses a thin progress bar at the pane's top edge, outside the content layout. Result counts stay on one line.
+Action buttons keep their labels and size while an Aurora edge indicates progress. Completed actions are replaced by their results or an empty state. Reading file details uses a thin progress bar at the pane's top edge, outside the content layout. Result counts stay on one line.
 
 Rename validation, unavailable locations, empty extraction results, and failures use the existing app snackbars. Repeated metadata reads do not repeat the same notification. Opening cached empty results stays quiet, and a hidden pane does not announce background updates. Prerequisites for audio and video summaries appear in the action's tooltip and accessibility help text.
 

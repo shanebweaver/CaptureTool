@@ -21,7 +21,10 @@ public sealed partial class CaptureDetailsPane : UserControl, INotifyPropertyCha
     private string? _workingPath;
     private int _sourceVersion;
     private CaptureTextNavigationContext _navigation = new(false, false);
-    private static int _preferredTab;
+    private static string _preferredTab = nameof(FileDetailsTab);
+    private bool _updatingTabs = true;
+    private CaptureTextViewModel? ActiveTextContent => ReferenceEquals(ContentTabs.SelectedItem, TextTab) ? ViewModel?.TextContent :
+        ReferenceEquals(ContentTabs.SelectedItem, SpeechTab) ? ViewModel?.SpeechContent : null;
     private CaptureTextPassage? _selectedPassage;
     private bool _navigationQueued;
     private bool _userNavigationQueued;
@@ -36,7 +39,7 @@ public sealed partial class CaptureDetailsPane : UserControl, INotifyPropertyCha
     public CaptureDetailsPane()
     {
         InitializeComponent();
-        ContentTabs.SelectedIndex = _preferredTab;
+        UpdateTabs();
         Loaded += (_, _) => Open();
         Unloaded += (_, _) => Release();
     }
@@ -53,6 +56,7 @@ public sealed partial class CaptureDetailsPane : UserControl, INotifyPropertyCha
         _navigation = navigation;
         // Preserve filters and item bindings while the pane is temporarily closed.
         if (changed) Release();
+        UpdateTabs();
         if (!active)
         {
             EditorText?.Cancel();
@@ -68,6 +72,25 @@ public sealed partial class CaptureDetailsPane : UserControl, INotifyPropertyCha
         Open();
     }
 
+    private void UpdateTabs()
+    {
+        PivotItem[] tabs = _kind switch
+        {
+            AnalysisMediaKind.Audio => [FileDetailsTab, SpeechTab, SummaryTab],
+            AnalysisMediaKind.Video => [FileDetailsTab, TextTab, SpeechTab, SummaryTab],
+            _ => [FileDetailsTab, TextTab, SummaryTab]
+        };
+        if (ContentTabs.Items.Cast<PivotItem>().SequenceEqual(tabs)) { _updatingTabs = false; return; }
+        _updatingTabs = true;
+        foreach (var item in ContentTabs.Items.Cast<PivotItem>().Except(tabs).ToArray()) ContentTabs.Items.Remove(item);
+        for (int index = 0; index < tabs.Length; index++)
+            if (!ContentTabs.Items.Contains(tabs[index])) ContentTabs.Items.Insert(index, tabs[index]);
+        ContentTabs.SelectedItem = tabs.FirstOrDefault(tab => tab.Name == _preferredTab) ?? FileDetailsTab;
+        _updatingTabs = false;
+        UpdateSelectedPassage();
+        UpdateTextOverlay();
+    }
+
     private void Open()
     {
         if (!_active || !IsLoaded || ViewModel != null || string.IsNullOrWhiteSpace(_path)) return;
@@ -78,6 +101,8 @@ public sealed partial class CaptureDetailsPane : UserControl, INotifyPropertyCha
         ViewModel.SetNavigationContext(_navigation);
         ViewModel.TextContent.ScrollRequested += ScrollToPassage;
         ViewModel.TextContent.PropertyChanged += SelectionChanged;
+        ViewModel.SpeechContent.ScrollRequested += ScrollToPassage;
+        ViewModel.SpeechContent.PropertyChanged += SelectionChanged;
         ViewModel.PropertyChanged += ViewModelChanged;
         PropertyChanged?.Invoke(this, new(nameof(ViewModel)));
         _openTask = ViewModel.OpenAsync(_path, _kind, _workingPath);
@@ -86,7 +111,7 @@ public sealed partial class CaptureDetailsPane : UserControl, INotifyPropertyCha
 
     public void OpenText()
     {
-        ContentTabs.SelectedIndex = 1;
+        ContentTabs.SelectedItem = TextTab;
         _extractTextRequested = true;
         Open();
         _ = ExtractRequestedTextAsync();
@@ -100,7 +125,7 @@ public sealed partial class CaptureDetailsPane : UserControl, INotifyPropertyCha
         try
         {
             await _openTask;
-            if (_active && ContentTabs.SelectedIndex == 1 && ReferenceEquals(model, ViewModel)) await model.EnsureTextAsync();
+            if (_active && ReferenceEquals(ContentTabs.SelectedItem, TextTab) && ReferenceEquals(model, ViewModel)) await model.EnsureTextAsync();
         }
         catch (OperationCanceledException) { }
     }
@@ -115,6 +140,8 @@ public sealed partial class CaptureDetailsPane : UserControl, INotifyPropertyCha
         {
             ViewModel.TextContent.ScrollRequested -= ScrollToPassage;
             ViewModel.TextContent.PropertyChanged -= SelectionChanged;
+            ViewModel.SpeechContent.ScrollRequested -= ScrollToPassage;
+            ViewModel.SpeechContent.PropertyChanged -= SelectionChanged;
             ViewModel.PropertyChanged -= ViewModelChanged;
             ViewModel.Dispose();
         }
@@ -128,30 +155,38 @@ public sealed partial class CaptureDetailsPane : UserControl, INotifyPropertyCha
     private void Close_Click(object sender, RoutedEventArgs e) => CloseRequested?.Invoke(this, EventArgs.Empty);
     private void ContentTabs_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (!ReferenceEquals(sender, ContentTabs) || !e.AddedItems.OfType<PivotItem>().Any(item => ReferenceEquals(item, ContentTabs.SelectedItem))) return;
-        _preferredTab = ContentTabs.SelectedIndex;
-        if (_preferredTab != 1) EditorText?.Cancel();
+        if (_updatingTabs || !ReferenceEquals(sender, ContentTabs) || !e.AddedItems.OfType<PivotItem>().Any(item => ReferenceEquals(item, ContentTabs.SelectedItem))) return;
+        _preferredTab = ((PivotItem)ContentTabs.SelectedItem).Name;
+        if (!ReferenceEquals(ContentTabs.SelectedItem, TextTab)) EditorText?.Cancel();
+        _userNavigationQueued = false;
+        ClearLocation?.Invoke();
+        UpdateSelectedPassage();
         UpdateTextOverlay();
-        if (_preferredTab != 1) ClearLocation?.Invoke();
+        RequestNavigation();
     }
     private void UpdateTextOverlay()
     {
-        bool show = _active && ContentTabs.SelectedIndex == 1 && ViewModel?.CanShowImageTextOverlay == true;
+        bool show = _active && ReferenceEquals(ContentTabs.SelectedItem, TextTab) && ViewModel?.CanShowImageTextOverlay == true;
         TextOverlayChanged?.Invoke(show ? ViewModel!.TextPassages : null);
         if (show) RequestNavigation();
     }
     private void ScrollToPassage(CaptureTextPassage passage)
     {
-        Passages.ScrollIntoView(passage, ScrollIntoViewAlignment.Leading);
+        if (ActiveTextContent?.SelectedPassage != passage) return;
+        (passage.Source == CaptureTextSource.Speech ? SpeechPassages : Passages).ScrollIntoView(passage, ScrollIntoViewAlignment.Leading);
         RequestNavigation(userInitiated: true);
     }
     private void SelectionChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (e.PropertyName != nameof(CaptureTextViewModel.SelectedPassage)) return;
-        if (_selectedPassage != null) _selectedPassage.PropertyChanged -= SelectedPassageChanged;
-        _selectedPassage = ViewModel?.TextContent.SelectedPassage;
-        if (_selectedPassage != null) _selectedPassage.PropertyChanged += SelectedPassageChanged;
+        if (e.PropertyName != nameof(CaptureTextViewModel.SelectedPassage) || !ReferenceEquals(sender, ActiveTextContent)) return;
+        UpdateSelectedPassage();
         RequestNavigation(userInitiated: _selectedPassage != null);
+    }
+    private void UpdateSelectedPassage()
+    {
+        if (_selectedPassage != null) _selectedPassage.PropertyChanged -= SelectedPassageChanged;
+        _selectedPassage = ActiveTextContent?.SelectedPassage;
+        if (_selectedPassage != null) _selectedPassage.PropertyChanged += SelectedPassageChanged;
     }
     private void SelectedPassageChanged(object? sender, PropertyChangedEventArgs e)
     {
@@ -168,13 +203,13 @@ public sealed partial class CaptureDetailsPane : UserControl, INotifyPropertyCha
             _navigationQueued = false;
             bool requested = _userNavigationQueued;
             _userNavigationQueued = false;
-            if (!_active || ContentTabs.SelectedIndex != 1) return;
+            if (!_active || ActiveTextContent is not { } content) return;
             ClearLocation?.Invoke();
-            if (ViewModel?.TextContent.SelectedPassage is { CanNavigate: true } passage &&
+            if (content.SelectedPassage is { CanNavigate: true } passage &&
                 Navigate?.Invoke(passage) != true)
-                ViewModel.ReportActionFailure();
-            else if (requested && ViewModel?.TextContent.SelectedPassage is { CanNavigate: false })
-                ViewModel.ReportLocationUnavailable();
+                ViewModel?.ReportActionFailure();
+            else if (requested && content.SelectedPassage is { CanNavigate: false })
+                ViewModel?.ReportLocationUnavailable();
         });
     }
     private void ViewModelChanged(object? sender, PropertyChangedEventArgs e)
@@ -184,8 +219,8 @@ public sealed partial class CaptureDetailsPane : UserControl, INotifyPropertyCha
             DispatcherQueue.TryEnqueue(() => { if (_active && ViewModel?.IsEditingName == true) { NameInput.Focus(FocusState.Programmatic); NameInput.SelectAll(); } });
         else if (e.PropertyName == nameof(CaptureDetailsViewModel.IsEditingName))
             DispatcherQueue.TryEnqueue(() => { if (_active) EditNameButton.Focus(FocusState.Programmatic); });
-        if (e.PropertyName == nameof(CaptureDetailsViewModel.TextPassages) &&
-            (ViewModel?.TextContent.SelectedPassage is not { } selected || !ViewModel.TextPassages.Any(passage => passage.Id == selected.Id)))
+        if (e.PropertyName is nameof(CaptureDetailsViewModel.TextPassages) or nameof(CaptureDetailsViewModel.SpeechPassages) &&
+            ActiveTextContent?.SelectedPassage == null)
             ClearLocation?.Invoke();
     }
     private async void NameInput_KeyDown(object sender, KeyRoutedEventArgs e)
@@ -210,7 +245,7 @@ public sealed partial class CaptureDetailsPane : UserControl, INotifyPropertyCha
     {
         if (e.ClickedItem is CaptureTextPassage passage && ViewModel != null)
         {
-            ViewModel.TextContent.SelectedPassage = passage;
+            (passage.Source == CaptureTextSource.Speech ? ViewModel.SpeechContent : ViewModel.TextContent).SelectedPassage = passage;
             RequestNavigation(userInitiated: true);
         }
     }
