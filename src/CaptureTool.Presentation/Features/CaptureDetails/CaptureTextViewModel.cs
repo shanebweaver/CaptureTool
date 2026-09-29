@@ -13,13 +13,23 @@ public sealed class CaptureTextViewModel : ViewModelBase
 {
     private const int PageSize = 100;
     private readonly ILocalizationService _text;
+    private readonly CaptureTextFilter[] _sourceFilters;
     private IReadOnlyList<CaptureTextPassage> _all = [];
     private CaptureTextPassage[] _filtered = [];
     private CaptureTextNavigationContext _context = new(false, false);
     public ObservableCollection<CaptureTextPassage> Visible { get; } = [];
     public ObservableCollection<CaptureTextFilter> Filters { get; }
     public string Query { get; set { if (Set(ref field, value)) Filter(); } } = string.Empty;
-    public CaptureTextFilter? SelectedFilter { get; set { if (Set(ref field, value)) Filter(); } }
+    public CaptureTextFilter? SelectedFilter
+    {
+        get;
+        set
+        {
+            // ComboBox can briefly clear its selection while the available sources change.
+            if (value == null || !Filters.Contains(value)) return;
+            if (Set(ref field, value)) Filter();
+        }
+    }
     public CaptureTextPassage? SelectedPassage { get; set { if (Set(ref field, value)) UpdateCount(); } }
     public bool HasMore => Visible.Count < _filtered.Length;
     public bool HasText => _filtered.Length > 0;
@@ -33,8 +43,9 @@ public sealed class CaptureTextViewModel : ViewModelBase
     public CaptureTextViewModel(ILocalizationService text)
     {
         _text = text;
-        Filters = [new(Text("AllSources"), null), new(Text("ScreenText"), CaptureTextSource.ImageText),
+        _sourceFilters = [new(Text("ScreenText"), CaptureTextSource.ImageText),
             new(Text("Speech"), CaptureTextSource.Speech), new(Text("Codes"), CaptureTextSource.QrCode)];
+        Filters = [new(Text("AllSources"), null)];
         SelectedFilter = Filters[0];
         NextCommand = new RelayCommand(() => Move(1), () => HasText && SelectedIndex < _filtered.Length - 1);
         PreviousCommand = new RelayCommand(() => Move(-1), () => SelectedIndex > 0);
@@ -48,8 +59,26 @@ public sealed class CaptureTextViewModel : ViewModelBase
         if (_all.SequenceEqual(replacement)) return;
         _all = replacement;
         SetNavigationContext(_context);
+        UpdateSourceFilters();
         Filter();
         RaisePropertyChanged(nameof(HasSources));
+    }
+
+    private void UpdateSourceFilters()
+    {
+        var sources = _all.Select(passage => passage.Source).ToHashSet();
+        if (SelectedFilter?.Source is { } selected && (sources.Count < 2 || !sources.Contains(selected)))
+            SelectedFilter = Filters[0];
+
+        // Retain existing items so a still-available selection survives incremental results.
+        for (int i = Filters.Count - 1; i > 0; i--)
+            if (!sources.Contains(Filters[i].Source!.Value)) Filters.RemoveAt(i);
+        int index = 1;
+        foreach (var filter in _sourceFilters.Where(filter => sources.Contains(filter.Source!.Value)))
+        {
+            if (index == Filters.Count || Filters[index] != filter) Filters.Insert(index, filter);
+            index++;
+        }
     }
 
     public void SetNavigationContext(CaptureTextNavigationContext context)

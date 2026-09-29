@@ -94,6 +94,8 @@ public sealed partial class ImageEditTextExtractionUiTests
         var search = Element("CapturePane_Search").AsTextBox();
         search.Text = "spoken";
         WaitForElementByName(window, automation, "Second spoken passage", TimeSpan.FromSeconds(45));
+        Assert.IsNull(window.FindFirstDescendant(automation.ConditionFactory.ByAutomationId("CapturePane_SourceFilter")),
+            "A recording with only speech results should not show a source selector.");
         Element("CapturePane_CopyResults").Patterns.Invoke.Pattern.Invoke();
         WaitFor(() => ReadDetailsClipboard() == "First spoken passage" + Environment.NewLine + "Second spoken passage" ? window : null,
             InteractionTimeout, "complete filtered transcript");

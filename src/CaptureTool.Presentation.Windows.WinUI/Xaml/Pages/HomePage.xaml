@@ -303,8 +303,8 @@
 
                     <GridView
                         x:Name="RecentCapturesGridView"
-                        AutomationProperties.AutomationId="Home_RecentCaptures"
                         Grid.Row="1"
+                        AutomationProperties.AutomationId="Home_RecentCaptures"
                         CanDragItems="False"
                         ContainerContentChanging="RecentCapturesGridView_ContainerContentChanging"
                         IsItemClickEnabled="True"

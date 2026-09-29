@@ -1883,7 +1883,8 @@ SOFTWARE.
   <data name="CapturePane_Previous.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Vorheriges Ergebnis</value></data>
   <data name="CapturePane_Next.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Nächstes Ergebnis</value></data>
   <data name="CapturePane_Occurrences.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Vorkommen</value></data>
-  <data name="CapturePane_OpenLink.Content" xml:space="preserve"><value>Link öffnen</value></data>
+  <data name="CapturePane_OpenLink.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Link öffnen</value></data>
+  <data name="CapturePane_OpenLink.ToolTipService.ToolTip" xml:space="preserve"><value>Link öffnen</value></data>
   <data name="CapturePane_LoadMore.Content" xml:space="preserve"><value>Mehr anzeigen</value></data>
   <data name="CapturePane_CopyResults.Content" xml:space="preserve"><value>Alle Ergebnisse kopieren</value></data>
   <data name="CapturePane_AllSources" xml:space="preserve"><value>Alle Quellen</value></data>

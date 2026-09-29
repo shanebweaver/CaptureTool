@@ -268,6 +268,70 @@ public sealed class CaptureTextTests
     }
 
     [TestMethod]
+    [DataRow(AnalysisMediaKind.Image)]
+    [DataRow(AnalysisMediaKind.Audio)]
+    [DataRow(AnalysisMediaKind.Video)]
+    public void SourceChoicesReflectAvailableCaptureResults(AnalysisMediaKind kind)
+    {
+        var vm = new CaptureTextViewModel(Text());
+        Assert.IsFalse(vm.HasSources);
+        Assert.HasCount(1, vm.Filters);
+        var text = new TextRecognitionMetadata([new("Screen text", new(.1, .1, .2, .02))]);
+        var speech = new TranscriptMetadata("en", [new("Spoken text", TimeSpan.Zero, TimeSpan.FromSeconds(1))]);
+        var qr = new QrCodeMetadata([new("https://example.com", new(.1, .1, .2, .2))]);
+        AnalysisPayload[] payloads = kind switch
+        {
+            AnalysisMediaKind.Image => [text, qr],
+            AnalysisMediaKind.Audio => [speech],
+            _ => [text, speech, qr]
+        };
+        CaptureTextSource?[] expected = kind switch
+        {
+            AnalysisMediaKind.Image => [null, CaptureTextSource.ImageText, CaptureTextSource.QrCode],
+            AnalysisMediaKind.Audio => [null, CaptureTextSource.Speech],
+            _ => [null, CaptureTextSource.ImageText, CaptureTextSource.Speech, CaptureTextSource.QrCode]
+        };
+        vm.Replace(CaptureTextPassage.From(Record(kind, payloads), Text()));
+        CollectionAssert.AreEqual(expected, vm.Filters.Select(filter => filter.Source).ToArray());
+        Assert.AreEqual(kind != AnalysisMediaKind.Audio, vm.HasSources);
+        vm.Query = "no matches";
+        CollectionAssert.AreEqual(expected, vm.Filters.Select(filter => filter.Source).ToArray(),
+            "Searching must not remove source choices or shift the selector.");
+    }
+
+    [TestMethod]
+    public void SourceChangesResetHiddenFiltersAndPreserveSelectionsThatStillApply()
+    {
+        var vm = new CaptureTextViewModel(Text());
+        var text = new CaptureTextPassage("text", CaptureTextSource.ImageText, "Text", "capture screen", []);
+        var qr = new CaptureTextPassage("qr", CaptureTextSource.QrCode, "QR", "capture code", []);
+        vm.Replace([text, qr]);
+        vm.Query = "capture";
+        var selected = vm.Filters.Single(filter => filter.Source == CaptureTextSource.QrCode);
+        vm.SelectedFilter = selected;
+        vm.Replace([text, Passage("speech", "capture speech"), qr]);
+        Assert.AreSame(selected, vm.SelectedFilter);
+        vm.SelectedFilter = null;
+        Assert.AreSame(selected, vm.SelectedFilter, "Transient binding updates must preserve the selection.");
+        Assert.AreEqual("capture code", vm.CopyVisibleScope());
+
+        vm.Replace([text]);
+        Assert.IsFalse(vm.HasSources);
+        Assert.AreSame(vm.Filters[0], vm.SelectedFilter);
+        Assert.AreEqual("capture", vm.Query);
+        Assert.AreEqual("capture screen", vm.CopyVisibleScope());
+        vm.Replace([text, qr]);
+        Assert.IsTrue(vm.HasSources);
+        Assert.HasCount(2, vm.Visible);
+        vm.SelectedFilter = vm.Filters.Single(filter => filter.Source == CaptureTextSource.ImageText);
+        vm.Replace([text]);
+        Assert.AreSame(vm.Filters[0], vm.SelectedFilter, "A hidden selector should return to All sources.");
+        vm.Replace([]);
+        Assert.IsFalse(vm.HasSources);
+        Assert.HasCount(1, vm.Filters);
+    }
+
+    [TestMethod]
     public void RecycledOccurrenceSelectionCannotNavigateToAnotherPassage()
     {
         var first = Passage("first", "First", TimeSpan.FromSeconds(1));
@@ -316,9 +380,9 @@ public sealed class CaptureTextTests
         new(text, new(x, y, width, height));
     private static IReadOnlyList<CaptureTextPassage> ImageRows(RecognizedText[] words) =>
         CaptureTextPassage.From(Record(AnalysisMediaKind.Image, new TextRecognitionMetadata(words)), Text());
-    private static CaptureAnalysisRecord Record(AnalysisMediaKind kind, AnalysisPayload payload) =>
+    private static CaptureAnalysisRecord Record(AnalysisMediaKind kind, params AnalysisPayload[] payloads) =>
         new(CaptureId.New(), kind, new(new string('a', 64)), "test", Guid.NewGuid(),
-            [new(payload, new("test", "test", "test", "1"), DateTimeOffset.UtcNow, "test")]);
+            payloads.Select(payload => new AnalysisResult(payload, new("test", "test", "test", "1"), DateTimeOffset.UtcNow, "test")));
     private static ILocalizationService Text()
     {
         var text = new Mock<ILocalizationService>();

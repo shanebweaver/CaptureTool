@@ -22,12 +22,15 @@
 
         <!--  Toolbar  -->
         <CommandBar
-            AutomationProperties.AutomationId="AudioEdit_CommandBar"
             HorizontalAlignment="Stretch"
+            AutomationProperties.AutomationId="AudioEdit_CommandBar"
             DefaultLabelPosition="Right"
             IsOpen="False">
-            <AppBarToggleButton x:Name="DetailsToggle" x:Uid="CapturePane_Toggle" Icon="Bullets"
+            <AppBarToggleButton
+                x:Name="DetailsToggle"
+                x:Uid="CapturePane_Toggle"
                 AutomationProperties.AutomationId="Editor_DetailsToggle"
+                Icon="Bullets"
                 IsChecked="{x:Bind DetailsHost.IsPaneOpen, Mode=OneWay}" />
             <!--  Open in Clipchamp  -->
             <AppBarButton
@@ -69,12 +72,12 @@
         </CommandBar>
 
         <controls:CaptureDetailsHost
-            Grid.Row="1"
             x:Name="DetailsHost"
-            SourcePath="{x:Bind ViewModel.DetailsSourcePath, Mode=OneWay}"
+            Grid.Row="1"
+            IsSourceReady="{x:Bind ViewModel.IsMediaReady, Mode=OneWay}"
             MediaKind="Audio"
-            WorkingPath="{x:Bind ViewModel.AudioPath, Mode=OneWay}"
-            IsSourceReady="{x:Bind ViewModel.IsMediaReady, Mode=OneWay}">
+            SourcePath="{x:Bind ViewModel.DetailsSourcePath, Mode=OneWay}"
+            WorkingPath="{x:Bind ViewModel.AudioPath, Mode=OneWay}">
             <Grid Padding="0">
 
                 <Border
@@ -142,8 +145,7 @@
                 </Border>
 
 
-                <Grid
-                    Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.IsMediaLoading), Mode=OneWay}">
+                <Grid Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.IsMediaLoading), Mode=OneWay}">
                     <StackPanel
                         HorizontalAlignment="Center"
                         VerticalAlignment="Center"
@@ -161,9 +163,7 @@
                     </StackPanel>
                 </Grid>
 
-                <Grid
-                    Background="{ThemeResource AcrylicBackgroundFillColorBaseBrush}"
-                    Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.HasMediaFailure), Mode=OneWay}">
+                <Grid Background="{ThemeResource AcrylicBackgroundFillColorBaseBrush}" Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.HasMediaFailure), Mode=OneWay}">
                     <StackPanel
                         MaxWidth="520"
                         HorizontalAlignment="Center"

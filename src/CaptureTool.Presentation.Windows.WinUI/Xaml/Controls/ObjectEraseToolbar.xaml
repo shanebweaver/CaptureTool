@@ -21,9 +21,7 @@
         </Border.Shadow>
         <StackPanel Orientation="Horizontal" Spacing="8">
             <FontIcon Glyph="&#xE74D;" />
-            <TextBlock
-                x:Uid="ObjectEraseToolbar_Instruction"
-                VerticalAlignment="Center" />
+            <TextBlock x:Uid="ObjectEraseToolbar_Instruction" VerticalAlignment="Center" />
         </StackPanel>
     </Border>
 </local:UserControlBase>

@@ -2170,7 +2170,8 @@ SOFTWARE.
   <data name="CapturePane_Previous.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Previous result</value></data>
   <data name="CapturePane_Next.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Next result</value></data>
   <data name="CapturePane_Occurrences.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Occurrences</value></data>
-  <data name="CapturePane_OpenLink.Content" xml:space="preserve"><value>Open link</value></data>
+  <data name="CapturePane_OpenLink.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Open link</value></data>
+  <data name="CapturePane_OpenLink.ToolTipService.ToolTip" xml:space="preserve"><value>Open link</value></data>
   <data name="CapturePane_LoadMore.Content" xml:space="preserve"><value>Show more</value></data>
   <data name="CapturePane_CopyResults.Content" xml:space="preserve"><value>Copy all results</value></data>
   <data name="CapturePane_AllSources" xml:space="preserve"><value>All sources</value></data>

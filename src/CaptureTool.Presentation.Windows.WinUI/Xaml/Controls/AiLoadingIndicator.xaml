@@ -12,97 +12,95 @@
     IsTabStop="False"
     mc:Ignorable="d">
 
-    <Grid
-        Width="72"
-        Height="72">
+    <Grid Width="72" Height="72">
         <Grid.Resources>
             <Storyboard x:Name="MagicMotionStoryboard">
                 <DoubleAnimation
+                    EnableDependentAnimation="True"
+                    RepeatBehavior="Forever"
                     Storyboard.TargetName="OuterOrbitTransform"
                     Storyboard.TargetProperty="Angle"
-                    Duration="0:0:3.2"
-                    EnableDependentAnimation="True"
                     From="0"
-                    RepeatBehavior="Forever"
-                    To="360" />
+                    To="360"
+                    Duration="0:0:3.2" />
                 <DoubleAnimation
+                    EnableDependentAnimation="True"
+                    RepeatBehavior="Forever"
                     Storyboard.TargetName="InnerOrbitTransform"
                     Storyboard.TargetProperty="Angle"
-                    Duration="0:0:4.4"
-                    EnableDependentAnimation="True"
                     From="0"
-                    RepeatBehavior="Forever"
-                    To="-360" />
+                    To="-360"
+                    Duration="0:0:4.4" />
                 <DoubleAnimation
+                    AutoReverse="True"
+                    RepeatBehavior="Forever"
                     Storyboard.TargetName="GlowHalo"
                     Storyboard.TargetProperty="Opacity"
-                    AutoReverse="True"
-                    Duration="0:0:1.2"
                     From="0.08"
-                    RepeatBehavior="Forever"
-                    To="0.24" />
+                    To="0.24"
+                    Duration="0:0:1.2" />
                 <DoubleAnimation
+                    AutoReverse="True"
+                    EnableDependentAnimation="True"
+                    RepeatBehavior="Forever"
                     Storyboard.TargetName="GlowScaleTransform"
                     Storyboard.TargetProperty="ScaleX"
-                    AutoReverse="True"
-                    Duration="0:0:1.2"
-                    EnableDependentAnimation="True"
                     From="0.82"
-                    RepeatBehavior="Forever"
-                    To="1.12" />
+                    To="1.12"
+                    Duration="0:0:1.2" />
                 <DoubleAnimation
+                    AutoReverse="True"
+                    EnableDependentAnimation="True"
+                    RepeatBehavior="Forever"
                     Storyboard.TargetName="GlowScaleTransform"
                     Storyboard.TargetProperty="ScaleY"
-                    AutoReverse="True"
-                    Duration="0:0:1.2"
-                    EnableDependentAnimation="True"
                     From="0.82"
-                    RepeatBehavior="Forever"
-                    To="1.12" />
+                    To="1.12"
+                    Duration="0:0:1.2" />
                 <DoubleAnimation
+                    AutoReverse="True"
+                    RepeatBehavior="Forever"
                     Storyboard.TargetName="CoreSparkle"
                     Storyboard.TargetProperty="Opacity"
-                    AutoReverse="True"
-                    Duration="0:0:0.9"
                     From="0.72"
-                    RepeatBehavior="Forever"
-                    To="1" />
+                    To="1"
+                    Duration="0:0:0.9" />
                 <DoubleAnimation
+                    AutoReverse="True"
+                    EnableDependentAnimation="True"
+                    RepeatBehavior="Forever"
                     Storyboard.TargetName="CoreScaleTransform"
                     Storyboard.TargetProperty="ScaleX"
-                    AutoReverse="True"
-                    Duration="0:0:0.9"
-                    EnableDependentAnimation="True"
                     From="0.88"
-                    RepeatBehavior="Forever"
-                    To="1.04" />
+                    To="1.04"
+                    Duration="0:0:0.9" />
                 <DoubleAnimation
+                    AutoReverse="True"
+                    EnableDependentAnimation="True"
+                    RepeatBehavior="Forever"
                     Storyboard.TargetName="CoreScaleTransform"
                     Storyboard.TargetProperty="ScaleY"
-                    AutoReverse="True"
-                    Duration="0:0:0.9"
-                    EnableDependentAnimation="True"
                     From="0.88"
-                    RepeatBehavior="Forever"
-                    To="1.04" />
+                    To="1.04"
+                    Duration="0:0:0.9" />
                 <DoubleAnimation
-                    Storyboard.TargetName="OuterTwinkle"
-                    Storyboard.TargetProperty="Opacity"
                     AutoReverse="True"
                     BeginTime="0:0:0.2"
-                    Duration="0:0:0.7"
-                    From="0.25"
                     RepeatBehavior="Forever"
-                    To="1" />
-                <DoubleAnimation
-                    Storyboard.TargetName="InnerTwinkle"
+                    Storyboard.TargetName="OuterTwinkle"
                     Storyboard.TargetProperty="Opacity"
+                    From="0.25"
+                    To="1"
+                    Duration="0:0:0.7" />
+                <DoubleAnimation
                     AutoReverse="True"
                     BeginTime="0:0:0.55"
-                    Duration="0:0:0.8"
-                    From="0.2"
                     RepeatBehavior="Forever"
-                    To="0.9" />
+                    Storyboard.TargetName="InnerTwinkle"
+                    Storyboard.TargetProperty="Opacity"
+                    From="0.2"
+                    To="0.9"
+                    Duration="0:0:0.8" />
             </Storyboard>
         </Grid.Resources>
 
@@ -147,24 +145,24 @@
             </Canvas.RenderTransform>
 
             <Ellipse
-                Width="6"
-                Height="6"
                 Canvas.Left="27"
                 Canvas.Top="0"
+                Width="6"
+                Height="6"
                 Fill="{ThemeResource AccentFillColorDefaultBrush}" />
             <Ellipse
-                Width="4"
-                Height="4"
                 Canvas.Left="4"
                 Canvas.Top="40"
+                Width="4"
+                Height="4"
                 Fill="{ThemeResource TextFillColorPrimaryBrush}"
                 Opacity="0.7" />
             <Path
                 x:Name="OuterTwinkle"
-                Width="11"
-                Height="11"
                 Canvas.Left="45"
                 Canvas.Top="42"
+                Width="11"
+                Height="11"
                 Data="M 8,0 L 10,6 L 16,8 L 10,10 L 8,16 L 6,10 L 0,8 L 6,6 Z"
                 Fill="{ThemeResource AccentFillColorDefaultBrush}"
                 Stretch="Fill" />
@@ -180,18 +178,18 @@
 
             <Path
                 x:Name="InnerTwinkle"
-                Width="8"
-                Height="8"
                 Canvas.Left="17"
                 Canvas.Top="0"
+                Width="8"
+                Height="8"
                 Data="M 8,0 L 10,6 L 16,8 L 10,10 L 8,16 L 6,10 L 0,8 L 6,6 Z"
                 Fill="{ThemeResource TextFillColorPrimaryBrush}"
                 Stretch="Fill" />
             <Ellipse
-                Width="4"
-                Height="4"
                 Canvas.Left="1"
                 Canvas.Top="19"
+                Width="4"
+                Height="4"
                 Fill="{ThemeResource AccentFillColorDefaultBrush}"
                 Opacity="0.8" />
         </Canvas>

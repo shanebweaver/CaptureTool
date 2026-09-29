@@ -21,12 +21,15 @@
 
         <!--  Toolbar  -->
         <CommandBar
-            AutomationProperties.AutomationId="VideoEdit_CommandBar"
             HorizontalAlignment="Stretch"
+            AutomationProperties.AutomationId="VideoEdit_CommandBar"
             DefaultLabelPosition="Right"
             IsOpen="False">
-            <AppBarToggleButton x:Name="DetailsToggle" x:Uid="CapturePane_Toggle" Icon="Bullets"
+            <AppBarToggleButton
+                x:Name="DetailsToggle"
+                x:Uid="CapturePane_Toggle"
                 AutomationProperties.AutomationId="Editor_DetailsToggle"
+                Icon="Bullets"
                 IsChecked="{x:Bind DetailsHost.IsPaneOpen, Mode=OneWay}" />
             <!--  Trim  -->
             <AppBarToggleButton
@@ -92,15 +95,15 @@
 
         <!--  Content  -->
         <controls:CaptureDetailsHost
-            Grid.Row="1"
             x:Name="DetailsHost"
-            SourcePath="{x:Bind ViewModel.DetailsSourcePath, Mode=OneWay}"
-            MediaKind="Video"
+            Grid.Row="1"
+            EndSeconds="{x:Bind ViewModel.TrimEndSeconds, Mode=OneWay}"
             HasEdits="{x:Bind ViewModel.HasUnsavedChanges, Mode=OneWay}"
-            WorkingPath="{x:Bind ViewModel.VideoPath, Mode=OneWay}"
             IsSourceReady="{x:Bind ViewModel.IsMediaReady, Mode=OneWay}"
+            MediaKind="Video"
+            SourcePath="{x:Bind ViewModel.DetailsSourcePath, Mode=OneWay}"
             StartSeconds="{x:Bind ViewModel.TrimStartSeconds, Mode=OneWay}"
-            EndSeconds="{x:Bind ViewModel.TrimEndSeconds, Mode=OneWay}">
+            WorkingPath="{x:Bind ViewModel.VideoPath, Mode=OneWay}">
             <Grid Padding="8,0,8,8">
                 <MediaPlayerElement
                     x:Name="OriginalVideoPlayer"
@@ -145,9 +148,7 @@
                         HorizontalAlignment="Center"
                         VerticalAlignment="Center"
                         Spacing="16">
-                        <controls:AiLoadingIndicator
-                            x:Uid="VideoEdit_SuperResolutionProgressRing"
-                            IsActive="{x:Bind ViewModel.IsVideoSuperResolutionGenerating, Mode=OneWay}" />
+                        <controls:AiLoadingIndicator x:Uid="VideoEdit_SuperResolutionProgressRing" IsActive="{x:Bind ViewModel.IsVideoSuperResolutionGenerating, Mode=OneWay}" />
                         <TextBlock
                             x:Uid="VideoEdit_SuperResolutionProgressText"
                             HorizontalAlignment="Center"
@@ -194,9 +195,7 @@
                     </StackPanel>
                 </Grid>
 
-                <Grid
-                    Background="{ThemeResource AcrylicBackgroundFillColorBaseBrush}"
-                    Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.HasMediaFailure), Mode=OneWay}">
+                <Grid Background="{ThemeResource AcrylicBackgroundFillColorBaseBrush}" Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.HasMediaFailure), Mode=OneWay}">
                     <StackPanel
                         MaxWidth="520"
                         HorizontalAlignment="Center"
@@ -259,8 +258,8 @@
                     </Grid.ColumnDefinitions>
                     <TextBlock
                         x:Uid="VideoEdit_TrimStartTimeText"
-                        AutomationProperties.AutomationId="VideoEdit_TrimStartTime"
                         MinWidth="56"
+                        AutomationProperties.AutomationId="VideoEdit_TrimStartTime"
                         FontSize="12"
                         Text="{x:Bind FormatTime(ViewModel.TrimStartSeconds), Mode=OneWay}" />
                     <TextBlock

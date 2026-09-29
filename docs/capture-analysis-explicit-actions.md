@@ -26,6 +26,9 @@ shows a localized empty state in place of the search, navigation, and copy contr
 without an empty-text or empty-QR snackbar. Cached empty scans use the same state.
 A failed scan with no data leaves the action available to retry. Search controls
 appear when there is data, and an empty search never brings the scan button back.
+The source selector lists only sources with results in the current capture and
+is hidden when fewer than two sources are available. Search queries do not change
+the available source choices. A hidden or unavailable source selection resets to All sources.
 A Summary tab replaces the image-description section
 with screenshot summary and alt-text suggestions, each with a copy action.
 Feature descriptions appear in tooltips on info buttons beside the headings.

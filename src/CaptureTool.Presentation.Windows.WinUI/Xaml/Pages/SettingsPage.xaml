@@ -151,8 +151,8 @@
 
                 <StackPanel
                     x:Name="ContentPanel"
-                    Margin="54,0"
                     MaxWidth="800"
+                    Margin="54,0"
                     HorizontalAlignment="Stretch"
                     Spacing="12">
 
@@ -772,35 +772,69 @@
                         </Grid>
                     </StackPanel>
 
-                    <!-- One consent controls all local AI features. -->
-                    <StackPanel Spacing="4" AutomationProperties.AutomationId="CaptureMemorySettings">
+                    <!--  One consent controls all local AI features.  -->
+                    <StackPanel AutomationProperties.AutomationId="CaptureMemorySettings" Spacing="4">
                         <TextBlock x:Uid="CaptureMemory_SettingsHeader" Margin="0,4" />
-                        <Grid Padding="16,12" Background="{ThemeResource CardBackgroundFillColorDefault}"
-                              BorderBrush="{ThemeResource CardStrokeColorDefault}" BorderThickness="1" ColumnSpacing="16" CornerRadius="4">
+                        <Grid
+                            Padding="16,12"
+                            Background="{ThemeResource CardBackgroundFillColorDefault}"
+                            BorderBrush="{ThemeResource CardStrokeColorDefault}"
+                            BorderThickness="1"
+                            ColumnSpacing="16"
+                            CornerRadius="4">
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto" /><ColumnDefinition /><ColumnDefinition Width="Auto" /><ColumnDefinition Width="28" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="28" />
                             </Grid.ColumnDefinitions>
                             <SymbolIcon Symbol="Permissions" />
                             <StackPanel Grid.Column="1" VerticalAlignment="Center">
                                 <TextBlock x:Uid="AiSettings_ConsentHeader" TextWrapping="WrapWholeWords" />
-                                <TextBlock x:Uid="AiSettings_ConsentDescription" FontSize="12" Opacity=".75" TextWrapping="WrapWholeWords" />
+                                <TextBlock
+                                    x:Uid="AiSettings_ConsentDescription"
+                                    FontSize="12"
+                                    Opacity=".75"
+                                    TextWrapping="WrapWholeWords" />
                             </StackPanel>
-                            <CheckBox x:Uid="CaptureMemory_Consent" Grid.Column="2" MinWidth="0" HorizontalAlignment="Right"
-                                      AutomationProperties.AutomationId="CaptureMemoryConsent"
-                                      IsChecked="{x:Bind CaptureMemory.ConsentGranted, Mode=OneWay}" Click="CaptureMemoryConsent_Click" />
+                            <CheckBox
+                                x:Uid="CaptureMemory_Consent"
+                                Grid.Column="2"
+                                MinWidth="0"
+                                HorizontalAlignment="Right"
+                                AutomationProperties.AutomationId="CaptureMemoryConsent"
+                                Click="CaptureMemoryConsent_Click"
+                                IsChecked="{x:Bind CaptureMemory.ConsentGranted, Mode=OneWay}" />
                         </Grid>
-                        <Grid Padding="16,12" Background="{ThemeResource CardBackgroundFillColorDefault}"
-                              BorderBrush="{ThemeResource CardStrokeColorDefault}" BorderThickness="1" ColumnSpacing="16" CornerRadius="4">
+                        <Grid
+                            Padding="16,12"
+                            Background="{ThemeResource CardBackgroundFillColorDefault}"
+                            BorderBrush="{ThemeResource CardStrokeColorDefault}"
+                            BorderThickness="1"
+                            ColumnSpacing="16"
+                            CornerRadius="4">
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto" /><ColumnDefinition /><ColumnDefinition Width="Auto" /><ColumnDefinition Width="28" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="28" />
                             </Grid.ColumnDefinitions>
                             <SymbolIcon Symbol="Delete" />
                             <StackPanel Grid.Column="1" VerticalAlignment="Center">
                                 <TextBlock x:Uid="AiSettings_DeleteHeader" TextWrapping="WrapWholeWords" />
-                                <TextBlock x:Uid="AiSettings_DeleteDescription" FontSize="12" Opacity=".75" TextWrapping="WrapWholeWords" />
+                                <TextBlock
+                                    x:Uid="AiSettings_DeleteDescription"
+                                    FontSize="12"
+                                    Opacity=".75"
+                                    TextWrapping="WrapWholeWords" />
                             </StackPanel>
-                            <Button x:Uid="CaptureMemory_Delete" Grid.Column="2" HorizontalAlignment="Right" VerticalAlignment="Center"
-                                    AutomationProperties.AutomationId="CaptureMemoryDelete" Command="{x:Bind CaptureMemory.DeleteCommand}" />
+                            <Button
+                                x:Uid="CaptureMemory_Delete"
+                                Grid.Column="2"
+                                HorizontalAlignment="Right"
+                                VerticalAlignment="Center"
+                                AutomationProperties.AutomationId="CaptureMemoryDelete"
+                                Command="{x:Bind CaptureMemory.DeleteCommand}" />
                         </Grid>
                     </StackPanel>
 

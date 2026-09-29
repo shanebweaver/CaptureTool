@@ -46,9 +46,7 @@
             </Grid>
         </DataTemplate>
         <DataTemplate x:Key="AnalysisActionTemplate" x:DataType="details:CaptureAnalysisAction">
-            <Grid
-                Height="32"
-                Visibility="{x:Bind utils:VisibilityUtility.InverseBoolToVisibility(HasResult), Mode=OneWay}">
+            <Grid Height="32" Visibility="{x:Bind utils:VisibilityUtility.InverseBoolToVisibility(HasResult), Mode=OneWay}">
                 <Button
                     Height="32"
                     HorizontalAlignment="Stretch"
@@ -157,7 +155,10 @@
                         Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.CanEditName), Mode=OneWay}">
                         <FontIcon FontSize="14" Glyph="&#xE70F;" />
                     </Button>
-                    <Grid Grid.Column="1" Width="32" Height="32">
+                    <Grid
+                        Grid.Column="1"
+                        Width="32"
+                        Height="32">
                         <Button
                             Width="32"
                             Height="32"
@@ -261,8 +262,8 @@
                         Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.HasVisualMedia), Mode=OneWay}">
                         <TextBlock
                             x:Uid="CaptureText_Title"
-                            AutomationProperties.AutomationId="CaptureText_Title"
                             VerticalAlignment="Center"
+                            AutomationProperties.AutomationId="CaptureText_Title"
                             FontWeight="SemiBold" />
                         <Button
                             x:Uid="CaptureText_Info"
@@ -288,9 +289,7 @@
                         Margin="0,0,0,8"
                         Spacing="8"
                         Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.ShowTextActions), Mode=OneWay}">
-                        <Grid
-                            Height="32"
-                            Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.ShowScanTextAction), Mode=OneWay}">
+                        <Grid Height="32" Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.ShowScanTextAction), Mode=OneWay}">
                             <Button
                                 Height="32"
                                 HorizontalAlignment="Stretch"
@@ -337,6 +336,7 @@
                             <ComboBox
                                 x:Uid="CapturePane_SourceFilter"
                                 HorizontalAlignment="Stretch"
+                                AutomationProperties.AutomationId="CapturePane_SourceFilter"
                                 ItemsSource="{x:Bind ViewModel.TextContent.Filters, Mode=OneWay}"
                                 SelectedItem="{x:Bind ViewModel.TextContent.SelectedFilter, Mode=TwoWay}"
                                 Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.TextContent.HasSources), Mode=OneWay}">
@@ -412,16 +412,28 @@
                                             VerticalAlignment="Center"
                                             Query="{x:Bind Query, Mode=OneWay}"
                                             Text="{x:Bind Text}" />
-                                        <Button
-                                            x:Uid="CaptureDetails_Copy"
+                                        <StackPanel
                                             Grid.Column="1"
-                                            Padding="6"
                                             VerticalAlignment="Top"
-                                            Click="Copy_Click"
-                                            Style="{StaticResource SubtleButtonStyle}"
-                                            Tag="{x:Bind Text}">
-                                            <FontIcon FontSize="12" Glyph="&#xE8C8;" />
-                                        </Button>
+                                            Orientation="Horizontal">
+                                            <Button
+                                                x:Uid="CapturePane_OpenLink"
+                                                Padding="6"
+                                                Click="OpenLink_Click"
+                                                Style="{StaticResource SubtleButtonStyle}"
+                                                Tag="{x:Bind}"
+                                                Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(HasWebLink)}">
+                                                <FontIcon FontSize="12" Glyph="&#xE8A7;" />
+                                            </Button>
+                                            <Button
+                                                x:Uid="CaptureDetails_Copy"
+                                                Padding="6"
+                                                Click="Copy_Click"
+                                                Style="{StaticResource SubtleButtonStyle}"
+                                                Tag="{x:Bind Text}">
+                                                <FontIcon FontSize="12" Glyph="&#xE8C8;" />
+                                            </Button>
+                                        </StackPanel>
                                         <StackPanel
                                             Grid.Row="1"
                                             Grid.ColumnSpan="2"
@@ -443,12 +455,6 @@
                                                     </DataTemplate>
                                                 </ComboBox.ItemTemplate>
                                             </ComboBox>
-                                            <Button
-                                                x:Uid="CapturePane_OpenLink"
-                                                HorizontalAlignment="Left"
-                                                Click="OpenLink_Click"
-                                                Tag="{x:Bind}"
-                                                Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(HasWebLink)}" />
                                         </StackPanel>
                                     </Grid>
                                 </DataTemplate>

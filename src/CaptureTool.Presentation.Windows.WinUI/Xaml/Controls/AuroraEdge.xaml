@@ -7,7 +7,7 @@
     Background="Transparent"
     IsHitTestVisible="False"
     IsTabStop="False">
-    <!-- Keep layout bounds visible to accessibility even when only Composition draws the edge. -->
+    <!--  Keep layout bounds visible to accessibility even when only Composition draws the edge.  -->
     <Grid Background="Transparent">
         <Grid x:Name="CompositionHost" />
         <Border
@@ -16,9 +16,9 @@
             CornerRadius="4">
             <Border.BorderBrush>
                 <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                    <GradientStop Color="#129DD1" Offset="0" />
-                    <GradientStop Color="#8460D4" Offset="0.5" />
-                    <GradientStop Color="#CF68AF" Offset="1" />
+                    <GradientStop Offset="0" Color="#129DD1" />
+                    <GradientStop Offset="0.5" Color="#8460D4" />
+                    <GradientStop Offset="1" Color="#CF68AF" />
                 </LinearGradientBrush>
             </Border.BorderBrush>
         </Border>

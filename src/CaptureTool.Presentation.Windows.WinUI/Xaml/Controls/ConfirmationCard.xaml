@@ -6,9 +6,9 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="using:CaptureTool.Presentation.Windows.WinUI.Xaml.Controls"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    d:DataContext="{d:DesignInstance Type=local:ConfirmationCard}"
     HorizontalAlignment="Center"
     VerticalAlignment="Center"
+    d:DataContext="{d:DesignInstance Type=local:ConfirmationCard}"
     mc:Ignorable="d">
 
     <Border

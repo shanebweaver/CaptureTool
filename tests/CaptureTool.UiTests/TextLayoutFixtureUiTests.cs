@@ -114,6 +114,8 @@ public sealed partial class ImageEditTextExtractionUiTests
             return;
         }
         var results = Element("CapturePane_Search");
+        Assert.IsNull(window.FindFirstDescendant(automation.ConditionFactory.ByAutomationId("CapturePane_SourceFilter")),
+            "A capture with only recognized text should not show a source selector.");
         Assert.AreEqual(scanBounds.Top, results.BoundingRectangle.Top, "Results replace the action at the top of the tab.");
         Assert.IsNull(window.FindFirstDescendant(automation.ConditionFactory.ByAutomationId("CaptureAction_Qr")));
         Element("ImageEdit_TextExtractionOverlayMarker");

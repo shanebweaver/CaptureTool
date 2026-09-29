@@ -61,6 +61,14 @@ public sealed partial class ImageEditTextExtractionUiTests
         Element("CapturePane_CopyResults").Patterns.Invoke.Pattern.Invoke();
         WaitFor(() => ReadDetailsClipboard()?.Contains(editBeforeConsent ? "OCR MODE" : "Contoso invoice") == true ? window : null,
             InteractionTimeout, "text copied from the pane after first-use consent");
+        var sources = Element("CapturePane_SourceFilter");
+        sources.Patterns.ExpandCollapse.Pattern.Expand();
+        WaitForElementByName(window, automation, "On-screen text", InteractionTimeout);
+        WaitForElementByName(window, automation, "QR codes", InteractionTimeout);
+        Assert.IsNull(window.FindFirstDescendant(automation.ConditionFactory.ByName("Speech")),
+            "Image results must not offer the speech filter.");
+        Screenshot("image-source-choices");
+        sources.Patterns.ExpandCollapse.Pattern.Collapse();
         shortcut.Click();
         Assert.IsNull(Find("CaptureAction_ScanText_Loading"));
         Element("CapturePane_SummaryTab").Patterns.SelectionItem.Pattern.Select();
