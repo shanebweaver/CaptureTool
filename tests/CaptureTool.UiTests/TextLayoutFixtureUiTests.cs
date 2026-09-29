@@ -41,6 +41,15 @@ public sealed partial class ImageEditTextExtractionUiTests
         using var automation = new UIA3Automation();
         var window = WaitForMainWindow(app, automation, AppLaunchTimeout);
         Element("ImageEdit_CommandBar"); MaximizeWindow(window);
+        if (emptyScan)
+        {
+            // Exercise the busy effect in dark mode without changing the desktop theme.
+            WaitForElementByName(window, automation, "File", InteractionTimeout).Click();
+            Element("AppMenu_SettingsItem").Patterns.Invoke.Pattern.Invoke();
+            WaitForElementByName(window, automation, "Dark", InteractionTimeout).Patterns.SelectionItem.Pattern.Select();
+            WaitForElementByName(window, automation, "Back", InteractionTimeout).Patterns.Invoke.Pattern.Invoke();
+            Element("ImageEdit_CommandBar");
+        }
         Element("Editor_DetailsToggle").Click();
         Element("CapturePane_TextTab").Patterns.SelectionItem.Pattern.Select();
         var scanBounds = StableScanBounds();
@@ -53,14 +62,38 @@ public sealed partial class ImageEditTextExtractionUiTests
         WaitForElementByName(consent, automation, "Allow local AI", InteractionTimeout).AsButton().Invoke();
         WaitForElementRemoved(window, automation, "CaptureMemoryConsentDialog", InteractionTimeout);
         var loading = Element("CaptureAction_ScanText_Loading");
-        Assert.IsGreaterThanOrEqualTo(scanBounds.Bottom, loading.BoundingRectangle.Top, "Progress belongs below the action.");
-        Assert.IsFalse(scanBounds.IntersectsWith(loading.BoundingRectangle));
+        Screenshot("action-loading");
+        Assert.AreEqual(scanBounds, loading.BoundingRectangle, "The busy edge should follow the button's bounds.");
+        Assert.AreEqual(ControlType.ProgressBar, loading.ControlType);
         Assert.AreEqual(scanBounds, StableScanBounds(), "Loading must not resize or move the button.");
         Assert.AreEqual(scanLabel, Element("CaptureAction_ScanText").Name);
         Assert.IsFalse(Element("CaptureAction_ScanText").IsEnabled);
         Assert.IsNull(window.FindFirstDescendant(automation.ConditionFactory.ByAutomationId("CapturePane_Search")));
         Assert.IsNull(window.FindFirstDescendant(automation.ConditionFactory.ByAutomationId("CapturePane_EmptyTextTitle")));
-        Screenshot("action-loading");
+        if (new Windows.UI.ViewManagement.UISettings().AnimationsEnabled &&
+            !new Windows.UI.ViewManagement.AccessibilitySettings().HighContrast)
+        {
+            using var firstFrame = CaptureButton();
+            Thread.Sleep(650);
+            using var secondFrame = CaptureButton();
+            string firstPath = Path.Combine(isolated, "aurora-first-frame.png");
+            string secondPath = Path.Combine(isolated, "aurora-second-frame.png");
+            firstFrame.Save(firstPath); secondFrame.Save(secondPath);
+            TestContext.AddResultFile(firstPath); TestContext.AddResultFile(secondPath);
+            int changedEdgePixels = 0;
+            for (int x = 8; x < scanBounds.Width - 8; x++)
+            {
+                var before = firstFrame.GetPixel(x, 1);
+                var after = secondFrame.GetPixel(x, 1);
+                if (Math.Abs(before.R - after.R) + Math.Abs(before.G - after.G) + Math.Abs(before.B - after.B) > 6)
+                    changedEdgePixels++;
+            }
+            Assert.IsGreaterThan(scanBounds.Width / 10, changedEdgePixels,
+                "The visible border should animate, rather than silently falling back to a static edge.");
+            Assert.AreEqual(scanBounds, Element("CaptureAction_ScanText").BoundingRectangle);
+            Assert.AreEqual(scanLabel, Element("CaptureAction_ScanText").Name);
+            Assert.IsFalse(Element("CaptureAction_ScanText").IsEnabled);
+        }
         WaitForElementRemoved(window, automation, "CaptureAction_ScanText_Loading", InteractionTimeout);
         WaitForElementRemoved(window, automation, "CaptureAction_ScanText", InteractionTimeout);
         Assert.IsNull(window.FindFirstDescendant(automation.ConditionFactory.ByName("No QR codes found.")),
@@ -135,6 +168,13 @@ public sealed partial class ImageEditTextExtractionUiTests
             Thread.Sleep(250);
             string path = Path.Combine(artifacts, (emptyScan ? "empty-" : string.Empty) + name + ".png");
             window.CaptureToFile(path); TestContext.AddResultFile(path);
+        }
+        System.Drawing.Bitmap CaptureButton()
+        {
+            var bitmap = new System.Drawing.Bitmap(scanBounds.Width, scanBounds.Height);
+            using var graphics = System.Drawing.Graphics.FromImage(bitmap);
+            graphics.CopyFromScreen(scanBounds.Location, System.Drawing.Point.Empty, scanBounds.Size);
+            return bitmap;
         }
     }
 }

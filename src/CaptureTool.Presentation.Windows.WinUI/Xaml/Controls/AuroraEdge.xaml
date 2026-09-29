@@ -1,0 +1,32 @@
+<UserControl
+    x:Class="CaptureTool.Presentation.Windows.WinUI.Xaml.Controls.AuroraEdge"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    AutomationProperties.AccessibilityView="Control"
+    AutomationProperties.LiveSetting="Polite"
+    Background="Transparent"
+    IsHitTestVisible="False"
+    IsTabStop="False">
+    <!-- Keep layout bounds visible to accessibility even when only Composition draws the edge. -->
+    <Grid Background="Transparent">
+        <Grid x:Name="CompositionHost" />
+        <Border
+            x:Name="StaticEdge"
+            BorderThickness="1.5"
+            CornerRadius="4">
+            <Border.BorderBrush>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                    <GradientStop Color="#129DD1" Offset="0" />
+                    <GradientStop Color="#8460D4" Offset="0.5" />
+                    <GradientStop Color="#CF68AF" Offset="1" />
+                </LinearGradientBrush>
+            </Border.BorderBrush>
+        </Border>
+        <Border
+            x:Name="ContrastEdge"
+            BorderBrush="{ThemeResource SystemColorHighlightColor}"
+            BorderThickness="2"
+            CornerRadius="4"
+            Visibility="Collapsed" />
+    </Grid>
+</UserControl>

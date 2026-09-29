@@ -19,8 +19,8 @@ The Text tab offers one **Find text and QR codes** action for images and videos,
 plus audio transcription where relevant. The combined scan queues OCR and QR
 detection in one request and reuses either result when it is already available.
 Before data is available, only the action is shown. The button keeps its label,
-size, and position and is disabled while a progress ring occupies the results
-area below it. Once scanning completes, results replace the button and progress.
+size, and position and is disabled while an animated Aurora edge follows its
+border. Once scanning completes, results replace the button and its busy effect.
 Opening saved text or QR data goes straight to results. A successful empty scan
 shows a localized empty state in place of the search, navigation, and copy controls,
 without an empty-text or empty-QR snackbar. Cached empty scans use the same state.
@@ -32,10 +32,16 @@ Feature descriptions appear in tooltips on info buttons beside the headings.
 The info buttons support keyboard focus and pointer hover, with localized
 accessible names and help text.
 Their buttons keep a fixed label and size and are disabled during generation.
-A progress ring sits beside each button in a reserved column. Once a result is
-available, the action row disappears and the generated text and copy action take
-its place. Failed requests show an error snackbar, stop progress, and re-enable
+The same Aurora edge indicates generation without replacing the icon or label.
+Once a result is available, the action row disappears and the generated text and
+copy action take its place. Failed requests show an error snackbar, stop progress, and re-enable
 the button for another attempt.
+Name suggestions and transcription use this treatment too. The reusable XAML
+control draws a flowing cyan, violet, and pink border with a soft halo through
+Windows Composition. It keeps the native button and its layout intact, exposes
+the busy state to assistive technology, and releases animations on unload.
+Reduced motion uses a static gradient; high contrast uses a static system-color
+border. No progress spinners are needed for these actions.
 Successful results do not show a snackbar for bounded input selection. Coverage
 remains in the saved metadata and model input; generation failures and source/read
 problems still produce notifications.

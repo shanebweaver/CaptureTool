@@ -38,7 +38,7 @@ public sealed partial class ImageEditTextExtractionUiTests
         string altButtonLabel = Element("CaptureAction_AltText").Name;
         Element("CaptureAction_AltText").Patterns.Invoke.Pattern.Invoke();
         Answer("Allow local AI");
-        AssertAdjacentLoading("CaptureAction_AltText", altButtonBounds, altButtonLabel, "alt-text-loading.png");
+        AssertButtonLoading("CaptureAction_AltText", altButtonBounds, altButtonLabel, "alt-text-loading.png");
         Assert.IsNull(window.FindFirstDescendant(automation.ConditionFactory.ByAutomationId("CaptureAction_Summary_Loading")));
         Assert.IsNull(window.FindFirstDescendant(automation.ConditionFactory.ByAutomationId("CaptureAction_Name_Loading")));
         WaitForElementRemoved(window, automation, "CaptureAction_AltText_Loading", InteractionTimeout);
@@ -51,7 +51,7 @@ public sealed partial class ImageEditTextExtractionUiTests
         var summaryButtonBounds = StableButtonBounds("CaptureAction_Summary");
         string summaryButtonLabel = Element("CaptureAction_Summary").Name;
         Element("CaptureAction_Summary").Patterns.Invoke.Pattern.Invoke();
-        AssertAdjacentLoading("CaptureAction_Summary", summaryButtonBounds, summaryButtonLabel, "summary-loading.png");
+        AssertButtonLoading("CaptureAction_Summary", summaryButtonBounds, summaryButtonLabel, "summary-loading.png");
         Assert.IsNull(window.FindFirstDescendant(automation.ConditionFactory.ByAutomationId("CaptureAction_Name_Loading")));
         Assert.IsNull(window.FindFirstDescendant(automation.ConditionFactory.ByAutomationId("CaptureMemoryConsentDialog")));
         WaitForElementRemoved(window, automation, "CaptureAction_Summary_Loading", InteractionTimeout);
@@ -117,17 +117,15 @@ public sealed partial class ImageEditTextExtractionUiTests
                 return stable.Elapsed >= TimeSpan.FromMilliseconds(500) ? button : null;
             }, InteractionTimeout, "settled action button geometry").BoundingRectangle;
         }
-        void AssertAdjacentLoading(string id, System.Drawing.Rectangle bounds, string label, string fileName)
+        void AssertButtonLoading(string id, System.Drawing.Rectangle bounds, string label, string fileName)
         {
             Assert.AreEqual(bounds, StableButtonBounds(id), "Loading must preserve the button's position and size.");
             var button = Element(id);
             var loading = Element(id + "_Loading");
             Assert.AreEqual(label, button.Name);
             Assert.IsFalse(button.IsEnabled);
-            Assert.IsGreaterThanOrEqualTo(bounds.Right, loading.BoundingRectangle.Left, "Progress belongs beside the button.");
-            Assert.AreEqual(bounds.Top + bounds.Height / 2d, loading.BoundingRectangle.Top + loading.BoundingRectangle.Height / 2d,
-                1d, "Progress should be vertically centered on the button row.");
-            Assert.IsFalse(bounds.IntersectsWith(loading.BoundingRectangle));
+            Assert.AreEqual(bounds, loading.BoundingRectangle, "The busy edge should follow the button's bounds.");
+            Assert.AreEqual(ControlType.ProgressBar, loading.ControlType, "Busy state remains available to assistive technology.");
             Assert.IsNull(button.FindFirstDescendant(automation.ConditionFactory.ByAutomationId(id + "_Loading")));
             string path = Path.Combine(isolated, fileName); window.CaptureToFile(path); TestContext.AddResultFile(path);
         }

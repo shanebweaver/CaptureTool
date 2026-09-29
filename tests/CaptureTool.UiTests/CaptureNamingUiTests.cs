@@ -56,7 +56,8 @@ public sealed partial class ImageEditTextExtractionUiTests
             Screenshot("filename-idle");
             Element("CaptureAction_Name").Patterns.Invoke.Pattern.Invoke();
             var loading = Element("CaptureAction_Name_Loading");
-            Assert.IsTrue(actionBounds.Contains(loading.BoundingRectangle), "Loading stays inside the AI button.");
+            Assert.AreEqual(actionBounds, loading.BoundingRectangle, "The busy edge should follow the icon button's bounds.");
+            Assert.IsFalse(Element("CaptureAction_Name").IsEnabled);
             Assert.AreEqual(tabsTop, Element("CapturePane_DetailsTab").BoundingRectangle.Top, 1);
             Screenshot("filename-loading");
             try

@@ -20,11 +20,7 @@
             <Setter Property="Foreground" Value="{ThemeResource TextFillColorSecondaryBrush}" />
         </Style>
         <DataTemplate x:Key="SummaryActionTemplate" x:DataType="details:CaptureAnalysisAction">
-            <Grid Height="32" ColumnSpacing="8">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="24" />
-                </Grid.ColumnDefinitions>
+            <Grid Height="32">
                 <Button
                     Height="32"
                     HorizontalAlignment="Stretch"
@@ -43,45 +39,30 @@
                         <TextBlock VerticalAlignment="Center" Text="{x:Bind Label, Mode=OneWay}" />
                     </StackPanel>
                 </Button>
-                <ProgressRing
-                    Grid.Column="1"
-                    Width="20"
-                    Height="20"
-                    MinWidth="0"
-                    MinHeight="0"
-                    VerticalAlignment="Center"
+                <local:AuroraEdge
                     AutomationProperties.AutomationId="{x:Bind LoadingId}"
                     AutomationProperties.Name="{x:Bind Label, Mode=OneWay}"
-                    IsActive="{x:Bind IsRunning, Mode=OneWay}"
-                    Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(IsRunning), Mode=OneWay}" />
+                    IsActive="{x:Bind IsRunning, Mode=OneWay}" />
             </Grid>
         </DataTemplate>
         <DataTemplate x:Key="AnalysisActionTemplate" x:DataType="details:CaptureAnalysisAction">
-            <Button
-                AutomationProperties.AutomationId="{x:Bind Id}"
-                AutomationProperties.HelpText="{x:Bind ToolTip, Mode=OneWay}"
-                AutomationProperties.Name="{x:Bind Label, Mode=OneWay}"
-                Command="{x:Bind Command}"
-                ToolTipService.ToolTip="{x:Bind ToolTip, Mode=OneWay}"
+            <Grid
+                Height="32"
                 Visibility="{x:Bind utils:VisibilityUtility.InverseBoolToVisibility(HasResult), Mode=OneWay}">
-                <Grid ColumnSpacing="8">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="16" />
-                    </Grid.ColumnDefinitions>
-                    <TextBlock VerticalAlignment="Center" Text="{x:Bind Label, Mode=OneWay}" />
-                    <ProgressRing
-                        Grid.Column="1"
-                        Width="16"
-                        Height="16"
-                        MinWidth="0"
-                        MinHeight="0"
-                        AutomationProperties.AutomationId="{x:Bind LoadingId}"
-                        AutomationProperties.Name="{x:Bind Label, Mode=OneWay}"
-                        IsActive="{x:Bind IsRunning, Mode=OneWay}"
-                        Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(IsRunning), Mode=OneWay}" />
-                </Grid>
-            </Button>
+                <Button
+                    Height="32"
+                    HorizontalAlignment="Stretch"
+                    AutomationProperties.AutomationId="{x:Bind Id}"
+                    AutomationProperties.HelpText="{x:Bind ToolTip, Mode=OneWay}"
+                    AutomationProperties.Name="{x:Bind Label, Mode=OneWay}"
+                    Command="{x:Bind Command}"
+                    Content="{x:Bind Label, Mode=OneWay}"
+                    ToolTipService.ToolTip="{x:Bind ToolTip, Mode=OneWay}" />
+                <local:AuroraEdge
+                    AutomationProperties.AutomationId="{x:Bind LoadingId}"
+                    AutomationProperties.Name="{x:Bind Label, Mode=OneWay}"
+                    IsActive="{x:Bind IsRunning, Mode=OneWay}" />
+            </Grid>
         </DataTemplate>
         <DataTemplate x:Key="PropertyTemplate" x:DataType="details:CaptureProperty">
             <Grid Margin="0,5" ColumnSpacing="12">
@@ -176,37 +157,28 @@
                         Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.CanEditName), Mode=OneWay}">
                         <FontIcon FontSize="14" Glyph="&#xE70F;" />
                     </Button>
-                    <Button
-                        Grid.Column="1"
-                        Width="32"
-                        Height="32"
-                        Padding="0"
-                        AutomationProperties.AutomationId="CaptureAction_Name"
-                        AutomationProperties.Name="{x:Bind ViewModel.NameSuggestionToolTip, Mode=OneWay}"
-                        Command="{x:Bind ViewModel.SuggestNameCommand, Mode=OneWay}"
-                        Style="{StaticResource SubtleButtonStyle}"
-                        ToolTipService.ToolTip="{x:Bind ViewModel.NameSuggestionToolTip, Mode=OneWay}">
-                        <Grid Width="16" Height="16">
+                    <Grid Grid.Column="1" Width="32" Height="32">
+                        <Button
+                            Width="32"
+                            Height="32"
+                            Padding="0"
+                            AutomationProperties.AutomationId="CaptureAction_Name"
+                            AutomationProperties.Name="{x:Bind ViewModel.NameSuggestionToolTip, Mode=OneWay}"
+                            Command="{x:Bind ViewModel.SuggestNameCommand, Mode=OneWay}"
+                            Style="{StaticResource SubtleButtonStyle}"
+                            ToolTipService.ToolTip="{x:Bind ViewModel.NameSuggestionToolTip, Mode=OneWay}">
                             <FontIcon
                                 AutomationProperties.AccessibilityView="Raw"
                                 FontFamily="Segoe Fluent Icons"
                                 FontSize="16"
                                 Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}"
-                                Glyph="&#xF6C7;"
-                                Visibility="{x:Bind utils:VisibilityUtility.InverseBoolToVisibility(ViewModel.IsGeneratingName), Mode=OneWay}" />
-                            <ProgressRing
-                                Width="16"
-                                Height="16"
-                                MinWidth="0"
-                                MinHeight="0"
-                                AutomationProperties.AutomationId="CaptureAction_Name_Loading"
-                                AutomationProperties.LiveSetting="Polite"
-                                AutomationProperties.Name="{x:Bind ViewModel.NameSuggestionToolTip, Mode=OneWay}"
-                                Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}"
-                                IsActive="{x:Bind ViewModel.IsGeneratingName, Mode=OneWay}"
-                                Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.IsGeneratingName), Mode=OneWay}" />
-                        </Grid>
-                    </Button>
+                                Glyph="&#xF6C7;" />
+                        </Button>
+                        <local:AuroraEdge
+                            AutomationProperties.AutomationId="CaptureAction_Name_Loading"
+                            AutomationProperties.Name="{x:Bind ViewModel.NameSuggestionToolTip, Mode=OneWay}"
+                            IsActive="{x:Bind ViewModel.IsGeneratingName, Mode=OneWay}" />
+                    </Grid>
                 </Grid>
                 <Button
                     x:Uid="CaptureNaming_Save"
@@ -316,24 +288,31 @@
                         Margin="0,0,0,8"
                         Spacing="8"
                         Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.ShowTextActions), Mode=OneWay}">
-                        <Button
+                        <Grid
                             Height="32"
-                            HorizontalAlignment="Stretch"
-                            AutomationProperties.AutomationId="CaptureAction_ScanText"
-                            AutomationProperties.Name="{x:Bind ViewModel.ScanTextAction.Label, Mode=OneWay}"
-                            Command="{x:Bind ViewModel.ScanTextAction.Command, Mode=OneWay}"
-                            ToolTipService.ToolTip="{x:Bind ViewModel.ScanTextAction.ToolTip, Mode=OneWay}"
                             Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.ShowScanTextAction), Mode=OneWay}">
-                            <StackPanel Orientation="Horizontal" Spacing="8">
-                                <FontIcon
-                                    AutomationProperties.AccessibilityView="Raw"
-                                    FontFamily="Segoe Fluent Icons"
-                                    FontSize="16"
-                                    Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}"
-                                    Glyph="&#xED37;" />
-                                <TextBlock Text="{x:Bind ViewModel.ScanTextAction.Label, Mode=OneWay}" />
-                            </StackPanel>
-                        </Button>
+                            <Button
+                                Height="32"
+                                HorizontalAlignment="Stretch"
+                                AutomationProperties.AutomationId="CaptureAction_ScanText"
+                                AutomationProperties.Name="{x:Bind ViewModel.ScanTextAction.Label, Mode=OneWay}"
+                                Command="{x:Bind ViewModel.ScanTextAction.Command, Mode=OneWay}"
+                                ToolTipService.ToolTip="{x:Bind ViewModel.ScanTextAction.ToolTip, Mode=OneWay}">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <FontIcon
+                                        AutomationProperties.AccessibilityView="Raw"
+                                        FontFamily="Segoe Fluent Icons"
+                                        FontSize="16"
+                                        Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}"
+                                        Glyph="&#xED37;" />
+                                    <TextBlock Text="{x:Bind ViewModel.ScanTextAction.Label, Mode=OneWay}" />
+                                </StackPanel>
+                            </Button>
+                            <local:AuroraEdge
+                                AutomationProperties.AutomationId="CaptureAction_ScanText_Loading"
+                                AutomationProperties.Name="{x:Bind ViewModel.ScanTextAction.Label, Mode=OneWay}"
+                                IsActive="{x:Bind ViewModel.ScanTextAction.IsRunning, Mode=OneWay}" />
+                        </Grid>
                         <ContentControl
                             Content="{x:Bind ViewModel.TranscriptAction, Mode=OneWay}"
                             ContentTemplate="{StaticResource AnalysisActionTemplate}"
@@ -515,17 +494,6 @@
                                 TextWrapping="Wrap" />
                         </StackPanel>
                     </StackPanel>
-                    <ProgressRing
-                        Grid.Row="2"
-                        Width="32"
-                        Height="32"
-                        Margin="0,24,0,0"
-                        HorizontalAlignment="Center"
-                        VerticalAlignment="Top"
-                        AutomationProperties.AutomationId="CaptureAction_ScanText_Loading"
-                        AutomationProperties.Name="{x:Bind ViewModel.ScanTextAction.Label, Mode=OneWay}"
-                        IsActive="{x:Bind ViewModel.ScanTextAction.IsRunning, Mode=OneWay}"
-                        Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.ScanTextAction.IsRunning), Mode=OneWay}" />
                 </Grid>
             </PivotItem>
             <PivotItem x:Uid="CapturePane_SummaryTab" AutomationProperties.AutomationId="CapturePane_SummaryTab">
