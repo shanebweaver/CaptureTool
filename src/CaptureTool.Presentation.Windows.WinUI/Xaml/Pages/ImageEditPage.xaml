@@ -66,7 +66,7 @@
                 Click="ExtractText_Click"
                 IsEnabled="{x:Bind ViewModel.IsLoaded, Mode=OneWay}">
                 <AppBarButton.Icon>
-                    <FontIcon Glyph="&#xE8D2;" />
+                    <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xED37;" />
                 </AppBarButton.Icon>
             </AppBarButton>
             <AppBarToggleButton

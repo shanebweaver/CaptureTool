@@ -2249,4 +2249,7 @@ SOFTWARE.
   <data name="CapturePane_Loading.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Loading details</value></data>
   <data name="CaptureSummary_Info.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>About AI summary</value></data>
   <data name="CaptureSummary_AltTextInfo.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>About alt text</value></data>
+  <data name="CaptureText_Title.Text" xml:space="preserve"><value>Text and QR codes</value></data>
+  <data name="CaptureText_Info.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>About text and QR codes</value></data>
+  <data name="CaptureText_Hint.Text" xml:space="preserve"><value>Find text and QR codes in this capture. Select a result to locate it, or copy the text to use elsewhere.</value></data>
 </root>

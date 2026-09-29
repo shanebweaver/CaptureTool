@@ -1975,4 +1975,7 @@ SOFTWARE.
   <data name="CapturePane_Loading.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Details werden geladen</value></data>
   <data name="CaptureSummary_Info.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Informationen zur KI-Zusammenfassung</value></data>
   <data name="CaptureSummary_AltTextInfo.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Informationen zum Alternativtext</value></data>
+  <data name="CaptureText_Title.Text" xml:space="preserve"><value>Text und QR-Codes</value></data>
+  <data name="CaptureText_Info.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Über Text und QR-Codes</value></data>
+  <data name="CaptureText_Hint.Text" xml:space="preserve"><value>Suchen Sie nach Text und QR-Codes in dieser Aufnahme. Wählen Sie ein Ergebnis aus, um es in der Aufnahme zu finden, oder kopieren Sie den Text zur weiteren Verwendung.</value></data>
 </root>

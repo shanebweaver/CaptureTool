@@ -1981,4 +1981,7 @@ SOFTWARE.
   <data name="CapturePane_Loading.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Cargando detalles</value></data>
   <data name="CaptureSummary_Info.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Acerca del resumen con IA</value></data>
   <data name="CaptureSummary_AltTextInfo.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Acerca del texto alternativo</value></data>
+  <data name="CaptureText_Title.Text" xml:space="preserve"><value>Texto y códigos QR</value></data>
+  <data name="CaptureText_Info.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Acerca del texto y los códigos QR</value></data>
+  <data name="CaptureText_Hint.Text" xml:space="preserve"><value>Busca texto y códigos QR en esta captura. Selecciona un resultado para localizarlo o copia el texto para usarlo en otro lugar.</value></data>
 </root>

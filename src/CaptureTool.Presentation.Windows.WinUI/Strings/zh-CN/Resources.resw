@@ -1981,4 +1981,7 @@ SOFTWARE.
   <data name="CapturePane_Loading.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>正在加载详细信息</value></data>
   <data name="CaptureSummary_Info.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>关于 AI 摘要</value></data>
   <data name="CaptureSummary_AltTextInfo.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>关于替代文本</value></data>
+  <data name="CaptureText_Title.Text" xml:space="preserve"><value>文字和二维码</value></data>
+  <data name="CaptureText_Info.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>关于文字和二维码</value></data>
+  <data name="CaptureText_Hint.Text" xml:space="preserve"><value>查找此捕获内容中的文字和二维码。选择结果以定位其位置，或复制文字以在其他地方使用。</value></data>
 </root>

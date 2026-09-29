@@ -1981,4 +1981,7 @@ SOFTWARE.
   <data name="CapturePane_Loading.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Загрузка сведений</value></data>
   <data name="CaptureSummary_Info.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>О сводке ИИ</value></data>
   <data name="CaptureSummary_AltTextInfo.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Об альтернативном тексте</value></data>
+  <data name="CaptureText_Title.Text" xml:space="preserve"><value>Текст и QR-коды</value></data>
+  <data name="CaptureText_Info.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>О тексте и QR-кодах</value></data>
+  <data name="CaptureText_Hint.Text" xml:space="preserve"><value>Найдите текст и QR-коды в этом снимке. Выберите результат, чтобы найти его в снимке, или скопируйте текст для использования в другом месте.</value></data>
 </root>
