@@ -75,15 +75,12 @@ public sealed class CaptureAnalysisConfiguration
         }
     }
 
-    /// <summary>One LLM action prepares the capture's other supported LLM outputs while the model is resident.</summary>
+    /// <summary>Requests only the selected action and its source prerequisites.</summary>
     public static IReadOnlyList<AnalysisCapability> ForAction(AnalysisMediaKind kind, AnalysisCapability capability)
     {
-        var outputs = MetadataEnrichmentConfiguration.LanguageModelCapabilities
-            .Where(output => kind == AnalysisMediaKind.Image || output != AnalysisCapability.ImageAltText).ToArray();
-        if (!outputs.Contains(capability)) return [capability];
-        // Publish the requested output first. Remaining outputs reuse the same source evidence and model.
-        return [.. kind == AnalysisMediaKind.Image ? new[] { AnalysisCapability.TextRecognition, AnalysisCapability.Description } : [],
-            capability, .. outputs.Where(output => output != capability)];
+        return kind == AnalysisMediaKind.Image && MetadataEnrichmentConfiguration.LanguageModelCapabilities.Contains(capability)
+            ? [AnalysisCapability.TextRecognition, AnalysisCapability.Description, capability]
+            : [capability];
     }
 
     public static CaptureAnalysisConfiguration CreateDefault() => new([

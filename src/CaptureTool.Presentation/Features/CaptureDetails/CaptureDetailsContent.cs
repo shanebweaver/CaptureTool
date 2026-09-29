@@ -14,7 +14,6 @@ public sealed class CaptureDetailsContent
     public string Description { get; private init; } = string.Empty;
     public bool HasSummaryInputs => Description.Length > 0 || Passages.Any(passage => !string.IsNullOrWhiteSpace(passage.Text));
     public IReadOnlyList<CaptureTextPassage> Passages { get; private init; } = [];
-    public bool HasLimitedCoverage { get; private init; }
     public bool HasContent => AltText.Length > 0 || Summary.Length > 0 || Description.Length > 0 || Passages.Count > 0;
 
     public static CaptureDetailsContent Create(CaptureAnalysisRecord record, ILocalizationService localization) => new()
@@ -29,9 +28,7 @@ public sealed class CaptureDetailsContent
         Description = string.Join(Environment.NewLine, record.Results.Select(result => result.Payload).OfType<DescriptionMetadata>()
             .SelectMany(payload => payload.Descriptions).Select(description => description.Timestamp is { } time
                 ? $"{Time(time)}  {description.Text}" : description.Text)),
-        Passages = CaptureTextPassage.From(record, localization),
-        HasLimitedCoverage = record.Results.Any(result => result.Payload is CaptureSynopsisMetadata { Coverage.IsComplete: false } or ImageAltTextMetadata { Coverage.IsComplete: false }) ||
-            record.MediaKind == AnalysisMediaKind.Video && record.Results.Any(result => result.Payload is TextRecognitionMetadata)
+        Passages = CaptureTextPassage.From(record, localization)
     };
 
     internal static string Time(TimeSpan time) => time.TotalHours >= 1

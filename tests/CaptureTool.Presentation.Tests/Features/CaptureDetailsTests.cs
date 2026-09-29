@@ -18,6 +18,91 @@ namespace CaptureTool.Presentation.Tests.Features;
 public sealed class CaptureDetailsTests
 {
     [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task CombinedScanWaitsForBothResultsAndRetriesOnlyWhenIncomplete(bool textFails)
+    {
+        var setup = new Setup();
+        CaptureDetailsSnapshot snapshot = new(CaptureDetailsStatus.Empty);
+        setup.Reader.Setup(x => x.ReadAsync(It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync(() => snapshot);
+        setup.Memory.Setup(x => x.EnsureConsentAsync(It.IsAny<CancellationToken>())).ReturnsAsync(true);
+        var admission = new TaskCompletionSource();
+        setup.Memory.Setup(x => x.ScanTextAsync("capture.png", It.IsAny<CancellationToken>())).Returns(admission.Task);
+        using var vm = setup.ViewModel;
+        await vm.OpenAsync("capture.png", AnalysisMediaKind.Image);
+        string label = vm.ScanTextAction.Label;
+        Assert.IsTrue(vm.ScanTextAction.Command.CanExecute(null));
+        Assert.IsTrue(vm.ShowScanTextAction);
+        Assert.IsFalse(vm.ShowTextResults);
+        Assert.IsFalse(vm.ShowTextEmptyState);
+        Task request = vm.ScanTextAction.Command.ExecuteAsync(null);
+        Assert.IsTrue(vm.ScanTextAction.IsRunning);
+        Assert.IsFalse(vm.ScanTextAction.Command.CanExecute(null));
+        Assert.IsTrue(vm.ShowScanTextAction);
+        Assert.IsFalse(vm.ShowTextResults);
+        Assert.IsFalse(vm.ShowTextEmptyState);
+        await vm.ScanTextAction.Command.ExecuteAsync(null);
+        var revision = new SourceRevision(new string('a', 64));
+        var run = new AnalysisRun(Guid.NewGuid(), Guid.NewGuid(), 1, "plan", null, AnalysisRunStatus.Queued,
+            [AnalysisCapability.QrCodeDetection, AnalysisCapability.TextRecognition], []).BindSource(revision);
+        var record = new CaptureAnalysisRecord(CaptureId.New(), AnalysisMediaKind.Image, revision, "plan", run.Id,
+            [Result(new QrCodeMetadata([]), run.Id)]);
+        run = run.CompleteStep(new(AnalysisCapability.QrCodeDetection, AnalyzerOutcomeKind.Succeeded, null));
+        snapshot = new(CaptureDetailsStatus.Available, record, run);
+        admission.SetResult();
+        await request;
+        Assert.IsTrue(vm.ScanTextAction.IsRunning, "A completed QR scan must not end progress while OCR is pending.");
+        Assert.IsFalse(vm.ScanTextAction.Command.CanExecute(null));
+        Assert.IsFalse(vm.ShowTextResults);
+        Assert.IsFalse(vm.ShowTextEmptyState);
+        setup.Notifications.VerifyNoOtherCalls();
+        run = run.CompleteStep(new(AnalysisCapability.TextRecognition, textFails ? AnalyzerOutcomeKind.Failed : AnalyzerOutcomeKind.Succeeded, textFails ? "test-failure" : null));
+        if (!textFails) record = record.WithResult(Result(new TextRecognitionMetadata([]), run.Id));
+        snapshot = new(CaptureDetailsStatus.Available, record, run);
+        await vm.RefreshAsync();
+        Assert.IsFalse(vm.ScanTextAction.IsRunning);
+        Assert.AreEqual(!textFails, vm.ScanTextAction.HasResult, "Empty successful scans count as completed.");
+        Assert.AreEqual(textFails, vm.ScanTextAction.Command.CanExecute(null));
+        Assert.AreEqual(textFails, vm.ShowScanTextAction);
+        Assert.IsFalse(vm.ShowTextResults);
+        Assert.AreEqual(!textFails, vm.ShowTextEmptyState);
+        if (!textFails) setup.Notifications.VerifyNoOtherCalls();
+        Assert.AreEqual(label, vm.ScanTextAction.Label);
+        setup.Memory.Verify(x => x.ScanTextAsync("capture.png", It.IsAny<CancellationToken>()), Times.Once);
+        setup.Memory.Verify(x => x.AnalyzeAsync(It.IsAny<string>(), It.IsAny<AnalysisCapability>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task SavedTextOrQrDataOpensDirectlyIntoResults(bool qrOnly)
+    {
+        var setup = new Setup();
+        Guid run = Guid.NewGuid();
+        AnalysisPayload payload = qrOnly
+            ? new QrCodeMetadata([new("https://example.com/invoice", new(.1, .1, .2, .2))])
+            : new TextRecognitionMetadata([new("Invoice total USD 125.00")]);
+        var record = new CaptureAnalysisRecord(CaptureId.New(), AnalysisMediaKind.Image,
+            new(new string('a', 64)), "plan", run, [Result(payload, run)]);
+        setup.Reader.Setup(reader => reader.ReadAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new CaptureDetailsSnapshot(CaptureDetailsStatus.Available, record));
+        using var vm = setup.ViewModel;
+        await vm.OpenAsync("capture.png", AnalysisMediaKind.Image);
+        Assert.IsTrue(vm.ShowTextResults);
+        Assert.IsFalse(vm.ShowTextEmptyState);
+        Assert.IsFalse(vm.ShowScanTextAction);
+        Assert.IsFalse(vm.ShowTextActions);
+
+        vm.TextContent.Query = "no matching text";
+        Assert.IsFalse(vm.TextContent.HasText);
+        Assert.IsTrue(vm.ShowTextResults, "Filtering saved data must not reset the scan flow.");
+        Assert.IsFalse(vm.ShowTextEmptyState, "A search with no matches is different from an empty scan.");
+        Assert.IsFalse(vm.ShowScanTextAction);
+        setup.Memory.Verify(x => x.ScanTextAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+        setup.Memory.Verify(x => x.AnalyzeAsync(It.IsAny<string>(), It.IsAny<AnalysisCapability>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [TestMethod]
     public async Task TextShortcutReusesMatchingSavedResultsWithoutRenderingOrRequestingAnalysis()
     {
         var setup = new Setup();
@@ -54,6 +139,8 @@ public sealed class CaptureDetailsTests
         await vm.OpenAsync("capture.png", AnalysisMediaKind.Image);
         Assert.IsEmpty(vm.TextPassages);
         Assert.IsFalse(vm.CanShowImageTextOverlay);
+        Assert.IsTrue(vm.ShowScanTextAction);
+        Assert.IsFalse(vm.ShowTextResults);
         Assert.IsFalse(editor.IsRunning, "Opening the pane does not start extraction.");
         Task extraction = vm.EnsureTextAsync();
         Assert.IsTrue(vm.TextAction.IsRunning);
@@ -62,6 +149,8 @@ public sealed class CaptureDetailsTests
         await extraction;
         Assert.IsTrue(vm.CanShowImageTextOverlay);
         Assert.AreEqual("Current image", vm.TextContent.CopyVisibleScope());
+        Assert.IsTrue(vm.ShowTextResults);
+        Assert.IsFalse(vm.ShowScanTextAction);
         Assert.IsTrue(vm.TextPassages.Single().CanNavigate);
         var bounds = vm.TextPassages.Single().SelectedLocation!.Bounds!;
         Assert.AreEqual(.1, bounds.X, .000001);
@@ -72,6 +161,8 @@ public sealed class CaptureDetailsTests
         editor.Invalidate(true);
         Assert.IsEmpty(vm.TextPassages);
         Assert.IsFalse(vm.CanShowImageTextOverlay);
+        Assert.IsTrue(vm.ShowScanTextAction);
+        Assert.IsFalse(vm.ShowTextResults);
         setup.Memory.Verify(x => x.AnalyzeAsync(It.IsAny<string>(), It.IsAny<AnalysisCapability>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
@@ -90,9 +181,11 @@ public sealed class CaptureDetailsTests
             vm.SetEditorText(editor);
             await vm.OpenAsync("capture.png", AnalysisMediaKind.Image);
             await vm.EnsureTextAsync();
-            Assert.AreEqual("CaptureAction_NoText", vm.TextAction.Status);
+            Assert.IsTrue(vm.ShowTextEmptyState);
+            Assert.IsFalse(vm.ShowTextResults);
+            Assert.IsFalse(vm.ShowScanTextAction);
             Assert.IsFalse(vm.TextAction.Command.CanExecute(null));
-            setup.Notifications.Verify(x => x.ShowInfo("CaptureAction_NoText"), _ == 0 ? Times.Once() : Times.Never());
+            setup.Notifications.VerifyNoOtherCalls();
         }
         Assert.AreEqual(1, calls);
     }
@@ -151,19 +244,25 @@ public sealed class CaptureDetailsTests
     }
 
     [TestMethod]
-    public async Task EmptySavedResultIsExplainedWithoutEnablingRepeatedInference()
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task EmptySavedResultIsExplainedWithoutEnablingRepeatedInference(bool qrComplete)
     {
         var setup = new Setup();
         Guid run = Guid.NewGuid();
         var record = new CaptureAnalysisRecord(CaptureId.New(), AnalysisMediaKind.Image, new(new string('a', 64)), "plan", run,
             [Result(new TextRecognitionMetadata([]), run)]);
+        if (qrComplete) record = record.WithResult(Result(new QrCodeMetadata([]), run));
         setup.Reader.Setup(x => x.ReadAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new CaptureDetailsSnapshot(CaptureDetailsStatus.Available, record));
         using var vm = setup.ViewModel;
         await vm.OpenAsync("capture.png", AnalysisMediaKind.Image);
         Assert.IsFalse(vm.TextAction.Command.CanExecute(null));
-        Assert.AreEqual("CaptureAction_NoText", vm.TextAction.Status);
-        Assert.IsTrue(vm.QrAction.Command.CanExecute(null));
+        Assert.IsFalse(vm.ShowTextResults);
+        Assert.AreEqual(qrComplete, vm.ShowTextEmptyState);
+        Assert.AreEqual(!qrComplete, vm.ShowScanTextAction);
+        Assert.AreEqual(!qrComplete, vm.QrAction.Command.CanExecute(null));
+        Assert.AreEqual(!qrComplete, vm.ScanTextAction.Command.CanExecute(null), "The combined button can fill in a missing QR result when OCR is cached.");
         Assert.IsTrue(vm.SummaryAction.Command.CanExecute(null));
         setup.Notifications.Verify(x => x.ShowInfo(It.IsAny<string>()), Times.Never, "Opening cached empty results should stay quiet.");
     }
@@ -389,7 +488,7 @@ public sealed class CaptureDetailsTests
         Assert.IsTrue(vm.IsGeneratingName);
         Assert.IsFalse(vm.SuggestNameCommand.CanExecute(null));
         Assert.IsFalse(vm.IsEditingName);
-        Assert.AreEqual("CaptureNaming_Suggest" + Environment.NewLine + "CaptureAction_RelatedResults", vm.NameSuggestionToolTip,
+        Assert.AreEqual("CaptureNaming_Suggest", vm.NameSuggestionToolTip,
             "The AI tooltip stays unchanged during loading.");
         if (editWhileGenerating)
         {
@@ -541,8 +640,46 @@ public sealed class CaptureDetailsTests
     public void SavedOutputsRetainTheirCoverageAcrossIndependentActions()
     {
         var record = Record(limited: true);
-        var content = CaptureDetailsContent.Create(record.StartRun(record.SourceRevision, "next", Guid.NewGuid()), Localization());
-        Assert.IsTrue(content.HasLimitedCoverage);
+        var next = record.StartRun(record.SourceRevision, "next", Guid.NewGuid());
+        var saved = next.Results.Select(result => result.Payload).OfType<CaptureSynopsisMetadata>().Single();
+        Assert.IsFalse(saved.Coverage.IsComplete);
+        Assert.AreEqual(MetadataProcessingLimit.OversizedEntry, saved.Coverage.Limits);
+    }
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task SuccessfulSuggestionsWithLimitedInputDoNotShowWarnings(bool altText)
+    {
+        var setup = new Setup();
+        using var vm = setup.ViewModel;
+        var action = altText ? vm.AltTextAction : vm.SummaryAction;
+        var run = new AnalysisRun(Guid.NewGuid(), Guid.NewGuid(), 1, "test", null, AnalysisRunStatus.Queued, [action.Capability], []);
+        CaptureDetailsSnapshot snapshot = new(CaptureDetailsStatus.Empty, Run: run);
+        setup.Reader.Setup(reader => reader.ReadAsync(It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync(() => snapshot);
+        await vm.OpenAsync("capture.png", AnalysisMediaKind.Image);
+        Assert.IsTrue(action.IsRunning);
+
+        var source = Result(new TextRecognitionMetadata([new("Invoice total USD 125.00"), new(new string('x', 2000))]), run.Id);
+        var coverage = new MetadataProcessingCoverage(2, 1, 24, MetadataProcessingLimit.OversizedEntry);
+        var suggestion = new SuggestedText("Invoice summary", [new(source.ResultId, 0, 0, 24)]);
+        AnalysisPayload payload = altText ? new ImageAltTextMetadata(suggestion, coverage) : new CaptureSynopsisMetadata(null, [suggestion], coverage);
+        var output = Result(payload, run.Id, new([new(source.Payload.Capability, source.ResultId)]));
+        snapshot = new(CaptureDetailsStatus.Available, new CaptureAnalysisRecord(CaptureId.New(), AnalysisMediaKind.Image,
+            new(new string('a', 64)), "plan", run.Id, [source, output]));
+        await vm.RefreshAsync();
+        await vm.RefreshAsync();
+
+        Assert.AreEqual(suggestion.Text, altText ? vm.Content.AltText : vm.Summary);
+        Assert.IsTrue(action.HasResult);
+        Assert.IsFalse(action.IsRunning);
+        setup.Notifications.VerifyNoOtherCalls();
+
+        using var reopened = new CaptureDetailsViewModel(setup.Reader.Object, setup.Memory.Object, setup.Clipboard.Object,
+            Localization(), Mock.Of<ITaskEnvironment>(), setup.Notifications.Object);
+        await reopened.OpenAsync("capture.png", AnalysisMediaKind.Image);
+        Assert.AreEqual(suggestion.Text, altText ? reopened.Content.AltText : reopened.Summary);
+        setup.Notifications.VerifyNoOtherCalls();
     }
 
     [TestMethod]
@@ -625,7 +762,7 @@ public sealed class CaptureDetailsTests
     }
 
     [TestMethod]
-    public async Task CompletedEmptyResultsNotifyOnceAndLoadingKeepsItsLabel()
+    public async Task CompletedEmptyTextStaysQuietAndLoadingKeepsItsLabel()
     {
         var setup = new Setup();
         var run = new AnalysisRun(Guid.NewGuid(), Guid.NewGuid(), 1, "test", null, AnalysisRunStatus.Queued,
@@ -643,7 +780,7 @@ public sealed class CaptureDetailsTests
         await vm.RefreshAsync();
         Assert.IsFalse(vm.TextAction.IsRunning);
         Assert.AreEqual(label, vm.TextAction.Label);
-        setup.Notifications.Verify(x => x.ShowInfo("CaptureAction_NoText"), Times.Once);
+        setup.Notifications.VerifyNoOtherCalls();
     }
 
     [TestMethod]
@@ -665,22 +802,69 @@ public sealed class CaptureDetailsTests
     }
 
     [TestMethod]
-    public async Task FailedRequestsNotifyOncePerAttemptAndRemainRetryable()
+    [DataRow("text")]
+    [DataRow("summary")]
+    [DataRow("alt-text")]
+    public async Task FailedRequestsNotifyOncePerAttemptAndRemainRetryable(string actionName)
     {
         var setup = new Setup();
+        using var vm = setup.ViewModel;
+        var action = actionName switch
+        {
+            "summary" => vm.SummaryAction,
+            "alt-text" => vm.AltTextAction,
+            _ => vm.TextAction
+        };
         setup.Reader.Setup(x => x.ReadAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new CaptureDetailsSnapshot(CaptureDetailsStatus.Empty));
         setup.Memory.Setup(x => x.EnsureConsentAsync(It.IsAny<CancellationToken>())).ReturnsAsync(true);
-        setup.Memory.Setup(x => x.AnalyzeAsync(It.IsAny<string>(), AnalysisCapability.TextRecognition, It.IsAny<CancellationToken>()))
+        setup.Memory.Setup(x => x.AnalyzeAsync(It.IsAny<string>(), action.Capability, It.IsAny<CancellationToken>()))
             .Callback(() => setup.State = setup.State with { FailureCode = "model-failed" }).Returns(Task.CompletedTask);
-        using var vm = setup.ViewModel;
         await vm.OpenAsync("capture.png", AnalysisMediaKind.Image);
-        await vm.TextAction.Command.ExecuteAsync(null);
+        await action.Command.ExecuteAsync(null);
         await vm.RefreshAsync();
         setup.Notifications.Verify(x => x.ShowError("CaptureAction_Failed"), Times.Once);
-        Assert.IsTrue(vm.TextAction.Command.CanExecute(null));
-        await vm.TextAction.Command.ExecuteAsync(null);
+        Assert.IsFalse(action.IsRunning);
+        Assert.IsFalse(action.HasResult);
+        Assert.IsTrue(action.Command.CanExecute(null));
+        await action.Command.ExecuteAsync(null);
         setup.Notifications.Verify(x => x.ShowError("CaptureAction_Failed"), Times.Exactly(2));
+    }
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task FailedSummaryGenerationStopsProgressAndAllowsAnotherAttempt(bool altText)
+    {
+        var setup = new Setup();
+        using var vm = setup.ViewModel;
+        var action = altText ? vm.AltTextAction : vm.SummaryAction;
+        CaptureDetailsSnapshot snapshot = new(CaptureDetailsStatus.Empty);
+        setup.Reader.Setup(x => x.ReadAsync(It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync(() => snapshot);
+        setup.Memory.Setup(x => x.EnsureConsentAsync(It.IsAny<CancellationToken>())).ReturnsAsync(true);
+        setup.Memory.Setup(x => x.AnalyzeAsync("capture.png", action.Capability, It.IsAny<CancellationToken>()))
+            .Callback(() => snapshot = new(CaptureDetailsStatus.Empty, Run: new AnalysisRun(
+                Guid.NewGuid(), Guid.NewGuid(), 1, "test", null, AnalysisRunStatus.Queued, [action.Capability], [])))
+            .Returns(Task.CompletedTask);
+        await vm.OpenAsync("capture.png", AnalysisMediaKind.Image);
+        string label = action.Label;
+        for (int attempt = 1; attempt <= 2; attempt++)
+        {
+            Assert.IsTrue(action.Command.CanExecute(null));
+            await action.Command.ExecuteAsync(null);
+            Assert.IsTrue(action.IsRunning);
+            Assert.IsFalse(action.Command.CanExecute(null));
+            snapshot = snapshot with { Run = snapshot.Run!.BindSource(new(new string('a', 64)))
+                .CompleteStep(new(action.Capability, AnalyzerOutcomeKind.Failed, "model-failed")) };
+            await vm.RefreshAsync();
+            await vm.RefreshAsync();
+            Assert.IsFalse(action.IsRunning);
+            Assert.IsFalse(action.HasResult);
+            Assert.IsTrue(action.Command.CanExecute(null));
+            Assert.AreEqual(label, action.Label);
+            setup.Notifications.Verify(x => x.ShowError("CaptureAction_Failed"), Times.Exactly(attempt));
+        }
+        setup.Memory.Verify(x => x.AnalyzeAsync("capture.png", action.Capability, It.IsAny<CancellationToken>()), Times.Exactly(2));
     }
 
     [TestMethod]

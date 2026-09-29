@@ -11,6 +11,26 @@ public sealed class FoundryModelLifetimeTests
     public TestContext TestContext { get; set; } = null!;
 
     [TestMethod]
+    public async Task OnlyRequestedTextModelsAreEligibleForThirtySecondsOfIdleReuse()
+    {
+        using var runtime = new FoundryRuntime(Mock.Of<IStorageService>());
+        var text = Model("text");
+        var vision = Model("vision");
+        Assert.AreEqual(TimeSpan.Zero, runtime.IdleRetention);
+        await using (await runtime.AcquireModelAsync(text.Object, TestContext.CancellationToken, retainWhenIdle: true)) { }
+        Assert.AreEqual(TimeSpan.FromSeconds(30), runtime.IdleRetention);
+        await using (await runtime.AcquireModelAsync(text.Object, TestContext.CancellationToken, retainWhenIdle: true)) { }
+        text.Verify(model => model.LoadAsync(It.IsAny<CancellationToken>()), Times.Once);
+        await runtime.ReleaseAsync();
+        Assert.AreEqual(TimeSpan.Zero, runtime.IdleRetention);
+        await using (await runtime.AcquireModelAsync(text.Object, TestContext.CancellationToken, retainWhenIdle: true)) { }
+        text.Verify(model => model.LoadAsync(It.IsAny<CancellationToken>()), Times.Exactly(2));
+        await using (await runtime.AcquireModelAsync(vision.Object, TestContext.CancellationToken)) { }
+        Assert.AreEqual(TimeSpan.Zero, runtime.IdleRetention);
+        await runtime.ReleaseAsync();
+    }
+
+    [TestMethod]
     public async Task SameModelIsLoadedOnceAcrossAdaptersAndReleasedWhenIdle()
     {
         using var runtime = new FoundryRuntime(Mock.Of<IStorageService>());

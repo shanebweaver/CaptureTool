@@ -20,6 +20,32 @@ public sealed class CaptureMemoryIntegrationTests
     private CancellationToken Ct => TestContext.CancellationToken;
 
     [TestMethod]
+    [DataRow("png")]
+    [DataRow("mp4")]
+    public async Task TextScanAdmitsOcrAndQrTogetherWithoutOtherAnalysis(string extension)
+    {
+        using var environment = new AnalysisTestEnvironment();
+        using var store = environment.CreateStore();
+        using var catalog = environment.CreateCatalog();
+        using var authorization = new CaptureMemoryAuthorization(new LocalCaptureMemoryPolicyStore(environment, environment.Protector, environment.Files));
+        var worker = new AdmissionWorker();
+        using var memory = new CaptureMemoryService(authorization, catalog, store, worker, new Prompts(), new LocalFileSystem());
+        try
+        {
+            await memory.InitializeAsync(Ct);
+            await memory.SetConsentAsync(true, Ct);
+            Directory.CreateDirectory(environment.Root);
+            string path = Path.Combine(environment.Root, "scan." + extension);
+            File.WriteAllText(path, "synthetic source");
+            await memory.ScanTextAsync(path, Ct);
+            Assert.IsNotNull(worker.Admitted);
+            CollectionAssert.AreEqual(new[] { AnalysisCapability.QrCodeDetection, AnalysisCapability.TextRecognition }, worker.Admitted.Capabilities!.ToArray());
+            Assert.IsTrue(worker.Admitted.ReuseExisting, "Completed OCR or QR results must be reused on a partial retry.");
+        }
+        finally { await memory.StopAsync(); }
+    }
+
+    [TestMethod]
     public async Task UnavailableSemanticModelDoesNotScheduleItsMediaPrerequisites()
     {
         using var environment = new AnalysisTestEnvironment();
@@ -64,8 +90,7 @@ public sealed class CaptureMemoryIntegrationTests
             Assert.AreEqual(1, unavailable.Probes);
             Assert.AreEqual(1, fallback.Probes);
             Assert.IsNotNull(worker.Admitted);
-            CollectionAssert.AreEqual(new[] { AnalysisCapability.TextRecognition, AnalysisCapability.Description, AnalysisCapability.CaptureSynopsis,
-                AnalysisCapability.CaptureName, AnalysisCapability.ImageAltText, AnalysisCapability.CaptureClassification },
+            CollectionAssert.AreEqual(new[] { AnalysisCapability.TextRecognition, AnalysisCapability.Description, AnalysisCapability.CaptureSynopsis },
                 worker.Admitted.Capabilities!.ToArray());
         }
         finally { await memory.StopAsync(); }

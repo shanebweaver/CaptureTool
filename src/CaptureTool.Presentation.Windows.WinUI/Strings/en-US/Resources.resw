@@ -2146,7 +2146,6 @@ SOFTWARE.
   <data name="CaptureDetails_Partial" xml:space="preserve"><value>Some analysis did not complete. Available saved results are shown.</value></data>
   <data name="CaptureDetails_Empty" xml:space="preserve"><value>No saved text yet. Choose an action above to extract what you need.</value></data>
   <data name="CaptureDetails_Retained" xml:space="preserve"><value>Some results are from an earlier analysis of this same file.</value></data>
-  <data name="CaptureDetails_Limited" xml:space="preserve"><value>Some content was skipped. Results may be incomplete.</value></data>
   <data name="CaptureDetails_Copied" xml:space="preserve"><value>Copied to clipboard.</value></data>
   <data name="CaptureDetails_CopyFailed" xml:space="preserve"><value>Could not copy text. Please try again.</value></data>
   <data name="HomePage_RecentCaptureDetailsMenuItem.Text" xml:space="preserve"><value>Details</value></data>
@@ -2223,12 +2222,13 @@ SOFTWARE.
   <data name="CaptureAction_Summary" xml:space="preserve"><value>Generate summary</value></data>
   <data name="CaptureAction_Name" xml:space="preserve"><value>Suggest a name</value></data>
   <data name="CaptureAction_Text" xml:space="preserve"><value>Extract text</value></data>
+  <data name="CaptureAction_ScanText" xml:space="preserve"><value>Find text and QR codes</value></data>
   <data name="CaptureAction_Qr" xml:space="preserve"><value>Find QR codes</value></data>
   <data name="CaptureAction_Transcript" xml:space="preserve"><value>Transcribe audio</value></data>
   <data name="CaptureAction_DescriptionHeading.Text" xml:space="preserve"><value>AI description</value></data>
   <data name="CaptureAction_SummaryInputs" xml:space="preserve"><value>Extract text or transcribe audio to create a summary.</value></data>
-  <data name="CaptureAction_NoText" xml:space="preserve"><value>No text found.</value></data>
-  <data name="CaptureAction_NoQr" xml:space="preserve"><value>No QR codes found.</value></data>
+  <data name="CapturePane_EmptyTextTitle.Text" xml:space="preserve"><value>No results found</value></data>
+  <data name="CapturePane_EmptyTextDescription" xml:space="preserve"><value>No text or QR codes were found in this capture.</value></data>
   <data name="CaptureAction_NoSpeech" xml:space="preserve"><value>No speech found.</value></data>
   <data name="CaptureAction_NoDescription" xml:space="preserve"><value>No description was generated.</value></data>
   <data name="CaptureAction_Unavailable" xml:space="preserve"><value>This action is not available on this device.</value></data>
@@ -2247,5 +2247,6 @@ SOFTWARE.
   <data name="CaptureNaming_Edit.ToolTipService.ToolTip" xml:space="preserve"><value>Rename</value></data>
   <data name="CaptureAction_SummaryAudioInputs" xml:space="preserve"><value>Transcribe audio to create a summary.</value></data>
   <data name="CapturePane_Loading.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Loading details</value></data>
-  <data name="CaptureAction_RelatedResults" xml:space="preserve"><value>Also prepares other AI suggestions for this capture.</value></data>
+  <data name="CaptureSummary_Info.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>About AI summary</value></data>
+  <data name="CaptureSummary_AltTextInfo.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>About alt text</value></data>
 </root>

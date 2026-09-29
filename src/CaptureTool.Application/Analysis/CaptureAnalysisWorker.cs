@@ -18,6 +18,8 @@ public sealed class CaptureAnalysisWorker : ICaptureAnalysisWorker, IDisposable
     private readonly IReadOnlyDictionary<string, IMetadataProcessor> _processors;
     private readonly IAnalysisResources[] _resources;
     private readonly ILogService? _log;
+    private readonly TimeProvider _time;
+    private int _releaseRequested;
     private readonly SemaphoreSlim _signal = new(0, 1);
     private readonly SemaphoreSlim _commands = new(1, 1);
     private readonly SemaphoreSlim _running = new(1, 1);
@@ -32,7 +34,8 @@ public sealed class CaptureAnalysisWorker : ICaptureAnalysisWorker, IDisposable
 
     public CaptureAnalysisWorker(IAnalysisExecutionStore store, IAnalysisAuthorization authorization, IAnalysisSource source,
         CaptureAnalysisConfiguration configuration, IEnumerable<IMediaAnalyzer> analyzers, ICaptureAssetCatalog catalog,
-        IEnumerable<IMetadataProcessor>? processors = null, IEnumerable<IAnalysisResources>? resources = null, ILogService? log = null)
+        IEnumerable<IMetadataProcessor>? processors = null, IEnumerable<IAnalysisResources>? resources = null, ILogService? log = null,
+        TimeProvider? time = null)
     {
         _store = store;
         _authorization = authorization;
@@ -41,6 +44,7 @@ public sealed class CaptureAnalysisWorker : ICaptureAnalysisWorker, IDisposable
         _configuration = configuration;
         _resources = resources?.ToArray() ?? [];
         _log = log;
+        _time = time ?? TimeProvider.System;
         IMediaAnalyzer[] adapters = analyzers.ToArray();
         IMetadataProcessor[] metadata = processors?.ToArray() ?? [];
         configuration.ValidateAnalyzers(adapters.Select(analyzer => analyzer.Descriptor), metadata.Select(processor => processor.Descriptor));
@@ -79,12 +83,34 @@ public sealed class CaptureAnalysisWorker : ICaptureAnalysisWorker, IDisposable
         try
         {
             await _store.InitializeAsync(cancellationToken).ConfigureAwait(false);
+            long? idleSince = null;
             while (true)
             {
                 cancellationToken.ThrowIfCancellationRequested();
                 IReadOnlyList<AnalysisWorkItem> pending = await _store.ReadPendingAsync(cancellationToken).ConfigureAwait(false);
                 if (pending.Count == 0)
                 {
+                    idleSince ??= _time.GetTimestamp();
+                    TimeSpan retention = _resources.Length == 0 ? TimeSpan.Zero : _resources.Min(resource => resource.IdleRetention);
+                    TimeSpan remaining = retention - _time.GetElapsedTime(idleSince.Value);
+                    bool forceRelease = Interlocked.Exchange(ref _releaseRequested, 0) != 0;
+                    if (!forceRelease && remaining > TimeSpan.Zero && _invocation is not { IsCompleted: false } &&
+                        !_resources.Any(resource => resource.IsUnderMemoryPressure))
+                    {
+                        bool allowed;
+                        using (var grant = await _authorization.AcquireAsync(cancellationToken).ConfigureAwait(false))
+                            allowed = grant.IsAllowed && !grant.Revoked.IsCancellationRequested;
+                        if (allowed)
+                        {
+                            if (Progress.Activity != AnalysisActivity.Idle || Progress.QueuedCaptures != 0 || Progress.Fraction != null)
+                                Report(Progress with { Activity = AnalysisActivity.Idle, QueuedCaptures = 0, Fraction = null });
+                            // New requests wake immediately. Poll only during this bounded grace
+                            // period so low memory or revoked consent releases an idle model promptly.
+                            await WaitForIdleSignalAsync(remaining < TimeSpan.FromSeconds(1) ? remaining : TimeSpan.FromSeconds(1),
+                                cancellationToken).ConfigureAwait(false);
+                            continue;
+                        }
+                    }
                     bool released = await ReleaseResourcesAsync().WaitAsync(cancellationToken).ConfigureAwait(false);
                     Report(Progress with
                     {
@@ -95,6 +121,7 @@ public sealed class CaptureAnalysisWorker : ICaptureAnalysisWorker, IDisposable
                     await _signal.WaitAsync(cancellationToken).ConfigureAwait(false);
                     continue;
                 }
+                idleSince = null;
                 if (_invocation is { IsCompleted: false } invocation)
                 {
                     await WaitForProviderAsync(invocation, pending, cancellationToken).ConfigureAwait(false);
@@ -117,11 +144,28 @@ public sealed class CaptureAnalysisWorker : ICaptureAnalysisWorker, IDisposable
             {
                 // A timed-out native call still owns its model. Cleanup follows its actual
                 // completion, without blocking shutdown or permitting a new invocation.
-                _ = ObserveAsync(ReleaseResourcesAsync());
+                bool stopped = _invocation is not { IsCompleted: false };
+                Task cleanup = ReleaseResourcesAsync();
+                if (stopped) await ObserveAsync(cleanup).ConfigureAwait(false);
+                else _ = ObserveAsync(cleanup);
                 if (Progress.Activity != AnalysisActivity.StorageUnavailable) Report(Progress with { Activity = AnalysisActivity.Idle, QueuedCaptures = 0, Fraction = null });
                 _running.Release();
             }
         }
+    }
+
+    private async Task WaitForIdleSignalAsync(TimeSpan delay, CancellationToken ct)
+    {
+        using var wake = CancellationTokenSource.CreateLinkedTokenSource(ct);
+        Task signal = _signal.WaitAsync(wake.Token);
+        try { await Task.WhenAny(signal, Task.Delay(delay, _time, wake.Token)).ConfigureAwait(false); }
+        finally
+        {
+            await wake.CancelAsync().ConfigureAwait(false);
+            try { await signal.ConfigureAwait(false); }
+            catch (OperationCanceledException) when (wake.IsCancellationRequested) { }
+        }
+        ct.ThrowIfCancellationRequested();
     }
 
     private Task<bool> ReleaseResourcesAsync()
@@ -232,6 +276,7 @@ public sealed class CaptureAnalysisWorker : ICaptureAnalysisWorker, IDisposable
                 await _store.FinishAsync(work.Token, AnalysisRunStatus.Cancelled, cancellationToken).ConfigureAwait(false);
                 CancelActive(work.Token);
             }
+            Interlocked.Exchange(ref _releaseRequested, 1);
             Signal();
         }
         finally { _commands.Release(); }
@@ -244,6 +289,7 @@ public sealed class CaptureAnalysisWorker : ICaptureAnalysisWorker, IDisposable
         {
             AnalysisCleanupResult result = await _store.ClearAsync(reconciliationBoundary, cancellationToken).ConfigureAwait(false);
             CancelActive(null);
+            Interlocked.Exchange(ref _releaseRequested, 1);
             Signal();
             return result;
         }

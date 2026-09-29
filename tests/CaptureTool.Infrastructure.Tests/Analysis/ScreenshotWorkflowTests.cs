@@ -10,7 +10,7 @@ public sealed partial class CaptureAnalysisWorkerTests
     [TestMethod]
     [DataRow(false)]
     [DataRow(true)]
-    public async Task OneLlmRequestCachesCompanionOutputsAcrossWorkerAndStoreRestarts(bool abstain)
+    public async Task IndependentActionsCacheOnlyRequestedOutputsAcrossWorkerAndStoreRestarts(bool abstain)
     {
         var name = new ScreenshotProcessor(AnalysisCapability.CaptureName) { Abstain = abstain };
         var summary = new ScreenshotProcessor(AnalysisCapability.CaptureSynopsis) { Abstain = abstain };
@@ -22,12 +22,13 @@ public sealed partial class CaptureAnalysisWorkerTests
         var request = await fixture.EnqueueAsync(Ct, capabilities: ImageAction(fixture, AnalysisCapability.CaptureName));
         await DrainAsync(fixture.Worker, Ct);
         var initial = (await fixture.Store.GetAsync(request.CaptureId, cancellationToken: Ct))!;
-        Assert.HasCount(6, initial.Results);
-        Assert.IsTrue(MetadataEnrichmentConfiguration.LanguageModelCapabilities.All(capability =>
-            initial.Results.Any(result => result.Payload.Capability == capability)));
+        Assert.HasCount(3, initial.Results);
+        Assert.AreEqual(0, summary.Calls);
+        Assert.AreEqual(0, alt.Calls);
+        Assert.AreEqual(0, classification.Calls);
         fixture.Calls.Clear();
         foreach (var capability in new[] { AnalysisCapability.CaptureSynopsis, AnalysisCapability.ImageAltText,
-            AnalysisCapability.CaptureName, AnalysisCapability.CaptureSynopsis, AnalysisCapability.ImageAltText })
+            AnalysisCapability.CaptureName, AnalysisCapability.CaptureSynopsis, AnalysisCapability.ImageAltText, AnalysisCapability.CaptureClassification })
         {
             // Reopen the protected store and construct a new worker for every explicit action.
             using var reopened = fixture.Environment.CreateStore();
@@ -61,7 +62,7 @@ public sealed partial class CaptureAnalysisWorkerTests
     }
 
     [TestMethod]
-    public async Task AltTextCommitsFirstAndCompanionsFinishBeforeReleasingModelResources()
+    public async Task ExplicitMultipleOutputsFinishBeforeReleasingModelResources()
     {
         var resources = new TestResources();
         var calls = new List<AnalysisCapability>();
@@ -75,7 +76,8 @@ public sealed partial class CaptureAnalysisWorkerTests
         fixture.Preferred.Execute = (_, _) => Task.FromResult(SourceSuccess(fixture));
         var committed = new List<AnalysisCapability>();
         fixture.Worker.ResultCommitted += (_, capability) => committed.Add(capability);
-        await fixture.EnqueueAsync(Ct, capabilities: ImageAction(fixture, AnalysisCapability.ImageAltText));
+        await fixture.EnqueueAsync(Ct, capabilities: [AnalysisCapability.TextRecognition, AnalysisCapability.Description,
+            AnalysisCapability.ImageAltText, AnalysisCapability.CaptureSynopsis, AnalysisCapability.CaptureName, AnalysisCapability.CaptureClassification]);
         await DrainAsync(fixture.Worker, Ct);
         CollectionAssert.AreEqual(new[] { AnalysisCapability.ImageAltText, AnalysisCapability.CaptureSynopsis,
             AnalysisCapability.CaptureName, AnalysisCapability.CaptureClassification }, calls);
@@ -95,8 +97,9 @@ public sealed partial class CaptureAnalysisWorkerTests
         var alt = new ScreenshotProcessor(AnalysisCapability.ImageAltText);
         using var fixture = new Fixture(TimeSpan.FromMilliseconds(40), processors: [classification, name, summary, alt]);
         fixture.Preferred.Execute = (_, _) => Task.FromResult(SourceSuccess(fixture));
-        // An explicit classification request puts it first; its timeout must still preserve the other outputs.
-        var request = await fixture.EnqueueAsync(Ct, capabilities: ImageAction(fixture, AnalysisCapability.CaptureClassification));
+        // An explicit multi-output request must retain its remaining work after a timeout.
+        var request = await fixture.EnqueueAsync(Ct, capabilities: [AnalysisCapability.TextRecognition, AnalysisCapability.Description,
+            AnalysisCapability.CaptureClassification, AnalysisCapability.CaptureName, AnalysisCapability.CaptureSynopsis, AnalysisCapability.ImageAltText]);
         using var shutdown = CancellationTokenSource.CreateLinkedTokenSource(Ct);
         Task runner = fixture.Worker.RunAsync(shutdown.Token);
         try
@@ -167,7 +170,7 @@ public sealed partial class CaptureAnalysisWorkerTests
             record.Results.Single(result => result.Payload is CaptureSynopsisMetadata).ResultId);
         var work = (await reopened.GetWorkAsync(request.CaptureId, Ct))!;
         Assert.AreEqual(AnalysisRunStatus.Completed, work.Run.Status);
-        Assert.HasCount(4, work.Run.CompletedSteps.Where(step => step.ReusedResultId != null));
+        Assert.HasCount(2, work.Run.CompletedSteps.Where(step => step.ReusedResultId != null));
         Assert.IsNotNull(((ImageAltTextMetadata)record.Results.Single(result => result.Payload is ImageAltTextMetadata).Payload).Suggestion);
     }
 

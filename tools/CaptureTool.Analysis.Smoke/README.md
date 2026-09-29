@@ -81,12 +81,51 @@ An opt-in `--enrichment-probe --enrichment-model <catalog-alias>` diagnostic wri
 raw responses for one hard-coded synthetic invoice only. It never reads captures.
 Production adapters do not log source text, prompts, or raw responses.
 
-`--screenshot-checks` runs the requested name batch, including companion summary,
-alt text, and classification, on generated development and invoice screenshots.
+`--screenshot-checks` explicitly evaluates OCR, description, name, summary,
+alt text, and classification on generated development and invoice screenshots.
+This diagnostic requests every output; a normal UI action requests only its own output.
 It requires cached vision and Phi models and never downloads them. Add
 `--classification-only` to repeat just OCR, description, and classification when
 investigating its prompt or parser. Reports retain synthetic responses and per-step
 timings under `screenshots`; no user captures are read.
+
+`--model-reuse-checks` requires cached Phi weights and measures cold acquisition,
+reuse after a short idle pause, and reacquisition after explicit release. It also
+queries the Windows low-memory signal. It runs no inference and reads no captures.
+Worker regression tests separately cover the 30-second deadline, deadline reset,
+low-memory release, cancellation, consent revocation, deletion, and shutdown.
+
+`--input-compaction-checks` compares the former per-entry source objects with the
+compact source format using cached CPU Phi weights. It keeps one model loaded,
+runs two rounds of name, summary, and alt-text requests on invoice and dense OCR
+fixtures, and reverses format order in the second round. Additional paired checks
+cover German, embedded instructions, conflicting sources, skipped oversized entries,
+description-only alt text, and classification. Reports under `input-compaction`
+include requests, responses, generation time, token counts, retries, and basic
+fixture checks. Inspect meaning and citations as well as the automatic checks.
+Only synthetic fixtures are read or saved. See the
+[input compaction investigation](../../docs/metadata-input-compaction.md).
+
+GPU diagnostics use explicit flags and the same isolated test cache:
+
+```powershell
+& CaptureTool.Analysis.Smoke.exe <absolute-output-directory> --device-probe
+& CaptureTool.Analysis.Smoke.exe <absolute-output-directory> --device-probe --prepare-ep CUDAExecutionProvider
+& CaptureTool.Analysis.Smoke.exe <absolute-output-directory> --device-check Phi-4-mini-instruct-cuda-gpu:5 --prepare-ep CUDAExecutionProvider --prepare-model
+& CaptureTool.Analysis.Smoke.exe <absolute-output-directory> --device-check Phi-4-mini-instruct-generic-cpu:5
+```
+
+Choose IDs returned by the probe on the test machine. `--prepare-ep` downloads
+and registers the named compatible execution provider; registration is required
+in each process even when its binaries are cached. `--prepare-model` permits
+downloading the selected variant. Without these flags the diagnostic uses only
+already available providers and weights. Device checks compare name, summary,
+and alt text on synthetic invoice and dense-text fixtures, recording loading and
+generation time, token counts, attempts, and parsed output. They preserve the
+production prompts and validation and leave the app's device selection unchanged.
+GPU sampling with `nvidia-smi` can independently confirm actual GPU activity.
+The [GTX 1080 Ti investigation](../../docs/foundry-gpu-investigation.md) records
+the CUDA and WebGPU compatibility failures and the successful CPU control.
 
 Scale checks seed 100, 1,000, and 10,000 DPAPI-protected records with 200 OCR regions
 each. Reports measure discovery, settings contention, cancellation, deletion,

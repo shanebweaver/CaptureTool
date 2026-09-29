@@ -133,16 +133,23 @@ internal sealed class CaptureMemoryService : ICaptureMemoryService, IDisposable
     }
 
     public Task AnalyzeAsync(string path, AnalysisCapability capability, CancellationToken cancellationToken = default)
+        => RequestAnalysisAsync(path, capability, scanText: false, cancellationToken);
+
+    public Task ScanTextAsync(string path, CancellationToken cancellationToken = default)
+        => RequestAnalysisAsync(path, AnalysisCapability.TextRecognition, scanText: true, cancellationToken);
+
+    private Task RequestAnalysisAsync(string path, AnalysisCapability capability, bool scanText, CancellationToken cancellationToken)
     {
         long epoch = Interlocked.Read(ref _epoch);
         return GuardAsync(ct => LockedAsync(async () =>
         {
-            // An explicit LLM action admits one batch with its prerequisites and companion
-            // outputs, keeping the model resident. The worker reuses each cached result.
+            // Admit only the requested output and its prerequisites. The worker reuses
+            // cached results and briefly retains the model for subsequent requests.
             if (!Current(epoch) || !_authorization.IsAllowed || Volatile.Read(ref _deleting) != 0 ||
                 !Path.IsPathFullyQualified(path) || !_files.FileExists(path)) return;
             CaptureFileType media = CaptureFileTypeDetector.DetectFileType(path);
             if (media is not (CaptureFileType.Image or CaptureFileType.Audio or CaptureFileType.Video)) return;
+            if (scanText && media == CaptureFileType.Audio) return;
             // Check the requested semantic output before scheduling expensive prerequisites.
             // Probes cannot download/load models or inspect the capture.
             IMetadataProcessor[] candidates = _processors.Where(processor => processor.Descriptor.Capability == capability).ToArray();
@@ -171,7 +178,7 @@ internal sealed class CaptureMemoryService : ICaptureMemoryService, IDisposable
             }
             AnalysisAdmissionScope scope = await _store.GetAdmissionScopeAsync(ct).ConfigureAwait(false);
             if (!Current(epoch) || !_authorization.IsAllowed) return;
-            await AdmitAsync(asset, scope.Generation, _authorization.Policy.Revision, prior?.Run.Id, capability, ct).ConfigureAwait(false);
+            await AdmitAsync(asset, scope.Generation, _authorization.Policy.Revision, prior?.Run.Id, capability, scanText, ct).ConfigureAwait(false);
             await InitializeStorageAsync(ct).ConfigureAwait(false);
         }, ct), cancellationToken);
     }
@@ -219,7 +226,7 @@ internal sealed class CaptureMemoryService : ICaptureMemoryService, IDisposable
         }
     }
 
-    private async Task AdmitAsync(CaptureAsset asset, Guid generation, Guid authorization, Guid? prior, AnalysisCapability capability, CancellationToken ct)
+    private async Task AdmitAsync(CaptureAsset asset, Guid generation, Guid authorization, Guid? prior, AnalysisCapability capability, bool scanText, CancellationToken ct)
     {
         if (_runner != null && _worker.Progress.Activity == AnalysisActivity.StorageUnavailable) await _runner.ConfigureAwait(false);
         AnalysisMediaKind media = asset.MediaType switch
@@ -230,7 +237,9 @@ internal sealed class CaptureMemoryService : ICaptureMemoryService, IDisposable
             _ => throw new InvalidOperationException("Unsupported capture media.")
         };
         if (await _worker.EnqueueAsync(new(asset.Id, media, asset.SourcePath, Guid.NewGuid(), generation, prior,
-            ExpectedAuthorizationId: authorization, Capabilities: CaptureAnalysisConfiguration.ForAction(media, capability), ReuseExisting: true), ct).ConfigureAwait(false))
+            ExpectedAuthorizationId: authorization, Capabilities: scanText
+                ? [AnalysisCapability.QrCodeDetection, AnalysisCapability.TextRecognition]
+                : CaptureAnalysisConfiguration.ForAction(media, capability), ReuseExisting: true), ct).ConfigureAwait(false))
         {
             _storage = _storage with { HasData = true };
             Publish();

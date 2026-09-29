@@ -54,11 +54,9 @@ public sealed class CaptureAnalysisFoundationTests
         Assert.AreEqual("zxing-image-qr", image.Steps[1].Candidates.Single());
         Assert.AreEqual("image-v9", image.Version);
         Assert.AreEqual(AnalysisCapability.ImageAltText, image.Steps.Last().Capability);
-        CollectionAssert.AreEqual(new[] { AnalysisCapability.TextRecognition, AnalysisCapability.Description, AnalysisCapability.CaptureSynopsis,
-            AnalysisCapability.CaptureName, AnalysisCapability.ImageAltText, AnalysisCapability.CaptureClassification },
+        CollectionAssert.AreEqual(new[] { AnalysisCapability.TextRecognition, AnalysisCapability.Description, AnalysisCapability.CaptureSynopsis },
             configuration.SelectPlan(AnalysisMediaKind.Image, CaptureAnalysisConfiguration.ForAction(AnalysisMediaKind.Image, AnalysisCapability.CaptureSynopsis)).Steps.Select(step => step.Capability).ToArray());
-        CollectionAssert.AreEqual(new[] { AnalysisCapability.TextRecognition, AnalysisCapability.Description, AnalysisCapability.CaptureName,
-            AnalysisCapability.CaptureSynopsis, AnalysisCapability.ImageAltText, AnalysisCapability.CaptureClassification },
+        CollectionAssert.AreEqual(new[] { AnalysisCapability.TextRecognition, AnalysisCapability.Description, AnalysisCapability.CaptureName },
             configuration.SelectPlan(AnalysisMediaKind.Image, CaptureAnalysisConfiguration.ForAction(AnalysisMediaKind.Image, AnalysisCapability.CaptureName)).Steps.Select(step => step.Capability).ToArray());
         Assert.AreEqual("video-v8", video.Version);
         Assert.AreEqual("audio-v6", configuration.Plans.Single(plan => plan.MediaKind == AnalysisMediaKind.Audio).Version);
@@ -70,7 +68,7 @@ public sealed class CaptureAnalysisFoundationTests
     }
 
     [TestMethod]
-    public void LlmBatchesPrioritizeTheRequestedOutputAndKeepSourceActionsSeparate()
+    public void ActionsRequestOnlyTheirOutputAndRequiredSources()
     {
         var configuration = CaptureAnalysisConfiguration.CreateDefault();
         foreach (var kind in Enum.GetValues<AnalysisMediaKind>())
@@ -80,10 +78,8 @@ public sealed class CaptureAnalysisFoundationTests
             var plan = configuration.SelectPlan(kind, CaptureAnalysisConfiguration.ForAction(kind, requested));
             var outputs = plan.Steps.Where(step => MetadataEnrichmentConfiguration.LanguageModelCapabilities.Contains(step.Capability)).ToArray();
             Assert.AreEqual(requested, outputs[0].Capability);
-            Assert.HasCount(kind == AnalysisMediaKind.Image ? 4 : 3, outputs);
-            if (requested != AnalysisCapability.CaptureClassification)
-                Assert.AreEqual(AnalysisCapability.CaptureClassification, outputs[^1].Capability,
-                    "Background classification must not delay name, summary, or alt text.");
+            Assert.HasCount(1, outputs, "Other LLM features must require their own explicit request.");
+            Assert.HasCount(kind == AnalysisMediaKind.Image ? 3 : 1, plan.Steps);
             CollectionAssert.AreEqual(plan.Steps.Select(step => step.Capability).ToArray(),
                 configuration.SelectPlan(kind, plan.Steps.Select(step => step.Capability).ToArray()).Steps.Select(step => step.Capability).ToArray(),
                 "Persisted execution order must survive reconstruction between steps.");

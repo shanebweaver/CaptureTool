@@ -9,8 +9,9 @@ Windows-only decision. Image-description and speech providers are unchanged.
 
 Both providers run only after an explicit action under the shared local-AI
 consent. Saved metadata is reused, providers run sequentially, and the Foundry
-model unloads when requested work drains. This restores compatibility, not lower
-peak memory: Phi-4 can still use roughly the 8 GB observed during testing.
+model stays loaded for up to 30 seconds after requested work drains. A new request
+resets that idle window; low memory or shutdown releases it sooner once inference
+stops. Phi-4 can still use roughly the 8 GB observed during testing.
 Strict validation and bounded correction remain in place; see the
 [screenshot stability investigation](metadata-enrichment-stability.md) for the
 current version 3 transport and the earlier prepared-metadata qualification.

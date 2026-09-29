@@ -1,4 +1,4 @@
-﻿using FlaUI.Core.AutomationElements;
+using FlaUI.Core.AutomationElements;
 using FlaUI.Core.Definitions;
 using FlaUI.UIA3;
 using System.Text.Json;
@@ -169,8 +169,8 @@ public sealed partial class ImageEditTextExtractionUiTests
             Element("CapturePane_TextTab").Patterns.SelectionItem.Pattern.Select();
             Screenshot("text-invitation");
             Assert.IsNull(window.FindFirstDescendant(automation.ConditionFactory.ByAutomationId("CaptureMemoryConsentDialog")), "Opening Text only reads saved results.");
-            Element("CaptureAction_Text").Patterns.Invoke.Pattern.Invoke();
-            WaitForElementRemoved(window, automation, "CaptureAction_Text", InteractionTimeout);
+            Element("CaptureAction_ScanText").Patterns.Invoke.Pattern.Invoke();
+            WaitForElementRemoved(window, automation, "CaptureAction_ScanText_Loading", InteractionTimeout);
             Assert.IsNull(window.FindFirstDescendant(automation.ConditionFactory.ByAutomationId("CaptureMemoryConsentDialog")), "Consent from standalone OCR also covers pipeline actions.");
             var search = Element("CapturePane_Search").AsTextBox(); search.Text = "INV-2048";
             WaitFor(() => Element("CapturePane_CopyResults").IsEnabled ? window : null, InteractionTimeout, "saved analysis text");

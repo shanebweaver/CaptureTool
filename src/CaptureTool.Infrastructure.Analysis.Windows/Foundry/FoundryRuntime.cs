@@ -13,10 +13,15 @@ internal sealed partial class FoundryRuntime(IStorageService storage) : IAnalysi
     private bool _modelReady;
     private FoundryLocalManager? _manager;
     private bool _ownsManager;
+    private bool _retainWhenIdle;
+    private readonly Lazy<WindowsMemoryPressure> _memoryPressure = new(() => new());
+
+    public TimeSpan IdleRetention => _modelReady && _retainWhenIdle ? TimeSpan.FromSeconds(30) : TimeSpan.Zero;
+    public bool IsUnderMemoryPressure => _memoryPressure.Value.IsLow;
 
     // One resident model, shared by all adapters. The lease spans native inference,
     // including an invocation that has outlived its worker deadline.
-    internal async Task<IAsyncDisposable> AcquireModelAsync(IModel model, CancellationToken ct)
+    internal async Task<IAsyncDisposable> AcquireModelAsync(IModel model, CancellationToken ct, bool retainWhenIdle = false)
     {
         await _modelGate.WaitAsync(ct).ConfigureAwait(false);
         try
@@ -29,6 +34,7 @@ internal sealed partial class FoundryRuntime(IStorageService storage) : IAnalysi
                 catch { await UnloadAsync().ConfigureAwait(false); throw; }
             }
             ct.ThrowIfCancellationRequested();
+            _retainWhenIdle = retainWhenIdle;
             return new ModelLease(this, ct);
         }
         catch { _modelGate.Release(); throw; }
@@ -49,6 +55,7 @@ internal sealed partial class FoundryRuntime(IStorageService storage) : IAnalysi
         }
 
         _modelReady = false;
+        _retainWhenIdle = false;
         // Keep ownership if unloading fails; never load a second model on top of it.
         await _loadedModel.UnloadAsync(CancellationToken.None).ConfigureAwait(false);
         _loadedModel = null;
@@ -133,6 +140,7 @@ internal sealed partial class FoundryRuntime(IStorageService storage) : IAnalysi
 
     public void Dispose()
     {
+        if (_memoryPressure.IsValueCreated) _memoryPressure.Value.Dispose();
         if (_ownsManager)
         {
             _manager?.Dispose();

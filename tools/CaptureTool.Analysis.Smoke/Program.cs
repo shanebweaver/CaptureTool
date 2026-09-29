@@ -33,6 +33,14 @@ if (args.Contains("--recovery-child", StringComparer.Ordinal)) return await Reco
 if (args.Contains("--recovery-resume", StringComparer.Ordinal)) return await RecoveryChecks.ChildAsync(output, args[^1], resume: true);
 if (args.Contains("--scale-checks", StringComparer.Ordinal)) return await ScaleChecks.RunAsync(output);
 var storage = new SmokeStorage(output);
+if (args.Contains("--input-compaction-checks", StringComparer.Ordinal))
+    return await InputCompactionChecks.RunAsync(storage, Path.Combine(output, "input-compaction", DateTime.UtcNow.ToString("yyyyMMdd-HHmmss")));
+if (args.Contains("--device-probe", StringComparer.Ordinal))
+    return await DeviceChecks.ProbeAsync(storage, args);
+if (args.Contains("--device-check", StringComparer.Ordinal))
+    return await DeviceChecks.RunAsync(storage, Path.Combine(output, "devices", DateTime.UtcNow.ToString("yyyyMMdd-HHmmss")), args);
+if (args.Contains("--model-reuse-checks", StringComparer.Ordinal))
+    return await ModelReuseChecks.RunAsync(storage);
 if (args.Contains("--windows-language-probe", StringComparer.Ordinal))
 {
     AppDomain.CurrentDomain.FirstChanceException += (_, observed) =>

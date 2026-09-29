@@ -32,6 +32,7 @@ public sealed class CaptureDetailsViewModel : ViewModelBase
     public CaptureAnalysisAction NameAction { get; }
     public CaptureAnalysisAction TextAction { get; }
     public CaptureAnalysisAction QrAction { get; }
+    public CaptureAnalysisAction ScanTextAction { get; }
     public CaptureAnalysisAction TranscriptAction { get; }
     private IEnumerable<CaptureAnalysisAction> Actions => [AltTextAction, SummaryAction, NameAction, TextAction, QrAction, TranscriptAction];
     private CaptureDetailsSnapshot? _snapshot;
@@ -72,8 +73,13 @@ public sealed class CaptureDetailsViewModel : ViewModelBase
     private bool UsesEditorText => IsImage && _editorText != null && (_editorText.HasChanges || _editorText.Document != null ||
         _snapshot?.Status is CaptureDetailsStatus.SourceChanged or CaptureDetailsStatus.SourceUnavailable ||
         _snapshot?.Record != null && !_sourceMatches);
-    public bool ShowQrAction => HasVisualMedia && !UsesEditorText;
     public IReadOnlyList<CaptureTextPassage> TextPassages => UsesEditorText ? _editorPassages : Content.Passages;
+    public bool ShowTextResults => !ScanTextAction.IsRunning && TextPassages.Count > 0;
+    public bool ShowTextEmptyState => !ScanTextAction.IsRunning && !TranscriptAction.IsRunning && TextPassages.Count == 0 &&
+        (HasVisualMedia ? ScanTextAction.HasResult : HasAudio && TranscriptAction.HasResult);
+    public string TextEmptyDescription => _text.GetString(HasVisualMedia ? "CapturePane_EmptyTextDescription" : "CaptureAction_NoSpeech");
+    public bool ShowScanTextAction => HasVisualMedia && !ScanTextAction.HasResult && !ShowTextResults;
+    public bool ShowTextActions => ShowScanTextAction || HasAudio && !TranscriptAction.HasResult;
 
     public string PhysicalFileName => _path == null ? string.Empty : Path.GetFileName(_path);
     public string NameDraft { get; set => Set(ref field, value); } = string.Empty;
@@ -83,8 +89,7 @@ public sealed class CaptureDetailsViewModel : ViewModelBase
     public IRelayCommand CancelNameCommand { get; }
     public IAsyncRelayCommand SaveNameCommand { get; }
     public IAsyncRelayCommand SuggestNameCommand { get; }
-    public string NameSuggestionToolTip => _text.GetString("CaptureNaming_Suggest") + Environment.NewLine + RelatedResultsHint;
-    private string RelatedResultsHint => _text.GetString("CaptureAction_RelatedResults");
+    public string NameSuggestionToolTip => _text.GetString("CaptureNaming_Suggest");
     public string FileName { get; private set => Set(ref field, value); } = string.Empty;
     public string FilePath => _path ?? string.Empty;
     public CaptureFileProperties FileProperties { get; private set => Set(ref field, value); } = new();
@@ -124,6 +129,8 @@ public sealed class CaptureDetailsViewModel : ViewModelBase
         NameAction = Action(AnalysisCapability.CaptureName, "Name");
         TextAction = Action(AnalysisCapability.TextRecognition, "Text");
         QrAction = Action(AnalysisCapability.QrCodeDetection, "Qr");
+        ScanTextAction = new(AnalysisCapability.TextRecognition, "CaptureAction_ScanText", _text.GetString("CaptureAction_ScanText"),
+            () => RequestAnalysisAsync(AnalysisCapability.TextRecognition, scanText: true));
         TranscriptAction = Action(AnalysisCapability.Transcription, "Transcript");
         EditNameCommand = new RelayCommand(() => { _reviewSuggestedName = false; EditName(FileName == PhysicalFileName ? Path.GetFileNameWithoutExtension(FileName) : FileName); });
         CancelNameCommand = new RelayCommand(() => { _reviewSuggestedName = false; IsEditingName = false; });
@@ -158,8 +165,9 @@ public sealed class CaptureDetailsViewModel : ViewModelBase
         if (!IsReading && !IsGeneratingName) _reviewSuggestedName = false;
     }
 
-    private async Task RequestAnalysisAsync(AnalysisCapability capability)
+    private async Task RequestAnalysisAsync(AnalysisCapability capability, bool scanText = false)
     {
+        if (scanText && !ScanTextAction.Command.CanExecute(null)) return;
         if (!_disposed && UsesEditorText && (capability == AnalysisCapability.TextRecognition || capability == AnalysisCapability.QrCodeDetection))
         {
             await _editorText!.ExtractAsync();
@@ -181,7 +189,8 @@ public sealed class CaptureDetailsViewModel : ViewModelBase
                 if (!_memory.State.PolicyAvailable) Notify(Text("Unavailable"), error: true);
                 return;
             }
-            await _memory.AnalyzeAsync(_path, capability, _cancellation);
+            if (scanText) await _memory.ScanTextAsync(_path, _cancellation);
+            else await _memory.AnalyzeAsync(_path, capability, _cancellation);
             if (_memory.State.FailureCode is { } failure && !_disposed)
             {
                 _requestFailures[capability] = failure == "model-unavailable" ? "Unavailable" : "Failed";
@@ -211,11 +220,6 @@ public sealed class CaptureDetailsViewModel : ViewModelBase
                 string editorStatus = isText ? _editorText.Status : string.Empty;
                 if (!hasResult && !_editorText.CanExtract && editorStatus.Length == 0)
                     editorStatus = _text.GetString("CaptureAction_Unavailable");
-                if (hasResult && (isText ? !_editorPassages.Any(passage => passage.Source == CaptureTextSource.ImageText) : document!.QrCodes.Count == 0))
-                    editorStatus = _text.GetString(isText ? "CaptureAction_NoText" : "CaptureAction_NoQr");
-                // Editor failures already have a snackbar; only report newly completed empty results here.
-                if (isText && hasResult && !action.HasResult && action.IsRunning && editorStatus.Length > 0)
-                    Notify(editorStatus);
                 action.Update(isText && _editorText.IsRunning, hasResult,
                     !_disposed && !_memory.State.IsDeleting && _editorText.CanExtract && !_editorText.IsRunning, editorStatus);
                 continue;
@@ -225,8 +229,6 @@ public sealed class CaptureDetailsViewModel : ViewModelBase
                 !_snapshot.Run.CompletedSteps.Any(step => step.Capability == action.Capability);
             string? status = result?.Payload switch
             {
-                TextRecognitionMetadata { Regions.Count: 0 } => "NoText",
-                QrCodeMetadata { Codes.Count: 0 } => "NoQr",
                 TranscriptMetadata { Segments.Count: 0 } => "NoSpeech",
                 DescriptionMetadata { Descriptions.Count: 0 } => "NoDescription",
                 ImageAltTextMetadata { Suggestion: null } => "NoSuggestion",
@@ -251,10 +253,13 @@ public sealed class CaptureDetailsViewModel : ViewModelBase
                 (action.Capability != AnalysisCapability.ImageAltText || IsImage),
                 message);
         }
+        ScanTextAction.Update(TextAction.IsRunning || QrAction.IsRunning || _requesting && _requestedAction == AnalysisCapability.TextRecognition,
+            TextAction.HasResult && QrAction.HasResult,
+            HasVisualMedia && (TextAction.Command.CanExecute(null) || QrAction.Command.CanExecute(null)));
         SummaryAction.Label = _text.GetString(IsImage ? "CaptureAction_ScreenshotSummary" : "CaptureAction_Summary");
-        AltTextAction.ToolTip = AltTextAction.Label + Environment.NewLine + RelatedResultsHint;
+        AltTextAction.ToolTip = AltTextAction.Label;
         SummaryAction.ToolTip = NeedsSummaryInputs ? _text.GetString(HasVisualMedia
-            ? "CaptureAction_SummaryInputs" : "CaptureAction_SummaryAudioInputs") : SummaryAction.Label + Environment.NewLine + RelatedResultsHint;
+            ? "CaptureAction_SummaryInputs" : "CaptureAction_SummaryAudioInputs") : SummaryAction.Label;
         RaisePropertyChanged(nameof(IsImage));
         IsGeneratingSummary = SummaryAction.IsRunning;
         IsGeneratingName = NameAction.IsRunning;
@@ -262,6 +267,11 @@ public sealed class CaptureDetailsViewModel : ViewModelBase
         RaisePropertyChanged(nameof(HasVisualMedia));
         RaisePropertyChanged(nameof(HasAudio));
         RaisePropertyChanged(nameof(NeedsSummaryInputs));
+        RaisePropertyChanged(nameof(ShowTextResults));
+        RaisePropertyChanged(nameof(ShowTextEmptyState));
+        RaisePropertyChanged(nameof(TextEmptyDescription));
+        RaisePropertyChanged(nameof(ShowScanTextAction));
+        RaisePropertyChanged(nameof(ShowTextActions));
     }
 
     public Task OpenAsync(string path)
@@ -395,7 +405,7 @@ public sealed class CaptureDetailsViewModel : ViewModelBase
     public async Task EnsureTextAsync()
     {
         if (_disposed || TextAction.HasResult || TextAction.IsRunning) return;
-        if (TextAction.Command.CanExecute(null)) await TextAction.Command.ExecuteAsync(null);
+        if (ScanTextAction.Command.CanExecute(null)) await ScanTextAction.Command.ExecuteAsync(null);
     }
 
     private void EditorTextChanged()
@@ -417,7 +427,6 @@ public sealed class CaptureDetailsViewModel : ViewModelBase
             ? new(_navigation.IsReady, _editorText!.Document != null)
             : _navigation with { SourceMatches = _sourceMatches });
         RaisePropertyChanged(nameof(TextPassages));
-        RaisePropertyChanged(nameof(ShowQrAction));
         RaisePropertyChanged(nameof(CanShowImageTextOverlay));
     }
     public void ReportActionFailure()
@@ -462,7 +471,7 @@ public sealed class CaptureDetailsViewModel : ViewModelBase
                     _snapshot = snapshot;
                     Content = content;
                     SetSummary(snapshot.Record);
-                    ReportReadNotice(snapshot, content);
+                    ReportReadNotice(snapshot);
                     await ReadNameAsync();
                 }
                 catch (OperationCanceledException) when (_cancellation.IsCancellationRequested) { return; }
@@ -472,7 +481,7 @@ public sealed class CaptureDetailsViewModel : ViewModelBase
                     Content = new();
                     _snapshot = null;
                     SetSummary(null);
-                    ReportReadNotice(new(CaptureDetailsStatus.Unavailable), Content);
+                    ReportReadNotice(new(CaptureDetailsStatus.Unavailable));
                     IsGeneratingSummary = false;
                     IsGeneratingName = false;
                 }
@@ -484,7 +493,7 @@ public sealed class CaptureDetailsViewModel : ViewModelBase
         }
     }
 
-    private void ReportReadNotice(CaptureDetailsSnapshot snapshot, CaptureDetailsContent content)
+    private void ReportReadNotice(CaptureDetailsSnapshot snapshot)
     {
         string? state = snapshot.Status switch
         {
@@ -493,7 +502,6 @@ public sealed class CaptureDetailsViewModel : ViewModelBase
             CaptureDetailsStatus.Unavailable => "Unavailable",
             _ => null
         };
-        state ??= content.HasLimitedCoverage ? "Limited" : null;
         if (state != null && state != _readNotice) Notify(Text(state), error: state == "Unavailable");
         _readNotice = state;
     }

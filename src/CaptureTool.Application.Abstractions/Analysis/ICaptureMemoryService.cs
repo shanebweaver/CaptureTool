@@ -45,8 +45,10 @@ public interface ICaptureMemoryService
     Task SetPreferredPathAsync(string sourcePath, string preferredPath, CancellationToken cancellationToken = default);
     Task SetConsentAsync(bool granted, CancellationToken cancellationToken = default);
     Task<bool> EnsureConsentAsync(CancellationToken cancellationToken = default);
-    /// <summary>Requests an action, its prerequisites, and companion LLM outputs. Capture/open/tab lifecycle events never call this.</summary>
+    /// <summary>Requests one action and its prerequisites. Capture/open/tab lifecycle events never call this.</summary>
     Task AnalyzeAsync(string path, AnalysisCapability capability, CancellationToken cancellationToken = default);
+    /// <summary>Requests OCR and QR detection together for visual media, reusing either completed scan.</summary>
+    Task ScanTextAsync(string path, CancellationToken cancellationToken = default);
     Task DeleteMetadataAsync(CancellationToken cancellationToken = default);
     Task RefreshAsync(CancellationToken cancellationToken = default);
     Task StopAsync();

@@ -652,6 +652,8 @@ public sealed partial class CaptureAnalysisWorkerTests
     {
         public int Releases;
         public bool Fail;
+        public TimeSpan IdleRetention { get; set; }
+        public bool IsUnderMemoryPressure { get; set; }
         public Task ReleaseAsync()
         {
             Interlocked.Increment(ref Releases);
@@ -694,7 +696,7 @@ public sealed partial class CaptureAnalysisWorkerTests
         public CaptureAnalysisConfiguration Configuration { get; }
         public CaptureAnalysisWorker Worker { get; }
         public Fixture(TimeSpan? timeout = null, IEnumerable<IMetadataProcessor>? processors = null, AnalysisMediaKind kind = AnalysisMediaKind.Image,
-            IEnumerable<IAnalysisResources>? resources = null)
+            IEnumerable<IAnalysisResources>? resources = null, TimeProvider? time = null)
         {
             Store = Environment.CreateStore();
             Catalog = Environment.CreateCatalog();
@@ -709,7 +711,7 @@ public sealed partial class CaptureAnalysisWorkerTests
                 .. metadata.GroupBy(processor => processor.Descriptor.Capability).Select(group => new AnalysisStep(group.Key,
                     group.Select(processor => processor.Descriptor.Id), TimeSpan.FromSeconds(1), timeout ?? group.First().Descriptor.Limits.ExecutionTimeout)),
             ])]);
-            Worker = new(Store, Authorization, Source, Configuration, Adapters, Catalog, metadata, resources);
+            Worker = new(Store, Authorization, Source, Configuration, Adapters, Catalog, metadata, resources, time: time);
         }
         public async Task<AnalysisRequest> EnqueueAsync(CancellationToken ct, string? language = null, IReadOnlyList<AnalysisCapability>? capabilities = null)
         {

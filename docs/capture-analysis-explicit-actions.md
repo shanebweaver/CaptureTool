@@ -11,13 +11,36 @@ Semantic actions prefer the [Windows language-model provider](windows-language-m
 with the existing Phi-4 CPU model as a backup when Windows cannot serve the request.
 They check candidate readiness before scheduling media prerequisites. This fallback
 is part of the explicit action; it does not authorize background or startup work.
-Phi-4 retains its high peak memory cost and unloads when requested work drains.
+Phi-4 retains its high peak memory cost. After requested work drains it stays loaded
+for up to 30 seconds for another explicit action, then unloads. Low memory, revoked
+consent, cancellation, metadata deletion, and shutdown release it sooner once inference stops.
 
-The details pane offers separate actions for recognized text, QR codes, and audio
-transcription where relevant. A Summary tab replaces the image-description section
+The Text tab offers one **Find text and QR codes** action for images and videos,
+plus audio transcription where relevant. The combined scan queues OCR and QR
+detection in one request and reuses either result when it is already available.
+Before data is available, only the action is shown. The button keeps its label,
+size, and position and is disabled while a progress ring occupies the results
+area below it. Once scanning completes, results replace the button and progress.
+Opening saved text or QR data goes straight to results. A successful empty scan
+shows a localized empty state in place of the search, navigation, and copy controls,
+without an empty-text or empty-QR snackbar. Cached empty scans use the same state.
+A failed scan with no data leaves the action available to retry. Search controls
+appear when there is data, and an empty search never brings the scan button back.
+A Summary tab replaces the image-description section
 with screenshot summary and alt-text suggestions, each with a copy action.
+Feature descriptions appear in tooltips on info buttons beside the headings.
+The info buttons support keyboard focus and pointer hover, with localized
+accessible names and help text.
+Their buttons keep a fixed label and size and are disabled during generation.
+A progress ring sits beside each button in a reserved column. Once a result is
+available, the action row disappears and the generated text and copy action take
+its place. Failed requests show an error snackbar, stop progress, and re-enable
+the button for another attempt.
+Successful results do not show a snackbar for bounded input selection. Coverage
+remains in the saved metadata and model input; generation failures and source/read
+problems still produce notifications.
 Clicking either screenshot action authorizes OCR, visual description, and its one
-selected LLM output. A name suggestion uses the screenshot synopsis workflow too.
+selected LLM output. A name suggestion uses the same sources and its own prompt.
 Already saved results (including empty OCR) are reused after verifying the source
 revision. Audio/video summaries continue to consume available text metadata.
 Each action requests selected capabilities from the common configuration. The worker preserves

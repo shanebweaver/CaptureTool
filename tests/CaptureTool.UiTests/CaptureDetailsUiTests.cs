@@ -13,7 +13,7 @@ public sealed partial class ImageEditTextExtractionUiTests
 {
     [TestMethod]
     [TestCategory("UI")]
-    public void CapturePane_AltTextAlsoPreparesSummaryAndNameWithSharedConsent()
+    public void CapturePane_AltTextSummaryAndNameRunOnlyWhenRequestedWithSharedConsent()
     {
         if (!ShouldRunUiTests()) Assert.Inconclusive("Enable isolated desktop UI tests.");
         using var dpi = new DesktopDpiScope();
@@ -27,25 +27,45 @@ public sealed partial class ImageEditTextExtractionUiTests
         Element("ImageEdit_CommandBar"); MaximizeWindow(window);
         Element("Editor_DetailsToggle").Patterns.Toggle.Pattern.Toggle();
         Element("CapturePane_SummaryTab").Patterns.SelectionItem.Pattern.Select();
+        AssertInfoAccessibility("CaptureSummary_Info", "About AI summary", "Create an AI summary of this image.");
+        AssertInfoAccessibility("CaptureSummary_AltTextInfo", "About alt text",
+            "Create a brief description for screen readers. Review it before sharing.");
         Assert.IsNull(window.FindFirstDescendant(automation.ConditionFactory.ByAutomationId("CaptureMemoryConsentDialog")));
         Element("CaptureAction_AltText").Patterns.Invoke.Pattern.Invoke();
         Answer("Not now");
         WaitFor(() => Element("CaptureAction_AltText").IsEnabled ? window : null, InteractionTimeout, "declined action remains available");
+        var altButtonBounds = StableButtonBounds("CaptureAction_AltText");
+        string altButtonLabel = Element("CaptureAction_AltText").Name;
         Element("CaptureAction_AltText").Patterns.Invoke.Pattern.Invoke();
         Answer("Allow local AI");
-        Element("CaptureAction_AltText_Loading");
-        Element("CaptureAction_Summary_Loading");
-        Element("CaptureAction_Name_Loading");
+        AssertAdjacentLoading("CaptureAction_AltText", altButtonBounds, altButtonLabel, "alt-text-loading.png");
+        Assert.IsNull(window.FindFirstDescendant(automation.ConditionFactory.ByAutomationId("CaptureAction_Summary_Loading")));
+        Assert.IsNull(window.FindFirstDescendant(automation.ConditionFactory.ByAutomationId("CaptureAction_Name_Loading")));
+        WaitForElementRemoved(window, automation, "CaptureAction_AltText_Loading", InteractionTimeout);
         WaitForElementRemoved(window, automation, "CaptureAction_AltText", InteractionTimeout);
         const string alt = "Invoice INV-2048 from Contoso showing a total of USD 125.00, due October 15, 2026.";
         WaitForElementByName(window, automation, alt, InteractionTimeout);
-        WaitForElementRemoved(window, automation, "CaptureAction_Summary", InteractionTimeout);
+        WaitFor(() => Element("CaptureAction_Summary").IsEnabled ? window : null, InteractionTimeout, "summary available after alt text");
         const string summary = "Invoice INV-2048 totals USD 125.00 and is due on 2026-10-15.";
+        Assert.IsNull(window.FindFirstDescendant(automation.ConditionFactory.ByName(summary)), "Alt text must not generate a summary.");
+        var summaryButtonBounds = StableButtonBounds("CaptureAction_Summary");
+        string summaryButtonLabel = Element("CaptureAction_Summary").Name;
+        Element("CaptureAction_Summary").Patterns.Invoke.Pattern.Invoke();
+        AssertAdjacentLoading("CaptureAction_Summary", summaryButtonBounds, summaryButtonLabel, "summary-loading.png");
+        Assert.IsNull(window.FindFirstDescendant(automation.ConditionFactory.ByAutomationId("CaptureAction_Name_Loading")));
+        Assert.IsNull(window.FindFirstDescendant(automation.ConditionFactory.ByAutomationId("CaptureMemoryConsentDialog")));
+        WaitForElementRemoved(window, automation, "CaptureAction_Summary_Loading", InteractionTimeout);
+        WaitForElementRemoved(window, automation, "CaptureAction_Summary", InteractionTimeout);
         WaitForElementByName(window, automation, summary, InteractionTimeout);
-        WaitFor(() => Element("CaptureAction_Name").IsEnabled ? window : null, InteractionTimeout, "companion name suggestion ready");
+        WaitFor(() => Element("CaptureAction_Name").IsEnabled ? window : null, InteractionTimeout, "name action available");
         Assert.IsNull(window.FindFirstDescendant(automation.ConditionFactory.ByAutomationId("CaptureName_Input")),
-            "A companion name must not enter rename mode automatically.");
-        Assert.IsTrue(File.Exists(fixture), "Companion generation must not rename the file.");
+            "Other actions must not start renaming.");
+        Assert.IsTrue(File.Exists(fixture));
+        Element("CaptureAction_Name").Patterns.Invoke.Pattern.Invoke();
+        Element("CaptureAction_Name_Loading");
+        WaitFor(() => window.FindFirstDescendant(automation.ConditionFactory.ByAutomationId("CaptureName_Input"))?.AsTextBox().Text == "Contoso invoice" ? window : null,
+            InteractionTimeout, "explicit name suggestion");
+        Element("CaptureName_Cancel").Patterns.Invoke.Pattern.Invoke();
         Element("CaptureAction_Name").Patterns.Invoke.Pattern.Invoke();
         Assert.IsNull(window.FindFirstDescendant(automation.ConditionFactory.ByAutomationId("CaptureAction_Name_Loading")),
             "Reviewing the cached name must not run the model again.");
@@ -56,9 +76,9 @@ public sealed partial class ImageEditTextExtractionUiTests
         Element("CaptureSummary_CopySummary").Patterns.Invoke.Pattern.Invoke();
         WaitFor(() => ReadDetailsClipboard() == summary ? window : null, InteractionTimeout, "summary copied");
         Element("CapturePane_TextTab").Patterns.SelectionItem.Pattern.Select();
-        Assert.IsNull(window.FindFirstDescendant(automation.ConditionFactory.ByAutomationId("CaptureAction_Text")), "Summary saves missing OCR for later use.");
-        WaitFor(() => Element("CaptureAction_Qr").IsEnabled ? window : null, InteractionTimeout,
-            "the LLM batch finishes without running unrelated QR detection");
+        Element("CapturePane_Search");
+        Assert.IsNull(window.FindFirstDescendant(automation.ConditionFactory.ByAutomationId("CaptureAction_ScanText")),
+            "Cached OCR opens directly into results even when no QR scan was requested.");
         Element("CapturePane_SummaryTab").Patterns.SelectionItem.Pattern.Select();
         WaitForElementRemoved(window, automation, "ImageEdit_TextExtractionOverlayMarker", InteractionTimeout);
         Assert.IsNull(window.FindFirstDescendant(automation.ConditionFactory.ByAutomationId("CaptureAction_AltText")));
@@ -78,6 +98,39 @@ public sealed partial class ImageEditTextExtractionUiTests
         Thread.Sleep(350);
         screenshot = Path.Combine(isolated, "summary-compact.png"); window.CaptureToFile(screenshot); TestContext.AddResultFile(screenshot);
         AutomationElement Element(string id) => WaitForElement(window, automation, id, InteractionTimeout);
+        void AssertInfoAccessibility(string id, string name, string hint)
+        {
+            var info = Element(id);
+            Assert.AreEqual(name, info.Name);
+            Assert.AreEqual(hint, info.Properties.HelpText.Value);
+            Assert.IsTrue(info.Properties.IsKeyboardFocusable.Value);
+            Assert.IsNull(window.FindFirstDescendant(automation.ConditionFactory.ByName(hint)), "Hints should only appear in tooltips.");
+        }
+        System.Drawing.Rectangle StableButtonBounds(string id)
+        {
+            var bounds = Element(id).BoundingRectangle;
+            var stable = System.Diagnostics.Stopwatch.StartNew();
+            return WaitFor(() =>
+            {
+                var button = Element(id);
+                if (button.BoundingRectangle != bounds) { bounds = button.BoundingRectangle; stable.Restart(); }
+                return stable.Elapsed >= TimeSpan.FromMilliseconds(500) ? button : null;
+            }, InteractionTimeout, "settled action button geometry").BoundingRectangle;
+        }
+        void AssertAdjacentLoading(string id, System.Drawing.Rectangle bounds, string label, string fileName)
+        {
+            Assert.AreEqual(bounds, StableButtonBounds(id), "Loading must preserve the button's position and size.");
+            var button = Element(id);
+            var loading = Element(id + "_Loading");
+            Assert.AreEqual(label, button.Name);
+            Assert.IsFalse(button.IsEnabled);
+            Assert.IsGreaterThanOrEqualTo(bounds.Right, loading.BoundingRectangle.Left, "Progress belongs beside the button.");
+            Assert.AreEqual(bounds.Top + bounds.Height / 2d, loading.BoundingRectangle.Top + loading.BoundingRectangle.Height / 2d,
+                1d, "Progress should be vertically centered on the button row.");
+            Assert.IsFalse(bounds.IntersectsWith(loading.BoundingRectangle));
+            Assert.IsNull(button.FindFirstDescendant(automation.ConditionFactory.ByAutomationId(id + "_Loading")));
+            string path = Path.Combine(isolated, fileName); window.CaptureToFile(path); TestContext.AddResultFile(path);
+        }
         void Answer(string label)
         {
             var consent = Element("CaptureMemoryConsentDialog");
@@ -138,10 +191,11 @@ public sealed partial class ImageEditTextExtractionUiTests
         OpenCapture();
         dialog = OpenDetails();
         Element("CapturePane_TextTab").Patterns.SelectionItem.Pattern.Select();
-        Element("CaptureAction_Text").Patterns.Invoke.Pattern.Invoke();
-        WaitForElementRemoved(window, automation, "CaptureAction_Text", InteractionTimeout);
-        Element("CaptureAction_Qr").Patterns.Invoke.Pattern.Invoke();
-        WaitForElementRemoved(window, automation, "CaptureAction_Qr", InteractionTimeout);
+        Element("CaptureAction_ScanText").Patterns.Invoke.Pattern.Invoke();
+        Element("CaptureAction_ScanText_Loading");
+        WaitForElementRemoved(window, automation, "CaptureAction_ScanText_Loading", InteractionTimeout);
+        WaitForElementRemoved(window, automation, "CaptureAction_ScanText", InteractionTimeout);
+        Element("CapturePane_Search");
         Element("CapturePane_SummaryTab").Patterns.SelectionItem.Pattern.Select();
         WaitFor(() => Element("CaptureAction_Summary").IsEnabled ? window : null, InteractionTimeout, "summary inputs available");
         Element("CaptureAction_Summary").Patterns.Invoke.Pattern.Invoke();

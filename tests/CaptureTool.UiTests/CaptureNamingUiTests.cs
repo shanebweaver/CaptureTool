@@ -1,4 +1,4 @@
-﻿using FlaUI.Core.AutomationElements;
+using FlaUI.Core.AutomationElements;
 using FlaUI.Core.Definitions;
 using FlaUI.UIA3;
 using System.Xml.Linq;
@@ -70,9 +70,9 @@ public sealed partial class ImageEditTextExtractionUiTests
             Assert.AreEqual(nameBounds.Right, Element("CaptureName_Input").BoundingRectangle.Right, 1);
             Assert.IsTrue(File.Exists(fixture), "Suggestions must not rename a file before acceptance.");
             Element("CapturePane_SummaryTab").Patterns.SelectionItem.Pattern.Select();
-            WaitForElementByName(window, automation, "Invoice INV-2048 totals USD 125.00 and is due on 2026-10-15.", InteractionTimeout);
-            Assert.IsNull(window.FindFirstDescendant(automation.ConditionFactory.ByAutomationId("CaptureAction_Summary")),
-                "Name generation also prepares the summary.");
+            Assert.IsTrue(Element("CaptureAction_Summary").IsEnabled, "Summary requires its own request.");
+            Assert.IsTrue(Element("CaptureAction_AltText").IsEnabled, "Alt text requires its own request.");
+            Assert.IsNull(window.FindFirstDescendant(automation.ConditionFactory.ByName("Invoice INV-2048 totals USD 125.00 and is due on 2026-10-15.")));
             Element("CapturePane_DetailsTab").Patterns.SelectionItem.Pattern.Select();
             Screenshot("suggested-name");
             Element("CaptureName_Cancel").Patterns.Invoke.Pattern.Invoke();
@@ -116,9 +116,8 @@ public sealed partial class ImageEditTextExtractionUiTests
             WaitFor(() => Element("CaptureDetailsFileName").Name == "Partner demo notes.png" ? window : null,
                 InteractionTimeout, "chosen name survives deletion and restart");
             Element("CapturePane_TextTab").Patterns.SelectionItem.Pattern.Select();
-            Assert.IsTrue(Element("CaptureAction_Text").IsEnabled);
-            Assert.IsFalse(Element("CapturePane_CopyResults").IsEnabled);
-            Assert.IsEmpty(Element("CapturePane_Passages").FindAllChildren(automation.ConditionFactory.ByControlType(ControlType.ListItem)));
+            Assert.IsTrue(Element("CaptureAction_ScanText").IsEnabled);
+            Assert.IsNull(window.FindFirstDescendant(automation.ConditionFactory.ByAutomationId("CapturePane_Search")));
             Element("CapturePane_DetailsTab").Patterns.SelectionItem.Pattern.Select();
             Assert.IsNull(Element("CaptureDetailsPane").FindFirstDescendant(automation.ConditionFactory.ByName(
                 "Invoice INV-2048 totals USD 125.00 and is due on 2026-10-15.")), "Deleted analysis must not return after restart.");

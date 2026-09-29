@@ -1865,7 +1865,6 @@ SOFTWARE.
   <data name="CaptureDetails_Partial" xml:space="preserve"><value>Certaines analyses n’ont pas abouti. Les résultats enregistrés disponibles sont affichés.</value></data>
   <data name="CaptureDetails_Empty" xml:space="preserve"><value>Aucun texte enregistré. Choisissez une action ci-dessus pour extraire ce dont vous avez besoin.</value></data>
   <data name="CaptureDetails_Retained" xml:space="preserve"><value>Certains résultats proviennent d’une analyse précédente de ce même fichier.</value></data>
-  <data name="CaptureDetails_Limited" xml:space="preserve"><value>Certains contenus ont été ignorés. Les résultats peuvent être incomplets.</value></data>
   <data name="CaptureDetails_Copied" xml:space="preserve"><value>Copié dans le presse-papiers.</value></data>
   <data name="CaptureDetails_CopyFailed" xml:space="preserve"><value>Impossible de copier le texte. Réessayez.</value></data>
   <data name="HomePage_RecentCaptureDetailsMenuItem.Text" xml:space="preserve"><value>Détails</value></data>
@@ -1955,12 +1954,13 @@ SOFTWARE.
   <data name="CaptureAction_Summary" xml:space="preserve"><value>Générer un résumé</value></data>
   <data name="CaptureAction_Name" xml:space="preserve"><value>Suggérer un nom</value></data>
   <data name="CaptureAction_Text" xml:space="preserve"><value>Extraire le texte</value></data>
+  <data name="CaptureAction_ScanText" xml:space="preserve"><value>Rechercher du texte et des codes QR</value></data>
   <data name="CaptureAction_Qr" xml:space="preserve"><value>Trouver les codes QR</value></data>
   <data name="CaptureAction_Transcript" xml:space="preserve"><value>Transcrire l’audio</value></data>
   <data name="CaptureAction_DescriptionHeading.Text" xml:space="preserve"><value>Description par IA</value></data>
   <data name="CaptureAction_SummaryInputs" xml:space="preserve"><value>Extrayez le texte ou transcrivez l’audio pour créer un résumé.</value></data>
-  <data name="CaptureAction_NoText" xml:space="preserve"><value>Aucun texte trouvé.</value></data>
-  <data name="CaptureAction_NoQr" xml:space="preserve"><value>Aucun code QR trouvé.</value></data>
+  <data name="CapturePane_EmptyTextTitle.Text" xml:space="preserve"><value>Aucun résultat trouvé</value></data>
+  <data name="CapturePane_EmptyTextDescription" xml:space="preserve"><value>Aucun texte ni code QR n’a été trouvé dans cette capture.</value></data>
   <data name="CaptureAction_NoSpeech" xml:space="preserve"><value>Aucune parole trouvée.</value></data>
   <data name="CaptureAction_NoDescription" xml:space="preserve"><value>Aucune description générée.</value></data>
   <data name="CaptureAction_Unavailable" xml:space="preserve"><value>Cette action n’est pas disponible sur cet appareil.</value></data>
@@ -1979,5 +1979,6 @@ SOFTWARE.
   <data name="CaptureNaming_Edit.ToolTipService.ToolTip" xml:space="preserve"><value>Renommer</value></data>
   <data name="CaptureAction_SummaryAudioInputs" xml:space="preserve"><value>Transcrivez l’audio pour créer un résumé.</value></data>
   <data name="CapturePane_Loading.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Chargement des détails</value></data>
-  <data name="CaptureAction_RelatedResults" xml:space="preserve"><value>Prépare aussi d’autres suggestions d’IA pour cette capture.</value></data>
+  <data name="CaptureSummary_Info.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>À propos du résumé par IA</value></data>
+  <data name="CaptureSummary_AltTextInfo.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>À propos du texte alternatif</value></data>
 </root>

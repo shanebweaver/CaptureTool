@@ -38,7 +38,11 @@ metadata record. Forgetting requests requires no disk writes or library scan.
 
 Foundry owns one resident model, keyed by its resolved identity, behind an exclusive
 lease. Compatible work reuses it, including synopsis and classification adapters.
-Switching unloads the previous model first; idle and shutdown release resources.
+Switching unloads the previous model first. Requested Phi text actions keep the
+model resident for up to 30 seconds after the queue drains, restarting the idle
+window after subsequent requested work. Vision and speech release immediately
+when idle. Windows low physical memory, revoked consent, cancellation, metadata
+deletion, and shutdown bypass the text model's idle window.
 Cancellation cannot unload a model while native inference still owns it. Cleanup
 waits for the actual invocation to finish, and an unload failure prevents loading
 another model over the retained allocation. The worker's resource lifetime contract
@@ -57,7 +61,8 @@ paths, captured text, or generated responses.
 
 Reusing a large model reduces repeated loading; it does not reduce that model's
 resident memory requirement. Memory remains allocated while compatible work runs
-and is released when it becomes idle or the provider changes.
+and during Phi's bounded idle window, then is released when that window expires
+or the provider changes. See [independent actions and caching](capture-action-caching.md).
 
 ## Verification
 

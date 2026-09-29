@@ -1865,7 +1865,6 @@ SOFTWARE.
   <data name="CaptureDetails_Partial" xml:space="preserve"><value>Часть анализа не завершена. Показаны доступные сохранённые результаты.</value></data>
   <data name="CaptureDetails_Empty" xml:space="preserve"><value>Сохранённого текста пока нет. Выберите действие выше, чтобы извлечь нужные данные.</value></data>
   <data name="CaptureDetails_Retained" xml:space="preserve"><value>Некоторые результаты получены при предыдущем анализе этого же файла.</value></data>
-  <data name="CaptureDetails_Limited" xml:space="preserve"><value>Часть содержимого пропущена. Результаты могут быть неполными.</value></data>
   <data name="CaptureDetails_Copied" xml:space="preserve"><value>Скопировано в буфер обмена.</value></data>
   <data name="CaptureDetails_CopyFailed" xml:space="preserve"><value>Не удалось скопировать текст. Попробуйте ещё раз.</value></data>
   <data name="HomePage_RecentCaptureDetailsMenuItem.Text" xml:space="preserve"><value>Сведения</value></data>
@@ -1955,12 +1954,13 @@ SOFTWARE.
   <data name="CaptureAction_Summary" xml:space="preserve"><value>Создать сводку</value></data>
   <data name="CaptureAction_Name" xml:space="preserve"><value>Предложить имя</value></data>
   <data name="CaptureAction_Text" xml:space="preserve"><value>Извлечь текст</value></data>
+  <data name="CaptureAction_ScanText" xml:space="preserve"><value>Найти текст и QR-коды</value></data>
   <data name="CaptureAction_Qr" xml:space="preserve"><value>Найти QR-коды</value></data>
   <data name="CaptureAction_Transcript" xml:space="preserve"><value>Расшифровать аудио</value></data>
   <data name="CaptureAction_DescriptionHeading.Text" xml:space="preserve"><value>Описание с помощью ИИ</value></data>
   <data name="CaptureAction_SummaryInputs" xml:space="preserve"><value>Извлеките текст или расшифруйте аудио, чтобы создать сводку.</value></data>
-  <data name="CaptureAction_NoText" xml:space="preserve"><value>Текст не найден.</value></data>
-  <data name="CaptureAction_NoQr" xml:space="preserve"><value>QR-коды не найдены.</value></data>
+  <data name="CapturePane_EmptyTextTitle.Text" xml:space="preserve"><value>Результаты не найдены</value></data>
+  <data name="CapturePane_EmptyTextDescription" xml:space="preserve"><value>В этом снимке не найдены текст или QR-коды.</value></data>
   <data name="CaptureAction_NoSpeech" xml:space="preserve"><value>Речь не найдена.</value></data>
   <data name="CaptureAction_NoDescription" xml:space="preserve"><value>Описание не создано.</value></data>
   <data name="CaptureAction_Unavailable" xml:space="preserve"><value>Это действие недоступно на данном устройстве.</value></data>
@@ -1979,5 +1979,6 @@ SOFTWARE.
   <data name="CaptureNaming_Edit.ToolTipService.ToolTip" xml:space="preserve"><value>Переименовать</value></data>
   <data name="CaptureAction_SummaryAudioInputs" xml:space="preserve"><value>Расшифруйте аудио, чтобы создать сводку.</value></data>
   <data name="CapturePane_Loading.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Загрузка сведений</value></data>
-  <data name="CaptureAction_RelatedResults" xml:space="preserve"><value>Также создаёт другие предложения ИИ для этого снимка.</value></data>
+  <data name="CaptureSummary_Info.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>О сводке ИИ</value></data>
+  <data name="CaptureSummary_AltTextInfo.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Об альтернативном тексте</value></data>
 </root>

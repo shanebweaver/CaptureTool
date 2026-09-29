@@ -65,7 +65,7 @@ internal sealed partial class FoundryMetadataProcessor(
             return AnalyzerOutcome.Unsuccessful(AnalyzerOutcomeKind.TemporarilyUnavailable, "model-not-prepared");
         }
 
-        await using var lease = await runtime.AcquireModelAsync(model, ct).ConfigureAwait(false);
+        await using var lease = await runtime.AcquireModelAsync(model, ct, retainWhenIdle: true).ConfigureAwait(false);
         bool serving = false;
         try
         {

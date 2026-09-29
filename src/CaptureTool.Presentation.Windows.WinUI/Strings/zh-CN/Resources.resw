@@ -1865,7 +1865,6 @@ SOFTWARE.
   <data name="CaptureDetails_Partial" xml:space="preserve"><value>部分分析未完成。此处显示可用的已保存结果。</value></data>
   <data name="CaptureDetails_Empty" xml:space="preserve"><value>尚无已保存的文字。请选择上方的操作以提取所需内容。</value></data>
   <data name="CaptureDetails_Retained" xml:space="preserve"><value>部分结果来自对同一文件的先前分析。</value></data>
-  <data name="CaptureDetails_Limited" xml:space="preserve"><value>部分内容已跳过，结果可能不完整。</value></data>
   <data name="CaptureDetails_Copied" xml:space="preserve"><value>已复制到剪贴板。</value></data>
   <data name="CaptureDetails_CopyFailed" xml:space="preserve"><value>无法复制文本，请重试。</value></data>
   <data name="HomePage_RecentCaptureDetailsMenuItem.Text" xml:space="preserve"><value>详情</value></data>
@@ -1955,12 +1954,13 @@ SOFTWARE.
   <data name="CaptureAction_Summary" xml:space="preserve"><value>生成摘要</value></data>
   <data name="CaptureAction_Name" xml:space="preserve"><value>建议名称</value></data>
   <data name="CaptureAction_Text" xml:space="preserve"><value>提取文字</value></data>
+  <data name="CaptureAction_ScanText" xml:space="preserve"><value>查找文本和二维码</value></data>
   <data name="CaptureAction_Qr" xml:space="preserve"><value>查找二维码</value></data>
   <data name="CaptureAction_Transcript" xml:space="preserve"><value>转录音频</value></data>
   <data name="CaptureAction_DescriptionHeading.Text" xml:space="preserve"><value>AI 描述</value></data>
   <data name="CaptureAction_SummaryInputs" xml:space="preserve"><value>提取文本或转录音频以创建摘要。</value></data>
-  <data name="CaptureAction_NoText" xml:space="preserve"><value>未找到文字。</value></data>
-  <data name="CaptureAction_NoQr" xml:space="preserve"><value>未找到二维码。</value></data>
+  <data name="CapturePane_EmptyTextTitle.Text" xml:space="preserve"><value>未找到结果</value></data>
+  <data name="CapturePane_EmptyTextDescription" xml:space="preserve"><value>未在此捕获内容中找到文字或二维码。</value></data>
   <data name="CaptureAction_NoSpeech" xml:space="preserve"><value>未找到语音。</value></data>
   <data name="CaptureAction_NoDescription" xml:space="preserve"><value>未生成描述。</value></data>
   <data name="CaptureAction_Unavailable" xml:space="preserve"><value>此设备不支持此操作。</value></data>
@@ -1979,5 +1979,6 @@ SOFTWARE.
   <data name="CaptureNaming_Edit.ToolTipService.ToolTip" xml:space="preserve"><value>重命名</value></data>
   <data name="CaptureAction_SummaryAudioInputs" xml:space="preserve"><value>转录音频以创建摘要。</value></data>
   <data name="CapturePane_Loading.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>正在加载详细信息</value></data>
-  <data name="CaptureAction_RelatedResults" xml:space="preserve"><value>同时为此捕获生成其他 AI 建议。</value></data>
+  <data name="CaptureSummary_Info.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>关于 AI 摘要</value></data>
+  <data name="CaptureSummary_AltTextInfo.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>关于替代文本</value></data>
 </root>

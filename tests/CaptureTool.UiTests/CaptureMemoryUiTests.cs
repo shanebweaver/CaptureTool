@@ -1,4 +1,4 @@
-﻿using FlaUI.Core.AutomationElements;
+using FlaUI.Core.AutomationElements;
 using FlaUI.Core.Definitions;
 using FlaUI.Core.Input;
 using FlaUI.Core.WindowsAPI;
@@ -75,9 +75,9 @@ public sealed partial class ImageEditTextExtractionUiTests
         WaitFor(() => recent.FindFirstDescendant(automation.ConditionFactory.ByControlType(ControlType.ListItem)), InteractionTimeout, "recent capture").DoubleClick();
         Element("Editor_DetailsToggle").Patterns.Toggle.Pattern.Toggle();
         Element("CapturePane_TextTab").Patterns.SelectionItem.Pattern.Select();
-        Element("CaptureAction_Text").Patterns.Invoke.Pattern.Invoke();
+        Element("CaptureAction_ScanText").Patterns.Invoke.Pattern.Invoke();
         AutomationElement progress = WaitFor(() => window.FindFirstDescendant(
-            automation.ConditionFactory.ByAutomationId("CaptureAction_Text_Loading")) is { IsOffscreen: false } visible ? visible : null,
+            automation.ConditionFactory.ByAutomationId("CaptureAction_ScanText_Loading")) is { IsOffscreen: false } visible ? visible : null,
             InteractionTimeout, "text action progress visible in the pane");
         Assert.IsFalse(progress.IsOffscreen, "Analysis progress should be visible beside the text action.");
         Assert.IsFalse(progress.Patterns.Invoke.IsSupported, "Progress must be passive.");
@@ -86,7 +86,7 @@ public sealed partial class ImageEditTextExtractionUiTests
         Assert.IsNull(window.FindFirstDescendant(automation.ConditionFactory.ByAutomationId("CaptureMemoryProgress")),
             "Local AI actions should not show a global analysis snackbar.");
         SaveScreenshot("loading");
-        WaitForElementRemoved(window, automation, "CaptureAction_Text_Loading", InteractionTimeout);
+        WaitForElementRemoved(window, automation, "CaptureAction_ScanText_Loading", InteractionTimeout);
         OpenSettings();
         consent = Element("CaptureMemoryConsent");
         delete = Element("CaptureMemoryDelete");

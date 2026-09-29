@@ -60,7 +60,8 @@ internal static class ScreenshotChecks
                 var capture = new CaptureAnalysisRecord(CaptureId.New(), AnalysisMediaKind.Image, revision, plan.Version, Guid.NewGuid(), []);
                 IReadOnlyList<AnalysisCapability> capabilities = classificationOnly
                     ? [AnalysisCapability.TextRecognition, AnalysisCapability.Description, AnalysisCapability.CaptureClassification]
-                    : CaptureAnalysisConfiguration.ForAction(AnalysisMediaKind.Image, AnalysisCapability.CaptureName);
+                    : [AnalysisCapability.TextRecognition, AnalysisCapability.Description, AnalysisCapability.CaptureName,
+                        AnalysisCapability.CaptureSynopsis, AnalysisCapability.ImageAltText, AnalysisCapability.CaptureClassification];
                 foreach (var capability in capabilities)
                 {
                     var timer = Stopwatch.StartNew();
