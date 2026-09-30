@@ -1995,4 +1995,12 @@ SOFTWARE.
   <data name="CaptureSpeech_EmptyDescription.Text" xml:space="preserve"><value>No se detectó voz en esta grabación.</value></data>
   <data name="CaptureSummary_VideoHint" xml:space="preserve"><value>Crea un resumen con IA a partir del texto y la voz de este vídeo. Primero busca texto o transcribe el audio.</value></data>
   <data name="CaptureSummary_AudioHint" xml:space="preserve"><value>Crea un resumen con IA a partir de la transcripción de esta grabación. Primero transcribe el audio.</value></data>
+  <data name="CaptureVideoText_Search.PlaceholderText" xml:space="preserve"><value>Buscar texto o una marca de tiempo</value></data>
+  <data name="CaptureVideoText_Search.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Buscar texto o una marca de tiempo</value></data>
+  <data name="CaptureVideoText_Back.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Volver a las marcas de tiempo</value></data>
+  <data name="CaptureVideoText_Back.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve"><value>Volver a las marcas de tiempo</value></data>
+  <data name="CaptureVideoText_TimestampCount" xml:space="preserve"><value>Marcas de tiempo: {0}</value></data>
+  <data name="CaptureVideoText_NoMatches.Text" xml:space="preserve"><value>No hay marcas de tiempo coincidentes</value></data>
+  <data name="CaptureVideoText_UnknownTime" xml:space="preserve"><value>Tiempo no disponible</value></data>
+  <data name="CaptureVideoText_Hint" xml:space="preserve"><value>Busca texto y códigos QR en este vídeo. Elige una marca de tiempo para ir a ese momento y buscar o copiar su texto.</value></data>
 </root>

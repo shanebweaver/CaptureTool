@@ -1995,4 +1995,12 @@ SOFTWARE.
   <data name="CaptureSpeech_EmptyDescription.Text" xml:space="preserve"><value>В этой записи не обнаружена речь.</value></data>
   <data name="CaptureSummary_VideoHint" xml:space="preserve"><value>Создайте ИИ-сводку на основе текста и речи в этом видео. Сначала найдите текст или расшифруйте аудио.</value></data>
   <data name="CaptureSummary_AudioHint" xml:space="preserve"><value>Создайте ИИ-сводку на основе расшифровки этой записи. Сначала расшифруйте аудио.</value></data>
+  <data name="CaptureVideoText_Search.PlaceholderText" xml:space="preserve"><value>Найти текст или отметку времени</value></data>
+  <data name="CaptureVideoText_Search.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Найти текст или отметку времени</value></data>
+  <data name="CaptureVideoText_Back.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Назад к отметкам времени</value></data>
+  <data name="CaptureVideoText_Back.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve"><value>Назад к отметкам времени</value></data>
+  <data name="CaptureVideoText_TimestampCount" xml:space="preserve"><value>Отметки времени: {0}</value></data>
+  <data name="CaptureVideoText_NoMatches.Text" xml:space="preserve"><value>Нет подходящих отметок времени</value></data>
+  <data name="CaptureVideoText_UnknownTime" xml:space="preserve"><value>Время недоступно</value></data>
+  <data name="CaptureVideoText_Hint" xml:space="preserve"><value>Найдите текст и QR-коды в этом видео. Выберите отметку времени, чтобы перейти к соответствующему моменту, затем найдите или скопируйте его текст.</value></data>
 </root>

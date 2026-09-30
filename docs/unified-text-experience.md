@@ -6,6 +6,10 @@ Opening Details or switching to Text only reads available results. The shortcut 
 
 Images have a **Text** tab, audio recordings have a **Speech** tab, and videos have both. Text contains on-screen text and QR codes. Speech contains the **Transcribe audio** action and its transcript. Each tab keeps its own search, selection, copy scope, and empty state. Selecting a transcript passage seeks to its timestamp. Available text and speech still contribute to recording summaries, whose info tooltip explains the inputs.
 
+Video text has two levels. The first lists timestamps with a text preview and result count. Search finds moments containing the requested words or matching a timestamp. Selecting a moment seeks the video and opens its paragraphs and QR codes using the image text browser. A text query carries into that view; a timestamp query shows all text at that moment. The Back button restores the timestamp search, and local search and copy stay within the selected moment. Repeated QR codes are available at every recorded occurrence. Missing timestamps remain readable without an invented playback position.
+
+Video OCR retains each frame's words, lines, and paragraph boundaries instead of flattening a frame into one text block. Timestamp rows are paged, but searching covers all moments. Refreshes retain the open moment and its local search when that timestamp still exists. The Speech tab remains independent.
+
 ## Feedback and progress
 
 Action buttons keep their labels and size while an Aurora edge indicates progress. Completed actions are replaced by their results or an empty state. Reading file details uses a thin progress bar at the pane's top edge, outside the content layout. Result counts stay on one line.

@@ -23,7 +23,8 @@ public sealed partial class CaptureDetailsPane : UserControl, INotifyPropertyCha
     private CaptureTextNavigationContext _navigation = new(false, false);
     private static string _preferredTab = nameof(FileDetailsTab);
     private bool _updatingTabs = true;
-    private CaptureTextViewModel? ActiveTextContent => ReferenceEquals(ContentTabs.SelectedItem, TextTab) ? ViewModel?.TextContent :
+    private CaptureTextViewModel? ActiveTextContent => ReferenceEquals(ContentTabs.SelectedItem, TextTab)
+        ? ViewModel?.ShowVideoTimestamps == true ? null : ViewModel?.DisplayedTextContent :
         ReferenceEquals(ContentTabs.SelectedItem, SpeechTab) ? ViewModel?.SpeechContent : null;
     private CaptureTextPassage? _selectedPassage;
     private bool _navigationQueued;
@@ -101,6 +102,8 @@ public sealed partial class CaptureDetailsPane : UserControl, INotifyPropertyCha
         ViewModel.SetNavigationContext(_navigation);
         ViewModel.TextContent.ScrollRequested += ScrollToPassage;
         ViewModel.TextContent.PropertyChanged += SelectionChanged;
+        ViewModel.VideoText.Content.ScrollRequested += ScrollToPassage;
+        ViewModel.VideoText.Content.PropertyChanged += SelectionChanged;
         ViewModel.SpeechContent.ScrollRequested += ScrollToPassage;
         ViewModel.SpeechContent.PropertyChanged += SelectionChanged;
         ViewModel.PropertyChanged += ViewModelChanged;
@@ -140,6 +143,8 @@ public sealed partial class CaptureDetailsPane : UserControl, INotifyPropertyCha
         {
             ViewModel.TextContent.ScrollRequested -= ScrollToPassage;
             ViewModel.TextContent.PropertyChanged -= SelectionChanged;
+            ViewModel.VideoText.Content.ScrollRequested -= ScrollToPassage;
+            ViewModel.VideoText.Content.PropertyChanged -= SelectionChanged;
             ViewModel.SpeechContent.ScrollRequested -= ScrollToPassage;
             ViewModel.SpeechContent.PropertyChanged -= SelectionChanged;
             ViewModel.PropertyChanged -= ViewModelChanged;
@@ -214,6 +219,11 @@ public sealed partial class CaptureDetailsPane : UserControl, INotifyPropertyCha
     }
     private void ViewModelChanged(object? sender, PropertyChangedEventArgs e)
     {
+        if (ViewModel?.IsVideo == true && e.PropertyName == nameof(CaptureDetailsViewModel.ShowVideoTimestamps))
+        {
+            UpdateSelectedPassage();
+            ClearLocation?.Invoke();
+        }
         if (e.PropertyName is nameof(CaptureDetailsViewModel.TextPassages) or nameof(CaptureDetailsViewModel.CanShowImageTextOverlay)) UpdateTextOverlay();
         if (e.PropertyName == nameof(CaptureDetailsViewModel.IsEditingName) && ViewModel?.IsEditingName == true)
             DispatcherQueue.TryEnqueue(() => { if (_active && ViewModel?.IsEditingName == true) { NameInput.Focus(FocusState.Programmatic); NameInput.SelectAll(); } });
@@ -245,9 +255,31 @@ public sealed partial class CaptureDetailsPane : UserControl, INotifyPropertyCha
     {
         if (e.ClickedItem is CaptureTextPassage passage && ViewModel != null)
         {
-            (passage.Source == CaptureTextSource.Speech ? ViewModel.SpeechContent : ViewModel.TextContent).SelectedPassage = passage;
+            (passage.Source == CaptureTextSource.Speech ? ViewModel.SpeechContent : ViewModel.DisplayedTextContent).SelectedPassage = passage;
             RequestNavigation(userInitiated: true);
         }
+    }
+    private void VideoFrames_ItemClick(object sender, ItemClickEventArgs e)
+    {
+        if (e.ClickedItem is not CaptureVideoTextFrame frame || ViewModel == null) return;
+        ViewModel.VideoText.Open(frame);
+        UpdateSelectedPassage();
+        RequestNavigation(userInitiated: true);
+        DispatcherQueue.TryEnqueue(() => VideoFrameBack.Focus(FocusState.Programmatic));
+    }
+    private void VideoFrameBack_Click(object sender, RoutedEventArgs e)
+    {
+        var selected = ViewModel?.VideoText.SelectedFrame;
+        ViewModel?.VideoText.BackCommand.Execute(null);
+        DispatcherQueue.TryEnqueue(() =>
+        {
+            if (selected != null)
+            {
+                VideoFrames.SelectedItem = selected;
+                VideoFrames.ScrollIntoView(selected, ScrollIntoViewAlignment.Leading);
+            }
+            VideoFrames.Focus(FocusState.Programmatic);
+        });
     }
     private async void OpenLink_Click(object sender, RoutedEventArgs e)
     {

@@ -138,7 +138,7 @@
                         FontSize="12"
                         Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                         Text="{x:Bind SelectedLocation.Label, Mode=OneWay}"
-                        Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(IsTimed), Mode=OneWay}" />
+                        Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(IsTimestampVisible), Mode=OneWay}" />
                     <ComboBox
                         x:Uid="CapturePane_Occurrences"
                         HorizontalAlignment="Stretch"
@@ -350,7 +350,7 @@
                                 <ToolTip AutomationProperties.AutomationId="CaptureText_InfoToolTip">
                                     <TextBlock
                                         x:Name="TextHint"
-                                        x:Uid="CaptureText_Hint"
+                                        Text="{x:Bind ViewModel.TextHint, Mode=OneWay}"
                                         MaxWidth="280"
                                         TextWrapping="Wrap" />
                                 </ToolTip>
@@ -386,97 +386,196 @@
                                 IsActive="{x:Bind ViewModel.ScanTextAction.IsRunning, Mode=OneWay}" />
                         </Grid>
                     </StackPanel>
-                    <Grid
-                        Grid.Row="2"
-                        RowSpacing="8"
-                        Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.ShowTextResults), Mode=OneWay}">
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="*" />
-                            <RowDefinition Height="Auto" />
-                        </Grid.RowDefinitions>
-                        <StackPanel Spacing="8">
+                    <Grid Grid.Row="2" Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.ShowTextResults), Mode=OneWay}">
+                        <Grid RowSpacing="8" Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.ShowVideoTimestamps), Mode=OneWay}">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
                             <TextBox
-                                x:Uid="CapturePane_Search"
-                                AutomationProperties.AutomationId="CapturePane_Search"
+                                x:Uid="CaptureVideoText_Search"
+                                AutomationProperties.AutomationId="CaptureVideoText_Search"
                                 MaxLength="256"
-                                Text="{x:Bind ViewModel.TextContent.Query, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-                            <ComboBox
-                                x:Uid="CapturePane_SourceFilter"
-                                HorizontalAlignment="Stretch"
-                                AutomationProperties.AutomationId="CapturePane_SourceFilter"
-                                ItemsSource="{x:Bind ViewModel.TextContent.Filters, Mode=OneWay}"
-                                SelectedItem="{x:Bind ViewModel.TextContent.SelectedFilter, Mode=TwoWay}"
-                                Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.TextContent.HasSources), Mode=OneWay}">
-                                <ComboBox.ItemTemplate>
-                                    <DataTemplate x:DataType="details:CaptureTextFilter">
-                                        <TextBlock Text="{x:Bind Label}" />
-                                    </DataTemplate>
-                                </ComboBox.ItemTemplate>
-                            </ComboBox>
-                        </StackPanel>
-                        <Grid Grid.Row="1" ColumnSpacing="6">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="Auto" />
-                                <ColumnDefinition Width="Auto" />
-                            </Grid.ColumnDefinitions>
+                                Text="{x:Bind ViewModel.VideoText.Query, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                             <TextBlock
-                                VerticalAlignment="Center"
-                                AutomationProperties.AutomationId="CapturePane_MatchCount"
+                                Grid.Row="1"
+                                AutomationProperties.AutomationId="CaptureVideoText_Count"
                                 AutomationProperties.LiveSetting="Polite"
                                 FontSize="12"
-                                Text="{x:Bind ViewModel.TextContent.CountText, Mode=OneWay}"
-                                TextTrimming="CharacterEllipsis" />
-                            <Button
-                                x:Uid="CapturePane_Previous"
-                                Grid.Column="1"
-                                AutomationProperties.AutomationId="CapturePane_Previous"
-                                Command="{x:Bind ViewModel.TextContent.PreviousCommand, Mode=OneWay}">
-                                <FontIcon FontSize="12" Glyph="&#xE70E;" />
-                            </Button>
-                            <Button
-                                x:Uid="CapturePane_Next"
-                                Grid.Column="2"
-                                AutomationProperties.AutomationId="CapturePane_Next"
-                                Command="{x:Bind ViewModel.TextContent.NextCommand, Mode=OneWay}">
-                                <FontIcon FontSize="12" Glyph="&#xE70D;" />
-                            </Button>
-                        </Grid>
-                        <ListView
-                            x:Name="Passages"
-                            Grid.Row="2"
-                            HorizontalContentAlignment="Stretch"
-                            AutomationProperties.AutomationId="CapturePane_Passages"
-                            IsItemClickEnabled="True"
-                            ItemTemplate="{StaticResource PassageTemplate}"
-                            ItemClick="Passages_ItemClick"
-                            ItemsSource="{x:Bind ViewModel.TextContent.Visible, Mode=OneWay}"
-                            SelectedItem="{x:Bind ViewModel.TextContent.SelectedPassage, Mode=TwoWay}"
-                            SelectionMode="Single">
-                            <ListView.ItemContainerTransitions>
-                                <TransitionCollection />
-                            </ListView.ItemContainerTransitions>
-                            <ListView.ItemContainerStyle>
-                                <Style TargetType="ListViewItem">
-                                    <Setter Property="Padding" Value="0" />
-                                    <Setter Property="HorizontalContentAlignment" Value="Stretch" />
-                                </Style>
-                            </ListView.ItemContainerStyle>
-                        </ListView>
-                        <StackPanel Grid.Row="3" Spacing="6">
+                                Text="{x:Bind ViewModel.VideoText.CountText, Mode=OneWay}" />
+                            <ListView
+                                x:Name="VideoFrames"
+                                Grid.Row="2"
+                                HorizontalContentAlignment="Stretch"
+                                AutomationProperties.AutomationId="CaptureVideoText_Timestamps"
+                                IsItemClickEnabled="True"
+                                ItemClick="VideoFrames_ItemClick"
+                                ItemsSource="{x:Bind ViewModel.VideoText.Visible, Mode=OneWay}"
+                                SelectionMode="Single">
+                                <ListView.ItemContainerTransitions>
+                                    <TransitionCollection />
+                                </ListView.ItemContainerTransitions>
+                                <ListView.ItemContainerStyle>
+                                    <Style TargetType="ListViewItem">
+                                        <Setter Property="Padding" Value="0" />
+                                        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                                    </Style>
+                                </ListView.ItemContainerStyle>
+                                <ListView.ItemTemplate>
+                                    <DataTemplate x:DataType="details:CaptureVideoTextFrame">
+                                        <Grid Padding="12,8" ColumnSpacing="8">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <StackPanel Spacing="4">
+                                                <TextBlock FontWeight="SemiBold" Text="{x:Bind Label}" />
+                                                <TextBlock
+                                                    FontSize="12"
+                                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                                    Text="{x:Bind CountText}" />
+                                                <TextBlock MaxLines="2" Text="{x:Bind Preview}" TextTrimming="CharacterEllipsis" TextWrapping="Wrap" />
+                                            </StackPanel>
+                                            <FontIcon
+                                                Grid.Column="1"
+                                                AutomationProperties.AccessibilityView="Raw"
+                                                FontSize="12"
+                                                Glyph="&#xE76C;" />
+                                        </Grid>
+                                    </DataTemplate>
+                                </ListView.ItemTemplate>
+                            </ListView>
+                            <TextBlock
+                                x:Uid="CaptureVideoText_NoMatches"
+                                Grid.Row="2"
+                                Margin="16,24"
+                                VerticalAlignment="Top"
+                                TextAlignment="Center"
+                                TextWrapping="Wrap"
+                                Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.VideoText.HasNoMatches), Mode=OneWay}" />
                             <Button
                                 x:Uid="CapturePane_LoadMore"
-                                Command="{x:Bind ViewModel.TextContent.LoadMoreCommand, Mode=OneWay}"
-                                Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.TextContent.HasMore), Mode=OneWay}" />
-                            <Button
-                                x:Uid="CapturePane_CopyResults"
-                                HorizontalAlignment="Stretch"
-                                AutomationProperties.AutomationId="CapturePane_CopyResults"
-                                Command="{x:Bind ViewModel.CopyResultsCommand, Mode=OneWay}"
-                                IsEnabled="{x:Bind ViewModel.TextContent.HasText, Mode=OneWay}" />
-                        </StackPanel>
+                                Grid.Row="3"
+                                AutomationProperties.AutomationId="CaptureVideoText_LoadMore"
+                                Command="{x:Bind ViewModel.VideoText.LoadMoreCommand, Mode=OneWay}"
+                                Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.VideoText.HasMore), Mode=OneWay}" />
+                        </Grid>
+                        <Grid
+                            RowSpacing="8"
+                            Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.ShowTextPassages), Mode=OneWay}">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+                            <StackPanel Spacing="8">
+                                <Grid ColumnSpacing="8" Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.IsVideo), Mode=OneWay}">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <Button
+                                        x:Name="VideoFrameBack"
+                                        x:Uid="CaptureVideoText_Back"
+                                        Width="32"
+                                        Height="32"
+                                        Padding="0"
+                                        AutomationProperties.AutomationId="CaptureVideoText_Back"
+                                        Click="VideoFrameBack_Click"
+                                        Style="{StaticResource SubtleButtonStyle}">
+                                        <FontIcon FontSize="14" Glyph="&#xE72B;" />
+                                    </Button>
+                                    <TextBlock
+                                        Grid.Column="1"
+                                        VerticalAlignment="Center"
+                                        AutomationProperties.AutomationId="CaptureVideoText_SelectedTime"
+                                        FontWeight="SemiBold"
+                                        Text="{x:Bind ViewModel.VideoText.SelectedFrame.Label, Mode=OneWay}" />
+                                </Grid>
+                                <TextBox
+                                    x:Uid="CapturePane_Search"
+                                    AutomationProperties.AutomationId="CapturePane_Search"
+                                    MaxLength="256"
+                                    Text="{x:Bind ViewModel.DisplayedTextContent.Query, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                <ComboBox
+                                    x:Uid="CapturePane_SourceFilter"
+                                    HorizontalAlignment="Stretch"
+                                    AutomationProperties.AutomationId="CapturePane_SourceFilter"
+                                    ItemsSource="{x:Bind ViewModel.DisplayedTextContent.Filters, Mode=OneWay}"
+                                    SelectedItem="{x:Bind ViewModel.DisplayedTextContent.SelectedFilter, Mode=TwoWay}"
+                                    Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.DisplayedTextContent.HasSources), Mode=OneWay}">
+                                    <ComboBox.ItemTemplate>
+                                        <DataTemplate x:DataType="details:CaptureTextFilter">
+                                            <TextBlock Text="{x:Bind Label}" />
+                                        </DataTemplate>
+                                    </ComboBox.ItemTemplate>
+                                </ComboBox>
+                            </StackPanel>
+                            <Grid Grid.Row="1" ColumnSpacing="6">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock
+                                    VerticalAlignment="Center"
+                                    AutomationProperties.AutomationId="CapturePane_MatchCount"
+                                    AutomationProperties.LiveSetting="Polite"
+                                    FontSize="12"
+                                    Text="{x:Bind ViewModel.DisplayedTextContent.CountText, Mode=OneWay}"
+                                    TextTrimming="CharacterEllipsis" />
+                                <Button
+                                    x:Uid="CapturePane_Previous"
+                                    Grid.Column="1"
+                                    AutomationProperties.AutomationId="CapturePane_Previous"
+                                    Command="{x:Bind ViewModel.DisplayedTextContent.PreviousCommand, Mode=OneWay}">
+                                    <FontIcon FontSize="12" Glyph="&#xE70E;" />
+                                </Button>
+                                <Button
+                                    x:Uid="CapturePane_Next"
+                                    Grid.Column="2"
+                                    AutomationProperties.AutomationId="CapturePane_Next"
+                                    Command="{x:Bind ViewModel.DisplayedTextContent.NextCommand, Mode=OneWay}">
+                                    <FontIcon FontSize="12" Glyph="&#xE70D;" />
+                                </Button>
+                            </Grid>
+                            <ListView
+                                x:Name="Passages"
+                                Grid.Row="2"
+                                HorizontalContentAlignment="Stretch"
+                                AutomationProperties.AutomationId="CapturePane_Passages"
+                                IsItemClickEnabled="True"
+                                ItemTemplate="{StaticResource PassageTemplate}"
+                                ItemClick="Passages_ItemClick"
+                                ItemsSource="{x:Bind ViewModel.DisplayedTextContent.Visible, Mode=OneWay}"
+                                SelectedItem="{x:Bind ViewModel.DisplayedTextContent.SelectedPassage, Mode=TwoWay}"
+                                SelectionMode="Single">
+                                <ListView.ItemContainerTransitions>
+                                    <TransitionCollection />
+                                </ListView.ItemContainerTransitions>
+                                <ListView.ItemContainerStyle>
+                                    <Style TargetType="ListViewItem">
+                                        <Setter Property="Padding" Value="0" />
+                                        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                                    </Style>
+                                </ListView.ItemContainerStyle>
+                            </ListView>
+                            <StackPanel Grid.Row="3" Spacing="6">
+                                <Button
+                                    x:Uid="CapturePane_LoadMore"
+                                    Command="{x:Bind ViewModel.DisplayedTextContent.LoadMoreCommand, Mode=OneWay}"
+                                    Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.DisplayedTextContent.HasMore), Mode=OneWay}" />
+                                <Button
+                                    x:Uid="CapturePane_CopyResults"
+                                    HorizontalAlignment="Stretch"
+                                    AutomationProperties.AutomationId="CapturePane_CopyResults"
+                                    Command="{x:Bind ViewModel.CopyResultsCommand, Mode=OneWay}"
+                                    IsEnabled="{x:Bind ViewModel.DisplayedTextContent.HasText, Mode=OneWay}" />
+                            </StackPanel>
+                        </Grid>
                     </Grid>
                     <StackPanel
                         Grid.Row="2"

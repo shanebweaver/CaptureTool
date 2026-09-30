@@ -1995,4 +1995,12 @@ SOFTWARE.
   <data name="CaptureSpeech_EmptyDescription.Text" xml:space="preserve"><value>Aucune parole n&apos;a été détectée dans cet enregistrement.</value></data>
   <data name="CaptureSummary_VideoHint" xml:space="preserve"><value>Créez un résumé par IA à partir du texte et des paroles de cette vidéo. Recherchez d&apos;abord du texte ou transcrivez l&apos;audio.</value></data>
   <data name="CaptureSummary_AudioHint" xml:space="preserve"><value>Créez un résumé par IA à partir de la transcription de cet enregistrement. Transcrivez d&apos;abord l&apos;audio.</value></data>
+  <data name="CaptureVideoText_Search.PlaceholderText" xml:space="preserve"><value>Rechercher du texte ou un horodatage</value></data>
+  <data name="CaptureVideoText_Search.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Rechercher du texte ou un horodatage</value></data>
+  <data name="CaptureVideoText_Back.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Retour aux horodatages</value></data>
+  <data name="CaptureVideoText_Back.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve"><value>Retour aux horodatages</value></data>
+  <data name="CaptureVideoText_TimestampCount" xml:space="preserve"><value>Horodatages : {0}</value></data>
+  <data name="CaptureVideoText_NoMatches.Text" xml:space="preserve"><value>Aucun horodatage correspondant</value></data>
+  <data name="CaptureVideoText_UnknownTime" xml:space="preserve"><value>Horodatage indisponible</value></data>
+  <data name="CaptureVideoText_Hint" xml:space="preserve"><value>Recherchez du texte et des codes QR dans cette vidéo. Choisissez un horodatage pour accéder au moment correspondant, puis recherchez ou copiez son texte.</value></data>
 </root>

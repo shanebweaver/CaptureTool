@@ -156,18 +156,48 @@ public sealed partial class ImageEditTextExtractionUiTests
             Assert.IsNull(window.FindFirstDescendant(automation.ConditionFactory.ByAutomationId("CapturePane_Search")),
                 "Speech results do not complete the Text scan.");
             Element("CaptureAction_ScanText").Patterns.Invoke.Pattern.Invoke();
+            var timestampSearch = Element("CaptureVideoText_Search").AsTextBox();
+            timestampSearch.Text = "Contoso";
+            WaitFor(() => Element("CaptureVideoText_Count").Name == "Timestamps: 2" ? window : null,
+                InteractionTimeout, "search returns both matching moments");
+            string timestampsScreenshot = Path.Combine(artifacts, "text-timestamps.png");
+            window.CaptureToFile(timestampsScreenshot); TestContext.AddResultFile(timestampsScreenshot);
+            Assert.IsNull(window.FindFirstDescendant(automation.ConditionFactory.ByAutomationId("CapturePane_Search")));
+            WaitForElementByName(Element("CaptureVideoText_Timestamps"), automation, "0:02", InteractionTimeout).Click();
+            WaitFor(() =>
+            {
+                var progress = Element("ProgressSlider").Patterns.RangeValue.Pattern;
+                double fraction = (progress.Value.Value - progress.Minimum.Value) / (progress.Maximum.Value - progress.Minimum.Value);
+                return Math.Abs(fraction - .4) < .02 ? window : null;
+            }, InteractionTimeout, "opening a timestamp seeks to that video frame");
+            Assert.AreEqual("0:02", Element("CaptureVideoText_SelectedTime").Name);
             var textSearch = Element("CapturePane_Search").AsTextBox();
-            textSearch.Text = "Contoso";
+            Assert.AreEqual("Contoso", textSearch.Text);
             WaitForElementByName(Element("CapturePane_Passages"), automation,
                 "Contoso invoice. Reference: INV-2048. Total USD 125.00. Due 2026-10-15.", InteractionTimeout);
+            textSearch.Text = "Contact";
             Element("CapturePane_CopyResults").Patterns.Invoke.Pattern.Invoke();
-            WaitFor(() => ReadDetailsClipboard() == "Contoso invoice. Reference: INV-2048. Total USD 125.00. Due 2026-10-15." ? window : null,
-                InteractionTimeout, "Text copies only visible text, not speech");
+            WaitFor(() => ReadDetailsClipboard() == "Contact billing@example.com or visit https://example.com/invoice." ? window : null,
+                InteractionTimeout, "copy uses the current frame and local word search");
+            string frameScreenshot = Path.Combine(artifacts, "text-frame.png");
+            window.CaptureToFile(frameScreenshot); TestContext.AddResultFile(frameScreenshot);
+            Element("CaptureVideoText_Back").Patterns.Invoke.Pattern.Invoke();
+            Assert.AreEqual("Contoso", Element("CaptureVideoText_Search").AsTextBox().Text);
+            WaitForElementByName(Element("CaptureVideoText_Timestamps"), automation, "0:01", InteractionTimeout).Click();
+            Assert.AreEqual("Contoso", Element("CapturePane_Search").AsTextBox().Text);
+            Element("CapturePane_SourceFilter");
             Element("CapturePane_SpeechTab").Patterns.SelectionItem.Pattern.Select();
             Assert.AreEqual("spoken", Element("CaptureSpeech_Search").AsTextBox().Text);
             WaitForElementByName(Element("CaptureSpeech_Passages"), automation, "Second spoken passage", InteractionTimeout);
             Element("CapturePane_TextTab").Patterns.SelectionItem.Pattern.Select();
             Assert.AreEqual("Contoso", Element("CapturePane_Search").AsTextBox().Text);
+            Assert.AreEqual("0:01", Element("CaptureVideoText_SelectedTime").Name);
+            Element("CaptureVideoText_Back").Patterns.Invoke.Pattern.Invoke();
+            Element("CaptureVideoText_Search").AsTextBox().Text = "0:03";
+            WaitForElementByName(Element("CaptureVideoText_Timestamps"), automation, "0:03", InteractionTimeout).Click();
+            Assert.AreEqual(string.Empty, Element("CapturePane_Search").AsTextBox().Text);
+            WaitForElementByName(Element("CapturePane_Passages"), automation, "Final screen", InteractionTimeout);
+            WaitForElementByName(Element("CapturePane_Passages"), automation, "https://example.com/invoice", InteractionTimeout);
         }
 
         Element("CapturePane_DetailsTab").Patterns.SelectionItem.Pattern.Select();

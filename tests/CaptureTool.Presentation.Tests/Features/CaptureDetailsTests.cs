@@ -54,8 +54,11 @@ public sealed class CaptureDetailsTests
         Assert.AreEqual("spoken", vm.SpeechContent.Query);
         Assert.IsFalse(vm.TextContent.Filters.Any(filter => filter.Source == CaptureTextSource.Speech));
         Assert.IsFalse(vm.SpeechContent.HasSources);
-        vm.TextContent.Query = "visible";
-        vm.TextContent.SelectedPassage = vm.TextContent.Visible.Single();
+        Assert.IsTrue(vm.ShowVideoTimestamps);
+        vm.VideoText.Open(vm.VideoText.Visible.First());
+        Assert.IsFalse(vm.ShowVideoTimestamps);
+        vm.DisplayedTextContent.Query = "visible";
+        vm.DisplayedTextContent.SelectedPassage = vm.DisplayedTextContent.Visible.Single();
         await vm.CopyResultsCommand.ExecuteAsync(null);
         setup.Clipboard.Verify(x => x.CopyTextAsync("Visible invoice"), Times.Once);
         await vm.CopySpeechResultsCommand.ExecuteAsync(null);
@@ -64,7 +67,7 @@ public sealed class CaptureDetailsTests
         Assert.IsFalse(vm.SpeechContent.HasText);
         Assert.IsTrue(vm.ShowSpeechResults);
         Assert.IsFalse(vm.ShowSpeechEmptyState, "An empty search is not an empty transcription.");
-        Assert.AreEqual("Visible invoice", vm.TextContent.CopyVisibleScope());
+        Assert.AreEqual("Visible invoice", vm.DisplayedTextContent.CopyVisibleScope());
     }
 
     [TestMethod]

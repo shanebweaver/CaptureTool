@@ -1989,4 +1989,12 @@ SOFTWARE.
   <data name="CaptureSpeech_EmptyDescription.Text" xml:space="preserve"><value>In dieser Aufnahme wurde keine Sprache erkannt.</value></data>
   <data name="CaptureSummary_VideoHint" xml:space="preserve"><value>Eine KI-Zusammenfassung aus Text und Sprache in diesem Video erstellen. Suchen Sie zuerst nach Text oder transkribieren Sie das Audio.</value></data>
   <data name="CaptureSummary_AudioHint" xml:space="preserve"><value>Eine KI-Zusammenfassung aus dem Transkript dieser Aufnahme erstellen. Transkribieren Sie zuerst das Audio.</value></data>
+  <data name="CaptureVideoText_Search.PlaceholderText" xml:space="preserve"><value>Text oder Zeitstempel suchen</value></data>
+  <data name="CaptureVideoText_Search.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Text oder Zeitstempel suchen</value></data>
+  <data name="CaptureVideoText_Back.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Zurück zu den Zeitstempeln</value></data>
+  <data name="CaptureVideoText_Back.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve"><value>Zurück zu den Zeitstempeln</value></data>
+  <data name="CaptureVideoText_TimestampCount" xml:space="preserve"><value>Zeitstempel: {0}</value></data>
+  <data name="CaptureVideoText_NoMatches.Text" xml:space="preserve"><value>Keine passenden Zeitstempel</value></data>
+  <data name="CaptureVideoText_UnknownTime" xml:space="preserve"><value>Zeit nicht verfügbar</value></data>
+  <data name="CaptureVideoText_Hint" xml:space="preserve"><value>Suchen Sie Text und QR-Codes in diesem Video. Wählen Sie einen Zeitstempel, um zur entsprechenden Stelle zu springen und den Text dort zu durchsuchen oder zu kopieren.</value></data>
 </root>

@@ -156,18 +156,20 @@ public sealed class CaptureTextTests
     }
 
     [TestMethod]
-    public void VideoWordsAreGroupedWithinFramesAndRepeatedFramesStillDeduplicate()
+    public void VideoWordsKeepTheirOwnFrameGroupingAndWordBounds()
     {
         var regions = new[] { 1, 2, 3 }.SelectMany(second => new[] {
             Word("Frame", .1, .1, .05), Word(second == 3 ? "changed" : "text", .16, .1, .07)
         }.Select(word => new RecognizedText(word.Text, word.Bounds, TimeSpan.FromSeconds(second))));
         var rows = CaptureTextPassage.From(Record(AnalysisMediaKind.Video, new TextRecognitionMetadata(regions)), Text());
-        Assert.HasCount(2, rows);
+        Assert.HasCount(3, rows);
         Assert.AreEqual("Frame text", rows[0].Text);
-        CollectionAssert.AreEqual(new[] { TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(2) }, rows[0].Locations.Select(location => location.Time!.Value).ToArray());
-        Assert.AreEqual("Frame changed", rows[1].Text);
-        Assert.AreEqual(TimeSpan.FromSeconds(3), rows[1].Locations[0].Time);
-        Assert.IsEmpty(CaptureImageTextOverlay.Create(rows, new(1000, 500)).Text);
+        CollectionAssert.AreEqual(new[] { TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(2), TimeSpan.FromSeconds(3) },
+            rows.Select(row => row.SelectedLocation!.Time!.Value).ToArray());
+        Assert.AreEqual("Frame changed", rows[2].Text);
+        Assert.HasCount(2, rows[0].TextRegions);
+        Assert.HasCount(1, rows[0].TextLines);
+        Assert.IsTrue(rows[1].TextRegions.All(word => word.Timestamp == TimeSpan.FromSeconds(2)));
     }
 
     [TestMethod]
@@ -185,17 +187,16 @@ public sealed class CaptureTextTests
     }
 
     [TestMethod]
-    public void RepeatedVideoFramesAreGroupedWithoutLosingOccurrences()
+    public void RepeatedVideoFramesKeepSeparatePassagesAtEveryTimestamp()
     {
         var record = Record(AnalysisMediaKind.Video, new TextRecognitionMetadata([
             new("First", timestamp: TimeSpan.FromSeconds(1)), new("Second", timestamp: TimeSpan.FromSeconds(1)),
             new("First", timestamp: TimeSpan.FromSeconds(2)), new("Second", timestamp: TimeSpan.FromSeconds(2)),
             new("Changed", timestamp: TimeSpan.FromSeconds(3)), new("First", timestamp: TimeSpan.FromSeconds(4))]));
         var passages = CaptureTextPassage.From(record, Text());
-        Assert.HasCount(3, passages);
-        Assert.AreEqual("First" + Environment.NewLine + Environment.NewLine + "Second", passages[0].Text);
-        CollectionAssert.AreEqual(new[] { TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(2) }, passages[0].Locations.Select(location => location.Time!.Value).ToArray());
-        Assert.HasCount(1, passages[2].Locations);
+        Assert.HasCount(6, passages);
+        CollectionAssert.AreEqual(new[] { "First", "Second", "First", "Second", "Changed", "First" }, passages.Select(passage => passage.Text).ToArray());
+        CollectionAssert.AreEqual(new[] { 1d, 1d, 2d, 2d, 3d, 4d }, passages.Select(passage => passage.SelectedLocation!.Time!.Value.TotalSeconds).ToArray());
     }
 
     [TestMethod]

@@ -2263,4 +2263,12 @@ SOFTWARE.
   <data name="CaptureSpeech_EmptyDescription.Text" xml:space="preserve"><value>No speech was detected in this recording.</value></data>
   <data name="CaptureSummary_VideoHint" xml:space="preserve"><value>Create an AI summary from text and speech in this video. Find text or transcribe audio first.</value></data>
   <data name="CaptureSummary_AudioHint" xml:space="preserve"><value>Create an AI summary from this recording&apos;s transcript. Transcribe audio first.</value></data>
+  <data name="CaptureVideoText_Search.PlaceholderText" xml:space="preserve"><value>Find text or a timestamp</value></data>
+  <data name="CaptureVideoText_Search.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Find text or a timestamp</value></data>
+  <data name="CaptureVideoText_Back.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Back to timestamps</value></data>
+  <data name="CaptureVideoText_Back.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve"><value>Back to timestamps</value></data>
+  <data name="CaptureVideoText_TimestampCount" xml:space="preserve"><value>Timestamps: {0}</value></data>
+  <data name="CaptureVideoText_NoMatches.Text" xml:space="preserve"><value>No matching timestamps</value></data>
+  <data name="CaptureVideoText_UnknownTime" xml:space="preserve"><value>Time unavailable</value></data>
+  <data name="CaptureVideoText_Hint" xml:space="preserve"><value>Find text and QR codes in this video. Choose a timestamp to jump to that moment, then search or copy its text.</value></data>
 </root>

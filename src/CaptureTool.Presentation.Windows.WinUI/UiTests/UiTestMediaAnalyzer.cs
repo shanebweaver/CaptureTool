@@ -22,7 +22,11 @@ internal sealed class UiTestMediaAnalyzer(MediaAnalyzerDescriptor descriptor) : 
         await Task.Delay(TimeSpan.FromSeconds(3), ct);
         if (descriptor.Capability == AnalysisCapability.QrCodeDetection)
             return AnalyzerOutcome.Success(new QrCodeMetadata(UiTestLaunchOptions.DetailsFixture && UiTestTextFixture.Current == null
-                ? [new("https://example.com/invoice", new(.1, .1, .2, .2))] : []), new(descriptor.Id, "ui-test", "fixture", "1"));
+                ? input.MediaKind == AnalysisMediaKind.Video
+                    ? [new("https://example.com/invoice", new(.1, .1, .2, .2), TimeSpan.FromSeconds(1)),
+                        new("https://example.com/invoice", new(.1, .1, .2, .2), TimeSpan.FromSeconds(3))]
+                    : [new("https://example.com/invoice", new(.1, .1, .2, .2))]
+                : []), new(descriptor.Id, "ui-test", "fixture", "1"));
         if (descriptor.Capability == AnalysisCapability.TextRecognition)
             return AnalyzerOutcome.Success(new TextRecognitionMetadata(UiTestTextFixture.Current?.SavedText() ??
                 (UiTestLaunchOptions.DetailsFixture ? TextFixture(input.MediaKind) : [])), new(descriptor.Id, "ui-test", "fixture", "1"));
@@ -38,21 +42,22 @@ internal sealed class UiTestMediaAnalyzer(MediaAnalyzerDescriptor descriptor) : 
     {
         string[] lines = ["Contoso invoice. Reference: INV-2048. Total USD 125.00. Due 2026-10-15.",
             "Contact billing@example.com or visit https://example.com/invoice."];
-        for (int i = 0; i < lines.Length; i++)
+        TimeSpan?[] frames = kind == AnalysisMediaKind.Video
+            ? [TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(2), TimeSpan.FromSeconds(3)] : [null];
+        foreach (var timestamp in frames)
         {
-            if (kind != AnalysisMediaKind.Image)
+            string[] frameLines = timestamp == TimeSpan.FromSeconds(3) ? ["Final screen"] : lines;
+            for (int i = 0; i < frameLines.Length; i++)
             {
-                yield return new(lines[i], timestamp: TimeSpan.FromSeconds(i + 1));
-                continue;
-            }
-            // Match real providers: word-level regions, not preassembled display passages.
-            double x = .1;
-            int wordIndex = 0;
-            foreach (string word in lines[i].Split(' '))
-            {
-                double width = word.Length * .007;
-                yield return new(word, new(x, i == 0 ? .15 : .5, width, .035), lineIndex: i, wordIndex: wordIndex++);
-                x += width + .007;
+                // Match real providers: word-level regions, not preassembled display passages.
+                double x = .1;
+                int wordIndex = 0;
+                foreach (string word in frameLines[i].Split(' '))
+                {
+                    double width = word.Length * .007;
+                    yield return new(word, new(x, i == 0 ? .15 : .5, width, .035), timestamp, lineIndex: i, wordIndex: wordIndex++);
+                    x += width + .007;
+                }
             }
         }
     }

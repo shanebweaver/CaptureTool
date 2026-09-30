@@ -48,6 +48,8 @@ public sealed class CaptureDetailsViewModel : ViewModelBase
     public bool HasVisualMedia => _kind is AnalysisMediaKind.Image or AnalysisMediaKind.Video;
     public bool HasAudio => _kind is AnalysisMediaKind.Audio or AnalysisMediaKind.Video;
     public bool IsImage => _kind == AnalysisMediaKind.Image;
+    public bool IsVideo => _kind == AnalysisMediaKind.Video;
+    public string TextHint => _text.GetString(IsVideo ? "CaptureVideoText_Hint" : "CaptureText_Hint/Text");
     public bool NeedsSummaryInputs => !IsImage && !Content.HasSummaryInputs;
     public string SummaryHint => _text.GetString(IsImage ? "CaptureSummary_Hint/Text" :
         HasVisualMedia ? "CaptureSummary_VideoHint" : "CaptureSummary_AudioHint");
@@ -78,6 +80,8 @@ public sealed class CaptureDetailsViewModel : ViewModelBase
     public IReadOnlyList<CaptureTextPassage> TextPassages => TextContent.All;
     public IReadOnlyList<CaptureTextPassage> SpeechPassages => SpeechContent.All;
     public bool ShowTextResults => !ScanTextAction.IsRunning && TextPassages.Count > 0;
+    public bool ShowVideoTimestamps => IsVideo && !VideoText.HasSelectedFrame;
+    public bool ShowTextPassages => !ShowVideoTimestamps;
     public bool ShowTextEmptyState => HasVisualMedia && !ScanTextAction.IsRunning && TextPassages.Count == 0 && ScanTextAction.HasResult;
     public string TextEmptyDescription => _text.GetString("CapturePane_EmptyTextDescription");
     public bool ShowScanTextAction => HasVisualMedia && !ScanTextAction.HasResult && !ShowTextResults;
@@ -112,6 +116,8 @@ public sealed class CaptureDetailsViewModel : ViewModelBase
     public IRelayCommand OpenFolderCommand { get; }
     public CaptureTextViewModel TextContent { get; }
     public CaptureTextViewModel SpeechContent { get; }
+    public CaptureVideoTextViewModel VideoText { get; }
+    public CaptureTextViewModel DisplayedTextContent => IsVideo ? VideoText.Content : TextContent;
     public IAsyncRelayCommand CopyResultsCommand { get; }
     public IAsyncRelayCommand CopySpeechResultsCommand { get; }
     public CaptureDetailsContent Content { get; private set => Set(ref field, value); } = new();
@@ -145,7 +151,9 @@ public sealed class CaptureDetailsViewModel : ViewModelBase
         if (_names != null) _names.Changed += OnNamesChanged;
         TextContent = new(text);
         SpeechContent = new(text);
-        CopyResultsCommand = new AsyncRelayCommand(() => CopyAsync(TextContent.CopyVisibleScope()));
+        VideoText = new(text);
+        VideoText.PropertyChanged += VideoTextChanged;
+        CopyResultsCommand = new AsyncRelayCommand(() => CopyAsync(DisplayedTextContent.CopyVisibleScope()));
         CopySpeechResultsCommand = new AsyncRelayCommand(() => CopyAsync(SpeechContent.CopyVisibleScope()));
         _cancellation = _lifetime.Token;
         CopyCommand = new AsyncRelayCommand<string>(CopyAsync, value => !_disposed && !string.IsNullOrEmpty(value));
@@ -268,6 +276,11 @@ public sealed class CaptureDetailsViewModel : ViewModelBase
         SummaryAction.ToolTip = NeedsSummaryInputs ? _text.GetString(HasVisualMedia
             ? "CaptureAction_SummaryInputs" : "CaptureAction_SummaryAudioInputs") : SummaryAction.Label;
         RaisePropertyChanged(nameof(IsImage));
+        RaisePropertyChanged(nameof(IsVideo));
+        RaisePropertyChanged(nameof(TextHint));
+        RaisePropertyChanged(nameof(DisplayedTextContent));
+        RaisePropertyChanged(nameof(ShowVideoTimestamps));
+        RaisePropertyChanged(nameof(ShowTextPassages));
         IsGeneratingSummary = SummaryAction.IsRunning;
         IsGeneratingName = NameAction.IsRunning;
         SuggestNameCommand.NotifyCanExecuteChanged();
@@ -438,9 +451,18 @@ public sealed class CaptureDetailsViewModel : ViewModelBase
             ? new(_navigation.IsReady, _editorText!.Document != null)
             : _navigation with { SourceMatches = _sourceMatches });
         SpeechContent.SetNavigationContext(_navigation with { SourceMatches = _sourceMatches });
+        VideoText.Replace(IsVideo ? TextPassages : []);
+        VideoText.SetNavigationContext(_navigation with { SourceMatches = _sourceMatches });
         RaisePropertyChanged(nameof(TextPassages));
         RaisePropertyChanged(nameof(SpeechPassages));
         RaisePropertyChanged(nameof(CanShowImageTextOverlay));
+    }
+
+    private void VideoTextChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName != nameof(CaptureVideoTextViewModel.HasSelectedFrame)) return;
+        RaisePropertyChanged(nameof(ShowVideoTimestamps));
+        RaisePropertyChanged(nameof(ShowTextPassages));
     }
     public void ReportActionFailure()
     {
@@ -574,6 +596,7 @@ public sealed class CaptureDetailsViewModel : ViewModelBase
     {
         if (_disposed) return;
         _disposed = true;
+        VideoText.PropertyChanged -= VideoTextChanged;
         if (_editorText != null) _editorText.Changed -= EditorTextChanged;
         _memory.StateChanged -= OnMemoryChanged;
         if (_names != null) _names.Changed -= OnNamesChanged;

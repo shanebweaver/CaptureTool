@@ -1995,4 +1995,12 @@ SOFTWARE.
   <data name="CaptureSpeech_EmptyDescription.Text" xml:space="preserve"><value>未在此录制中检测到语音。</value></data>
   <data name="CaptureSummary_VideoHint" xml:space="preserve"><value>根据此视频中的文字和语音创建 AI 摘要。请先查找文字或转写音频。</value></data>
   <data name="CaptureSummary_AudioHint" xml:space="preserve"><value>根据此录制的转写文本创建 AI 摘要。请先转写音频。</value></data>
+  <data name="CaptureVideoText_Search.PlaceholderText" xml:space="preserve"><value>查找文字或时间戳</value></data>
+  <data name="CaptureVideoText_Search.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>查找文字或时间戳</value></data>
+  <data name="CaptureVideoText_Back.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>返回时间戳列表</value></data>
+  <data name="CaptureVideoText_Back.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve"><value>返回时间戳列表</value></data>
+  <data name="CaptureVideoText_TimestampCount" xml:space="preserve"><value>时间戳：{0}</value></data>
+  <data name="CaptureVideoText_NoMatches.Text" xml:space="preserve"><value>没有匹配的时间戳</value></data>
+  <data name="CaptureVideoText_UnknownTime" xml:space="preserve"><value>时间不可用</value></data>
+  <data name="CaptureVideoText_Hint" xml:space="preserve"><value>查找此视频中的文字和二维码。选择时间戳可跳转到对应时刻，然后查找或复制该时刻的文字。</value></data>
 </root>

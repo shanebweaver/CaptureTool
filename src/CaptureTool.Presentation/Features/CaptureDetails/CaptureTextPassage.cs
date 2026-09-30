@@ -33,11 +33,14 @@ public sealed class CaptureTextPassage : ViewModelBase
             {
                 UpdateNavigation();
                 RaisePropertyChanged(nameof(IsTimed));
+                RaisePropertyChanged(nameof(IsTimestampVisible));
                 RaisePropertyChanged(nameof(NavigationLabel));
             }
         }
     }
     public bool IsTimed => SelectedLocation?.Time != null;
+    public bool ShowTimestamp { get; init; } = true;
+    public bool IsTimestampVisible => ShowTimestamp && IsTimed;
     public string NavigationLabel => IsTimed ? Label + " " + SelectedLocation!.Label : SelectedLocation?.Label ?? Label;
     public bool CanNavigate { get; private set => Set(ref field, value); }
     public string NavigationHint { get; private set => Set(ref field, value); } = string.Empty;
@@ -71,7 +74,7 @@ public sealed class CaptureTextPassage : ViewModelBase
     }
 
     internal bool SameContent(CaptureTextPassage other) => Id == other.Id && Source == other.Source &&
-        Text == other.Text && Locations.SequenceEqual(other.Locations) && TextRegions.SequenceEqual(other.TextRegions);
+        Text == other.Text && ShowTimestamp == other.ShowTimestamp && Locations.SequenceEqual(other.Locations) && TextRegions.SequenceEqual(other.TextRegions);
 
     public static IReadOnlyList<CaptureTextPassage> From(RecognizedTextDocument document, ILocalizationService localization)
     {
@@ -108,20 +111,14 @@ public sealed class CaptureTextPassage : ViewModelBase
             switch (result.Payload)
             {
                 case TextRecognitionMetadata text when record.MediaKind == AnalysisMediaKind.Video:
-                    CaptureTextPassage? previous = null;
                     foreach (var frame in text.Regions.Select((region, index) => (region, index))
                         .GroupBy(item => item.region.Timestamp).OrderBy(group => group.Key))
                     {
-                        string content = string.Join(Environment.NewLine + Environment.NewLine,
-                            CaptureTextGrouping.Create(frame.Select(item => item.region).ToArray()).Select(group => group.Text));
-                        var location = Location(frame.Key, null, Label("RecognizedText"));
-                        if (previous?.Text == content && frame.Key != null) previous.Locations.Add(location);
-                        else
-                        {
-                            previous = new($"{result.ResultId}:{frame.First().index}", CaptureTextSource.ImageText,
-                                Label("RecognizedText"), content, [location]);
-                            passages.Add(previous);
-                        }
+                        var words = frame.ToArray();
+                        passages.AddRange(CaptureTextGrouping.Create(words.Select(item => item.region).ToArray())
+                            .Select(group => new CaptureTextPassage($"{result.ResultId}:{words[group.FirstIndex].index}",
+                                CaptureTextSource.ImageText, Label("RecognizedText"), group.Text,
+                                [Location(frame.Key, group.Bounds, Label("RecognizedText"))], group.Regions, group.Lines)));
                     }
                     break;
                 case TextRecognitionMetadata text:
