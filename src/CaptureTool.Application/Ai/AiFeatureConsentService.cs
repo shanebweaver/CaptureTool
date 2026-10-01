@@ -19,7 +19,7 @@ internal sealed class AiFeatureConsentService : IAiFeatureConsentService, IDispo
         _memory.StateChanged += OnStateChanged;
         OnStateChanged();
     }
-    public CancellationToken Revoked { get { lock (_gate) return _revoked.Token; } }
+    public CancellationToken Revoked { get { lock (_gate) { return _revoked.Token; } } }
     public AiFeatureConsentState GetConsentState(AiFeatureId featureId)
     {
         var state = _memory.State;
@@ -37,7 +37,11 @@ internal sealed class AiFeatureConsentService : IAiFeatureConsentService, IDispo
                 _retired.Add(_revoked);
                 _revoked = new();
             }
-            else if (!allowed) _ = ObserveCancellationAsync(_revoked);
+            else if (!allowed)
+            {
+                _ = ObserveCancellationAsync(_revoked);
+            }
+
             _allowed = allowed;
         }
     }
@@ -51,7 +55,10 @@ internal sealed class AiFeatureConsentService : IAiFeatureConsentService, IDispo
         lock (_gate)
         {
             _revoked.Dispose();
-            foreach (var source in _retired) source.Dispose();
+            foreach (var source in _retired)
+            {
+                source.Dispose();
+            }
         }
     }
 }

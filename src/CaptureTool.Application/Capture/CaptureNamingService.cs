@@ -35,18 +35,34 @@ internal sealed class CaptureNamingService(ICaptureAssetCatalog catalog, ICaptur
 
     public async Task<CaptureFileRename?> RenameAsync(string path, CaptureFileType mediaType, string name, CancellationToken cancellationToken = default)
     {
-        if (Volatile.Read(ref _stopped)) return null;
+        if (Volatile.Read(ref _stopped))
+        {
+            return null;
+        }
+
         try
         {
             var chosen = new CaptureName(name, false);
-            if (!Path.IsPathFullyQualified(path) || !_files.FileExists(path)) return null;
+            if (!Path.IsPathFullyQualified(path) || !_files.FileExists(path))
+            {
+                return null;
+            }
+
             string newPath;
             await _commands.WaitAsync(cancellationToken).ConfigureAwait(false);
             try
             {
-                if (!_files.FileExists(path)) return null;
+                if (!_files.FileExists(path))
+                {
+                    return null;
+                }
+
                 var matches = await MatchesAsync(path, cancellationToken).ConfigureAwait(false);
-                if (matches.Length > 1) return null;
+                if (matches.Length > 1)
+                {
+                    return null;
+                }
+
                 var asset = matches.SingleOrDefault();
                 if (asset == null)
                 {
@@ -77,7 +93,12 @@ internal sealed class CaptureNamingService(ICaptureAssetCatalog catalog, ICaptur
     private void Publish()
     {
         if (Changed is { } changed)
-            foreach (Action observer in changed.GetInvocationList()) try { observer(); } catch (Exception) { }
+        {
+            foreach (Action observer in changed.GetInvocationList())
+            {
+                try { observer(); } catch (Exception) { }
+            }
+        }
     }
     internal async Task StopAsync()
     {

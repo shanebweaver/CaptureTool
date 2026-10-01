@@ -23,13 +23,20 @@ public sealed class CaptureDetailsReader(ICaptureAssetCatalog catalog, ICaptureM
 
     public async Task<FileDetailsMetadata?> ReadFileAsync(string path, AnalysisMediaKind kind, CancellationToken cancellationToken = default)
     {
-        if (properties == null || !Path.IsPathFullyQualified(path)) return null;
+        if (properties == null || !Path.IsPathFullyQualified(path))
+        {
+            return null;
+        }
+
         DateTimeOffset? capturedAt = null;
         try
         {
             var matches = (await catalog.ReadAllAsync(cancellationToken).ConfigureAwait(false))
                 .Where(asset => SamePath(path, asset.SourcePath) || SamePath(path, asset.PreferredPath)).Take(2).ToArray();
-            if (matches.Length == 1) capturedAt = matches[0].CapturedAt;
+            if (matches.Length == 1)
+            {
+                capturedAt = matches[0].CapturedAt;
+            }
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or CryptographicException)
         {
@@ -40,14 +47,22 @@ public sealed class CaptureDetailsReader(ICaptureAssetCatalog catalog, ICaptureM
 
     public async Task<CaptureDetailsSnapshot> ReadAsync(string path, CancellationToken cancellationToken = default)
     {
-        if (!Path.IsPathFullyQualified(path)) return new(CaptureDetailsStatus.SourceUnavailable);
+        if (!Path.IsPathFullyQualified(path))
+        {
+            return new(CaptureDetailsStatus.SourceUnavailable);
+        }
+
         try
         {
             var scope = await execution.GetAdmissionScopeAsync(cancellationToken).ConfigureAwait(false);
             CaptureAsset[] matches = (await catalog.ReadAllAsync(cancellationToken).ConfigureAwait(false))
                 .Where(asset => SamePath(path, asset.SourcePath) || SamePath(path, asset.PreferredPath)).Take(2).ToArray();
             // Ambiguous paths must not expose another capture's metadata.
-            if (matches.Length != 1) return new(CaptureDetailsStatus.Empty);
+            if (matches.Length != 1)
+            {
+                return new(CaptureDetailsStatus.Empty);
+            }
+
             CaptureAsset asset = matches[0];
             AnalysisRun? run = (await execution.GetWorkAsync(asset.Id, cancellationToken).ConfigureAwait(false))?.Run;
             CaptureAnalysisRecord? record = await metadata.GetAsync(asset.Id, cancellationToken: cancellationToken).ConfigureAwait(false);
@@ -57,10 +72,16 @@ public sealed class CaptureDetailsReader(ICaptureAssetCatalog catalog, ICaptureM
                 await using var lease = await files.OpenAsync(path, cancellationToken).ConfigureAwait(false);
                 if (record != null && (record.CaptureId != asset.Id || record.MediaKind != MediaKind(asset.MediaType) ||
                     record.SourceRevision != lease.Revision) || !await lease.VerifyAsync(cancellationToken).ConfigureAwait(false))
+                {
                     snapshot = new(CaptureDetailsStatus.SourceChanged);
+                }
                 else
                 {
-                    if (run?.SourceRevision is { } revision && revision != lease.Revision) run = null;
+                    if (run?.SourceRevision is { } revision && revision != lease.Revision)
+                    {
+                        run = null;
+                    }
+
                     snapshot = new(record?.Results.Count > 0 ? CaptureDetailsStatus.Available : CaptureDetailsStatus.Empty, record, run);
                 }
             }
@@ -70,7 +91,10 @@ public sealed class CaptureDetailsReader(ICaptureAssetCatalog catalog, ICaptureM
             }
             // Deletion/recovery during a read invalidates the entire snapshot, including its execution state.
             if (scope.Generation != (await execution.GetAdmissionScopeAsync(cancellationToken).ConfigureAwait(false)).Generation)
+            {
                 return new(CaptureDetailsStatus.Empty);
+            }
+
             return snapshot;
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or CryptographicException)

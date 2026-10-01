@@ -13,10 +13,26 @@ internal sealed class CaptureAnalysisOnboarding(ICaptureMemoryService memory) : 
         try
         {
             await memory.InitializeAsync(ct).ConfigureAwait(false);
-            if (!memory.State.PolicyAvailable) return false;
-            if (memory.State.Policy.IsAllowed) return true;
-            if (attempt != Interlocked.Read(ref _attempt)) return memory.State.Policy.IsAllowed;
-            if (!memory.State.Policy.ConsentGranted) await memory.SetConsentAsync(true, ct).ConfigureAwait(false);
+            if (!memory.State.PolicyAvailable)
+            {
+                return false;
+            }
+
+            if (memory.State.Policy.IsAllowed)
+            {
+                return true;
+            }
+
+            if (attempt != Interlocked.Read(ref _attempt))
+            {
+                return memory.State.Policy.IsAllowed;
+            }
+
+            if (!memory.State.Policy.ConsentGranted)
+            {
+                await memory.SetConsentAsync(true, ct).ConfigureAwait(false);
+            }
+
             ct.ThrowIfCancellationRequested();
             Interlocked.Increment(ref _attempt);
             return memory.State.Policy.IsAllowed;

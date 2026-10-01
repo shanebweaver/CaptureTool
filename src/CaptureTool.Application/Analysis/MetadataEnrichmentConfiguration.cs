@@ -13,8 +13,16 @@ public sealed record StructuredFactsOptions
     public StructuredFactsOptions(MetadataProcessingLimits limits, int maxFacts, int maxEvidencePerFact)
     {
         ArgumentNullException.ThrowIfNull(limits);
-        if (maxFacts is < 1 or > StructuredFactsMetadata.MaximumFactCount) throw new ArgumentOutOfRangeException(nameof(maxFacts));
-        if (maxEvidencePerFact is < 1 or > StructuredFact.MaximumEvidenceCount) throw new ArgumentOutOfRangeException(nameof(maxEvidencePerFact));
+        if (maxFacts is < 1 or > StructuredFactsMetadata.MaximumFactCount)
+        {
+            throw new ArgumentOutOfRangeException(nameof(maxFacts));
+        }
+
+        if (maxEvidencePerFact is < 1 or > StructuredFact.MaximumEvidenceCount)
+        {
+            throw new ArgumentOutOfRangeException(nameof(maxEvidencePerFact));
+        }
+
         Limits = limits;
         MaxFacts = maxFacts;
         MaxEvidencePerFact = maxEvidencePerFact;

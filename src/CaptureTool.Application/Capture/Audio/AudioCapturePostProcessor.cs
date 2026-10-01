@@ -99,7 +99,11 @@ internal sealed class AudioCapturePostProcessor
                 audioFile.FilePath,
                 audioFolder,
                 _fileNameGenerator.GetNewCaptureFileName);
-            if (_analysis != null) await _analysis.SavedAsync(registration, audioFile.FilePath, newFilePath).ConfigureAwait(false);
+            if (_analysis != null)
+            {
+                await _analysis.SavedAsync(registration, audioFile.FilePath, newFilePath).ConfigureAwait(false);
+            }
+
             _recentCaptureCatalog.ReplacePath(audioFile.FilePath, newFilePath);
             TrackOutput("auto_save", TelemetryOutcomes.Succeeded);
         }

@@ -104,7 +104,11 @@ internal sealed class VideoCapturePostProcessor
                 videoFile.FilePath,
                 videosFolder,
                 _fileNameGenerator.GetNewCaptureFileName);
-            if (_analysis != null) await _analysis.SavedAsync(registration, videoFile.FilePath, newFilePath).ConfigureAwait(false);
+            if (_analysis != null)
+            {
+                await _analysis.SavedAsync(registration, videoFile.FilePath, newFilePath).ConfigureAwait(false);
+            }
+
             _recentCaptureCatalog.ReplacePath(videoFile.FilePath, newFilePath);
             TrackOutput("auto_save", TelemetryOutcomes.Succeeded);
         }

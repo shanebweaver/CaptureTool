@@ -362,9 +362,11 @@ public sealed class RecognizedTextLayout
         // Pane overlays already carry the shared layout. Keep those exact paragraph/line boundaries
         // so a clicked passage, drag selection, and copied text all describe the same words.
         if (regions.All(region => region.ParagraphIndex >= 0 && region.LineIndex >= 0))
+        {
             return regions.GroupBy(region => region.ParagraphIndex).Select(paragraph =>
                 (IReadOnlyList<IReadOnlyList<RecognizedTextRegion>>)paragraph.GroupBy(region => region.LineIndex)
                     .Select(line => (IReadOnlyList<RecognizedTextRegion>)line.ToArray()).ToArray()).ToArray();
+        }
 
         double left = regions.Min(region => (double)region.Bounds.Left);
         double top = regions.Min(region => (double)region.Bounds.Top);

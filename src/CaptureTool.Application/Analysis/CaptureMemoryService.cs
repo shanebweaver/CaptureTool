@@ -55,7 +55,11 @@ internal sealed class CaptureMemoryService : ICaptureMemoryService, IDisposable
         {
             await LockedAsync(async () =>
             {
-                if (_initialized) return;
+                if (_initialized)
+                {
+                    return;
+                }
+
                 await InitializePolicyAsync(ct).ConfigureAwait(false);
                 await InitializeStorageAsync(ct).ConfigureAwait(false);
                 _initialized = true;
@@ -70,7 +74,9 @@ internal sealed class CaptureMemoryService : ICaptureMemoryService, IDisposable
             IReadOnlyList<CaptureRegistration> registrations = await _catalog.ReadRegistrationsAsync(ct).ConfigureAwait(false);
             CaptureRegistration? existing = registrations.FirstOrDefault(entry => SamePath(entry.Asset.SourcePath, asset.SourcePath));
             if (existing == null)
+            {
                 await _catalog.RegisterAsync(asset, ct).ConfigureAwait(false);
+            }
         }, ct), cancellationToken, "capture-registration");
     }
 
@@ -78,7 +84,10 @@ internal sealed class CaptureMemoryService : ICaptureMemoryService, IDisposable
         GuardAsync(ct => LockedAsync(async () =>
         {
             var asset = (await _catalog.ReadAllAsync(ct).ConfigureAwait(false)).FirstOrDefault(item => SamePath(item.SourcePath, sourcePath));
-            if (asset != null) await _catalog.SetPreferredPathAsync(asset.Id, preferredPath, ct).ConfigureAwait(false);
+            if (asset != null)
+            {
+                await _catalog.SetPreferredPathAsync(asset.Id, preferredPath, ct).ConfigureAwait(false);
+            }
         }, ct), cancellationToken, "capture-registration");
 
     public Task SetConsentAsync(bool granted, CancellationToken cancellationToken = default)
@@ -90,7 +99,11 @@ internal sealed class CaptureMemoryService : ICaptureMemoryService, IDisposable
         await _consentRequests.WaitAsync(ct).ConfigureAwait(false);
         try
         {
-            if (_authorization.IsConsentAllowed || attempt != Interlocked.Read(ref _consentAttempt)) return;
+            if (_authorization.IsConsentAllowed || attempt != Interlocked.Read(ref _consentAttempt))
+            {
+                return;
+            }
+
             await UpdateConsentAsync(true, ct).ConfigureAwait(false);
             Interlocked.Increment(ref _consentAttempt);
         }
@@ -99,36 +112,70 @@ internal sealed class CaptureMemoryService : ICaptureMemoryService, IDisposable
 
     private Task UpdateConsentAsync(bool granted, CancellationToken cancellationToken)
     {
-        if (granted && _authorization.IsConsentAllowed) return Task.CompletedTask;
+        if (granted && _authorization.IsConsentAllowed)
+        {
+            return Task.CompletedTask;
+        }
+
         long epoch = Interlocked.Increment(ref _epoch);
         if (!granted) { _authorization.Block(revokeConsent: true); Publish(); }
         return GuardAsync(async ct =>
         {
             if (!_authorization.IsLoaded) { SetFailure("policy-unavailable"); return; }
-            if (granted && !await _prompts.ConfirmAsync(CaptureMemoryPrompt.Consent, ct).ConfigureAwait(false)) return;
+            if (granted && !await _prompts.ConfirmAsync(CaptureMemoryPrompt.Consent, ct).ConfigureAwait(false))
+            {
+                return;
+            }
+
             bool applied = false;
             await LockedAsync(async () =>
             {
-                if (!CanApplyPolicy(epoch, granted)) return;
+                if (!CanApplyPolicy(epoch, granted))
+                {
+                    return;
+                }
+
                 CaptureMemoryPolicy policy = _authorization.Policy;
-                if (!granted && _naming != null) await _naming.InvalidatePendingAsync(ct).ConfigureAwait(false);
-                if (!CanApplyPolicy(epoch, granted)) return;
+                if (!granted && _naming != null)
+                {
+                    await _naming.InvalidatePendingAsync(ct).ConfigureAwait(false);
+                }
+
+                if (!CanApplyPolicy(epoch, granted))
+                {
+                    return;
+                }
                 // Keep legacy preferences readable, but consent never enables automatic work.
                 await _authorization.SaveAsync(new(false, granted, Guid.NewGuid(), policy.EnableBoundary,
                     policy.ScanningPreference), ct, grantConsent: granted).ConfigureAwait(false);
-                if (granted) _lastGrantedEpoch = epoch;
+                if (granted)
+                {
+                    _lastGrantedEpoch = epoch;
+                }
+
                 applied = true;
                 await RefreshStatusAsync(ct).ConfigureAwait(false);
             }, ct).ConfigureAwait(false);
-            if (!applied || !Current(epoch)) return;
-            if (!granted) await OfferDeletionAsync(epoch, ct).ConfigureAwait(false);
+            if (!applied || !Current(epoch))
+            {
+                return;
+            }
+
+            if (!granted)
+            {
+                await OfferDeletionAsync(epoch, ct).ConfigureAwait(false);
+            }
         }, cancellationToken);
     }
 
     public async Task<bool> EnsureConsentAsync(CancellationToken cancellationToken = default)
     {
         await InitializeAsync(cancellationToken).ConfigureAwait(false);
-        if (!_authorization.IsConsentAllowed) await SetConsentAsync(true, cancellationToken).ConfigureAwait(false);
+        if (!_authorization.IsConsentAllowed)
+        {
+            await SetConsentAsync(true, cancellationToken).ConfigureAwait(false);
+        }
+
         return !cancellationToken.IsCancellationRequested && _authorization.IsConsentAllowed;
     }
 
@@ -146,10 +193,21 @@ internal sealed class CaptureMemoryService : ICaptureMemoryService, IDisposable
             // Admit only the requested output and its prerequisites. The worker reuses
             // cached results and briefly retains the model for subsequent requests.
             if (!Current(epoch) || !_authorization.IsAllowed || Volatile.Read(ref _deleting) != 0 ||
-                !Path.IsPathFullyQualified(path) || !_files.FileExists(path)) return;
+                !Path.IsPathFullyQualified(path) || !_files.FileExists(path))
+            {
+                return;
+            }
+
             CaptureFileType media = CaptureFileTypeDetector.DetectFileType(path);
-            if (media is not (CaptureFileType.Image or CaptureFileType.Audio or CaptureFileType.Video)) return;
-            if (scanText && media == CaptureFileType.Audio) return;
+            if (media is not (CaptureFileType.Image or CaptureFileType.Audio or CaptureFileType.Video))
+            {
+                return;
+            }
+
+            if (scanText && media == CaptureFileType.Audio)
+            {
+                return;
+            }
             // Check the requested semantic output before scheduling expensive prerequisites.
             // Probes cannot download/load models or inspect the capture.
             IMetadataProcessor[] candidates = _processors.Where(processor => processor.Descriptor.Capability == capability).ToArray();
@@ -169,15 +227,27 @@ internal sealed class CaptureMemoryService : ICaptureMemoryService, IDisposable
             CaptureAsset? asset = assets.FirstOrDefault(item => SamePath(item.SourcePath, path)) ??
                 assets.FirstOrDefault(item => SamePath(item.PreferredPath, path));
             AnalysisWorkItem? prior = asset == null ? null : await _store.GetWorkAsync(asset.Id, ct).ConfigureAwait(false);
-            if (prior?.Run.IsPending == true) return;
-            if (!Current(epoch) || !_authorization.IsAllowed) return;
+            if (prior?.Run.IsPending == true)
+            {
+                return;
+            }
+
+            if (!Current(epoch) || !_authorization.IsAllowed)
+            {
+                return;
+            }
+
             if (asset == null)
             {
                 asset = new(CaptureId.New(), media, null, path, CaptureSourceOwnership.External);
                 await _catalog.RegisterAsync(asset, ct).ConfigureAwait(false);
             }
             AnalysisAdmissionScope scope = await _store.GetAdmissionScopeAsync(ct).ConfigureAwait(false);
-            if (!Current(epoch) || !_authorization.IsAllowed) return;
+            if (!Current(epoch) || !_authorization.IsAllowed)
+            {
+                return;
+            }
+
             await AdmitAsync(asset, scope.Generation, _authorization.Policy.Revision, prior?.Run.Id, capability, scanText, ct).ConfigureAwait(false);
             await InitializeStorageAsync(ct).ConfigureAwait(false);
         }, ct), cancellationToken);
@@ -185,23 +255,43 @@ internal sealed class CaptureMemoryService : ICaptureMemoryService, IDisposable
 
     public Task DeleteMetadataAsync(CancellationToken cancellationToken = default)
     {
-        if (Volatile.Read(ref _deleting) != 0) return Task.CompletedTask;
+        if (Volatile.Read(ref _deleting) != 0)
+        {
+            return Task.CompletedTask;
+        }
+
         long epoch = Interlocked.Increment(ref _epoch);
         return GuardAsync(ct => OfferDeletionAsync(epoch, ct), cancellationToken);
     }
     private async Task OfferDeletionAsync(long epoch, CancellationToken ct)
     {
-        if (Interlocked.CompareExchange(ref _deleting, 1, 0) != 0) return;
+        if (Interlocked.CompareExchange(ref _deleting, 1, 0) != 0)
+        {
+            return;
+        }
+
         Publish();
         try
         {
             await LockedAsync(() => RefreshStatusAsync(ct), ct).ConfigureAwait(false);
-            if (!Current(epoch) || _storage.HasData != true || !await _prompts.ConfirmAsync(CaptureMemoryPrompt.DeleteMetadata, ct).ConfigureAwait(false)) return;
+            if (!Current(epoch) || _storage.HasData != true || !await _prompts.ConfirmAsync(CaptureMemoryPrompt.DeleteMetadata, ct).ConfigureAwait(false))
+            {
+                return;
+            }
+
             await LockedAsync(async () =>
             {
-                if (!Current(epoch)) return;
+                if (!Current(epoch))
+                {
+                    return;
+                }
+
                 long boundary = await _catalog.GetBoundaryAsync(ct).ConfigureAwait(false);
-                if (_naming != null) await _naming.InvalidatePendingAsync(ct).ConfigureAwait(false);
+                if (_naming != null)
+                {
+                    await _naming.InvalidatePendingAsync(ct).ConfigureAwait(false);
+                }
+
                 await _worker.ClearAsync(boundary, ct).ConfigureAwait(false);
                 await InitializeStorageAsync(ct).ConfigureAwait(false);
             }, ct).ConfigureAwait(false);
@@ -211,7 +301,11 @@ internal sealed class CaptureMemoryService : ICaptureMemoryService, IDisposable
 
     public Task RefreshAsync(CancellationToken cancellationToken = default) => GuardAsync(ct => LockedAsync(async () =>
     {
-        if (!_authorization.IsLoaded) await InitializePolicyAsync(ct).ConfigureAwait(false);
+        if (!_authorization.IsLoaded)
+        {
+            await InitializePolicyAsync(ct).ConfigureAwait(false);
+        }
+
         await RefreshStatusAsync(ct).ConfigureAwait(false);
     }, ct), cancellationToken);
 
@@ -228,7 +322,11 @@ internal sealed class CaptureMemoryService : ICaptureMemoryService, IDisposable
 
     private async Task AdmitAsync(CaptureAsset asset, Guid generation, Guid authorization, Guid? prior, AnalysisCapability capability, bool scanText, CancellationToken ct)
     {
-        if (_runner != null && _worker.Progress.Activity == AnalysisActivity.StorageUnavailable) await _runner.ConfigureAwait(false);
+        if (_runner != null && _worker.Progress.Activity == AnalysisActivity.StorageUnavailable)
+        {
+            await _runner.ConfigureAwait(false);
+        }
+
         AnalysisMediaKind media = asset.MediaType switch
         {
             CaptureFileType.Image => AnalysisMediaKind.Image,
@@ -243,7 +341,10 @@ internal sealed class CaptureMemoryService : ICaptureMemoryService, IDisposable
         {
             _storage = _storage with { HasData = true };
             Publish();
-            if (_runner == null || _runner.IsCompleted) _runner = ObserveRunnerAsync();
+            if (_runner == null || _runner.IsCompleted)
+            {
+                _runner = ObserveRunnerAsync();
+            }
         }
     }
     private async Task InitializeStorageAsync(CancellationToken ct)
@@ -295,15 +396,27 @@ internal sealed class CaptureMemoryService : ICaptureMemoryService, IDisposable
     private void Publish()
     {
         if (StateChanged is { } changed)
+        {
             foreach (Action observer in changed.GetInvocationList())
+            {
                 try { observer(); } catch (Exception) { }
+            }
+        }
     }
     public async Task StopAsync()
     {
         _authorization.Block();
         await _lifetime.CancelAsync().ConfigureAwait(false);
-        if (_runner != null) await _runner.ConfigureAwait(false);
-        if (_naming != null) await _naming.StopAsync().ConfigureAwait(false);
+        if (_runner != null)
+        {
+            await _runner.ConfigureAwait(false);
+        }
+
+        if (_naming != null)
+        {
+            await _naming.StopAsync().ConfigureAwait(false);
+        }
+
         await _commands.WaitAsync().ConfigureAwait(false);
         try { await _store.DiscardPendingAsync(CancellationToken.None).ConfigureAwait(false); }
         finally { _commands.Release(); }

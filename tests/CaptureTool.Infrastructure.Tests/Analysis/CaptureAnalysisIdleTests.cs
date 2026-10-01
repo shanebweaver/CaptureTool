@@ -1,10 +1,54 @@
 using CaptureTool.Application.Abstractions.Analysis;
 using CaptureTool.Domain.Analysis;
+using System.Collections.Concurrent;
+using System.Runtime.ExceptionServices;
 
 namespace CaptureTool.Infrastructure.Tests.Analysis;
 
 public sealed partial class CaptureAnalysisWorkerTests
 {
+    [TestMethod]
+    [DoNotParallelize]
+    public async Task IdleModelRetentionDoesNotThrowCancellationExceptionsWhilePolling()
+    {
+        var resources = new TestResources { IdleRetention = TimeSpan.FromSeconds(30) };
+        using var fixture = new Fixture(resources: [resources]);
+        var request = await fixture.EnqueueAsync(Ct);
+        using var shutdown = CancellationTokenSource.CreateLinkedTokenSource(Ct);
+        var cancellations = new ConcurrentQueue<string>();
+        var observingWorker = new AsyncLocal<bool>();
+        void Observe(object? sender, FirstChanceExceptionEventArgs args)
+        {
+            if (observingWorker.Value && args.Exception is OperationCanceledException)
+                cancellations.Enqueue(args.Exception.StackTrace ?? "No stack trace");
+        }
+        AppDomain.CurrentDomain.FirstChanceException += Observe;
+        Task runner = Task.Run(async () =>
+        {
+            observingWorker.Value = true;
+            await fixture.Worker.RunAsync(shutdown.Token);
+        }, Ct);
+        try
+        {
+            await WaitForIdleConditionAsync(() => fixture.Worker.Progress.Activity == AnalysisActivity.Idle &&
+                fixture.Worker.Progress.CaptureId == request.CaptureId);
+            // Exercise two idle polls while the completed model remains available for reuse.
+            await Task.Delay(TimeSpan.FromMilliseconds(2200), Ct);
+            Assert.IsFalse(runner.IsCompleted);
+            Assert.AreEqual(0, resources.Releases);
+            Assert.IsEmpty(cancellations, $"Normal idle polling threw {cancellations.Count} cancellation exceptions. {string.Join(Environment.NewLine, cancellations.Take(3))}");
+            shutdown.Cancel();
+            await runner.WaitAsync(TimeSpan.FromSeconds(5), Ct);
+            Assert.IsNotEmpty(cancellations, "Real shutdown cancellation should still be observed by this test.");
+        }
+        finally
+        {
+            AppDomain.CurrentDomain.FirstChanceException -= Observe;
+            shutdown.Cancel();
+            await runner.WaitAsync(TimeSpan.FromSeconds(5), Ct);
+        }
+    }
+
     [TestMethod]
     public async Task IndependentRequestsReuseResourcesAndRestartTheThirtySecondIdleWindow()
     {

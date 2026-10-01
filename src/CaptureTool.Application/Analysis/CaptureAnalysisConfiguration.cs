@@ -13,10 +13,17 @@ public sealed class CaptureAnalysisConfiguration
     public MediaAnalysisPlan SelectPlan(AnalysisMediaKind kind, IReadOnlyList<AnalysisCapability>? capabilities = null)
     {
         MediaAnalysisPlan configured = Plans.Single(plan => plan.MediaKind == kind);
-        if (capabilities == null) return configured;
+        if (capabilities == null)
+        {
+            return configured;
+        }
+
         if (capabilities.Count == 0 || capabilities.Distinct().Count() != capabilities.Count ||
             capabilities.Any(capability => !configured.Steps.Any(step => step.Capability == capability)))
+        {
             throw new ArgumentException("Request supported, distinct analysis capabilities.", nameof(capabilities));
+        }
+
         var selected = configured.Steps.Where(step => capabilities.Contains(step.Capability)).ToArray();
         return new(kind, configured.Version,
             selected.Where(step => !MetadataEnrichmentConfiguration.LanguageModelCapabilities.Contains(step.Capability))
@@ -27,11 +34,18 @@ public sealed class CaptureAnalysisConfiguration
     public CaptureAnalysisConfiguration(IEnumerable<MediaAnalysisPlan> plans, int maximumBatchCaptures = 16)
     {
         ArgumentNullException.ThrowIfNull(plans);
-        if (maximumBatchCaptures is < 1 or > 64) throw new ArgumentOutOfRangeException(nameof(maximumBatchCaptures));
+        if (maximumBatchCaptures is < 1 or > 64)
+        {
+            throw new ArgumentOutOfRangeException(nameof(maximumBatchCaptures));
+        }
+
         MaximumBatchCaptures = maximumBatchCaptures;
         MediaAnalysisPlan[] copy = plans.ToArray();
         if (copy.Length == 0 || copy.Any(plan => plan == null) || copy.Select(plan => plan.MediaKind).Distinct().Count() != copy.Length)
+        {
             throw new ArgumentException("Specify one plan per supported media kind.", nameof(plans));
+        }
+
         Plans = Array.AsReadOnly(copy);
     }
 
@@ -42,12 +56,18 @@ public sealed class CaptureAnalysisConfiguration
         ArgumentNullException.ThrowIfNull(analyzers);
         MediaAnalyzerDescriptor[] copy = analyzers.ToArray();
         if (copy.Any(analyzer => analyzer == null) || copy.Select(analyzer => analyzer.Id).Distinct(StringComparer.Ordinal).Count() != copy.Length)
+        {
             throw new ArgumentException("Analyzer identities must be unique.", nameof(analyzers));
+        }
+
         var byId = copy.ToDictionary(analyzer => analyzer.Id, StringComparer.Ordinal);
         MetadataProcessorDescriptor[] metadata = processors?.ToArray() ?? [];
         if (metadata.Any(processor => processor == null) || metadata.Select(processor => processor.Id).Distinct(StringComparer.Ordinal).Count() != metadata.Length ||
             metadata.Any(processor => byId.ContainsKey(processor.Id)))
+        {
             throw new ArgumentException("Provider identities must be unique.", nameof(processors));
+        }
+
         var metadataById = metadata.ToDictionary(processor => processor.Id, StringComparer.Ordinal);
         foreach (MediaAnalysisPlan plan in Plans)
         {
@@ -55,8 +75,15 @@ public sealed class CaptureAnalysisConfiguration
             foreach (AnalysisStep step in plan.Steps)
             {
                 MetadataProcessorDescriptor? contract = metadataById.GetValueOrDefault(step.Candidates[0]);
-                if (contract != null) metadataStarted = true;
-                else if (metadataStarted) throw new ArgumentException("All media steps must precede metadata processing.", nameof(processors));
+                if (contract != null)
+                {
+                    metadataStarted = true;
+                }
+                else if (metadataStarted)
+                {
+                    throw new ArgumentException("All media steps must precede metadata processing.", nameof(processors));
+                }
+
                 foreach (string id in step.Candidates)
                 {
                     if (contract != null)
@@ -64,12 +91,17 @@ public sealed class CaptureAnalysisConfiguration
                         if (!metadataById.TryGetValue(id, out MetadataProcessorDescriptor? processor) || processor.Capability != step.Capability ||
                             processor.Version != contract.Version || !processor.Inputs.SequenceEqual(contract.Inputs) || processor.Limits != contract.Limits ||
                             step.ExecutionTimeout > processor.Limits.ExecutionTimeout)
+                        {
                             throw new ArgumentException($"Processor '{id}' is missing or incompatible with the configured contract.", nameof(processors));
+                        }
+
                         continue;
                     }
                     if (!byId.TryGetValue(id, out MediaAnalyzerDescriptor? analyzer) ||
                         analyzer.Capability != step.Capability || !analyzer.SupportedMedia.Contains(plan.MediaKind))
+                    {
                         throw new ArgumentException($"Analyzer '{id}' is missing or incompatible with the configured step.", nameof(analyzers));
+                    }
                 }
             }
         }
@@ -80,7 +112,10 @@ public sealed class CaptureAnalysisConfiguration
     {
         var processor = MetadataEnrichmentConfiguration.SemanticModels.Select(model => model.Descriptor)
             .FirstOrDefault(descriptor => descriptor.Capability == capability);
-        if (processor == null) return [capability];
+        if (processor == null)
+        {
+            return [capability];
+        }
 
         // Each output declares its inputs. Request those supported by this media kind
         // in source execution order; the worker reuses any existing results.

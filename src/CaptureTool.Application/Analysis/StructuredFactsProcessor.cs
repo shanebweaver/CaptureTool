@@ -28,8 +28,16 @@ public sealed partial class StructuredFactsProcessor : IMetadataProcessor
     {
         ArgumentNullException.ThrowIfNull(input);
         cancellationToken.ThrowIfCancellationRequested();
-        if (!Descriptor.Matches(input.Descriptor)) return Task.FromResult(AnalyzerOutcome.Unsuccessful(AnalyzerOutcomeKind.Unsupported, "metadata-contract-mismatch"));
-        if (input.Derivation == null) return Task.FromResult(AnalyzerOutcome.Unsuccessful(AnalyzerOutcomeKind.Unsupported, "metadata-input-missing"));
+        if (!Descriptor.Matches(input.Descriptor))
+        {
+            return Task.FromResult(AnalyzerOutcome.Unsuccessful(AnalyzerOutcomeKind.Unsupported, "metadata-contract-mismatch"));
+        }
+
+        if (input.Derivation == null)
+        {
+            return Task.FromResult(AnalyzerOutcome.Unsuccessful(AnalyzerOutcomeKind.Unsupported, "metadata-input-missing"));
+        }
+
         return Task.FromResult(Extract(input, cancellationToken));
     }
 
@@ -45,22 +53,42 @@ public sealed partial class StructuredFactsProcessor : IMetadataProcessor
             foreach (MetadataTextEntry entry in input.Entries)
             {
                 CheckBudget();
-                if (!IsValidText(entry.Text)) return AnalyzerOutcome.Unsuccessful(AnalyzerOutcomeKind.InvalidSource, "metadata-text-invalid");
+                if (!IsValidText(entry.Text))
+                {
+                    return AnalyzerOutcome.Unsuccessful(AnalyzerOutcomeKind.InvalidSource, "metadata-text-invalid");
+                }
+
                 for (Match match = CandidateRegex().Match(entry.Text); match.Success; match = match.NextMatch())
                 {
                     CheckBudget();
                     (StructuredFactKind Kind, Group Group)? candidate = Select(match);
-                    if (candidate == null) continue;
+                    if (candidate == null)
+                    {
+                        continue;
+                    }
+
                     (StructuredFactKind kind, Group group) = candidate.Value;
                     string value = group.Value;
-                    if (kind == StructuredFactKind.Url) value = TrimUrlPunctuation(value);
-                    if (kind == StructuredFactKind.EmailAddress && value.EndsWith('.')) value = value[..^1];
+                    if (kind == StructuredFactKind.Url)
+                    {
+                        value = TrimUrlPunctuation(value);
+                    }
+
+                    if (kind == StructuredFactKind.EmailAddress && value.EndsWith('.'))
+                    {
+                        value = value[..^1];
+                    }
+
                     if (value.Length > StructuredFact.MaximumValueLength)
                     {
                         limited |= MetadataProcessingLimit.FactValue;
                         continue;
                     }
-                    if (!IsValid(kind, value)) continue;
+                    if (!IsValid(kind, value))
+                    {
+                        continue;
+                    }
+
                     var key = (kind, value);
                     if (!facts.TryGetValue(key, out List<AnalysisEvidence>? evidence))
                     {
@@ -96,18 +124,36 @@ public sealed partial class StructuredFactsProcessor : IMetadataProcessor
         void CheckBudget()
         {
             cancellationToken.ThrowIfCancellationRequested();
-            if (_time.GetElapsedTime(started) >= limits.ExecutionTimeout) throw new TimeoutException();
+            if (_time.GetElapsedTime(started) >= limits.ExecutionTimeout)
+            {
+                throw new TimeoutException();
+            }
         }
 
         bool IsValidText(string text)
         {
             for (int index = 0; index < text.Length; index++)
             {
-                if (index % 256 == 0) CheckBudget();
+                if (index % 256 == 0)
+                {
+                    CheckBudget();
+                }
+
                 char value = text[index];
-                if (value == '\0') return false;
-                if (!char.IsSurrogate(value)) continue;
-                if (!char.IsHighSurrogate(value) || index + 1 == text.Length || !char.IsLowSurrogate(text[++index])) return false;
+                if (value == '\0')
+                {
+                    return false;
+                }
+
+                if (!char.IsSurrogate(value))
+                {
+                    continue;
+                }
+
+                if (!char.IsHighSurrogate(value) || index + 1 == text.Length || !char.IsLowSurrogate(text[++index]))
+                {
+                    return false;
+                }
             }
             return true;
         }
@@ -115,12 +161,36 @@ public sealed partial class StructuredFactsProcessor : IMetadataProcessor
 
     private static (StructuredFactKind, Group)? Select(Match match)
     {
-        if (match.Groups["url"] is { Success: true } url) return (StructuredFactKind.Url, url);
-        if (match.Groups["email"] is { Success: true } email) return (StructuredFactKind.EmailAddress, email);
-        if (match.Groups["date"] is { Success: true } date) return (StructuredFactKind.Date, date);
-        if (match.Groups["amount"] is { Success: true } amount) return (StructuredFactKind.CurrencyAmount, amount);
-        if (match.Groups["error"] is { Success: true } error) return (StructuredFactKind.ErrorCode, error);
-        if (match.Groups["reference"] is { Success: true } reference) return (StructuredFactKind.ReferenceCode, reference);
+        if (match.Groups["url"] is { Success: true } url)
+        {
+            return (StructuredFactKind.Url, url);
+        }
+
+        if (match.Groups["email"] is { Success: true } email)
+        {
+            return (StructuredFactKind.EmailAddress, email);
+        }
+
+        if (match.Groups["date"] is { Success: true } date)
+        {
+            return (StructuredFactKind.Date, date);
+        }
+
+        if (match.Groups["amount"] is { Success: true } amount)
+        {
+            return (StructuredFactKind.CurrencyAmount, amount);
+        }
+
+        if (match.Groups["error"] is { Success: true } error)
+        {
+            return (StructuredFactKind.ErrorCode, error);
+        }
+
+        if (match.Groups["reference"] is { Success: true } reference)
+        {
+            return (StructuredFactKind.ReferenceCode, reference);
+        }
+
         return null;
     }
 
@@ -142,7 +212,11 @@ public sealed partial class StructuredFactsProcessor : IMetadataProcessor
     {
         int at = value.IndexOf('@');
         string local = value[..at];
-        if (local.StartsWith('.') || local.EndsWith('.') || local.Contains("..", StringComparison.Ordinal)) return false;
+        if (local.StartsWith('.') || local.EndsWith('.') || local.Contains("..", StringComparison.Ordinal))
+        {
+            return false;
+        }
+
         string[] labels = value[(at + 1)..].Split('.');
         return value.Length <= 254 && labels.Length >= 2 && labels.All(label => label.Length is >= 1 and <= 63 &&
             char.IsAsciiLetterOrDigit(label[0]) && char.IsAsciiLetterOrDigit(label[^1]) &&
@@ -152,9 +226,21 @@ public sealed partial class StructuredFactsProcessor : IMetadataProcessor
 
     private static bool IsErrorCode(string value)
     {
-        if (value.StartsWith("0x", StringComparison.OrdinalIgnoreCase)) return value.Length is >= 4 and <= 18 && value[2..].All(char.IsAsciiHexDigit);
-        if (value.All(char.IsAsciiDigit)) return value.Length is >= 3 and <= 8;
-        if (!char.IsAsciiLetterUpper(value[0]) || !value.All(character => char.IsAsciiLetterUpper(character) || char.IsAsciiDigit(character) || character is '_' or '-')) return false;
+        if (value.StartsWith("0x", StringComparison.OrdinalIgnoreCase))
+        {
+            return value.Length is >= 4 and <= 18 && value[2..].All(char.IsAsciiHexDigit);
+        }
+
+        if (value.All(char.IsAsciiDigit))
+        {
+            return value.Length is >= 3 and <= 8;
+        }
+
+        if (!char.IsAsciiLetterUpper(value[0]) || !value.All(character => char.IsAsciiLetterUpper(character) || char.IsAsciiDigit(character) || character is '_' or '-'))
+        {
+            return false;
+        }
+
         return value.Any(char.IsAsciiDigit) || value.StartsWith("ERR_", StringComparison.Ordinal) && value.Length > 4 ||
             value.StartsWith("E_", StringComparison.Ordinal) && value.Length > 2;
     }
@@ -165,21 +251,52 @@ public sealed partial class StructuredFactsProcessor : IMetadataProcessor
         int parentheses = 0, brackets = 0, braces = 0;
         foreach (char character in value)
         {
-            if (character == '(') parentheses++;
-            else if (character == ')') parentheses--;
-            else if (character == '[') brackets++;
-            else if (character == ']') brackets--;
-            else if (character == '{') braces++;
-            else if (character == '}') braces--;
+            if (character == '(')
+            {
+                parentheses++;
+            }
+            else if (character == ')')
+            {
+                parentheses--;
+            }
+            else if (character == '[')
+            {
+                brackets++;
+            }
+            else if (character == ']')
+            {
+                brackets--;
+            }
+            else if (character == '{')
+            {
+                braces++;
+            }
+            else if (character == '}')
+            {
+                braces--;
+            }
         }
         while (length > 0)
         {
             char last = value[length - 1];
             if (".,;!，。；！".Contains(last)) { length--; continue; }
-            if (last == ')' && parentheses < 0) parentheses++;
-            else if (last == ']' && brackets < 0) brackets++;
-            else if (last == '}' && braces < 0) braces++;
-            else break;
+            if (last == ')' && parentheses < 0)
+            {
+                parentheses++;
+            }
+            else if (last == ']' && brackets < 0)
+            {
+                brackets++;
+            }
+            else if (last == '}' && braces < 0)
+            {
+                braces++;
+            }
+            else
+            {
+                break;
+            }
+
             length--;
         }
         return value[..length];

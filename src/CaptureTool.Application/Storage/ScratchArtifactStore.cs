@@ -43,7 +43,11 @@ internal sealed class ScratchArtifactStore : IScratchArtifactStore
         string ownerDirectory = Path.Combine(rootPath, $"{ownerName}-{Guid.NewGuid():N}");
         lock (_lock)
         {
-            if (maximumRetainedArtifacts is { } limit) PruneOwnerArtifacts(rootPath, ownerName, limit);
+            if (maximumRetainedArtifacts is { } limit)
+            {
+                PruneOwnerArtifacts(rootPath, ownerName, limit);
+            }
+
             _activeOwnerDirectories.Add(ownerDirectory);
         }
 
@@ -81,11 +85,21 @@ internal sealed class ScratchArtifactStore : IScratchArtifactStore
         int retained = _activeOwnerDirectories.Count(IsOwned);
         foreach (string entry in _fileSystem.EnumerateFileSystemEntries(rootPath))
         {
-            if (!IsOwned(entry) || _activeOwnerDirectories.Contains(entry)) continue;
+            if (!IsOwned(entry) || _activeOwnerDirectories.Contains(entry))
+            {
+                continue;
+            }
+
             TryDeleteEntry(entry);
-            if (_fileSystem.DirectoryExists(entry) || _fileSystem.FileExists(entry)) retained++;
+            if (_fileSystem.DirectoryExists(entry) || _fileSystem.FileExists(entry))
+            {
+                retained++;
+            }
         }
-        if (retained >= limit) throw new IOException("Pending scratch cleanup exceeds its bound.");
+        if (retained >= limit)
+        {
+            throw new IOException("Pending scratch cleanup exceeds its bound.");
+        }
     }
 
     public void DeleteArtifact(string artifactPath)

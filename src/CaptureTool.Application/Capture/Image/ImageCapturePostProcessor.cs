@@ -102,7 +102,11 @@ internal sealed class ImageCapturePostProcessor
                     screenshotsFolder,
                     _fileNameGenerator.GetNewCaptureFileName);
                 imageFile.PersistentFilePath = newFilePath;
-                if (_analysis != null) await _analysis.SavedAsync(registration, imageFile.FilePath, newFilePath);
+                if (_analysis != null)
+                {
+                    await _analysis.SavedAsync(registration, imageFile.FilePath, newFilePath);
+                }
+
                 _recentCaptureCatalog.ReplacePath(imageFile.FilePath, newFilePath);
                 TrackOutput("auto_save", TelemetryOutcomes.Succeeded);
             }

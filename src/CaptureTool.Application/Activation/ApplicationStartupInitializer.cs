@@ -87,7 +87,10 @@ internal sealed class ApplicationStartupInitializer : IApplicationStartupInitial
             _localizationService.Initialize(languageOverride);
 
             _navigationService.SetNavigationHandler(_navigationHandler);
-            if (_captureMemory != null) await _captureMemory.InitializeAsync(cancellationTokenSource.Token);
+            if (_captureMemory != null)
+            {
+                await _captureMemory.InitializeAsync(cancellationTokenSource.Token);
+            }
 
             _isInitialized = true;
             _telemetryService?.TrackEvent(TelemetryEvents.AppStarted);
