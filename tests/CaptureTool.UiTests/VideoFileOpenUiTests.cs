@@ -12,17 +12,18 @@ namespace CaptureTool.UiTests;
 public sealed partial class ImageEditTextExtractionUiTests
 {
     [TestMethod]
-    [DataRow(false, "default", false)]
-    [DataRow(true, "default", false)]
-    [DataRow(false, "compact", false)]
-    [DataRow(true, "compact", false)]
-    [DataRow(false, "maximized", false)]
-    [DataRow(true, "maximized", false)]
-    [DataRow(true, "default", true)]
-    [DataRow(true, "compact", true)]
-    [DataRow(true, "maximized", true)]
+    [DataRow(false, "default", false, "CapturePane_TextTab")]
+    [DataRow(true, "default", false, "CapturePane_TextTab")]
+    [DataRow(false, "compact", false, "CapturePane_TextTab")]
+    [DataRow(true, "compact", false, "CapturePane_TextTab")]
+    [DataRow(false, "maximized", false, "CapturePane_TextTab")]
+    [DataRow(true, "maximized", false, "CapturePane_TextTab")]
+    [DataRow(true, "default", true, "CapturePane_TextTab")]
+    [DataRow(true, "compact", true, "CapturePane_TextTab")]
+    [DataRow(true, "maximized", true, "CapturePane_TextTab")]
+    [DataRow(true, "default", false, "CapturePane_SummaryTab")]
     [TestCategory("UI")]
-    public void FileOpen_VideoFromImageEditor(bool detailsOpen, string windowSize, bool populateText)
+    public void FileOpen_VideoFromImageEditor(bool detailsOpen, string windowSize, bool populateText, string tabId)
     {
         if (!ShouldRunUiTests()) Assert.Inconclusive("Enable isolated desktop UI tests to run this check.");
         using var dpi = new DesktopDpiScope();
@@ -62,7 +63,7 @@ public sealed partial class ImageEditTextExtractionUiTests
         if (detailsOpen)
         {
             Element("Editor_DetailsToggle").Patterns.Toggle.Pattern.Toggle();
-            Element("CapturePane_TextTab").Patterns.SelectionItem.Pattern.Select();
+            Element(tabId).Patterns.SelectionItem.Pattern.Select();
         }
         if (populateText)
         {
@@ -101,6 +102,8 @@ public sealed partial class ImageEditTextExtractionUiTests
             Assert.AreEqual(ToggleState.Off, Element("Editor_DetailsToggle").Patterns.Toggle.Pattern.ToggleState.Value);
             WaitForElementRemoved(window, automation, "CaptureDetailsPane", InteractionTimeout);
             Element("Editor_DetailsToggle").Patterns.Toggle.Pattern.Toggle();
+            Assert.IsTrue(Element("CapturePane_DetailsTab").Patterns.SelectionItem.Pattern.IsSelected.Value,
+                "Opening a new file must reset the selected tab to File Details.");
             AssertDetailsLayout(window, automation, "VideoEdit_CommandBar", null);
             string screenshot = Path.Combine(isolated, "video-open.png");
             window.CaptureToFile(screenshot);

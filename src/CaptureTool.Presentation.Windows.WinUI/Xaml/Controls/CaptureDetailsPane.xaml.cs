@@ -22,7 +22,8 @@ public sealed partial class CaptureDetailsPane : UserControl, INotifyPropertyCha
     private string? _workingPath;
     private int _sourceVersion;
     private CaptureTextNavigationContext _navigation = new(false, false);
-    private static string _preferredTab = nameof(FileDetailsTab);
+    // Keep selection within this editor; every new editor starts on File Details.
+    private string _preferredTab = nameof(FileDetailsTab);
     private bool _updatingTabs = true;
     private readonly ICaptureDetailsFeatureAvailability _features;
     private CaptureTextViewModel? ActiveTextContent => ReferenceEquals(ContentTabs.SelectedItem, TextTab)
@@ -83,12 +84,19 @@ public sealed partial class CaptureDetailsPane : UserControl, INotifyPropertyCha
         if (_features.IsSpeechTabEnabled(_kind)) tabs.Add(SpeechTab);
         tabs.Add(SummaryTab);
         if (ContentTabs.Items.Cast<PivotItem>().SequenceEqual(tabs)) { _updatingTabs = false; return; }
+        var selectedTab = tabs.FirstOrDefault(tab => tab.Name == _preferredTab) ?? FileDetailsTab;
         _updatingTabs = true;
-        foreach (var item in ContentTabs.Items.Cast<PivotItem>().Except(tabs).ToArray()) ContentTabs.Items.Remove(item);
-        for (int index = 0; index < tabs.Count; index++)
-            if (!ContentTabs.Items.Contains(tabs[index])) ContentTabs.Items.Insert(index, tabs[index]);
-        ContentTabs.SelectedItem = tabs.FirstOrDefault(tab => tab.Name == _preferredTab) ?? FileDetailsTab;
-        _updatingTabs = false;
+        try
+        {
+            // Pivot can retain a stale SelectedIndex when tabs before the selected item are removed.
+            // Keep the stable first tab selected while editing, then restore using the new index.
+            ContentTabs.SelectedIndex = 0;
+            foreach (var item in ContentTabs.Items.Cast<PivotItem>().Except(tabs).ToArray()) ContentTabs.Items.Remove(item);
+            for (int index = 0; index < tabs.Count; index++)
+                if (!ContentTabs.Items.Contains(tabs[index])) ContentTabs.Items.Insert(index, tabs[index]);
+            ContentTabs.SelectedIndex = tabs.IndexOf(selectedTab);
+        }
+        finally { _updatingTabs = false; }
         UpdateSelectedPassage();
         UpdateTextOverlay();
     }

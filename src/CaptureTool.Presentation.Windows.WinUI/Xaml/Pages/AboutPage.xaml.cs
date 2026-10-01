@@ -1,3 +1,4 @@
+using CaptureTool.Presentation.Windows.WinUI.UiTests;
 using CaptureTool.Presentation.Windows.WinUI.Xaml.Views;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -17,11 +18,19 @@ public sealed partial class AboutPage : AboutPageBase
         Loaded += AboutPage_Loaded;
         ViewModel.ShowDialogRequested += ViewModel_ShowDialogRequested;
 
-        var package = global::Windows.ApplicationModel.Package.Current;
-        var version = package.Id.Version;
-
-        AppName = package.DisplayName;
-        AppVersion = $"{version.Major}.{version.Minor}.{version.Build}.{version.Revision}";
+        if (UiTestLaunchOptions.Current.IsEnabled)
+        {
+            // Desktop UI tests also run without package identity.
+            AppName = "Capture Tool";
+            AppVersion = typeof(App).Assembly.GetName().Version?.ToString() ?? string.Empty;
+        }
+        else
+        {
+            var package = global::Windows.ApplicationModel.Package.Current;
+            var version = package.Id.Version;
+            AppName = package.DisplayName;
+            AppVersion = $"{version.Major}.{version.Minor}.{version.Build}.{version.Revision}";
+        }
     }
 
     private void AboutPage_Loaded(object sender, RoutedEventArgs e)

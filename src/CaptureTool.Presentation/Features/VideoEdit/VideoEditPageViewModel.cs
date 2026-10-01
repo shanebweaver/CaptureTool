@@ -3,6 +3,7 @@ using CaptureTool.Application.Abstractions.Edit.External;
 using CaptureTool.Application.Abstractions.Edit.Video.CopyVideoFile;
 using CaptureTool.Application.Abstractions.Edit.Video.SaveVideoFile;
 using CaptureTool.Application.Abstractions.Edit.Video.SuperResolution;
+using CaptureTool.Application.Abstractions.Files;
 using CaptureTool.Application.Abstractions.EditSessions;
 using CaptureTool.Application.Abstractions.Localization;
 using CaptureTool.Application.Abstractions.Logging;
@@ -220,6 +221,7 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
     private readonly IAppNotificationService _notificationService;
     private readonly ITelemetryService? _telemetryService;
     private readonly IScratchArtifactStore? _scratchArtifactStore;
+    private readonly IFileSystem? _fileSystem;
     private readonly HashSet<string> _scratchArtifactPaths = new(StringComparer.OrdinalIgnoreCase);
     private string? _originalVideoPath;
     private string? _superResolutionVideoPath;
@@ -245,7 +247,8 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
         ILocalizationService? localizationService = null,
         IAppNotificationService? notificationService = null,
         ITelemetryService? telemetryService = null,
-        IScratchArtifactStore? scratchArtifactStore = null)
+        IScratchArtifactStore? scratchArtifactStore = null,
+        IFileSystem? fileSystem = null)
     {
         _saveAction = saveAction;
         _copyAction = copyAction;
@@ -260,6 +263,7 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
         _notificationService = notificationService ?? new NullAppNotificationService();
         _telemetryService = telemetryService;
         _scratchArtifactStore = scratchArtifactStore;
+        _fileSystem = fileSystem;
 
         SaveCommand = new AsyncRelayCommand(SaveCommandAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
         CopyCommand = new AsyncRelayCommand(CopyAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
@@ -287,6 +291,7 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
     public override void Load(VideoFile video)
     {
         ThrowIfNotReadyToLoad();
+        MediaWorkingCopy.RestoreIfMissing(video, video.PersistentFilePath, _fileSystem, _scratchArtifactStore);
         _loadedFile = video;
         StartLoading();
 

@@ -1,6 +1,7 @@
 using CaptureTool.Application.Abstractions.Edit.Audio.CopyAudioFile;
 using CaptureTool.Application.Abstractions.Edit.Audio.SaveAudioFile;
 using CaptureTool.Application.Abstractions.Edit.External;
+using CaptureTool.Application.Abstractions.Files;
 using CaptureTool.Application.Abstractions.Settings.OpenAudioFolder;
 using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Application.Abstractions.UseCases;
@@ -92,10 +93,62 @@ public sealed class AudioEditPageViewModelWaveformTests
             Times.Once);
     }
 
+    [TestMethod]
+    public void Load_AfterPreviousEditorDisposed_ShouldRecreateWorkingCopy()
+    {
+        var existingFiles = new HashSet<string> { "scratch\\working.wav", "recordings\\source.wav" };
+        var files = new Mock<IFileSystem>();
+        files.Setup(service => service.FileExists(It.IsAny<string>()))
+            .Returns<string>(existingFiles.Contains);
+        var scratchArtifactStore = new Mock<IScratchArtifactStore>();
+        scratchArtifactStore.Setup(store => store.DeleteArtifact(It.IsAny<string>()))
+            .Callback<string>(path => existingFiles.Remove(path));
+        scratchArtifactStore.Setup(store => store.CreateLeasedArtifactPath(It.IsAny<string>(), ".wav"))
+            .Returns("scratch\\restored.wav");
+        var navigationFile = new AudioFile("scratch\\working.wav", "recordings\\source.wav");
+        var previous = CreateViewModel(scratchArtifactStore: scratchArtifactStore.Object, fileSystem: files.Object);
+        previous.Load(navigationFile);
+        files.Verify(service => service.CopyFile(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<bool>()), Times.Never);
+        previous.Dispose();
+
+        var reopened = CreateViewModel(scratchArtifactStore: scratchArtifactStore.Object, fileSystem: files.Object);
+        reopened.Load(navigationFile);
+
+        reopened.AudioPath.Should().Be("scratch\\restored.wav");
+        reopened.DetailsSourcePath.Should().Be("recordings\\source.wav");
+        navigationFile.FilePath.Should().Be("scratch\\restored.wav");
+        files.Verify(service => service.CopyFile("recordings\\source.wav", "scratch\\restored.wav", true), Times.Once);
+        reopened.Dispose();
+        scratchArtifactStore.Verify(store => store.DeleteArtifact("scratch\\working.wav"), Times.Once);
+        scratchArtifactStore.Verify(store => store.DeleteArtifact("scratch\\restored.wav"), Times.Once);
+        scratchArtifactStore.Verify(store => store.DeleteArtifact("recordings\\source.wav"), Times.Never);
+    }
+
+    [TestMethod]
+    public void Load_WhenRestoringWorkingCopyFails_ShouldReleaseIncompleteCopy()
+    {
+        var files = new Mock<IFileSystem>();
+        files.Setup(service => service.FileExists("recordings\\source.wav")).Returns(true);
+        files.Setup(service => service.CopyFile("recordings\\source.wav", "scratch\\restored.wav", true))
+            .Throws(new IOException("Copy failed."));
+        var scratchArtifactStore = new Mock<IScratchArtifactStore>();
+        scratchArtifactStore.Setup(store => store.CreateLeasedArtifactPath(It.IsAny<string>(), ".wav"))
+            .Returns("scratch\\restored.wav");
+        var navigationFile = new AudioFile("scratch\\working.wav", "recordings\\source.wav");
+        using var viewModel = CreateViewModel(scratchArtifactStore: scratchArtifactStore.Object, fileSystem: files.Object);
+
+        Action load = () => viewModel.Load(navigationFile);
+
+        load.Should().Throw<IOException>().WithMessage("Copy failed.");
+        navigationFile.FilePath.Should().Be("scratch\\working.wav");
+        scratchArtifactStore.Verify(store => store.DeleteArtifact("scratch\\restored.wav"), Times.Once);
+    }
+
     private static AudioEditPageViewModel CreateViewModel(
         IOpenExternalEditorUseCase? openExternalEditorAction = null,
         IOpenAudioFolderUseCase? openAudioFolderAction = null,
-        IScratchArtifactStore? scratchArtifactStore = null)
+        IScratchArtifactStore? scratchArtifactStore = null,
+        IFileSystem? fileSystem = null)
     {
         return new AudioEditPageViewModel(
             Mock.Of<ISaveAudioFileUseCase>(),
@@ -103,6 +156,7 @@ public sealed class AudioEditPageViewModelWaveformTests
             openExternalEditorAction ?? Mock.Of<IOpenExternalEditorUseCase>(),
             openAudioFolderAction ?? Mock.Of<IOpenAudioFolderUseCase>(),
             Mock.Of<IAudioWaveformHistory>(),
-            scratchArtifactStore: scratchArtifactStore);
+            scratchArtifactStore: scratchArtifactStore,
+            fileSystem: fileSystem);
     }
 }

@@ -3,6 +3,7 @@ using CaptureTool.Application.Abstractions.Edit.External;
 using CaptureTool.Application.Abstractions.Edit.Video.CopyVideoFile;
 using CaptureTool.Application.Abstractions.Edit.Video.SaveVideoFile;
 using CaptureTool.Application.Abstractions.Edit.Video.SuperResolution;
+using CaptureTool.Application.Abstractions.Files;
 using CaptureTool.Application.Abstractions.Localization;
 using CaptureTool.Application.Abstractions.Logging;
 using CaptureTool.Application.Abstractions.Settings.OpenVideosFolder;
@@ -70,6 +71,37 @@ public sealed class VideoEditPageViewModelSuperResolutionTests
 
         scratchArtifactStore.Verify(store => store.DeleteArtifact("working.mp4"), Times.Once);
         scratchArtifactStore.Verify(store => store.DeleteArtifact("enhanced.mp4"), Times.Once);
+    }
+
+    [TestMethod]
+    public void Load_AfterPreviousEditorDisposed_ShouldRecreateWorkingCopy()
+    {
+        var existingFiles = new HashSet<string> { "scratch\\working.mp4", "recordings\\source.mp4" };
+        var files = new Mock<IFileSystem>();
+        files.Setup(service => service.FileExists(It.IsAny<string>()))
+            .Returns<string>(existingFiles.Contains);
+        var scratchArtifactStore = new Mock<IScratchArtifactStore>();
+        scratchArtifactStore.Setup(store => store.DeleteArtifact(It.IsAny<string>()))
+            .Callback<string>(path => existingFiles.Remove(path));
+        scratchArtifactStore.Setup(store => store.CreateLeasedArtifactPath(It.IsAny<string>(), ".mp4"))
+            .Returns("scratch\\restored.mp4");
+        var navigationFile = new VideoFile("scratch\\working.mp4", "recordings\\source.mp4");
+        var previous = CreateViewModel(scratchArtifactStore: scratchArtifactStore.Object, fileSystem: files.Object);
+        previous.Load(navigationFile);
+        files.Verify(service => service.CopyFile(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<bool>()), Times.Never);
+        previous.Dispose();
+
+        var reopened = CreateViewModel(scratchArtifactStore: scratchArtifactStore.Object, fileSystem: files.Object);
+        reopened.Load(navigationFile);
+
+        reopened.VideoPath.Should().Be("scratch\\restored.mp4");
+        reopened.DetailsSourcePath.Should().Be("recordings\\source.mp4");
+        navigationFile.FilePath.Should().Be("scratch\\restored.mp4");
+        files.Verify(service => service.CopyFile("recordings\\source.mp4", "scratch\\restored.mp4", true), Times.Once);
+        reopened.Dispose();
+        scratchArtifactStore.Verify(store => store.DeleteArtifact("scratch\\working.mp4"), Times.Once);
+        scratchArtifactStore.Verify(store => store.DeleteArtifact("scratch\\restored.mp4"), Times.Once);
+        scratchArtifactStore.Verify(store => store.DeleteArtifact("recordings\\source.mp4"), Times.Never);
     }
 
     [TestMethod]
@@ -276,7 +308,8 @@ public sealed class VideoEditPageViewModelSuperResolutionTests
         Mock<IVideoSuperResolutionService>? service = null,
         ISaveVideoFileUseCase? saveAction = null,
         IAiFeatureConsentService? consentService = null,
-        IScratchArtifactStore? scratchArtifactStore = null)
+        IScratchArtifactStore? scratchArtifactStore = null,
+        IFileSystem? fileSystem = null)
     {
         service ??= CreateReadyService("enhanced.mp4");
         consentService ??= Mock.Of<IAiFeatureConsentService>(consent =>
@@ -299,7 +332,8 @@ public sealed class VideoEditPageViewModelSuperResolutionTests
             consentService,
             localization.Object,
             Mock.Of<IAppNotificationService>(),
-            scratchArtifactStore: scratchArtifactStore);
+            scratchArtifactStore: scratchArtifactStore,
+            fileSystem: fileSystem);
     }
 
     public TestContext TestContext { get; set; } = null!;

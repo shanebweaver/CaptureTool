@@ -1,6 +1,7 @@
 using CaptureTool.Application.Abstractions.Edit.Audio.CopyAudioFile;
 using CaptureTool.Application.Abstractions.Edit.Audio.SaveAudioFile;
 using CaptureTool.Application.Abstractions.Edit.External;
+using CaptureTool.Application.Abstractions.Files;
 using CaptureTool.Application.Abstractions.Localization;
 using CaptureTool.Application.Abstractions.Settings.OpenAudioFolder;
 using CaptureTool.Application.Abstractions.Storage;
@@ -95,6 +96,7 @@ public sealed partial class AudioEditPageViewModel : LoadableViewModelBase<Audio
     private readonly ILocalizationService? _localizationService;
     private readonly ITelemetryService? _telemetryService;
     private readonly IScratchArtifactStore? _scratchArtifactStore;
+    private readonly IFileSystem? _fileSystem;
 
     public ObservableCollection<AudioWaveformBarViewModel> WaveformBars
     {
@@ -110,7 +112,8 @@ public sealed partial class AudioEditPageViewModel : LoadableViewModelBase<Audio
         IAudioWaveformHistory waveformHistory,
         ITelemetryService? telemetryService = null,
         ILocalizationService? localizationService = null,
-        IScratchArtifactStore? scratchArtifactStore = null)
+        IScratchArtifactStore? scratchArtifactStore = null,
+        IFileSystem? fileSystem = null)
     {
         _saveAction = saveAction;
         _copyAction = copyAction;
@@ -120,6 +123,7 @@ public sealed partial class AudioEditPageViewModel : LoadableViewModelBase<Audio
         _telemetryService = telemetryService;
         _localizationService = localizationService;
         _scratchArtifactStore = scratchArtifactStore;
+        _fileSystem = fileSystem;
 
         SaveCommand = new AsyncRelayCommand(SaveAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
         CopyCommand = new AsyncRelayCommand(CopyAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
@@ -148,6 +152,7 @@ public sealed partial class AudioEditPageViewModel : LoadableViewModelBase<Audio
     public override void Load(AudioFile audio)
     {
         ThrowIfNotReadyToLoad();
+        MediaWorkingCopy.RestoreIfMissing(audio, audio.PersistentFilePath, _fileSystem, _scratchArtifactStore);
         _loadedFile = audio;
         StartLoading();
 
