@@ -174,6 +174,9 @@
                     FontWeight="SemiBold" />
                 <Button
                     x:Uid="CapturePane_Close"
+                    Width="32"
+                    Height="32"
+                    Padding="0"
                     HorizontalAlignment="Right"
                     AutomationProperties.AutomationId="CapturePane_Close"
                     Click="Close_Click"
@@ -224,7 +227,6 @@
                         Padding="0"
                         AutomationProperties.AutomationId="CaptureName_Edit"
                         Command="{x:Bind ViewModel.EditNameCommand, Mode=OneWay}"
-                        Style="{StaticResource SubtleButtonStyle}"
                         Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.CanEditName), Mode=OneWay}">
                         <FontIcon FontSize="14" Glyph="&#xE70F;" />
                     </Button>
@@ -239,7 +241,6 @@
                             AutomationProperties.AutomationId="CaptureAction_Name"
                             AutomationProperties.Name="{x:Bind ViewModel.NameSuggestionToolTip, Mode=OneWay}"
                             Command="{x:Bind ViewModel.SuggestNameCommand, Mode=OneWay}"
-                            Style="{StaticResource SubtleButtonStyle}"
                             ToolTipService.ToolTip="{x:Bind ViewModel.NameSuggestionToolTip, Mode=OneWay}">
                             <FontIcon
                                 AutomationProperties.AccessibilityView="Raw"
@@ -284,7 +285,10 @@
             x:Name="ContentTabs"
             Grid.Row="1"
             SelectionChanged="ContentTabs_SelectionChanged">
-            <PivotItem x:Name="FileDetailsTab" x:Uid="CapturePane_DetailsTab" AutomationProperties.AutomationId="CapturePane_DetailsTab">
+            <PivotItem
+                x:Name="FileDetailsTab"
+                x:Uid="CapturePane_DetailsTab"
+                AutomationProperties.AutomationId="CapturePane_DetailsTab">
                 <ScrollViewer HorizontalScrollMode="Disabled" VerticalScrollBarVisibility="Auto">
                     <StackPanel Padding="0,0,8,8" Spacing="12">
                         <Grid Margin="0,5" ColumnSpacing="12">
@@ -321,7 +325,10 @@
                     </StackPanel>
                 </ScrollViewer>
             </PivotItem>
-            <PivotItem x:Name="TextTab" x:Uid="CapturePane_TextTab" AutomationProperties.AutomationId="CapturePane_TextTab">
+            <PivotItem
+                x:Name="TextTab"
+                x:Uid="CapturePane_TextTab"
+                AutomationProperties.AutomationId="CapturePane_TextTab">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
@@ -350,8 +357,8 @@
                                 <ToolTip AutomationProperties.AutomationId="CaptureText_InfoToolTip">
                                     <TextBlock
                                         x:Name="TextHint"
-                                        Text="{x:Bind ViewModel.TextHint, Mode=OneWay}"
                                         MaxWidth="280"
+                                        Text="{x:Bind ViewModel.TextHint, Mode=OneWay}"
                                         TextWrapping="Wrap" />
                                 </ToolTip>
                             </ToolTipService.ToolTip>
@@ -436,7 +443,11 @@
                                                     FontSize="12"
                                                     Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                                                     Text="{x:Bind CountText}" />
-                                                <TextBlock MaxLines="2" Text="{x:Bind Preview}" TextTrimming="CharacterEllipsis" TextWrapping="Wrap" />
+                                                <TextBlock
+                                                    MaxLines="2"
+                                                    Text="{x:Bind Preview}"
+                                                    TextTrimming="CharacterEllipsis"
+                                                    TextWrapping="Wrap" />
                                             </StackPanel>
                                             <FontIcon
                                                 Grid.Column="1"
@@ -462,9 +473,7 @@
                                 Command="{x:Bind ViewModel.VideoText.LoadMoreCommand, Mode=OneWay}"
                                 Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.VideoText.HasMore), Mode=OneWay}" />
                         </Grid>
-                        <Grid
-                            RowSpacing="8"
-                            Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.ShowTextPassages), Mode=OneWay}">
+                        <Grid RowSpacing="8" Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.ShowTextPassages), Mode=OneWay}">
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto" />
                                 <RowDefinition Height="Auto" />
@@ -548,8 +557,8 @@
                                 HorizontalContentAlignment="Stretch"
                                 AutomationProperties.AutomationId="CapturePane_Passages"
                                 IsItemClickEnabled="True"
-                                ItemTemplate="{StaticResource PassageTemplate}"
                                 ItemClick="Passages_ItemClick"
+                                ItemTemplate="{StaticResource PassageTemplate}"
                                 ItemsSource="{x:Bind ViewModel.DisplayedTextContent.Visible, Mode=OneWay}"
                                 SelectedItem="{x:Bind ViewModel.DisplayedTextContent.SelectedPassage, Mode=TwoWay}"
                                 SelectionMode="Single">
@@ -606,7 +615,10 @@
                     </StackPanel>
                 </Grid>
             </PivotItem>
-            <PivotItem x:Name="SpeechTab" x:Uid="CapturePane_SpeechTab" AutomationProperties.AutomationId="CapturePane_SpeechTab">
+            <PivotItem
+                x:Name="SpeechTab"
+                x:Uid="CapturePane_SpeechTab"
+                AutomationProperties.AutomationId="CapturePane_SpeechTab">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
@@ -700,8 +712,8 @@
                             HorizontalContentAlignment="Stretch"
                             AutomationProperties.AutomationId="CaptureSpeech_Passages"
                             IsItemClickEnabled="True"
-                            ItemTemplate="{StaticResource PassageTemplate}"
                             ItemClick="Passages_ItemClick"
+                            ItemTemplate="{StaticResource PassageTemplate}"
                             ItemsSource="{x:Bind ViewModel.SpeechContent.Visible, Mode=OneWay}"
                             SelectedItem="{x:Bind ViewModel.SpeechContent.SelectedPassage, Mode=TwoWay}"
                             SelectionMode="Single">
@@ -757,7 +769,10 @@
                     </StackPanel>
                 </Grid>
             </PivotItem>
-            <PivotItem x:Name="SummaryTab" x:Uid="CapturePane_SummaryTab" AutomationProperties.AutomationId="CapturePane_SummaryTab">
+            <PivotItem
+                x:Name="SummaryTab"
+                x:Uid="CapturePane_SummaryTab"
+                AutomationProperties.AutomationId="CapturePane_SummaryTab">
                 <ScrollViewer HorizontalScrollMode="Disabled" VerticalScrollBarVisibility="Auto">
                     <StackPanel Padding="0,0,8,8" Spacing="16">
                         <StackPanel Spacing="8">
@@ -778,8 +793,8 @@
                                         <ToolTip AutomationProperties.AutomationId="CaptureSummary_InfoToolTip">
                                             <TextBlock
                                                 x:Name="SummaryHint"
-                                                Text="{x:Bind ViewModel.SummaryHint, Mode=OneWay}"
                                                 MaxWidth="280"
+                                                Text="{x:Bind ViewModel.SummaryHint, Mode=OneWay}"
                                                 TextWrapping="Wrap" />
                                         </ToolTip>
                                     </ToolTipService.ToolTip>

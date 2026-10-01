@@ -75,6 +75,8 @@ internal sealed class AnalysisTestEnvironment : IDisposable, IStorageService
         public bool FailCleanup { get; set; }
         public List<byte[]> PublishedBytes { get; } = [];
 
+        public bool FileExists(string path) => _inner.FileExists(path);
+
         public async Task<byte[]?> ReadAsync(string path, CancellationToken cancellationToken)
         {
             if (BeforeRead != null) await BeforeRead(path, cancellationToken);

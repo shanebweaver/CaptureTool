@@ -18,6 +18,8 @@ internal sealed class ProtectedDocumentFile
 
     public async Task<T?> ReadAsync<T>(string path, JsonTypeInfo<T> typeInfo, CancellationToken cancellationToken) where T : class
     {
+        // Missing documents are expected on a fresh install; avoid opening them just to discover that.
+        if (!_files.FileExists(path)) return null;
         byte[]? ciphertext = await _files.ReadAsync(path, cancellationToken).ConfigureAwait(false);
         if (ciphertext == null) return null;
         byte[] plaintext = _protector.Unprotect(ciphertext);

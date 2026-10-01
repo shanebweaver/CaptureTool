@@ -4,6 +4,8 @@ internal sealed class LocalProtectedFileSystem : IProtectedFileSystem
 {
     private const long MaximumDocumentBytes = 64 * 1024 * 1024;
 
+    public bool FileExists(string path) => File.Exists(path);
+
     public async Task<byte[]?> ReadAsync(string path, CancellationToken cancellationToken)
     {
         try
@@ -15,6 +17,7 @@ internal sealed class LocalProtectedFileSystem : IProtectedFileSystem
             await stream.ReadExactlyAsync(data, cancellationToken).ConfigureAwait(false);
             return data;
         }
+        // The file or its directory can disappear after the caller's existence check.
         catch (FileNotFoundException) { return null; }
         catch (DirectoryNotFoundException) { return null; }
     }

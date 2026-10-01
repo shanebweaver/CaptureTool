@@ -40,7 +40,8 @@ public partial class App : Microsoft.UI.Xaml.Application
 
     private void App_UnhandledException(object sender, Microsoft.UI.Xaml.UnhandledExceptionEventArgs e)
     {
-        ServiceProvider.GetService<ILogService>().LogException(e.Exception, "Unhandled exception occurred.");
+        ServiceProvider.GetService<ILogService>().LogException(e.Exception,
+            $"Unhandled exception occurred. HRESULT: 0x{e.Exception.HResult:X8}. XAML message: {e.Message}");
     }
 
     private void RestoreAppTheme()
