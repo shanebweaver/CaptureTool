@@ -35,7 +35,7 @@ public sealed class CaptureDetailsTests
         Assert.IsFalse(vm.ShowTextResults);
         Assert.IsFalse(vm.ShowTextEmptyState);
         Assert.IsTrue(vm.ShowScanTextAction, "Transcribing a video does not complete its text scan.");
-        Assert.IsFalse(vm.NeedsSummaryInputs, "A transcript is still available to the summary feature.");
+        Assert.IsTrue(vm.Content.HasSummaryInputs, "A transcript is still available to the summary feature.");
         vm.SpeechContent.Query = "spoken";
         var speech = vm.SpeechPassages.Single();
         vm.SpeechContent.SelectedPassage = speech;
@@ -102,6 +102,35 @@ public sealed class CaptureDetailsTests
         Assert.IsTrue(vm.ShowSpeechEmptyState);
         Assert.IsFalse(vm.ShowTextEmptyState);
         Assert.AreEqual(kind == AnalysisMediaKind.Video, vm.ShowScanTextAction);
+        setup.Notifications.VerifyNoOtherCalls();
+    }
+
+    [TestMethod]
+    public async Task EmptySpeechDuringVideoSummaryStaysQuietWhileSummaryContinues()
+    {
+        var setup = new Setup();
+        var revision = new SourceRevision(new string('a', 64));
+        var run = new AnalysisRun(Guid.NewGuid(), Guid.NewGuid(), 1, "plan", null, AnalysisRunStatus.Queued,
+            [AnalysisCapability.Transcription, AnalysisCapability.CaptureSynopsis], []).BindSource(revision);
+        CaptureDetailsSnapshot snapshot = new(CaptureDetailsStatus.Empty, Run: run);
+        setup.Reader.Setup(reader => reader.ReadAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(() => snapshot);
+        using var vm = setup.ViewModel;
+        await vm.OpenAsync("capture.mp4", AnalysisMediaKind.Video);
+        Assert.IsTrue(vm.TranscriptAction.IsRunning);
+        Assert.IsTrue(vm.IsGeneratingSummary);
+
+        var record = new CaptureAnalysisRecord(CaptureId.New(), AnalysisMediaKind.Video, revision, "plan", run.Id,
+            [Result(new TranscriptMetadata("en", []), run.Id)]);
+        snapshot = new(CaptureDetailsStatus.Available, record,
+            Run: run.CompleteStep(new(AnalysisCapability.Transcription, AnalyzerOutcomeKind.Succeeded, null)));
+        await vm.RefreshAsync();
+        await vm.RefreshAsync();
+
+        Assert.IsTrue(vm.ShowSpeechEmptyState);
+        Assert.IsFalse(vm.TranscriptAction.IsRunning);
+        Assert.IsTrue(vm.IsGeneratingSummary);
+        setup.Notifications.VerifyNoOtherCalls();
     }
 
     [TestMethod]
@@ -387,6 +416,39 @@ public sealed class CaptureDetailsTests
         onboarding.Verify(x => x.EnableAsync(It.IsAny<CancellationToken>()), Times.Once);
         memory.Verify(x => x.AnalyzeAsync("capture.png", AnalysisCapability.ImageAltText, It.IsAny<CancellationToken>()), accepted ? Times.Once() : Times.Never());
         memory.Verify(x => x.AnalyzeAsync(It.IsAny<string>(), It.Is<AnalysisCapability>(c => c != AnalysisCapability.ImageAltText), It.IsAny<CancellationToken>()), Times.Never());
+    }
+
+    [TestMethod]
+    [DataRow(AnalysisMediaKind.Video, false, false)]
+    [DataRow(AnalysisMediaKind.Video, false, true)]
+    [DataRow(AnalysisMediaKind.Video, true, false)]
+    [DataRow(AnalysisMediaKind.Video, true, true)]
+    [DataRow(AnalysisMediaKind.Audio, false, false)]
+    [DataRow(AnalysisMediaKind.Audio, false, true)]
+    [DataRow(AnalysisMediaKind.Audio, true, false)]
+    [DataRow(AnalysisMediaKind.Audio, true, true)]
+    public async Task RecordingSummaryAndNameRequestAnalysisWithoutExistingSources(AnalysisMediaKind kind, bool name, bool accepted)
+    {
+        var setup = new Setup(Mock.Of<ICaptureNamingService>());
+        setup.State = setup.State with { Policy = CaptureMemoryPolicy.Disabled() };
+        setup.Reader.Setup(reader => reader.ReadAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new CaptureDetailsSnapshot(CaptureDetailsStatus.Empty));
+        setup.Memory.Setup(memory => memory.EnsureConsentAsync(It.IsAny<CancellationToken>())).ReturnsAsync(accepted);
+        using var vm = setup.ViewModel;
+        string path = kind == AnalysisMediaKind.Video ? "capture.mp4" : "capture.wav";
+        await vm.OpenAsync(path, kind);
+
+        Assert.IsTrue(vm.SummaryAction.Command.CanExecute(null));
+        Assert.IsTrue(vm.SuggestNameCommand.CanExecute(null));
+        Assert.AreEqual(vm.SummaryAction.Label, vm.SummaryAction.ToolTip);
+        setup.Memory.Verify(memory => memory.AnalyzeAsync(It.IsAny<string>(), It.IsAny<AnalysisCapability>(), It.IsAny<CancellationToken>()), Times.Never);
+
+        var requested = name ? AnalysisCapability.CaptureName : AnalysisCapability.CaptureSynopsis;
+        await (name ? vm.SuggestNameCommand : vm.SummaryAction.Command).ExecuteAsync(null);
+
+        setup.Memory.Verify(memory => memory.EnsureConsentAsync(It.IsAny<CancellationToken>()), Times.Once);
+        setup.Memory.Verify(memory => memory.AnalyzeAsync(path, requested, It.IsAny<CancellationToken>()), accepted ? Times.Once() : Times.Never());
+        setup.Memory.Verify(memory => memory.AnalyzeAsync(It.IsAny<string>(), It.Is<AnalysisCapability>(capability => capability != requested), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [TestMethod]

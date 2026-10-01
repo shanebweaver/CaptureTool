@@ -11,12 +11,14 @@ namespace CaptureTool.UiTests;
 public sealed partial class ImageEditTextExtractionUiTests
 {
     [TestMethod]
-    [DataRow(false, false)]
-    [DataRow(true, false)]
-    [DataRow(false, true)]
-    [DataRow(true, true)]
+    [DataRow(false, false, false)]
+    [DataRow(true, false, false)]
+    [DataRow(false, false, true)]
+    [DataRow(true, false, true)]
+    [DataRow(false, true, false)]
+    [DataRow(true, true, false)]
     [TestCategory("UI")]
-    public void CapturePane_RecordingTextAndLocations(bool video, bool mediaTabs)
+    public void CapturePane_RecordingTextAndLocations(bool video, bool mediaTabs, bool summaryFirst)
     {
         if (!ShouldRunUiTests()) Assert.Inconclusive("Enable isolated desktop UI tests to run this check.");
         using var dpi = new DesktopDpiScope();
@@ -118,9 +120,30 @@ public sealed partial class ImageEditTextExtractionUiTests
         Assert.IsFalse(summaryInfo.IsOffscreen);
         if (!mediaTabs)
         {
+            if (summaryFirst) GenerateSummary();
             Element("CapturePane_DetailsTab").Patterns.SelectionItem.Pattern.Select();
-            Element("CaptureAction_Name");
+            Assert.IsTrue(Element("CaptureAction_Name").IsEnabled, "Naming must work without first opening the hidden media tabs.");
+            Element("CaptureAction_Name").Patterns.Invoke.Pattern.Invoke();
+            Element("CaptureAction_Name_Loading");
+            WaitFor(() =>
+            {
+                var input = window.FindFirstDescendant(automation.ConditionFactory.ByAutomationId("CaptureName_Input"));
+                return input?.AsTextBox().Text == "Contoso invoice" ? input : null;
+            }, TimeSpan.FromSeconds(45), "name generated without opening hidden media tabs");
+            Element("CaptureName_Cancel").Patterns.Invoke.Pattern.Invoke();
+            if (!summaryFirst) GenerateSummary();
+            Assert.IsNull(window.FindFirstDescendant(automation.ConditionFactory.ByAutomationId("CapturePane_TextTab")));
+            Assert.IsNull(window.FindFirstDescendant(automation.ConditionFactory.ByAutomationId("CapturePane_SpeechTab")));
             return;
+
+            void GenerateSummary()
+            {
+                Element("CapturePane_SummaryTab").Patterns.SelectionItem.Pattern.Select();
+                Assert.IsTrue(Element("CaptureAction_Summary").IsEnabled, "Summary must work without first opening the hidden media tabs.");
+                Element("CaptureAction_Summary").Patterns.Invoke.Pattern.Invoke();
+                Element("CaptureAction_Summary_Loading");
+                Element("CaptureSummary_Result");
+            }
         }
         Element("CapturePane_SpeechTab").Patterns.SelectionItem.Pattern.Select();
         foreach (string tabId in video

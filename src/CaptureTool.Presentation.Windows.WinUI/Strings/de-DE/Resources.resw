@@ -1953,7 +1953,6 @@ SOFTWARE.
   <data name="CaptureAction_Qr" xml:space="preserve"><value>QR-Codes finden</value></data>
   <data name="CaptureAction_Transcript" xml:space="preserve"><value>Audio transkribieren</value></data>
   <data name="CaptureAction_DescriptionHeading.Text" xml:space="preserve"><value>KI-Beschreibung</value></data>
-  <data name="CaptureAction_SummaryInputs" xml:space="preserve"><value>Extrahieren Sie Text oder transkribieren Sie Audio, um eine Zusammenfassung zu erstellen.</value></data>
   <data name="CapturePane_EmptyTextTitle.Text" xml:space="preserve"><value>Keine Ergebnisse gefunden</value></data>
   <data name="CapturePane_EmptyTextDescription" xml:space="preserve"><value>In dieser Aufnahme wurden weder Text noch QR-Codes gefunden.</value></data>
   <data name="CaptureAction_NoSpeech" xml:space="preserve"><value>Keine Sprache gefunden.</value></data>
@@ -1972,7 +1971,6 @@ SOFTWARE.
   <data name="CaptureNaming_Suggest" xml:space="preserve"><value>Mit KI einen Dateinamen vorschlagen</value></data>
   <data name="CaptureNaming_AiGenerating" xml:space="preserve"><value>KI schlägt einen Namen vor…</value></data>
   <data name="CaptureNaming_Edit.ToolTipService.ToolTip" xml:space="preserve"><value>Umbenennen</value></data>
-  <data name="CaptureAction_SummaryAudioInputs" xml:space="preserve"><value>Transkribieren Sie Audio, um eine Zusammenfassung zu erstellen.</value></data>
   <data name="CapturePane_Loading.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Details werden geladen</value></data>
   <data name="CaptureSummary_Info.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Informationen zur KI-Zusammenfassung</value></data>
   <data name="CaptureSummary_AltTextInfo.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Informationen zum Alternativtext</value></data>
@@ -1987,8 +1985,8 @@ SOFTWARE.
   <data name="CaptureSpeech_Search.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Im Transkript suchen</value></data>
   <data name="CaptureSpeech_EmptyTitle.Text" xml:space="preserve"><value>Keine Sprache gefunden</value></data>
   <data name="CaptureSpeech_EmptyDescription.Text" xml:space="preserve"><value>In dieser Aufnahme wurde keine Sprache erkannt.</value></data>
-  <data name="CaptureSummary_VideoHint" xml:space="preserve"><value>Eine KI-Zusammenfassung aus Text und Sprache in diesem Video erstellen. Suchen Sie zuerst nach Text oder transkribieren Sie das Audio.</value></data>
-  <data name="CaptureSummary_AudioHint" xml:space="preserve"><value>Eine KI-Zusammenfassung aus dem Transkript dieser Aufnahme erstellen. Transkribieren Sie zuerst das Audio.</value></data>
+  <data name="CaptureSummary_VideoHint" xml:space="preserve"><value>Eine KI-Zusammenfassung dieses Videos erstellen.</value></data>
+  <data name="CaptureSummary_AudioHint" xml:space="preserve"><value>Eine KI-Zusammenfassung dieser Aufnahme erstellen.</value></data>
   <data name="CaptureVideoText_Search.PlaceholderText" xml:space="preserve"><value>Text oder Zeitstempel suchen</value></data>
   <data name="CaptureVideoText_Search.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Text oder Zeitstempel suchen</value></data>
   <data name="CaptureVideoText_Back.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Zurück zu den Zeitstempeln</value></data>

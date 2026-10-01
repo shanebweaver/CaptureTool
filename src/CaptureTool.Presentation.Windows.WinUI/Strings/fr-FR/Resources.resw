@@ -1959,7 +1959,6 @@ SOFTWARE.
   <data name="CaptureAction_Qr" xml:space="preserve"><value>Trouver les codes QR</value></data>
   <data name="CaptureAction_Transcript" xml:space="preserve"><value>Transcrire l’audio</value></data>
   <data name="CaptureAction_DescriptionHeading.Text" xml:space="preserve"><value>Description par IA</value></data>
-  <data name="CaptureAction_SummaryInputs" xml:space="preserve"><value>Extrayez le texte ou transcrivez l’audio pour créer un résumé.</value></data>
   <data name="CapturePane_EmptyTextTitle.Text" xml:space="preserve"><value>Aucun résultat trouvé</value></data>
   <data name="CapturePane_EmptyTextDescription" xml:space="preserve"><value>Aucun texte ni code QR n’a été trouvé dans cette capture.</value></data>
   <data name="CaptureAction_NoSpeech" xml:space="preserve"><value>Aucune parole trouvée.</value></data>
@@ -1978,7 +1977,6 @@ SOFTWARE.
   <data name="CaptureNaming_Suggest" xml:space="preserve"><value>Suggérer un nom de fichier avec l’IA</value></data>
   <data name="CaptureNaming_AiGenerating" xml:space="preserve"><value>Suggestion d’un nom avec l’IA…</value></data>
   <data name="CaptureNaming_Edit.ToolTipService.ToolTip" xml:space="preserve"><value>Renommer</value></data>
-  <data name="CaptureAction_SummaryAudioInputs" xml:space="preserve"><value>Transcrivez l’audio pour créer un résumé.</value></data>
   <data name="CapturePane_Loading.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Chargement des détails</value></data>
   <data name="CaptureSummary_Info.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>À propos du résumé par IA</value></data>
   <data name="CaptureSummary_AltTextInfo.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>À propos du texte alternatif</value></data>
@@ -1993,8 +1991,8 @@ SOFTWARE.
   <data name="CaptureSpeech_Search.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Rechercher dans la transcription</value></data>
   <data name="CaptureSpeech_EmptyTitle.Text" xml:space="preserve"><value>Aucune parole trouvée</value></data>
   <data name="CaptureSpeech_EmptyDescription.Text" xml:space="preserve"><value>Aucune parole n&apos;a été détectée dans cet enregistrement.</value></data>
-  <data name="CaptureSummary_VideoHint" xml:space="preserve"><value>Créez un résumé par IA à partir du texte et des paroles de cette vidéo. Recherchez d&apos;abord du texte ou transcrivez l&apos;audio.</value></data>
-  <data name="CaptureSummary_AudioHint" xml:space="preserve"><value>Créez un résumé par IA à partir de la transcription de cet enregistrement. Transcrivez d&apos;abord l&apos;audio.</value></data>
+  <data name="CaptureSummary_VideoHint" xml:space="preserve"><value>Créez un résumé de cette vidéo par IA.</value></data>
+  <data name="CaptureSummary_AudioHint" xml:space="preserve"><value>Créez un résumé de cet enregistrement par IA.</value></data>
   <data name="CaptureVideoText_Search.PlaceholderText" xml:space="preserve"><value>Rechercher du texte ou un horodatage</value></data>
   <data name="CaptureVideoText_Search.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Rechercher du texte ou un horodatage</value></data>
   <data name="CaptureVideoText_Back.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Retour aux horodatages</value></data>

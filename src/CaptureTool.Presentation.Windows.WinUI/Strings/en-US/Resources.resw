@@ -2227,7 +2227,6 @@ SOFTWARE.
   <data name="CaptureAction_Qr" xml:space="preserve"><value>Find QR codes</value></data>
   <data name="CaptureAction_Transcript" xml:space="preserve"><value>Transcribe audio</value></data>
   <data name="CaptureAction_DescriptionHeading.Text" xml:space="preserve"><value>AI description</value></data>
-  <data name="CaptureAction_SummaryInputs" xml:space="preserve"><value>Extract text or transcribe audio to create a summary.</value></data>
   <data name="CapturePane_EmptyTextTitle.Text" xml:space="preserve"><value>No results found</value></data>
   <data name="CapturePane_EmptyTextDescription" xml:space="preserve"><value>No text or QR codes were found in this capture.</value></data>
   <data name="CaptureAction_NoSpeech" xml:space="preserve"><value>No speech found.</value></data>
@@ -2246,7 +2245,6 @@ SOFTWARE.
   <data name="CaptureNaming_Suggest" xml:space="preserve"><value>Suggest a file name with AI</value></data>
   <data name="CaptureNaming_AiGenerating" xml:space="preserve"><value>Suggesting a name with AI…</value></data>
   <data name="CaptureNaming_Edit.ToolTipService.ToolTip" xml:space="preserve"><value>Rename</value></data>
-  <data name="CaptureAction_SummaryAudioInputs" xml:space="preserve"><value>Transcribe audio to create a summary.</value></data>
   <data name="CapturePane_Loading.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Loading details</value></data>
   <data name="CaptureSummary_Info.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>About AI summary</value></data>
   <data name="CaptureSummary_AltTextInfo.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>About alt text</value></data>
@@ -2261,8 +2259,8 @@ SOFTWARE.
   <data name="CaptureSpeech_Search.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Find in transcript</value></data>
   <data name="CaptureSpeech_EmptyTitle.Text" xml:space="preserve"><value>No speech found</value></data>
   <data name="CaptureSpeech_EmptyDescription.Text" xml:space="preserve"><value>No speech was detected in this recording.</value></data>
-  <data name="CaptureSummary_VideoHint" xml:space="preserve"><value>Create an AI summary from text and speech in this video. Find text or transcribe audio first.</value></data>
-  <data name="CaptureSummary_AudioHint" xml:space="preserve"><value>Create an AI summary from this recording&apos;s transcript. Transcribe audio first.</value></data>
+  <data name="CaptureSummary_VideoHint" xml:space="preserve"><value>Create an AI summary of this video.</value></data>
+  <data name="CaptureSummary_AudioHint" xml:space="preserve"><value>Create an AI summary of this recording.</value></data>
   <data name="CaptureVideoText_Search.PlaceholderText" xml:space="preserve"><value>Find text or a timestamp</value></data>
   <data name="CaptureVideoText_Search.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Find text or a timestamp</value></data>
   <data name="CaptureVideoText_Back.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Back to timestamps</value></data>

@@ -78,9 +78,15 @@ public sealed class CaptureAnalysisConfiguration
     /// <summary>Requests only the selected action and its source prerequisites.</summary>
     public static IReadOnlyList<AnalysisCapability> ForAction(AnalysisMediaKind kind, AnalysisCapability capability)
     {
-        return kind == AnalysisMediaKind.Image && MetadataEnrichmentConfiguration.LanguageModelCapabilities.Contains(capability)
-            ? [AnalysisCapability.TextRecognition, AnalysisCapability.Description, capability]
-            : [capability];
+        var processor = MetadataEnrichmentConfiguration.SemanticModels.Select(model => model.Descriptor)
+            .FirstOrDefault(descriptor => descriptor.Capability == capability);
+        if (processor == null) return [capability];
+
+        // Each output declares its inputs. Request those supported by this media kind
+        // in source execution order; the worker reuses any existing results.
+        return CreateDefault().SelectPlan(kind).Steps
+            .Where(step => processor.Inputs.Contains(step.Capability))
+            .Select(step => step.Capability).Append(capability).ToArray();
     }
 
     public static CaptureAnalysisConfiguration CreateDefault() => new([

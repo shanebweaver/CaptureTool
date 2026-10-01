@@ -50,7 +50,6 @@ public sealed class CaptureDetailsViewModel : ViewModelBase
     public bool IsImage => _kind == AnalysisMediaKind.Image;
     public bool IsVideo => _kind == AnalysisMediaKind.Video;
     public string TextHint => _text.GetString(IsVideo ? "CaptureVideoText_Hint" : "CaptureText_Hint/Text");
-    public bool NeedsSummaryInputs => !IsImage && !Content.HasSummaryInputs;
     public string SummaryHint => _text.GetString(IsImage ? "CaptureSummary_Hint/Text" :
         HasVisualMedia ? "CaptureSummary_VideoHint" : "CaptureSummary_AudioHint");
     private readonly IClipboardService _clipboard;
@@ -189,7 +188,6 @@ public sealed class CaptureDetailsViewModel : ViewModelBase
             return;
         }
         if (_disposed || _path == null || _requesting || _memory.State.IsDeleting || _snapshot?.Run?.IsPending == true) return;
-        if (NeedsSummaryInputs && (capability == AnalysisCapability.CaptureSynopsis || capability == AnalysisCapability.CaptureName)) return;
         _requesting = true;
         _requestedAction = capability;
         _actionNotices.Clear();
@@ -258,13 +256,13 @@ public sealed class CaptureDetailsViewModel : ViewModelBase
                 failed.Steps.Contains(action.Capability)) status ??= "Failed";
             if (result == null && !running && _requestFailures.TryGetValue(action.Capability, out string? failure)) status = failure;
             string message = status == null ? string.Empty : _text.GetString("CaptureAction_" + status);
-            if (!running && message.Length > 0 && message != action.Status &&
+            // Empty speech is already explained in the Speech tab and does not need a notification.
+            if (!running && status != "NoSpeech" && message.Length > 0 && message != action.Status &&
                 (action.IsRunning || _requestedAction == action.Capability) &&
                 _actionNotices.Add((message, status == "Failed")))
                 Notify(message, error: status == "Failed");
             action.Update(running, result != null || action == NameAction && (_acceptedName || Content.SuggestedName.Length > 0),
                 !_disposed && !_requesting && !pending && !_memory.State.IsDeleting &&
-                (!(action.Capability == AnalysisCapability.CaptureSynopsis || action.Capability == AnalysisCapability.CaptureName) || !NeedsSummaryInputs) &&
                 (action.Capability != AnalysisCapability.ImageAltText || IsImage),
                 message);
         }
@@ -273,8 +271,7 @@ public sealed class CaptureDetailsViewModel : ViewModelBase
             HasVisualMedia && (TextAction.Command.CanExecute(null) || QrAction.Command.CanExecute(null)));
         SummaryAction.Label = _text.GetString(IsImage ? "CaptureAction_ScreenshotSummary" : "CaptureAction_Summary");
         AltTextAction.ToolTip = AltTextAction.Label;
-        SummaryAction.ToolTip = NeedsSummaryInputs ? _text.GetString(HasVisualMedia
-            ? "CaptureAction_SummaryInputs" : "CaptureAction_SummaryAudioInputs") : SummaryAction.Label;
+        SummaryAction.ToolTip = SummaryAction.Label;
         RaisePropertyChanged(nameof(IsImage));
         RaisePropertyChanged(nameof(IsVideo));
         RaisePropertyChanged(nameof(TextHint));
@@ -286,7 +283,6 @@ public sealed class CaptureDetailsViewModel : ViewModelBase
         SuggestNameCommand.NotifyCanExecuteChanged();
         RaisePropertyChanged(nameof(HasVisualMedia));
         RaisePropertyChanged(nameof(HasAudio));
-        RaisePropertyChanged(nameof(NeedsSummaryInputs));
         RaisePropertyChanged(nameof(SummaryHint));
         RaisePropertyChanged(nameof(ShowTextResults));
         RaisePropertyChanged(nameof(ShowTextEmptyState));

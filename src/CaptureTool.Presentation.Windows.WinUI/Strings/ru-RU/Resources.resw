@@ -1959,7 +1959,6 @@ SOFTWARE.
   <data name="CaptureAction_Qr" xml:space="preserve"><value>Найти QR-коды</value></data>
   <data name="CaptureAction_Transcript" xml:space="preserve"><value>Расшифровать аудио</value></data>
   <data name="CaptureAction_DescriptionHeading.Text" xml:space="preserve"><value>Описание с помощью ИИ</value></data>
-  <data name="CaptureAction_SummaryInputs" xml:space="preserve"><value>Извлеките текст или расшифруйте аудио, чтобы создать сводку.</value></data>
   <data name="CapturePane_EmptyTextTitle.Text" xml:space="preserve"><value>Результаты не найдены</value></data>
   <data name="CapturePane_EmptyTextDescription" xml:space="preserve"><value>В этом снимке не найдены текст или QR-коды.</value></data>
   <data name="CaptureAction_NoSpeech" xml:space="preserve"><value>Речь не найдена.</value></data>
@@ -1978,7 +1977,6 @@ SOFTWARE.
   <data name="CaptureNaming_Suggest" xml:space="preserve"><value>Предложить имя файла с помощью ИИ</value></data>
   <data name="CaptureNaming_AiGenerating" xml:space="preserve"><value>ИИ подбирает имя…</value></data>
   <data name="CaptureNaming_Edit.ToolTipService.ToolTip" xml:space="preserve"><value>Переименовать</value></data>
-  <data name="CaptureAction_SummaryAudioInputs" xml:space="preserve"><value>Расшифруйте аудио, чтобы создать сводку.</value></data>
   <data name="CapturePane_Loading.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Загрузка сведений</value></data>
   <data name="CaptureSummary_Info.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>О сводке ИИ</value></data>
   <data name="CaptureSummary_AltTextInfo.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Об альтернативном тексте</value></data>
@@ -1993,8 +1991,8 @@ SOFTWARE.
   <data name="CaptureSpeech_Search.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Поиск в расшифровке</value></data>
   <data name="CaptureSpeech_EmptyTitle.Text" xml:space="preserve"><value>Речь не найдена</value></data>
   <data name="CaptureSpeech_EmptyDescription.Text" xml:space="preserve"><value>В этой записи не обнаружена речь.</value></data>
-  <data name="CaptureSummary_VideoHint" xml:space="preserve"><value>Создайте ИИ-сводку на основе текста и речи в этом видео. Сначала найдите текст или расшифруйте аудио.</value></data>
-  <data name="CaptureSummary_AudioHint" xml:space="preserve"><value>Создайте ИИ-сводку на основе расшифровки этой записи. Сначала расшифруйте аудио.</value></data>
+  <data name="CaptureSummary_VideoHint" xml:space="preserve"><value>Создайте сводку этого видео с помощью ИИ.</value></data>
+  <data name="CaptureSummary_AudioHint" xml:space="preserve"><value>Создайте сводку этой записи с помощью ИИ.</value></data>
   <data name="CaptureVideoText_Search.PlaceholderText" xml:space="preserve"><value>Найти текст или отметку времени</value></data>
   <data name="CaptureVideoText_Search.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Найти текст или отметку времени</value></data>
   <data name="CaptureVideoText_Back.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Назад к отметкам времени</value></data>

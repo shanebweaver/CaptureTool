@@ -79,7 +79,16 @@ public sealed class CaptureAnalysisFoundationTests
             var outputs = plan.Steps.Where(step => MetadataEnrichmentConfiguration.LanguageModelCapabilities.Contains(step.Capability)).ToArray();
             Assert.AreEqual(requested, outputs[0].Capability);
             Assert.HasCount(1, outputs, "Other LLM features must require their own explicit request.");
-            Assert.HasCount(kind == AnalysisMediaKind.Image ? 3 : 1, plan.Steps);
+            AnalysisCapability[] sources = kind switch
+            {
+                AnalysisMediaKind.Image => [AnalysisCapability.TextRecognition, AnalysisCapability.Description],
+                AnalysisMediaKind.Video => [AnalysisCapability.TextRecognition, AnalysisCapability.Transcription, AnalysisCapability.Description],
+                _ => [AnalysisCapability.Transcription]
+            };
+            if (requested == AnalysisCapability.CaptureClassification && kind != AnalysisMediaKind.Audio)
+                sources = [AnalysisCapability.QrCodeDetection, .. sources];
+            CollectionAssert.AreEqual(sources.Append(requested).ToArray(), plan.Steps.Select(step => step.Capability).ToArray(),
+                "An action must collect its own inputs even when their tabs are hidden.");
             CollectionAssert.AreEqual(plan.Steps.Select(step => step.Capability).ToArray(),
                 configuration.SelectPlan(kind, plan.Steps.Select(step => step.Capability).ToArray()).Steps.Select(step => step.Capability).ToArray(),
                 "Persisted execution order must survive reconstruction between steps.");
