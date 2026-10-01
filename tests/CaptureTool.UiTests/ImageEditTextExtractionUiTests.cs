@@ -149,7 +149,8 @@ public sealed partial class ImageEditTextExtractionUiTests
         string appDataDirectory,
         string appTempDirectory,
         string? language = null,
-        bool detailsFixture = false, bool captureFixture = false, bool onboarding = false, string? textFixturePath = null)
+        bool detailsFixture = false, bool captureFixture = false, bool onboarding = false, string? textFixturePath = null,
+        bool mediaTabs = false)
     {
         string[] appArguments = [
             "--capturetool-ui-test",
@@ -173,6 +174,7 @@ public sealed partial class ImageEditTextExtractionUiTests
         }
         if (onboarding) startInfo.ArgumentList.Add("--ui-test-onboarding");
         if (detailsFixture) startInfo.ArgumentList.Add("--ui-test-details");
+        if (mediaTabs) startInfo.ArgumentList.Add("--ui-test-media-tabs");
         if (captureFixture) startInfo.ArgumentList.Add("--ui-test-capture");
         if (textFixturePath != null)
         {

@@ -2022,10 +2022,10 @@ SOFTWARE.
     <value>Delete</value>
   </data>
   <data name="CaptureMemory_ConsentTitle" xml:space="preserve">
-    <value>Unlock more from every capture</value>
+    <value>Allow AI features?</value>
   </data>
   <data name="CaptureMemory_ConsentContent" xml:space="preserve">
-    <value>Use local AI only when you choose an action. Nothing is scanned automatically. Results stay on this PC and are stored securely. Models may need to be downloaded. You can withdraw consent or delete results in Settings.</value>
+    <value>AI runs on this PC only when you choose an action. Results are saved securely on this PC. Some features may require an AI model download. You can turn AI off or delete saved results in Settings.</value>
   </data>
   <data name="CaptureMemory_ConsentAccept" xml:space="preserve">
     <value>Allow local AI</value>
@@ -2195,11 +2195,11 @@ SOFTWARE.
   <data name="CaptureNaming_Invalid" xml:space="preserve"><value>Enter a single-line name with 1–160 characters.</value></data>
   <data name="CaptureNaming_SaveFailed" xml:space="preserve"><value>The file could not be renamed. Check that the name is not already in use and the file is writable.</value></data>
   <data name="CaptureWelcome_Eyebrow.Text" xml:space="preserve"><value>ON-DEVICE AI</value></data>
-  <data name="CaptureWelcome_Hero.Text" xml:space="preserve"><value>A little capture magic</value></data>
-  <data name="CaptureWelcome_Text.Text" xml:space="preserve"><value>Images: extract text, summarize screenshots, and create alt text.</value></data>
-  <data name="CaptureWelcome_Recording.Text" xml:space="preserve"><value>Video: explore on-screen text, descriptions, and speech.</value></data>
-  <data name="CaptureWelcome_Names.Text" xml:space="preserve"><value>Audio: transcribe recordings into readable text.</value></data>
-  <data name="CaptureWelcome_Consent.Text" xml:space="preserve"><value>Use local AI only when you choose an action. Nothing is scanned automatically. Results stay on this PC and are stored securely. Models may need to be downloaded. You can withdraw consent or delete results in Settings.</value></data>
+  <data name="CaptureWelcome_Hero.Text" xml:space="preserve"><value>Get more from your captures</value></data>
+  <data name="CaptureWelcome_Text.Text" xml:space="preserve"><value>Copy text from images to use anywhere.</value></data>
+  <data name="CaptureWelcome_Recording.Text" xml:space="preserve"><value>Get a quick summary of a screenshot or recording.</value></data>
+  <data name="CaptureWelcome_Names.Text" xml:space="preserve"><value>Give your captures clearer names with AI suggestions.</value></data>
+  <data name="CaptureWelcome_Consent.Text" xml:space="preserve"><value>AI runs on this PC only when you choose an action. Results are saved securely on this PC. Some features may require an AI model download. You can turn AI off or delete saved results in Settings.</value></data>
   <data name="CaptureWelcome_NotNow" xml:space="preserve"><value>Not now</value></data>
   <data name="AddOns_ItemUnknown" xml:space="preserve"><value>Loading…</value></data>
   <data name="ChromaKeyToolbar_KeyColorLabel.Text" xml:space="preserve"><value>Key color</value></data>

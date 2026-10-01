@@ -28,13 +28,6 @@ public sealed class FeatureAvailabilityTests
     }
 
     [TestMethod]
-    public void AiConsentSettingsFeatureAvailability_ReturnsFeatureManagerValue()
-    {
-        Assert.IsTrue(new AiConsentSettingsFeatureAvailability(new ConstantFeatureManager(true)).IsAiConsentSettingsEnabled);
-        Assert.IsFalse(new AiConsentSettingsFeatureAvailability(new ConstantFeatureManager(false)).IsAiConsentSettingsEnabled);
-    }
-
-    [TestMethod]
     public void ImageSuperResolutionFeatureAvailability_ReturnsFeatureManagerValue()
     {
         Assert.IsTrue(new ImageSuperResolutionFeatureAvailability(new ConstantFeatureManager(true)).IsImageSuperResolutionEnabled);
@@ -59,10 +52,9 @@ public sealed class FeatureAvailabilityTests
     }
 
     [TestMethod]
-    public void TextExtractionFeatureAvailability_ReturnsFeatureManagerValue()
+    public void TextExtractionFeatureAvailability_IsEnabledWithoutDeviceService()
     {
-        Assert.IsTrue(new TextExtractionFeatureAvailability(new ConstantFeatureManager(true)).IsTextExtractionEnabled);
-        Assert.IsFalse(new TextExtractionFeatureAvailability(new ConstantFeatureManager(false)).IsTextExtractionEnabled);
+        Assert.IsTrue(new TextExtractionFeatureAvailability().IsTextExtractionEnabled);
     }
 
     [TestMethod]
@@ -76,7 +68,6 @@ public sealed class FeatureAvailabilityTests
         bool expected)
     {
         var availability = new TextExtractionFeatureAvailability(
-            new ConstantFeatureManager(true),
             new StubTextExtractionService(readyState));
 
         Assert.AreEqual(expected, availability.IsTextExtractionEnabled);

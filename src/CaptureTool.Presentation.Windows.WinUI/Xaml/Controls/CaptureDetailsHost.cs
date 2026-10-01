@@ -6,10 +6,9 @@ using Microsoft.UI.Xaml.Controls;
 
 namespace CaptureTool.Presentation.Windows.WinUI.Xaml.Controls;
 
-/// <summary>Shared docked editor details mode. The pane preference lasts for the app session.</summary>
+/// <summary>Shared docked editor details mode. Each editor starts with the pane closed.</summary>
 public sealed partial class CaptureDetailsHost : SplitView
 {
-    private static bool _preferredOpen;
     private readonly CaptureDetailsPane _details;
     private AppBarToggleButton? _toggleControl;
     public static readonly DependencyProperty SourcePathProperty = DependencyProperty.Register(nameof(SourcePath), typeof(string), typeof(CaptureDetailsHost), new(null, Changed));
@@ -58,11 +57,10 @@ public sealed partial class CaptureDetailsHost : SplitView
         PanePlacement = SplitViewPanePlacement.Right;
         DisplayMode = SplitViewDisplayMode.Inline;
         OpenPaneLength = 380;
-        IsPaneOpen = _preferredOpen;
+        IsPaneOpen = false;
         _details.CloseRequested += (_, _) => ClosePane();
         RegisterPropertyChangedCallback(IsPaneOpenProperty, (_, _) =>
         {
-            _preferredOpen = IsPaneOpen;
             if (IsPaneOpen) ActivateMode?.Invoke();
             Update();
         });

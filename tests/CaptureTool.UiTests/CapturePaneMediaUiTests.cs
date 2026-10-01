@@ -11,10 +11,12 @@ namespace CaptureTool.UiTests;
 public sealed partial class ImageEditTextExtractionUiTests
 {
     [TestMethod]
-    [DataRow(false)]
-    [DataRow(true)]
+    [DataRow(false, false)]
+    [DataRow(true, false)]
+    [DataRow(false, true)]
+    [DataRow(true, true)]
     [TestCategory("UI")]
-    public void CapturePane_RecordingTextAndLocations(bool video)
+    public void CapturePane_RecordingTextAndLocations(bool video, bool mediaTabs)
     {
         if (!ShouldRunUiTests()) Assert.Inconclusive("Enable isolated desktop UI tests to run this check.");
         using var dpi = new DesktopDpiScope();
@@ -53,7 +55,7 @@ public sealed partial class ImageEditTextExtractionUiTests
             json.WriteNumber("CaptureFileType", video ? 1 : 2); json.WriteNumber("Origin", 0);
             json.WriteString("LastActivityUtc", DateTime.UtcNow); json.WriteEndObject(); json.WriteEndArray();
         }
-        using var app = LaunchApp(ResolveAppExecutablePath(repo), image, data, temp, "en-US", detailsFixture: true);
+        using var app = LaunchApp(ResolveAppExecutablePath(repo), image, data, temp, "en-US", detailsFixture: true, mediaTabs: mediaTabs);
         using var automation = new UIA3Automation();
         var window = WaitForMainWindow(app, automation, AppLaunchTimeout);
         WaitForElement(window, automation, "ImageEdit_CommandBar", AppLaunchTimeout);
@@ -62,9 +64,13 @@ public sealed partial class ImageEditTextExtractionUiTests
         Element("CapturePane_TextTab");
         Assert.IsNull(window.FindFirstDescendant(automation.ConditionFactory.ByAutomationId("CapturePane_SpeechTab")),
             "Images have a Text tab and no Speech tab.");
-        Element("CapturePane_Close").Patterns.Invoke.Pattern.Invoke();
+        Element("CapturePane_TextTab").Patterns.SelectionItem.Pattern.Select();
         Menu("AppMenu_HomeItem"); OpenRecording(); OpenPane();
         var pane = Element("CaptureDetailsPane");
+        if (!mediaTabs)
+            Assert.IsTrue(Element("CapturePane_DetailsTab").Patterns.SelectionItem.Pattern.IsSelected.Value,
+                "A remembered Text tab falls back to file details when unavailable for this recording.");
+        Element("CapturePane_DetailsTab").Patterns.SelectionItem.Pattern.Select();
         WaitForElementByName(pane, automation, video ? "Video" : "Audio", InteractionTimeout);
         AssertDetailsLayout(window, automation, video ? "VideoEdit_CommandBar" : "AudioEdit_CommandBar",
             video ? null : "ProgressSlider");
@@ -91,6 +97,7 @@ public sealed partial class ImageEditTextExtractionUiTests
             Assert.AreEqual(ToggleState.Off, Element("VideoEdit_TrimButton").Patterns.Toggle.Pattern.ToggleState.Value);
         }
         window.CaptureToFile(Path.Combine(artifacts, "local-details.png"));
+        Menu("AppMenu_HomeItem"); OpenRecording(); OpenPane();
         Element("CapturePane_Close").Patterns.Invoke.Pattern.Invoke();
         Thread.Sleep(350);
         Menu("AppMenu_SettingsItem");
@@ -100,13 +107,21 @@ public sealed partial class ImageEditTextExtractionUiTests
         var resources = System.Xml.Linq.XDocument.Load(Path.Combine(repo, "src", "CaptureTool.Presentation.Windows.WinUI", "Strings", "en-US", "Resources.resw"))
             .Root!.Elements("data").ToDictionary(item => (string)item.Attribute("name")!, item => item.Element("value")!.Value);
         Menu("AppMenu_HomeItem"); OpenRecording(); OpenPane();
-        Assert.AreEqual(video, window.FindFirstDescendant(automation.ConditionFactory.ByAutomationId("CapturePane_TextTab")) != null,
-            "Only videos have a Text tab alongside Speech.");
+        Assert.AreEqual(video && mediaTabs, window.FindFirstDescendant(automation.ConditionFactory.ByAutomationId("CapturePane_TextTab")) != null,
+            "Video text is shown only when its tab is enabled.");
+        Assert.AreEqual(mediaTabs, window.FindFirstDescendant(automation.ConditionFactory.ByAutomationId("CapturePane_SpeechTab")) != null,
+            "Recording speech is shown only when its tab is enabled.");
         Element("CapturePane_SummaryTab").Patterns.SelectionItem.Pattern.Select();
         var summaryInfo = Element("CaptureSummary_Info");
         Assert.AreEqual(resources[video ? "CaptureSummary_VideoHint" : "CaptureSummary_AudioHint"], summaryInfo.Properties.HelpText.Value);
         Assert.IsTrue(summaryInfo.Properties.IsKeyboardFocusable.Value);
         Assert.IsFalse(summaryInfo.IsOffscreen);
+        if (!mediaTabs)
+        {
+            Element("CapturePane_DetailsTab").Patterns.SelectionItem.Pattern.Select();
+            Element("CaptureAction_Name");
+            return;
+        }
         Element("CapturePane_SpeechTab").Patterns.SelectionItem.Pattern.Select();
         foreach (string tabId in video
             ? new[] { "CapturePane_DetailsTab", "CapturePane_TextTab", "CapturePane_SpeechTab", "CapturePane_SummaryTab" }
@@ -219,7 +234,9 @@ public sealed partial class ImageEditTextExtractionUiTests
         {
             var grid = Element("Home_RecentCaptures");
             WaitFor(() => grid.FindFirstDescendant(automation.ConditionFactory.ByControlType(ControlType.ListItem)), InteractionTimeout, "recording").DoubleClick();
-            Element("Editor_DetailsToggle");
+            Assert.AreEqual(ToggleState.Off, Element("Editor_DetailsToggle").Patterns.Toggle.Pattern.ToggleState.Value,
+                "Loading a recording starts with Details closed, even if the previous editor left it open.");
+            WaitForElementRemoved(window, automation, "CaptureDetailsPane", InteractionTimeout);
         }
         void OpenPane()
         {

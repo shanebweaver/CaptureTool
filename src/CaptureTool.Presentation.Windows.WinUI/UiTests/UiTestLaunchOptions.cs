@@ -35,6 +35,7 @@ internal sealed class UiTestLaunchOptions
     public string? Language { get; }
 
     public static bool DetailsFixture { get; private set; }
+    public static bool MediaTabs { get; private set; }
     public static bool CaptureFixture { get; private set; }
     public static bool Onboarding { get; private set; }
     public static string? TextFixturePath { get; private set; }
@@ -45,6 +46,7 @@ internal sealed class UiTestLaunchOptions
         Onboarding = isEnabled && args.Contains("--ui-test-onboarding", StringComparer.OrdinalIgnoreCase);
         TextFixturePath = isEnabled ? GetOptionValue(args, "--ui-test-text-fixture") : null;
         DetailsFixture = isEnabled && args.Contains("--ui-test-details", StringComparer.OrdinalIgnoreCase);
+        MediaTabs = isEnabled && args.Contains("--ui-test-media-tabs", StringComparer.OrdinalIgnoreCase);
         CaptureFixture = DetailsFixture && args.Contains("--ui-test-capture", StringComparer.OrdinalIgnoreCase);
 
         Current = new(

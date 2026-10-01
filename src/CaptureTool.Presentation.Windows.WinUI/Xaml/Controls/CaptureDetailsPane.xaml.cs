@@ -1,4 +1,5 @@
 using CaptureTool.Application.Abstractions.Capture.Assets;
+using CaptureTool.Application.Abstractions.Library.CaptureDetails;
 using CaptureTool.Domain.Analysis;
 using CaptureTool.Presentation.Features.CaptureDetails;
 using Microsoft.UI.Xaml;
@@ -23,6 +24,7 @@ public sealed partial class CaptureDetailsPane : UserControl, INotifyPropertyCha
     private CaptureTextNavigationContext _navigation = new(false, false);
     private static string _preferredTab = nameof(FileDetailsTab);
     private bool _updatingTabs = true;
+    private readonly ICaptureDetailsFeatureAvailability _features;
     private CaptureTextViewModel? ActiveTextContent => ReferenceEquals(ContentTabs.SelectedItem, TextTab)
         ? ViewModel?.ShowVideoTimestamps == true ? null : ViewModel?.DisplayedTextContent :
         ReferenceEquals(ContentTabs.SelectedItem, SpeechTab) ? ViewModel?.SpeechContent : null;
@@ -39,6 +41,7 @@ public sealed partial class CaptureDetailsPane : UserControl, INotifyPropertyCha
 
     public CaptureDetailsPane()
     {
+        _features = App.Current.ServiceProvider.GetService<ICaptureDetailsFeatureAvailability>();
         InitializeComponent();
         UpdateTabs();
         Loaded += (_, _) => Open();
@@ -75,16 +78,14 @@ public sealed partial class CaptureDetailsPane : UserControl, INotifyPropertyCha
 
     private void UpdateTabs()
     {
-        PivotItem[] tabs = _kind switch
-        {
-            AnalysisMediaKind.Audio => [FileDetailsTab, SpeechTab, SummaryTab],
-            AnalysisMediaKind.Video => [FileDetailsTab, TextTab, SpeechTab, SummaryTab],
-            _ => [FileDetailsTab, TextTab, SummaryTab]
-        };
+        List<PivotItem> tabs = [FileDetailsTab];
+        if (_features.IsTextTabEnabled(_kind)) tabs.Add(TextTab);
+        if (_features.IsSpeechTabEnabled(_kind)) tabs.Add(SpeechTab);
+        tabs.Add(SummaryTab);
         if (ContentTabs.Items.Cast<PivotItem>().SequenceEqual(tabs)) { _updatingTabs = false; return; }
         _updatingTabs = true;
         foreach (var item in ContentTabs.Items.Cast<PivotItem>().Except(tabs).ToArray()) ContentTabs.Items.Remove(item);
-        for (int index = 0; index < tabs.Length; index++)
+        for (int index = 0; index < tabs.Count; index++)
             if (!ContentTabs.Items.Contains(tabs[index])) ContentTabs.Items.Insert(index, tabs[index]);
         ContentTabs.SelectedItem = tabs.FirstOrDefault(tab => tab.Name == _preferredTab) ?? FileDetailsTab;
         _updatingTabs = false;
@@ -114,6 +115,7 @@ public sealed partial class CaptureDetailsPane : UserControl, INotifyPropertyCha
 
     public void OpenText()
     {
+        if (!_features.IsTextTabEnabled(_kind)) return;
         ContentTabs.SelectedItem = TextTab;
         _extractTextRequested = true;
         Open();

@@ -6,7 +6,7 @@ Status: Implemented; review and verification recorded in [capture-experience-rev
 
 Someone viewing an image, audio recording, or video can identify the capture and inspect useful file properties without leaving the editor. The pane works with AI disabled and with files that have never been analyzed.
 
-This replaces the Home Details dialog. Home remains a way to open a capture; it does not gain another metadata surface. The editor hosts one shared right-hand pane, inline when space permits and dismissible as an overlay at narrow widths. Opening the pane never schedules analysis or prepares models. Analysis completion does not open it automatically. Preserve the user's pane preference across editor navigation.
+This replaces the Home Details dialog. Home remains a way to open a capture; it does not gain another metadata surface. The editor hosts one shared right-hand pane, inline when space permits and dismissible as an overlay at narrow widths. Opening the pane never schedules analysis or prepares models. Analysis completion does not open it automatically. Each media file loaded into an editor starts with the pane closed, including when reopening the same file after navigating away.
 
 ## Experience
 

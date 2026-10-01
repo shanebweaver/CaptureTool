@@ -1741,10 +1741,10 @@ SOFTWARE.
     <value>Supprimer</value>
   </data>
   <data name="CaptureMemory_ConsentTitle" xml:space="preserve">
-    <value>Découvrez plus dans chaque capture</value>
+    <value>Autoriser les fonctions d’IA ?</value>
   </data>
   <data name="CaptureMemory_ConsentContent" xml:space="preserve">
-    <value>L’IA locale s’utilise uniquement lorsque vous choisissez une action. Rien n’est analysé automatiquement. Les résultats restent stockés de manière sécurisée sur ce PC. Des modèles devront peut-être être téléchargés. Vous pouvez retirer votre consentement ou supprimer les résultats dans les paramètres.</value>
+    <value>L’IA fonctionne sur ce PC uniquement lorsque vous choisissez une action. Les résultats sont enregistrés de manière sécurisée sur ce PC. Certaines fonctions peuvent nécessiter le téléchargement d’un modèle d’IA. Vous pouvez désactiver l’IA ou supprimer les résultats enregistrés dans les paramètres.</value>
   </data>
   <data name="CaptureMemory_ConsentAccept" xml:space="preserve">
     <value>Autoriser l’IA locale</value>
@@ -1914,11 +1914,11 @@ SOFTWARE.
   <data name="CaptureNaming_Invalid" xml:space="preserve"><value>Saisissez un nom sur une seule ligne de 1 à 160 caractères.</value></data>
   <data name="CaptureNaming_SaveFailed" xml:space="preserve"><value>Le fichier n’a pas pu être renommé. Vérifiez que le nom n’est pas déjà utilisé et que le fichier est accessible en écriture.</value></data>
   <data name="CaptureWelcome_Eyebrow.Text" xml:space="preserve"><value>IA SUR L’APPAREIL</value></data>
-  <data name="CaptureWelcome_Hero.Text" xml:space="preserve"><value>Un peu de magie</value></data>
-  <data name="CaptureWelcome_Text.Text" xml:space="preserve"><value>Images : extrayez du texte, résumez des captures et créez du texte alternatif.</value></data>
-  <data name="CaptureWelcome_Recording.Text" xml:space="preserve"><value>Vidéo : explorez le texte à l’écran, les descriptions et la parole.</value></data>
-  <data name="CaptureWelcome_Names.Text" xml:space="preserve"><value>Audio : transcrivez vos enregistrements en texte lisible.</value></data>
-  <data name="CaptureWelcome_Consent.Text" xml:space="preserve"><value>L’IA locale s’utilise uniquement lorsque vous choisissez une action. Rien n’est analysé automatiquement. Les résultats restent stockés de manière sécurisée sur ce PC. Des modèles devront peut-être être téléchargés. Vous pouvez retirer votre consentement ou supprimer les résultats dans les paramètres.</value></data>
+  <data name="CaptureWelcome_Hero.Text" xml:space="preserve"><value>Profitez davantage de vos captures</value></data>
+  <data name="CaptureWelcome_Text.Text" xml:space="preserve"><value>Copiez le texte de vos images pour l’utiliser où vous voulez.</value></data>
+  <data name="CaptureWelcome_Recording.Text" xml:space="preserve"><value>Obtenez un bref résumé d’une capture d’écran ou d’un enregistrement.</value></data>
+  <data name="CaptureWelcome_Names.Text" xml:space="preserve"><value>Donnez des noms plus clairs à vos captures grâce aux suggestions de l’IA.</value></data>
+  <data name="CaptureWelcome_Consent.Text" xml:space="preserve"><value>L’IA fonctionne sur ce PC uniquement lorsque vous choisissez une action. Les résultats sont enregistrés de manière sécurisée sur ce PC. Certaines fonctions peuvent nécessiter le téléchargement d’un modèle d’IA. Vous pouvez désactiver l’IA ou supprimer les résultats enregistrés dans les paramètres.</value></data>
   <data name="CaptureWelcome_NotNow" xml:space="preserve"><value>Pas maintenant</value></data>
   <data name="AddOns_ChromaKeyPurchaseNotCompletedLabel.Text" xml:space="preserve"><value>L’achat n’a pas été finalisé. Réessayez.</value></data>
   <data name="AudioCapture_StopCaptureFailedMessage" xml:space="preserve"><value>L’enregistrement n’a pas pu être finalisé. Essayez d’enregistrer à nouveau.</value></data>

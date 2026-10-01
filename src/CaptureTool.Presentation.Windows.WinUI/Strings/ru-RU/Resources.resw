@@ -1741,10 +1741,10 @@ SOFTWARE.
     <value>Удалить</value>
   </data>
   <data name="CaptureMemory_ConsentTitle" xml:space="preserve">
-    <value>Откройте больше в каждом снимке</value>
+    <value>Разрешить функции ИИ?</value>
   </data>
   <data name="CaptureMemory_ConsentContent" xml:space="preserve">
-    <value>Локальный ИИ используется только при выборе действия. Автоматического анализа нет. Результаты безопасно хранятся на этом компьютере. Может потребоваться загрузка моделей. Вы можете отозвать согласие или удалить результаты в настройках.</value>
+    <value>ИИ работает на этом компьютере только тогда, когда вы выбираете действие. Результаты безопасно сохраняются на этом компьютере. Для некоторых функций может потребоваться загрузка модели ИИ. Вы можете отключить ИИ или удалить сохранённые результаты в настройках.</value>
   </data>
   <data name="CaptureMemory_ConsentAccept" xml:space="preserve">
     <value>Разрешить локальный ИИ</value>
@@ -1914,11 +1914,11 @@ SOFTWARE.
   <data name="CaptureNaming_Invalid" xml:space="preserve"><value>Введите имя в одну строку длиной от 1 до 160 символов.</value></data>
   <data name="CaptureNaming_SaveFailed" xml:space="preserve"><value>Не удалось переименовать файл. Убедитесь, что имя не занято и файл доступен для записи.</value></data>
   <data name="CaptureWelcome_Eyebrow.Text" xml:space="preserve"><value>ЛОКАЛЬНЫЙ ИИ</value></data>
-  <data name="CaptureWelcome_Hero.Text" xml:space="preserve"><value>Немного магии</value></data>
-  <data name="CaptureWelcome_Text.Text" xml:space="preserve"><value>Изображения: извлекайте текст, создавайте сводки и альтернативные описания.</value></data>
-  <data name="CaptureWelcome_Recording.Text" xml:space="preserve"><value>Видео: изучайте текст на экране, описания и речь.</value></data>
-  <data name="CaptureWelcome_Names.Text" xml:space="preserve"><value>Аудио: превращайте записи в читаемый текст.</value></data>
-  <data name="CaptureWelcome_Consent.Text" xml:space="preserve"><value>Локальный ИИ используется только при выборе действия. Автоматического анализа нет. Результаты безопасно хранятся на этом компьютере. Может потребоваться загрузка моделей. Вы можете отозвать согласие или удалить результаты в настройках.</value></data>
+  <data name="CaptureWelcome_Hero.Text" xml:space="preserve"><value>Больше пользы от снимков и записей</value></data>
+  <data name="CaptureWelcome_Text.Text" xml:space="preserve"><value>Копируйте текст с изображений и используйте его где угодно.</value></data>
+  <data name="CaptureWelcome_Recording.Text" xml:space="preserve"><value>Получайте краткое содержание снимка экрана или записи.</value></data>
+  <data name="CaptureWelcome_Names.Text" xml:space="preserve"><value>Давайте снимкам и записям более понятные имена с помощью подсказок ИИ.</value></data>
+  <data name="CaptureWelcome_Consent.Text" xml:space="preserve"><value>ИИ работает на этом компьютере только тогда, когда вы выбираете действие. Результаты безопасно сохраняются на этом компьютере. Для некоторых функций может потребоваться загрузка модели ИИ. Вы можете отключить ИИ или удалить сохранённые результаты в настройках.</value></data>
   <data name="CaptureWelcome_NotNow" xml:space="preserve"><value>Не сейчас</value></data>
   <data name="AddOns_ChromaKeyPurchaseNotCompletedLabel.Text" xml:space="preserve"><value>Покупка не завершена. Попробуйте ещё раз.</value></data>
   <data name="AudioCapture_StopCaptureFailedMessage" xml:space="preserve"><value>Не удалось завершить запись. Попробуйте записать ещё раз.</value></data>

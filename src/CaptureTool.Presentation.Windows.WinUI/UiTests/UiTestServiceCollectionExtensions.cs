@@ -10,6 +10,7 @@ using CaptureTool.Application.Abstractions.Analysis;
 using CaptureTool.Application.Analysis;
 using CaptureTool.Domain.Analysis;
 using CaptureTool.Domain.Analysis.Payloads;
+using CaptureTool.FeatureManagement;
 
 namespace CaptureTool.Presentation.Windows.WinUI.UiTests;
 
@@ -20,6 +21,8 @@ internal static class UiTestServiceCollectionExtensions
         UiTestLaunchOptions options)
     {
         services.AddSingleton(options);
+        if (UiTestLaunchOptions.MediaTabs)
+            services.AddSingleton<IFeatureManager, UiTestMediaTabsFeatureManager>();
         services.AddSingleton<ILocalizationService, UiTestLocalizationService>();
         services.AddSingleton<IImageCanvasExporter, UiTestImageCanvasExporter>();
         services.AddSingleton<IStorageService, UiTestStorageService>();
@@ -41,6 +44,15 @@ internal static class UiTestServiceCollectionExtensions
                 group.Select(candidate => candidate.MediaKind).Distinct().ToArray())));
 
         return services;
+    }
+
+    private sealed class UiTestMediaTabsFeatureManager : IFeatureManager
+    {
+        public bool IsEnabled(FeatureFlag featureFlag) =>
+            featureFlag == AppFeatures.Feature_CaptureDetails_VideoTextTab ||
+            featureFlag == AppFeatures.Feature_CaptureDetails_VideoSpeechTab ||
+            featureFlag == AppFeatures.Feature_CaptureDetails_AudioSpeechTab ||
+            new MicrosoftFeatureManager().IsEnabled(featureFlag);
     }
 
     private sealed class UiTestMetadataProcessor(MetadataProcessorDescriptor descriptor) : IMetadataProcessor

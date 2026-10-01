@@ -1735,10 +1735,10 @@ SOFTWARE.
     <value>Löschen</value>
   </data>
   <data name="CaptureMemory_ConsentTitle" xml:space="preserve">
-    <value>Mehr aus jeder Aufnahme machen</value>
+    <value>KI-Funktionen erlauben?</value>
   </data>
   <data name="CaptureMemory_ConsentContent" xml:space="preserve">
-    <value>Lokale KI wird nur verwendet, wenn Sie eine Aktion auswählen. Nichts wird automatisch analysiert. Ergebnisse bleiben sicher gespeichert auf diesem PC. Modelle müssen eventuell heruntergeladen werden. Sie können die Zustimmung widerrufen oder Ergebnisse in den Einstellungen löschen.</value>
+    <value>Die KI arbeitet auf diesem PC und nur, wenn Sie eine Aktion auswählen. Ergebnisse werden sicher auf diesem PC gespeichert. Für einige Funktionen muss möglicherweise ein KI-Modell heruntergeladen werden. Sie können die KI in den Einstellungen deaktivieren oder gespeicherte Ergebnisse löschen.</value>
   </data>
   <data name="CaptureMemory_ConsentAccept" xml:space="preserve">
     <value>Lokale KI erlauben</value>
@@ -1908,11 +1908,11 @@ SOFTWARE.
   <data name="CaptureNaming_Invalid" xml:space="preserve"><value>Geben Sie einen einzeiligen Namen mit 1–160 Zeichen ein.</value></data>
   <data name="CaptureNaming_SaveFailed" xml:space="preserve"><value>Die Datei konnte nicht umbenannt werden. Prüfen Sie, ob der Name bereits verwendet wird und die Datei beschreibbar ist.</value></data>
   <data name="CaptureWelcome_Eyebrow.Text" xml:space="preserve"><value>LOKALE KI</value></data>
-  <data name="CaptureWelcome_Hero.Text" xml:space="preserve"><value>Ein wenig Aufnahmemagie</value></data>
-  <data name="CaptureWelcome_Text.Text" xml:space="preserve"><value>Bilder: Text extrahieren, Screenshots zusammenfassen und Alternativtext erstellen.</value></data>
-  <data name="CaptureWelcome_Recording.Text" xml:space="preserve"><value>Video: Bildschirmtext, Beschreibungen und Sprache erkunden.</value></data>
-  <data name="CaptureWelcome_Names.Text" xml:space="preserve"><value>Audio: Aufnahmen in lesbaren Text transkribieren.</value></data>
-  <data name="CaptureWelcome_Consent.Text" xml:space="preserve"><value>Lokale KI wird nur verwendet, wenn Sie eine Aktion auswählen. Nichts wird automatisch analysiert. Ergebnisse bleiben sicher gespeichert auf diesem PC. Modelle müssen eventuell heruntergeladen werden. Sie können die Zustimmung widerrufen oder Ergebnisse in den Einstellungen löschen.</value></data>
+  <data name="CaptureWelcome_Hero.Text" xml:space="preserve"><value>Mehr aus Ihren Aufnahmen</value></data>
+  <data name="CaptureWelcome_Text.Text" xml:space="preserve"><value>Kopieren Sie Text aus Bildern, um ihn überall zu verwenden.</value></data>
+  <data name="CaptureWelcome_Recording.Text" xml:space="preserve"><value>Erhalten Sie eine kurze Zusammenfassung eines Screenshots oder einer Aufnahme.</value></data>
+  <data name="CaptureWelcome_Names.Text" xml:space="preserve"><value>Geben Sie Ihren Aufnahmen mit KI-Vorschlägen aussagekräftigere Namen.</value></data>
+  <data name="CaptureWelcome_Consent.Text" xml:space="preserve"><value>Die KI arbeitet auf diesem PC und nur, wenn Sie eine Aktion auswählen. Ergebnisse werden sicher auf diesem PC gespeichert. Für einige Funktionen muss möglicherweise ein KI-Modell heruntergeladen werden. Sie können die KI in den Einstellungen deaktivieren oder gespeicherte Ergebnisse löschen.</value></data>
   <data name="CaptureWelcome_NotNow" xml:space="preserve"><value>Nicht jetzt</value></data>
   <data name="AddOns_ChromaKeyPurchaseNotCompletedLabel.Text" xml:space="preserve"><value>Der Kauf wurde nicht abgeschlossen. Versuchen Sie es erneut.</value></data>
   <data name="AudioCapture_StopCaptureFailedMessage" xml:space="preserve"><value>Die Aufnahme konnte nicht fertiggestellt werden. Versuchen Sie erneut, eine Aufnahme zu erstellen.</value></data>

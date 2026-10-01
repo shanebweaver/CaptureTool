@@ -92,10 +92,9 @@
                     <ColumnDefinition Width="28" />
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
-                <FontIcon
-                    FontSize="20"
+                <SymbolIcon
                     Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}"
-                    Glyph="&#xE720;" />
+                    Symbol="Document" />
                 <TextBlock
                     x:Uid="CaptureWelcome_Recording"
                     Grid.Column="1"
@@ -109,7 +108,7 @@
                 <FontIcon
                     FontSize="20"
                     Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}"
-                    Glyph="&#xE8D6;" />
+                    Glyph="&#xE70F;" />
                 <TextBlock
                     x:Uid="CaptureWelcome_Names"
                     Grid.Column="1"

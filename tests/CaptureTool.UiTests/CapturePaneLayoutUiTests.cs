@@ -3,6 +3,7 @@ using FlaUI.Core.Definitions;
 using FlaUI.Core.Input;
 using FlaUI.Core.WindowsAPI;
 using FlaUI.UIA3;
+using System.Text.Json;
 
 namespace CaptureTool.UiTests;
 
@@ -20,7 +21,18 @@ public sealed partial class ImageEditTextExtractionUiTests
         Directory.CreateDirectory(isolated);
         string fixture = Path.Combine(isolated, "capture.png");
         CreateOcrFixtureImage(fixture);
-        using var app = LaunchApp(ResolveAppExecutablePath(repo), fixture, Path.Combine(isolated, "data"),
+        string nextImage = Path.Combine(isolated, "next.png");
+        File.Copy(fixture, nextImage);
+        string data = Path.Combine(isolated, "data");
+        Directory.CreateDirectory(data);
+        using (var stream = File.Create(Path.Combine(data, "RecentCaptures.json")))
+        using (var json = new Utf8JsonWriter(stream))
+        {
+            json.WriteStartArray(); json.WriteStartObject(); json.WriteString("FilePath", nextImage);
+            json.WriteNumber("CaptureFileType", 0); json.WriteNumber("Origin", 0);
+            json.WriteString("LastActivityUtc", DateTime.UtcNow); json.WriteEndObject(); json.WriteEndArray();
+        }
+        using var app = LaunchApp(ResolveAppExecutablePath(repo), fixture, data,
             Path.Combine(isolated, "temp"), "en-US", detailsFixture: true);
         using var automation = new UIA3Automation();
         var window = WaitForMainWindow(app, automation, AppLaunchTimeout);
@@ -71,6 +83,21 @@ public sealed partial class ImageEditTextExtractionUiTests
         Assert.IsFalse(Element("ImageEdit_TextExtractionButton").Patterns.Toggle.IsSupported);
         Element("CapturePane_Close").Patterns.Invoke.Pattern.Invoke();
         AssertClosed();
+
+        // A different image and reopening the same image both start a fresh pane lifetime.
+        for (int load = 0; load < 2; load++)
+        {
+            Element("Editor_DetailsToggle").Click();
+            Layout();
+            window.Focus();
+            WaitForElementByName(window, automation, "File", InteractionTimeout).Click();
+            Element("AppMenu_HomeItem").Patterns.Invoke.Pattern.Invoke();
+            var captures = Element("Home_RecentCaptures");
+            WaitFor(() => captures.FindFirstDescendant(automation.ConditionFactory.ByControlType(ControlType.ListItem)),
+                InteractionTimeout, "next image").DoubleClick();
+            Element("ImageEdit_CommandBar");
+            AssertClosed();
+        }
 
         AutomationElement Element(string id) => WaitForElement(window, automation, id, InteractionTimeout);
         void Layout() => AssertDetailsLayout(window, automation, "ImageEdit_CommandBar", "ZoomSlider");

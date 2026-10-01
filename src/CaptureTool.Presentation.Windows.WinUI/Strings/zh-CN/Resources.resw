@@ -1741,10 +1741,10 @@ SOFTWARE.
     <value>删除</value>
   </data>
   <data name="CaptureMemory_ConsentTitle" xml:space="preserve">
-    <value>发现每次捕获中的更多价值</value>
+    <value>允许使用 AI 功能？</value>
   </data>
   <data name="CaptureMemory_ConsentContent" xml:space="preserve">
-    <value>只有在您选择操作时才会使用本地 AI，不会自动扫描任何内容。结果会安全地存储在此电脑上。可能需要下载模型。您可以在设置中撤回同意或删除结果。</value>
+    <value>AI 仅在您选择操作时在此电脑上运行。结果会安全地保存在此电脑上。某些功能可能需要下载 AI 模型。您可以在设置中关闭 AI 或删除已保存的结果。</value>
   </data>
   <data name="CaptureMemory_ConsentAccept" xml:space="preserve">
     <value>允许本地 AI</value>
@@ -1914,11 +1914,11 @@ SOFTWARE.
   <data name="CaptureNaming_Invalid" xml:space="preserve"><value>请输入 1–160 个字符的单行名称。</value></data>
   <data name="CaptureNaming_SaveFailed" xml:space="preserve"><value>无法重命名文件。请检查该名称是否已被使用，以及文件是否可写。</value></data>
   <data name="CaptureWelcome_Eyebrow.Text" xml:space="preserve"><value>设备端 AI</value></data>
-  <data name="CaptureWelcome_Hero.Text" xml:space="preserve"><value>让捕获多一点魔力</value></data>
-  <data name="CaptureWelcome_Text.Text" xml:space="preserve"><value>图像：提取文本、总结截图并创建替代文本。</value></data>
-  <data name="CaptureWelcome_Recording.Text" xml:space="preserve"><value>视频：查看画面文字、描述和语音内容。</value></data>
-  <data name="CaptureWelcome_Names.Text" xml:space="preserve"><value>音频：将录音转录为可读文字。</value></data>
-  <data name="CaptureWelcome_Consent.Text" xml:space="preserve"><value>只有在您选择操作时才会使用本地 AI，不会自动扫描任何内容。结果会安全地存储在此电脑上。可能需要下载模型。您可以在设置中撤回同意或删除结果。</value></data>
+  <data name="CaptureWelcome_Hero.Text" xml:space="preserve"><value>让捕获内容更有价值</value></data>
+  <data name="CaptureWelcome_Text.Text" xml:space="preserve"><value>复制图像中的文字，随处使用。</value></data>
+  <data name="CaptureWelcome_Recording.Text" xml:space="preserve"><value>快速获取屏幕截图或录制内容的摘要。</value></data>
+  <data name="CaptureWelcome_Names.Text" xml:space="preserve"><value>借助 AI 建议，为捕获内容起更清晰的名称。</value></data>
+  <data name="CaptureWelcome_Consent.Text" xml:space="preserve"><value>AI 仅在您选择操作时在此电脑上运行。结果会安全地保存在此电脑上。某些功能可能需要下载 AI 模型。您可以在设置中关闭 AI 或删除已保存的结果。</value></data>
   <data name="CaptureWelcome_NotNow" xml:space="preserve"><value>暂不启用</value></data>
   <data name="AddOns_ChromaKeyPurchaseNotCompletedLabel.Text" xml:space="preserve"><value>购买未完成。请重试。</value></data>
   <data name="AudioCapture_StopCaptureFailedMessage" xml:space="preserve"><value>无法完成录音。请尝试重新录制。</value></data>

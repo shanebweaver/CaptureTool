@@ -1,5 +1,7 @@
 # PRD: Image Edit Text Extraction Mode
 
+Release update: Text Extraction has shipped, and its `ImageEdit_TextExtraction` flag has been removed. Device support and consent still apply. The original proposal below is retained for context; see [Text in the capture pane](unified-text-experience.md) for the current UX.
+
 ## Summary
 Add a feature-flagged Text Extraction mode to the image edit page. The mode asks for per-feature AI consent before first use, runs local OCR against the current edited image state, and displays a dimmed overlay with transparent cutouts over detected text areas.
 
