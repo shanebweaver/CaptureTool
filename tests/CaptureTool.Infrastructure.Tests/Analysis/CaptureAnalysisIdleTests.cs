@@ -73,7 +73,9 @@ public sealed partial class CaptureAnalysisWorkerTests
             fixture.Calls.Clear();
             Assert.IsTrue(await fixture.Worker.EnqueueAsync(first with
             {
-                RequestId = Guid.NewGuid(), ExpectedRunId = first.RequestId, ReuseExisting = true,
+                RequestId = Guid.NewGuid(),
+                ExpectedRunId = first.RequestId,
+                ReuseExisting = true,
                 Capabilities = ImageAction(fixture, AnalysisCapability.CaptureSynopsis),
             }, Ct));
             await WaitForIdleConditionAsync(() => summary.Calls == 1 && fixture.Worker.Progress.Activity == AnalysisActivity.Idle);

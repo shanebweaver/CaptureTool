@@ -12,16 +12,15 @@ using CaptureTool.Application.Abstractions.Capture.Video.StartVideoCapture;
 using CaptureTool.Application.Abstractions.Capture.Video.StopVideoCapture;
 using CaptureTool.Application.Abstractions.Capture.Video.ToggleVideoCaptureDesktopAudio;
 using CaptureTool.Application.Abstractions.Capture.Video.ToggleVideoCapturePauseResume;
+using CaptureTool.Application.Abstractions.Localization;
 using CaptureTool.Application.Abstractions.TaskEnvironment;
 using CaptureTool.Application.Abstractions.Themes;
-using CaptureTool.Application.Abstractions.Localization;
 using CaptureTool.Application.Abstractions.UseCases;
 using CaptureTool.Domain.Capture;
 using CaptureTool.Presentation.Shared.Commands;
 using CaptureTool.Presentation.ViewModels;
 using CommunityToolkit.Mvvm.Input;
 using System.Collections.ObjectModel;
-using System.Drawing;
 using System.Timers;
 using Timer = System.Timers.Timer;
 

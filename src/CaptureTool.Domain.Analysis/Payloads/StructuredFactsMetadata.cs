@@ -77,10 +77,10 @@ public sealed class StructuredFactsMetadata : DerivedAnalysisPayload
         foreach (StructuredFact fact in Facts)
         {
             foreach (AnalysisEvidence evidence in fact.Evidence)
-        {
-            AnalysisResult? source = inputs.SingleOrDefault(input => input.ResultId == evidence.ResultId);
-            if (source?.Payload is not (TextRecognitionMetadata or QrCodeMetadata or TranscriptMetadata) ||
-                !string.Equals(fact.Value, evidence.ResolveText(source), StringComparison.Ordinal))
+            {
+                AnalysisResult? source = inputs.SingleOrDefault(input => input.ResultId == evidence.ResultId);
+                if (source?.Payload is not (TextRecognitionMetadata or QrCodeMetadata or TranscriptMetadata) ||
+                    !string.Equals(fact.Value, evidence.ResolveText(source), StringComparison.Ordinal))
                 {
                     throw new ArgumentException("Observed facts require matching evidence in OCR, QR values, or transcripts.", nameof(inputs));
                 }

@@ -1,17 +1,17 @@
 using CaptureTool.Application.Abstractions.Analysis;
 using CaptureTool.Application.Abstractions.Capture.Assets;
-using CaptureTool.Domain.Capture;
 using CaptureTool.Application.Abstractions.Clipboard;
+using CaptureTool.Application.Abstractions.Edit.Image.TextExtraction;
 using CaptureTool.Application.Abstractions.Library.CaptureDetails;
 using CaptureTool.Application.Abstractions.Localization;
+using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Application.Abstractions.TaskEnvironment;
 using CaptureTool.Domain.Analysis;
 using CaptureTool.Domain.Analysis.Payloads;
-using CaptureTool.Application.Abstractions.Storage;
+using CaptureTool.Domain.Capture;
 using CaptureTool.Presentation.Notifications;
 using CaptureTool.Presentation.ViewModels;
 using CommunityToolkit.Mvvm.Input;
-using CaptureTool.Application.Abstractions.Edit.Image.TextExtraction;
 
 namespace CaptureTool.Presentation.Features.CaptureDetails;
 

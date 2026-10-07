@@ -1,4 +1,5 @@
 ﻿using CaptureTool.Application.Abstractions.Analysis;
+using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Application.Analysis;
 using CaptureTool.Domain;
 using CaptureTool.Domain.Analysis;
@@ -6,7 +7,6 @@ using CaptureTool.Domain.Analysis.Payloads;
 using CaptureTool.Infrastructure.Analysis.Windows;
 using CaptureTool.Infrastructure.Analysis.Windows.DependencyInjection;
 using CaptureTool.Infrastructure.Analysis.Windows.Foundry;
-using CaptureTool.Application.Abstractions.Storage;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Windows.AI;
 using Microsoft.Windows.AI.Text;
@@ -86,8 +86,11 @@ public sealed class WindowsLanguageModelTests
     [DataRow(false)]
     public async Task MalformedOutputGetsAtMostOneCorrectionOnTheSameSession(bool recover)
     {
-        var client = new Client { Generate = calls => Task.FromResult(new WindowsLanguageModelResponse(LanguageModelResponseStatus.Complete,
-            calls == 2 && recover ? Valid : Valid.Replace("\"evidence\":0", "\"evidence\":99"))) };
+        var client = new Client
+        {
+            Generate = calls => Task.FromResult(new WindowsLanguageModelResponse(LanguageModelResponseStatus.Complete,
+            calls == 2 && recover ? Valid : Valid.Replace("\"evidence\":0", "\"evidence\":99")))
+        };
         var result = await new WindowsLanguageModelProcessor(Input().Descriptor, client).ProcessAsync(Input(), TestContext.CancellationToken);
         Assert.AreEqual(recover ? AnalyzerOutcomeKind.Succeeded : AnalyzerOutcomeKind.Failed, result.Kind);
         Assert.HasCount(1, client.Sessions);

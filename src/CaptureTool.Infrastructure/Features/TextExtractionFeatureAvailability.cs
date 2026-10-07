@@ -23,7 +23,7 @@ public sealed class TextExtractionFeatureAvailability : ITextExtractionFeatureAv
 
         return _textExtractionService.GetReadyState() is
             TextExtractionReadyState.Ready or
-            TextExtractionReadyState.PreparationNeeded or 
+            TextExtractionReadyState.PreparationNeeded or
             TextExtractionReadyState.LanguageResourcesRequired;
     }
 }

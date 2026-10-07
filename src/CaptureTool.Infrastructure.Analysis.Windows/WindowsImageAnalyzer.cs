@@ -6,7 +6,6 @@ using Microsoft.Graphics.Imaging;
 using Microsoft.Windows.AI;
 using Microsoft.Windows.AI.ContentSafety;
 using Microsoft.Windows.AI.Imaging;
-using System.Runtime.InteropServices.WindowsRuntime;
 using Windows.Globalization;
 using Windows.Graphics.Imaging;
 using Windows.Media.Ocr;
@@ -119,8 +118,12 @@ internal sealed class WindowsImageAnalyzer(string id, WindowsImageModel model, A
             }
         }
         return AnalyzerOutcome.Success(model == WindowsImageModel.Description ? new DescriptionMetadata(descriptions) : new TextRecognitionMetadata(text),
-            new(id, "microsoft-windows", model switch { WindowsImageModel.Ocr => "windows-ai-text-recognizer",
-                WindowsImageModel.LegacyOcr => "windows-media-ocr", _ => "windows-ai-image-description" }, "1"));
+            new(id, "microsoft-windows", model switch
+            {
+                WindowsImageModel.Ocr => "windows-ai-text-recognizer",
+                WindowsImageModel.LegacyOcr => "windows-media-ocr",
+                _ => "windows-ai-image-description"
+            }, "1"));
     }
 
     private async Task<AnalyzerOutcomeKind> AnalyzeFrameAsync(SoftwareBitmap bitmap, TimeSpan? timestamp, string? language,
@@ -136,20 +139,20 @@ internal sealed class WindowsImageAnalyzer(string id, WindowsImageModel model, A
 
             OcrResult recognized = await engine.RecognizeAsync(bitmap).AsTask(ct).ConfigureAwait(false);
             foreach (var (line, lineIndex) in recognized.Lines.Select((line, index) => (line, index)))
-            foreach (var (word, wordIndex) in line.Words.Select((word, index) => (word, index)))
-            {
-                if (string.IsNullOrWhiteSpace(word.Text))
+                foreach (var (word, wordIndex) in line.Words.Select((word, index) => (word, index)))
                 {
-                    continue;
-                }
+                    if (string.IsNullOrWhiteSpace(word.Text))
+                    {
+                        continue;
+                    }
 
-                var bounds = word.BoundingRect;
-                text.Add(new(word.Text, Bounds(bounds.X, bounds.Y, bounds.Right, bounds.Bottom, bitmap), timestamp, lineIndex, wordIndex));
-                if (text.Count > MaximumRegions)
-                {
-                    return AnalyzerOutcomeKind.Failed;
+                    var bounds = word.BoundingRect;
+                    text.Add(new(word.Text, Bounds(bounds.X, bounds.Y, bounds.Right, bounds.Bottom, bitmap), timestamp, lineIndex, wordIndex));
+                    if (text.Count > MaximumRegions)
+                    {
+                        return AnalyzerOutcomeKind.Failed;
+                    }
                 }
-            }
         }
         else
         {
@@ -159,24 +162,24 @@ internal sealed class WindowsImageAnalyzer(string id, WindowsImageModel model, A
                 using TextRecognizer recognizer = await TextRecognizer.CreateAsync().AsTask(ct).ConfigureAwait(false);
                 var recognized = await recognizer.RecognizeTextFromImageAsync(image).AsTask(ct).ConfigureAwait(false);
                 foreach (var (line, lineIndex) in recognized.Lines.Select((line, index) => (line, index)))
-                foreach (var (word, wordIndex) in line.Words.Select((word, index) => (word, index)))
-                {
-                    if (string.IsNullOrWhiteSpace(word.Text))
+                    foreach (var (word, wordIndex) in line.Words.Select((word, index) => (word, index)))
                     {
-                        continue;
-                    }
+                        if (string.IsNullOrWhiteSpace(word.Text))
+                        {
+                            continue;
+                        }
 
-                    var box = word.BoundingBox;
-                    double left = Math.Min(Math.Min(box.TopLeft.X, box.TopRight.X), Math.Min(box.BottomLeft.X, box.BottomRight.X));
-                    double top = Math.Min(Math.Min(box.TopLeft.Y, box.TopRight.Y), Math.Min(box.BottomLeft.Y, box.BottomRight.Y));
-                    double right = Math.Max(Math.Max(box.TopLeft.X, box.TopRight.X), Math.Max(box.BottomLeft.X, box.BottomRight.X));
-                    double bottom = Math.Max(Math.Max(box.TopLeft.Y, box.TopRight.Y), Math.Max(box.BottomLeft.Y, box.BottomRight.Y));
-                    text.Add(new(word.Text, Bounds(left, top, right, bottom, bitmap), timestamp, lineIndex, wordIndex));
-                    if (text.Count > MaximumRegions)
-                    {
-                        return AnalyzerOutcomeKind.Failed;
+                        var box = word.BoundingBox;
+                        double left = Math.Min(Math.Min(box.TopLeft.X, box.TopRight.X), Math.Min(box.BottomLeft.X, box.BottomRight.X));
+                        double top = Math.Min(Math.Min(box.TopLeft.Y, box.TopRight.Y), Math.Min(box.BottomLeft.Y, box.BottomRight.Y));
+                        double right = Math.Max(Math.Max(box.TopLeft.X, box.TopRight.X), Math.Max(box.BottomLeft.X, box.BottomRight.X));
+                        double bottom = Math.Max(Math.Max(box.TopLeft.Y, box.TopRight.Y), Math.Max(box.BottomLeft.Y, box.BottomRight.Y));
+                        text.Add(new(word.Text, Bounds(left, top, right, bottom, bitmap), timestamp, lineIndex, wordIndex));
+                        if (text.Count > MaximumRegions)
+                        {
+                            return AnalyzerOutcomeKind.Failed;
+                        }
                     }
-                }
             }
             else
             {

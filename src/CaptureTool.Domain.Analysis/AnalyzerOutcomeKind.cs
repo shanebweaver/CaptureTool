@@ -1,12 +1,12 @@
 namespace CaptureTool.Domain.Analysis;
 
-public enum AnalyzerOutcomeKind 
-{ 
+public enum AnalyzerOutcomeKind
+{
     Succeeded,
-    Unsupported, 
-    TemporarilyUnavailable, 
-    Failed, 
-    InvalidSource, 
-    ContentRejected, 
-    Cancelled 
+    Unsupported,
+    TemporarilyUnavailable,
+    Failed,
+    InvalidSource,
+    ContentRejected,
+    Cancelled
 }

@@ -190,9 +190,14 @@ internal static class MetadataTextProtocol
                 string? category = value.GetProperty("category").GetString();
                 CaptureCategory? selected = category switch
                 {
-                    null => null, "document" => CaptureCategory.Document, "conversation" => CaptureCategory.Conversation,
-                    "code" => CaptureCategory.Code, "error" => CaptureCategory.Error, "web-content" => CaptureCategory.WebContent,
-                    "media" => CaptureCategory.Media, "other" => CaptureCategory.Other,
+                    null => null,
+                    "document" => CaptureCategory.Document,
+                    "conversation" => CaptureCategory.Conversation,
+                    "code" => CaptureCategory.Code,
+                    "error" => CaptureCategory.Error,
+                    "web-content" => CaptureCategory.WebContent,
+                    "media" => CaptureCategory.Media,
+                    "other" => CaptureCategory.Other,
                     _ => throw new InvalidDataException("Unknown category."),
                 };
                 var evidence = Evidence(value.GetProperty("evidence")).ToArray();

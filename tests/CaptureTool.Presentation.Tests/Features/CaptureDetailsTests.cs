@@ -1,6 +1,5 @@
-using CaptureTool.Application.Abstractions.Capture.Assets;
-using CaptureTool.Domain.Capture;
 using CaptureTool.Application.Abstractions.Analysis;
+using CaptureTool.Application.Abstractions.Capture.Assets;
 using CaptureTool.Application.Abstractions.Clipboard;
 using CaptureTool.Application.Abstractions.Library.CaptureDetails;
 using CaptureTool.Application.Abstractions.Localization;
@@ -8,6 +7,7 @@ using CaptureTool.Application.Abstractions.TaskEnvironment;
 using CaptureTool.Domain;
 using CaptureTool.Domain.Analysis;
 using CaptureTool.Domain.Analysis.Payloads;
+using CaptureTool.Domain.Capture;
 using CaptureTool.Presentation.Features.CaptureDetails;
 using CaptureTool.Presentation.Notifications;
 using Moq;
@@ -587,10 +587,13 @@ public sealed class CaptureDetailsTests
         await vm.RefreshAsync();
         Assert.IsTrue(vm.IsGeneratingName);
         Assert.IsFalse(vm.IsGeneratingSummary);
-        snapshot = snapshot with { Run = run.BindSource(new(new string('a', 64)))
+        snapshot = snapshot with
+        {
+            Run = run.BindSource(new(new string('a', 64)))
             .CompleteStep(new(AnalysisCapability.TextRecognition, AnalyzerOutcomeKind.Unsupported, "model-unavailable"))
             .CompleteStep(new(AnalysisCapability.Description, AnalyzerOutcomeKind.Unsupported, "model-unavailable"))
-            .CompleteStep(new(AnalysisCapability.CaptureName, AnalyzerOutcomeKind.Failed, "model-failed")) };
+            .CompleteStep(new(AnalysisCapability.CaptureName, AnalyzerOutcomeKind.Failed, "model-failed"))
+        };
         await vm.RefreshAsync();
         Assert.IsFalse(vm.IsGeneratingName);
         Assert.AreEqual("CaptureAction_Failed", vm.NameAction.Status);
@@ -1072,8 +1075,11 @@ public sealed class CaptureDetailsTests
             await action.Command.ExecuteAsync(null);
             Assert.IsTrue(action.IsRunning);
             Assert.IsFalse(action.Command.CanExecute(null));
-            snapshot = snapshot with { Run = snapshot.Run!.BindSource(new(new string('a', 64)))
-                .CompleteStep(new(action.Capability, AnalyzerOutcomeKind.Failed, "model-failed")) };
+            snapshot = snapshot with
+            {
+                Run = snapshot.Run!.BindSource(new(new string('a', 64)))
+                .CompleteStep(new(action.Capability, AnalyzerOutcomeKind.Failed, "model-failed"))
+            };
             await vm.RefreshAsync();
             await vm.RefreshAsync();
             Assert.IsFalse(action.IsRunning);

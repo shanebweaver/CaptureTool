@@ -1,7 +1,8 @@
-using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml;
 using CaptureTool.Application.Abstractions.Analysis;
+using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
 namespace CaptureTool.Presentation.Windows.WinUI.Xaml.Controls;
+
 public sealed partial class CaptureAnalysisWelcome : UserControl
 {
     public CaptureAnalysisWelcome() : this(new(false, false, false)) { }

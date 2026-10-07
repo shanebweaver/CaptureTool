@@ -23,7 +23,7 @@ public sealed class AnalysisRun
         }
 
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(queueOrder);
-        
+
         if (!Enum.IsDefined(status))
         {
             throw new ArgumentOutOfRangeException(nameof(status));
@@ -38,8 +38,8 @@ public sealed class AnalysisRun
         Steps = AnalysisGuard.Freeze(steps);
         CompletedSteps = AnalysisGuard.Freeze(completedSteps);
 
-        if (Steps.Count == 0 || 
-            Steps.Distinct().Count() != Steps.Count || 
+        if (Steps.Count == 0 ||
+            Steps.Distinct().Count() != Steps.Count ||
             CompletedSteps.Count > Steps.Count ||
             !CompletedSteps.Select(step => step.Capability).SequenceEqual(Steps.Take(CompletedSteps.Count)))
         {
@@ -61,8 +61,8 @@ public sealed class AnalysisRun
 
     public AnalysisRun BindSource(SourceRevision revision)
     {
-        if (!IsPending || 
-            SourceRevision != null && 
+        if (!IsPending ||
+            SourceRevision != null &&
             SourceRevision != revision)
         {
             throw new InvalidOperationException("Cannot resume this run with a different source.");
@@ -73,9 +73,9 @@ public sealed class AnalysisRun
             AuthorizationId,
             QueueOrder,
             PlanVersion,
-            revision, 
+            revision,
             AnalysisRunStatus.Running,
-            Steps, 
+            Steps,
             CompletedSteps);
     }
 
@@ -87,13 +87,13 @@ public sealed class AnalysisRun
         }
 
         return new(
-            Id, 
-            AuthorizationId, 
-            QueueOrder, 
-            PlanVersion, 
+            Id,
+            AuthorizationId,
+            QueueOrder,
+            PlanVersion,
             SourceRevision,
             CompletedSteps.Count + 1 == Steps.Count ? AnalysisRunStatus.Completed : AnalysisRunStatus.Running,
-            Steps, 
+            Steps,
             CompletedSteps.Append(step));
     }
 
@@ -106,12 +106,12 @@ public sealed class AnalysisRun
 
         return new(
             Id,
-            AuthorizationId, 
-            QueueOrder, 
-            PlanVersion, 
-            SourceRevision, 
-            status, 
-            Steps, 
+            AuthorizationId,
+            QueueOrder,
+            PlanVersion,
+            SourceRevision,
+            status,
+            Steps,
             CompletedSteps);
     }
 }

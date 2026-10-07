@@ -1,5 +1,5 @@
-﻿using CaptureTool.Application.Abstractions.Clipboard;
-using CaptureTool.Application.Abstractions.Analysis;
+﻿using CaptureTool.Application.Abstractions.Analysis;
+using CaptureTool.Application.Abstractions.Clipboard;
 using CaptureTool.Application.Abstractions.Files;
 using CaptureTool.Application.Abstractions.Library.RecentCaptures;
 using CaptureTool.Application.Abstractions.Logging;
@@ -11,8 +11,8 @@ using CaptureTool.Application.Capture;
 using CaptureTool.Application.Capture.Audio;
 using CaptureTool.Application.Capture.Image;
 using CaptureTool.Application.Capture.Video;
-using CaptureTool.Domain.FileSystem;
 using CaptureTool.Domain.Capture;
+using CaptureTool.Domain.FileSystem;
 using Moq;
 
 namespace CaptureTool.Application.Tests.Capture;

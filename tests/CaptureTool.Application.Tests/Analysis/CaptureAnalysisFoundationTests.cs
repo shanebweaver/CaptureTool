@@ -72,27 +72,27 @@ public sealed class CaptureAnalysisFoundationTests
     {
         var configuration = CaptureAnalysisConfiguration.CreateDefault();
         foreach (var kind in Enum.GetValues<AnalysisMediaKind>())
-        foreach (var requested in MetadataEnrichmentConfiguration.LanguageModelCapabilities
-            .Where(capability => kind == AnalysisMediaKind.Image || capability != AnalysisCapability.ImageAltText))
-        {
-            var plan = configuration.SelectPlan(kind, CaptureAnalysisConfiguration.ForAction(kind, requested));
-            var outputs = plan.Steps.Where(step => MetadataEnrichmentConfiguration.LanguageModelCapabilities.Contains(step.Capability)).ToArray();
-            Assert.AreEqual(requested, outputs[0].Capability);
-            Assert.HasCount(1, outputs, "Other LLM features must require their own explicit request.");
-            AnalysisCapability[] sources = kind switch
+            foreach (var requested in MetadataEnrichmentConfiguration.LanguageModelCapabilities
+                .Where(capability => kind == AnalysisMediaKind.Image || capability != AnalysisCapability.ImageAltText))
             {
-                AnalysisMediaKind.Image => [AnalysisCapability.TextRecognition, AnalysisCapability.Description],
-                AnalysisMediaKind.Video => [AnalysisCapability.TextRecognition, AnalysisCapability.Transcription, AnalysisCapability.Description],
-                _ => [AnalysisCapability.Transcription]
-            };
-            if (requested == AnalysisCapability.CaptureClassification && kind != AnalysisMediaKind.Audio)
-                sources = [AnalysisCapability.QrCodeDetection, .. sources];
-            CollectionAssert.AreEqual(sources.Append(requested).ToArray(), plan.Steps.Select(step => step.Capability).ToArray(),
-                "An action must collect its own inputs even when their tabs are hidden.");
-            CollectionAssert.AreEqual(plan.Steps.Select(step => step.Capability).ToArray(),
-                configuration.SelectPlan(kind, plan.Steps.Select(step => step.Capability).ToArray()).Steps.Select(step => step.Capability).ToArray(),
-                "Persisted execution order must survive reconstruction between steps.");
-        }
+                var plan = configuration.SelectPlan(kind, CaptureAnalysisConfiguration.ForAction(kind, requested));
+                var outputs = plan.Steps.Where(step => MetadataEnrichmentConfiguration.LanguageModelCapabilities.Contains(step.Capability)).ToArray();
+                Assert.AreEqual(requested, outputs[0].Capability);
+                Assert.HasCount(1, outputs, "Other LLM features must require their own explicit request.");
+                AnalysisCapability[] sources = kind switch
+                {
+                    AnalysisMediaKind.Image => [AnalysisCapability.TextRecognition, AnalysisCapability.Description],
+                    AnalysisMediaKind.Video => [AnalysisCapability.TextRecognition, AnalysisCapability.Transcription, AnalysisCapability.Description],
+                    _ => [AnalysisCapability.Transcription]
+                };
+                if (requested == AnalysisCapability.CaptureClassification && kind != AnalysisMediaKind.Audio)
+                    sources = [AnalysisCapability.QrCodeDetection, .. sources];
+                CollectionAssert.AreEqual(sources.Append(requested).ToArray(), plan.Steps.Select(step => step.Capability).ToArray(),
+                    "An action must collect its own inputs even when their tabs are hidden.");
+                CollectionAssert.AreEqual(plan.Steps.Select(step => step.Capability).ToArray(),
+                    configuration.SelectPlan(kind, plan.Steps.Select(step => step.Capability).ToArray()).Steps.Select(step => step.Capability).ToArray(),
+                    "Persisted execution order must survive reconstruction between steps.");
+            }
         foreach (var requested in new[] { AnalysisCapability.TextRecognition, AnalysisCapability.QrCodeDetection, AnalysisCapability.Transcription })
             CollectionAssert.AreEqual(new[] { requested }, CaptureAnalysisConfiguration.ForAction(AnalysisMediaKind.Video, requested).ToArray());
     }

@@ -10,10 +10,10 @@ using Windows.Storage.Streams;
 namespace CaptureTool.Infrastructure.Analysis.Windows.Foundry;
 
 internal sealed class FoundryImageDescriptionAnalyzer(
-    string id, 
-    string alias, 
+    string id,
+    string alias,
     FoundryRuntime runtime,
-    WindowsAnalysisMedia media) 
+    WindowsAnalysisMedia media)
     : IMediaAnalyzer
 {
     internal const int MaximumVisionDimension = 1024;
@@ -34,9 +34,9 @@ internal sealed class FoundryImageDescriptionAnalyzer(
     public async Task<AnalyzerAvailability> PrepareAsync(IProgress<AnalysisProgress>? progress, CancellationToken ct)
     {
         _model = await runtime.ResolveAsync(alias, ct).ConfigureAwait(false);
-        if (_model?.Info.Task != "vision-language-chat") 
-        { 
-            _model = null; 
+        if (_model?.Info.Task != "vision-language-chat")
+        {
+            _model = null;
             return AnalyzerAvailability.Unsupported;
         }
 
@@ -120,9 +120,9 @@ internal sealed class FoundryImageDescriptionAnalyzer(
                 return FoundryVisionProtocol.ParseResponse(bytes, model.Id);
             }
         }
-        catch (InvalidAnalysisMediaException) 
-        { 
-            return AnalyzerOutcome.Unsuccessful(AnalyzerOutcomeKind.InvalidSource, "invalid-media"); 
+        catch (InvalidAnalysisMediaException)
+        {
+            return AnalyzerOutcome.Unsuccessful(AnalyzerOutcomeKind.InvalidSource, "invalid-media");
         }
         finally
         {

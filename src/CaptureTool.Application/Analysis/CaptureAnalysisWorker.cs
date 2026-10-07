@@ -132,7 +132,8 @@ public sealed class CaptureAnalysisWorker : ICaptureAnalysisWorker, IDisposable
                     {
                         Activity = released ? AnalysisActivity.Idle : AnalysisActivity.ProviderUnavailable,
                         FailureCode = released ? Progress.FailureCode : "model-release-failed",
-                        QueuedCaptures = 0, Fraction = null,
+                        QueuedCaptures = 0,
+                        Fraction = null,
                     });
                     await _signal.WaitAsync(cancellationToken).ConfigureAwait(false);
                     continue;
@@ -506,51 +507,51 @@ public sealed class CaptureAnalysisWorker : ICaptureAnalysisWorker, IDisposable
         foreach (string id in step.Candidates)
         {
             for (int retry = 0; retry <= step.RetryCount; retry++)
-        {
-            IMediaAnalyzer? analyzer = _analyzers.GetValueOrDefault(id);
-            IMetadataProcessor? processor = _processors.GetValueOrDefault(id);
-            MetadataProcessorInput? snapshot = null;
-            long version = AdvanceProgressVersion();
-            var progress = new InlineProgress(value => Report(
-                new(value.Stage == AnalysisProgressStage.Preparing ? AnalysisActivity.Preparing : AnalysisActivity.Analyzing,
-                    remaining, work.Token.CaptureId, index, total, value.Fraction), version, ct));
-            try
             {
-                // Select whole entries immediately before this attempt. The store rechecks the
-                // consulted identities at commit; preparation never owns the publication gate.
-                if (processor != null)
+                IMediaAnalyzer? analyzer = _analyzers.GetValueOrDefault(id);
+                IMetadataProcessor? processor = _processors.GetValueOrDefault(id);
+                MetadataProcessorInput? snapshot = null;
+                long version = AdvanceProgressVersion();
+                var progress = new InlineProgress(value => Report(
+                    new(value.Stage == AnalysisProgressStage.Preparing ? AnalysisActivity.Preparing : AnalysisActivity.Analyzing,
+                        remaining, work.Token.CaptureId, index, total, value.Fraction), version, ct));
+                try
                 {
-                    if (metadata == null)
+                    // Select whole entries immediately before this attempt. The store rechecks the
+                    // consulted identities at commit; preparation never owns the publication gate.
+                    if (processor != null)
+                    {
+                        if (metadata == null)
                         {
                             return (AnalyzerOutcome.Unsuccessful(AnalyzerOutcomeKind.Unsupported, "metadata-input-missing"), null);
                         }
 
                         snapshot = MetadataProcessorInput.Create(metadata, processor.Descriptor, ct);
-                    if (!snapshot.Entries.Any(entry => !string.IsNullOrWhiteSpace(entry.Text)))
+                        if (!snapshot.Entries.Any(entry => !string.IsNullOrWhiteSpace(entry.Text)))
                         {
                             return (AnalyzerOutcome.Unsuccessful(AnalyzerOutcomeKind.Unsupported, "metadata-input-empty"), null);
                         }
                     }
-                AnalyzerAvailability available = await InvokeAsync(token => processor != null
-                    ? processor.GetAvailabilityAsync(token).AsTask() : analyzer!.GetAvailabilityAsync(work.MediaKind, work.Language, token).AsTask(),
-                    TimeSpan.FromSeconds(10), ct).ConfigureAwait(false);
-                if (available == AnalyzerAvailability.PreparationRequired)
-                {
-                    progress.Report(new(AnalysisProgressStage.Preparing));
-                    available = await InvokeAsync(token => processor != null ? processor.PrepareAsync(progress, token) : analyzer!.PrepareAsync(progress, token), step.PreparationTimeout, ct).ConfigureAwait(false);
-                }
-                if (available != AnalyzerAvailability.Ready)
-                {
-                    last = AnalyzerOutcome.Unsuccessful(available is AnalyzerAvailability.Unsupported or AnalyzerAvailability.LanguageResourcesRequired
-                        ? AnalyzerOutcomeKind.Unsupported : AnalyzerOutcomeKind.TemporarilyUnavailable,
-                        available == AnalyzerAvailability.LanguageResourcesRequired ? "ocr-language-required" : "model-unavailable");
-                    break;
-                }
-                progress.Report(new(AnalysisProgressStage.Analyzing));
-                last = await InvokeAsync(token => processor != null ? processor.ProcessAsync(snapshot!, token) : analyzer!.AnalyzeAsync(input, progress, token), step.ExecutionTimeout, ct).ConfigureAwait(false);
-                if (last.Kind == AnalyzerOutcomeKind.Succeeded && (last.Payload!.Capability != step.Capability ||
-                    !last.Payload.Supports(work.MediaKind) || last.Producer!.AnalyzerId != id ||
-                    (last.Payload is DerivedAnalysisPayload) != (processor != null)))
+                    AnalyzerAvailability available = await InvokeAsync(token => processor != null
+                        ? processor.GetAvailabilityAsync(token).AsTask() : analyzer!.GetAvailabilityAsync(work.MediaKind, work.Language, token).AsTask(),
+                        TimeSpan.FromSeconds(10), ct).ConfigureAwait(false);
+                    if (available == AnalyzerAvailability.PreparationRequired)
+                    {
+                        progress.Report(new(AnalysisProgressStage.Preparing));
+                        available = await InvokeAsync(token => processor != null ? processor.PrepareAsync(progress, token) : analyzer!.PrepareAsync(progress, token), step.PreparationTimeout, ct).ConfigureAwait(false);
+                    }
+                    if (available != AnalyzerAvailability.Ready)
+                    {
+                        last = AnalyzerOutcome.Unsuccessful(available is AnalyzerAvailability.Unsupported or AnalyzerAvailability.LanguageResourcesRequired
+                            ? AnalyzerOutcomeKind.Unsupported : AnalyzerOutcomeKind.TemporarilyUnavailable,
+                            available == AnalyzerAvailability.LanguageResourcesRequired ? "ocr-language-required" : "model-unavailable");
+                        break;
+                    }
+                    progress.Report(new(AnalysisProgressStage.Analyzing));
+                    last = await InvokeAsync(token => processor != null ? processor.ProcessAsync(snapshot!, token) : analyzer!.AnalyzeAsync(input, progress, token), step.ExecutionTimeout, ct).ConfigureAwait(false);
+                    if (last.Kind == AnalyzerOutcomeKind.Succeeded && (last.Payload!.Capability != step.Capability ||
+                        !last.Payload.Supports(work.MediaKind) || last.Producer!.AnalyzerId != id ||
+                        (last.Payload is DerivedAnalysisPayload) != (processor != null)))
                     {
                         last = AnalyzerOutcome.Unsuccessful(AnalyzerOutcomeKind.Failed, "invalid-model-output");
                     }
@@ -575,22 +576,22 @@ public sealed class CaptureAnalysisWorker : ICaptureAnalysisWorker, IDisposable
                         break;
                     }
                 }
-            catch (OperationCanceledException) when (ct.IsCancellationRequested) { throw; }
-            catch (ProviderBusyException) when (processor != null && !ct.IsCancellationRequested)
-            {
-                // A timed-out metadata call must not discard independent companion steps.
-                // Commit its failure, then let the worker wait for native ownership to end
-                // before starting the next step. Late output remains fenced out.
-                last = AnalyzerOutcome.Unsuccessful(AnalyzerOutcomeKind.Failed, "provider-not-stopped");
-                return (last, null);
-            }
-            catch (ProviderBusyException) { throw; }
-            catch (TimeoutException) { last = AnalyzerOutcome.Unsuccessful(AnalyzerOutcomeKind.Failed, "model-timeout"); }
-            catch (OperationCanceledException) { return (AnalyzerOutcome.Unsuccessful(AnalyzerOutcomeKind.Cancelled, "model-cancelled"), null); }
-            catch (Exception) { last = AnalyzerOutcome.Unsuccessful(AnalyzerOutcomeKind.Failed, "model-failed"); }
-            finally
-            {
-                if (last.Kind is AnalyzerOutcomeKind.Failed or AnalyzerOutcomeKind.TemporarilyUnavailable)
+                catch (OperationCanceledException) when (ct.IsCancellationRequested) { throw; }
+                catch (ProviderBusyException) when (processor != null && !ct.IsCancellationRequested)
+                {
+                    // A timed-out metadata call must not discard independent companion steps.
+                    // Commit its failure, then let the worker wait for native ownership to end
+                    // before starting the next step. Late output remains fenced out.
+                    last = AnalyzerOutcome.Unsuccessful(AnalyzerOutcomeKind.Failed, "provider-not-stopped");
+                    return (last, null);
+                }
+                catch (ProviderBusyException) { throw; }
+                catch (TimeoutException) { last = AnalyzerOutcome.Unsuccessful(AnalyzerOutcomeKind.Failed, "model-timeout"); }
+                catch (OperationCanceledException) { return (AnalyzerOutcome.Unsuccessful(AnalyzerOutcomeKind.Cancelled, "model-cancelled"), null); }
+                catch (Exception) { last = AnalyzerOutcome.Unsuccessful(AnalyzerOutcomeKind.Failed, "model-failed"); }
+                finally
+                {
+                    if (last.Kind is AnalyzerOutcomeKind.Failed or AnalyzerOutcomeKind.TemporarilyUnavailable)
                     {
                         _log?.LogWarning($"Analysis provider {id}, step {step.Capability.Name}: {last.Kind} ({last.FailureCode}).");
                     }
@@ -601,8 +602,8 @@ public sealed class CaptureAnalysisWorker : ICaptureAnalysisWorker, IDisposable
                     }
 
                     AdvanceProgressVersion();
+                }
             }
-        }
         }
 
         return (strongestFailure, null);
@@ -656,7 +657,9 @@ public sealed class CaptureAnalysisWorker : ICaptureAnalysisWorker, IDisposable
 
     private void CancelActive(AnalysisRunToken? token)
     {
-        lock (_activeLock) { if (token == null || token == _activeToken)
+        lock (_activeLock)
+        {
+            if (token == null || token == _activeToken)
             {
                 RequestCancellation(_activeCancellation);
             }
@@ -671,7 +674,9 @@ public sealed class CaptureAnalysisWorker : ICaptureAnalysisWorker, IDisposable
     {
         // Serialize producers; the consumer can only lower the count. Coalesce wakeups
         // without throwing a first-chance exception for an already pending signal.
-        lock (_signal) { if (_signal.CurrentCount == 0)
+        lock (_signal)
+        {
+            if (_signal.CurrentCount == 0)
             {
                 _signal.Release();
             }

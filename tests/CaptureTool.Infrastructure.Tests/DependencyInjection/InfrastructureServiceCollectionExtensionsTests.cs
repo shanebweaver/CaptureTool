@@ -1,4 +1,3 @@
-using CaptureTool.Application.Abstractions.Library.CaptureDetails;
 using CaptureTool.Application.Abstractions.Cancellation;
 using CaptureTool.Application.Abstractions.Edit.Image.ChromaKey;
 using CaptureTool.Application.Abstractions.Edit.Image.Description;
@@ -10,8 +9,9 @@ using CaptureTool.Application.Abstractions.Edit.Image.TextExtraction;
 using CaptureTool.Application.Abstractions.Edit.Video.SuperResolution;
 using CaptureTool.Application.Abstractions.Files;
 using CaptureTool.Application.Abstractions.Globalization;
-using CaptureTool.Application.Abstractions.Logging;
+using CaptureTool.Application.Abstractions.Library.CaptureDetails;
 using CaptureTool.Application.Abstractions.Library.RecentCaptures;
+using CaptureTool.Application.Abstractions.Logging;
 using CaptureTool.Application.Abstractions.Metrics;
 using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Application.Abstractions.Settings;

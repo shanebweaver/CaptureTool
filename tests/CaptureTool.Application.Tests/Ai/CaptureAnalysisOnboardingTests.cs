@@ -2,6 +2,7 @@
 using CaptureTool.Application.Analysis;
 using Moq;
 namespace CaptureTool.Application.Tests.Ai;
+
 [TestClass]
 public sealed class CaptureAnalysisOnboardingTests
 {

@@ -67,7 +67,9 @@ internal sealed partial class FoundryRuntime(IStorageService storage,
     {
         public async ValueTask DisposeAsync()
         {
-            try { if (ct.IsCancellationRequested)
+            try
+            {
+                if (ct.IsCancellationRequested)
                 {
                     await owner.UnloadAsync().ConfigureAwait(false);
                 }
@@ -91,8 +93,11 @@ internal sealed partial class FoundryRuntime(IStorageService storage,
                     string root = Path.Combine(storage.GetApplicationDataFolderPath(), "AnalysisModels", "FoundryLocal");
                     await FoundryLocalManager.CreateAsync(new Configuration
                     {
-                        AppName = "capture-tool", AppDataDir = root, ModelCacheDir = Path.Combine(root, "models"),
-                        LogsDir = Path.Combine(root, "logs"), LogLevel = Microsoft.AI.Foundry.Local.LogLevel.Fatal,
+                        AppName = "capture-tool",
+                        AppDataDir = root,
+                        ModelCacheDir = Path.Combine(root, "models"),
+                        LogsDir = Path.Combine(root, "logs"),
+                        LogLevel = Microsoft.AI.Foundry.Local.LogLevel.Fatal,
                         Web = new Configuration.WebService { Urls = "http://127.0.0.1:0" },
                     }, NullLogger.Instance, ct).ConfigureAwait(false);
                     _ownsManager = true;

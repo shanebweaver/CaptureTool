@@ -1,8 +1,8 @@
 using CaptureTool.Application.Abstractions.Capture.Assets;
-using CaptureTool.Domain;
 using CaptureTool.Application.Abstractions.Library.RecentCaptures;
 using CaptureTool.Application.Abstractions.Library.RecentCaptures.GetRecentCaptures;
 using CaptureTool.Application.Library.RecentCaptures.GetRecentCaptures;
+using CaptureTool.Domain;
 using CaptureTool.Domain.Capture;
 using Moq;
 

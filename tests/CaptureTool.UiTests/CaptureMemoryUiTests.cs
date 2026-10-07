@@ -1,10 +1,8 @@
 using FlaUI.Core.AutomationElements;
 using FlaUI.Core.Definitions;
-using FlaUI.Core.Input;
-using FlaUI.Core.WindowsAPI;
 using FlaUI.UIA3;
-using System.Text.Json;
 using System.Runtime.InteropServices;
+using System.Text.Json;
 using System.Xml.Linq;
 
 namespace CaptureTool.UiTests;

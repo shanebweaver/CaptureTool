@@ -3,8 +3,8 @@ using CaptureTool.Application.Abstractions.Library.CaptureDetails;
 using CaptureTool.Domain.Analysis;
 using CaptureTool.Presentation.Features.CaptureDetails;
 using Microsoft.UI.Xaml;
-using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Automation.Peers;
+using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
 using System.ComponentModel;
 

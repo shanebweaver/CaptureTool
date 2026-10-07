@@ -1,4 +1,3 @@
-using CaptureTool.Application.Abstractions.Analysis;
 using CaptureTool.Domain;
 using CaptureTool.Domain.Analysis;
 using CaptureTool.Domain.Analysis.Payloads;

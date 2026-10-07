@@ -1,8 +1,8 @@
 using CaptureTool.Application.Abstractions.Ai;
-using CaptureTool.Infrastructure.Ai;
 using CaptureTool.Application.Abstractions.Edit.Video.SuperResolution;
 using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Domain.FileSystem;
+using CaptureTool.Infrastructure.Ai;
 using Microsoft.Graphics.Imaging;
 using Microsoft.Windows.AI;
 using Microsoft.Windows.AI.Video;

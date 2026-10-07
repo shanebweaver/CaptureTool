@@ -120,7 +120,8 @@ internal sealed partial class LocalCaptureAnalysisStore
             await _documents.WriteAsync(_controlPath, control with { Version = 2, QueueOrder = run.QueueOrder },
                 AnalysisJsonContext.Default.AnalysisControlDocument, cancellationToken).ConfigureAwait(false);
             AnalysisDocument next = (prior ?? new(2, request.CaptureId.Value, (int)request.MediaKind, null,
-                plan.Version, request.RequestId, [])) with { Version = 2, Run = ToDocument(run, path, request.Language, request.ReuseExisting) };
+                plan.Version, request.RequestId, [])) with
+            { Version = 2, Run = ToDocument(run, path, request.Language, request.ReuseExisting) };
             await WriteDocumentAsync(control.Generation, next, cancellationToken).ConfigureAwait(false);
             _sessionRequests[request.CaptureId] = new(request.CaptureId, control.Generation, request.RequestId);
             return true;
@@ -144,7 +145,8 @@ internal sealed partial class LocalCaptureAnalysisStore
                 : AnalysisDocumentMapper.ToRecord(document).StartRun(revision, run.PlanVersion, run.Id);
             AnalysisDocument next = AnalysisDocumentMapper.ToDocument(record) with
             {
-                Version = 2, Run = ToDocument(run.BindSource(revision), document.Run!.SourcePath, document.Run.Language, document.Run.ReuseExisting),
+                Version = 2,
+                Run = ToDocument(run.BindSource(revision), document.Run!.SourcePath, document.Run.Language, document.Run.ReuseExisting),
             };
             await WriteDocumentAsync(token.Generation, next, cancellationToken).ConfigureAwait(false);
             return true;
@@ -174,7 +176,8 @@ internal sealed partial class LocalCaptureAnalysisStore
             if (result != null) record = record.WithResult(result);
             AnalysisDocument next = AnalysisDocumentMapper.ToDocument(record) with
             {
-                Version = 2, Run = ToDocument(run.CompleteStep(step), document.Run!.SourcePath, document.Run.Language, document.Run.ReuseExisting),
+                Version = 2,
+                Run = ToDocument(run.CompleteStep(step), document.Run!.SourcePath, document.Run.Language, document.Run.ReuseExisting),
             };
             await WriteDocumentAsync(token.Generation, next, cancellationToken).ConfigureAwait(false);
             if (!ToWork(token.Generation, next).Run.IsPending) _sessionRequests.Remove(token.CaptureId);

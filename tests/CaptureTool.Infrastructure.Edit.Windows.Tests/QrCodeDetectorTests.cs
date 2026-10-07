@@ -1,5 +1,4 @@
 using CaptureTool.Application.Abstractions.Edit.Image.TextExtraction;
-using CaptureTool.Infrastructure.Edit.Windows;
 using FluentAssertions;
 using ZXing;
 using ZXing.Common;

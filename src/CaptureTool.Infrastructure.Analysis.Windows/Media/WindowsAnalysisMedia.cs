@@ -2,7 +2,6 @@ using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Domain.Analysis;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Runtime.InteropServices.WindowsRuntime;
 using Windows.Graphics.Imaging;
 using Windows.Media.Editing;
 using Windows.Media.MediaProperties;

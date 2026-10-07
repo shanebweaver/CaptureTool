@@ -13,11 +13,11 @@ public sealed class CaptureAnalysisRecord
     public IReadOnlyList<AnalysisResult> Results { get; }
 
     public CaptureAnalysisRecord(
-        CaptureId captureId, 
-        AnalysisMediaKind mediaKind, 
+        CaptureId captureId,
+        AnalysisMediaKind mediaKind,
         SourceRevision sourceRevision,
-        string planVersion, 
-        Guid runId, 
+        string planVersion,
+        Guid runId,
         IEnumerable<AnalysisResult> results)
     {
         if (captureId.IsEmpty)
@@ -94,9 +94,9 @@ public sealed class CaptureAnalysisRecord
 
         AnalysisResult[] next = [.. Results.Where(existing => existing.Payload.Capability != result.Payload.Capability), result];
         return new(
-            CaptureId, 
-            MediaKind, 
-            SourceRevision, 
+            CaptureId,
+            MediaKind,
+            SourceRevision,
             PlanVersion,
             RunId,
             next.Where(existing => existing.Derivation?.Matches(next) != false));

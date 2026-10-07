@@ -71,7 +71,7 @@ public sealed class CaptureVideoTextViewModel : ViewModelBase
                 item.Passage.Id, item.Passage.Source, item.Passage.Label, item.Passage.Text,
                 item.Passage.Locations.Where(location => location.Time == group.Key)
                     .Select(location => group.Key == null ? location with { Bounds = null } : location), item.Passage.TextRegions, item.Passage.TextLines)
-                { ShowTimestamp = false }).ToArray(), _text))
+            { ShowTimestamp = false }).ToArray(), _text))
             .ToArray();
         Filter();
         if (SelectedFrame is { } selected)

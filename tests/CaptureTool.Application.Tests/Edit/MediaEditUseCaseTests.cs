@@ -1,5 +1,4 @@
 using CaptureTool.Application.Abstractions.Capture.Assets;
-using CaptureTool.Domain.Capture;
 using CaptureTool.Application.Abstractions.Clipboard;
 using CaptureTool.Application.Abstractions.Edit.Audio.CopyAudioFile;
 using CaptureTool.Application.Abstractions.Edit.Audio.OpenAudioEditPage;
@@ -19,6 +18,7 @@ using CaptureTool.Application.Edit.External;
 using CaptureTool.Application.Edit.Video.CopyVideoFile;
 using CaptureTool.Application.Edit.Video.OpenVideoEditPage;
 using CaptureTool.Application.Edit.Video.SaveVideoFile;
+using CaptureTool.Domain.Capture;
 using CaptureTool.Domain.FileSystem;
 using Moq;
 

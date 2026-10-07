@@ -211,8 +211,12 @@ internal sealed class CaptureMemoryService : ICaptureMemoryService, IDisposable
             {
                 return;
             }
-            var kind = media switch { CaptureFileType.Image => AnalysisMediaKind.Image,
-                CaptureFileType.Audio => AnalysisMediaKind.Audio, _ => AnalysisMediaKind.Video };
+            var kind = media switch
+            {
+                CaptureFileType.Image => AnalysisMediaKind.Image,
+                CaptureFileType.Audio => AnalysisMediaKind.Audio,
+                _ => AnalysisMediaKind.Video
+            };
             if (_availability != null)
             {
                 _availability.Invalidate(); // An explicit request can recover after a system/model update.

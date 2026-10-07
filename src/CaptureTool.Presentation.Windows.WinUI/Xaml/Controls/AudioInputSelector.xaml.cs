@@ -1,8 +1,8 @@
 using CaptureTool.Application.Abstractions.Audio;
 using CaptureTool.Presentation.Windows.WinUI.Utils;
-using Microsoft.Windows.ApplicationModel.Resources;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.Windows.ApplicationModel.Resources;
 using System.Collections;
 using System.Windows.Input;
 using Windows.System;

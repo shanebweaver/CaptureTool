@@ -1,6 +1,6 @@
 using CaptureTool.Application.Abstractions.Ai;
-using CaptureTool.Infrastructure.Ai;
 using CaptureTool.Application.Abstractions.Edit.Image.Description;
+using CaptureTool.Infrastructure.Ai;
 using Microsoft.Graphics.Imaging;
 using Microsoft.Windows.AI;
 using Microsoft.Windows.AI.ContentSafety;

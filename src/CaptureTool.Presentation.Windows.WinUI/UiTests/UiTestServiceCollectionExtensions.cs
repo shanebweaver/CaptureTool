@@ -1,16 +1,16 @@
-﻿using CaptureTool.Application.Abstractions.Edit.Image.Rendering;
+﻿using CaptureTool.Application.Abstractions.Analysis;
+using CaptureTool.Application.Abstractions.Edit.Image.Rendering;
 using CaptureTool.Application.Abstractions.Edit.Image.TextExtraction;
 using CaptureTool.Application.Abstractions.Localization;
 using CaptureTool.Application.Abstractions.Logging;
 using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Application.Abstractions.Themes;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
-using CaptureTool.Application.Abstractions.Analysis;
 using CaptureTool.Application.Analysis;
 using CaptureTool.Domain.Analysis;
 using CaptureTool.Domain.Analysis.Payloads;
 using CaptureTool.FeatureManagement;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace CaptureTool.Presentation.Windows.WinUI.UiTests;
 

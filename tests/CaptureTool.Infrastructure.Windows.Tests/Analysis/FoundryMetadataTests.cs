@@ -1,12 +1,12 @@
 ﻿using CaptureTool.Application.Abstractions.Analysis;
+using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Application.Analysis;
 using CaptureTool.Domain;
 using CaptureTool.Domain.Analysis;
 using CaptureTool.Domain.Analysis.Payloads;
 using CaptureTool.Infrastructure.Analysis.Windows;
-using CaptureTool.Infrastructure.Analysis.Windows.Foundry;
 using CaptureTool.Infrastructure.Analysis.Windows.DependencyInjection;
-using CaptureTool.Application.Abstractions.Storage;
+using CaptureTool.Infrastructure.Analysis.Windows.Foundry;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using System.Text;

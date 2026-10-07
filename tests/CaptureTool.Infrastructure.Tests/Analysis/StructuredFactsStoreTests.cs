@@ -51,8 +51,8 @@ public sealed class StructuredFactsStoreTests
         Assert.AreEqual(result.Producer, loaded.Producer);
         CollectionAssert.AreEqual(facts.Facts.Select(fact => (fact.Kind, fact.Value)).ToArray(), restored.Facts.Select(fact => (fact.Kind, fact.Value)).ToArray());
         foreach (StructuredFact fact in restored.Facts)
-        foreach (AnalysisEvidence evidence in fact.Evidence)
-            Assert.AreEqual(fact.Value, evidence.ResolveText(source));
+            foreach (AnalysisEvidence evidence in fact.Evidence)
+                Assert.AreEqual(fact.Value, evidence.ResolveText(source));
         foreach (byte[] bytes in environment.Files.PublishedBytes)
             Assert.DoesNotContain("private.example", Encoding.UTF8.GetString(bytes));
     }

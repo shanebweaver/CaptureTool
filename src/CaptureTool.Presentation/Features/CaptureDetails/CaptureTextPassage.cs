@@ -1,5 +1,5 @@
-using CaptureTool.Application.Abstractions.Localization;
 using CaptureTool.Application.Abstractions.Edit.Image.TextExtraction;
+using CaptureTool.Application.Abstractions.Localization;
 using CaptureTool.Domain.Analysis;
 using CaptureTool.Domain.Analysis.Payloads;
 using CaptureTool.Presentation.ViewModels;

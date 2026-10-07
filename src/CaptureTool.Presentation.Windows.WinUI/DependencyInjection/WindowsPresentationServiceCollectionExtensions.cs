@@ -1,12 +1,10 @@
-﻿using CaptureTool.Application.Abstractions.Ai;
-using CaptureTool.Application.Abstractions.Analysis;
-using CaptureTool.Presentation.Windows.WinUI.Analysis;
+﻿using CaptureTool.Application.Abstractions.Analysis;
 using CaptureTool.Application.Abstractions.Capture;
 using CaptureTool.Application.Abstractions.Capture.Audio;
-using CaptureTool.Application.Abstractions.Edit.Image.SuperResolution;
 using CaptureTool.Application.Abstractions.EditSessions;
 using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Application.Abstractions.Windowing;
+using CaptureTool.Presentation.Windows.WinUI.Analysis;
 using CaptureTool.Presentation.Windows.WinUI.AudioCapture;
 using CaptureTool.Presentation.Windows.WinUI.Capture;
 using CaptureTool.Presentation.Windows.WinUI.EditSessions;

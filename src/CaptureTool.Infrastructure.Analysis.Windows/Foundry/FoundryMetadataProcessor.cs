@@ -6,9 +6,9 @@ using System.Globalization;
 namespace CaptureTool.Infrastructure.Analysis.Windows.Foundry;
 
 internal sealed partial class FoundryMetadataProcessor(
-    MetadataProcessorDescriptor descriptor, 
-    string alias, 
-    FoundryRuntime runtime) 
+    MetadataProcessorDescriptor descriptor,
+    string alias,
+    FoundryRuntime runtime)
     : IMetadataProcessor
 {
     private IModel? _model;
@@ -70,9 +70,9 @@ internal sealed partial class FoundryMetadataProcessor(
             Uri endpoint = await runtime.StartChatServiceAsync(ct).ConfigureAwait(false);
             serving = true;
             using var http = new HttpClient(new HttpClientHandler { UseProxy = false, AllowAutoRedirect = false })
-            { 
-                Timeout = Timeout.InfiniteTimeSpan, 
-                MaxResponseContentBufferSize = FoundryMetadataProtocol.MaximumResponseBytes 
+            {
+                Timeout = Timeout.InfiniteTimeSpan,
+                MaxResponseContentBufferSize = FoundryMetadataProtocol.MaximumResponseBytes
             };
             return await FoundryMetadataGeneration.GenerateAsync(model.Id, input,
                 new(Descriptor.Id, "foundry-local", model.Id, Descriptor.Version, model.Info.Version.ToString(CultureInfo.InvariantCulture)),
@@ -85,9 +85,9 @@ internal sealed partial class FoundryMetadataProcessor(
                     return await response.Content.ReadAsByteArrayAsync(CancellationToken.None).ConfigureAwait(false);
                 }, ct).ConfigureAwait(false);
         }
-        catch (HttpRequestException) 
-        { 
-            return AnalyzerOutcome.Unsuccessful(AnalyzerOutcomeKind.Failed, "text-response-failed"); 
+        catch (HttpRequestException)
+        {
+            return AnalyzerOutcome.Unsuccessful(AnalyzerOutcomeKind.Failed, "text-response-failed");
         }
         finally
         {

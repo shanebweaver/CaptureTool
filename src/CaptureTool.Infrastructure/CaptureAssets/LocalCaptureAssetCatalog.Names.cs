@@ -19,17 +19,23 @@ internal sealed partial class LocalCaptureAssetCatalog
     }
 
     public Task SetAutomaticNamingAsync(bool enabled, CancellationToken cancellationToken = default) =>
-        UpdateNamingAsync(state => state with { AutomaticNamingEnabled = enabled,
+        UpdateNamingAsync(state => state with
+        {
+            AutomaticNamingEnabled = enabled,
             NamingEpoch = enabled ? state.NamingEpoch ?? Guid.NewGuid() : null,
-            Entries = enabled ? state.Entries : WithoutSuggestions(state) }, cancellationToken);
+            Entries = enabled ? state.Entries : WithoutSuggestions(state)
+        }, cancellationToken);
 
     public Task EnableAutomaticNamingByDefaultAsync(CancellationToken cancellationToken = default) =>
         UpdateNamingAsync(state => state.AutomaticNamingEnabled != null ? state :
             state with { AutomaticNamingEnabled = true, NamingEpoch = Guid.NewGuid() }, cancellationToken);
 
     public Task InvalidatePendingNamesAsync(CancellationToken cancellationToken = default) =>
-        UpdateNamingAsync(state => state with { NamingEpoch = state.NamingEpoch == null ? null : Guid.NewGuid(),
-            Entries = WithoutSuggestions(state) }, cancellationToken);
+        UpdateNamingAsync(state => state with
+        {
+            NamingEpoch = state.NamingEpoch == null ? null : Guid.NewGuid(),
+            Entries = WithoutSuggestions(state)
+        }, cancellationToken);
 
     private static List<CaptureRegistration> WithoutSuggestions(Catalog state) => state.Entries.Select(entry =>
         entry.Asset.Name?.IsAutomatic == true ? entry with { Asset = entry.Asset.WithName(null), NamingEpoch = null } : entry).ToList();

@@ -1,6 +1,4 @@
-using CaptureTool.Application.Abstractions.Edit.Image.TextExtraction;
 using CaptureTool.Application.Edit.Image.TextExtraction;
-using System.Drawing;
 
 namespace CaptureTool.Application.Tests.Edit;
 

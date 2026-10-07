@@ -1,5 +1,5 @@
-using CaptureTool.Application.Abstractions.Cancellation;
 using CaptureTool.Application.Abstractions.Analysis;
+using CaptureTool.Application.Abstractions.Cancellation;
 using CaptureTool.Application.Abstractions.Logging;
 using CaptureTool.Application.Abstractions.Shutdown;
 using CaptureTool.Application.Abstractions.Telemetry;

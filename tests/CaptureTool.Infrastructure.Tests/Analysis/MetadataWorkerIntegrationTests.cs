@@ -16,8 +16,12 @@ public sealed partial class CaptureAnalysisWorkerTests
         var request = await fixture.EnqueueAsync(Ct, capabilities: [AnalysisCapability.TextRecognition]);
         await DrainAsync(fixture.Worker, Ct);
         Assert.AreEqual(0, synopsis.Probes);
-        Assert.IsTrue(await fixture.Worker.EnqueueAsync(request with { RequestId = Guid.NewGuid(),
-            ExpectedRunId = request.RequestId, Capabilities = [AnalysisCapability.CaptureSynopsis] }, Ct));
+        Assert.IsTrue(await fixture.Worker.EnqueueAsync(request with
+        {
+            RequestId = Guid.NewGuid(),
+            ExpectedRunId = request.RequestId,
+            Capabilities = [AnalysisCapability.CaptureSynopsis]
+        }, Ct));
         await DrainAsync(fixture.Worker, Ct);
         CollectionAssert.AreEqual(new[] { "preferred" }, fixture.Calls.ToArray());
         var record = (await fixture.Store.GetAsync(request.CaptureId, cancellationToken: Ct))!;

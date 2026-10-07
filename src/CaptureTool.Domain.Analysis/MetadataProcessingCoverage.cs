@@ -12,21 +12,21 @@ public sealed record MetadataProcessingCoverage
     public bool IsComplete => Limits == MetadataProcessingLimit.None;
 
     public MetadataProcessingCoverage(
-        long availableEntries, 
-        int includedEntries, 
-        int includedCharacters, 
+        long availableEntries,
+        int includedEntries,
+        int includedCharacters,
         MetadataProcessingLimit limits)
     {
-        const MetadataProcessingLimit known = 
-            MetadataProcessingLimit.InputEntries | 
+        const MetadataProcessingLimit known =
+            MetadataProcessingLimit.InputEntries |
             MetadataProcessingLimit.InputCharacters |
-            MetadataProcessingLimit.OversizedEntry | 
-            MetadataProcessingLimit.Facts | 
-            MetadataProcessingLimit.Evidence | 
+            MetadataProcessingLimit.OversizedEntry |
+            MetadataProcessingLimit.Facts |
+            MetadataProcessingLimit.Evidence |
             MetadataProcessingLimit.FactValue;
-        const MetadataProcessingLimit inputLimits = 
-            MetadataProcessingLimit.InputEntries | 
-            MetadataProcessingLimit.InputCharacters | 
+        const MetadataProcessingLimit inputLimits =
+            MetadataProcessingLimit.InputEntries |
+            MetadataProcessingLimit.InputCharacters |
             MetadataProcessingLimit.OversizedEntry;
 
         if (availableEntries < 0 ||
@@ -39,7 +39,7 @@ public sealed record MetadataProcessingCoverage
             throw new ArgumentException("Invalid metadata coverage counts.");
         }
 
-        if ((limits & ~known) != 0 || 
+        if ((limits & ~known) != 0 ||
             (includedEntries < availableEntries) != ((limits & inputLimits) != 0))
         {
             throw new ArgumentException("Coverage limits must describe omitted input entries.", nameof(limits));
@@ -53,9 +53,9 @@ public sealed record MetadataProcessingCoverage
 
     public MetadataProcessingCoverage WithOutputLimits(MetadataProcessingLimit limits)
     {
-        const MetadataProcessingLimit outputLimits = 
-            MetadataProcessingLimit.Facts | 
-            MetadataProcessingLimit.Evidence | 
+        const MetadataProcessingLimit outputLimits =
+            MetadataProcessingLimit.Facts |
+            MetadataProcessingLimit.Evidence |
             MetadataProcessingLimit.FactValue;
 
         if ((limits & ~outputLimits) != 0)
@@ -64,9 +64,9 @@ public sealed record MetadataProcessingCoverage
         }
 
         return new(
-            AvailableEntries, 
-            IncludedEntries, 
-            IncludedCharacters, 
+            AvailableEntries,
+            IncludedEntries,
+            IncludedCharacters,
             Limits | limits);
     }
 

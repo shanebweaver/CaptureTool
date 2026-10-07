@@ -34,8 +34,13 @@ public sealed partial class CaptureAnalysisWorkerTests
             using var reopened = fixture.Environment.CreateStore();
             using var worker = new CaptureAnalysisWorker(reopened, fixture.Authorization, fixture.Source,
                 fixture.Configuration, fixture.Adapters, fixture.Catalog, processors);
-            request = request with { RequestId = Guid.NewGuid(), ExpectedRunId = request.RequestId, ReuseExisting = true,
-                Capabilities = ImageAction(fixture, capability) };
+            request = request with
+            {
+                RequestId = Guid.NewGuid(),
+                ExpectedRunId = request.RequestId,
+                ReuseExisting = true,
+                Capabilities = ImageAction(fixture, capability)
+            };
             Assert.IsTrue(await worker.EnqueueAsync(request, Ct));
             await DrainAsync(worker, Ct);
             var saved = (await reopened.GetAsync(request.CaptureId, cancellationToken: Ct))!;
@@ -67,11 +72,14 @@ public sealed partial class CaptureAnalysisWorkerTests
         var resources = new TestResources();
         var calls = new List<AnalysisCapability>();
         var processors = MetadataEnrichmentConfiguration.LanguageModelCapabilities.Select(capability =>
-            new ScreenshotProcessor(capability) { Starting = () =>
+            new ScreenshotProcessor(capability)
+            {
+                Starting = () =>
             {
                 Assert.AreEqual(0, resources.Releases, "The worker must not unload models between companion requests.");
                 calls.Add(capability);
-            }}).ToArray();
+            }
+            }).ToArray();
         using var fixture = new Fixture(processors: processors, resources: [resources]);
         fixture.Preferred.Execute = (_, _) => Task.FromResult(SourceSuccess(fixture));
         var committed = new List<AnalysisCapability>();
@@ -146,8 +154,13 @@ public sealed partial class CaptureAnalysisWorkerTests
         await DrainAsync(fixture.Worker, Ct);
         var original = (await fixture.Store.GetAsync(request.CaptureId, cancellationToken: Ct))!;
         fixture.Calls.Clear();
-        var next = request with { RequestId = Guid.NewGuid(), ExpectedRunId = request.RequestId, ReuseExisting = true,
-            Capabilities = ImageAction(fixture, AnalysisCapability.CaptureSynopsis) };
+        var next = request with
+        {
+            RequestId = Guid.NewGuid(),
+            ExpectedRunId = request.RequestId,
+            ReuseExisting = true,
+            Capabilities = ImageAction(fixture, AnalysisCapability.CaptureSynopsis)
+        };
         Assert.IsTrue(await fixture.Worker.EnqueueAsync(next, Ct));
         await DrainAsync(fixture.Worker, Ct);
         CollectionAssert.AreEqual(cachedOcr && !cachedDescription ? new[] { "description" } : Array.Empty<string>(), fixture.Calls.ToArray());
@@ -157,8 +170,12 @@ public sealed partial class CaptureAnalysisWorkerTests
             Assert.AreEqual(source.ResultId, saved.Results.Single(result => result.Payload.Capability == source.Payload.Capability).ResultId);
 
         fixture.Calls.Clear();
-        Assert.IsTrue(await fixture.Worker.EnqueueAsync(next with { RequestId = Guid.NewGuid(), ExpectedRunId = next.RequestId,
-            Capabilities = ImageAction(fixture, AnalysisCapability.ImageAltText) }, Ct));
+        Assert.IsTrue(await fixture.Worker.EnqueueAsync(next with
+        {
+            RequestId = Guid.NewGuid(),
+            ExpectedRunId = next.RequestId,
+            Capabilities = ImageAction(fixture, AnalysisCapability.ImageAltText)
+        }, Ct));
         await DrainAsync(fixture.Worker, Ct);
         Assert.IsEmpty(fixture.Calls);
         Assert.AreEqual(1, summary.Calls);
@@ -207,8 +224,13 @@ public sealed partial class CaptureAnalysisWorkerTests
         fixture.Calls.Clear();
         for (int attempt = 0; attempt < 2; attempt++)
         {
-            request = request with { RequestId = Guid.NewGuid(), ExpectedRunId = request.RequestId, ReuseExisting = true,
-                Capabilities = ImageAction(fixture, AnalysisCapability.CaptureName) };
+            request = request with
+            {
+                RequestId = Guid.NewGuid(),
+                ExpectedRunId = request.RequestId,
+                ReuseExisting = true,
+                Capabilities = ImageAction(fixture, AnalysisCapability.CaptureName)
+            };
             Assert.IsTrue(await fixture.Worker.EnqueueAsync(request, Ct));
             await DrainAsync(fixture.Worker, Ct);
             var saved = (await fixture.Store.GetAsync(request.CaptureId, cancellationToken: Ct))!;
@@ -229,8 +251,13 @@ public sealed partial class CaptureAnalysisWorkerTests
         await DrainAsync(fixture.Worker, Ct);
         fixture.Calls.Clear();
         fixture.Source.Revision = new(new string('b', 64));
-        Assert.IsTrue(await fixture.Worker.EnqueueAsync(request with { RequestId = Guid.NewGuid(), ExpectedRunId = request.RequestId,
-            ReuseExisting = true, Capabilities = ImageAction(fixture, AnalysisCapability.CaptureSynopsis) }, Ct));
+        Assert.IsTrue(await fixture.Worker.EnqueueAsync(request with
+        {
+            RequestId = Guid.NewGuid(),
+            ExpectedRunId = request.RequestId,
+            ReuseExisting = true,
+            Capabilities = ImageAction(fixture, AnalysisCapability.CaptureSynopsis)
+        }, Ct));
         await DrainAsync(fixture.Worker, Ct);
         CollectionAssert.AreEqual(new[] { "preferred", "description" }, fixture.Calls.ToArray());
         Assert.AreEqual(2, summary.Calls);

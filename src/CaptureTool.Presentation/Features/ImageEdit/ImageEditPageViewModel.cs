@@ -1,6 +1,6 @@
-﻿using CaptureTool.Application.Abstractions.Capture.Assets;
-using CaptureTool.Application.Abstractions.Ai;
+﻿using CaptureTool.Application.Abstractions.Ai;
 using CaptureTool.Application.Abstractions.Cancellation;
+using CaptureTool.Application.Abstractions.Capture.Assets;
 using CaptureTool.Application.Abstractions.Clipboard;
 using CaptureTool.Application.Abstractions.Edit.External;
 using CaptureTool.Application.Abstractions.Edit.Image;

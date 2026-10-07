@@ -3,9 +3,9 @@ using CaptureTool.Application.Analysis;
 using CaptureTool.Domain;
 using CaptureTool.Domain.Analysis;
 using CaptureTool.Domain.Analysis.Payloads;
+using CaptureTool.Domain.Capture;
 using CaptureTool.Infrastructure.Analysis.Persistence;
 using CaptureTool.Infrastructure.CaptureAssets;
-using CaptureTool.Domain.Capture;
 using System.Collections.Concurrent;
 
 namespace CaptureTool.Infrastructure.Tests.Analysis;
@@ -24,8 +24,12 @@ public sealed partial class CaptureAnalysisWorkerTests
         await DrainAsync(fixture.Worker, Ct);
         CollectionAssert.AreEqual(new[] { "description" }, fixture.Calls.ToArray());
         var description = (await fixture.Store.GetAsync(first.CaptureId, cancellationToken: Ct))!.Results.Single();
-        var second = first with { RequestId = Guid.NewGuid(), ExpectedRunId = first.RequestId,
-            Capabilities = [AnalysisCapability.TextRecognition] };
+        var second = first with
+        {
+            RequestId = Guid.NewGuid(),
+            ExpectedRunId = first.RequestId,
+            Capabilities = [AnalysisCapability.TextRecognition]
+        };
         Assert.IsTrue(await fixture.Worker.EnqueueAsync(second, Ct));
         await DrainAsync(fixture.Worker, Ct);
         CollectionAssert.AreEqual(new[] { "description", "preferred" }, fixture.Calls.ToArray());
@@ -471,7 +475,8 @@ public sealed partial class CaptureAnalysisWorkerTests
         await fixture.Authorization.ChangeAsync(false, Ct);
         AnalysisAdmissionScope scope = await fixture.Store.GetAdmissionScopeAsync(Ct);
         Assert.IsFalse(await fixture.Worker.EnqueueAsync(AnalysisExecutionStoreTests.Request(fixture.Environment, scope)
-            with { ExpectedAuthorizationId = old.ExpectedAuthorizationId }, Ct));
+            with
+        { ExpectedAuthorizationId = old.ExpectedAuthorizationId }, Ct));
         await fixture.Authorization.ChangeAsync(true, Ct);
         AnalysisRequest fresh = await fixture.EnqueueAsync(Ct);
         await DrainAsync(fixture.Worker, Ct);

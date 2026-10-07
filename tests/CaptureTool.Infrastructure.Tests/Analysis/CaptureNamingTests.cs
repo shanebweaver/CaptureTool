@@ -1,6 +1,5 @@
 ﻿using CaptureTool.Application.Abstractions.Library.RecentCaptures;
 using CaptureTool.Application.Capture;
-using CaptureTool.Domain;
 using CaptureTool.Domain.Capture;
 using CaptureTool.Infrastructure.Files;
 

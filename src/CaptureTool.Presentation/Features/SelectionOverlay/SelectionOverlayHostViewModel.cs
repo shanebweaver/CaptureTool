@@ -4,7 +4,6 @@ using CaptureTool.Domain.Capture;
 using CaptureTool.Domain.FileSystem;
 using CaptureTool.Presentation.ViewModels;
 using System.ComponentModel;
-using System.Drawing;
 
 namespace CaptureTool.Presentation.Features.SelectionOverlay;
 

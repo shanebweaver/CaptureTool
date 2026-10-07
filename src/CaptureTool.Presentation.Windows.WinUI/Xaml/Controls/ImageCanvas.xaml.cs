@@ -6,8 +6,8 @@ using CaptureTool.Domain.Edit;
 using CaptureTool.Domain.Edit.Drawable;
 using CaptureTool.Domain.Edit.Operations;
 using CaptureTool.Infrastructure.Edit.Windows;
-using CaptureTool.Presentation.Features.ImageEdit;
 using CaptureTool.Presentation.Features.CaptureDetails;
+using CaptureTool.Presentation.Features.ImageEdit;
 using Microsoft.Graphics.Canvas;
 using Microsoft.Graphics.Canvas.UI;
 using Microsoft.Graphics.Canvas.UI.Xaml;
@@ -928,7 +928,10 @@ public sealed partial class ImageCanvas : UserControlBase
             bounds.Width * renderSize.Width, bounds.Height * renderSize.Height);
         CanvasContainer.StartBringIntoView(new BringIntoViewOptions
         {
-            TargetRect = region, HorizontalAlignmentRatio = .5, VerticalAlignmentRatio = .5, AnimationDesired = false
+            TargetRect = region,
+            HorizontalAlignmentRatio = .5,
+            VerticalAlignmentRatio = .5,
+            AnimationDesired = false
         });
         return true;
     }
