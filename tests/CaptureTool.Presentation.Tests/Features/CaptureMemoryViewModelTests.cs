@@ -1,4 +1,4 @@
-﻿using CaptureTool.Application.Abstractions.Analysis;
+using CaptureTool.Application.Abstractions.Analysis;
 using CaptureTool.Application.Abstractions.Localization;
 using CaptureTool.Application.Abstractions.TaskEnvironment;
 using CaptureTool.Domain.Analysis;
@@ -11,6 +11,43 @@ namespace CaptureTool.Presentation.Tests.Features;
 [TestClass]
 public sealed class CaptureMemoryViewModelTests
 {
+    [TestMethod]
+    public async Task UnsupportedDeviceHidesEnablementButKeepsRevocationAndDeletion()
+    {
+        using var fixture = new Fixture();
+        fixture.Availability.Query = (_, _) => Task.FromResult(false);
+        fixture.Change(fixture.State with { Policy = CaptureMemoryPolicy.Disabled(), Storage = new(false, true) });
+        await fixture.ViewModel.RefreshAsync();
+        fixture.Dispatch();
+        Assert.IsFalse(fixture.ViewModel.ShowSettings);
+        Assert.IsFalse(fixture.ViewModel.ShowConsent);
+        Assert.IsFalse(fixture.ViewModel.SetConsentCommand.CanExecute(true));
+        await fixture.ViewModel.SetConsentCommand.ExecuteAsync(true);
+        fixture.Memory.Verify(x => x.SetConsentAsync(true, It.IsAny<CancellationToken>()), Times.Never);
+        fixture.Change(fixture.State with { Storage = new(true, true) });
+        fixture.Dispatch();
+        Assert.IsTrue(fixture.ViewModel.ShowSettings);
+        Assert.IsFalse(fixture.ViewModel.ShowConsent);
+        Assert.IsTrue(fixture.ViewModel.DeleteCommand.CanExecute(null));
+        fixture.Change(fixture.State with { Policy = new(false, true, Guid.NewGuid(), 0) });
+        fixture.Dispatch();
+        Assert.IsTrue(fixture.ViewModel.ShowConsent);
+        Assert.IsTrue(fixture.ViewModel.SetConsentCommand.CanExecute(false));
+    }
+
+    [TestMethod]
+    public async Task SupportedDeviceShowsConsentBeforeAnyModelsHaveBeenPrepared()
+    {
+        using var fixture = new Fixture();
+        fixture.Change(fixture.State with { Policy = CaptureMemoryPolicy.Disabled(), Storage = new(false, true) });
+        fixture.Dispatch();
+        Assert.IsFalse(fixture.ViewModel.ShowSettings);
+        await fixture.ViewModel.RefreshAsync();
+        fixture.Dispatch();
+        Assert.IsTrue(fixture.ViewModel.ShowSettings);
+        Assert.IsTrue(fixture.ViewModel.ShowConsent);
+        Assert.IsTrue(fixture.ViewModel.SetConsentCommand.CanExecute(true));
+    }
     [TestMethod]
     public void CoalescesSettingsStateOnDispatcher()
     {
@@ -162,6 +199,7 @@ public sealed class CaptureMemoryViewModelTests
     public async Task ExplicitActionReportsFailureEvenWhenUiUpdateRunsAfterCommandCompletes(string code)
     {
         using var fixture = new Fixture();
+        await fixture.ViewModel.RefreshAsync();
         fixture.Change(fixture.State with { Policy = CaptureMemoryPolicy.Disabled(), FailureCode = code });
         fixture.Dispatch();
         fixture.Notifications.Verify(x => x.ShowError(It.IsAny<string>()), Times.Never);
@@ -195,6 +233,7 @@ public sealed class CaptureMemoryViewModelTests
     public async Task ExplicitFailureSurvivesRecoveryBeforeDispatcherRuns()
     {
         using var fixture = new Fixture();
+        await fixture.ViewModel.RefreshAsync();
         fixture.Change(fixture.State with { Policy = CaptureMemoryPolicy.Disabled() });
         fixture.Dispatch();
         fixture.Memory.Setup(x => x.SetConsentAsync(true, default)).Callback(() =>
@@ -229,6 +268,7 @@ public sealed class CaptureMemoryViewModelTests
 
     private sealed class Fixture : IDisposable
     {
+        public TestAnalysisAvailability Availability { get; } = new();
         public Mock<ICaptureMemoryService> Memory { get; } = new();
         public Mock<IAppNotificationService> Notifications { get; } = new();
         public Queue<Action> Updates { get; } = new();
@@ -241,7 +281,7 @@ public sealed class CaptureMemoryViewModelTests
             ui.Setup(value => value.TryExecute(It.IsAny<Action>())).Callback<Action>(Updates.Enqueue).Returns(true);
             var localization = new Mock<ILocalizationService>();
             localization.Setup(value => value.GetString(It.IsAny<string>())).Returns<string>(value => value);
-            ViewModel = new(Memory.Object, ui.Object, localization.Object, Notifications.Object);
+            ViewModel = new(Memory.Object, ui.Object, localization.Object, Notifications.Object, Availability);
         }
         public void Change(CaptureMemoryState state) { State = state; Memory.Raise(value => value.StateChanged += null); }
         public void Dispatch() { while (Updates.TryDequeue(out Action? update)) update(); }

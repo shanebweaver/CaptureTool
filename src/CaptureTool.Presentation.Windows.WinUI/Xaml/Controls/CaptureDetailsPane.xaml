@@ -241,7 +241,8 @@
                             AutomationProperties.AutomationId="CaptureAction_Name"
                             AutomationProperties.Name="{x:Bind ViewModel.NameSuggestionToolTip, Mode=OneWay}"
                             Command="{x:Bind ViewModel.SuggestNameCommand, Mode=OneWay}"
-                            ToolTipService.ToolTip="{x:Bind ViewModel.NameSuggestionToolTip, Mode=OneWay}">
+                            ToolTipService.ToolTip="{x:Bind ViewModel.NameSuggestionToolTip, Mode=OneWay}"
+                            Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.ShowNameAction), Mode=OneWay}">
                             <FontIcon
                                 AutomationProperties.AccessibilityView="Raw"
                                 FontFamily="Segoe Fluent Icons"
@@ -291,24 +292,26 @@
                 AutomationProperties.AutomationId="CapturePane_DetailsTab">
                 <ScrollViewer HorizontalScrollMode="Disabled" VerticalScrollBarVisibility="Auto">
                     <StackPanel Padding="0,0,8,8" Spacing="12">
-                        <Grid Margin="0,5" ColumnSpacing="12">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="110" />
-                                <ColumnDefinition Width="*" />
-                            </Grid.ColumnDefinitions>
-                            <TextBlock
-                                x:Uid="CaptureNaming_FileName"
-                                FontSize="12"
-                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                                TextWrapping="Wrap" />
-                            <TextBlock
-                                Grid.Column="1"
-                                FontSize="12"
-                                IsTextSelectionEnabled="True"
-                                Text="{x:Bind ViewModel.PhysicalFileName, Mode=OneWay}"
-                                TextWrapping="Wrap" />
-                        </Grid>
-                        <ItemsControl ItemTemplate="{StaticResource PropertyTemplate}" ItemsSource="{x:Bind ViewModel.FileProperties.Basic, Mode=OneWay}" />
+                        <StackPanel>
+                            <Grid Margin="0,5" ColumnSpacing="12">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="110" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock
+                                    x:Uid="CaptureNaming_FileName"
+                                    FontSize="12"
+                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                    TextWrapping="Wrap" />
+                                <TextBlock
+                                    Grid.Column="1"
+                                    FontSize="12"
+                                    IsTextSelectionEnabled="True"
+                                    Text="{x:Bind ViewModel.PhysicalFileName, Mode=OneWay}"
+                                    TextWrapping="Wrap" />
+                            </Grid>
+                            <ItemsControl ItemTemplate="{StaticResource PropertyTemplate}" ItemsSource="{x:Bind ViewModel.FileProperties.Basic, Mode=OneWay}" />
+                        </StackPanel>
                         <StackPanel Orientation="Horizontal" Spacing="8">
                             <Button x:Uid="CapturePane_CopyPath" Command="{x:Bind ViewModel.CopyPathCommand, Mode=OneWay}" />
                             <Button x:Uid="CapturePane_OpenFolder" Command="{x:Bind ViewModel.OpenFolderCommand, Mode=OneWay}" />
@@ -320,8 +323,6 @@
                             Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.FileProperties.HasTechnical), Mode=OneWay}">
                             <ItemsControl ItemTemplate="{StaticResource PropertyTemplate}" ItemsSource="{x:Bind ViewModel.FileProperties.Technical, Mode=OneWay}" />
                         </Expander>
-
-
                     </StackPanel>
                 </ScrollViewer>
             </PivotItem>
@@ -775,7 +776,7 @@
                 AutomationProperties.AutomationId="CapturePane_SummaryTab">
                 <ScrollViewer HorizontalScrollMode="Disabled" VerticalScrollBarVisibility="Auto">
                     <StackPanel Padding="0,0,8,8" Spacing="16">
-                        <StackPanel Spacing="8">
+                        <StackPanel Spacing="8" Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.ShowSummarySection), Mode=OneWay}">
                             <StackPanel Orientation="Horizontal" Spacing="4">
                                 <TextBlock
                                     x:Uid="CapturePane_Summary"
@@ -805,7 +806,7 @@
                                     HorizontalContentAlignment="Stretch"
                                     Content="{x:Bind ViewModel.SummaryAction, Mode=OneWay}"
                                     ContentTemplate="{StaticResource SummaryActionTemplate}"
-                                    Visibility="{x:Bind utils:VisibilityUtility.InverseBoolToVisibility(ViewModel.SummaryAction.HasResult), Mode=OneWay}" />
+                                    Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.SummaryAction.ShowAction), Mode=OneWay}" />
                                 <StackPanel Spacing="8" Visibility="{x:Bind TextVisibility(ViewModel.Summary), Mode=OneWay}">
                                     <TextBlock
                                         AutomationProperties.AutomationId="CaptureSummary_Result"
@@ -820,7 +821,7 @@
                                 </StackPanel>
                             </Grid>
                         </StackPanel>
-                        <StackPanel Spacing="8" Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.IsImage), Mode=OneWay}">
+                        <StackPanel Spacing="8" Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.ShowAltTextSection), Mode=OneWay}">
                             <StackPanel Orientation="Horizontal" Spacing="4">
                                 <TextBlock
                                     x:Uid="CaptureSummary_AltText"
@@ -850,7 +851,7 @@
                                     HorizontalContentAlignment="Stretch"
                                     Content="{x:Bind ViewModel.AltTextAction, Mode=OneWay}"
                                     ContentTemplate="{StaticResource SummaryActionTemplate}"
-                                    Visibility="{x:Bind utils:VisibilityUtility.InverseBoolToVisibility(ViewModel.AltTextAction.HasResult), Mode=OneWay}" />
+                                    Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.AltTextAction.ShowAction), Mode=OneWay}" />
                                 <StackPanel Spacing="8" Visibility="{x:Bind TextVisibility(ViewModel.Content.AltText), Mode=OneWay}">
                                     <TextBlock
                                         AutomationProperties.AutomationId="CaptureSummary_AltTextResult"

@@ -9,6 +9,7 @@ public enum AnalyzerAvailability
     PreparationRequired,
     Unsupported,
     TemporarilyUnavailable,
+    LanguageResourcesRequired,
 }
 
 public enum AnalysisProgressStage

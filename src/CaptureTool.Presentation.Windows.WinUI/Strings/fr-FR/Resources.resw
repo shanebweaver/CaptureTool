@@ -1916,7 +1916,7 @@ SOFTWARE.
   <data name="CaptureWelcome_Eyebrow.Text" xml:space="preserve"><value>IA SUR L’APPAREIL</value></data>
   <data name="CaptureWelcome_Hero.Text" xml:space="preserve"><value>Profitez davantage de vos captures</value></data>
   <data name="CaptureWelcome_Text.Text" xml:space="preserve"><value>Copiez le texte de vos images pour l’utiliser où vous voulez.</value></data>
-  <data name="CaptureWelcome_Recording.Text" xml:space="preserve"><value>Obtenez un bref résumé d’une capture d’écran ou d’un enregistrement.</value></data>
+  <data name="CaptureWelcome_Recording.Text" xml:space="preserve"><value>Obtenez un résumé rapide de vos captures.</value></data>
   <data name="CaptureWelcome_Names.Text" xml:space="preserve"><value>Donnez des noms plus clairs à vos captures grâce aux suggestions de l’IA.</value></data>
   <data name="CaptureWelcome_Consent.Text" xml:space="preserve"><value>L’IA fonctionne sur ce PC uniquement lorsque vous choisissez une action. Les résultats sont enregistrés de manière sécurisée sur ce PC. Certaines fonctions peuvent nécessiter le téléchargement d’un modèle d’IA. Vous pouvez désactiver l’IA ou supprimer les résultats enregistrés dans les paramètres.</value></data>
   <data name="CaptureWelcome_NotNow" xml:space="preserve"><value>Pas maintenant</value></data>
@@ -2001,4 +2001,5 @@ SOFTWARE.
   <data name="CaptureVideoText_NoMatches.Text" xml:space="preserve"><value>Aucun horodatage correspondant</value></data>
   <data name="CaptureVideoText_UnknownTime" xml:space="preserve"><value>Horodatage indisponible</value></data>
   <data name="CaptureVideoText_Hint" xml:space="preserve"><value>Recherchez du texte et des codes QR dans cette vidéo. Choisissez un horodatage pour accéder au moment correspondant, puis recherchez ou copiez son texte.</value></data>
+  <data name="TextExtractionStatus_LanguageResourcesRequired" xml:space="preserve"><value>Pour extraire du texte, installez le module de reconnaissance de texte (OCR) de votre langue dans les paramètres Windows, puis réessayez.</value></data>
 </root>

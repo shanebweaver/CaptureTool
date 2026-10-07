@@ -7,12 +7,16 @@ using Microsoft.Windows.ApplicationModel.Resources;
 
 namespace CaptureTool.Presentation.Windows.WinUI.Analysis;
 
-internal sealed class CaptureMemoryDialogService(MainWindowDialogCoordinator dialogs) : ICaptureMemoryPrompts
+internal sealed class CaptureMemoryDialogService(MainWindowDialogCoordinator dialogs,
+    IAnalysisFeatureAvailability availability) : ICaptureMemoryPrompts
 {
     private ResourceLoader? _resources;
     public XamlRoot? XamlRoot { get => dialogs.XamlRoot; set => dialogs.XamlRoot = value; }
     public async Task<bool> ConfirmAsync(CaptureMemoryPrompt prompt, CancellationToken cancellationToken)
     {
+        var benefits = prompt == CaptureMemoryPrompt.Consent
+            ? await AnalysisFeatureBenefits.ReadAsync(availability, cancellationToken).ConfigureAwait(false) : null;
+        if (benefits is { Any: false }) return false;
         var result = await dialogs.ShowAsync(() =>
         {
             string name = prompt.ToString();
@@ -21,7 +25,7 @@ internal sealed class CaptureMemoryDialogService(MainWindowDialogCoordinator dia
             {
                 Title = Text("CaptureMemory_" + name + "Title"),
                 Content = welcome
-                    ? new CaptureTool.Presentation.Windows.WinUI.Xaml.Controls.CaptureAnalysisWelcome() : Text("CaptureMemory_" + name + "Content"),
+                    ? new CaptureTool.Presentation.Windows.WinUI.Xaml.Controls.CaptureAnalysisWelcome(benefits!) : Text("CaptureMemory_" + name + "Content"),
                 PrimaryButtonText = Text("CaptureMemory_" + name + "Accept"),
                 CloseButtonText = Text(welcome ? "CaptureWelcome_NotNow" : "CaptureMemory_Cancel"),
                 DefaultButton = prompt == CaptureMemoryPrompt.DeleteMetadata ? ContentDialogButton.Close : ContentDialogButton.Primary

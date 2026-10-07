@@ -15,6 +15,10 @@ public sealed class CaptureMemoryViewModel : ViewModelBase
     private readonly ITaskEnvironment _ui;
     private readonly ILocalizationService _localization;
     private readonly IAppNotificationService _notifications;
+    private readonly IAnalysisFeatureAvailability? _availability;
+    private bool _hasSupportedFeatures;
+    public bool ShowConsent => _hasSupportedFeatures || ConsentGranted;
+    public bool ShowSettings => ShowConsent || CanDelete;
     private string? _reportedFailure;
     private string? _pendingFailure;
     private string? _reportedOperationFailure;
@@ -30,19 +34,32 @@ public sealed class CaptureMemoryViewModel : ViewModelBase
     public IAsyncRelayCommand DeleteCommand { get; }
 
     public CaptureMemoryViewModel(ICaptureMemoryService memory, ITaskEnvironment ui,
-        ILocalizationService localization, IAppNotificationService notifications)
+        ILocalizationService localization, IAppNotificationService notifications,
+        IAnalysisFeatureAvailability? availability = null)
     {
         _memory = memory;
         _ui = ui;
         _localization = localization;
         _notifications = notifications;
-        SetConsentCommand = new AsyncRelayCommand<bool>(value => RunAsync(() => memory.SetConsentAsync(value)));
+        _availability = availability;
+        SetConsentCommand = new AsyncRelayCommand<bool>(value => !value || _hasSupportedFeatures
+            ? RunAsync(() => memory.SetConsentAsync(value)) : Task.CompletedTask,
+            value => !value || _hasSupportedFeatures);
         DeleteCommand = new AsyncRelayCommand(() => RunAsync(() => memory.DeleteMetadataAsync()), () => CanDelete);
         _memory.StateChanged += QueueUpdate;
         QueueUpdate();
     }
     // Page navigation observes state; it is not an explicit analysis retry.
-    public Task RefreshAsync() => RunAsync(() => _memory.RefreshAsync(), reportMemoryFailure: false);
+    public Task RefreshAsync() => RunAsync(async () =>
+    {
+        if (_availability != null)
+        {
+            _availability.Invalidate();
+            var support = await AnalysisFeatureBenefits.ReadAsync(_availability);
+            _hasSupportedFeatures = support.Any;
+        }
+        await _memory.RefreshAsync();
+    }, reportMemoryFailure: false);
     private async Task RunAsync(Func<Task> action, bool reportMemoryFailure = true)
     {
         if (reportMemoryFailure) Interlocked.Increment(ref _activeOperations);
@@ -78,6 +95,9 @@ public sealed class CaptureMemoryViewModel : ViewModelBase
         CaptureMemoryState state = _memory.State;
         ConsentGranted = state.ConsentAvailable && state.Policy.ConsentGranted;
         CanDelete = state.CanDelete;
+        RaisePropertyChanged(nameof(ShowConsent));
+        RaisePropertyChanged(nameof(ShowSettings));
+        SetConsentCommand.NotifyCanExecuteChanged();
         DeleteCommand.NotifyCanExecuteChanged();
         if (Interlocked.Exchange(ref _operationRecovered, 0) != 0) _reportedOperationFailure = null;
         string? pendingOperation = Interlocked.Exchange(ref _pendingOperationFailure, null);

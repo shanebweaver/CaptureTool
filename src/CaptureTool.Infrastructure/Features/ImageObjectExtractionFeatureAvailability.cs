@@ -25,7 +25,7 @@ public sealed class ImageObjectExtractionFeatureAvailability : IImageObjectExtra
     {
         if (_objectExtractionService is null)
         {
-            return true;
+            return false;
         }
 
         return _objectExtractionService.GetReadyState() is

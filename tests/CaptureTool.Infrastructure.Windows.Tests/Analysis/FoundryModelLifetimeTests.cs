@@ -1,5 +1,10 @@
 using CaptureTool.Application.Abstractions.Storage;
+using CaptureTool.Application.Abstractions.Analysis;
+using CaptureTool.Domain;
+using CaptureTool.Domain.Analysis;
+using CaptureTool.Infrastructure.Analysis.Windows;
 using CaptureTool.Infrastructure.Analysis.Windows.Foundry;
+using CaptureTool.Infrastructure.Analysis.Windows.Media;
 using Microsoft.AI.Foundry.Local;
 using Moq;
 
@@ -79,6 +84,62 @@ public sealed class FoundryModelLifetimeTests
         await active.DisposeAsync();
         await release.WaitAsync(TimeSpan.FromSeconds(5), TestContext.CancellationToken);
         model.Verify(value => value.UnloadAsync(It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [TestMethod]
+    [DataRow(AnalysisMediaKind.Image, false)]
+    [DataRow(AnalysisMediaKind.Image, true)]
+    [DataRow(AnalysisMediaKind.Video, false)]
+    [DataRow(AnalysisMediaKind.Video, true)]
+    public async Task WindowsImageAnalysisWaitsForFoundryAndReleasesItBeforeDecoding(AnalysisMediaKind kind, bool description)
+    {
+        using var runtime = new FoundryRuntime(Mock.Of<IStorageService>());
+        var model = Model("retained-text");
+        var active = await runtime.AcquireModelAsync(model.Object, TestContext.CancellationToken, retainWhenIdle: true);
+        try
+        {
+            var analyzer = new WindowsImageAnalyzer("test", description ? WindowsImageModel.Description : WindowsImageModel.Ocr,
+                kind, new WindowsAnalysisMedia(Mock.Of<IScratchArtifactStore>()), runtime);
+            // Passive UI probes must not evict an active or retained model.
+            _ = await analyzer.GetAvailabilityAsync(kind, null, TestContext.CancellationToken);
+            model.Verify(value => value.UnloadAsync(It.IsAny<CancellationToken>()), Times.Never);
+            var input = new AnalysisInput(CaptureId.New(), kind, new(new string('a', 64)),
+                Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"), "missing.png"));
+            Task<AnalyzerOutcome> pending = analyzer.AnalyzeAsync(input, null, TestContext.CancellationToken);
+            Assert.IsFalse(pending.IsCompleted, "Decoding must wait while Foundry still owns an inference lease.");
+            model.Verify(value => value.UnloadAsync(It.IsAny<CancellationToken>()), Times.Never);
+            await active.DisposeAsync();
+            active = null;
+            var result = await pending.WaitAsync(TimeSpan.FromSeconds(5), TestContext.CancellationToken);
+            Assert.AreEqual(AnalyzerOutcomeKind.InvalidSource, result.Kind);
+            model.Verify(value => value.UnloadAsync(It.IsAny<CancellationToken>()), Times.Once);
+            Assert.AreEqual(TimeSpan.Zero, runtime.IdleRetention);
+        }
+        finally { if (active != null) await active.DisposeAsync(); }
+    }
+
+    [TestMethod]
+    public async Task CancellingWindowsHandoffWaitsForFoundryThenStopsBeforeDecoding()
+    {
+        using var runtime = new FoundryRuntime(Mock.Of<IStorageService>());
+        var model = Model("speech");
+        var active = await runtime.AcquireModelAsync(model.Object, TestContext.CancellationToken);
+        using var cancellation = new CancellationTokenSource();
+        try
+        {
+            var analyzer = new WindowsImageAnalyzer("test", WindowsImageModel.Description, AnalysisMediaKind.Video,
+                new WindowsAnalysisMedia(Mock.Of<IScratchArtifactStore>()), runtime);
+            var input = new AnalysisInput(CaptureId.New(), AnalysisMediaKind.Video, new(new string('a', 64)), "invalid-path");
+            Task<AnalyzerOutcome> pending = analyzer.AnalyzeAsync(input, null, cancellation.Token);
+            await cancellation.CancelAsync();
+            Assert.IsFalse(pending.IsCompleted);
+            model.Verify(value => value.UnloadAsync(It.IsAny<CancellationToken>()), Times.Never);
+            await active.DisposeAsync();
+            active = null;
+            await Assert.ThrowsExactlyAsync<OperationCanceledException>(() => pending.WaitAsync(TimeSpan.FromSeconds(5), TestContext.CancellationToken));
+            model.Verify(value => value.UnloadAsync(It.IsAny<CancellationToken>()), Times.Once);
+        }
+        finally { if (active != null) await active.DisposeAsync(); }
     }
 
     [TestMethod]

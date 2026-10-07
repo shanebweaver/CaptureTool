@@ -20,6 +20,19 @@ public sealed class CaptureMemoryIntegrationTests
     private CancellationToken Ct => TestContext.CancellationToken;
 
     [TestMethod]
+    public async Task UnsupportedDirectRequestCreatesNoCatalogEntryOrWork()
+    {
+        using var environment = new AnalysisTestEnvironment();
+        await using var app = new App(environment, availability: new UnsupportedFeatures());
+        await app.EnableAsync(Ct);
+        await app.Memory.AnalyzeAsync(app.Asset().SourcePath, AnalysisCapability.Description, Ct);
+        Assert.AreEqual(0, app.Analyzer.Calls);
+        Assert.IsEmpty(await app.Store.ReadPendingAsync(Ct));
+        Assert.IsEmpty(await app.Catalog.ReadAllAsync(Ct));
+        Assert.IsNull(app.Memory.State.FailureCode);
+    }
+
+    [TestMethod]
     [DataRow("png")]
     [DataRow("mp4")]
     public async Task TextScanAdmitsOcrAndQrTogetherWithoutOtherAnalysis(string extension)
@@ -721,6 +734,11 @@ public sealed class CaptureMemoryIntegrationTests
 
     private static RecentCaptureCatalogEntry Entry(CaptureAsset asset, RecentCaptureOrigin origin) =>
         new(asset.SourcePath, asset.MediaType, origin, DateTime.UtcNow);
+    private sealed class UnsupportedFeatures : IAnalysisFeatureAvailability
+    {
+        public Task<bool> IsSupportedAsync(AnalysisMediaKind kind, AnalysisCapability capability, CancellationToken cancellationToken = default) => Task.FromResult(false);
+        public void Invalidate() { }
+    }
     private static TaskCompletionSource Signal() => new(TaskCreationOptions.RunContinuationsAsynchronously);
 
     private sealed class App : IAsyncDisposable
@@ -735,7 +753,8 @@ public sealed class CaptureMemoryIntegrationTests
         public Prompts Prompts { get; } = new();
         public Recents Recents { get; } = new();
         public Analyzer Analyzer { get; } = new();
-        public App(AnalysisTestEnvironment environment, IEnumerable<IMetadataProcessor>? processors = null)
+        public App(AnalysisTestEnvironment environment, IEnumerable<IMetadataProcessor>? processors = null,
+            IAnalysisFeatureAvailability? availability = null)
         {
             _environment = environment;
             Store = environment.CreateStore();
@@ -745,7 +764,7 @@ public sealed class CaptureMemoryIntegrationTests
                 [new(AnalysisCapability.Description, ["test"], TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(5))])]);
             Worker = new(Store, Authorization, new LocalAnalysisSource(), configuration, [Analyzer], Catalog);
             Names = new(Catalog, Catalog, new NameNotifier(), new LocalFileSystem());
-            Memory = new(Authorization, Catalog, Store, Worker, Prompts, new LocalFileSystem(), Names, processors);
+            Memory = new(Authorization, Catalog, Store, Worker, Prompts, new LocalFileSystem(), Names, processors, availability);
         }
         public CaptureAsset Asset()
         {

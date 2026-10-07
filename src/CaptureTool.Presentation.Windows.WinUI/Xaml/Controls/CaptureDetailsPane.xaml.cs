@@ -80,9 +80,9 @@ public sealed partial class CaptureDetailsPane : UserControl, INotifyPropertyCha
     private void UpdateTabs()
     {
         List<PivotItem> tabs = [FileDetailsTab];
-        if (_features.IsTextTabEnabled(_kind)) tabs.Add(TextTab);
-        if (_features.IsSpeechTabEnabled(_kind)) tabs.Add(SpeechTab);
-        tabs.Add(SummaryTab);
+        if (_features.IsTextTabEnabled(_kind) && ViewModel?.ShowTextTab == true) tabs.Add(TextTab);
+        if (_features.IsSpeechTabEnabled(_kind) && ViewModel?.ShowSpeechTab == true) tabs.Add(SpeechTab);
+        if (ViewModel?.ShowSummaryTab == true) tabs.Add(SummaryTab);
         if (ContentTabs.Items.Cast<PivotItem>().SequenceEqual(tabs)) { _updatingTabs = false; return; }
         var selectedTab = tabs.FirstOrDefault(tab => tab.Name == _preferredTab) ?? FileDetailsTab;
         _updatingTabs = true;
@@ -124,7 +124,6 @@ public sealed partial class CaptureDetailsPane : UserControl, INotifyPropertyCha
     public void OpenText()
     {
         if (!_features.IsTextTabEnabled(_kind)) return;
-        ContentTabs.SelectedItem = TextTab;
         _extractTextRequested = true;
         Open();
         _ = ExtractRequestedTextAsync();
@@ -138,7 +137,11 @@ public sealed partial class CaptureDetailsPane : UserControl, INotifyPropertyCha
         try
         {
             await _openTask;
-            if (_active && ReferenceEquals(ContentTabs.SelectedItem, TextTab) && ReferenceEquals(model, ViewModel)) await model.EnsureTextAsync();
+            if (_active && ReferenceEquals(model, ViewModel) && ContentTabs.Items.Contains(TextTab))
+            {
+                ContentTabs.SelectedItem = TextTab;
+                await model.EnsureTextAsync();
+            }
         }
         catch (OperationCanceledException) { }
     }
@@ -229,6 +232,8 @@ public sealed partial class CaptureDetailsPane : UserControl, INotifyPropertyCha
     }
     private void ViewModelChanged(object? sender, PropertyChangedEventArgs e)
     {
+        if (e.PropertyName is nameof(CaptureDetailsViewModel.ShowTextTab) or
+            nameof(CaptureDetailsViewModel.ShowSpeechTab) or nameof(CaptureDetailsViewModel.ShowSummaryTab)) UpdateTabs();
         if (ViewModel?.IsVideo == true && e.PropertyName == nameof(CaptureDetailsViewModel.ShowVideoTimestamps))
         {
             UpdateSelectedPassage();

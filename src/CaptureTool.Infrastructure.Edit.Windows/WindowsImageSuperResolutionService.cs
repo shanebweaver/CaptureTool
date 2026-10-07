@@ -1,3 +1,5 @@
+using CaptureTool.Application.Abstractions.Ai;
+using CaptureTool.Infrastructure.Ai;
 using CaptureTool.Application.Abstractions.Edit.Image.SuperResolution;
 using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Domain.FileSystem;
@@ -15,15 +17,18 @@ public sealed class WindowsImageSuperResolutionService : IImageSuperResolutionSe
     private const int DocumentedMaxScaleFactor = 8;
     private const long MaxOutputPixels = 64L * 1024L * 1024L;
 
+    private readonly IAiDeviceSupport _device;
     private readonly IScratchArtifactStore _scratchArtifactStore;
 
-    public WindowsImageSuperResolutionService(IScratchArtifactStore scratchArtifactStore)
+    public WindowsImageSuperResolutionService(IScratchArtifactStore scratchArtifactStore, IAiDeviceSupport? device = null)
     {
         _scratchArtifactStore = scratchArtifactStore;
+        _device = device ?? WindowsAiDeviceSupport.Current;
     }
 
     public ImageSuperResolutionReadyState GetReadyState()
     {
+        if (!_device.WindowsAi) return ImageSuperResolutionReadyState.NotSupported;
         try
         {
             return MapReadyState(ImageScaler.GetReadyState());
@@ -44,7 +49,7 @@ public sealed class WindowsImageSuperResolutionService : IImageSuperResolutionSe
             return ImageSuperResolutionPreparationResult.Success;
         }
 
-        if (readyState is ImageSuperResolutionReadyState.NotSupported or ImageSuperResolutionReadyState.Disabled)
+        if (readyState != ImageSuperResolutionReadyState.PreparationNeeded)
         {
             return ImageSuperResolutionPreparationResult.NotSupported;
         }

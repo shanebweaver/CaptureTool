@@ -18,6 +18,64 @@ namespace CaptureTool.Presentation.Tests.Features;
 public sealed class CaptureDetailsTests
 {
     [TestMethod]
+    public async Task TextScanContinuesAfterAsynchronousSupportRecheck()
+    {
+        var setup = new Setup();
+        setup.Availability.Query = async (_, _) => { await Task.Yield(); return true; };
+        setup.Reader.Setup(x => x.ReadAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new CaptureDetailsSnapshot(CaptureDetailsStatus.Empty));
+        setup.Memory.Setup(x => x.EnsureConsentAsync(It.IsAny<CancellationToken>())).ReturnsAsync(true);
+        using var vm = setup.ViewModel;
+        await vm.OpenAsync("capture.png", AnalysisMediaKind.Image);
+        await vm.ScanTextAction.Command.ExecuteAsync(null);
+        setup.Memory.Verify(x => x.EnsureConsentAsync(It.IsAny<CancellationToken>()), Times.Once);
+        setup.Memory.Verify(x => x.ScanTextAsync("capture.png", It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [TestMethod]
+    public async Task UnsupportedActionsStayHiddenAndCannotPromptForConsent()
+    {
+        var setup = new Setup();
+        setup.Availability.Query = (_, capability) => Task.FromResult(capability == AnalysisCapability.TextRecognition);
+        setup.Reader.Setup(x => x.ReadAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new CaptureDetailsSnapshot(CaptureDetailsStatus.Empty));
+        using var vm = setup.ViewModel;
+        await vm.OpenAsync("capture.png", AnalysisMediaKind.Image);
+        Assert.IsTrue(vm.ShowTextTab);
+        Assert.IsFalse(vm.ShowNameAction);
+        Assert.IsFalse(vm.ShowSummaryTab);
+        Assert.IsFalse(vm.NameAction.Command.CanExecute(null));
+        Assert.IsFalse(vm.SummaryAction.Command.CanExecute(null));
+        // ExecuteAsync can be called directly even when CanExecute is false.
+        await vm.SummaryAction.Command.ExecuteAsync(null);
+        await vm.NameAction.Command.ExecuteAsync(null);
+        setup.Memory.Verify(x => x.EnsureConsentAsync(It.IsAny<CancellationToken>()), Times.Never);
+        setup.Memory.Verify(x => x.AnalyzeAsync(It.IsAny<string>(), It.IsAny<AnalysisCapability>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [TestMethod]
+    public async Task UnknownSupportNeverFlashesActionsAndSavedResultsRemainReadable()
+    {
+        var setup = new Setup();
+        var probe = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        setup.Availability.Query = (_, _) => probe.Task;
+        setup.Reader.Setup(x => x.ReadAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new CaptureDetailsSnapshot(CaptureDetailsStatus.Empty));
+        using var vm = setup.ViewModel;
+        Task opening = vm.OpenAsync("capture.png", AnalysisMediaKind.Image);
+        Assert.IsFalse(vm.ShowSummaryTab);
+        Assert.IsFalse(vm.ShowNameAction);
+        probe.SetResult(false);
+        await opening;
+        Assert.IsFalse(vm.ShowSummaryTab);
+        setup.Reader.Setup(x => x.ReadAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new CaptureDetailsSnapshot(CaptureDetailsStatus.Available, Record()));
+        await vm.RefreshAsync();
+        Assert.IsTrue(vm.ShowTextTab);
+        Assert.IsFalse(vm.TextAction.Command.CanExecute(null));
+    }
+
+    [TestMethod]
     public async Task VideoTextAndSpeechKeepIndependentSearchCopyAndNavigationState()
     {
         var setup = new Setup();
@@ -406,7 +464,7 @@ public sealed class CaptureDetailsTests
         var reader = new Mock<ICaptureDetailsReader>();
         reader.Setup(x => x.ReadAsync(It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync(new CaptureDetailsSnapshot(CaptureDetailsStatus.Empty));
         using var vm = new CaptureDetailsViewModel(reader.Object, memory.Object, Mock.Of<IClipboardService>(),
-            Localization(), Mock.Of<ITaskEnvironment>(), Mock.Of<IAppNotificationService>(), onboarding: onboarding.Object);
+            Localization(), Mock.Of<ITaskEnvironment>(), Mock.Of<IAppNotificationService>(), onboarding: onboarding.Object, availability: new TestAnalysisAvailability());
         await vm.OpenAsync("capture.png", AnalysisMediaKind.Image);
         Assert.IsTrue(vm.AltTextAction.Command.CanExecute(null));
         Assert.IsTrue(vm.SummaryAction.Command.CanExecute(null));
@@ -602,7 +660,7 @@ public sealed class CaptureDetailsTests
         var text = new Mock<ILocalizationService>();
         text.Setup(x => x.GetString(It.IsAny<string>())).Returns<string>(key => key);
         using var vm = new CaptureDetailsViewModel(Mock.Of<ICaptureDetailsReader>(), memory.Object, Mock.Of<IClipboardService>(),
-            text.Object, Mock.Of<ITaskEnvironment>(), Mock.Of<IAppNotificationService>(), onboarding: onboarding.Object);
+            text.Object, Mock.Of<ITaskEnvironment>(), Mock.Of<IAppNotificationService>(), onboarding: onboarding.Object, availability: new TestAnalysisAvailability());
         onboarding.VerifyNoOtherCalls();
         await vm.OpenAsync("capture.png", AnalysisMediaKind.Image);
         onboarding.Verify(x => x.EnableAsync(It.IsAny<CancellationToken>()), Times.Never());
@@ -1073,6 +1131,7 @@ public sealed class CaptureDetailsTests
     }
     private sealed class Setup
     {
+        public TestAnalysisAvailability Availability { get; } = new();
         public Mock<ICaptureDetailsReader> Reader { get; } = new();
         public Mock<ICaptureMemoryService> Memory { get; } = new();
         public Mock<IClipboardService> Clipboard { get; } = new();
@@ -1089,7 +1148,7 @@ public sealed class CaptureDetailsTests
             Memory.SetupGet(memory => memory.State).Returns(() => State);
             var ui = new Mock<ITaskEnvironment>();
             ui.Setup(ui => ui.TryExecute(It.IsAny<Action>())).Returns((Action action) => { action(); return true; });
-            ViewModel = new(Reader.Object, Memory.Object, Clipboard.Object, Localization(), ui.Object, Notifications.Object, names: names);
+            ViewModel = new(Reader.Object, Memory.Object, Clipboard.Object, Localization(), ui.Object, Notifications.Object, names: names, availability: Availability);
         }
     }
 }

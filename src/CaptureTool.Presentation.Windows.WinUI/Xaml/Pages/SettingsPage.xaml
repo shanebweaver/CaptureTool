@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8" ?>
+<?xml version="1.0" encoding="utf-8" ?>
 <local:SettingsPageBase
     x:Class="CaptureTool.Presentation.Windows.WinUI.Xaml.Pages.SettingsPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
@@ -773,10 +773,9 @@
                     </StackPanel>
 
                     <!--  One consent controls all local AI features.  -->
-                    <StackPanel AutomationProperties.AutomationId="CaptureMemorySettings" Spacing="4">
+                    <StackPanel AutomationProperties.AutomationId="CaptureMemorySettings" Spacing="4" Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(CaptureMemory.ShowSettings), Mode=OneWay}">
                         <TextBlock x:Uid="CaptureMemory_SettingsHeader" Margin="0,4" />
-                        <Grid
-                            Padding="16,12"
+                        <Grid Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(CaptureMemory.ShowConsent), Mode=OneWay}" Padding="16,12"
                             Background="{ThemeResource CardBackgroundFillColorDefault}"
                             BorderBrush="{ThemeResource CardStrokeColorDefault}"
                             BorderThickness="1"

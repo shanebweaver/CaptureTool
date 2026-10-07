@@ -24,7 +24,7 @@ public sealed class VideoSuperResolutionFeatureAvailability : IVideoSuperResolut
     {
         if (_videoSuperResolutionService is null)
         {
-            return true;
+            return false;
         }
 
         return _videoSuperResolutionService.GetReadyState() is

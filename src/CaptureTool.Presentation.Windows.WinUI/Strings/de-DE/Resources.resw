@@ -1910,7 +1910,7 @@ SOFTWARE.
   <data name="CaptureWelcome_Eyebrow.Text" xml:space="preserve"><value>LOKALE KI</value></data>
   <data name="CaptureWelcome_Hero.Text" xml:space="preserve"><value>Mehr aus Ihren Aufnahmen</value></data>
   <data name="CaptureWelcome_Text.Text" xml:space="preserve"><value>Kopieren Sie Text aus Bildern, um ihn überall zu verwenden.</value></data>
-  <data name="CaptureWelcome_Recording.Text" xml:space="preserve"><value>Erhalten Sie eine kurze Zusammenfassung eines Screenshots oder einer Aufnahme.</value></data>
+  <data name="CaptureWelcome_Recording.Text" xml:space="preserve"><value>Erhalten Sie eine kurze Zusammenfassung Ihrer Aufnahmen.</value></data>
   <data name="CaptureWelcome_Names.Text" xml:space="preserve"><value>Geben Sie Ihren Aufnahmen mit KI-Vorschlägen aussagekräftigere Namen.</value></data>
   <data name="CaptureWelcome_Consent.Text" xml:space="preserve"><value>Die KI arbeitet auf diesem PC und nur, wenn Sie eine Aktion auswählen. Ergebnisse werden sicher auf diesem PC gespeichert. Für einige Funktionen muss möglicherweise ein KI-Modell heruntergeladen werden. Sie können die KI in den Einstellungen deaktivieren oder gespeicherte Ergebnisse löschen.</value></data>
   <data name="CaptureWelcome_NotNow" xml:space="preserve"><value>Nicht jetzt</value></data>
@@ -1995,4 +1995,5 @@ SOFTWARE.
   <data name="CaptureVideoText_NoMatches.Text" xml:space="preserve"><value>Keine passenden Zeitstempel</value></data>
   <data name="CaptureVideoText_UnknownTime" xml:space="preserve"><value>Zeit nicht verfügbar</value></data>
   <data name="CaptureVideoText_Hint" xml:space="preserve"><value>Suchen Sie Text und QR-Codes in diesem Video. Wählen Sie einen Zeitstempel, um zur entsprechenden Stelle zu springen und den Text dort zu durchsuchen oder zu kopieren.</value></data>
+  <data name="TextExtractionStatus_LanguageResourcesRequired" xml:space="preserve"><value>Installieren Sie zur Texterkennung das OCR-Sprachpaket für Ihre Sprache in den Windows-Einstellungen. Versuchen Sie es anschließend erneut.</value></data>
 </root>

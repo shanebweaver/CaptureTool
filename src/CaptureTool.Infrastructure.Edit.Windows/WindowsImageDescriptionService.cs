@@ -1,3 +1,5 @@
+using CaptureTool.Application.Abstractions.Ai;
+using CaptureTool.Infrastructure.Ai;
 using CaptureTool.Application.Abstractions.Edit.Image.Description;
 using Microsoft.Graphics.Imaging;
 using Microsoft.Windows.AI;
@@ -8,10 +10,11 @@ using Windows.Storage.Streams;
 
 namespace CaptureTool.Infrastructure.Edit.Windows;
 
-public sealed class WindowsImageDescriptionService : IImageDescriptionService
+public sealed class WindowsImageDescriptionService(IAiDeviceSupport? device = null) : IImageDescriptionService
 {
     public ImageDescriptionReadyState GetReadyState()
     {
+        if (!(device ?? WindowsAiDeviceSupport.Current).WindowsAi) return ImageDescriptionReadyState.NotSupported;
         try
         {
             return MapReadyState(ImageDescriptionGenerator.GetReadyState());
@@ -33,7 +36,7 @@ public sealed class WindowsImageDescriptionService : IImageDescriptionService
             return ImageDescriptionPreparationResult.Success;
         }
 
-        if (readyState is ImageDescriptionReadyState.NotSupported or ImageDescriptionReadyState.Disabled)
+        if (readyState != ImageDescriptionReadyState.PreparationNeeded)
         {
             return ImageDescriptionPreparationResult.NotSupported;
         }

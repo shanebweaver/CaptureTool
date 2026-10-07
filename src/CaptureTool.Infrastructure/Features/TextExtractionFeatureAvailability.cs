@@ -18,12 +18,13 @@ public sealed class TextExtractionFeatureAvailability : ITextExtractionFeatureAv
     {
         if (_textExtractionService is null)
         {
-            return true;
+            return false;
         }
 
         return _textExtractionService.GetReadyState() is
             TextExtractionReadyState.Ready or
-            TextExtractionReadyState.PreparationNeeded;
+            TextExtractionReadyState.PreparationNeeded or 
+            TextExtractionReadyState.LanguageResourcesRequired;
     }
 }
 

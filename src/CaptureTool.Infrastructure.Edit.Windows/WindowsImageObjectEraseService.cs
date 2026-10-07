@@ -1,3 +1,5 @@
+using CaptureTool.Application.Abstractions.Ai;
+using CaptureTool.Infrastructure.Ai;
 using CaptureTool.Application.Abstractions.Edit.Image.ObjectErase;
 using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Domain.FileSystem;
@@ -13,15 +15,18 @@ namespace CaptureTool.Infrastructure.Edit.Windows;
 
 public sealed class WindowsImageObjectEraseService : IImageObjectEraseService
 {
+    private readonly IAiDeviceSupport _device;
     private readonly IScratchArtifactStore _scratchArtifactStore;
 
-    public WindowsImageObjectEraseService(IScratchArtifactStore scratchArtifactStore)
+    public WindowsImageObjectEraseService(IScratchArtifactStore scratchArtifactStore, IAiDeviceSupport? device = null)
     {
         _scratchArtifactStore = scratchArtifactStore;
+        _device = device ?? WindowsAiDeviceSupport.Current;
     }
 
     public ObjectEraseReadyState GetReadyState()
     {
+        if (!_device.WindowsAi) return ObjectEraseReadyState.NotSupported;
         try
         {
             return MapReadyStates(
@@ -45,7 +50,7 @@ public sealed class WindowsImageObjectEraseService : IImageObjectEraseService
             return ObjectErasePreparationResult.Success;
         }
 
-        if (readyState is ObjectEraseReadyState.NotSupported or ObjectEraseReadyState.Disabled)
+        if (readyState != ObjectEraseReadyState.PreparationNeeded)
         {
             return ObjectErasePreparationResult.NotSupported;
         }

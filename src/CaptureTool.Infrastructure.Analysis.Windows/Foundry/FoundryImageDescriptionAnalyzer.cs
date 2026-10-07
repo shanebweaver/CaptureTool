@@ -4,7 +4,6 @@ using CaptureTool.Domain.Analysis.Payloads;
 using CaptureTool.Infrastructure.Analysis.Windows.Media;
 using Microsoft.AI.Foundry.Local;
 using System.Globalization;
-using System.Runtime.InteropServices;
 using Windows.Graphics.Imaging;
 using Windows.Storage.Streams;
 
@@ -24,8 +23,7 @@ internal sealed class FoundryImageDescriptionAnalyzer(
     public async ValueTask<AnalyzerAvailability> GetAvailabilityAsync(AnalysisMediaKind kind, string? language, CancellationToken ct)
     {
         ct.ThrowIfCancellationRequested();
-        if (kind is not (AnalysisMediaKind.Image or AnalysisMediaKind.Video) || !OperatingSystem.IsWindowsVersionAtLeast(10, 0, 26100) ||
-            RuntimeInformation.ProcessArchitecture is not (Architecture.X64 or Architecture.Arm64))
+        if (kind is not (AnalysisMediaKind.Image or AnalysisMediaKind.Video) || !runtime.IsSupported)
         {
             return AnalyzerAvailability.Unsupported;
         }

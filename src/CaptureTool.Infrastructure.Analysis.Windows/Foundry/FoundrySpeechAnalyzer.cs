@@ -5,7 +5,6 @@ using CaptureTool.Infrastructure.Analysis.Windows.Media;
 using Microsoft.AI.Foundry.Local;
 using Microsoft.AI.Foundry.Local.OpenAI;
 using System.Globalization;
-using System.Runtime.InteropServices;
 
 namespace CaptureTool.Infrastructure.Analysis.Windows.Foundry;
 
@@ -21,8 +20,7 @@ internal sealed class FoundrySpeechAnalyzer(string id, string alias, bool stream
     {
         cancellationToken.ThrowIfCancellationRequested();
         if (mediaKind is not (AnalysisMediaKind.Audio or AnalysisMediaKind.Video) ||
-            !OperatingSystem.IsWindowsVersionAtLeast(10, 0, 26100) ||
-            RuntimeInformation.ProcessArchitecture is not (Architecture.X64 or Architecture.Arm64) || !SupportsLanguage(language))
+            !runtime.IsSupported || !SupportsLanguage(language))
         {
             return AnalyzerAvailability.Unsupported;
         }

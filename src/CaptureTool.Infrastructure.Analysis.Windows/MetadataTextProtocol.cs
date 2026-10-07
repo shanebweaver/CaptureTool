@@ -27,9 +27,13 @@ internal static class MetadataTextProtocol
         "Use exactly this flat schema: {\"summary\":\"short summary paragraph\",\"evidence\":0}. " +
         "summary is a string, never an object or array. Cite its primary source. " +
         "Abstain with {\"summary\":null,\"evidence\":null}. An incomplete source selection only supports a summary of supplied excerpts, not the entire recording.";
-    private const string NameRules = "Suggest one concise, descriptive capture name in 3 to 8 words, preferably under 80 characters; the hard maximum is 160. " +
+    private const string NameRules = "Suggest one concise, descriptive capture name, preferably under 80 characters; the hard maximum is 160. " +
         "Name the main subject so the capture is easy to recognize later. Do not include a file extension, path, or quotation marks. " +
-        "Use the language of the source text. Use exactly this flat schema: {\"name\":\"short capture name\",\"evidence\":0}. " +
+        "Write the entire name in the language of the source text, even though these instructions are in English. " +
+        "Keep Spanish names in Spanish, French in French, German in German, Russian in Russian, Chinese in Chinese, and English in English. " +
+        "Do not translate into English when the source text is in another language. " +
+        "Prefer the language of text-recognition or transcription sources over an AI description's language. " +
+        "Use exactly this flat schema: {\"name\":\"short capture name\",\"evidence\":0}. " +
         "name is a string, never an object or array. Cite its primary source. Abstain with {\"name\":null,\"evidence\":null}.";
     private const string ClassificationRules = "Choose at most one primary category from document, conversation, code, error, web-content, media, other. " +
         "document means invoices, receipts, forms, notices, letters and reports; conversation means dialogue or messages; " +

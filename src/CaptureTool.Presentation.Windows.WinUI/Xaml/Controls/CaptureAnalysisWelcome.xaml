@@ -4,7 +4,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <StackPanel MaxWidth="420" Spacing="18">
         <Border
-            Height="126"
+            MinHeight="126"
             BorderBrush="#806CAFFF"
             BorderThickness="1"
             CornerRadius="16">
@@ -73,7 +73,7 @@
             </Grid>
         </Border>
         <StackPanel Spacing="12">
-            <Grid ColumnSpacing="12">
+            <Grid x:Name="TextBenefit" ColumnSpacing="12">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="28" />
                     <ColumnDefinition Width="*" />
@@ -87,7 +87,7 @@
                     Grid.Column="1"
                     TextWrapping="Wrap" />
             </Grid>
-            <Grid ColumnSpacing="12">
+            <Grid x:Name="SummaryBenefit" ColumnSpacing="12">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="28" />
                     <ColumnDefinition Width="*" />
@@ -100,7 +100,7 @@
                     Grid.Column="1"
                     TextWrapping="Wrap" />
             </Grid>
-            <Grid ColumnSpacing="12">
+            <Grid x:Name="NamesBenefit" ColumnSpacing="12">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="28" />
                     <ColumnDefinition Width="*" />

@@ -1,3 +1,5 @@
+using CaptureTool.Application.Abstractions.Ai;
+using CaptureTool.Infrastructure.Ai;
 using CaptureTool.Application.Abstractions.Edit.Image.ForegroundExtraction;
 using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Domain.FileSystem;
@@ -13,15 +15,18 @@ namespace CaptureTool.Infrastructure.Edit.Windows;
 
 public sealed class WindowsImageForegroundExtractionService : IImageForegroundExtractionService
 {
+    private readonly IAiDeviceSupport _device;
     private readonly IScratchArtifactStore _scratchArtifactStore;
 
-    public WindowsImageForegroundExtractionService(IScratchArtifactStore scratchArtifactStore)
+    public WindowsImageForegroundExtractionService(IScratchArtifactStore scratchArtifactStore, IAiDeviceSupport? device = null)
     {
         _scratchArtifactStore = scratchArtifactStore;
+        _device = device ?? WindowsAiDeviceSupport.Current;
     }
 
     public ForegroundExtractionReadyState GetReadyState()
     {
+        if (!_device.WindowsAi) return ForegroundExtractionReadyState.NotSupported;
         try
         {
             return MapReadyState(ImageObjectExtractor.GetReadyState());
@@ -43,7 +48,7 @@ public sealed class WindowsImageForegroundExtractionService : IImageForegroundEx
             return ForegroundExtractionPreparationResult.Success;
         }
 
-        if (readyState is ForegroundExtractionReadyState.NotSupported or ForegroundExtractionReadyState.Disabled)
+        if (readyState != ForegroundExtractionReadyState.PreparationNeeded)
         {
             return ForegroundExtractionPreparationResult.NotSupported;
         }

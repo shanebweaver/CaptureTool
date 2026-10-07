@@ -58,6 +58,9 @@ internal static class UiTestServiceCollectionExtensions
     private sealed class UiTestMetadataProcessor(MetadataProcessorDescriptor descriptor) : IMetadataProcessor
     {
         public MetadataProcessorDescriptor Descriptor => descriptor;
+        public ValueTask<AnalyzerAvailability> GetAvailabilityAsync(CancellationToken cancellationToken) =>
+            ValueTask.FromResult(UiTestLaunchOptions.AiProfile is "none" or "legacy-ocr"
+                ? AnalyzerAvailability.Unsupported : AnalyzerAvailability.Ready);
         public async Task<AnalyzerOutcome> ProcessAsync(MetadataProcessorInput input, CancellationToken cancellationToken)
         {
             if (!UiTestLaunchOptions.DetailsFixture || input.Entries.Count == 0)

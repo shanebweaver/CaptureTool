@@ -17,7 +17,8 @@ public static class WindowsAnalysisServiceCollectionExtensions
         services.AddSingleton<IAnalysisResources>(provider => provider.GetRequiredService<FoundryRuntime>());
         services.AddSingleton<IWindowsLanguageModelClient>(provider => new WindowsLanguageModelClient(
             provider.GetRequiredService<FoundryRuntime>(), languageModelAccess,
-            provider.GetService<CaptureTool.Application.Abstractions.Logging.ILogService>()));
+            provider.GetService<CaptureTool.Application.Abstractions.Logging.ILogService>(),
+            provider.GetService<CaptureTool.Application.Abstractions.Ai.IAiDeviceSupport>()));
         foreach (var model in metadataModels ?? [])
         {
             services.AddSingleton<IMetadataProcessor>(provider => model.Backend switch
@@ -50,6 +51,8 @@ public static class WindowsAnalysisServiceCollectionExtensions
         return services;
 
         void AddImage(string id, WindowsImageModel model, AnalysisMediaKind kind) =>
-            services.AddSingleton<IMediaAnalyzer>(provider => new WindowsImageAnalyzer(id, model, kind, provider.GetRequiredService<WindowsAnalysisMedia>()));
+            services.AddSingleton<IMediaAnalyzer>(provider => new WindowsImageAnalyzer(id, model, kind,
+                provider.GetRequiredService<WindowsAnalysisMedia>(), provider.GetRequiredService<FoundryRuntime>(),
+                provider.GetService<CaptureTool.Application.Abstractions.Ai.IAiDeviceSupport>()));
     }
 }

@@ -147,7 +147,13 @@ public sealed partial class ImageEditTextExtractionUiTests
         void Confirm(string prompt, string answer)
         {
             AutomationElement dialog = Element("CaptureMemory" + prompt + "Dialog");
-            WaitForElementByName(dialog, automation, resources[answer], InteractionTimeout).AsButton().Invoke();
+            var button = WaitForElementByName(dialog, automation, resources[answer], InteractionTimeout).AsButton();
+            if (prompt == "Consent")
+            {
+                Thread.Sleep(250); // Let the opening animation finish before capturing the localized layout.
+                SaveScreenshot("consent");
+            }
+            button.Invoke();
             WaitForElementRemoved(window, automation, "CaptureMemory" + prompt + "Dialog", InteractionTimeout);
         }
         void SaveScreenshot(string name)

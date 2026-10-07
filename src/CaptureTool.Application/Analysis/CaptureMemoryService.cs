@@ -18,6 +18,7 @@ internal sealed class CaptureMemoryService : ICaptureMemoryService, IDisposable
     private readonly IFileSystem _files;
     private readonly CaptureNamingService? _naming;
     private readonly IReadOnlyList<IMetadataProcessor> _processors;
+    private readonly IAnalysisFeatureAvailability? _availability;
     private readonly SemaphoreSlim _commands = new(1, 1);
     private readonly SemaphoreSlim _consentRequests = new(1, 1);
     private long _consentAttempt;
@@ -32,7 +33,8 @@ internal sealed class CaptureMemoryService : ICaptureMemoryService, IDisposable
 
     public CaptureMemoryService(CaptureMemoryAuthorization authorization, ICaptureAssetCatalog catalog,
         IAnalysisExecutionStore store, ICaptureAnalysisWorker worker, ICaptureMemoryPrompts prompts, IFileSystem files,
-        CaptureNamingService? naming = null, IEnumerable<IMetadataProcessor>? processors = null)
+        CaptureNamingService? naming = null, IEnumerable<IMetadataProcessor>? processors = null,
+        IAnalysisFeatureAvailability? availability = null)
     {
         _authorization = authorization;
         _catalog = catalog;
@@ -42,6 +44,7 @@ internal sealed class CaptureMemoryService : ICaptureMemoryService, IDisposable
         _files = files;
         _naming = naming;
         _processors = processors?.ToArray() ?? [];
+        _availability = availability;
         _worker.ProgressChanged += OnProgress;
     }
     public CaptureMemoryState State => new(_authorization.Policy, _authorization.IsLoaded &&
@@ -208,10 +211,18 @@ internal sealed class CaptureMemoryService : ICaptureMemoryService, IDisposable
             {
                 return;
             }
+            var kind = media switch { CaptureFileType.Image => AnalysisMediaKind.Image,
+                CaptureFileType.Audio => AnalysisMediaKind.Audio, _ => AnalysisMediaKind.Video };
+            if (_availability != null)
+            {
+                _availability.Invalidate(); // An explicit request can recover after a system/model update.
+                if (!await _availability.IsSupportedAsync(kind, capability, ct).ConfigureAwait(false) &&
+                    !(scanText && await _availability.IsSupportedAsync(kind, AnalysisCapability.QrCodeDetection, ct).ConfigureAwait(false))) return;
+            }
             // Check the requested semantic output before scheduling expensive prerequisites.
             // Probes cannot download/load models or inspect the capture.
             IMetadataProcessor[] candidates = _processors.Where(processor => processor.Descriptor.Capability == capability).ToArray();
-            if (candidates.Length != 0)
+            if (_availability == null && candidates.Length != 0)
             {
                 bool available = false;
                 foreach (var candidate in candidates)

@@ -1916,7 +1916,7 @@ SOFTWARE.
   <data name="CaptureWelcome_Eyebrow.Text" xml:space="preserve"><value>IA LOCAL</value></data>
   <data name="CaptureWelcome_Hero.Text" xml:space="preserve"><value>Saca más partido a tus capturas</value></data>
   <data name="CaptureWelcome_Text.Text" xml:space="preserve"><value>Copia texto de imágenes para usarlo donde quieras.</value></data>
-  <data name="CaptureWelcome_Recording.Text" xml:space="preserve"><value>Obtén un resumen breve de una captura de pantalla o una grabación.</value></data>
+  <data name="CaptureWelcome_Recording.Text" xml:space="preserve"><value>Obtén un breve resumen de tus capturas.</value></data>
   <data name="CaptureWelcome_Names.Text" xml:space="preserve"><value>Pon nombres más claros a tus capturas con sugerencias de IA.</value></data>
   <data name="CaptureWelcome_Consent.Text" xml:space="preserve"><value>La IA se ejecuta en este PC solo cuando eliges una acción. Los resultados se guardan de forma segura en este PC. Algunas funciones pueden requerir la descarga de un modelo de IA. Puedes desactivar la IA o eliminar los resultados guardados en Configuración.</value></data>
   <data name="CaptureWelcome_NotNow" xml:space="preserve"><value>Ahora no</value></data>
@@ -2001,4 +2001,5 @@ SOFTWARE.
   <data name="CaptureVideoText_NoMatches.Text" xml:space="preserve"><value>No hay marcas de tiempo coincidentes</value></data>
   <data name="CaptureVideoText_UnknownTime" xml:space="preserve"><value>Tiempo no disponible</value></data>
   <data name="CaptureVideoText_Hint" xml:space="preserve"><value>Busca texto y códigos QR en este vídeo. Elige una marca de tiempo para ir a ese momento y buscar o copiar su texto.</value></data>
+  <data name="TextExtractionStatus_LanguageResourcesRequired" xml:space="preserve"><value>Para extraer texto, instala el paquete de reconocimiento de texto (OCR) de tu idioma en Configuración de Windows y vuelve a intentarlo.</value></data>
 </root>

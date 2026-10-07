@@ -13,6 +13,8 @@ public sealed class CaptureAnalysisAction : ViewModelBase
     public string LoadingId => Id + "_Loading";
     public bool IsRunning { get; private set => Set(ref field, value); }
     public bool HasResult { get; private set => Set(ref field, value); }
+    public bool IsSupported { get; internal set => Set(ref field, value); }
+    public bool ShowAction => IsSupported && !HasResult;
     public string Status { get; private set => Set(ref field, value); } = string.Empty;
     private bool _canRun;
     public IAsyncRelayCommand Command { get; }
@@ -26,6 +28,7 @@ public sealed class CaptureAnalysisAction : ViewModelBase
     public void Update(bool running, bool hasResult, bool canRun, string status = "")
     {
         IsRunning = running; HasResult = hasResult;
+        RaisePropertyChanged(nameof(ShowAction));
         Status = status;
         _canRun = canRun && !hasResult;
         Command.NotifyCanExecuteChanged();

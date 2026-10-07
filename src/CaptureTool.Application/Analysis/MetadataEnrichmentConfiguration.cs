@@ -71,7 +71,7 @@ public static class MetadataEnrichmentConfiguration
             capability == AnalysisCapability.CaptureClassification ? "classification" :
             capability == AnalysisCapability.ImageAltText ? "alt-text" :
             throw new ArgumentException("Unsupported semantic capability.", nameof(capability));
-        return new(modelId + "-" + suffix, capability == AnalysisCapability.CaptureName ? "2" :
+        return new(modelId + "-" + suffix, capability == AnalysisCapability.CaptureName ? "3" :
             capability == AnalysisCapability.CaptureSynopsis || capability == AnalysisCapability.CaptureClassification ? "5" : "4", capability,
             capability == AnalysisCapability.ImageAltText
                 ? [AnalysisCapability.Description, AnalysisCapability.TextRecognition]

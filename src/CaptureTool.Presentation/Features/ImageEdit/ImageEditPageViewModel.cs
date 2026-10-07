@@ -2827,7 +2827,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         TextExtractionReadyState readyState = _textExtractionService.GetReadyState();
         IsTextExtractionAvailable = readyState is
             TextExtractionReadyState.Ready or
-            TextExtractionReadyState.PreparationNeeded;
+            TextExtractionReadyState.PreparationNeeded or TextExtractionReadyState.LanguageResourcesRequired;
     }
 
     private void UpdateCanToggleTextExtraction()
@@ -3110,6 +3110,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         return readyState switch
         {
             TextExtractionReadyState.NotSupported => GetLocalizedString("TextExtractionStatus_NotSupported"),
+            TextExtractionReadyState.LanguageResourcesRequired => GetLocalizedString("TextExtractionStatus_LanguageResourcesRequired"),
             TextExtractionReadyState.Disabled => GetLocalizedString("TextExtractionStatus_Disabled"),
             _ => GetLocalizedString("TextExtractionStatus_NotAvailable")
         };
@@ -3121,6 +3122,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         {
             TextExtractionPreparationStatus.Cancelled => string.Empty,
             TextExtractionPreparationStatus.NotSupported => GetLocalizedString("TextExtractionStatus_NotSupported"),
+            TextExtractionPreparationStatus.LanguageResourcesRequired => GetLocalizedString("TextExtractionStatus_LanguageResourcesRequired"),
             TextExtractionPreparationStatus.Failed => string.IsNullOrWhiteSpace(result.ErrorMessage)
                 ? GetLocalizedString("TextExtractionStatus_PreparationFailed")
                 : result.ErrorMessage,

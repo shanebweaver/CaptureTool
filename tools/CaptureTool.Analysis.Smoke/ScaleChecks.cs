@@ -131,6 +131,7 @@ internal static class ScaleChecks
         public TaskCompletionSource FirstRead { get; private set; } = NewSignal();
         public void Reset() => FirstRead = NewSignal();
         private static TaskCompletionSource NewSignal() => new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public bool FileExists(string path) => _inner.FileExists(path);
         public Task<byte[]?> ReadAsync(string path, CancellationToken ct)
         {
             if (path.EndsWith(".analysis", StringComparison.Ordinal)) FirstRead.TrySetResult();

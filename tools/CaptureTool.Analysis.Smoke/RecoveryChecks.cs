@@ -238,6 +238,7 @@ internal static class RecoveryChecks
         public string Root => root;
         public string? Stage => stage;
         public bool Armed { get; set; }
+        public bool FileExists(string path) => _inner.FileExists(path);
         public Task<byte[]?> ReadAsync(string path, CancellationToken ct) => _inner.ReadAsync(path, ct);
         public string[] GetFiles(string path) => _inner.GetFiles(path);
         public string[] GetDirectories(string path) => _inner.GetDirectories(path);

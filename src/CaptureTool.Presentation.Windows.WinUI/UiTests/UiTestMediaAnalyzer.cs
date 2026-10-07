@@ -9,7 +9,10 @@ internal sealed class UiTestMediaAnalyzer(MediaAnalyzerDescriptor descriptor) : 
 {
     public MediaAnalyzerDescriptor Descriptor => descriptor;
     public ValueTask<AnalyzerAvailability> GetAvailabilityAsync(AnalysisMediaKind kind, string? language, CancellationToken ct) =>
-        ValueTask.FromResult(AnalyzerAvailability.Ready);
+        ValueTask.FromResult(UiTestLaunchOptions.AiProfile == "none" ||
+            UiTestLaunchOptions.AiProfile == "legacy-ocr" && descriptor.Capability != AnalysisCapability.TextRecognition &&
+            descriptor.Capability != AnalysisCapability.QrCodeDetection && descriptor.Capability != AnalysisCapability.FileDetails
+            ? AnalyzerAvailability.Unsupported : AnalyzerAvailability.Ready);
     public Task<AnalyzerAvailability> PrepareAsync(IProgress<AnalysisProgress>? progress, CancellationToken ct) =>
         Task.FromResult(AnalyzerAvailability.Ready);
     public async Task<AnalyzerOutcome> AnalyzeAsync(AnalysisInput input, IProgress<AnalysisProgress>? progress, CancellationToken ct)

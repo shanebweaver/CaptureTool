@@ -6,6 +6,7 @@ public enum TextExtractionReadyState
     PreparationNeeded,
     NotSupported,
     Disabled,
-    Unknown
+    Unknown,
+    LanguageResourcesRequired
 }
 

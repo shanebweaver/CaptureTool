@@ -10,7 +10,7 @@ internal sealed class UiTestTextExtractionService : ITextExtractionService
 
     public TextExtractionReadyState GetReadyState()
     {
-        return TextExtractionReadyState.Ready;
+        return UiTestLaunchOptions.AiProfile == "none" ? TextExtractionReadyState.NotSupported : TextExtractionReadyState.Ready;
     }
 
     public Task<TextExtractionPreparationResult> EnsureReadyAsync(CancellationToken cancellationToken = default)

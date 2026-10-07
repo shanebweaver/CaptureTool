@@ -30,8 +30,8 @@ public sealed class FeatureAvailabilityTests
     [TestMethod]
     public void ImageSuperResolutionFeatureAvailability_ReturnsFeatureManagerValue()
     {
-        Assert.IsTrue(new ImageSuperResolutionFeatureAvailability(new ConstantFeatureManager(true)).IsImageSuperResolutionEnabled);
-        Assert.IsFalse(new ImageSuperResolutionFeatureAvailability(new ConstantFeatureManager(false)).IsImageSuperResolutionEnabled);
+        Assert.IsTrue(new ImageSuperResolutionFeatureAvailability(new ConstantFeatureManager(true), new StubImageSuperResolutionService(ImageSuperResolutionReadyState.Ready)).IsImageSuperResolutionEnabled);
+        Assert.IsFalse(new ImageSuperResolutionFeatureAvailability(new ConstantFeatureManager(false), new StubImageSuperResolutionService(ImageSuperResolutionReadyState.Ready)).IsImageSuperResolutionEnabled);
     }
 
     [TestMethod]
@@ -52,14 +52,15 @@ public sealed class FeatureAvailabilityTests
     }
 
     [TestMethod]
-    public void TextExtractionFeatureAvailability_IsEnabledWithoutDeviceService()
+    public void TextExtractionFeatureAvailability_IsHiddenWithoutDeviceService()
     {
-        Assert.IsTrue(new TextExtractionFeatureAvailability().IsTextExtractionEnabled);
+        Assert.IsFalse(new TextExtractionFeatureAvailability().IsTextExtractionEnabled);
     }
 
     [TestMethod]
     [DataRow(TextExtractionReadyState.Ready, true)]
     [DataRow(TextExtractionReadyState.PreparationNeeded, true)]
+    [DataRow(TextExtractionReadyState.LanguageResourcesRequired, true)]
     [DataRow(TextExtractionReadyState.NotSupported, false)]
     [DataRow(TextExtractionReadyState.Disabled, false)]
     [DataRow(TextExtractionReadyState.Unknown, false)]
@@ -76,8 +77,8 @@ public sealed class FeatureAvailabilityTests
     [TestMethod]
     public void ImageDescriptionFeatureAvailability_ReturnsFeatureManagerValue()
     {
-        Assert.IsTrue(new ImageDescriptionFeatureAvailability(new ConstantFeatureManager(true)).IsImageDescriptionEnabled);
-        Assert.IsFalse(new ImageDescriptionFeatureAvailability(new ConstantFeatureManager(false)).IsImageDescriptionEnabled);
+        Assert.IsTrue(new ImageDescriptionFeatureAvailability(new ConstantFeatureManager(true), new StubImageDescriptionService(ImageDescriptionReadyState.Ready)).IsImageDescriptionEnabled);
+        Assert.IsFalse(new ImageDescriptionFeatureAvailability(new ConstantFeatureManager(false), new StubImageDescriptionService(ImageDescriptionReadyState.Ready)).IsImageDescriptionEnabled);
     }
 
     [TestMethod]
@@ -100,8 +101,8 @@ public sealed class FeatureAvailabilityTests
     [TestMethod]
     public void ImageForegroundExtractionFeatureAvailability_ReturnsFeatureManagerValue()
     {
-        Assert.IsTrue(new ImageForegroundExtractionFeatureAvailability(new ConstantFeatureManager(true)).IsImageForegroundExtractionEnabled);
-        Assert.IsFalse(new ImageForegroundExtractionFeatureAvailability(new ConstantFeatureManager(false)).IsImageForegroundExtractionEnabled);
+        Assert.IsTrue(new ImageForegroundExtractionFeatureAvailability(new ConstantFeatureManager(true), new StubImageForegroundExtractionService(ForegroundExtractionReadyState.Ready)).IsImageForegroundExtractionEnabled);
+        Assert.IsFalse(new ImageForegroundExtractionFeatureAvailability(new ConstantFeatureManager(false), new StubImageForegroundExtractionService(ForegroundExtractionReadyState.Ready)).IsImageForegroundExtractionEnabled);
     }
 
     [TestMethod]
@@ -124,8 +125,8 @@ public sealed class FeatureAvailabilityTests
     [TestMethod]
     public void ImageObjectEraseFeatureAvailability_ReturnsFeatureManagerValue()
     {
-        Assert.IsTrue(new ImageObjectEraseFeatureAvailability(new ConstantFeatureManager(true)).IsImageObjectEraseEnabled);
-        Assert.IsFalse(new ImageObjectEraseFeatureAvailability(new ConstantFeatureManager(false)).IsImageObjectEraseEnabled);
+        Assert.IsTrue(new ImageObjectEraseFeatureAvailability(new ConstantFeatureManager(true), new StubImageObjectEraseService(ObjectEraseReadyState.Ready)).IsImageObjectEraseEnabled);
+        Assert.IsFalse(new ImageObjectEraseFeatureAvailability(new ConstantFeatureManager(false), new StubImageObjectEraseService(ObjectEraseReadyState.Ready)).IsImageObjectEraseEnabled);
     }
 
     [TestMethod]
@@ -148,8 +149,8 @@ public sealed class FeatureAvailabilityTests
     [TestMethod]
     public void ImageObjectExtractionFeatureAvailability_ReturnsFeatureManagerValue()
     {
-        Assert.IsTrue(new ImageObjectExtractionFeatureAvailability(new ConstantFeatureManager(true)).IsImageObjectExtractionEnabled);
-        Assert.IsFalse(new ImageObjectExtractionFeatureAvailability(new ConstantFeatureManager(false)).IsImageObjectExtractionEnabled);
+        Assert.IsTrue(new ImageObjectExtractionFeatureAvailability(new ConstantFeatureManager(true), new StubImageForegroundExtractionService(ForegroundExtractionReadyState.Ready)).IsImageObjectExtractionEnabled);
+        Assert.IsFalse(new ImageObjectExtractionFeatureAvailability(new ConstantFeatureManager(false), new StubImageForegroundExtractionService(ForegroundExtractionReadyState.Ready)).IsImageObjectExtractionEnabled);
     }
 
     [TestMethod]
@@ -172,10 +173,8 @@ public sealed class FeatureAvailabilityTests
     [TestMethod]
     public void VideoSuperResolutionFeatureAvailability_ReturnsFeatureManagerValue()
     {
-        Assert.IsTrue(new VideoSuperResolutionFeatureAvailability(
-            new ConstantFeatureManager(true)).IsVideoSuperResolutionEnabled);
-        Assert.IsFalse(new VideoSuperResolutionFeatureAvailability(
-            new ConstantFeatureManager(false)).IsVideoSuperResolutionEnabled);
+        Assert.IsTrue(new VideoSuperResolutionFeatureAvailability(new ConstantFeatureManager(true), new StubVideoSuperResolutionService(VideoSuperResolutionReadyState.Ready)).IsVideoSuperResolutionEnabled);
+        Assert.IsFalse(new VideoSuperResolutionFeatureAvailability(new ConstantFeatureManager(false), new StubVideoSuperResolutionService(VideoSuperResolutionReadyState.Ready)).IsVideoSuperResolutionEnabled);
     }
 
     [TestMethod]

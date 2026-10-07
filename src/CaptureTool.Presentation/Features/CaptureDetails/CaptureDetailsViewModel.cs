@@ -27,6 +27,13 @@ public sealed class CaptureDetailsViewModel : ViewModelBase
     public bool IsGeneratingSummary { get; private set => Set(ref field, value); }
     private readonly ICaptureMemoryService _memory;
     private readonly ICaptureAnalysisOnboarding? _onboarding;
+    private readonly IAnalysisFeatureAvailability? _availability;
+    public bool ShowNameAction => NameAction.IsSupported || HasSuggestedName;
+    public bool ShowSummarySection => SummaryAction.IsSupported || HasSummary;
+    public bool ShowAltTextSection => IsImage && (AltTextAction.IsSupported || Content.AltText.Length > 0);
+    public bool ShowSummaryTab => ShowSummarySection || ShowAltTextSection;
+    public bool ShowTextTab => HasVisualMedia && (TextAction.IsSupported || QrAction.IsSupported || TextPassages.Count > 0);
+    public bool ShowSpeechTab => HasAudio && (TranscriptAction.IsSupported || SpeechPassages.Count > 0);
     public CaptureAnalysisAction AltTextAction { get; }
     public CaptureAnalysisAction SummaryAction { get; }
     public CaptureAnalysisAction NameAction { get; }
@@ -83,10 +90,10 @@ public sealed class CaptureDetailsViewModel : ViewModelBase
     public bool ShowTextPassages => !ShowVideoTimestamps;
     public bool ShowTextEmptyState => HasVisualMedia && !ScanTextAction.IsRunning && TextPassages.Count == 0 && ScanTextAction.HasResult;
     public string TextEmptyDescription => _text.GetString("CapturePane_EmptyTextDescription");
-    public bool ShowScanTextAction => HasVisualMedia && !ScanTextAction.HasResult && !ShowTextResults;
+    public bool ShowScanTextAction => HasVisualMedia && ScanTextAction.IsSupported && !ScanTextAction.HasResult && !ShowTextResults;
     public bool ShowSpeechResults => !TranscriptAction.IsRunning && SpeechPassages.Count > 0;
     public bool ShowSpeechEmptyState => HasAudio && !TranscriptAction.IsRunning && SpeechPassages.Count == 0 && TranscriptAction.HasResult;
-    public bool ShowSpeechAction => HasAudio && !TranscriptAction.HasResult && !ShowSpeechResults;
+    public bool ShowSpeechAction => HasAudio && TranscriptAction.IsSupported && !TranscriptAction.HasResult && !ShowSpeechResults;
 
     public string PhysicalFileName => _path == null ? string.Empty : Path.GetFileName(_path);
     public string NameDraft { get; set => Set(ref field, value); } = string.Empty;
@@ -126,7 +133,8 @@ public sealed class CaptureDetailsViewModel : ViewModelBase
 
     public CaptureDetailsViewModel(ICaptureDetailsReader reader, ICaptureMemoryService memory, IClipboardService clipboard,
         ILocalizationService text, ITaskEnvironment ui, IAppNotificationService notifications,
-        IFolderLauncher? folders = null, ICaptureNamingService? names = null, ICaptureAnalysisOnboarding? onboarding = null)
+        IFolderLauncher? folders = null, ICaptureNamingService? names = null, ICaptureAnalysisOnboarding? onboarding = null,
+        IAnalysisFeatureAvailability? availability = null)
     {
         _reader = reader; _memory = memory; _clipboard = clipboard; _text = text; _ui = ui;
         _wasPolicyAllowed = memory.State.Policy.IsAllowed;
@@ -134,6 +142,7 @@ public sealed class CaptureDetailsViewModel : ViewModelBase
         _folders = folders;
         _names = names;
         _onboarding = onboarding;
+        _availability = availability;
         AltTextAction = Action(AnalysisCapability.ImageAltText, "AltText");
         SummaryAction = Action(AnalysisCapability.CaptureSynopsis, "Summary");
         NameAction = Action(AnalysisCapability.CaptureName, "Name");
@@ -181,7 +190,27 @@ public sealed class CaptureDetailsViewModel : ViewModelBase
 
     private async Task RequestAnalysisAsync(AnalysisCapability capability, bool scanText = false)
     {
+        // AsyncRelayCommand disables itself after the first await. Check entry eligibility
+        // before probing support, not while this command is already running.
         if (scanText && !ScanTextAction.Command.CanExecute(null)) return;
+        if (_disposed || !(scanText ? ScanTextAction.IsSupported : Actions.Any(action => action.Capability == capability && action.IsSupported))) return;
+        try
+        {
+            if (_availability != null && _kind is { } kind)
+            {
+                _availability.Invalidate();
+                bool supported = await _availability.IsSupportedAsync(kind, capability, _cancellation);
+                if (!supported && scanText)
+                    supported = await _availability.IsSupportedAsync(kind, AnalysisCapability.QrCodeDetection, _cancellation);
+                if (!supported)
+                {
+                    await RefreshSupportAsync();
+                    return;
+                }
+            }
+        }
+        catch (OperationCanceledException) when (_cancellation.IsCancellationRequested) { return; }
+        if (_disposed) return;
         if (!_disposed && UsesEditorText && (capability == AnalysisCapability.TextRecognition || capability == AnalysisCapability.QrCodeDetection))
         {
             await _editorText!.ExtractAsync();
@@ -234,7 +263,7 @@ public sealed class CaptureDetailsViewModel : ViewModelBase
                 if (!hasResult && !_editorText.CanExtract && editorStatus.Length == 0)
                     editorStatus = _text.GetString("CaptureAction_Unavailable");
                 action.Update(isText && _editorText.IsRunning, hasResult,
-                    !_disposed && !_memory.State.IsDeleting && _editorText.CanExtract && !_editorText.IsRunning, editorStatus);
+                    action.IsSupported && !_disposed && !_memory.State.IsDeleting && _editorText.CanExtract && !_editorText.IsRunning, editorStatus);
                 continue;
             }
             var result = _snapshot?.Record?.Results.SingleOrDefault(result => result.Payload.Capability == action.Capability);
@@ -256,16 +285,19 @@ public sealed class CaptureDetailsViewModel : ViewModelBase
                 failed.Steps.Contains(action.Capability)) status ??= "Failed";
             if (result == null && !running && _requestFailures.TryGetValue(action.Capability, out string? failure)) status = failure;
             string message = status == null ? string.Empty : _text.GetString("CaptureAction_" + status);
+            if (_snapshot?.Run?.CompletedSteps.SingleOrDefault(step => step.Capability == action.Capability)?.FailureCode == "ocr-language-required")
+                message = _text.GetString("TextExtractionStatus_LanguageResourcesRequired");
             // Empty speech is already explained in the Speech tab and does not need a notification.
             if (!running && status != "NoSpeech" && message.Length > 0 && message != action.Status &&
                 (action.IsRunning || _requestedAction == action.Capability) &&
                 _actionNotices.Add((message, status == "Failed")))
                 Notify(message, error: status == "Failed");
             action.Update(running, result != null || action == NameAction && (_acceptedName || Content.SuggestedName.Length > 0),
-                !_disposed && !_requesting && !pending && !_memory.State.IsDeleting &&
+                action.IsSupported && !_disposed && !_requesting && !pending && !_memory.State.IsDeleting &&
                 (action.Capability != AnalysisCapability.ImageAltText || IsImage),
                 message);
         }
+        ScanTextAction.IsSupported = TextAction.IsSupported || QrAction.IsSupported;
         ScanTextAction.Update(TextAction.IsRunning || QrAction.IsRunning || _requesting && _requestedAction == AnalysisCapability.TextRecognition,
             TextAction.HasResult && QrAction.HasResult,
             HasVisualMedia && (TextAction.Command.CanExecute(null) || QrAction.Command.CanExecute(null)));
@@ -291,9 +323,15 @@ public sealed class CaptureDetailsViewModel : ViewModelBase
         RaisePropertyChanged(nameof(ShowSpeechResults));
         RaisePropertyChanged(nameof(ShowSpeechEmptyState));
         RaisePropertyChanged(nameof(ShowSpeechAction));
+        RaisePropertyChanged(nameof(ShowNameAction));
+        RaisePropertyChanged(nameof(ShowSummarySection));
+        RaisePropertyChanged(nameof(ShowAltTextSection));
+        RaisePropertyChanged(nameof(ShowSummaryTab));
+        RaisePropertyChanged(nameof(ShowTextTab));
+        RaisePropertyChanged(nameof(ShowSpeechTab));
     }
 
-    public Task OpenAsync(string path)
+    public async Task OpenAsync(string path)
     {
         if (_path != null) throw new InvalidOperationException("Each details view has its own lifetime.");
         _path = path;
@@ -301,7 +339,9 @@ public sealed class CaptureDetailsViewModel : ViewModelBase
         RaisePropertyChanged(nameof(FilePath));
         FileName = Path.GetFileName(path);
         if (HasEdits) Notify(_text.GetString("CapturePane_PendingEdits"));
-        return Task.WhenAll(RefreshAsync(), ReadNameAsync());
+        await Task.WhenAll(RefreshAsync(), ReadNameAsync());
+        _kind ??= _snapshot?.Record?.MediaKind;
+        await RefreshSupportAsync();
     }
 
     public Task OpenAsync(string path, AnalysisMediaKind kind, string? workingPath = null)
@@ -313,7 +353,21 @@ public sealed class CaptureDetailsViewModel : ViewModelBase
         return Task.WhenAll(analysis, ReadFileAsync());
     }
 
-    public Task RefreshAllAsync() => Task.WhenAll(RefreshAsync(), ReadFileAsync(), ReadNameAsync());
+    public Task RefreshAllAsync() => Task.WhenAll(RefreshAsync(), ReadFileAsync(), ReadNameAsync(), RefreshSupportAsync());
+
+    private async Task RefreshSupportAsync()
+    {
+        if (_disposed || _kind is not { } kind || _availability == null) return;
+        try
+        {
+            var support = await Task.WhenAll(Actions.Select(async action =>
+                (Action: action, Supported: await _availability.IsSupportedAsync(kind, action.Capability, _cancellation))));
+            if (_disposed) return;
+            foreach (var item in support) item.Action.IsSupported = item.Supported;
+            UpdateActions();
+        }
+        catch (OperationCanceledException) when (_cancellation.IsCancellationRequested) { }
+    }
 
     private void OnNamesChanged() => _ui.TryExecute(() => { if (!_disposed) _ = ReadNameAsync(); });
     private async Task ReadNameAsync()

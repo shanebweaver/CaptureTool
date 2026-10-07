@@ -2197,7 +2197,7 @@ SOFTWARE.
   <data name="CaptureWelcome_Eyebrow.Text" xml:space="preserve"><value>ON-DEVICE AI</value></data>
   <data name="CaptureWelcome_Hero.Text" xml:space="preserve"><value>Get more from your captures</value></data>
   <data name="CaptureWelcome_Text.Text" xml:space="preserve"><value>Copy text from images to use anywhere.</value></data>
-  <data name="CaptureWelcome_Recording.Text" xml:space="preserve"><value>Get a quick summary of a screenshot or recording.</value></data>
+  <data name="CaptureWelcome_Recording.Text" xml:space="preserve"><value>Get a quick summary of your captures.</value></data>
   <data name="CaptureWelcome_Names.Text" xml:space="preserve"><value>Give your captures clearer names with AI suggestions.</value></data>
   <data name="CaptureWelcome_Consent.Text" xml:space="preserve"><value>AI runs on this PC only when you choose an action. Results are saved securely on this PC. Some features may require an AI model download. You can turn AI off or delete saved results in Settings.</value></data>
   <data name="CaptureWelcome_NotNow" xml:space="preserve"><value>Not now</value></data>
@@ -2269,4 +2269,5 @@ SOFTWARE.
   <data name="CaptureVideoText_NoMatches.Text" xml:space="preserve"><value>No matching timestamps</value></data>
   <data name="CaptureVideoText_UnknownTime" xml:space="preserve"><value>Time unavailable</value></data>
   <data name="CaptureVideoText_Hint" xml:space="preserve"><value>Find text and QR codes in this video. Choose a timestamp to jump to that moment, then search or copy its text.</value></data>
+  <data name="TextExtractionStatus_LanguageResourcesRequired" xml:space="preserve"><value>To extract text, install the OCR language pack for your language in Windows Settings, then try again.</value></data>
 </root>

@@ -24,7 +24,7 @@ public sealed class ImageForegroundExtractionFeatureAvailability : IImageForegro
     {
         if (_foregroundExtractionService is null)
         {
-            return true;
+            return false;
         }
 
         return _foregroundExtractionService.GetReadyState() is

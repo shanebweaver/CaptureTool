@@ -1916,7 +1916,7 @@ SOFTWARE.
   <data name="CaptureWelcome_Eyebrow.Text" xml:space="preserve"><value>ЛОКАЛЬНЫЙ ИИ</value></data>
   <data name="CaptureWelcome_Hero.Text" xml:space="preserve"><value>Больше пользы от снимков и записей</value></data>
   <data name="CaptureWelcome_Text.Text" xml:space="preserve"><value>Копируйте текст с изображений и используйте его где угодно.</value></data>
-  <data name="CaptureWelcome_Recording.Text" xml:space="preserve"><value>Получайте краткое содержание снимка экрана или записи.</value></data>
+  <data name="CaptureWelcome_Recording.Text" xml:space="preserve"><value>Получайте краткие сводки ваших снимков и записей.</value></data>
   <data name="CaptureWelcome_Names.Text" xml:space="preserve"><value>Давайте снимкам и записям более понятные имена с помощью подсказок ИИ.</value></data>
   <data name="CaptureWelcome_Consent.Text" xml:space="preserve"><value>ИИ работает на этом компьютере только тогда, когда вы выбираете действие. Результаты безопасно сохраняются на этом компьютере. Для некоторых функций может потребоваться загрузка модели ИИ. Вы можете отключить ИИ или удалить сохранённые результаты в настройках.</value></data>
   <data name="CaptureWelcome_NotNow" xml:space="preserve"><value>Не сейчас</value></data>
@@ -2001,4 +2001,5 @@ SOFTWARE.
   <data name="CaptureVideoText_NoMatches.Text" xml:space="preserve"><value>Нет подходящих отметок времени</value></data>
   <data name="CaptureVideoText_UnknownTime" xml:space="preserve"><value>Время недоступно</value></data>
   <data name="CaptureVideoText_Hint" xml:space="preserve"><value>Найдите текст и QR-коды в этом видео. Выберите отметку времени, чтобы перейти к соответствующему моменту, затем найдите или скопируйте его текст.</value></data>
+  <data name="TextExtractionStatus_LanguageResourcesRequired" xml:space="preserve"><value>Для извлечения текста установите языковой пакет распознавания текста (OCR) для своего языка в параметрах Windows, затем повторите попытку.</value></data>
 </root>

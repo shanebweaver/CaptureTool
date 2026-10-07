@@ -2,7 +2,6 @@ using CaptureTool.Application.Abstractions.Analysis;
 using CaptureTool.Domain.Analysis;
 using Microsoft.AI.Foundry.Local;
 using System.Globalization;
-using System.Runtime.InteropServices;
 
 namespace CaptureTool.Infrastructure.Analysis.Windows.Foundry;
 
@@ -18,8 +17,7 @@ internal sealed partial class FoundryMetadataProcessor(
     public async ValueTask<AnalyzerAvailability> GetAvailabilityAsync(CancellationToken ct)
     {
         ct.ThrowIfCancellationRequested();
-        if (!OperatingSystem.IsWindowsVersionAtLeast(10, 0, 26100) ||
-            RuntimeInformation.ProcessArchitecture is not (Architecture.X64 or Architecture.Arm64))
+        if (!runtime.IsSupported)
         {
             return AnalyzerAvailability.Unsupported;
         }

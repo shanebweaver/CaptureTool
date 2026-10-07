@@ -1916,7 +1916,7 @@ SOFTWARE.
   <data name="CaptureWelcome_Eyebrow.Text" xml:space="preserve"><value>设备端 AI</value></data>
   <data name="CaptureWelcome_Hero.Text" xml:space="preserve"><value>让捕获内容更有价值</value></data>
   <data name="CaptureWelcome_Text.Text" xml:space="preserve"><value>复制图像中的文字，随处使用。</value></data>
-  <data name="CaptureWelcome_Recording.Text" xml:space="preserve"><value>快速获取屏幕截图或录制内容的摘要。</value></data>
+  <data name="CaptureWelcome_Recording.Text" xml:space="preserve"><value>快速获取捕获内容的摘要。</value></data>
   <data name="CaptureWelcome_Names.Text" xml:space="preserve"><value>借助 AI 建议，为捕获内容起更清晰的名称。</value></data>
   <data name="CaptureWelcome_Consent.Text" xml:space="preserve"><value>AI 仅在您选择操作时在此电脑上运行。结果会安全地保存在此电脑上。某些功能可能需要下载 AI 模型。您可以在设置中关闭 AI 或删除已保存的结果。</value></data>
   <data name="CaptureWelcome_NotNow" xml:space="preserve"><value>暂不启用</value></data>
@@ -2001,4 +2001,5 @@ SOFTWARE.
   <data name="CaptureVideoText_NoMatches.Text" xml:space="preserve"><value>没有匹配的时间戳</value></data>
   <data name="CaptureVideoText_UnknownTime" xml:space="preserve"><value>时间不可用</value></data>
   <data name="CaptureVideoText_Hint" xml:space="preserve"><value>查找此视频中的文字和二维码。选择时间戳可跳转到对应时刻，然后查找或复制该时刻的文字。</value></data>
+  <data name="TextExtractionStatus_LanguageResourcesRequired" xml:space="preserve"><value>要提取文本，请在 Windows 设置中安装所用语言的光学字符识别 (OCR) 语言包，然后重试。</value></data>
 </root>

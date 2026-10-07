@@ -10,22 +10,25 @@ using WinRect = global::Windows.Foundation.Rect;
 
 namespace CaptureTool.Infrastructure.Edit.Windows;
 
-public sealed class WindowsTextExtractionService(IRecognizedTextDocumentBuilder documents) : ITextExtractionService
+public sealed class WindowsTextExtractionService(IRecognizedTextDocumentBuilder documents,
+    CaptureTool.Application.Abstractions.Ai.IAiDeviceSupport? device = null) : ITextExtractionService
 {
+    private bool WindowsAiSupported => (device ?? CaptureTool.Infrastructure.Ai.WindowsAiDeviceSupport.Current).WindowsAi;
     public TextExtractionReadyState GetReadyState()
     {
+        if (!WindowsAiSupported) return LegacyReadyState();
         try
         {
-            return GetCombinedReadyState(
+            var ready = GetCombinedReadyState(
                 TextRecognizer.GetReadyState(),
                 IsLegacyOcrAvailable());
+            return ready is TextExtractionReadyState.NotSupported or TextExtractionReadyState.Disabled or TextExtractionReadyState.Unknown
+                ? LegacyReadyState() : ready;
         }
         catch
         {
             // The Windows AI runtime can be absent even when the app package contains its projections.
-            return IsLegacyOcrAvailable()
-                ? TextExtractionReadyState.Ready
-                : TextExtractionReadyState.Unknown;
+            return LegacyReadyState();
         }
     }
 
@@ -33,6 +36,9 @@ public sealed class WindowsTextExtractionService(IRecognizedTextDocumentBuilder 
         CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
+        if (!WindowsAiSupported) return IsLegacyOcrAvailable()
+            ? TextExtractionPreparationResult.Success
+            : new(TextExtractionPreparationStatus.LanguageResourcesRequired);
 
         try
         {
@@ -86,7 +92,7 @@ public sealed class WindowsTextExtractionService(IRecognizedTextDocumentBuilder 
             IReadOnlyList<RecognizedQrCodeRegion> qrCodes = QrCodeDetector.Detect(sourceBitmap);
             cancellationToken.ThrowIfCancellationRequested();
 
-            TextExtractionResult? aiResult = await TryExtractWithWindowsAiAsync(
+            TextExtractionResult? aiResult = !WindowsAiSupported ? null : await TryExtractWithWindowsAiAsync(
                 sourceBitmap,
                 request,
                 qrCodes,
@@ -111,6 +117,9 @@ public sealed class WindowsTextExtractionService(IRecognizedTextDocumentBuilder 
             return TextExtractionResult.Failed(ex.Message);
         }
     }
+
+    private static TextExtractionReadyState LegacyReadyState() => IsLegacyOcrAvailable()
+        ? TextExtractionReadyState.Ready : TextExtractionReadyState.LanguageResourcesRequired;
 
     internal static TextExtractionReadyState GetCombinedReadyState(
         AIFeatureReadyState aiReadyState,

@@ -67,12 +67,20 @@ Metadata enrichment checks use synthetic OCR/transcript entries rather than medi
 & artifacts/capture-analysis-execution/aot/CaptureTool.Analysis.Smoke.exe "$PWD/artifacts/enrichment" --enrichment-checks
 ```
 
+Add `--enrichment-languages` to check Name and Summary with synthetic text in all
+six supported app languages (English, German, Spanish, French, Russian, and
+Simplified Chinese). `--enrichment-model phi-4-mini` selects the CPU fallback.
+This uses the same preparation/download behavior as the other enrichment checks.
+Fixture vocabulary checks reject accidental translations into English. Inspect
+the saved suggestions for fluency and factual accuracy as well. These fixtures
+exercise metadata generation, not speech recognition, OCR, or localized UI layout.
+
 The configured text model is prepared if necessary. `enrichment-results.json` retains
 normalized outputs, source evidence, real model identities, and fixture acceptance
 separately from provider outcomes. Noise/hostile fixtures may safely abstain or be
 rejected; a provider failure is never relabeled successful inference. Inspect meaning
 as well as the automated schema/category checks. The corpus covers three media kinds,
-German, conflicting entries, and a whole oversized entry omitted with explicit coverage.
+all six app languages, conflicting entries, and a whole oversized entry omitted with explicit coverage.
 Use `--enrichment-first` for the invoice only, or `--enrichment-model <catalog-alias>`
 to evaluate a candidate without editing production configuration. Models and runtime
 components are retained under this output directory for repeat checks.

@@ -26,11 +26,13 @@ internal interface IWindowsLanguageModelClient
 
 /// <summary>The WinRT boundary. No native objects are created by registration or passive probes.</summary>
 internal sealed class WindowsLanguageModelClient(IAnalysisResources otherModels,
-    WindowsLanguageModelAccess? access, ILogService? log = null) : IWindowsLanguageModelClient
+    WindowsLanguageModelAccess? access, ILogService? log = null,
+    CaptureTool.Application.Abstractions.Ai.IAiDeviceSupport? device = null) : IWindowsLanguageModelClient
 {
+    private bool PlatformSupported => (device ?? CaptureTool.Infrastructure.Ai.WindowsAiDeviceSupport.Current).WindowsAi;
     public AnalyzerAvailability GetAvailability()
     {
-        if (!OperatingSystem.IsWindowsVersionAtLeast(10, 0, 26100))
+        if (!PlatformSupported)
         {
             return AnalyzerAvailability.Unsupported;
         }
@@ -56,6 +58,7 @@ internal sealed class WindowsLanguageModelClient(IAnalysisResources otherModels,
     public async Task<AnalyzerAvailability> PrepareAsync(CancellationToken ct)
     {
         ct.ThrowIfCancellationRequested();
+        if (!PlatformSupported) return AnalyzerAvailability.Unsupported;
         try
         {
             if (access != null)

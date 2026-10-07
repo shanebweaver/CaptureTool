@@ -24,7 +24,7 @@ public sealed class ImageSuperResolutionFeatureAvailability : IImageSuperResolut
     {
         if (_imageSuperResolutionService is null)
         {
-            return true;
+            return false;
         }
 
         return _imageSuperResolutionService.GetReadyState() is

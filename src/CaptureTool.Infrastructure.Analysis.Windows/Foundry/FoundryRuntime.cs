@@ -5,8 +5,10 @@ using Microsoft.Extensions.Logging.Abstractions;
 
 namespace CaptureTool.Infrastructure.Analysis.Windows.Foundry;
 
-internal sealed partial class FoundryRuntime(IStorageService storage) : IAnalysisResources, IDisposable
+internal sealed partial class FoundryRuntime(IStorageService storage,
+    CaptureTool.Application.Abstractions.Ai.IAiDeviceSupport? device = null) : IAnalysisResources, IDisposable
 {
+    public bool IsSupported => (device ?? CaptureTool.Infrastructure.Ai.WindowsAiDeviceSupport.Current).FoundryCpu;
     private readonly SemaphoreSlim _gate = new(1, 1);
     private readonly SemaphoreSlim _modelGate = new(1, 1);
     private IModel? _loadedModel;
@@ -77,6 +79,8 @@ internal sealed partial class FoundryRuntime(IStorageService storage) : IAnalysi
     // Only preparation may initialize the SDK or access its catalog. Passive probes never call here.
     public async Task<IModel?> ResolveAsync(string alias, CancellationToken ct)
     {
+        ct.ThrowIfCancellationRequested();
+        if (!IsSupported) return null;
         await _gate.WaitAsync(ct).ConfigureAwait(false);
         try
         {

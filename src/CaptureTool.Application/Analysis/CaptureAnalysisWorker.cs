@@ -541,8 +541,9 @@ public sealed class CaptureAnalysisWorker : ICaptureAnalysisWorker, IDisposable
                 }
                 if (available != AnalyzerAvailability.Ready)
                 {
-                    last = AnalyzerOutcome.Unsuccessful(available == AnalyzerAvailability.Unsupported
-                        ? AnalyzerOutcomeKind.Unsupported : AnalyzerOutcomeKind.TemporarilyUnavailable, "model-unavailable");
+                    last = AnalyzerOutcome.Unsuccessful(available is AnalyzerAvailability.Unsupported or AnalyzerAvailability.LanguageResourcesRequired
+                        ? AnalyzerOutcomeKind.Unsupported : AnalyzerOutcomeKind.TemporarilyUnavailable,
+                        available == AnalyzerAvailability.LanguageResourcesRequired ? "ocr-language-required" : "model-unavailable");
                     break;
                 }
                 progress.Report(new(AnalysisProgressStage.Analyzing));

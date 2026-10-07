@@ -17,8 +17,12 @@ namespace CaptureTool.Infrastructure.Analysis.Windows;
 internal enum WindowsImageModel { Ocr, LegacyOcr, Description }
 
 internal sealed class WindowsImageAnalyzer(string id, WindowsImageModel model, AnalysisMediaKind mediaKind,
-    WindowsAnalysisMedia media) : IMediaAnalyzer
+    WindowsAnalysisMedia media, IAnalysisResources otherModels,
+    CaptureTool.Application.Abstractions.Ai.IAiDeviceSupport? device = null) : IMediaAnalyzer
 {
+    private bool PlatformSupported => model == WindowsImageModel.LegacyOcr
+        ? OperatingSystem.IsWindowsVersionAtLeast(10, 0, 17763)
+        : (device ?? CaptureTool.Infrastructure.Ai.WindowsAiDeviceSupport.Current).WindowsAi;
     private const int MaximumRegions = 50000;
     public MediaAnalyzerDescriptor Descriptor { get; } = new(id,
         model == WindowsImageModel.Description ? AnalysisCapability.Description : AnalysisCapability.TextRecognition, [mediaKind]);
@@ -26,7 +30,7 @@ internal sealed class WindowsImageAnalyzer(string id, WindowsImageModel model, A
     public ValueTask<AnalyzerAvailability> GetAvailabilityAsync(AnalysisMediaKind kind, string? language, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        if (kind != mediaKind || !OperatingSystem.IsWindowsVersionAtLeast(10, 0, model == WindowsImageModel.LegacyOcr ? 17763 : 26100))
+        if (kind != mediaKind || !PlatformSupported)
         {
             return ValueTask.FromResult(AnalyzerAvailability.Unsupported);
         }
@@ -35,7 +39,7 @@ internal sealed class WindowsImageAnalyzer(string id, WindowsImageModel model, A
         {
             if (model == WindowsImageModel.LegacyOcr)
             {
-                return ValueTask.FromResult(CreateLegacy(language) == null ? AnalyzerAvailability.Unsupported : AnalyzerAvailability.Ready);
+                return ValueTask.FromResult(CreateLegacy(language) == null ? AnalyzerAvailability.LanguageResourcesRequired : AnalyzerAvailability.Ready);
             }
 
             return ValueTask.FromResult(MapReady(model == WindowsImageModel.Ocr ? TextRecognizer.GetReadyState() : ImageDescriptionGenerator.GetReadyState()));
@@ -45,10 +49,12 @@ internal sealed class WindowsImageAnalyzer(string id, WindowsImageModel model, A
 
     public async Task<AnalyzerAvailability> PrepareAsync(IProgress<AnalysisProgress>? progress, CancellationToken cancellationToken)
     {
+        cancellationToken.ThrowIfCancellationRequested();
+        if (!PlatformSupported) return AnalyzerAvailability.Unsupported;
         progress?.Report(new(AnalysisProgressStage.Preparing));
         if (model == WindowsImageModel.LegacyOcr)
         {
-            return AnalyzerAvailability.Ready;
+            return CreateLegacy(null) == null ? AnalyzerAvailability.LanguageResourcesRequired : AnalyzerAvailability.Ready;
         }
 
         AIFeatureReadyResult ready = model == WindowsImageModel.Ocr
@@ -66,9 +72,18 @@ internal sealed class WindowsImageAnalyzer(string id, WindowsImageModel model, A
 
     private async Task<AnalyzerOutcome> AnalyzeCoreAsync(AnalysisInput input, IProgress<AnalysisProgress>? progress, CancellationToken cancellationToken)
     {
-        if (input.MediaKind != mediaKind)
+        if (input.MediaKind != mediaKind || !PlatformSupported)
         {
             return AnalyzerOutcome.Unsuccessful(AnalyzerOutcomeKind.Unsupported, "unsupported-media");
+        }
+
+        cancellationToken.ThrowIfCancellationRequested();
+        if (model != WindowsImageModel.LegacyOcr)
+        {
+            // A completed Foundry request can leave its model resident. Release it before
+            // allocating frames or loading a Windows AI model, including during idle reuse.
+            await otherModels.ReleaseAsync().ConfigureAwait(false);
+            cancellationToken.ThrowIfCancellationRequested();
         }
 
         List<RecognizedText> text = [];

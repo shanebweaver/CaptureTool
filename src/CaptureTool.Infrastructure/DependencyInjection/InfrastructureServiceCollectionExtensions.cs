@@ -45,6 +45,7 @@ public static class InfrastructureServiceCollectionExtensions
     public static IServiceCollection AddGenericServices(this IServiceCollection services)
     {
         services.AddSingleton<ICancellationService, CancellationService>();
+        services.AddSingleton<CaptureTool.Application.Abstractions.Ai.IAiDeviceSupport>(_ => CaptureTool.Infrastructure.Ai.WindowsAiDeviceSupport.Current);
         services.AddSingleton<ICaptureDetailsFeatureAvailability, CaptureDetailsFeatureAvailability>();
         services.AddSingleton<IStoreFeatureAvailability, StoreFeatureAvailability>();
         services.AddSingleton<IChromaKeyFeatureAvailability, ChromaKeyFeatureAvailability>();

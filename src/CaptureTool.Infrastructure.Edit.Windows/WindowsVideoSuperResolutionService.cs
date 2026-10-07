@@ -1,3 +1,5 @@
+using CaptureTool.Application.Abstractions.Ai;
+using CaptureTool.Infrastructure.Ai;
 using CaptureTool.Application.Abstractions.Edit.Video.SuperResolution;
 using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Domain.FileSystem;
@@ -24,15 +26,18 @@ public sealed class WindowsVideoSuperResolutionService : IVideoSuperResolutionSe
     private const double MinSupportedFrameRate = 15;
     private const double MaxSupportedFrameRate = 60;
 
+    private readonly IAiDeviceSupport _device;
     private readonly IScratchArtifactStore _scratchArtifactStore;
 
-    public WindowsVideoSuperResolutionService(IScratchArtifactStore scratchArtifactStore)
+    public WindowsVideoSuperResolutionService(IScratchArtifactStore scratchArtifactStore, IAiDeviceSupport? device = null)
     {
         _scratchArtifactStore = scratchArtifactStore;
+        _device = device ?? WindowsAiDeviceSupport.Current;
     }
 
     public VideoSuperResolutionReadyState GetReadyState()
     {
+        if (!_device.WindowsAi) return VideoSuperResolutionReadyState.NotSupported;
         try
         {
             return MapReadyState(VideoScaler.GetReadyState());
@@ -54,7 +59,7 @@ public sealed class WindowsVideoSuperResolutionService : IVideoSuperResolutionSe
             return VideoSuperResolutionPreparationResult.Success;
         }
 
-        if (readyState is VideoSuperResolutionReadyState.NotSupported or VideoSuperResolutionReadyState.Disabled)
+        if (readyState != VideoSuperResolutionReadyState.PreparationNeeded)
         {
             return VideoSuperResolutionPreparationResult.NotSupported;
         }
