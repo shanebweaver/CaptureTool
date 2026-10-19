@@ -32,7 +32,7 @@ public sealed class ImageEditPageViewModelSaveTests
     public async Task SaveAsSuggestsTheChosenNameOfTheOriginalCapture()
     {
         var names = new Mock<ICaptureNamingService>();
-        names.Setup(service => service.GetNameAsync("original.png", It.IsAny<CancellationToken>())).ReturnsAsync(new CaptureName("Roadmap: 東京", false));
+        names.Setup(service => service.GetNameAsync("original.png", It.IsAny<CancellationToken>())).ReturnsAsync(new CaptureName("Roadmap: 東京"));
         var picker = new Mock<IFilePickerService>();
         using var vm = await CreateLoadedViewModelAsync(new("working.png", "original.png"), Mock.Of<IImageCanvasExporter>(), picker.Object, names.Object);
         await vm.SaveAsync();

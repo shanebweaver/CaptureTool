@@ -9,18 +9,49 @@ internal sealed class LocalAnalysisSource : IAnalysisSource
     // Reads are streaming; this cap bounds hashing time and admission of unexpectedly large sources.
     private const long MaximumSourceBytes = 4L * 1024 * 1024 * 1024;
 
-    public async Task<IAnalysisSourceLease> OpenAsync(string path, CancellationToken cancellationToken)
+    public Task<AnalysisSourceIdentity> GetIdentityAsync(string path, CancellationToken cancellationToken)
     {
-        if (!Path.IsPathFullyQualified(path)) throw new ArgumentException("Source path must be absolute.", nameof(path));
-        var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read | FileShare.Delete, 65536,
+        cancellationToken.ThrowIfCancellationRequested();
+        if (!Path.IsPathFullyQualified(path))
+        {
+            throw new ArgumentException("Source path must be absolute.", nameof(path));
+        }
+
+        using var handle = File.OpenHandle(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
+        return Task.FromResult(WindowsFileIdentity.Read(handle));
+    }
+
+    public async Task<IAnalysisSourceLease> OpenAsync(string path, CancellationToken cancellationToken, AnalysisSourceIdentity? expectedIdentity = null)
+    {
+        if (!Path.IsPathFullyQualified(path))
+        {
+            throw new ArgumentException("Source path must be absolute.", nameof(path));
+        }
+        // Providers reopen this path. Hold off both writes and path replacement until
+        // verification and publication finish so every reader sees the leased file.
+        var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read, 65536,
             FileOptions.Asynchronous | FileOptions.SequentialScan);
         try
         {
-            if (stream.Length == 0 || stream.Length > MaximumSourceBytes) throw new InvalidDataException("Source size is unsupported.");
+            // Check the same handle that holds off replacement, before hashing any content.
+            if (expectedIdentity != null && WindowsFileIdentity.Read(stream.SafeFileHandle) != expectedIdentity)
+            {
+                throw new InvalidDataException("The selected file has been replaced.");
+            }
+
+            if (stream.Length == 0 || stream.Length > MaximumSourceBytes)
+            {
+                throw new InvalidDataException("Source size is unsupported.");
+            }
+
             SourceRevision revision = await HashAsync(stream, cancellationToken).ConfigureAwait(false);
             return new Lease(path, stream, revision);
         }
-        catch { await stream.DisposeAsync().ConfigureAwait(false); throw; }
+        catch
+        {
+            await stream.DisposeAsync().ConfigureAwait(false);
+            throw;
+        }
     }
 
     private static async Task<SourceRevision> HashAsync(FileStream stream, CancellationToken cancellationToken)
@@ -33,8 +64,10 @@ internal sealed class LocalAnalysisSource : IAnalysisSource
     {
         public string Path => path;
         public SourceRevision Revision => revision;
+
         public async Task<bool> VerifyAsync(CancellationToken cancellationToken) =>
             await HashAsync(stream, cancellationToken).ConfigureAwait(false) == Revision;
+
         public ValueTask DisposeAsync() => stream.DisposeAsync();
     }
 }

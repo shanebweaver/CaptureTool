@@ -76,7 +76,7 @@ public sealed class CaptureDetailsReaderTests
     {
         var setup = new Setup();
         setup.Store.SetupSequence(store => store.GetAdmissionScopeAsync(It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new AnalysisAdmissionScope(Guid.NewGuid(), 0)).ReturnsAsync(new AnalysisAdmissionScope(Guid.NewGuid(), 0));
+            .ReturnsAsync(new AnalysisAdmissionScope(Guid.NewGuid())).ReturnsAsync(new AnalysisAdmissionScope(Guid.NewGuid()));
         var snapshot = await setup.Reader.ReadAsync(Setup.Path);
         Assert.AreEqual(CaptureDetailsStatus.Empty, snapshot.Status);
         Assert.IsNull(snapshot.Record);
@@ -87,7 +87,7 @@ public sealed class CaptureDetailsReaderTests
     public async Task MissingFileDoesNotPresentUnverifiedSavedResults()
     {
         var setup = new Setup();
-        setup.Files.Setup(files => files.OpenAsync(It.IsAny<string>(), It.IsAny<CancellationToken>())).ThrowsAsync(new FileNotFoundException());
+        setup.Files.Setup(files => files.OpenAsync(It.IsAny<string>(), It.IsAny<CancellationToken>(), null)).ThrowsAsync(new FileNotFoundException());
         var snapshot = await setup.Reader.ReadAsync(Setup.Path);
         Assert.AreEqual(CaptureDetailsStatus.SourceUnavailable, snapshot.Status);
         Assert.IsNull(snapshot.Record);
@@ -145,12 +145,12 @@ public sealed class CaptureDetailsReaderTests
                 new("test", "test", "test", "1"), date, "plan", run)]);
             Catalog.Setup(catalog => catalog.ReadAllAsync(It.IsAny<CancellationToken>())).ReturnsAsync([
                 new(id, type, null, Path, CaptureSourceOwnership.External)]);
-            var scope = new AnalysisAdmissionScope(Guid.NewGuid(), 0);
+            var scope = new AnalysisAdmissionScope(Guid.NewGuid());
             Store.Setup(store => store.GetAdmissionScopeAsync(It.IsAny<CancellationToken>())).ReturnsAsync(scope);
             Metadata.Setup(reader => reader.GetAsync(id, null, It.IsAny<CancellationToken>())).ReturnsAsync(Record);
             Lease.SetupGet(lease => lease.Revision).Returns(revision);
             Lease.Setup(lease => lease.VerifyAsync(It.IsAny<CancellationToken>())).ReturnsAsync(true);
-            Files.Setup(files => files.OpenAsync(It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync(Lease.Object);
+            Files.Setup(files => files.OpenAsync(It.IsAny<string>(), It.IsAny<CancellationToken>(), null)).ReturnsAsync(Lease.Object);
             Reader = new(Catalog.Object, Metadata.Object, Store.Object, Files.Object);
         }
     }

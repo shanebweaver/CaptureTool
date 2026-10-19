@@ -1,4 +1,4 @@
-﻿using CaptureTool.Application.Abstractions.Library.RecentCaptures;
+using CaptureTool.Application.Abstractions.Library.RecentCaptures;
 using CaptureTool.Application.Capture;
 using CaptureTool.Domain.Capture;
 using CaptureTool.Infrastructure.Files;
@@ -21,15 +21,13 @@ public sealed class CaptureNamingTests
         string path = Path.Combine(environment.Root, "import.wav");
         await File.WriteAllTextAsync(path, "media", Ct);
         Assert.IsNull(await names.GetNameAsync(path, Ct));
-        Assert.IsFalse((await names.GetStateAsync(path, Ct)).IsGenerating);
         Assert.IsEmpty(await catalog.ReadAllAsync(Ct), "Reading a name must not enroll or schedule a capture.");
         var renamed = await names.RenameAsync(path, CaptureFileType.Audio, "Personal note", Ct);
         Assert.IsNotNull(renamed);
         Assert.IsTrue(File.Exists(renamed.NewPath));
         Assert.IsFalse(File.Exists(path));
         using var reopened = environment.CreateCatalog();
-        Assert.AreEqual(new CaptureName("Personal note", false), (await reopened.ReadAllAsync(Ct)).Single().Name);
-        await names.InvalidatePendingAsync(Ct);
+        Assert.AreEqual(new CaptureName("Personal note"), (await reopened.ReadAllAsync(Ct)).Single().Name);
         Assert.AreEqual("Personal note", (await names.GetNameAsync(renamed.NewPath, Ct))!.Text);
         environment.Protector.FailProtection = true;
         Assert.IsNull(await names.RenameAsync(renamed.NewPath, CaptureFileType.Audio, "Unsaved name", Ct));
@@ -58,16 +56,16 @@ public sealed class CaptureNamingTests
     [DataRow("Roadmap: résumé / 東京?", "Roadmap_ résumé _ 東京_")]
     [DataRow("...", "Capture")]
     public void SuggestedNamesAreSafeWithoutDiscardingUnicode(string text, string expected) =>
-        Assert.AreEqual(expected, new CaptureName(text, false).SuggestedFileName());
+        Assert.AreEqual(expected, new CaptureName(text).SuggestedFileName());
 
     [TestMethod]
     public void NamesRejectMultilineAndOverlongInputAndNeverSplitASurrogate()
     {
-        Assert.ThrowsExactly<ArgumentException>(() => new CaptureName("  ", false));
-        Assert.ThrowsExactly<ArgumentException>(() => new CaptureName("two\nlines", false));
-        Assert.ThrowsExactly<ArgumentException>(() => new CaptureName(new string('a', 161), false));
-        Assert.ThrowsExactly<ArgumentException>(() => new CaptureName("\ud800", false));
-        string suggestion = new CaptureName(new string('a', 119) + "📷", true).SuggestedFileName();
+        Assert.ThrowsExactly<ArgumentException>(() => new CaptureName("  "));
+        Assert.ThrowsExactly<ArgumentException>(() => new CaptureName("two\nlines"));
+        Assert.ThrowsExactly<ArgumentException>(() => new CaptureName(new string('a', 161)));
+        Assert.ThrowsExactly<ArgumentException>(() => new CaptureName("\ud800"));
+        string suggestion = new CaptureName(new string('a', 119) + "📷").SuggestedFileName();
         Assert.AreEqual(119, suggestion.Length);
     }
 

@@ -1,22 +1,20 @@
-﻿using CaptureTool.Application.Abstractions.Analysis;
+using CaptureTool.Application.Abstractions.Analysis;
 using CaptureTool.Application.Abstractions.Capture.Assets;
 using CaptureTool.Application.Abstractions.Logging;
 using CaptureTool.Domain;
 using CaptureTool.Domain.Analysis;
-using CaptureTool.Domain.Analysis.Payloads;
 
 namespace CaptureTool.Application.Analysis;
 
-public sealed class CaptureAnalysisWorker : ICaptureAnalysisWorker, IDisposable
+public sealed partial class CaptureAnalysisWorker : ICaptureAnalysisWorker, IDisposable
 {
     private readonly IAnalysisExecutionStore _store;
     private readonly IAnalysisAuthorization _authorization;
     private readonly IAnalysisSource _source;
     private readonly ICaptureAssetCatalog _catalog;
     private readonly CaptureAnalysisConfiguration _configuration;
-    private readonly IReadOnlyDictionary<string, IMediaAnalyzer> _analyzers;
-    private readonly IReadOnlyDictionary<string, IMetadataProcessor> _processors;
-    private readonly IAnalysisResources[] _resources;
+    private readonly AnalysisProviderSession _providers;
+    private readonly AnalysisStepExecutor _steps;
     private readonly ILogService? _log;
     private readonly TimeProvider _time;
     private int _releaseRequested;
@@ -27,7 +25,6 @@ public sealed class CaptureAnalysisWorker : ICaptureAnalysisWorker, IDisposable
     private readonly object _progressLock = new();
     private CancellationTokenSource? _activeCancellation;
     private AnalysisRunToken? _activeToken;
-    private Task? _invocation;
     private long _progressVersion;
     private bool _publishingProgress;
     private AnalysisActivitySnapshot _progress = new(AnalysisActivity.Idle);
@@ -42,14 +39,13 @@ public sealed class CaptureAnalysisWorker : ICaptureAnalysisWorker, IDisposable
         _source = source;
         _catalog = catalog;
         _configuration = configuration;
-        _resources = resources?.ToArray() ?? [];
         _log = log;
         _time = time ?? TimeProvider.System;
         IMediaAnalyzer[] adapters = analyzers.ToArray();
         IMetadataProcessor[] metadata = processors?.ToArray() ?? [];
         configuration.ValidateAnalyzers(adapters.Select(analyzer => analyzer.Descriptor), metadata.Select(processor => processor.Descriptor));
-        _analyzers = adapters.ToDictionary(analyzer => analyzer.Descriptor.Id, StringComparer.Ordinal);
-        _processors = metadata.ToDictionary(processor => processor.Descriptor.Id, StringComparer.Ordinal);
+        _providers = new AnalysisProviderSession(resources ?? [], log);
+        _steps = new AnalysisStepExecutor(adapters, metadata, _providers, log);
     }
 
     public AnalysisActivitySnapshot Progress => Volatile.Read(ref _progress);
@@ -69,247 +65,42 @@ public sealed class CaptureAnalysisWorker : ICaptureAnalysisWorker, IDisposable
             }
 
             MediaAnalysisPlan plan = _configuration.SelectPlan(request.MediaKind, request.Capabilities);
+            // Pin the selected file before queuing without reading its contents. Replays retain
+            // their original identity, even if the path has since been renamed or reused.
+            AnalysisWorkItem? prior = await _store.GetWorkAsync(request.CaptureId, cancellationToken).ConfigureAwait(false);
+            AnalysisSourceIdentity? identity = null;
+            if (prior?.Token == new AnalysisRunToken(request.CaptureId, request.Generation, request.RequestId))
+            {
+                identity = prior.SourceIdentity;
+            }
+            else
+            {
+                try
+                {
+                    identity = await _source.GetIdentityAsync(request.SourcePath, cancellationToken).ConfigureAwait(false);
+                }
+                catch (Exception exception) when (exception is IOException or InvalidDataException or UnauthorizedAccessException) { }
+            }
+            request = request with
+            {
+                SourceIdentity = identity
+            };
             bool accepted = await _store.AdmitAsync(request, grant.Revision, plan, cancellationToken).ConfigureAwait(false);
             if (accepted)
             {
-                if (request.ExpectedRunId is { } prior)
+                if (request.ExpectedRunId is { } priorRun)
                 {
-                    CancelActive(new(request.CaptureId, request.Generation, prior));
+                    CancelActive(new(request.CaptureId, request.Generation, priorRun));
                 }
 
                 Signal();
             }
             return accepted;
         }
-        finally { _commands.Release(); }
-    }
-
-    public async Task RunAsync(CancellationToken cancellationToken)
-    {
-        if (!await _running.WaitAsync(0, cancellationToken).ConfigureAwait(false))
-        {
-            throw new InvalidOperationException("Only one analysis worker may run.");
-        }
-
-        try
-        {
-            await _store.InitializeAsync(cancellationToken).ConfigureAwait(false);
-            long? idleSince = null;
-            while (true)
-            {
-                cancellationToken.ThrowIfCancellationRequested();
-                IReadOnlyList<AnalysisWorkItem> pending = await _store.ReadPendingAsync(cancellationToken).ConfigureAwait(false);
-                if (pending.Count == 0)
-                {
-                    idleSince ??= _time.GetTimestamp();
-                    TimeSpan retention = _resources.Length == 0 ? TimeSpan.Zero : _resources.Min(resource => resource.IdleRetention);
-                    TimeSpan remaining = retention - _time.GetElapsedTime(idleSince.Value);
-                    bool forceRelease = Interlocked.Exchange(ref _releaseRequested, 0) != 0;
-                    if (!forceRelease && remaining > TimeSpan.Zero && _invocation is not { IsCompleted: false } &&
-                        !_resources.Any(resource => resource.IsUnderMemoryPressure))
-                    {
-                        bool allowed;
-                        using (var grant = await _authorization.AcquireAsync(cancellationToken).ConfigureAwait(false))
-                        {
-                            allowed = grant.IsAllowed && !grant.Revoked.IsCancellationRequested;
-                        }
-
-                        if (allowed)
-                        {
-                            if (Progress.Activity != AnalysisActivity.Idle || Progress.QueuedCaptures != 0 || Progress.Fraction != null)
-                            {
-                                Report(Progress with { Activity = AnalysisActivity.Idle, QueuedCaptures = 0, Fraction = null });
-                            }
-                            // New requests wake immediately. Poll only during this bounded grace
-                            // period so low memory or revoked consent releases an idle model promptly.
-                            await WaitForIdleSignalAsync(remaining < TimeSpan.FromSeconds(1) ? remaining : TimeSpan.FromSeconds(1),
-                                cancellationToken).ConfigureAwait(false);
-                            continue;
-                        }
-                    }
-                    bool released = await ReleaseResourcesAsync().WaitAsync(cancellationToken).ConfigureAwait(false);
-                    Report(Progress with
-                    {
-                        Activity = released ? AnalysisActivity.Idle : AnalysisActivity.ProviderUnavailable,
-                        FailureCode = released ? Progress.FailureCode : "model-release-failed",
-                        QueuedCaptures = 0,
-                        Fraction = null,
-                    });
-                    await _signal.WaitAsync(cancellationToken).ConfigureAwait(false);
-                    continue;
-                }
-                idleSince = null;
-                if (_invocation is { IsCompleted: false } invocation)
-                {
-                    await WaitForProviderAsync(invocation, pending, cancellationToken).ConfigureAwait(false);
-                    continue;
-                }
-                await ProcessBatchAsync(pending, cancellationToken).ConfigureAwait(false);
-            }
-        }
-        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { }
-        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or System.Security.Cryptography.CryptographicException)
-        {
-            Report(new(AnalysisActivity.StorageUnavailable, FailureCode: "storage-unavailable"));
-        }
         finally
         {
-            // Shutdown abandons active and queued requests. Committed metadata remains,
-            // but a late provider result can no longer publish against these tokens.
-            try { await _store.DiscardPendingAsync(CancellationToken.None).ConfigureAwait(false); }
-            finally
-            {
-                // A timed-out native call still owns its model. Cleanup follows its actual
-                // completion, without blocking shutdown or permitting a new invocation.
-                bool stopped = _invocation is not { IsCompleted: false };
-                Task cleanup = ReleaseResourcesAsync();
-                if (stopped)
-                {
-                    await ObserveAsync(cleanup).ConfigureAwait(false);
-                }
-                else
-                {
-                    _ = ObserveAsync(cleanup);
-                }
-
-                if (Progress.Activity != AnalysisActivity.StorageUnavailable)
-                {
-                    Report(Progress with { Activity = AnalysisActivity.Idle, QueuedCaptures = 0, Fraction = null });
-                }
-
-                _running.Release();
-            }
+            _commands.Release();
         }
-    }
-
-    private async Task WaitForIdleSignalAsync(TimeSpan delay, CancellationToken ct)
-    {
-        // An idle poll is a normal wakeup, not cancellation. Dispose the timer after
-        // either wakeup so it cannot leave a callback behind when the worker stops.
-        await using var timer = _time.CreateTimer(static state => ((CaptureAnalysisWorker)state!).Signal(),
-            this, delay, Timeout.InfiniteTimeSpan);
-        await _signal.WaitAsync(ct).ConfigureAwait(false);
-    }
-
-    private Task<bool> ReleaseResourcesAsync()
-    {
-        Task? previous = _invocation;
-        if (_resources.Length == 0)
-        {
-            return Task.FromResult(true);
-        }
-
-        Task<bool> cleanup = Task.Run(async () =>
-        {
-            if (previous != null)
-            {
-                await ObserveAsync(previous).ConfigureAwait(false);
-            }
-
-            bool released = true;
-            foreach (IAnalysisResources resource in _resources)
-            {
-                try { await resource.ReleaseAsync().ConfigureAwait(false); }
-                catch (Exception)
-                {
-                    released = false;
-                    _log?.LogWarning("Analysis provider resource release failed.");
-                }
-            }
-            return released;
-        });
-        _invocation = cleanup;
-        return cleanup;
-    }
-
-    private async Task ProcessBatchAsync(IReadOnlyList<AnalysisWorkItem> pending, CancellationToken ct)
-    {
-        // Bound latency for new arrivals and avoid holding every library source open.
-        // Each capture retains its configured order; compatible next steps run together.
-        var batch = pending.Take(_configuration.MaximumBatchCaptures).ToList();
-        int waiting = pending.Count - batch.Count;
-        while (batch.Count != 0)
-        {
-            AnalysisStep? first = NextStep(batch[0]);
-            AnalysisWorkItem[] ready = first == null ? [batch[0]] : batch.Where(work =>
-                NextStep(work) is { } step && step.Capability == first.Capability && step.Candidates.SequenceEqual(first.Candidates)).ToArray();
-            foreach (AnalysisWorkItem work in ready)
-            {
-                ct.ThrowIfCancellationRequested();
-                await ProcessAsync(work, waiting + batch.Count - 1, ct).ConfigureAwait(false);
-                AnalysisWorkItem? next = await _store.GetWorkAsync(work.Token.CaptureId, ct).ConfigureAwait(false);
-                int index = batch.IndexOf(work);
-                if (next?.Token == work.Token && next.Run.IsPending)
-                {
-                    if (next.Run.CompletedSteps.Count <= work.Run.CompletedSteps.Count)
-                    {
-                        // A rejected commit must not become an unbounded inference retry.
-                        await _store.FinishAsync(work.Token, AnalysisRunStatus.Failed, ct).ConfigureAwait(false);
-                        _log?.LogWarning("Capture analysis stopped a run that made no durable progress.");
-                        Report(new(AnalysisActivity.Analyzing, waiting + batch.Count - 1, work.Token.CaptureId,
-                            FailureCode: "commit-rejected", LastRunStatus: AnalysisRunStatus.Failed));
-                        batch.RemoveAt(index);
-                    }
-                    else
-                    {
-                        batch[index] = next;
-                    }
-                }
-                else
-                {
-                    batch.RemoveAt(index);
-                }
-
-                if (_invocation is { IsCompleted: false })
-                {
-                    return;
-                }
-            }
-        }
-
-        AnalysisStep? NextStep(AnalysisWorkItem work)
-        {
-            MediaAnalysisPlan? plan = PlanFor(work);
-            return plan?.Version == work.Run.PlanVersion && work.Run.CompletedSteps.Count < plan.Steps.Count
-                ? plan.Steps[work.Run.CompletedSteps.Count] : null;
-        }
-    }
-
-    private async Task WaitForProviderAsync(Task invocation, IReadOnlyList<AnalysisWorkItem> pending, CancellationToken shutdown)
-    {
-        CancellationToken revoked;
-        AnalysisRunToken[] unauthorized;
-        using (IAnalysisAuthorizationLease grant = await _authorization.AcquireAsync(shutdown).ConfigureAwait(false))
-        {
-            unauthorized = pending.Where(work => !Permits(grant, work)).Select(work => work.Token).ToArray();
-            revoked = grant.Revoked;
-        }
-        // These run revisions cannot become authorized again. Release the policy lease
-        // before writing a potentially large backlog; store tokens reject replacements.
-        foreach (AnalysisRunToken token in unauthorized)
-        {
-            await _store.FinishAsync(token, AnalysisRunStatus.Cancelled, shutdown).ConfigureAwait(false);
-        }
-
-        pending = await _store.ReadPendingAsync(shutdown).ConfigureAwait(false);
-        if (pending.Count == 0)
-        {
-            return;
-        }
-
-        Report(new(AnalysisActivity.ProviderUnavailable, pending.Count, FailureCode: "provider-not-stopped"));
-        // Wake on provider completion, queue commands, revocation, or shutdown. Cancel the
-        // losing signal wait so it cannot consume a later enqueue/clear notification.
-        using var wake = CancellationTokenSource.CreateLinkedTokenSource(shutdown, revoked);
-        Task signal = _signal.WaitAsync(wake.Token);
-        try { await Task.WhenAny(invocation, signal).ConfigureAwait(false); }
-        finally
-        {
-            await wake.CancelAsync().ConfigureAwait(false);
-            try { await signal.ConfigureAwait(false); }
-            catch (OperationCanceledException) when (wake.IsCancellationRequested) { }
-        }
-        shutdown.ThrowIfCancellationRequested();
     }
 
     public async Task CancelAsync(CaptureId captureId, CancellationToken cancellationToken = default)
@@ -326,350 +117,32 @@ public sealed class CaptureAnalysisWorker : ICaptureAnalysisWorker, IDisposable
             Interlocked.Exchange(ref _releaseRequested, 1);
             Signal();
         }
-        finally { _commands.Release(); }
+        finally
+        {
+            _commands.Release();
+        }
     }
 
-    public async Task<AnalysisCleanupResult> ClearAsync(long reconciliationBoundary, CancellationToken cancellationToken = default)
+    public async Task<AnalysisCleanupResult> ClearAsync(CancellationToken cancellationToken = default)
     {
         await _commands.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
-            AnalysisCleanupResult result = await _store.ClearAsync(reconciliationBoundary, cancellationToken).ConfigureAwait(false);
+            AnalysisCleanupResult result = await _store.ClearAsync(cancellationToken).ConfigureAwait(false);
             CancelActive(null);
             Interlocked.Exchange(ref _releaseRequested, 1);
             Signal();
             return result;
         }
-        finally { _commands.Release(); }
-    }
-
-    private async Task ProcessAsync(AnalysisWorkItem queued, int remaining, CancellationToken shutdown)
-    {
-        AnalysisWorkItem? work = await _store.GetWorkAsync(queued.Token.CaptureId, shutdown).ConfigureAwait(false);
-        if (work == null || work.Token != queued.Token || !work.Run.IsPending)
-        {
-            return;
-        }
-
-        CancellationToken revoked;
-        using (IAnalysisAuthorizationLease grant = await _authorization.AcquireAsync(shutdown).ConfigureAwait(false))
-        {
-            if (!Permits(grant, work))
-            {
-                await _store.FinishAsync(work.Token, AnalysisRunStatus.Cancelled, shutdown).ConfigureAwait(false);
-                Report(new(AnalysisActivity.Analyzing, remaining, work.Token.CaptureId, LastRunStatus: AnalysisRunStatus.Cancelled));
-                return;
-            }
-            revoked = grant.Revoked;
-        }
-        MediaAnalysisPlan? plan = PlanFor(work);
-        if (plan == null || plan.Version != work.Run.PlanVersion || !plan.Steps.Select(step => step.Capability).SequenceEqual(work.Run.Steps))
-        {
-            await _store.FinishAsync(work.Token, AnalysisRunStatus.Failed, shutdown).ConfigureAwait(false);
-            Report(new(AnalysisActivity.Analyzing, remaining, work.Token.CaptureId, FailureCode: "plan-changed", LastRunStatus: AnalysisRunStatus.Failed));
-            return;
-        }
-
-        using var cancellation = CancellationTokenSource.CreateLinkedTokenSource(shutdown, revoked);
-        lock (_activeLock) { _activeCancellation = cancellation; _activeToken = work.Token; }
-        CancellationToken ct = cancellation.Token;
-        try
-        {
-            Report(new(AnalysisActivity.Analyzing, remaining, work.Token.CaptureId, work.Run.CompletedSteps.Count, plan.Steps.Count));
-            var asset = await _catalog.GetAsync(work.Token.CaptureId, ct).ConfigureAwait(false);
-            await using IAnalysisSourceLease source = await OpenSourceAsync(asset?.SourcePath ?? work.SourcePath, ct).ConfigureAwait(false);
-            if (work.Run.SourceRevision != null && source.Revision != work.Run.SourceRevision)
-            {
-                await _store.FinishAsync(work.Token, AnalysisRunStatus.InvalidSource, shutdown).ConfigureAwait(false);
-                return;
-            }
-            using (IAnalysisAuthorizationLease grant = await _authorization.AcquireAsync(ct).ConfigureAwait(false))
-            {
-                if (!Permits(grant, work) || !await _store.BindSourceAsync(work.Token, source.Revision, ct).ConfigureAwait(false))
-                {
-                    return;
-                }
-            }
-            DateTimeOffset? capturedAt = asset?.CapturedAt;
-            var input = new AnalysisInput(work.Token.CaptureId, work.MediaKind, source.Revision, source.Path, work.Language, capturedAt);
-            int index = work.Run.CompletedSteps.Count;
-            ct.ThrowIfCancellationRequested();
-            AnalysisWorkItem? current = await _store.GetWorkAsync(work.Token.CaptureId, ct).ConfigureAwait(false);
-            if (current?.Token != work.Token || !current.Run.IsPending)
-            {
-                return;
-            }
-
-            if (work.ReuseExisting)
-            {
-                CaptureAnalysisRecord? saved = await _store.GetAsync(work.Token.CaptureId, source.Revision, ct).ConfigureAwait(false);
-                AnalysisResult? reusable = saved?.Results.SingleOrDefault(result => result.Payload.Capability == plan.Steps[index].Capability);
-                if (reusable != null)
-                {
-                    if (!await VerifySourceAsync(source, ct).ConfigureAwait(false))
-                    {
-                        await _store.FinishAsync(work.Token, AnalysisRunStatus.InvalidSource, shutdown).ConfigureAwait(false);
-                        return;
-                    }
-                    using IAnalysisAuthorizationLease reuseGrant = await _authorization.AcquireAsync(ct).ConfigureAwait(false);
-                    if (Permits(reuseGrant, work))
-                    {
-                        await _store.CommitStepAsync(work.Token, new(plan.Steps[index].Capability,
-                            AnalyzerOutcomeKind.Succeeded, null, reusable.ResultId), null, ct).ConfigureAwait(false);
-                    }
-
-                    return;
-                }
-            }
-            CaptureAnalysisRecord? metadata = _processors.ContainsKey(plan.Steps[index].Candidates[0])
-                ? await _store.GetAsync(work.Token.CaptureId, source.Revision, ct).ConfigureAwait(false) : null;
-            var (outcome, derivation) = await ExecuteStepAsync(plan.Steps[index], work, input, metadata, remaining, index, plan.Steps.Count, ct).ConfigureAwait(false);
-            if (outcome.Kind is AnalyzerOutcomeKind.Cancelled or AnalyzerOutcomeKind.InvalidSource)
-            {
-                await _store.FinishAsync(work.Token, outcome.Kind == AnalyzerOutcomeKind.Cancelled
-                    ? AnalysisRunStatus.Cancelled : AnalysisRunStatus.InvalidSource, shutdown).ConfigureAwait(false);
-                return;
-            }
-            if (!await VerifySourceAsync(source, ct).ConfigureAwait(false))
-            {
-                await _store.FinishAsync(work.Token, AnalysisRunStatus.InvalidSource, shutdown).ConfigureAwait(false);
-                return;
-            }
-            using IAnalysisAuthorizationLease publication = await _authorization.AcquireAsync(ct).ConfigureAwait(false);
-            if (!Permits(publication, work))
-            {
-                return;
-            }
-
-            AnalysisResult? result = outcome.Kind == AnalyzerOutcomeKind.Succeeded
-                ? new(outcome.Payload!, outcome.Producer!, DateTimeOffset.UtcNow, plan.Version, work.Run.Id, derivation: derivation) : null;
-            if (!await _store.CommitStepAsync(work.Token, new(plan.Steps[index].Capability, outcome.Kind, outcome.FailureCode), result, ct).ConfigureAwait(false))
-            {
-                return;
-            }
-
-            if (result != null && ResultCommitted is { } committed)
-            {
-                foreach (Action<CaptureId, AnalysisCapability> observer in committed.GetInvocationList())
-                {
-                    try { observer(work.Token.CaptureId, result.Payload.Capability); } catch (Exception) { }
-                }
-            }
-
-            return; // Rejoin the batch at the next durable step boundary.
-        }
-        catch (OperationCanceledException) when (shutdown.IsCancellationRequested) { throw; }
-        catch (OperationCanceledException)
-        {
-            await _store.FinishAsync(work.Token, AnalysisRunStatus.Cancelled, shutdown).ConfigureAwait(false);
-        }
-        catch (ProviderBusyException)
-        {
-            await _store.FinishAsync(work.Token, ct.IsCancellationRequested ? AnalysisRunStatus.Cancelled : AnalysisRunStatus.Failed, shutdown).ConfigureAwait(false);
-            Report(new(AnalysisActivity.Analyzing, remaining, FailureCode: "provider-not-stopped"));
-        }
-        catch (SourceUnavailableException)
-        {
-            await _store.FinishAsync(work.Token, AnalysisRunStatus.InvalidSource, shutdown).ConfigureAwait(false);
-        }
         finally
         {
-            AdvanceProgressVersion();
-            lock (_activeLock) { _activeCancellation = null; _activeToken = null; }
-            if (!shutdown.IsCancellationRequested)
-            {
-                AnalysisWorkItem? finished = await _store.GetWorkAsync(work.Token.CaptureId, shutdown).ConfigureAwait(false);
-                if (finished?.Token == work.Token && !finished.Run.IsPending)
-                {
-                    Report(new(AnalysisActivity.Analyzing, remaining, work.Token.CaptureId, finished.Run.CompletedSteps.Count, plan.Steps.Count,
-                        FailureCode: finished.Run.CompletedSteps.LastOrDefault(step => step.Outcome != AnalyzerOutcomeKind.Succeeded)?.FailureCode ?? Progress.FailureCode,
-                        LastRunStatus: finished.Run.Status,
-                        LastRunHadFailures: finished.Run.Status == AnalysisRunStatus.Completed && finished.Run.CompletedSteps.Any(step =>
-                            step.Outcome is AnalyzerOutcomeKind.Failed or AnalyzerOutcomeKind.TemporarilyUnavailable)));
-                }
-            }
+            _commands.Release();
         }
     }
 
-    private MediaAnalysisPlan? PlanFor(AnalysisWorkItem work)
-    {
-        try { return _configuration.SelectPlan(work.MediaKind, work.Run.Steps); }
-        catch (ArgumentException) { return null; }
-        catch (InvalidOperationException) { return null; }
-    }
-
-    private async Task<(AnalyzerOutcome Outcome, AnalysisDerivation? Derivation)> ExecuteStepAsync(AnalysisStep step, AnalysisWorkItem work, AnalysisInput input,
-        CaptureAnalysisRecord? metadata,
-        int remaining, int index, int total, CancellationToken ct)
-    {
-        AnalyzerOutcome last = AnalyzerOutcome.Unsuccessful(AnalyzerOutcomeKind.Unsupported, "no-compatible-model");
-        AnalyzerOutcome strongestFailure = last;
-        foreach (string id in step.Candidates)
-        {
-            for (int retry = 0; retry <= step.RetryCount; retry++)
-            {
-                IMediaAnalyzer? analyzer = _analyzers.GetValueOrDefault(id);
-                IMetadataProcessor? processor = _processors.GetValueOrDefault(id);
-                MetadataProcessorInput? snapshot = null;
-                long version = AdvanceProgressVersion();
-                var progress = new InlineProgress(value => Report(
-                    new(value.Stage == AnalysisProgressStage.Preparing ? AnalysisActivity.Preparing : AnalysisActivity.Analyzing,
-                        remaining, work.Token.CaptureId, index, total, value.Fraction), version, ct));
-                try
-                {
-                    // Select whole entries immediately before this attempt. The store rechecks the
-                    // consulted identities at commit; preparation never owns the publication gate.
-                    if (processor != null)
-                    {
-                        if (metadata == null)
-                        {
-                            return (AnalyzerOutcome.Unsuccessful(AnalyzerOutcomeKind.Unsupported, "metadata-input-missing"), null);
-                        }
-
-                        snapshot = MetadataProcessorInput.Create(metadata, processor.Descriptor, ct);
-                        if (!snapshot.Entries.Any(entry => !string.IsNullOrWhiteSpace(entry.Text)))
-                        {
-                            return (AnalyzerOutcome.Unsuccessful(AnalyzerOutcomeKind.Unsupported, "metadata-input-empty"), null);
-                        }
-                    }
-                    AnalyzerAvailability available = await InvokeAsync(token => processor != null
-                        ? processor.GetAvailabilityAsync(token).AsTask() : analyzer!.GetAvailabilityAsync(work.MediaKind, work.Language, token).AsTask(),
-                        TimeSpan.FromSeconds(10), ct).ConfigureAwait(false);
-                    if (available == AnalyzerAvailability.PreparationRequired)
-                    {
-                        progress.Report(new(AnalysisProgressStage.Preparing));
-                        available = await InvokeAsync(token => processor != null ? processor.PrepareAsync(progress, token) : analyzer!.PrepareAsync(progress, token), step.PreparationTimeout, ct).ConfigureAwait(false);
-                    }
-                    if (available != AnalyzerAvailability.Ready)
-                    {
-                        last = AnalyzerOutcome.Unsuccessful(available is AnalyzerAvailability.Unsupported or AnalyzerAvailability.LanguageResourcesRequired
-                            ? AnalyzerOutcomeKind.Unsupported : AnalyzerOutcomeKind.TemporarilyUnavailable,
-                            available == AnalyzerAvailability.LanguageResourcesRequired ? "ocr-language-required" : "model-unavailable");
-                        break;
-                    }
-                    progress.Report(new(AnalysisProgressStage.Analyzing));
-                    last = await InvokeAsync(token => processor != null ? processor.ProcessAsync(snapshot!, token) : analyzer!.AnalyzeAsync(input, progress, token), step.ExecutionTimeout, ct).ConfigureAwait(false);
-                    if (last.Kind == AnalyzerOutcomeKind.Succeeded && (last.Payload!.Capability != step.Capability ||
-                        !last.Payload.Supports(work.MediaKind) || last.Producer!.AnalyzerId != id ||
-                        (last.Payload is DerivedAnalysisPayload) != (processor != null)))
-                    {
-                        last = AnalyzerOutcome.Unsuccessful(AnalyzerOutcomeKind.Failed, "invalid-model-output");
-                    }
-
-                    if (last.Kind == AnalyzerOutcomeKind.Succeeded && snapshot != null)
-                    {
-                        _ = metadata!.WithResult(new(last.Payload!, last.Producer!, DateTimeOffset.UtcNow, metadata.PlanVersion, derivation: snapshot.Derivation));
-                    }
-
-                    if (processor != null && last.Kind == AnalyzerOutcomeKind.InvalidSource)
-                    {
-                        last = AnalyzerOutcome.Unsuccessful(AnalyzerOutcomeKind.Failed, "invalid-metadata-input");
-                    }
-
-                    if (last.Kind is AnalyzerOutcomeKind.Succeeded or AnalyzerOutcomeKind.ContentRejected or AnalyzerOutcomeKind.Cancelled or AnalyzerOutcomeKind.InvalidSource)
-                    {
-                        return (last, last.Kind == AnalyzerOutcomeKind.Succeeded ? snapshot?.Derivation : null);
-                    }
-
-                    if (last.Kind == AnalyzerOutcomeKind.Unsupported)
-                    {
-                        break;
-                    }
-                }
-                catch (OperationCanceledException) when (ct.IsCancellationRequested) { throw; }
-                catch (ProviderBusyException) when (processor != null && !ct.IsCancellationRequested)
-                {
-                    // A timed-out metadata call must not discard independent companion steps.
-                    // Commit its failure, then let the worker wait for native ownership to end
-                    // before starting the next step. Late output remains fenced out.
-                    last = AnalyzerOutcome.Unsuccessful(AnalyzerOutcomeKind.Failed, "provider-not-stopped");
-                    return (last, null);
-                }
-                catch (ProviderBusyException) { throw; }
-                catch (TimeoutException) { last = AnalyzerOutcome.Unsuccessful(AnalyzerOutcomeKind.Failed, "model-timeout"); }
-                catch (OperationCanceledException) { return (AnalyzerOutcome.Unsuccessful(AnalyzerOutcomeKind.Cancelled, "model-cancelled"), null); }
-                catch (Exception) { last = AnalyzerOutcome.Unsuccessful(AnalyzerOutcomeKind.Failed, "model-failed"); }
-                finally
-                {
-                    if (last.Kind is AnalyzerOutcomeKind.Failed or AnalyzerOutcomeKind.TemporarilyUnavailable)
-                    {
-                        _log?.LogWarning($"Analysis provider {id}, step {step.Capability.Name}: {last.Kind} ({last.FailureCode}).");
-                    }
-                    // An unavailable/unsupported fallback cannot hide an earlier execution failure.
-                    if (FailureRank(last.Kind) >= FailureRank(strongestFailure.Kind))
-                    {
-                        strongestFailure = last;
-                    }
-
-                    AdvanceProgressVersion();
-                }
-            }
-        }
-
-        return (strongestFailure, null);
-    }
-
-    private static int FailureRank(AnalyzerOutcomeKind kind) => kind switch
-    {
-        AnalyzerOutcomeKind.Failed => 2,
-        AnalyzerOutcomeKind.TemporarilyUnavailable => 1,
-        _ => 0,
-    };
-
-    private async Task<T> InvokeAsync<T>(Func<CancellationToken, Task<T>> invoke, TimeSpan timeout, CancellationToken ct)
-    {
-        if (_invocation is { IsCompleted: false })
-        {
-            throw new ProviderBusyException();
-        }
-
-        var attempt = CancellationTokenSource.CreateLinkedTokenSource(ct);
-        Task<T> task = Task.Run(async () =>
-        {
-            try { return await invoke(attempt.Token).ConfigureAwait(false); }
-            finally { attempt.Dispose(); }
-        }, CancellationToken.None);
-        _invocation = task;
-        try { return await task.WaitAsync(timeout, ct).ConfigureAwait(false); }
-        catch (Exception exception) when (exception is TimeoutException or OperationCanceledException)
-        {
-            RequestCancellation(attempt);
-            try { await task.WaitAsync(TimeSpan.FromSeconds(2), CancellationToken.None).ConfigureAwait(false); }
-            catch (TimeoutException) { _ = ObserveAsync(task); throw new ProviderBusyException(); }
-            catch (Exception) { /* Observe the failed/cancelled invocation before allowing another model. */ }
-            throw;
-        }
-    }
-
-    private static async Task ObserveAsync(Task task) { try { await task.ConfigureAwait(false); } catch (Exception) { } }
-    private async Task<IAnalysisSourceLease> OpenSourceAsync(string path, CancellationToken ct)
-    {
-        try { return await _source.OpenAsync(path, ct).ConfigureAwait(false); }
-        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException) { throw new SourceUnavailableException(); }
-    }
-    private static async Task<bool> VerifySourceAsync(IAnalysisSourceLease source, CancellationToken ct)
-    {
-        try { return await source.VerifyAsync(ct).ConfigureAwait(false); }
-        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException) { throw new SourceUnavailableException(); }
-    }
-    private static bool Permits(IAnalysisAuthorizationLease grant, AnalysisWorkItem work) =>
+    private static bool IsAuthorized(IAnalysisAuthorizationLease grant, AnalysisWorkItem work) =>
         grant.IsAllowed && grant.Revision == work.Run.AuthorizationId && !grant.Revoked.IsCancellationRequested;
 
-    private void CancelActive(AnalysisRunToken? token)
-    {
-        lock (_activeLock)
-        {
-            if (token == null || token == _activeToken)
-            {
-                RequestCancellation(_activeCancellation);
-            }
-        }
-    }
-    private static void RequestCancellation(CancellationTokenSource? source)
-    {
-        // Revocation is immediate; third-party callbacks must not block or fail a clear/cancel command.
-        try { if (source != null) { _ = ObserveAsync(source.CancelAsync()); } } catch (ObjectDisposedException) { }
-    }
     private void Signal()
     {
         // Serialize producers; the consumer can only lower the count. Coalesce wakeups
@@ -682,55 +155,13 @@ public sealed class CaptureAnalysisWorker : ICaptureAnalysisWorker, IDisposable
             }
         }
     }
-    private long AdvanceProgressVersion()
-    {
-        lock (_progressLock) { return ++_progressVersion; }
-    }
-    private void Report(AnalysisActivitySnapshot snapshot, long? version = null, CancellationToken ct = default)
-    {
-        lock (_progressLock)
-        {
-            if (version != null && (version != _progressVersion || ct.IsCancellationRequested))
-            {
-                return;
-            }
 
-            Volatile.Write(ref _progress, snapshot);
-            if (_publishingProgress)
-            {
-                return;
-            }
-
-            _publishingProgress = true;
-        }
-        // One publisher delivers snapshots in order, coalescing concurrent updates.
-        // Observers run outside the state lock and may safely read or change worker state.
-        while (true)
-        {
-            if (ProgressChanged is { } changed)
-            {
-                foreach (Action<AnalysisActivitySnapshot> observer in changed.GetInvocationList())
-                {
-                    try { observer(snapshot); } catch (Exception) { /* An observer cannot own or stop application work. */ }
-                }
-            }
-
-            lock (_progressLock)
-            {
-                if (ReferenceEquals(snapshot, _progress))
-                {
-                    _publishingProgress = false;
-                    return;
-                }
-                snapshot = _progress;
-            }
-        }
-    }
-    public void Dispose() { _signal.Dispose(); _commands.Dispose(); _running.Dispose(); }
-    private sealed class InlineProgress(Action<AnalysisProgress> report) : IProgress<AnalysisProgress>
+    public void Dispose()
     {
-        public void Report(AnalysisProgress value) => report(value);
+        _signal.Dispose();
+        _commands.Dispose();
+        _running.Dispose();
     }
-    private sealed class ProviderBusyException : Exception;
+
     private sealed class SourceUnavailableException : Exception;
 }

@@ -182,7 +182,6 @@ public sealed class FoundryMetadataTests
         var result = Parse(Valid, input);
         Assert.AreEqual(AnalyzerOutcomeKind.Succeeded, result.Kind);
         var payload = (CaptureSynopsisMetadata)result.Payload!;
-        Assert.IsNull(payload.Title, "Summary generation must not also generate a name.");
         Assert.AreEqual("Invoice from Northwind.", payload.Summary[0].Text);
         Assert.AreEqual(input.Entries[0].ResultId, payload.Summary[0].Evidence[0].ResultId);
         Assert.AreEqual(0, payload.Summary[0].Evidence[0].Start);

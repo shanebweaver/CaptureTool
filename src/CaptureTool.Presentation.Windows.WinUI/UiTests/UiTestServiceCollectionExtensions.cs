@@ -69,7 +69,7 @@ internal static class UiTestServiceCollectionExtensions
             MetadataTextEntry entry = input.Entries[0];
             AnalysisEvidence[] evidence = [new(entry.ResultId, entry.EntryIndex, 0, entry.Text.Length)];
             AnalysisPayload payload = descriptor.Capability == AnalysisCapability.CaptureSynopsis
-                ? new CaptureSynopsisMetadata(null,
+                ? new CaptureSynopsisMetadata(
                     [new("Invoice INV-2048 totals USD 125.00 and is due on 2026-10-15.", evidence)], input.Coverage)
                 : descriptor.Capability == AnalysisCapability.CaptureName
                 ? new CaptureNameMetadata(new("Contoso invoice", evidence), input.Coverage)

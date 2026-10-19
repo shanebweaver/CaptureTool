@@ -18,7 +18,7 @@ public sealed class CaptureDetailsReader(ICaptureAssetCatalog catalog, ICaptureM
             await using var lease = await files.OpenAsync(path, cancellationToken).ConfigureAwait(false);
             return lease.Revision == revision && await lease.VerifyAsync(cancellationToken).ConfigureAwait(false);
         }
-        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException) { return false; }
+        catch (Exception exception) when (exception is IOException or InvalidDataException or UnauthorizedAccessException) { return false; }
     }
 
     public async Task<FileDetailsMetadata?> ReadFileAsync(string path, AnalysisMediaKind kind, CancellationToken cancellationToken = default)
@@ -38,7 +38,7 @@ public sealed class CaptureDetailsReader(ICaptureAssetCatalog catalog, ICaptureM
                 capturedAt = matches[0].CapturedAt;
             }
         }
-        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or CryptographicException)
+        catch (Exception exception) when (exception is IOException or InvalidDataException or UnauthorizedAccessException or CryptographicException)
         {
             // An unavailable catalog must not hide readable filesystem properties.
         }
@@ -85,7 +85,7 @@ public sealed class CaptureDetailsReader(ICaptureAssetCatalog catalog, ICaptureM
                     snapshot = new(record?.Results.Count > 0 ? CaptureDetailsStatus.Available : CaptureDetailsStatus.Empty, record, run);
                 }
             }
-            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            catch (Exception ex) when (ex is IOException or InvalidDataException or UnauthorizedAccessException)
             {
                 snapshot = new(CaptureDetailsStatus.SourceUnavailable);
             }
@@ -97,7 +97,7 @@ public sealed class CaptureDetailsReader(ICaptureAssetCatalog catalog, ICaptureM
 
             return snapshot;
         }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or CryptographicException)
+        catch (Exception ex) when (ex is IOException or InvalidDataException or UnauthorizedAccessException or CryptographicException)
         {
             return new(CaptureDetailsStatus.Unavailable);
         }

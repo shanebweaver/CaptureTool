@@ -1996,4 +1996,7 @@ SOFTWARE.
   <data name="CaptureVideoText_UnknownTime" xml:space="preserve"><value>Zeit nicht verfügbar</value></data>
   <data name="CaptureVideoText_Hint" xml:space="preserve"><value>Suchen Sie Text und QR-Codes in diesem Video. Wählen Sie einen Zeitstempel, um zur entsprechenden Stelle zu springen und den Text dort zu durchsuchen oder zu kopieren.</value></data>
   <data name="TextExtractionStatus_LanguageResourcesRequired" xml:space="preserve"><value>Installieren Sie zur Texterkennung das OCR-Sprachpaket für Ihre Sprache in den Windows-Einstellungen. Versuchen Sie es anschließend erneut.</value></data>
+  <data name="CaptureSummary_PartialCoverage.Text" xml:space="preserve">
+    <value>Diese Zusammenfassung verwendet Auszüge der verfügbaren Analyse und kann Details auslassen.</value>
+  </data>
 </root>

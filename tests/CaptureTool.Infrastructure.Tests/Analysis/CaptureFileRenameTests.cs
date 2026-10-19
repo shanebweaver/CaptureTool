@@ -34,7 +34,7 @@ public sealed class CaptureFileRenameTests
         var stored = (await catalog.GetAsync(asset.Id, Ct))!;
         Assert.AreEqual(savedCopy ? source : renamed, stored.SourcePath);
         Assert.AreEqual(savedCopy ? renamed : null, stored.PreferredPath);
-        Assert.AreEqual(new CaptureName("Meeting notes", false), stored.Name);
+        Assert.AreEqual(new CaptureName("Meeting notes"), stored.Name);
         Assert.AreEqual(renamed, recent.GetEntries().Single().FilePath);
         if (savedCopy) Assert.IsTrue(File.Exists(source));
     }

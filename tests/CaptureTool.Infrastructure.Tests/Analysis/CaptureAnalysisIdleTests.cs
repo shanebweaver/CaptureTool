@@ -117,7 +117,7 @@ public sealed partial class CaptureAnalysisWorkerTests
                 case "shutdown": shutdown.Cancel(); await runner.WaitAsync(TimeSpan.FromSeconds(5), Ct); break;
                 case "pressure": resources.IsUnderMemoryPressure = true; break;
                 case "consent": await fixture.Authorization.ChangeAsync(false, Ct); break;
-                case "delete": await fixture.Worker.ClearAsync(12, Ct); break;
+                case "delete": await fixture.Worker.ClearAsync(Ct); break;
                 case "cancel": await fixture.Worker.CancelAsync(request.CaptureId, Ct); break;
             }
             await WaitForIdleConditionAsync(() => resources.Releases != 0);

@@ -1,5 +1,6 @@
 using CaptureTool.Application.Abstractions.Analysis;
 using CaptureTool.Application.Abstractions.Logging;
+using CaptureTool.Infrastructure.Ai;
 using Microsoft.Windows.AI;
 using Microsoft.Windows.AI.Text;
 using System.Runtime.InteropServices;
@@ -29,7 +30,7 @@ internal sealed class WindowsLanguageModelClient(IAnalysisResources otherModels,
     WindowsLanguageModelAccess? access, ILogService? log = null,
     CaptureTool.Application.Abstractions.Ai.IAiDeviceSupport? device = null) : IWindowsLanguageModelClient
 {
-    private bool PlatformSupported => (device ?? CaptureTool.Infrastructure.Ai.WindowsAiDeviceSupport.Current).WindowsAi;
+    private bool PlatformSupported => (device ?? WindowsAiDeviceSupport.Current).WindowsAi;
     public AnalyzerAvailability GetAvailability()
     {
         if (!PlatformSupported)
@@ -49,7 +50,11 @@ internal sealed class WindowsLanguageModelClient(IAnalysisResources otherModels,
             // Unlock only during an authorized preparation, never a passive probe.
             return access != null && IsAccessDenied(exception) ? AnalyzerAvailability.PreparationRequired : AnalyzerAvailability.Unsupported;
         }
-        catch (Exception exception) { LogReadinessFailure(exception); return AnalyzerAvailability.TemporarilyUnavailable; }
+        catch (Exception exception)
+        {
+            LogReadinessFailure(exception);
+            return AnalyzerAvailability.TemporarilyUnavailable;
+        }
     }
 
     private void LogReadinessFailure(Exception exception) => log?.LogWarning(
@@ -58,7 +63,11 @@ internal sealed class WindowsLanguageModelClient(IAnalysisResources otherModels,
     public async Task<AnalyzerAvailability> PrepareAsync(CancellationToken ct)
     {
         ct.ThrowIfCancellationRequested();
-        if (!PlatformSupported) return AnalyzerAvailability.Unsupported;
+        if (!PlatformSupported)
+        {
+            return AnalyzerAvailability.Unsupported;
+        }
+
         try
         {
             if (access != null)
@@ -79,7 +88,10 @@ internal sealed class WindowsLanguageModelClient(IAnalysisResources otherModels,
             ct.ThrowIfCancellationRequested();
             return result.Status == AIFeatureReadyResultState.Success ? AnalyzerAvailability.Ready : AnalyzerAvailability.TemporarilyUnavailable;
         }
-        catch (Exception exception) when (IsUnavailable(exception)) { return AnalyzerAvailability.Unsupported; }
+        catch (Exception exception) when (IsUnavailable(exception))
+        {
+            return AnalyzerAvailability.Unsupported;
+        }
     }
 
     public async Task<IWindowsLanguageModelSession> CreateSessionAsync(CancellationToken ct)
@@ -89,7 +101,11 @@ internal sealed class WindowsLanguageModelClient(IAnalysisResources otherModels,
         await otherModels.ReleaseAsync().ConfigureAwait(false);
         ct.ThrowIfCancellationRequested();
         LanguageModel model = await LanguageModel.CreateAsync().AsTask(CancellationToken.None).ConfigureAwait(false);
-        if (ct.IsCancellationRequested) { model.Dispose(); ct.ThrowIfCancellationRequested(); }
+        if (ct.IsCancellationRequested)
+        {
+            model.Dispose();
+            ct.ThrowIfCancellationRequested();
+        }
         return new Session(model);
     }
 
@@ -108,7 +124,7 @@ internal sealed class WindowsLanguageModelClient(IAnalysisResources otherModels,
         EntryPointNotFoundException or PlatformNotSupportedException or UnauthorizedAccessException ||
         exception is COMException && exception.HResult is unchecked((int)0x80040154) or unchecked((int)0x80004002) or unchecked((int)0x80070005) or unchecked((int)0x80070032);
 
-    private sealed class Session(LanguageModel model) : IWindowsLanguageModelSession
+    private sealed partial class Session(LanguageModel model) : IWindowsLanguageModelSession
     {
         public async Task<WindowsLanguageModelResponse> GenerateAsync(string instructions, string sources)
         {

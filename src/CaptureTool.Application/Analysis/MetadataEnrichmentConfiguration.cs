@@ -1,4 +1,4 @@
-﻿using CaptureTool.Application.Abstractions.Analysis;
+using CaptureTool.Application.Abstractions.Analysis;
 using CaptureTool.Domain.Analysis;
 using CaptureTool.Domain.Analysis.Payloads;
 
@@ -71,14 +71,14 @@ public static class MetadataEnrichmentConfiguration
             capability == AnalysisCapability.CaptureClassification ? "classification" :
             capability == AnalysisCapability.ImageAltText ? "alt-text" :
             throw new ArgumentException("Unsupported semantic capability.", nameof(capability));
-        return new(modelId + "-" + suffix, capability == AnalysisCapability.CaptureName ? "3" :
-            capability == AnalysisCapability.CaptureSynopsis || capability == AnalysisCapability.CaptureClassification ? "5" : "4", capability,
+        return new(modelId + "-" + suffix, capability == AnalysisCapability.CaptureName ? "4" :
+            capability == AnalysisCapability.CaptureSynopsis || capability == AnalysisCapability.CaptureClassification ? "6" : "5", capability,
             capability == AnalysisCapability.ImageAltText
                 ? [AnalysisCapability.Description, AnalysisCapability.TextRecognition]
                 : capability == AnalysisCapability.CaptureSynopsis || capability == AnalysisCapability.CaptureName
                 ? [AnalysisCapability.Description, AnalysisCapability.TextRecognition, AnalysisCapability.Transcription]
                 : [AnalysisCapability.Description, AnalysisCapability.TextRecognition, AnalysisCapability.Transcription, AnalysisCapability.QrCodeDetection],
-            new(64, 4096, 1024, TimeSpan.FromMinutes(2)));
+            new(64, 4096, 1024, TimeSpan.FromMinutes(2)), MetadataInputSelection.Balanced);
     }
 
     public static MetadataProcessorDescriptor CreateStructuredFacts(MetadataProcessingLimits limits) =>

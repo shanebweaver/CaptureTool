@@ -1,4 +1,4 @@
-﻿using CaptureTool.Application.Abstractions.Analysis;
+using CaptureTool.Application.Abstractions.Analysis;
 using CaptureTool.Domain.Analysis;
 
 namespace CaptureTool.Application.Analysis;
@@ -90,6 +90,7 @@ public sealed class CaptureAnalysisConfiguration
                     {
                         if (!metadataById.TryGetValue(id, out MetadataProcessorDescriptor? processor) || processor.Capability != step.Capability ||
                             processor.Version != contract.Version || !processor.Inputs.SequenceEqual(contract.Inputs) || processor.Limits != contract.Limits ||
+                            processor.InputSelection != contract.InputSelection ||
                             step.ExecutionTimeout > processor.Limits.ExecutionTimeout)
                         {
                             throw new ArgumentException($"Processor '{id}' is missing or incompatible with the configured contract.", nameof(processors));

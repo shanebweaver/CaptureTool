@@ -19,10 +19,13 @@ internal sealed partial class LocalCaptureAnalysisStore
                 _files.GetFiles(GenerationPath(control.Generation)).Any(IsAnalysisTemporary));
             return new(records || cleanup, true, cleanup);
         }
-        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or CryptographicException)
+        catch (Exception exception) when (exception is IOException or InvalidDataException or UnauthorizedAccessException or CryptographicException)
         {
             return new(hasData, false);
         }
-        finally { _gate.Release(); }
+        finally
+        {
+            _gate.Release();
+        }
     }
 }

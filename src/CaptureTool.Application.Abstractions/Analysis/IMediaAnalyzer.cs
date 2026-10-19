@@ -25,9 +25,16 @@ public sealed record AnalysisProgress
 
     public AnalysisProgress(AnalysisProgressStage stage, double? fraction = null)
     {
-        if (!Enum.IsDefined(stage)) throw new ArgumentOutOfRangeException(nameof(stage));
+        if (!Enum.IsDefined(stage))
+        {
+            throw new ArgumentOutOfRangeException(nameof(stage));
+        }
+
         if (fraction is { } value && (!double.IsFinite(value) || value < 0 || value > 1))
+        {
             throw new ArgumentOutOfRangeException(nameof(fraction));
+        }
+
         Stage = stage;
         Fraction = fraction;
     }
@@ -53,7 +60,10 @@ public sealed class MediaAnalyzerDescriptor
         ArgumentNullException.ThrowIfNull(supportedMedia);
         AnalysisMediaKind[] media = supportedMedia.ToArray();
         if (media.Length == 0 || media.Any(kind => !Enum.IsDefined(kind)) || media.Distinct().Count() != media.Length)
+        {
             throw new ArgumentException("Specify distinct supported media kinds.", nameof(supportedMedia));
+        }
+
         Id = id;
         Capability = capability;
         SupportedMedia = Array.AsReadOnly(media);

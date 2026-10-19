@@ -65,10 +65,10 @@ public sealed class MetadataEnrichmentFoundationTests
     {
         AnalysisResult input = Ocr(Value);
         AnalysisResult other = Result(new QrCodeMetadata([new(Value, new(0, 0, 1, 1))]));
-        var undeclared = Result(new StructuredFactsMetadata([new(StructuredFactKind.Url, Value, [new(other.ResultId, 0, 0, Value.Length)])]),
+        var undeclared = Result(new StructuredFactsMetadata([new(StructuredFactKind.Url, Value, [new(other.ResultId, 0, 0, Value.Length)])], new(1, 1, Value.Length, MetadataProcessingLimit.None)),
             new([new(input.Payload.Capability, input.ResultId)]));
         Assert.ThrowsExactly<ArgumentException>(() => Record(input, other, undeclared));
-        var mismatch = Result(new StructuredFactsMetadata([new(StructuredFactKind.Url, "invented", [new(input.ResultId, 0, 0, Value.Length)])]),
+        var mismatch = Result(new StructuredFactsMetadata([new(StructuredFactKind.Url, "invented", [new(input.ResultId, 0, 0, Value.Length)])], new(1, 1, Value.Length, MetadataProcessingLimit.None)),
             new([new(input.Payload.Capability, input.ResultId)]));
         Assert.ThrowsExactly<ArgumentException>(() => Record(input, mismatch));
         AnalysisResult description = Result(new DescriptionMetadata([new(Value)]));
@@ -116,7 +116,7 @@ public sealed class MetadataEnrichmentFoundationTests
         Assert.ThrowsExactly<ArgumentException>(() => new AnalysisDerivation([new(AnalysisCapability.Description, null)]));
         Assert.ThrowsExactly<ArgumentException>(() => new AnalysisDerivation([reference, reference]));
         Assert.ThrowsExactly<ArgumentException>(() => new AnalysisDerivation([reference, new(AnalysisCapability.Description, input.ResultId)]));
-        Assert.ThrowsExactly<ArgumentException>(() => Result(new StructuredFactsMetadata([])));
+        Assert.ThrowsExactly<ArgumentException>(() => Result(new StructuredFactsMetadata([], new(0, 0, 0, MetadataProcessingLimit.None))));
         Assert.ThrowsExactly<ArgumentException>(() => Result(new TextRecognitionMetadata([]), new([reference])));
     }
 
@@ -124,7 +124,7 @@ public sealed class MetadataEnrichmentFoundationTests
     public void SuccessfulEmptyFactsStillDependOnSuccessfulEmptyInput()
     {
         AnalysisResult input = Result(new TextRecognitionMetadata([]));
-        AnalysisResult empty = Result(new StructuredFactsMetadata([]), new([new(input.Payload.Capability, input.ResultId)]));
+        AnalysisResult empty = Result(new StructuredFactsMetadata([], new(0, 0, 0, MetadataProcessingLimit.None)), new([new(input.Payload.Capability, input.ResultId)]));
         Assert.HasCount(2, Record(input, empty).Results);
         Assert.HasCount(1, Record(input, empty).WithResult(Ocr(Value)).Results);
     }
@@ -140,13 +140,13 @@ public sealed class MetadataEnrichmentFoundationTests
         AnalysisEvidence[] evidence = [new(input.ResultId, 0, 0, Value.Length)];
         var fact = new StructuredFact(StructuredFactKind.Url, Value, evidence);
         StructuredFact[] facts = [fact];
-        var payload = new StructuredFactsMetadata(facts);
+        var payload = new StructuredFactsMetadata(facts, new(1, 1, Value.Length, MetadataProcessingLimit.None));
         evidence[0] = new(Guid.NewGuid(), 0, 0, 1);
         facts[0] = new(StructuredFactKind.Date, "2026-09-24", [evidence[0]]);
         Assert.AreSame(fact, payload.Facts.Single());
         Assert.AreEqual(input.ResultId, fact.Evidence.Single().ResultId);
         Assert.ThrowsExactly<NotSupportedException>(() => ((IList<StructuredFact>)payload.Facts).Clear());
-        Assert.ThrowsExactly<ArgumentException>(() => new StructuredFactsMetadata([fact, fact]));
+        Assert.ThrowsExactly<ArgumentException>(() => new StructuredFactsMetadata([fact, fact], new(1, 1, Value.Length, MetadataProcessingLimit.None)));
         Assert.ThrowsExactly<ArgumentException>(() => new StructuredFact(StructuredFactKind.Url, Value, []));
         Assert.ThrowsExactly<ArgumentException>(() => new StructuredFact(StructuredFactKind.Url, Value, [evidence[0], evidence[0]]));
         Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => new StructuredFact((StructuredFactKind)99, Value, evidence));
@@ -157,7 +157,7 @@ public sealed class MetadataEnrichmentFoundationTests
     private static AnalysisResult Result(AnalysisPayload payload, AnalysisDerivation? derivation = null) =>
         new(payload, new("test", "local", "rules", "1"), DateTimeOffset.UtcNow, "v1", derivation: derivation);
     private static AnalysisResult Facts(AnalysisResult source, params AnalysisInputReference[] additional) =>
-        Result(new StructuredFactsMetadata([new(StructuredFactKind.Url, Value, [new(source.ResultId, 0, 0, Value.Length)])]),
+        Result(new StructuredFactsMetadata([new(StructuredFactKind.Url, Value, [new(source.ResultId, 0, 0, Value.Length)])], new(1, 1, Value.Length, MetadataProcessingLimit.None)),
             new(new[] { new AnalysisInputReference(source.Payload.Capability, source.ResultId) }.Concat(additional)));
     private static CaptureAnalysisRecord Record(params AnalysisResult[] results) =>
         new(CaptureId.New(), AnalysisMediaKind.Video, new(new string('a', 64)), "v1", Guid.NewGuid(), results);

@@ -49,18 +49,18 @@ public sealed class StructuredFactsMetadata : DerivedAnalysisPayload
     public const int MaximumFactCount = 256;
     public override AnalysisCapability Capability => AnalysisCapability.StructuredFacts;
     public IReadOnlyList<StructuredFact> Facts { get; }
-    /// <summary>Null for earlier results whose processing coverage is unknown.</summary>
-    public MetadataProcessingCoverage? Coverage { get; }
+    public MetadataProcessingCoverage Coverage { get; }
 
-    public StructuredFactsMetadata(IEnumerable<StructuredFact> facts, MetadataProcessingCoverage? coverage = null)
+    public StructuredFactsMetadata(IEnumerable<StructuredFact> facts, MetadataProcessingCoverage coverage)
     {
+        ArgumentNullException.ThrowIfNull(coverage);
         Facts = AnalysisGuard.Freeze(facts);
         if (Facts.Count > MaximumFactCount || Facts.Select(fact => (fact.Kind, fact.Value)).Distinct().Count() != Facts.Count)
         {
             throw new ArgumentException("Specify at most 256 distinct facts.", nameof(facts));
         }
 
-        if (Facts.Count != 0 && coverage?.IncludedEntries == 0)
+        if (Facts.Count != 0 && coverage.IncludedEntries == 0)
         {
             throw new ArgumentException("Facts require included source entries.", nameof(coverage));
         }
@@ -73,7 +73,7 @@ public sealed class StructuredFactsMetadata : DerivedAnalysisPayload
     public override void ValidateEvidence(IReadOnlyList<AnalysisResult> inputs)
     {
         ArgumentNullException.ThrowIfNull(inputs);
-        Coverage?.Validate(inputs, Facts.SelectMany(fact => fact.Evidence));
+        Coverage.Validate(inputs, Facts.SelectMany(fact => fact.Evidence));
         foreach (StructuredFact fact in Facts)
         {
             foreach (AnalysisEvidence evidence in fact.Evidence)

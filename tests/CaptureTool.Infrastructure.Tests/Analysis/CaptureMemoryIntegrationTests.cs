@@ -1,4 +1,4 @@
-﻿using CaptureTool.Application.Abstractions.Analysis;
+using CaptureTool.Application.Abstractions.Analysis;
 using CaptureTool.Application.Abstractions.Library.RecentCaptures;
 using CaptureTool.Application.Analysis;
 using CaptureTool.Application.Capture;
@@ -14,7 +14,7 @@ using CaptureTool.Infrastructure.Files;
 namespace CaptureTool.Infrastructure.Tests.Analysis;
 
 [TestClass]
-public sealed class CaptureMemoryIntegrationTests
+public sealed partial class CaptureMemoryIntegrationTests
 {
     public TestContext TestContext { get; set; } = null!;
     private CancellationToken Ct => TestContext.CancellationToken;
@@ -118,7 +118,7 @@ public sealed class CaptureMemoryIntegrationTests
         public Task<bool> EnqueueAsync(AnalysisRequest request, CancellationToken ct) { Admitted = request; return Task.FromResult(true); }
         public Task RunAsync(CancellationToken ct) => Task.CompletedTask;
         public Task CancelAsync(CaptureId id, CancellationToken ct) => throw new NotSupportedException();
-        public Task<AnalysisCleanupResult> ClearAsync(long boundary, CancellationToken ct) => throw new NotSupportedException();
+        public Task<AnalysisCleanupResult> ClearAsync(CancellationToken ct) => throw new NotSupportedException();
     }
 
     private sealed class ReadinessProcessor(string id = "windows-test", AnalyzerAvailability availability = AnalyzerAvailability.Unsupported) : IMetadataProcessor
@@ -159,7 +159,6 @@ public sealed class CaptureMemoryIntegrationTests
         int prompts = 0;
         app.Prompts.Override = (prompt, _) => { if (prompt == CaptureMemoryPrompt.Consent) prompts++; return Task.FromResult(prompt == CaptureMemoryPrompt.Consent); };
         Assert.IsTrue(await app.Memory.EnsureConsentAsync(Ct));
-        Assert.IsFalse(app.Memory.State.Policy.ScanningEnabled);
         Assert.IsTrue(await app.Memory.EnsureConsentAsync(Ct));
         await app.Memory.SetConsentAsync(true, Ct);
         await app.Memory.SetConsentAsync(false, Ct);
@@ -268,11 +267,11 @@ public sealed class CaptureMemoryIntegrationTests
     }
 
     [TestMethod]
-    public async Task ConsentAndCaptureRegistrationNeverScheduleWorkIncludingLegacyAutomaticPolicy()
+    public async Task ConsentAndCaptureRegistrationNeverScheduleWork()
     {
         using var environment = new AnalysisTestEnvironment();
         var policyStore = new LocalCaptureMemoryPolicyStore(environment, environment.Protector, environment.Files);
-        await policyStore.SaveAsync(new(true, true, Guid.NewGuid(), 0), Ct);
+        await policyStore.SaveAsync(new(true, Guid.NewGuid()), Ct);
         await using var app = new App(environment);
         await app.Memory.InitializeAsync(Ct);
         var asset = app.Asset();
@@ -346,7 +345,7 @@ public sealed class CaptureMemoryIntegrationTests
         {
             await app.EnableAsync(Ct);
             asset = app.Asset();
-            await app.Catalog.RegisterForAnalysisAsync(asset, app.Grant, Ct);
+            await app.Catalog.RegisterAsync(asset, Ct);
         }
         Guid run;
         await using (var restarted = new App(environment))
@@ -383,7 +382,6 @@ public sealed class CaptureMemoryIntegrationTests
         Assert.IsNull(await app.Store.GetWorkAsync(delayed.Id, Ct));
         Assert.IsNotNull(await app.Store.GetAsync(existing.Id, cancellationToken: Ct));
         await app.Memory.SetConsentAsync(false, Ct);
-        Assert.IsFalse(app.Memory.State.Policy.ScanningEnabled);
         Assert.IsFalse(app.Memory.State.Policy.ConsentGranted);
         Assert.IsTrue(app.Memory.State.CanDelete);
     }
@@ -552,7 +550,6 @@ public sealed class CaptureMemoryIntegrationTests
             finally { release.TrySetResult(); }
             await Task.WhenAll(capture, policy, metadata);
             environment.Files.BeforeWrite = null;
-            Assert.IsFalse(app.Memory.State.Policy.ScanningEnabled);
             if (revokeConsent) Assert.IsFalse(app.Memory.State.Policy.ConsentGranted);
         }
         await using var restarted = new App(environment);
@@ -591,7 +588,7 @@ public sealed class CaptureMemoryIntegrationTests
         var entered = Signal();
         var release = Signal();
         environment.Files.BeforeWrite = async (_, ct) => { entered.TrySetResult(); await release.Task.WaitAsync(ct); };
-        Task enabling = authorization.SaveAsync(new(true, true, Guid.NewGuid(), 0), Ct);
+        Task enabling = authorization.SaveAsync(new(true, Guid.NewGuid()), Ct);
         await entered.Task.WaitAsync(TimeSpan.FromSeconds(10), Ct);
         authorization.Block();
         release.TrySetResult();
@@ -754,15 +751,17 @@ public sealed class CaptureMemoryIntegrationTests
         public Recents Recents { get; } = new();
         public Analyzer Analyzer { get; } = new();
         public App(AnalysisTestEnvironment environment, IEnumerable<IMetadataProcessor>? processors = null,
-            IAnalysisFeatureAvailability? availability = null)
+            IAnalysisFeatureAvailability? availability = null, IMediaAnalyzer[]? mediaAnalyzers = null)
         {
             _environment = environment;
             Store = environment.CreateStore();
             Catalog = environment.CreateCatalog();
             Authorization = new(new LocalCaptureMemoryPolicyStore(environment, environment.Protector, environment.Files));
+            mediaAnalyzers ??= [Analyzer];
             var configuration = new CaptureAnalysisConfiguration([new(AnalysisMediaKind.Image, "test-v1",
-                [new(AnalysisCapability.Description, ["test"], TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(5))])]);
-            Worker = new(Store, Authorization, new LocalAnalysisSource(), configuration, [Analyzer], Catalog);
+                mediaAnalyzers.Select(analyzer => new AnalysisStep(analyzer.Descriptor.Capability, [analyzer.Descriptor.Id],
+                    TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(5))))]);
+            Worker = new(Store, Authorization, new LocalAnalysisSource(), configuration, mediaAnalyzers, Catalog);
             Names = new(Catalog, Catalog, new NameNotifier(), new LocalFileSystem());
             Memory = new(Authorization, Catalog, Store, Worker, Prompts, new LocalFileSystem(), Names, processors, availability);
         }
@@ -817,6 +816,8 @@ public sealed class CaptureMemoryIntegrationTests
     {
         private int _active;
         public int Calls { get; private set; }
+        public string? LastSourcePath { get; private set; }
+        public string? LastSourceContents { get; private set; }
         public int MaximumConcurrency { get; private set; }
         public Func<CancellationToken, Task>? BeforeComplete { get; set; }
         public MediaAnalyzerDescriptor Descriptor { get; } = new("test", AnalysisCapability.Description, [AnalysisMediaKind.Image]);
@@ -825,6 +826,8 @@ public sealed class CaptureMemoryIntegrationTests
         public async Task<AnalyzerOutcome> AnalyzeAsync(AnalysisInput input, IProgress<AnalysisProgress>? progress, CancellationToken ct)
         {
             Calls++;
+            LastSourcePath = input.SourcePath;
+            LastSourceContents = await File.ReadAllTextAsync(input.SourcePath, ct);
             MaximumConcurrency = Math.Max(MaximumConcurrency, Interlocked.Increment(ref _active));
             try
             {

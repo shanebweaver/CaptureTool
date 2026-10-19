@@ -2002,4 +2002,7 @@ SOFTWARE.
   <data name="CaptureVideoText_UnknownTime" xml:space="preserve"><value>时间不可用</value></data>
   <data name="CaptureVideoText_Hint" xml:space="preserve"><value>查找此视频中的文字和二维码。选择时间戳可跳转到对应时刻，然后查找或复制该时刻的文字。</value></data>
   <data name="TextExtractionStatus_LanguageResourcesRequired" xml:space="preserve"><value>要提取文本，请在 Windows 设置中安装所用语言的光学字符识别 (OCR) 语言包，然后重试。</value></data>
+  <data name="CaptureSummary_PartialCoverage.Text" xml:space="preserve">
+    <value>此摘要使用了现有分析的部分内容，可能会遗漏细节。</value>
+  </data>
 </root>

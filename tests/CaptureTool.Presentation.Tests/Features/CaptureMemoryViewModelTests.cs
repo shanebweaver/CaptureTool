@@ -29,7 +29,7 @@ public sealed class CaptureMemoryViewModelTests
         Assert.IsTrue(fixture.ViewModel.ShowSettings);
         Assert.IsFalse(fixture.ViewModel.ShowConsent);
         Assert.IsTrue(fixture.ViewModel.DeleteCommand.CanExecute(null));
-        fixture.Change(fixture.State with { Policy = new(false, true, Guid.NewGuid(), 0) });
+        fixture.Change(fixture.State with { Policy = new(true, Guid.NewGuid()) });
         fixture.Dispatch();
         Assert.IsTrue(fixture.ViewModel.ShowConsent);
         Assert.IsTrue(fixture.ViewModel.SetConsentCommand.CanExecute(false));
@@ -291,7 +291,7 @@ public sealed class CaptureMemoryViewModelTests
         public Mock<ICaptureMemoryService> Memory { get; } = new();
         public Mock<IAppNotificationService> Notifications { get; } = new();
         public Queue<Action> Updates { get; } = new();
-        public CaptureMemoryState State { get; private set; } = new(new(true, true, Guid.NewGuid(), 0), true, new(false, true), new(AnalysisActivity.Idle));
+        public CaptureMemoryState State { get; private set; } = new(new(true, Guid.NewGuid()), true, new(false, true), new(AnalysisActivity.Idle));
         public CaptureMemoryViewModel ViewModel { get; }
         public Fixture()
         {

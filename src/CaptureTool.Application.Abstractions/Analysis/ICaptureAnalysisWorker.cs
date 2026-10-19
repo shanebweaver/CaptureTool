@@ -3,7 +3,10 @@ using CaptureTool.Domain.Analysis;
 
 namespace CaptureTool.Application.Abstractions.Analysis;
 
-public enum AnalysisActivity { Idle, Preparing, Analyzing, StorageUnavailable, ProviderUnavailable }
+public enum AnalysisActivity
+{
+    Idle, Preparing, Analyzing, StorageUnavailable, ProviderUnavailable
+}
 public sealed record AnalysisActivitySnapshot(AnalysisActivity Activity, int QueuedCaptures = 0,
     CaptureId? CaptureId = null, int CompletedSteps = 0, int TotalSteps = 0, double? Fraction = null, string? FailureCode = null,
     AnalysisRunStatus? LastRunStatus = null, bool LastRunHadFailures = false);
@@ -19,5 +22,5 @@ public interface ICaptureAnalysisWorker
     /// <summary>One lazy session loop. Cancellation forgets pending work; startup never resumes it.</summary>
     Task RunAsync(CancellationToken cancellationToken);
     Task CancelAsync(CaptureId captureId, CancellationToken cancellationToken = default);
-    Task<AnalysisCleanupResult> ClearAsync(long reconciliationBoundary, CancellationToken cancellationToken = default);
+    Task<AnalysisCleanupResult> ClearAsync(CancellationToken cancellationToken = default);
 }

@@ -813,6 +813,12 @@
                                         IsTextSelectionEnabled="True"
                                         Text="{x:Bind ViewModel.Summary, Mode=OneWay}"
                                         TextWrapping="Wrap" />
+                                    <TextBlock
+                                        x:Uid="CaptureSummary_PartialCoverage"
+                                        AutomationProperties.AutomationId="CaptureSummary_PartialCoverage"
+                                        TextWrapping="Wrap"
+                                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                        Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.IsSummaryPartial), Mode=OneWay}" />
                                     <Button
                                         x:Uid="CaptureSummary_CopySummary"
                                         AutomationProperties.AutomationId="CaptureSummary_CopySummary"

@@ -1,21 +1,27 @@
-﻿using CaptureTool.Domain;
+using CaptureTool.Domain;
 using CaptureTool.Domain.Analysis;
 using CaptureTool.Domain.Analysis.Payloads;
-using System.Security.Cryptography;
-using System.Text.Json;
 
 namespace CaptureTool.Infrastructure.Analysis.Persistence.Serialization;
 
 internal static class AnalysisDocumentMapper
 {
     public static AnalysisDocument ToDocument(CaptureAnalysisRecord record) =>
-        new(1, record.CaptureId.Value, (int)record.MediaKind, record.SourceRevision.Sha256,
-            record.PlanVersion, record.RunId, record.Results.Select(ToDocument).ToArray());
+        new(Version: 2,
+            CaptureId: record.CaptureId.Value,
+            MediaKind: (int)record.MediaKind,
+            SourceSha256: record.SourceRevision.Sha256,
+            PlanVersion: record.PlanVersion,
+            RunId: record.RunId,
+            Results: record.Results.Select(ToDocument).ToArray());
 
     public static CaptureAnalysisRecord ToRecord(AnalysisDocument document)
     {
-        if (document.Version is not (1 or 2) || document.Results == null || document.SourceSha256 == null)
+        if (document.Version != 2 || document.Results == null || document.SourceSha256 == null)
+        {
             throw new InvalidDataException("Unsupported or invalid analysis document.");
+        }
+
         try
         {
             return new(new CaptureId(document.CaptureId), (AnalysisMediaKind)document.MediaKind,
@@ -30,13 +36,18 @@ internal static class AnalysisDocumentMapper
 
     private static ResultDocument ToDocument(AnalysisResult result)
     {
-        AnalyzerProvenance producer = result.Producer;
-        var document = new ResultDocument(result.Payload.Capability.Name, result.Payload.Capability.SchemaVersion,
-            new(producer.AnalyzerId, producer.ProviderId, producer.ModelId, producer.AdapterVersion, producer.ModelVersion),
-            result.GeneratedAt, result.PlanVersion, null, null, null, result.ProducingRunId,
+        var document = new ResultDocument(
+            Capability: result.Payload.Capability.Name,
+            SchemaVersion: result.Payload.Capability.SchemaVersion,
+            Producer: ToDocument(result.Producer),
+            GeneratedAt: result.GeneratedAt,
+            PlanVersion: result.PlanVersion,
+            Text: null,
+            Descriptions: null,
+            Transcript: null,
+            ProducingRunId: result.ProducingRunId,
             ResultId: result.ResultId,
-            Inputs: result.Derivation?.Inputs.Select(input => new InputReferenceDocument(
-                new(input.Capability.Name, input.Capability.SchemaVersion), input.ResultId)).ToArray());
+            Inputs: result.Derivation?.Inputs.Select(ToDocument).ToArray());
         return result.Payload switch
         {
             CaptureNameMetadata name => document with
@@ -51,53 +62,38 @@ internal static class AnalysisDocumentMapper
             },
             CaptureSynopsisMetadata synopsis => document with
             {
-                Synopsis = new(synopsis.Title == null ? null : ToDocument(synopsis.Title), synopsis.Summary.Select(ToDocument).ToArray()),
+                Synopsis = new(synopsis.Summary.Select(ToDocument).ToArray()),
                 Coverage = ToDocument(synopsis.Coverage),
             },
             CaptureClassificationMetadata classification => document with
             {
-                Classification = new(CaptureClassificationMetadata.VocabularyVersion,
-                    classification.Category is { } category ? (int)category : null,
-                    classification.CategoryEvidence.Select(ToDocument).ToArray(), classification.Topics.Select(ToDocument).ToArray()),
+                Classification = ToDocument(classification),
                 Coverage = ToDocument(classification.Coverage),
             },
             StructuredFactsMetadata facts => document with
             {
-                Facts = facts.Facts.Select(fact => new FactDocument((int)fact.Kind, fact.Value,
-                    fact.Evidence.Select(evidence => new EvidenceDocument(evidence.ResultId,
-                        evidence.EntryIndex, evidence.Start, evidence.Length)).ToArray())).ToArray(),
-                Coverage = facts.Coverage is { } coverage ? new(coverage.AvailableEntries, coverage.IncludedEntries,
-                    coverage.IncludedCharacters, (int)coverage.Limits) : null,
+                Facts = facts.Facts.Select(ToDocument).ToArray(),
+                Coverage = ToDocument(facts.Coverage),
             },
             FileDetailsMetadata file => document with
             {
-                FileDetails = new((int)file.MediaKind, file.FileName, file.SizeBytes, file.ContentType,
-                    file.FileCreatedAt, file.FileModifiedAt, file.CapturedAt, file.Duration?.Ticks,
-                    file.Image is { } image ? new(new(image.Dimensions.Width, image.Dimensions.Height), image.DpiX, image.DpiY) : null,
-                    file.Video is { } video ? new(new(video.Dimensions.Width, video.Dimensions.Height), video.FrameRate, video.Bitrate, video.Codec) : null,
-                    file.Audio is { } audio ? new(audio.Channels, audio.SampleRate, audio.Bitrate, audio.Codec) : null,
-                    CaptureTimeVerified: file.CapturedAt != null),
+                FileDetails = ToDocument(file),
             },
             QrCodeMetadata qr => document with
             {
-                QrCodes = qr.Codes.Select(code => new QrCodeDocument(code.Value,
-                    new(code.Bounds.X, code.Bounds.Y, code.Bounds.Width, code.Bounds.Height), code.Timestamp?.Ticks)).ToArray(),
+                QrCodes = qr.Codes.Select(ToDocument).ToArray(),
             },
             TextRecognitionMetadata text => document with
             {
-                Text = text.Regions.Select(region => new TextDocument(region.Text,
-                    region.Bounds is { } bounds ? new(bounds.X, bounds.Y, bounds.Width, bounds.Height) : null,
-                    region.Timestamp?.Ticks, region.LineIndex, region.WordIndex)).ToArray(),
+                Text = text.Regions.Select(ToDocument).ToArray(),
             },
             DescriptionMetadata descriptions => document with
             {
-                Descriptions = descriptions.Descriptions.Select(description =>
-                    new DescriptionDocument(description.Text, description.Timestamp?.Ticks)).ToArray(),
+                Descriptions = descriptions.Descriptions.Select(ToDocument).ToArray(),
             },
             TranscriptMetadata transcript => document with
             {
-                Transcript = new(transcript.Language, transcript.Segments.Select(segment =>
-                    new SegmentDocument(segment.Text, segment.Start.Ticks, segment.End.Ticks)).ToArray()),
+                Transcript = new(transcript.Language, transcript.Segments.Select(ToDocument).ToArray()),
             },
             _ => throw new InvalidDataException("Unregistered metadata payload type."),
         };
@@ -105,105 +101,246 @@ internal static class AnalysisDocumentMapper
 
     private static AnalysisResult ToResult(ResultDocument document)
     {
-        if (document == null || document.SchemaVersion != 1 || document.Producer == null)
+        if (document == null || document.SchemaVersion != 1 || document.Producer == null ||
+            document.ResultId == Guid.Empty || document.ProducingRunId == null || document.ProducingRunId == Guid.Empty)
+        {
             throw new InvalidDataException("Unsupported or invalid analysis result.");
-        int payloads = (document.Name != null ? 1 : 0) + (document.AltText != null ? 1 : 0) + (document.Facts != null ? 1 : 0) + (document.Synopsis != null ? 1 : 0) + (document.Classification != null ? 1 : 0) +
-            (document.FileDetails != null ? 1 : 0) + (document.Text != null ? 1 : 0) + (document.Descriptions != null ? 1 : 0) +
-            (document.Transcript != null ? 1 : 0) + (document.QrCodes != null ? 1 : 0);
-        if (payloads != 1) throw new InvalidDataException("Unsupported or ambiguous metadata payload.");
-        bool derived = document.Name != null || document.AltText != null || document.Facts != null || document.Synopsis != null || document.Classification != null;
-        if (derived && document.ResultId == null)
-            throw new InvalidDataException("Derived metadata requires a persisted result identity.");
-        if (!derived && document.Coverage != null)
+        }
+
+        AnalysisPayload payload = ToPayload(document);
+        ProducerDocument producer = document.Producer;
+        var provenance = new AnalyzerProvenance(producer.AnalyzerId, producer.ProviderId, producer.ModelId,
+            producer.AdapterVersion, producer.ModelVersion);
+        AnalysisDerivation? derivation = document.Inputs == null
+            ? null
+            : new AnalysisDerivation(document.Inputs.Select(ToInputReference));
+        return new AnalysisResult(payload, provenance, document.GeneratedAt, document.PlanVersion,
+            document.ProducingRunId, document.ResultId, derivation);
+    }
+
+    private static AnalysisPayload ToPayload(ResultDocument document)
+    {
+        int payloadCount =
+            (document.Name != null ? 1 : 0) +
+            (document.AltText != null ? 1 : 0) +
+            (document.Facts != null ? 1 : 0) +
+            (document.Synopsis != null ? 1 : 0) +
+            (document.Classification != null ? 1 : 0) +
+            (document.FileDetails != null ? 1 : 0) +
+            (document.Text != null ? 1 : 0) +
+            (document.Descriptions != null ? 1 : 0) +
+            (document.Transcript != null ? 1 : 0) +
+            (document.QrCodes != null ? 1 : 0);
+        if (payloadCount != 1)
+        {
+            throw new InvalidDataException("Unsupported or ambiguous metadata payload.");
+        }
+
+        bool isDerived = document.Name != null || document.AltText != null || document.Facts != null ||
+            document.Synopsis != null || document.Classification != null;
+        if (!isDerived && document.Coverage != null)
+        {
             throw new InvalidDataException("Processing coverage belongs to derived metadata.");
-        AnalysisPayload payload = document switch
+        }
+
+        // Exactly one payload has been established above. Dispatch only needs to
+        // check its capability and the fields required by that payload's schema.
+        return document switch
         {
             { Capability: "capture-name", Name: not null, Coverage: not null } =>
                 new CaptureNameMetadata(document.Name.Suggestion == null ? null : ToSuggestedText(document.Name.Suggestion), ToCoverage(document.Coverage)),
             { Capability: "image-alt-text", AltText: not null, Coverage: not null } =>
                 new ImageAltTextMetadata(document.AltText.Suggestion == null ? null : ToSuggestedText(document.AltText.Suggestion), ToCoverage(document.Coverage)),
             { Capability: "capture-synopsis", Synopsis.Summary: not null, Coverage: not null } =>
-                new CaptureSynopsisMetadata(document.Synopsis.Title == null ? null : ToSuggestedText(document.Synopsis.Title),
-                    document.Synopsis.Summary.Select(ToSuggestedText), ToCoverage(document.Coverage)),
+                new CaptureSynopsisMetadata(document.Synopsis.Summary.Select(ToSuggestedText), ToCoverage(document.Coverage)),
             { Capability: "capture-classification", Classification: { VocabularyVersion: "1", Evidence: not null, Topics: not null }, Coverage: not null } =>
-                new CaptureClassificationMetadata(document.Classification.Category is { } category ? (CaptureCategory)category : null,
-                    document.Classification.Evidence.Select(ToEvidence), document.Classification.Topics.Select(ToSuggestedText), ToCoverage(document.Coverage)),
-            { Capability: "structured-facts", Facts: not null, FileDetails: null, Text: null, Descriptions: null, Transcript: null, QrCodes: null } =>
-                new StructuredFactsMetadata(document.Facts.Select(ToFact), document.Coverage is { } coverage ?
-                    new(coverage.AvailableEntries, coverage.IncludedEntries, coverage.IncludedCharacters, (MetadataProcessingLimit)coverage.Limits) : null),
-            { Capability: "file-details", FileDetails: not null, Text: null, Descriptions: null, Transcript: null, QrCodes: null, Facts: null } =>
+                ToClassification(document.Classification, document.Coverage),
+            { Capability: "structured-facts", Coverage: not null, Facts: not null } =>
+                new StructuredFactsMetadata(document.Facts.Select(ToFact), ToCoverage(document.Coverage)),
+            { Capability: "file-details", FileDetails: not null } =>
                 ToFileDetails(document.FileDetails),
-            { Capability: "qr-code-detection", QrCodes: not null, Text: null, Descriptions: null, Transcript: null, FileDetails: null, Facts: null } =>
+            { Capability: "qr-code-detection", QrCodes: not null } =>
                 new QrCodeMetadata(document.QrCodes.Select(ToQrCode)),
-            { Capability: "text-recognition", Text: not null, Descriptions: null, Transcript: null, QrCodes: null, FileDetails: null, Facts: null } =>
+            { Capability: "text-recognition", Text: not null } =>
                 new TextRecognitionMetadata(document.Text.Select(ToText)),
-            { Capability: "description", Descriptions: not null, Text: null, Transcript: null, QrCodes: null, FileDetails: null, Facts: null } =>
+            { Capability: "description", Descriptions: not null } =>
                 new DescriptionMetadata(document.Descriptions.Select(ToDescription)),
-            { Capability: "transcription", Transcript.Segments: not null, Text: null, Descriptions: null, QrCodes: null, FileDetails: null, Facts: null } =>
+            { Capability: "transcription", Transcript.Segments: not null } =>
                 new TranscriptMetadata(document.Transcript.Language, document.Transcript.Segments.Select(ToSegment)),
             _ => throw new InvalidDataException("Unsupported or ambiguous metadata payload."),
         };
-        ProducerDocument producer = document.Producer;
-        return new(payload, new(producer.AnalyzerId, producer.ProviderId, producer.ModelId,
-            producer.AdapterVersion, producer.ModelVersion), document.GeneratedAt, document.PlanVersion, document.ProducingRunId,
-            document.ResultId ?? LegacyResultId(document),
-            document.Inputs == null ? null : new AnalysisDerivation(document.Inputs.Select(ToInputReference)));
     }
 
-    // Older documents have no identity. Hash their canonical source-generated representation so
-    // repeated reads do not change it; the next ordinary write persists the assigned identity.
-    private static Guid LegacyResultId(ResultDocument document) =>
-        new(SHA256.HashData(JsonSerializer.SerializeToUtf8Bytes(document, AnalysisJsonContext.Default.ResultDocument)).AsSpan(0, 16));
+    private static ProducerDocument ToDocument(AnalyzerProvenance producer) =>
+        new(producer.AnalyzerId, producer.ProviderId, producer.ModelId, producer.AdapterVersion, producer.ModelVersion);
+
+    private static InputReferenceDocument ToDocument(AnalysisInputReference input) =>
+        new(new CapabilityDocument(input.Capability.Name, input.Capability.SchemaVersion), input.ResultId);
+
+    private static ClassificationDocument ToDocument(CaptureClassificationMetadata classification) =>
+        new(VocabularyVersion: CaptureClassificationMetadata.VocabularyVersion,
+            Category: classification.Category is { } category ? (int)category : null,
+            Evidence: classification.CategoryEvidence.Select(ToDocument).ToArray(),
+            Topics: classification.Topics.Select(ToDocument).ToArray());
+
+    private static FactDocument ToDocument(StructuredFact fact) =>
+        new((int)fact.Kind, fact.Value, fact.Evidence.Select(ToDocument).ToArray());
+
+    private static QrCodeDocument ToDocument(DecodedQrCode code) =>
+        new(code.Value, ToDocument(code.Bounds), code.Timestamp?.Ticks);
+
+    private static TextDocument ToDocument(RecognizedText region) =>
+        new(region.Text, region.Bounds is { } bounds ? ToDocument(bounds) : null,
+            region.Timestamp?.Ticks, region.LineIndex, region.WordIndex);
+
+    private static DescriptionDocument ToDocument(MediaDescription description) =>
+        new(description.Text, description.Timestamp?.Ticks);
+
+    private static SegmentDocument ToDocument(TranscriptSegment segment) =>
+        new(segment.Text, segment.Start.Ticks, segment.End.Ticks);
+
+    private static FileDetailsDocument ToDocument(FileDetailsMetadata file)
+    {
+        ImageFileDocument? image = file.Image is { } imageDetails
+            ? new(ToDocument(imageDetails.Dimensions), imageDetails.DpiX, imageDetails.DpiY)
+            : null;
+        VideoFileDocument? video = file.Video is { } videoDetails
+            ? new(ToDocument(videoDetails.Dimensions), videoDetails.FrameRate, videoDetails.Bitrate, videoDetails.Codec)
+            : null;
+        AudioFileDocument? audio = file.Audio is { } audioDetails
+            ? new(audioDetails.Channels, audioDetails.SampleRate, audioDetails.Bitrate, audioDetails.Codec)
+            : null;
+        return new FileDetailsDocument(
+            MediaKind: (int)file.MediaKind,
+            FileName: file.FileName,
+            SizeBytes: file.SizeBytes,
+            ContentType: file.ContentType,
+            FileCreatedAt: file.FileCreatedAt,
+            FileModifiedAt: file.FileModifiedAt,
+            CapturedAt: file.CapturedAt,
+            DurationTicks: file.Duration?.Ticks,
+            Image: image,
+            Video: video,
+            Audio: audio);
+    }
+
+    private static DimensionsDocument ToDocument(MediaDimensions dimensions) => new(dimensions.Width, dimensions.Height);
+
+    private static BoundsDocument ToDocument(NormalizedBounds bounds) => new(bounds.X, bounds.Y, bounds.Width, bounds.Height);
 
     private static CoverageDocument ToDocument(MetadataProcessingCoverage coverage) =>
         new(coverage.AvailableEntries, coverage.IncludedEntries, coverage.IncludedCharacters, (int)coverage.Limits);
+
     private static MetadataProcessingCoverage ToCoverage(CoverageDocument coverage) =>
         new(coverage.AvailableEntries, coverage.IncludedEntries, coverage.IncludedCharacters, (MetadataProcessingLimit)coverage.Limits);
+
     private static EvidenceDocument ToDocument(AnalysisEvidence evidence) => new(evidence.ResultId, evidence.EntryIndex, evidence.Start, evidence.Length);
+
     private static SuggestedTextDocument ToDocument(SuggestedText text) => new(text.Text, text.Evidence.Select(ToDocument).ToArray());
-    private static AnalysisEvidence ToEvidence(EvidenceDocument document) => document == null
-        ? throw new InvalidDataException("Missing insight evidence.") : new(document.ResultId, document.EntryIndex, document.Start, document.Length);
-    private static SuggestedText ToSuggestedText(SuggestedTextDocument document) => document?.Evidence == null
-        ? throw new InvalidDataException("Missing insight text or evidence.") : new(document.Text, document.Evidence.Select(ToEvidence));
+
+    private static AnalysisEvidence ToEvidence(EvidenceDocument document)
+    {
+        if (document == null)
+        {
+            throw new InvalidDataException("Missing insight evidence.");
+        }
+        return new(document.ResultId, document.EntryIndex, document.Start, document.Length);
+    }
+
+    private static SuggestedText ToSuggestedText(SuggestedTextDocument document)
+    {
+        if (document?.Evidence == null)
+        {
+            throw new InvalidDataException("Missing insight text or evidence.");
+        }
+        return new(document.Text, document.Evidence.Select(ToEvidence));
+    }
+
+    private static CaptureClassificationMetadata ToClassification(ClassificationDocument document, CoverageDocument coverage)
+    {
+        CaptureCategory? category = document.Category is { } value ? (CaptureCategory)value : null;
+        IEnumerable<AnalysisEvidence> evidence = document.Evidence.Select(ToEvidence);
+        IEnumerable<SuggestedText> topics = document.Topics.Select(ToSuggestedText);
+        return new(category, evidence, topics, ToCoverage(coverage));
+    }
 
     private static AnalysisInputReference ToInputReference(InputReferenceDocument document)
     {
-        if (document?.Capability == null) throw new InvalidDataException("Missing derived input reference.");
+        if (document?.Capability == null)
+        {
+            throw new InvalidDataException("Missing derived input reference.");
+        }
+
         return new(new(document.Capability.Name, document.Capability.SchemaVersion), document.ResultId);
     }
 
     private static StructuredFact ToFact(FactDocument document)
     {
-        if (document?.Evidence == null) throw new InvalidDataException("Missing fact evidence.");
-        return new((StructuredFactKind)document.Kind, document.Value, document.Evidence.Select(evidence =>
-            evidence == null ? throw new InvalidDataException("Missing evidence span.") :
-                new AnalysisEvidence(evidence.ResultId, evidence.EntryIndex, evidence.Start, evidence.Length)));
+        if (document?.Evidence == null)
+        {
+            throw new InvalidDataException("Missing fact evidence.");
+        }
+
+        if (document.Evidence.Any(evidence => evidence == null))
+        {
+            throw new InvalidDataException("Missing evidence span.");
+        }
+        return new((StructuredFactKind)document.Kind, document.Value, document.Evidence.Select(ToEvidence));
     }
 
     private static RecognizedText ToText(TextDocument document)
     {
-        if (document == null) throw new InvalidDataException("Missing text region.");
+        if (document == null)
+        {
+            throw new InvalidDataException("Missing text region.");
+        }
+
         BoundsDocument? bounds = document.Bounds;
         return new(document.Text, bounds == null ? null : new(bounds.X, bounds.Y, bounds.Width, bounds.Height),
             document.TimestampTicks is { } ticks ? TimeSpan.FromTicks(ticks) : null, document.LineIndex, document.WordIndex);
     }
 
-    private static FileDetailsMetadata ToFileDetails(FileDetailsDocument file) =>
-        new((AnalysisMediaKind)file.MediaKind, file.FileName, file.SizeBytes, file.ContentType,
-            // Older file-details results could confuse historical activity with capture time.
-            // Keep all other facts, but expose unverified capture dates as unknown until reanalysis.
-            file.FileCreatedAt, file.FileModifiedAt, file.CaptureTimeVerified ? file.CapturedAt : null,
-            file.DurationTicks is { } ticks ? TimeSpan.FromTicks(ticks) : null,
-            file.Image is { } image ? new(ToDimensions(image.Dimensions), image.DpiX, image.DpiY) : null,
-            file.Video is { } video ? new(ToDimensions(video.Dimensions), video.FrameRate, video.Bitrate, video.Codec) : null,
-            file.Audio is { } audio ? new(audio.Channels, audio.SampleRate, audio.Bitrate, audio.Codec) : null);
+    private static FileDetailsMetadata ToFileDetails(FileDetailsDocument file)
+    {
+        ImageFileDetails? image = file.Image is { } imageDocument
+            ? new(ToDimensions(imageDocument.Dimensions), imageDocument.DpiX, imageDocument.DpiY)
+            : null;
+        VideoFileDetails? video = file.Video is { } videoDocument
+            ? new(ToDimensions(videoDocument.Dimensions), videoDocument.FrameRate, videoDocument.Bitrate, videoDocument.Codec)
+            : null;
+        AudioFileDetails? audio = file.Audio is { } audioDocument
+            ? new(audioDocument.Channels, audioDocument.SampleRate, audioDocument.Bitrate, audioDocument.Codec)
+            : null;
+        return new FileDetailsMetadata(
+            mediaKind: (AnalysisMediaKind)file.MediaKind,
+            fileName: file.FileName,
+            sizeBytes: file.SizeBytes,
+            contentType: file.ContentType,
+            fileCreatedAt: file.FileCreatedAt,
+            fileModifiedAt: file.FileModifiedAt,
+            capturedAt: file.CapturedAt,
+            duration: file.DurationTicks is { } ticks ? TimeSpan.FromTicks(ticks) : null,
+            image: image,
+            video: video,
+            audio: audio);
+    }
 
-    private static MediaDimensions ToDimensions(DimensionsDocument dimensions) => dimensions == null
-        ? throw new InvalidDataException("Missing media dimensions.") : new(dimensions.Width, dimensions.Height);
+    private static MediaDimensions ToDimensions(DimensionsDocument dimensions)
+    {
+        if (dimensions == null)
+        {
+            throw new InvalidDataException("Missing media dimensions.");
+        }
+        return new(dimensions.Width, dimensions.Height);
+    }
 
     private static DecodedQrCode ToQrCode(QrCodeDocument document)
     {
-        if (document?.Bounds == null) throw new InvalidDataException("Missing QR code bounds.");
+        if (document?.Bounds == null)
+        {
+            throw new InvalidDataException("Missing QR code bounds.");
+        }
+
         BoundsDocument bounds = document.Bounds;
         return new(document.Value, new(bounds.X, bounds.Y, bounds.Width, bounds.Height),
             document.TimestampTicks is { } ticks ? TimeSpan.FromTicks(ticks) : null);
@@ -211,13 +348,21 @@ internal static class AnalysisDocumentMapper
 
     private static MediaDescription ToDescription(DescriptionDocument document)
     {
-        if (document == null) throw new InvalidDataException("Missing description.");
+        if (document == null)
+        {
+            throw new InvalidDataException("Missing description.");
+        }
+
         return new(document.Text, document.TimestampTicks is { } ticks ? TimeSpan.FromTicks(ticks) : null);
     }
 
     private static TranscriptSegment ToSegment(SegmentDocument document)
     {
-        if (document == null) throw new InvalidDataException("Missing transcript segment.");
+        if (document == null)
+        {
+            throw new InvalidDataException("Missing transcript segment.");
+        }
+
         return new(document.Text, TimeSpan.FromTicks(document.StartTicks), TimeSpan.FromTicks(document.EndTicks));
     }
 }

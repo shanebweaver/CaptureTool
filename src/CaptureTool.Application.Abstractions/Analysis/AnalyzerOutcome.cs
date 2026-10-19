@@ -29,10 +29,16 @@ public sealed class AnalyzerOutcome
     public static AnalyzerOutcome Unsuccessful(AnalyzerOutcomeKind kind, string failureCode)
     {
         if (!Enum.IsDefined(kind) || kind == AnalyzerOutcomeKind.Succeeded)
+        {
             throw new ArgumentOutOfRangeException(nameof(kind));
+        }
+
         ArgumentException.ThrowIfNullOrWhiteSpace(failureCode);
         if (failureCode.Length > 80 || failureCode.Any(c => !(char.IsAsciiLetterOrDigit(c) || c is '-' or '_')))
+        {
             throw new ArgumentException("Use a bounded failure identifier.", nameof(failureCode));
+        }
+
         return new(kind, null, null, failureCode);
     }
 }

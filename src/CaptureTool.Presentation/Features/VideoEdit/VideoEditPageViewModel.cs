@@ -226,6 +226,8 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
     private string? _originalVideoPath;
     private string? _superResolutionVideoPath;
     private VideoEditSnapshot? _savedEditSnapshot;
+    private CancellationTokenSource? _enhancementCancellation;
+    private bool _isDisposed;
 
     public string EditSessionName => "video edit session";
 
@@ -507,6 +509,7 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
 
     private async Task ToggleVideoSuperResolutionAsync()
     {
+        if (_isDisposed || _enhancementCancellation != null) return;
         if (IsVideoSuperResolutionActive)
         {
             ShowOriginalVideo();
@@ -518,28 +521,31 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
             return;
         }
 
-        if (!await EnsureAiFeatureConsentAsync(
-            AiFeatureId.VideoSuperResolution,
-            CancellationToken.None))
-        {
-            TrackEditTool("super_resolution", TelemetryOutcomes.Canceled);
-            return;
-        }
-
-        if (!string.IsNullOrWhiteSpace(_superResolutionVideoPath) &&
-            File.Exists(_superResolutionVideoPath))
-        {
-            ShowSuperResolutionVideo(_superResolutionVideoPath);
-            return;
-        }
-
-        VideoSuperResolutionStatusMessage = string.Empty;
-        IsVideoSuperResolutionGenerating = true;
-        CancellationToken cancellationToken = _aiFeatureConsentService.Revoked;
-        UpdateVideoSuperResolutionAvailability();
+        using var consentCancellation = new CancellationTokenSource();
+        _enhancementCancellation = consentCancellation;
         try
         {
+            if (!await EnsureAiFeatureConsentAsync(AiFeatureId.VideoSuperResolution, consentCancellation.Token))
+            {
+                TrackEditTool("super_resolution", TelemetryOutcomes.Canceled);
+                return;
+            }
+            consentCancellation.Token.ThrowIfCancellationRequested();
+            // Consent may create a new authorization generation. Capture its token
+            // after the prompt, and let editor disposal cancel this exact operation.
+            using var operation = CancellationTokenSource.CreateLinkedTokenSource(_aiFeatureConsentService.Revoked);
+            _enhancementCancellation = operation;
+            CancellationToken cancellationToken = operation.Token;
             cancellationToken.ThrowIfCancellationRequested();
+            if (!string.IsNullOrWhiteSpace(_superResolutionVideoPath) && File.Exists(_superResolutionVideoPath))
+            {
+                ShowSuperResolutionVideo(_superResolutionVideoPath);
+                return;
+            }
+
+            VideoSuperResolutionStatusMessage = string.Empty;
+            IsVideoSuperResolutionGenerating = true;
+            UpdateVideoSuperResolutionAvailability();
             VideoSuperResolutionReadyState readyState = _videoSuperResolutionService.GetReadyState();
             if (readyState == VideoSuperResolutionReadyState.PreparationNeeded)
             {
@@ -561,6 +567,12 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
             VideoSuperResolutionResult result = await _videoSuperResolutionService.GenerateAsync(
                 new VideoSuperResolutionRequest(new VideoFile(_originalVideoPath)),
                 cancellationToken);
+            if (cancellationToken.IsCancellationRequested && result.VideoFile is { } abandoned)
+            {
+                // Only the scratch store can delete a generated artifact; it rejects
+                // paths outside its owned directory, including retained captures.
+                _scratchArtifactStore?.DeleteArtifact(abandoned.FilePath);
+            }
             cancellationToken.ThrowIfCancellationRequested();
             if (result.Status != VideoSuperResolutionStatus.Success ||
                 result.VideoFile is null)
@@ -575,19 +587,23 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
         }
         catch (OperationCanceledException)
         {
-            VideoSuperResolutionStatusMessage = string.Empty;
+            if (!_isDisposed) VideoSuperResolutionStatusMessage = string.Empty;
             TrackEditTool("super_resolution", TelemetryOutcomes.Canceled);
         }
         catch (Exception ex)
         {
             _logService.LogException(ex, "Failed to generate super-resolution video.");
-            ShowVideoSuperResolutionFailure(
+            if (!_isDisposed) ShowVideoSuperResolutionFailure(
                 GetLocalizedString("VideoSuperResolutionStatus_Failed"));
         }
         finally
         {
-            IsVideoSuperResolutionGenerating = false;
-            UpdateVideoSuperResolutionAvailability();
+            _enhancementCancellation = null;
+            if (!_isDisposed)
+            {
+                IsVideoSuperResolutionGenerating = false;
+                UpdateVideoSuperResolutionAvailability();
+            }
         }
     }
 
@@ -601,6 +617,7 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
         }
 
         bool consented = await _aiFeatureConsentService.EnsureConsentAsync(cancellationToken);
+        cancellationToken.ThrowIfCancellationRequested();
         UpdateVideoSuperResolutionAvailability();
         return consented;
     }
@@ -632,6 +649,11 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
 
     public override void Dispose()
     {
+        if (_isDisposed) return;
+        _isDisposed = true;
+        // Mark the operation canceled immediately; provider callbacks cannot hold
+        // the UI thread during disposal. The operation disposes its own token source.
+        if (_enhancementCancellation != null) _ = ObserveCancellationAsync(_enhancementCancellation.CancelAsync());
         foreach (string artifactPath in _scratchArtifactPaths)
         {
             _scratchArtifactStore?.DeleteArtifact(artifactPath);
@@ -641,6 +663,12 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
         _superResolutionVideoPath = null;
         VideoPath = null;
         base.Dispose();
+    }
+
+    private async Task ObserveCancellationAsync(Task cancellation)
+    {
+        try { await cancellation.ConfigureAwait(false); }
+        catch (Exception ex) { _logService.LogException(ex, "Failed to cancel video enhancement."); }
     }
 
     private void TrackScratchArtifact(string artifactPath)

@@ -66,9 +66,8 @@ internal static class MetadataChecks
                             IEnumerable<AnalysisEvidence> evidence = [];
                             if (outcome.Payload is CaptureSynopsisMetadata synopsis)
                             {
-                                title = synopsis.Title?.Text;
                                 summary = synopsis.Summary.Select(item => item.Text).ToArray();
-                                evidence = (synopsis.Title?.Evidence ?? []).Concat(synopsis.Summary.SelectMany(item => item.Evidence));
+                                evidence = synopsis.Summary.SelectMany(item => item.Evidence);
                                 if (fixture.Name != "conflict" && (fixture.Abstain ? summary.Length != 0 : summary.Length == 0)) status = "FixtureMismatch";
                             }
                             if (outcome.Payload is CaptureNameMetadata name)

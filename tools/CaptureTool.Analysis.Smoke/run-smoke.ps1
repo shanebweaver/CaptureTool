@@ -4,7 +4,8 @@ param(
     [switch]$Packaged,
     [switch]$PrepareWhisper,
     [switch]$PrepareVision,
-    [switch]$PrepareAll
+    [switch]$PrepareAll,
+    [string[]]$RequireAnalyzer = @()
 )
 $ErrorActionPreference = 'Stop'
 $binaryRoot = (Resolve-Path -LiteralPath $BinaryDirectory).Path
@@ -130,6 +131,15 @@ try {
     }
     Get-Content -LiteralPath (Join-Path $outputRoot 'results.json')
     if ($exitCode -ne 0) { throw "Provider smoke failed: $exitCode" }
+    $report = Get-Content -LiteralPath (Join-Path $outputRoot 'results.json') -Raw | ConvertFrom-Json
+    foreach ($required in $RequireAnalyzer) {
+        $observed = @($report.Results | Where-Object Analyzer -eq $required)
+        if ($observed.Count -eq 0 -or @($observed | Where-Object {
+            $_.Status -ne 'Succeeded' -or $_.Items -le 0 -or [string]::IsNullOrWhiteSpace($_.ActualModel)
+        }).Count -gt 0) {
+            throw "Required analyzer '$required' did not produce real model output for every media fixture. See results.json."
+        }
+    }
 }
 finally {
     if ($null -ne $process) {

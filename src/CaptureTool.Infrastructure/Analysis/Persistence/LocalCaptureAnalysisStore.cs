@@ -42,51 +42,10 @@ internal sealed partial class LocalCaptureAnalysisStore : ICaptureAnalysisStore,
             DeleteControlTemporaries();
             return CleanupObsoleteFiles(control.Generation);
         }
-        finally { _gate.Release(); }
-    }
-
-    public async Task<AnalysisWriteToken> BeginRunAsync(CaptureId captureId, AnalysisMediaKind mediaKind,
-        SourceRevision sourceRevision, string planVersion, CancellationToken cancellationToken = default)
-    {
-        // Validate before persisting any control state.
-        var next = new CaptureAnalysisRecord(captureId, mediaKind, sourceRevision, planVersion, Guid.NewGuid(), []);
-        await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
-        try
+        finally
         {
-            AnalysisControlDocument control = (await ReadControlAsync(true, cancellationToken).ConfigureAwait(false))!;
-            if ((await ReadDocumentAsync(control.Generation, captureId, cancellationToken).ConfigureAwait(false))?.Run != null)
-                throw new InvalidOperationException("Execution requests must be admitted through the execution store.");
-            CaptureAnalysisRecord? previous = await ReadRecordAsync(control.Generation, captureId, cancellationToken).ConfigureAwait(false);
-            if (previous != null)
-            {
-                if (previous.MediaKind != mediaKind) throw new InvalidOperationException("A capture cannot change media kind.");
-                next = previous.StartRun(sourceRevision, planVersion, next.RunId);
-            }
-
-            await WriteRecordAsync(control.Generation, next, cancellationToken).ConfigureAwait(false);
-            return new(captureId, sourceRevision, control.Generation, next.RunId);
+            _gate.Release();
         }
-        finally { _gate.Release(); }
-    }
-
-    public async Task<bool> TryWriteAsync(AnalysisWriteToken token, AnalysisResult result, CancellationToken cancellationToken = default)
-    {
-        ArgumentNullException.ThrowIfNull(token);
-        ArgumentNullException.ThrowIfNull(result);
-        ValidateId(token.CaptureId);
-        await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
-        try
-        {
-            AnalysisControlDocument? control = await ReadControlAsync(false, cancellationToken).ConfigureAwait(false);
-            if (control == null || control.Generation != token.Generation) return false;
-            if ((await ReadDocumentAsync(control.Generation, token.CaptureId, cancellationToken).ConfigureAwait(false))?.Run != null) return false;
-            CaptureAnalysisRecord? current = await ReadRecordAsync(control.Generation, token.CaptureId, cancellationToken).ConfigureAwait(false);
-            if (current == null || current.RunId != token.RunId || current.SourceRevision != token.SourceRevision) return false;
-            if (!current.HasCurrentInputs(result)) return false;
-            await WriteRecordAsync(control.Generation, current.WithResult(result), cancellationToken).ConfigureAwait(false);
-            return true;
-        }
-        finally { _gate.Release(); }
     }
 
     public async Task<CaptureAnalysisRecord?> GetAsync(CaptureId captureId, SourceRevision? expectedSource = null,
@@ -97,11 +56,18 @@ internal sealed partial class LocalCaptureAnalysisStore : ICaptureAnalysisStore,
         try
         {
             AnalysisControlDocument? control = await ReadControlAsync(false, cancellationToken).ConfigureAwait(false);
-            if (control == null) return null;
+            if (control == null)
+            {
+                return null;
+            }
+
             CaptureAnalysisRecord? record = await ReadRecordAsync(control.Generation, captureId, cancellationToken).ConfigureAwait(false);
             return expectedSource != null && record?.SourceRevision != expectedSource ? null : record;
         }
-        finally { _gate.Release(); }
+        finally
+        {
+            _gate.Release();
+        }
     }
 
     public async Task<IReadOnlyList<CaptureAnalysisRecord>> ReadAllAsync(CancellationToken cancellationToken = default)
@@ -110,40 +76,56 @@ internal sealed partial class LocalCaptureAnalysisStore : ICaptureAnalysisStore,
         try
         {
             AnalysisControlDocument? control = await ReadControlAsync(false, cancellationToken).ConfigureAwait(false);
-            if (control == null) return [];
+            if (control == null)
+            {
+                return [];
+            }
+
             List<CaptureAnalysisRecord> records = [];
             foreach (string path in _files.GetFiles(GenerationPath(control.Generation)).Order(StringComparer.Ordinal))
             {
-                if (!path.EndsWith(".analysis", StringComparison.Ordinal)) continue;
+                if (!path.EndsWith(".analysis", StringComparison.Ordinal))
+                {
+                    continue;
+                }
+
                 if (!Guid.TryParseExact(Path.GetFileNameWithoutExtension(path), "N", out Guid id) || id == Guid.Empty)
+                {
                     throw new InvalidDataException("Unexpected metadata filename.");
+                }
+
                 CaptureAnalysisRecord? record = await ReadRecordAsync(control.Generation, new CaptureId(id), cancellationToken).ConfigureAwait(false);
-                if (record != null) records.Add(record);
+                if (record != null)
+                {
+                    records.Add(record);
+                }
             }
 
             return records.AsReadOnly();
         }
-        finally { _gate.Release(); }
+        finally
+        {
+            _gate.Release();
+        }
     }
 
-    public Task<AnalysisCleanupResult> ClearAsync(CancellationToken cancellationToken = default) =>
-        ClearAsync(long.MaxValue, cancellationToken); // Without a catalog watermark, automatic historical reconciliation must fail closed.
-
-    public async Task<AnalysisCleanupResult> ClearAsync(long reconciliationBoundary, CancellationToken cancellationToken = default)
+    public async Task<AnalysisCleanupResult> ClearAsync(CancellationToken cancellationToken = default)
     {
-        if (reconciliationBoundary < 0) throw new ArgumentOutOfRangeException(nameof(reconciliationBoundary));
         await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
             // Explicit deletion must also recover unreadable or missing control. Ordinary access still fails closed.
             // Publish a protected generation before touching existing analysis files, even during recovery.
-            var next = new AnalysisControlDocument(2, Guid.NewGuid(), ReconciliationBoundary: reconciliationBoundary);
+            var next = new AnalysisControlDocument(2, Guid.NewGuid());
             await _documents.WriteAsync(_controlPath, next, AnalysisJsonContext.Default.AnalysisControlDocument, cancellationToken).ConfigureAwait(false);
             _sessionRequests.Clear();
             // After publication, deletion is committed even if cleanup is interrupted. Do not roll back the generation.
             return CleanupObsoleteFiles(next.Generation);
         }
-        finally { _gate.Release(); }
+        finally
+        {
+            _gate.Release();
+        }
     }
 
     private async Task<AnalysisControlDocument?> ReadControlAsync(bool create, CancellationToken cancellationToken)
@@ -155,15 +137,25 @@ internal sealed partial class LocalCaptureAnalysisStore : ICaptureAnalysisStore,
             // A crash before the very first atomic publication can leave only a control temporary.
             // Any other file or directory is evidence of an existing store: never silently reset it.
             if (_files.GetFiles(_root).Any(path => !IsControlTemporary(path)) || _files.GetDirectories(_root).Length != 0)
+            {
                 throw new InvalidDataException("Analysis control is missing from an existing store.");
-            if (!create) return null;
+            }
+
+            if (!create)
+            {
+                return null;
+            }
+
             DeleteControlTemporaries();
-            control = new(1, Guid.NewGuid());
+            control = new(2, Guid.NewGuid());
             await _documents.WriteAsync(_controlPath, control, AnalysisJsonContext.Default.AnalysisControlDocument, cancellationToken).ConfigureAwait(false);
         }
 
-        if (control.Version is not (1 or 2) || control.Generation == Guid.Empty || control.QueueOrder < 0 || control.ReconciliationBoundary < 0)
+        if (control.Version != 2 || control.Generation == Guid.Empty || control.QueueOrder < 0)
+        {
             throw new InvalidDataException("Unsupported or invalid analysis control.");
+        }
+
         return control;
     }
 
@@ -173,10 +165,6 @@ internal sealed partial class LocalCaptureAnalysisStore : ICaptureAnalysisStore,
         return document?.SourceSha256 == null ? null : AnalysisDocumentMapper.ToRecord(document);
     }
 
-    private Task WriteRecordAsync(Guid generation, CaptureAnalysisRecord record, CancellationToken cancellationToken) =>
-        _documents.WriteAsync(RecordPath(generation, record.CaptureId), AnalysisDocumentMapper.ToDocument(record),
-            AnalysisJsonContext.Default.AnalysisDocument, cancellationToken);
-
     private AnalysisCleanupResult CleanupObsoleteFiles(Guid current)
     {
         int remaining = 0;
@@ -185,37 +173,73 @@ internal sealed partial class LocalCaptureAnalysisStore : ICaptureAnalysisStore,
         // belong to an active write in this single-process store.
         foreach (string path in _files.GetFiles(GenerationPath(current)).Where(IsAnalysisTemporary))
         {
-            try { _files.DeleteFile(path); }
-            catch (IOException) { currentPending = true; }
-            catch (UnauthorizedAccessException) { currentPending = true; }
+            try
+            {
+                _files.DeleteFile(path);
+            }
+            catch (IOException)
+            {
+                currentPending = true;
+            }
+            catch (UnauthorizedAccessException)
+            {
+                currentPending = true;
+            }
         }
-        if (currentPending) remaining++;
+        if (currentPending)
+        {
+            remaining++;
+        }
+
         foreach (string directory in _files.GetDirectories(_recordsRoot))
         {
             if (!Guid.TryParseExact(Path.GetFileName(directory), "N", out Guid generation))
+            {
                 throw new InvalidDataException("Unexpected analysis generation directory.");
-            if (generation == current) continue;
-            try { _files.DeleteDocumentDirectory(directory); }
-            catch (IOException) { remaining++; }
-            catch (UnauthorizedAccessException) { remaining++; }
+            }
+
+            if (generation == current)
+            {
+                continue;
+            }
+
+            try
+            {
+                _files.DeleteDocumentDirectory(directory);
+            }
+            catch (IOException)
+            {
+                remaining++;
+            }
+            catch (UnauthorizedAccessException)
+            {
+                remaining++;
+            }
         }
 
         return new(remaining == 0, remaining);
     }
 
     private string GenerationPath(Guid generation) => Path.Combine(_recordsRoot, generation.ToString("N"));
+
     private string RecordPath(Guid generation, CaptureId captureId) => Path.Combine(GenerationPath(generation), captureId + ".analysis");
 
     private static void ValidateId(CaptureId captureId)
     {
-        if (captureId.IsEmpty) throw new ArgumentException("Capture identity is required.", nameof(captureId));
+        if (captureId.IsEmpty)
+        {
+            throw new ArgumentException("Capture identity is required.", nameof(captureId));
+        }
     }
 
     public void Dispose() => _gate.Dispose();
 
     private void DeleteControlTemporaries()
     {
-        foreach (string path in _files.GetFiles(_root).Where(IsControlTemporary)) _files.DeleteFile(path);
+        foreach (string path in _files.GetFiles(_root).Where(IsControlTemporary))
+        {
+            _files.DeleteFile(path);
+        }
     }
 
     private static bool IsControlTemporary(string path)

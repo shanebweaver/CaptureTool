@@ -24,7 +24,10 @@ internal sealed class AnalysisFeatureAvailability(CaptureAnalysisConfiguration c
         cancellationToken.ThrowIfCancellationRequested();
         var key = (kind, capability);
         if (_cache.TryGetValue(key, out var previous) && previous.Expires <= DateTimeOffset.UtcNow)
+        {
             _cache.TryRemove(new KeyValuePair<(AnalysisMediaKind, AnalysisCapability), CachedProbe>(key, previous));
+        }
+
         var probe = _cache.GetOrAdd(key, _ => new(new(() => CheckAsync(kind, capability)), DateTimeOffset.UtcNow.AddMinutes(1)));
         return await probe.Value.Value.WaitAsync(cancellationToken).ConfigureAwait(false);
     }
@@ -33,18 +36,31 @@ internal sealed class AnalysisFeatureAvailability(CaptureAnalysisConfiguration c
     {
         var plan = configuration.Plans.FirstOrDefault(item => item.MediaKind == kind);
         var step = plan?.Steps.FirstOrDefault(item => item.Capability == capability);
-        if (step == null) return false;
+        if (step == null)
+        {
+            return false;
+        }
+
         foreach (string id in step.Candidates)
         {
             if (_analyzers.TryGetValue(id, out var analyzer) && analyzer.Descriptor.SupportedMedia.Contains(kind) &&
-                await ProbeAsync(id, kind, ct => analyzer.GetAvailabilityAsync(kind, null, ct)).ConfigureAwait(false)) return true;
+                await ProbeAsync(id, kind, ct => analyzer.GetAvailabilityAsync(kind, null, ct)).ConfigureAwait(false))
+            {
+                return true;
+            }
+
             if (_processors.TryGetValue(id, out var processor) &&
                 await ProbeAsync(id, kind, processor.GetAvailabilityAsync).ConfigureAwait(false))
             {
                 // Outputs declare their own prerequisites. A useful source is sufficient;
                 // OCR, description, and speech need not all be supported on the same device.
                 foreach (var input in processor.Descriptor.Inputs)
-                    if (await IsSupportedAsync(kind, input).ConfigureAwait(false)) return true;
+                {
+                    if (await IsSupportedAsync(kind, input).ConfigureAwait(false))
+                    {
+                        return true;
+                    }
+                }
             }
         }
         return false;
@@ -60,7 +76,11 @@ internal sealed class AnalysisFeatureAvailability(CaptureAnalysisConfiguration c
             var state = await Task.Run(async () => await query(timeout.Token).ConfigureAwait(false))
                 .WaitAsync(ProbeTimeout).ConfigureAwait(false);
             bool supported = state is AnalyzerAvailability.Ready or AnalyzerAvailability.PreparationRequired or AnalyzerAvailability.LanguageResourcesRequired;
-            if (state != AnalyzerAvailability.TemporarilyUnavailable) _knownSupport[key] = supported;
+            if (state != AnalyzerAvailability.TemporarilyUnavailable)
+            {
+                _knownSupport[key] = supported;
+            }
+
             Report(state.ToString());
             return supported || state == AnalyzerAvailability.TemporarilyUnavailable && _knownSupport.GetValueOrDefault(key);
         }
@@ -75,7 +95,11 @@ internal sealed class AnalysisFeatureAvailability(CaptureAnalysisConfiguration c
 
         void Report(string reason)
         {
-            if (_reported.TryGetValue(key, out string? prior) && prior == reason) return;
+            if (_reported.TryGetValue(key, out string? prior) && prior == reason)
+            {
+                return;
+            }
+
             _reported[key] = reason;
             log?.LogInformation($"Analysis provider {id}, media {kind}: {reason}; OS {Environment.OSVersion.Version}; process {System.Runtime.InteropServices.RuntimeInformation.ProcessArchitecture}.");
         }

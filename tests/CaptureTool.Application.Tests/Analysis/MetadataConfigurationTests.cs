@@ -36,7 +36,7 @@ public sealed class MetadataConfigurationTests
         Assert.ThrowsExactly<ArgumentException>(() => new SuggestedText("unsupported", []));
         Assert.ThrowsExactly<ArgumentException>(() => new SuggestedText("bad\ntext", [evidence]));
         Assert.ThrowsExactly<ArgumentException>(() => new SuggestedText("bad\ud800", [evidence]));
-        Assert.ThrowsExactly<ArgumentException>(() => new CaptureSynopsisMetadata(new(new string('x', 161), [evidence]), [], coverage));
+        Assert.ThrowsExactly<ArgumentException>(() => new CaptureSynopsisMetadata([new(new string('x', 401), [evidence])], coverage));
         Assert.ThrowsExactly<ArgumentException>(() => new CaptureClassificationMetadata(CaptureCategory.Document, [], [], coverage));
         Assert.ThrowsExactly<ArgumentException>(() => new CaptureClassificationMetadata(null, [evidence], [], coverage));
         Assert.ThrowsExactly<ArgumentException>(() => new CaptureClassificationMetadata(null, [], [new("Uppercase", [evidence])], coverage));

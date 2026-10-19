@@ -118,6 +118,7 @@ public sealed class CaptureDetailsViewModel : ViewModelBase
         (UsesEditorText ? _editorText!.Document != null : _sourceMatches && !_navigation.ImageEdited);
     public string Summary { get; private set => Set(ref field, value); } = string.Empty;
     public bool HasSummary => Summary.Length > 0;
+    public bool IsSummaryPartial => Content.IsSummaryPartial;
     public IRelayCommand CopyPathCommand { get; }
     public IRelayCommand OpenFolderCommand { get; }
     public CaptureTextViewModel TextContent { get; }
@@ -374,13 +375,13 @@ public sealed class CaptureDetailsViewModel : ViewModelBase
     {
         if (_names == null || _path == null || _disposed) return;
         long revision = Interlocked.Increment(ref _nameRevision);
-        var state = await _names.GetStateAsync(_path, _cancellation);
+        var acceptedName = await _names.GetNameAsync(_path, _cancellation);
         if (_disposed || revision != Interlocked.Read(ref _nameRevision)) return;
         FileName = PhysicalFileName;
-        _acceptedName = state?.Name is { IsAutomatic: false };
+        _acceptedName = acceptedName != null;
         SuggestedName = _acceptedName ? string.Empty : Content.SuggestedName.Length > 0
-            ? new CaptureName(Content.SuggestedName, true).SuggestedFileName()
-            : state?.Name is { IsAutomatic: true } name ? name.SuggestedFileName() : string.Empty;
+            ? new CaptureName(Content.SuggestedName).SuggestedFileName()
+            : string.Empty;
         RaisePropertyChanged(nameof(HasSuggestedName));
         if (_reviewSuggestedName && HasSuggestedName)
         {
@@ -392,7 +393,7 @@ public sealed class CaptureDetailsViewModel : ViewModelBase
     private async Task RenameAsync(string name)
     {
         if (_names == null || _path == null || _kind == null || _disposed) return;
-        try { _ = new CaptureName(name, false); }
+        try { _ = new CaptureName(name); }
         catch (ArgumentException) { Notify(_text.GetString("CaptureNaming_Invalid"), error: true); return; }
         CaptureFileType kind = _kind switch { AnalysisMediaKind.Image => CaptureFileType.Image, AnalysisMediaKind.Audio => CaptureFileType.Audio, _ => CaptureFileType.Video };
         // Once accepted, finish the filesystem transaction even if the pane closes.
@@ -456,6 +457,7 @@ public sealed class CaptureDetailsViewModel : ViewModelBase
         Summary = Content.Summary;
         RefreshText();
         RaisePropertyChanged(nameof(HasSummary));
+        RaisePropertyChanged(nameof(IsSummaryPartial));
         UpdateActions();
     }
 

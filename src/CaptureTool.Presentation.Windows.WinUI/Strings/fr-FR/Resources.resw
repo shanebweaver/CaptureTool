@@ -2002,4 +2002,7 @@ SOFTWARE.
   <data name="CaptureVideoText_UnknownTime" xml:space="preserve"><value>Horodatage indisponible</value></data>
   <data name="CaptureVideoText_Hint" xml:space="preserve"><value>Recherchez du texte et des codes QR dans cette vidéo. Choisissez un horodatage pour accéder au moment correspondant, puis recherchez ou copiez son texte.</value></data>
   <data name="TextExtractionStatus_LanguageResourcesRequired" xml:space="preserve"><value>Pour extraire du texte, installez le module de reconnaissance de texte (OCR) de votre langue dans les paramètres Windows, puis réessayez.</value></data>
+  <data name="CaptureSummary_PartialCoverage.Text" xml:space="preserve">
+    <value>Ce résumé utilise des extraits de l’analyse disponible et peut omettre des détails.</value>
+  </data>
 </root>

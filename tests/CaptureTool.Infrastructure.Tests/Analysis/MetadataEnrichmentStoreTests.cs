@@ -21,11 +21,11 @@ public sealed partial class MetadataEnrichmentStoreTests
         using var environment = new AnalysisTestEnvironment();
         using var store = environment.CreateStore();
         CaptureId id = CaptureId.New();
-        AnalysisWriteToken token = await store.BeginRunAsync(id, AnalysisMediaKind.Image, AnalysisTestEnvironment.Revision(), "v1", Ct);
+        AnalysisRunToken token = await store.StartRunAsync(id, AnalysisMediaKind.Image, AnalysisTestEnvironment.Revision(), "v1", Ct, AnalysisCapability.TextRecognition, AnalysisCapability.StructuredFacts);
         AnalysisResult source = Ocr();
         AnalysisResult facts = Facts(source, absentQr: true);
-        Assert.IsTrue(await store.TryWriteAsync(token, source, Ct));
-        Assert.IsTrue(await store.TryWriteAsync(token, facts, Ct));
+        Assert.IsTrue(await store.PublishAsync(token, source, Ct));
+        Assert.IsTrue(await store.PublishAsync(token, facts, Ct));
         using var reopened = environment.CreateStore();
         CaptureAnalysisRecord record = (await reopened.GetAsync(id, cancellationToken: Ct))!;
         AnalysisResult loaded = record.Results.Single(result => result.Payload is StructuredFactsMetadata);
@@ -33,7 +33,7 @@ public sealed partial class MetadataEnrichmentStoreTests
         Assert.AreEqual(facts.Producer, loaded.Producer);
         Assert.AreEqual(facts.GeneratedAt, loaded.GeneratedAt);
         Assert.AreEqual(facts.PlanVersion, loaded.PlanVersion);
-        Assert.AreEqual(facts.ProducingRunId, loaded.ProducingRunId);
+        Assert.AreEqual(token.RunId, loaded.ProducingRunId);
         CollectionAssert.AreEqual(facts.Derivation!.Inputs.ToArray(), loaded.Derivation!.Inputs.ToArray());
         StructuredFact fact = ((StructuredFactsMetadata)loaded.Payload).Facts.Single();
         Assert.AreEqual(StructuredFactKind.Url, fact.Kind);
@@ -53,24 +53,25 @@ public sealed partial class MetadataEnrichmentStoreTests
         using var environment = new AnalysisTestEnvironment();
         using var store = environment.CreateStore();
         CaptureId id = CaptureId.New();
-        AnalysisWriteToken token = await store.BeginRunAsync(id, AnalysisMediaKind.Image, AnalysisTestEnvironment.Revision(), "v1", Ct);
+        AnalysisRunToken token = await store.StartRunAsync(id, AnalysisMediaKind.Image, AnalysisTestEnvironment.Revision(), "v1", Ct, AnalysisCapability.TextRecognition, AnalysisCapability.Description, AnalysisCapability.StructuredFacts);
         AnalysisResult source = Ocr();
-        await store.TryWriteAsync(token, source, Ct);
-        await store.TryWriteAsync(token, Facts(source), Ct);
-        await store.TryWriteAsync(token, AnalysisTestEnvironment.Description(), Ct);
+        await store.PublishAsync(token, source, Ct);
+        await store.PublishAsync(token, AnalysisTestEnvironment.Description(), Ct);
+        await store.PublishAsync(token, Facts(source), Ct);
         Assert.HasCount(3, (await store.GetAsync(id, cancellationToken: Ct))!.Results);
 
+        token = await store.StartRunAsync(id, AnalysisMediaKind.Image, AnalysisTestEnvironment.Revision(), "v1", Ct, AnalysisCapability.TextRecognition, AnalysisCapability.StructuredFacts);
         int writes = environment.Files.PublishedBytes.Count;
         AnalysisResult replacement = Ocr();
-        await store.TryWriteAsync(token, replacement, Ct);
+        await store.PublishAsync(token, replacement, Ct);
         Assert.HasCount(writes + 1, environment.Files.PublishedBytes, "Replacement and invalidation use one atomic publication.");
-        Assert.IsFalse(await store.TryWriteAsync(token, Facts(source), Ct));
+        Assert.IsFalse(await store.PublishAsync(token, Facts(source), Ct));
         Assert.HasCount(writes + 1, environment.Files.PublishedBytes);
         using var reopened = environment.CreateStore();
         CaptureAnalysisRecord record = (await reopened.GetAsync(id, cancellationToken: Ct))!;
         Assert.HasCount(2, record.Results);
         Assert.IsFalse(record.Results.Any(result => result.Payload is StructuredFactsMetadata));
-        Assert.IsTrue(await store.TryWriteAsync(token, Facts(replacement), Ct));
+        Assert.IsTrue(await store.PublishAsync(token, Facts(replacement), Ct));
     }
 
     [TestMethod]
@@ -79,14 +80,15 @@ public sealed partial class MetadataEnrichmentStoreTests
         using var environment = new AnalysisTestEnvironment();
         using var store = environment.CreateStore();
         CaptureId id = CaptureId.New();
-        AnalysisWriteToken token = await store.BeginRunAsync(id, AnalysisMediaKind.Image, AnalysisTestEnvironment.Revision(), "v1", Ct);
+        AnalysisRunToken token = await store.StartRunAsync(id, AnalysisMediaKind.Image, AnalysisTestEnvironment.Revision(), "v1", Ct, AnalysisCapability.TextRecognition, AnalysisCapability.StructuredFacts);
         AnalysisResult source = Ocr();
-        await store.TryWriteAsync(token, source, Ct);
-        await store.TryWriteAsync(token, Facts(source, absentQr: true), Ct);
+        await store.PublishAsync(token, source, Ct);
+        await store.PublishAsync(token, Facts(source, absentQr: true), Ct);
+        token = await store.StartRunAsync(id, AnalysisMediaKind.Image, AnalysisTestEnvironment.Revision(), "v1", Ct, AnalysisCapability.QrCodeDetection, AnalysisCapability.StructuredFacts);
         var qr = new AnalysisResult(new QrCodeMetadata([]), source.Producer, source.GeneratedAt, "v1");
-        await store.TryWriteAsync(token, qr, Ct);
+        await store.PublishAsync(token, qr, Ct);
         Assert.HasCount(2, (await store.GetAsync(id, cancellationToken: Ct))!.Results);
-        Assert.IsFalse(await store.TryWriteAsync(token, Facts(source, absentQr: true), Ct));
+        Assert.IsFalse(await store.PublishAsync(token, Facts(source, absentQr: true), Ct));
     }
 
     [TestMethod]
@@ -95,17 +97,18 @@ public sealed partial class MetadataEnrichmentStoreTests
         using var environment = new AnalysisTestEnvironment();
         using var store = environment.CreateStore();
         CaptureId id = CaptureId.New();
-        AnalysisWriteToken token = await store.BeginRunAsync(id, AnalysisMediaKind.Image, AnalysisTestEnvironment.Revision(), "v1", Ct);
+        AnalysisRunToken token = await store.StartRunAsync(id, AnalysisMediaKind.Image, AnalysisTestEnvironment.Revision(), "v1", Ct, AnalysisCapability.TextRecognition, AnalysisCapability.StructuredFacts);
         AnalysisResult source = Ocr();
         AnalysisResult facts = Facts(source);
-        await store.TryWriteAsync(token, source, Ct);
-        await store.TryWriteAsync(token, facts, Ct);
+        await store.PublishAsync(token, source, Ct);
+        await store.PublishAsync(token, facts, Ct);
+        token = await store.StartRunAsync(id, AnalysisMediaKind.Image, AnalysisTestEnvironment.Revision(), "v1", Ct, AnalysisCapability.TextRecognition);
         byte[] original = await File.ReadAllBytesAsync(environment.MetadataPaths.Single(), Ct);
         environment.Protector.FailProtection = true;
-        await Assert.ThrowsExactlyAsync<CryptographicException>(() => store.TryWriteAsync(token, Ocr(), Ct));
+        await Assert.ThrowsExactlyAsync<CryptographicException>(() => store.PublishAsync(token, Ocr(), Ct));
         environment.Protector.FailProtection = false;
         environment.Files.BeforeWrite = (_, _) => throw new IOException("Injected publication failure.");
-        await Assert.ThrowsExactlyAsync<IOException>(() => store.TryWriteAsync(token, Ocr(), Ct));
+        await Assert.ThrowsExactlyAsync<IOException>(() => store.PublishAsync(token, Ocr(), Ct));
         environment.Files.BeforeWrite = null;
         CollectionAssert.AreEqual(original, await File.ReadAllBytesAsync(environment.MetadataPaths.Single(), Ct));
         using var reopened = environment.CreateStore();
@@ -119,55 +122,36 @@ public sealed partial class MetadataEnrichmentStoreTests
         using var environment = new AnalysisTestEnvironment();
         using var store = environment.CreateStore();
         CaptureId id = CaptureId.New();
-        AnalysisWriteToken initial = await store.BeginRunAsync(id, AnalysisMediaKind.Image, AnalysisTestEnvironment.Revision(), "v1", Ct);
+        AnalysisRunToken initial = await store.StartRunAsync(id, AnalysisMediaKind.Image, AnalysisTestEnvironment.Revision(), "v1", Ct, AnalysisCapability.TextRecognition, AnalysisCapability.StructuredFacts);
         AnalysisResult source = Ocr();
         AnalysisResult facts = Facts(source);
-        await store.TryWriteAsync(initial, source, Ct);
-        await store.TryWriteAsync(initial, facts, Ct);
-        AnalysisWriteToken refresh = await store.BeginRunAsync(id, AnalysisMediaKind.Image, AnalysisTestEnvironment.Revision(), "v1", Ct);
+        await store.PublishAsync(initial, source, Ct);
+        await store.PublishAsync(initial, facts, Ct);
+        AnalysisRunToken refresh = await store.StartRunAsync(id, AnalysisMediaKind.Image, AnalysisTestEnvironment.Revision(), "v1", Ct, AnalysisCapability.TextRecognition, AnalysisCapability.StructuredFacts);
         Assert.HasCount(2, (await store.GetAsync(id, cancellationToken: Ct))!.Results);
-        Assert.IsFalse(await store.TryWriteAsync(initial, Facts(source), Ct));
-        AnalysisWriteToken changed = await store.BeginRunAsync(id, AnalysisMediaKind.Image, AnalysisTestEnvironment.Revision('b'), "v1", Ct);
+        Assert.IsFalse(await store.PublishAsync(initial, Facts(source), Ct));
+        AnalysisRunToken changed = await store.StartRunAsync(id, AnalysisMediaKind.Image, AnalysisTestEnvironment.Revision('b'), "v1", Ct, AnalysisCapability.TextRecognition, AnalysisCapability.StructuredFacts);
         Assert.IsEmpty((await store.GetAsync(id, cancellationToken: Ct))!.Results);
-        Assert.IsFalse(await store.TryWriteAsync(refresh, Facts(source), Ct));
-        Assert.IsFalse(await store.TryWriteAsync(changed, Facts(source), Ct));
+        Assert.IsFalse(await store.PublishAsync(refresh, Facts(source), Ct));
+        Assert.IsFalse(await store.PublishAsync(changed, Facts(source), Ct));
         source = Ocr();
-        await store.TryWriteAsync(changed, source, Ct);
-        await store.TryWriteAsync(changed, Facts(source), Ct);
+        await store.PublishAsync(changed, source, Ct);
+        await store.PublishAsync(changed, Facts(source), Ct);
         environment.Files.FailCleanup = true;
         Assert.IsFalse((await store.ClearAsync(Ct)).Completed);
-        Assert.IsFalse(await store.TryWriteAsync(changed, Facts(source), Ct));
+        Assert.IsFalse(await store.PublishAsync(changed, Facts(source), Ct));
         Assert.IsNull(await store.GetAsync(id, cancellationToken: Ct));
-        AnalysisWriteToken afterDelete = await store.BeginRunAsync(id, AnalysisMediaKind.Image, AnalysisTestEnvironment.Revision('b'), "v1", Ct);
+        AnalysisRunToken afterDelete = await store.StartRunAsync(id, AnalysisMediaKind.Image, AnalysisTestEnvironment.Revision('b'), "v1", Ct, AnalysisCapability.TextRecognition, AnalysisCapability.StructuredFacts);
         source = Ocr();
         facts = Facts(source);
-        await store.TryWriteAsync(afterDelete, source, Ct);
-        await store.TryWriteAsync(afterDelete, facts, Ct);
+        await store.PublishAsync(afterDelete, source, Ct);
+        await store.PublishAsync(afterDelete, facts, Ct);
         environment.Files.FailCleanup = false;
         using var reopened = environment.CreateStore();
         Assert.IsTrue((await reopened.InitializeAsync(Ct)).Completed);
         Assert.AreEqual(facts.ResultId, (await reopened.GetAsync(id, cancellationToken: Ct))!.Results.Last().ResultId);
         await reopened.ClearAsync(Ct);
         Assert.IsEmpty(await reopened.ReadAllAsync(Ct));
-    }
-
-    [TestMethod]
-    public async Task LegacyIdentityIsRepeatableWithoutReadSideWritesAndPersistsOnOrdinaryWrite()
-    {
-        using var environment = new AnalysisTestEnvironment();
-        using var store = environment.CreateStore();
-        CaptureId id = CaptureId.New();
-        AnalysisWriteToken token = await store.BeginRunAsync(id, AnalysisMediaKind.Image, AnalysisTestEnvironment.Revision(), "v1", Ct);
-        await store.TryWriteAsync(token, Ocr(), Ct);
-        await Mutate(environment, document => document["Results"]![0]!.AsObject().Remove("ResultId"));
-        byte[] legacy = await File.ReadAllBytesAsync(environment.MetadataPaths.Single(), Ct);
-        AnalysisResult first = (await store.GetAsync(id, cancellationToken: Ct))!.Results.Single();
-        using var reopened = environment.CreateStore();
-        Assert.AreNotEqual(Guid.Empty, first.ResultId);
-        Assert.AreEqual(first.ResultId, (await reopened.GetAsync(id, cancellationToken: Ct))!.Results.Single().ResultId);
-        CollectionAssert.AreEqual(legacy, await File.ReadAllBytesAsync(environment.MetadataPaths.Single(), Ct));
-        Assert.IsTrue(await store.TryWriteAsync(token, Facts(first), Ct));
-        Assert.AreEqual(first.ResultId, (await reopened.GetAsync(id, cancellationToken: Ct))!.Results.First().ResultId);
     }
 
     [TestMethod]
@@ -181,6 +165,7 @@ public sealed partial class MetadataEnrichmentStoreTests
     [DataRow("missing-inputs")]
     [DataRow("null-input")]
     [DataRow("null-evidence")]
+    [DataRow("missing-provenance")]
     [DataRow("missing-identity")]
     [DataRow("empty-identity")]
     public async Task CorruptDerivedDocumentsFailClosedWithoutRewriting(string fault)
@@ -188,10 +173,10 @@ public sealed partial class MetadataEnrichmentStoreTests
         using var environment = new AnalysisTestEnvironment();
         using var store = environment.CreateStore();
         CaptureId id = CaptureId.New();
-        AnalysisWriteToken token = await store.BeginRunAsync(id, AnalysisMediaKind.Image, AnalysisTestEnvironment.Revision(), "v1", Ct);
+        AnalysisRunToken token = await store.StartRunAsync(id, AnalysisMediaKind.Image, AnalysisTestEnvironment.Revision(), "v1", Ct, AnalysisCapability.TextRecognition, AnalysisCapability.StructuredFacts);
         AnalysisResult source = Ocr();
-        await store.TryWriteAsync(token, source, Ct);
-        await store.TryWriteAsync(token, Facts(source), Ct);
+        await store.PublishAsync(token, source, Ct);
+        await store.PublishAsync(token, Facts(source), Ct);
         await Mutate(environment, document =>
         {
             JsonNode result = document["Results"]![1]!;
@@ -207,6 +192,7 @@ public sealed partial class MetadataEnrichmentStoreTests
                 case "missing-inputs": result.AsObject().Remove("Inputs"); break;
                 case "null-input": result["Inputs"]![0] = null; break;
                 case "null-evidence": result["Facts"]![0]!["Evidence"]![0] = null; break;
+                case "missing-provenance": result.AsObject().Remove("ProducingRunId"); break;
                 case "missing-identity": result.AsObject().Remove("ResultId"); break;
                 case "empty-identity": result["ResultId"] = Guid.Empty; break;
                 default: Assert.Fail("Unknown test fault."); break;
@@ -265,7 +251,7 @@ public sealed partial class MetadataEnrichmentStoreTests
     {
         List<AnalysisInputReference> inputs = [new(source.Payload.Capability, source.ResultId)];
         if (absentQr) inputs.Add(new(AnalysisCapability.QrCodeDetection, null));
-        return new(new StructuredFactsMetadata([new(StructuredFactKind.Url, Value, [new(source.ResultId, 0, 4, Value.Length)])]),
+        return new(new StructuredFactsMetadata([new(StructuredFactKind.Url, Value, [new(source.ResultId, 0, 4, Value.Length)])], new(1, 1, Value.Length + 4, MetadataProcessingLimit.None)),
             AnalysisTestEnvironment.Producer(), DateTimeOffset.UtcNow, "v1", run, derivation: new(inputs));
     }
 }

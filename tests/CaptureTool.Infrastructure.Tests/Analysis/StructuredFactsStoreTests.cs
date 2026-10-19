@@ -26,7 +26,6 @@ public sealed class StructuredFactsStoreTests
         using var environment = new AnalysisTestEnvironment();
         using var store = environment.CreateStore();
         CaptureId id = CaptureId.New();
-        AnalysisWriteToken token = await store.BeginRunAsync(id, kind, AnalysisTestEnvironment.Revision(), "v1", Ct);
         const string text = "https://private.example.test USD 5 USD 5 EUR 6";
         AnalysisPayload payload = kind switch
         {
@@ -34,15 +33,16 @@ public sealed class StructuredFactsStoreTests
             AnalysisMediaKind.Video => new QrCodeMetadata([new(text, new(.1, .2, .3, .4), TimeSpan.FromSeconds(1))]),
             _ => new TextRecognitionMetadata([new(text, new(.1, .2, .3, .4))]),
         };
+        AnalysisRunToken token = await store.StartRunAsync(id, kind, AnalysisTestEnvironment.Revision(), "v1", Ct, payload.Capability, AnalysisCapability.StructuredFacts);
         AnalysisResult source = new(payload, AnalysisTestEnvironment.Producer(), DateTimeOffset.UtcNow, "v1");
-        await store.TryWriteAsync(token, source, Ct);
+        await store.PublishAsync(token, source, Ct);
         var processor = new StructuredFactsProcessor(limited ? new(new(100, 1000, 1000, TimeSpan.FromSeconds(2)), 2, 1) : null);
         MetadataProcessorInput input = MetadataProcessorInput.Create((await store.GetAsync(id, cancellationToken: Ct))!, processor.Descriptor, Ct);
         AnalyzerOutcome outcome = await processor.ProcessAsync(input, Ct);
         var facts = (StructuredFactsMetadata)outcome.Payload!;
         Assert.AreEqual(limited ? MetadataProcessingLimit.Facts | MetadataProcessingLimit.Evidence : MetadataProcessingLimit.None, facts.Coverage!.Limits);
         AnalysisResult result = new(facts, outcome.Producer!, DateTimeOffset.UtcNow, "v1", derivation: input.Derivation);
-        Assert.IsTrue(await store.TryWriteAsync(token, result, Ct));
+        Assert.IsTrue(await store.PublishAsync(token, result, Ct));
         using var reopened = environment.CreateStore();
         AnalysisResult loaded = (await reopened.GetAsync(id, cancellationToken: Ct))!.Results.Single(saved => saved.Payload is StructuredFactsMetadata);
         var restored = (StructuredFactsMetadata)loaded.Payload;
@@ -58,18 +58,18 @@ public sealed class StructuredFactsStoreTests
     }
 
     [TestMethod]
-    public async Task PartialInputAndEmptyOutputStayExplicitAfterReloadWhileLegacyCoverageStaysUnknown()
+    public async Task PartialInputAndEmptyOutputStayExplicitAfterReloadAndMissingCoverageIsRejected()
     {
         using var environment = new AnalysisTestEnvironment();
         using var store = environment.CreateStore();
         CaptureId id = CaptureId.New();
-        AnalysisWriteToken token = await store.BeginRunAsync(id, AnalysisMediaKind.Image, AnalysisTestEnvironment.Revision(), "v1", Ct);
+        AnalysisRunToken token = await store.StartRunAsync(id, AnalysisMediaKind.Image, AnalysisTestEnvironment.Revision(), "v1", Ct, AnalysisCapability.TextRecognition, AnalysisCapability.StructuredFacts);
         var source = new AnalysisResult(new TextRecognitionMetadata([new(new string('x', 100)), new("plain")]), AnalysisTestEnvironment.Producer(), DateTimeOffset.UtcNow, "v1");
-        await store.TryWriteAsync(token, source, Ct);
+        await store.PublishAsync(token, source, Ct);
         var processor = new StructuredFactsProcessor(new(new(1, 50, 50, TimeSpan.FromSeconds(2)), 256, 16));
         MetadataProcessorInput input = MetadataProcessorInput.Create((await store.GetAsync(id, cancellationToken: Ct))!, processor.Descriptor, Ct);
         AnalyzerOutcome outcome = await processor.ProcessAsync(input, Ct);
-        await store.TryWriteAsync(token, new(outcome.Payload!, outcome.Producer!, DateTimeOffset.UtcNow, "v1", derivation: input.Derivation), Ct);
+        await store.PublishAsync(token, new(outcome.Payload!, outcome.Producer!, DateTimeOffset.UtcNow, "v1", derivation: input.Derivation), Ct);
         using var reopened = environment.CreateStore();
         var facts = (StructuredFactsMetadata)(await reopened.GetAsync(id, cancellationToken: Ct))!.Results.Last().Payload;
         Assert.IsEmpty(facts.Facts);
@@ -77,8 +77,7 @@ public sealed class StructuredFactsStoreTests
         Assert.AreEqual(0, facts.Coverage.IncludedEntries);
         Assert.AreEqual(2L, facts.Coverage.AvailableEntries);
         await Mutate(environment, document => document["Results"]![1]!.AsObject().Remove("Coverage"));
-        facts = (StructuredFactsMetadata)(await reopened.GetAsync(id, cancellationToken: Ct))!.Results.Last().Payload;
-        Assert.IsNull(facts.Coverage, "Older facts never imply complete processing.");
+        await Assert.ThrowsExactlyAsync<InvalidDataException>(() => reopened.GetAsync(id, cancellationToken: Ct));
     }
 
     [TestMethod]
@@ -96,13 +95,13 @@ public sealed class StructuredFactsStoreTests
         using var environment = new AnalysisTestEnvironment();
         using var store = environment.CreateStore();
         CaptureId id = CaptureId.New();
-        AnalysisWriteToken token = await store.BeginRunAsync(id, AnalysisMediaKind.Image, AnalysisTestEnvironment.Revision(), "v1", Ct);
+        AnalysisRunToken token = await store.StartRunAsync(id, AnalysisMediaKind.Image, AnalysisTestEnvironment.Revision(), "v1", Ct, AnalysisCapability.TextRecognition, AnalysisCapability.StructuredFacts);
         var source = new AnalysisResult(new TextRecognitionMetadata([new("USD 5")]), AnalysisTestEnvironment.Producer(), DateTimeOffset.UtcNow, "v1");
-        await store.TryWriteAsync(token, source, Ct);
+        await store.PublishAsync(token, source, Ct);
         var processor = new StructuredFactsProcessor();
         MetadataProcessorInput input = MetadataProcessorInput.Create((await store.GetAsync(id, cancellationToken: Ct))!, processor.Descriptor, Ct);
         AnalyzerOutcome outcome = await processor.ProcessAsync(input, Ct);
-        await store.TryWriteAsync(token, new(outcome.Payload!, outcome.Producer!, DateTimeOffset.UtcNow, "v1", derivation: input.Derivation), Ct);
+        await store.PublishAsync(token, new(outcome.Payload!, outcome.Producer!, DateTimeOffset.UtcNow, "v1", derivation: input.Derivation), Ct);
         await Mutate(environment, document =>
         {
             JsonNode coverage = document["Results"]![1]!["Coverage"]!;

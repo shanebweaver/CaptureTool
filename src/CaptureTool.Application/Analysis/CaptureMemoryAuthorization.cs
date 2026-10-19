@@ -39,14 +39,27 @@ internal sealed class CaptureMemoryAuthorization(ICaptureMemoryPolicyStore store
             Volatile.Write(ref _policy, policy);
             lock (_blockGate)
             {
-                if (blockVersion == _blockVersion) { Volatile.Write(ref _blocked, false); Volatile.Write(ref _consentBlocked, false); }
+                if (blockVersion == _blockVersion)
+                {
+                    Volatile.Write(ref _blocked, false);
+                    Volatile.Write(ref _consentBlocked, false);
+                }
             }
 
             IsLoaded = true;
         }
-        catch (OperationCanceledException) { throw; }
-        catch (Exception exception) { throw new CaptureMemoryPolicyException("policy-unavailable", exception); }
-        finally { _gate.Release(); }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (Exception exception)
+        {
+            throw new CaptureMemoryPolicyException("policy-unavailable", exception);
+        }
+        finally
+        {
+            _gate.Release();
+        }
     }
 
     public void Block(bool revokeConsent = false)
@@ -79,9 +92,20 @@ internal sealed class CaptureMemoryAuthorization(ICaptureMemoryPolicyStore store
                 Block(revokeConsent: !policy.ConsentGranted);
                 blockVersion = Interlocked.Read(ref _blockVersion);
             }
-            try { await store.SaveAsync(policy, ct).ConfigureAwait(false); }
-            catch (OperationCanceledException) { Block(revokeConsent: true); throw; }
-            catch (Exception exception) { Block(revokeConsent: true); throw new CaptureMemoryPolicyException("policy-save", exception); }
+            try
+            {
+                await store.SaveAsync(policy, ct).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException)
+            {
+                Block(revokeConsent: true);
+                throw;
+            }
+            catch (Exception exception)
+            {
+                Block(revokeConsent: true);
+                throw new CaptureMemoryPolicyException("policy-save", exception);
+            }
             if (policy.Revision != Policy.Revision || _revoked.IsCancellationRequested)
             {
                 // Old leases keep a valid revoked token until application teardown.
@@ -104,7 +128,10 @@ internal sealed class CaptureMemoryAuthorization(ICaptureMemoryPolicyStore store
                 }
             }
         }
-        finally { _gate.Release(); }
+        finally
+        {
+            _gate.Release();
+        }
     }
 
     public async ValueTask<IAnalysisAuthorizationLease> AcquireAsync(CancellationToken cancellationToken)
@@ -112,10 +139,16 @@ internal sealed class CaptureMemoryAuthorization(ICaptureMemoryPolicyStore store
         await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
         return new Lease(IsLoaded && IsAllowed, Policy.Revision, _revoked.Token, _gate);
     }
+
     private static async Task ObserveCancellationAsync(CancellationTokenSource source)
     {
-        try { await source.CancelAsync().ConfigureAwait(false); } catch (Exception) { }
+        try
+        {
+            await source.CancelAsync().ConfigureAwait(false);
+        }
+        catch (Exception) { }
     }
+
     public void Dispose()
     {
         _revoked.Dispose();
@@ -126,11 +159,13 @@ internal sealed class CaptureMemoryAuthorization(ICaptureMemoryPolicyStore store
 
         _gate.Dispose();
     }
+
     private sealed class Lease(bool allowed, Guid revision, CancellationToken revoked, SemaphoreSlim gate) : IAnalysisAuthorizationLease
     {
         public bool IsAllowed => allowed;
         public Guid Revision => revision;
         public CancellationToken Revoked => revoked;
+
         public void Dispose() => gate.Release();
     }
 }

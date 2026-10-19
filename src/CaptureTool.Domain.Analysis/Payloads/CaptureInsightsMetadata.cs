@@ -17,32 +17,24 @@ public sealed class SuggestedText
 public sealed class CaptureSynopsisMetadata : DerivedAnalysisPayload
 {
     public override AnalysisCapability Capability => AnalysisCapability.CaptureSynopsis;
-    /// <summary>Legacy combined results may have a title; new names use CaptureNameMetadata.</summary>
-    public SuggestedText? Title { get; }
     public IReadOnlyList<SuggestedText> Summary { get; }
     public MetadataProcessingCoverage Coverage { get; }
 
-    public CaptureSynopsisMetadata(SuggestedText? title, IEnumerable<SuggestedText> summary, MetadataProcessingCoverage coverage)
+    public CaptureSynopsisMetadata(IEnumerable<SuggestedText> summary, MetadataProcessingCoverage coverage)
     {
         ArgumentNullException.ThrowIfNull(coverage);
-        if (title?.Text.Length > 160)
-        {
-            throw new ArgumentException("Suggested title is too long.", nameof(title));
-        }
-
         Summary = AnalysisGuard.Freeze(summary);
         if (Summary.Count > 3 || Summary.Select(item => item.Text).Distinct(StringComparer.OrdinalIgnoreCase).Count() != Summary.Count)
         {
             throw new ArgumentException("Specify at most three distinct summary statements.", nameof(summary));
         }
 
-        Title = title;
         Coverage = coverage;
     }
 
     public override bool Supports(AnalysisMediaKind mediaKind) => Enum.IsDefined(mediaKind);
     public override void ValidateEvidence(IReadOnlyList<AnalysisResult> inputs) => InsightValidation.Validate(inputs, Coverage,
-        (Title == null ? Summary : Summary.Prepend(Title)).SelectMany(item => item.Evidence));
+        Summary.SelectMany(item => item.Evidence));
 }
 
 public enum CaptureCategory

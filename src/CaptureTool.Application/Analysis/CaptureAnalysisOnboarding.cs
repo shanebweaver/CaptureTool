@@ -6,6 +6,7 @@ internal sealed class CaptureAnalysisOnboarding(ICaptureMemoryService memory) : 
 {
     private readonly SemaphoreSlim _requests = new(1, 1);
     private long _attempt;
+
     public async Task<bool> EnableAsync(CancellationToken ct = default)
     {
         long attempt = Interlocked.Read(ref _attempt);
@@ -37,7 +38,11 @@ internal sealed class CaptureAnalysisOnboarding(ICaptureMemoryService memory) : 
             Interlocked.Increment(ref _attempt);
             return memory.State.Policy.IsAllowed;
         }
-        finally { _requests.Release(); }
+        finally
+        {
+            _requests.Release();
+        }
     }
+
     public void Dispose() => _requests.Dispose();
 }

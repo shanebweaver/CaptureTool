@@ -2002,4 +2002,7 @@ SOFTWARE.
   <data name="CaptureVideoText_UnknownTime" xml:space="preserve"><value>Время недоступно</value></data>
   <data name="CaptureVideoText_Hint" xml:space="preserve"><value>Найдите текст и QR-коды в этом видео. Выберите отметку времени, чтобы перейти к соответствующему моменту, затем найдите или скопируйте его текст.</value></data>
   <data name="TextExtractionStatus_LanguageResourcesRequired" xml:space="preserve"><value>Для извлечения текста установите языковой пакет распознавания текста (OCR) для своего языка в параметрах Windows, затем повторите попытку.</value></data>
+  <data name="CaptureSummary_PartialCoverage.Text" xml:space="preserve">
+    <value>Эта сводка основана на выдержках из доступного анализа и может не включать некоторые детали.</value>
+  </data>
 </root>

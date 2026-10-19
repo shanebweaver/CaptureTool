@@ -1,12 +1,12 @@
 using CaptureTool.Application.Abstractions.Ai;
 using System.Runtime.InteropServices;
-using System.Runtime.Intrinsics.X86;
 
 namespace CaptureTool.Infrastructure.Ai;
 
 /// <summary>Requirements for the packaged WinML SDK and the CPU variants selected by FoundryRuntime.</summary>
 public sealed class WindowsAiDeviceSupport : IAiDeviceSupport
 {
+    private const uint Avx2InstructionsAvailable = 40; // PF_AVX2_INSTRUCTIONS_AVAILABLE
     public static WindowsAiDeviceSupport Current { get; } = new();
     public bool WindowsAi { get; }
     public bool FoundryCpu { get; }
@@ -16,7 +16,8 @@ public sealed class WindowsAiDeviceSupport : IAiDeviceSupport
         WindowsAi = OperatingSystem.IsWindowsVersionAtLeast(10, 0, 26100);
         // Do not enter either AI runtime on older Windows. Use installed, not currently free, RAM.
         FoundryCpu = WindowsAi && SupportsCpu(RuntimeInformation.ProcessArchitecture,
-            RuntimeInformation.OSArchitecture, Avx2.IsSupported,
+            // Intrinsic IsSupported reflects the AOT compilation target, not just the CPU.
+            RuntimeInformation.OSArchitecture, IsProcessorFeaturePresent(Avx2InstructionsAvailable),
             GetPhysicallyInstalledSystemMemory(out ulong kilobytes) ? kilobytes : 0);
     }
 
@@ -27,4 +28,8 @@ public sealed class WindowsAiDeviceSupport : IAiDeviceSupport
     [DllImport("kernel32.dll", ExactSpelling = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool GetPhysicallyInstalledSystemMemory(out ulong totalMemoryInKilobytes);
+
+    [DllImport("kernel32.dll", ExactSpelling = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool IsProcessorFeaturePresent(uint processorFeature);
 }

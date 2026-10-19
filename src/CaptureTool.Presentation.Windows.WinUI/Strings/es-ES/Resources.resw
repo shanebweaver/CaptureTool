@@ -2002,4 +2002,7 @@ SOFTWARE.
   <data name="CaptureVideoText_UnknownTime" xml:space="preserve"><value>Tiempo no disponible</value></data>
   <data name="CaptureVideoText_Hint" xml:space="preserve"><value>Busca texto y códigos QR en este vídeo. Elige una marca de tiempo para ir a ese momento y buscar o copiar su texto.</value></data>
   <data name="TextExtractionStatus_LanguageResourcesRequired" xml:space="preserve"><value>Para extraer texto, instala el paquete de reconocimiento de texto (OCR) de tu idioma en Configuración de Windows y vuelve a intentarlo.</value></data>
+  <data name="CaptureSummary_PartialCoverage.Text" xml:space="preserve">
+    <value>Este resumen utiliza extractos del análisis disponible y puede omitir detalles.</value>
+  </data>
 </root>

@@ -2,12 +2,11 @@ using System.Globalization;
 
 namespace CaptureTool.Domain.Capture;
 
-/// <summary>A saved name suggestion (IsAutomatic) or an explicitly accepted name.</summary>
+/// <summary>A validated capture name that can be converted to a safe file name.</summary>
 public sealed record CaptureName
 {
     public string Text { get; }
-    public bool IsAutomatic { get; }
-    public CaptureName(string text, bool isAutomatic)
+    public CaptureName(string text)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(text);
         text = text.Trim();
@@ -21,7 +20,6 @@ public sealed record CaptureName
                 throw new ArgumentException("Capture names must contain valid Unicode text.", nameof(text));
         }
         Text = text;
-        IsAutomatic = isAutomatic;
     }
 
     /// <summary>A Windows-safe base name; the caller preserves the extension and chooses the destination.</summary>

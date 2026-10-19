@@ -43,13 +43,20 @@ internal sealed class WindowsImageAnalyzer(string id, WindowsImageModel model, A
 
             return ValueTask.FromResult(MapReady(model == WindowsImageModel.Ocr ? TextRecognizer.GetReadyState() : ImageDescriptionGenerator.GetReadyState()));
         }
-        catch (Exception) { return ValueTask.FromResult(AnalyzerAvailability.Unsupported); }
+        catch (Exception)
+        {
+            return ValueTask.FromResult(AnalyzerAvailability.Unsupported);
+        }
     }
 
     public async Task<AnalyzerAvailability> PrepareAsync(IProgress<AnalysisProgress>? progress, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        if (!PlatformSupported) return AnalyzerAvailability.Unsupported;
+        if (!PlatformSupported)
+        {
+            return AnalyzerAvailability.Unsupported;
+        }
+
         progress?.Report(new(AnalysisProgressStage.Preparing));
         if (model == WindowsImageModel.LegacyOcr)
         {
@@ -65,8 +72,14 @@ internal sealed class WindowsImageAnalyzer(string id, WindowsImageModel model, A
 
     public async Task<AnalyzerOutcome> AnalyzeAsync(AnalysisInput input, IProgress<AnalysisProgress>? progress, CancellationToken cancellationToken)
     {
-        try { return await AnalyzeCoreAsync(input, progress, cancellationToken).ConfigureAwait(false); }
-        catch (InvalidAnalysisMediaException) { return AnalyzerOutcome.Unsuccessful(AnalyzerOutcomeKind.InvalidSource, "invalid-media"); }
+        try
+        {
+            return await AnalyzeCoreAsync(input, progress, cancellationToken).ConfigureAwait(false);
+        }
+        catch (InvalidAnalysisMediaException)
+        {
+            return AnalyzerOutcome.Unsuccessful(AnalyzerOutcomeKind.InvalidSource, "invalid-media");
+        }
     }
 
     private async Task<AnalyzerOutcome> AnalyzeCoreAsync(AnalysisInput input, IProgress<AnalysisProgress>? progress, CancellationToken cancellationToken)
@@ -139,6 +152,7 @@ internal sealed class WindowsImageAnalyzer(string id, WindowsImageModel model, A
 
             OcrResult recognized = await engine.RecognizeAsync(bitmap).AsTask(ct).ConfigureAwait(false);
             foreach (var (line, lineIndex) in recognized.Lines.Select((line, index) => (line, index)))
+            {
                 foreach (var (word, wordIndex) in line.Words.Select((word, index) => (word, index)))
                 {
                     if (string.IsNullOrWhiteSpace(word.Text))
@@ -153,6 +167,7 @@ internal sealed class WindowsImageAnalyzer(string id, WindowsImageModel model, A
                         return AnalyzerOutcomeKind.Failed;
                     }
                 }
+            }
         }
         else
         {
@@ -162,6 +177,7 @@ internal sealed class WindowsImageAnalyzer(string id, WindowsImageModel model, A
                 using TextRecognizer recognizer = await TextRecognizer.CreateAsync().AsTask(ct).ConfigureAwait(false);
                 var recognized = await recognizer.RecognizeTextFromImageAsync(image).AsTask(ct).ConfigureAwait(false);
                 foreach (var (line, lineIndex) in recognized.Lines.Select((line, index) => (line, index)))
+                {
                     foreach (var (word, wordIndex) in line.Words.Select((word, index) => (word, index)))
                     {
                         if (string.IsNullOrWhiteSpace(word.Text))
@@ -180,6 +196,7 @@ internal sealed class WindowsImageAnalyzer(string id, WindowsImageModel model, A
                             return AnalyzerOutcomeKind.Failed;
                         }
                     }
+                }
             }
             else
             {

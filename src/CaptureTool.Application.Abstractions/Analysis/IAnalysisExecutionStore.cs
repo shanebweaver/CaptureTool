@@ -3,13 +3,15 @@ using CaptureTool.Domain.Analysis;
 
 namespace CaptureTool.Application.Abstractions.Analysis;
 
-public sealed record AnalysisAdmissionScope(Guid Generation, long ReconciliationBoundary);
+public sealed record AnalysisAdmissionScope(Guid Generation);
 public sealed record AnalysisRunToken(CaptureId CaptureId, Guid Generation, Guid RunId);
 public sealed record AnalysisRequest(CaptureId CaptureId, AnalysisMediaKind MediaKind, string SourcePath,
     Guid RequestId, Guid Generation, Guid? ExpectedRunId = null, string? Language = null, Guid? ExpectedAuthorizationId = null,
-    IReadOnlyList<AnalysisCapability>? Capabilities = null, bool ReuseExisting = false);
+    IReadOnlyList<AnalysisCapability>? Capabilities = null, bool ReuseExisting = false, bool UsePreferredPath = false,
+    AnalysisSourceIdentity? SourceIdentity = null);
 public sealed record AnalysisWorkItem(AnalysisRunToken Token, AnalysisMediaKind MediaKind, string SourcePath,
-    string? Language, AnalysisRun Run, bool ReuseExisting = false);
+    string? Language, AnalysisRun Run, bool ReuseExisting = false, bool UsePreferredPath = false,
+    AnalysisSourceIdentity? SourceIdentity = null);
 
 /// <summary>Session-only execution requests backed by the singleton protected metadata store.</summary>
 public interface IAnalysisExecutionStore : ICaptureAnalysisStore
@@ -24,7 +26,4 @@ public interface IAnalysisExecutionStore : ICaptureAnalysisStore
     Task<bool> CommitStepAsync(AnalysisRunToken token, AnalysisStepCompletion step, AnalysisResult? result,
         CancellationToken cancellationToken = default);
     Task<bool> FinishAsync(AnalysisRunToken token, AnalysisRunStatus status, CancellationToken cancellationToken = default);
-
-    /// <summary>Atomically fences work and records the caller's capture-catalog watermark for later reconciliation.</summary>
-    Task<AnalysisCleanupResult> ClearAsync(long reconciliationBoundary, CancellationToken cancellationToken = default);
 }

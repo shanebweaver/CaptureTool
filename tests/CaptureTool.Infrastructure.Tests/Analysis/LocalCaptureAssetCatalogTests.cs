@@ -85,8 +85,8 @@ public sealed class LocalCaptureAssetCatalogTests
         Directory.CreateDirectory(environment.Root);
         await File.WriteAllTextAsync(asset.SourcePath, "source media", Cancellation);
         await catalog.RegisterAsync(asset, Cancellation);
-        AnalysisWriteToken token = await metadata.BeginRunAsync(asset.Id, AnalysisMediaKind.Image, AnalysisTestEnvironment.Revision(), "v1", Cancellation);
-        await metadata.TryWriteAsync(token, AnalysisTestEnvironment.Description(), Cancellation);
+        AnalysisRunToken token = await metadata.StartRunAsync(asset.Id, AnalysisMediaKind.Image, AnalysisTestEnvironment.Revision(), "v1", Cancellation);
+        await metadata.PublishAsync(token, AnalysisTestEnvironment.Description(), Cancellation);
         if (missingControl) File.Delete(environment.ControlPath);
         await metadata.ClearAsync(Cancellation);
         using LocalCaptureAssetCatalog reopened = environment.CreateCatalog();

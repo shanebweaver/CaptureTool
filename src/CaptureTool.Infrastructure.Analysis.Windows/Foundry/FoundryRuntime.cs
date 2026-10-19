@@ -32,21 +32,39 @@ internal sealed partial class FoundryRuntime(IStorageService storage,
             {
                 await UnloadAsync().ConfigureAwait(false);
                 _loadedModel = model;
-                try { await model.LoadAsync(ct).ConfigureAwait(false); _modelReady = true; }
-                catch { await UnloadAsync().ConfigureAwait(false); throw; }
+                try
+                {
+                    await model.LoadAsync(ct).ConfigureAwait(false);
+                    _modelReady = true;
+                }
+                catch
+                {
+                    await UnloadAsync().ConfigureAwait(false);
+                    throw;
+                }
             }
             ct.ThrowIfCancellationRequested();
             _retainWhenIdle = retainWhenIdle;
             return new ModelLease(this, ct);
         }
-        catch { _modelGate.Release(); throw; }
+        catch
+        {
+            _modelGate.Release();
+            throw;
+        }
     }
 
     public async Task ReleaseAsync()
     {
         await _modelGate.WaitAsync().ConfigureAwait(false);
-        try { await UnloadAsync().ConfigureAwait(false); }
-        finally { _modelGate.Release(); }
+        try
+        {
+            await UnloadAsync().ConfigureAwait(false);
+        }
+        finally
+        {
+            _modelGate.Release();
+        }
     }
 
     private async Task UnloadAsync()
@@ -74,7 +92,10 @@ internal sealed partial class FoundryRuntime(IStorageService storage,
                     await owner.UnloadAsync().ConfigureAwait(false);
                 }
             }
-            finally { owner._modelGate.Release(); }
+            finally
+            {
+                owner._modelGate.Release();
+            }
         }
     }
 
@@ -82,7 +103,11 @@ internal sealed partial class FoundryRuntime(IStorageService storage,
     public async Task<IModel?> ResolveAsync(string alias, CancellationToken ct)
     {
         ct.ThrowIfCancellationRequested();
-        if (!IsSupported) return null;
+        if (!IsSupported)
+        {
+            return null;
+        }
+
         await _gate.WaitAsync(ct).ConfigureAwait(false);
         try
         {
@@ -115,7 +140,10 @@ internal sealed partial class FoundryRuntime(IStorageService storage,
             model.SelectVariant(cpu);
             return model;
         }
-        finally { _gate.Release(); }
+        finally
+        {
+            _gate.Release();
+        }
     }
 
     // Vision in SDK 1.2.4 uses its documented Responses endpoint. Bind only an OS-assigned
@@ -142,14 +170,22 @@ internal sealed partial class FoundryRuntime(IStorageService storage,
 
             return new Uri(endpoint, path);
         }
-        catch { await StopServiceAsync().ConfigureAwait(false); throw; }
+        catch
+        {
+            await StopServiceAsync().ConfigureAwait(false);
+            throw;
+        }
     }
 
     public Task StopServiceAsync() => _manager?.StopWebServiceAsync(CancellationToken.None) ?? Task.CompletedTask;
 
     public void Dispose()
     {
-        if (_memoryPressure.IsValueCreated) _memoryPressure.Value.Dispose();
+        if (_memoryPressure.IsValueCreated)
+        {
+            _memoryPressure.Value.Dispose();
+        }
+
         if (_ownsManager)
         {
             _manager?.Dispose();

@@ -55,7 +55,6 @@ public sealed partial class CaptureAnalysisWorkerTests
         using var finalStore = fixture.Environment.CreateStore();
         var final = (await finalStore.GetAsync(request.CaptureId, cancellationToken: Ct))!;
         Assert.HasCount(6, final.Results);
-        Assert.IsNull(((CaptureSynopsisMetadata)final.Results.Single(result => result.Payload is CaptureSynopsisMetadata).Payload).Title);
 
         // QR-dependent classification is invalidated; name, summary, and alt text stay cached.
         var withQr = final.WithResult(new(new QrCodeMetadata([new("https://example.com", new(.1, .1, .2, .2))]),
@@ -289,7 +288,7 @@ public sealed partial class CaptureAnalysisWorkerTests
             AnalysisPayload payload = capability == AnalysisCapability.ImageAltText ? new ImageAltTextMetadata(text, input.Coverage)
                 : capability == AnalysisCapability.CaptureName ? new CaptureNameMetadata(text, input.Coverage)
                 : capability == AnalysisCapability.CaptureClassification ? new CaptureClassificationMetadata(null, [], [], input.Coverage)
-                : new CaptureSynopsisMetadata(null, text == null ? [] : [text], input.Coverage);
+                : new CaptureSynopsisMetadata(text == null ? [] : [text], input.Coverage);
             return AnalyzerOutcome.Success(payload, new(Descriptor.Id, "fixture", "fixture", "1"));
         }
     }

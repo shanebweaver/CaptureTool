@@ -3,13 +3,10 @@ using CaptureTool.Domain.Capture;
 
 namespace CaptureTool.Application.Abstractions.Analysis;
 
-public sealed record CaptureMemoryPolicy(bool ScanningEnabled, bool ConsentGranted, Guid Revision, long EnableBoundary,
-    bool? ScanningPreference = null)
+public sealed record CaptureMemoryPolicy(bool ConsentGranted, Guid Revision)
 {
-    // The legacy automatic-scanning fields remain readable for stored-policy compatibility.
-    // Explicit actions require consent, independently of a former automation preference.
     public bool IsAllowed => ConsentGranted;
-    public static CaptureMemoryPolicy Disabled() => new(false, false, Guid.NewGuid(), 0);
+    public static CaptureMemoryPolicy Disabled() => new(false, Guid.NewGuid());
 }
 
 public interface ICaptureMemoryPolicyStore
@@ -18,7 +15,10 @@ public interface ICaptureMemoryPolicyStore
     Task SaveAsync(CaptureMemoryPolicy policy, CancellationToken cancellationToken);
 }
 
-public enum CaptureMemoryPrompt { Consent, DeleteMetadata }
+public enum CaptureMemoryPrompt
+{
+    Consent, DeleteMetadata
+}
 public interface ICaptureMemoryPrompts
 {
     Task<bool> ConfirmAsync(CaptureMemoryPrompt prompt, CancellationToken cancellationToken);

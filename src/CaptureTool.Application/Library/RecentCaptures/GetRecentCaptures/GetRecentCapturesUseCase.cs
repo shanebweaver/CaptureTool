@@ -52,7 +52,7 @@ internal sealed class GetRecentCapturesUseCase : IGetRecentCapturesUseCase
                             .Where(path => path != null).Distinct(StringComparer.OrdinalIgnoreCase).Select(path => (Path: path!, Asset: asset)))
                             .GroupBy(item => item.Path, StringComparer.OrdinalIgnoreCase))
                         {
-                            if (group.Count() == 1 && group.First().Asset.Name is { IsAutomatic: false } name)
+                            if (group.Count() == 1 && group.First().Asset.Name is { } name)
                             {
                                 names[group.Key] = name.Text;
                             }

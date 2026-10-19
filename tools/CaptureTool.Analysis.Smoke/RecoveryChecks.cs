@@ -294,7 +294,7 @@ internal static class RecoveryChecks
             await File.AppendAllTextAsync(Path.Combine(faults.Root, "synopsis-calls.txt"), "called\n", ct);
             await faults.PauseAsync("metadata-execution", ct);
             var entry = input.Entries[0];
-            return AnalyzerOutcome.Success(new CaptureSynopsisMetadata(new(Derived, [new(entry.ResultId, entry.EntryIndex, 0, entry.Text.Length)]), [], input.Coverage), Producer("synopsis"));
+            return AnalyzerOutcome.Success(new CaptureSynopsisMetadata([new(Derived, [new(entry.ResultId, entry.EntryIndex, 0, entry.Text.Length)])], input.Coverage), Producer("synopsis"));
         }
     }
     private sealed class Prompts : ICaptureMemoryPrompts

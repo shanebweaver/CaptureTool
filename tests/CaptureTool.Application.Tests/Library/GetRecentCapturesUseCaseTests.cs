@@ -19,14 +19,14 @@ public sealed class GetRecentCapturesUseCaseTests
         recents.Setup(value => value.GetEntries()).Returns([Entry(path, CaptureFileType.Image, RecentCaptureOrigin.Captured, 1)]);
         var assets = new Mock<ICaptureAssetCatalog>();
         var asset = new CaptureAsset(CaptureId.New(), CaptureFileType.Image, null, path, CaptureSourceOwnership.Application,
-            name: new("Chosen capture name", false));
+            name: new("Chosen capture name"));
         assets.Setup(value => value.ReadAllAsync(It.IsAny<CancellationToken>())).ReturnsAsync([asset]);
         var useCase = new GetRecentCapturesUseCase(recents.Object, TestFileSystem.Instance, TestUseCaseExecutor.Instance, assets.Object);
         var response = (await useCase.ExecuteAsync(new(), TestContext.CancellationToken)).Value!;
         Assert.AreEqual("Chosen capture name", response.Captures.Single().FileName);
-        assets.Setup(value => value.ReadAllAsync(It.IsAny<CancellationToken>())).ReturnsAsync([asset.WithName(new("Pending suggestion", true))]);
+        assets.Setup(value => value.ReadAllAsync(It.IsAny<CancellationToken>())).ReturnsAsync([asset.WithName(null)]);
         response = (await useCase.ExecuteAsync(new(), TestContext.CancellationToken)).Value!;
-        Assert.AreEqual("capture.png", response.Captures.Single().FileName, "Pending suggestions must not silently rename captures in the UI.");
+        Assert.AreEqual("capture.png", response.Captures.Single().FileName);
         assets.Setup(value => value.ReadAllAsync(It.IsAny<CancellationToken>())).ReturnsAsync([asset,
             new(CaptureId.New(), CaptureFileType.Image, null, path + ".other", CaptureSourceOwnership.External, path)]);
         response = (await useCase.ExecuteAsync(new(), TestContext.CancellationToken)).Value!;

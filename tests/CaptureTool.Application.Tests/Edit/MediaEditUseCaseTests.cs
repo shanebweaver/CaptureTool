@@ -35,7 +35,7 @@ public sealed class MediaEditUseCaseTests
         string source = await CreateTempFileAsync(video ? "working.mp4" : "working.wav", "media");
         string original = Path.Combine(CreateTestFolder(), "original");
         var names = new Mock<ICaptureNamingService>();
-        names.Setup(service => service.GetNameAsync(original, It.IsAny<CancellationToken>())).ReturnsAsync(new CaptureName("Plan: résumé", true));
+        names.Setup(service => service.GetNameAsync(original, It.IsAny<CancellationToken>())).ReturnsAsync(new CaptureName("Plan: résumé"));
         var picker = new Mock<IFilePickerService>();
         if (video)
         {

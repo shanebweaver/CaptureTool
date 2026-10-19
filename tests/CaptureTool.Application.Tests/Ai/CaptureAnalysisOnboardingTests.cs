@@ -1,4 +1,4 @@
-﻿using CaptureTool.Application.Abstractions.Analysis;
+using CaptureTool.Application.Abstractions.Analysis;
 using CaptureTool.Application.Analysis;
 using Moq;
 namespace CaptureTool.Application.Tests.Ai;
@@ -37,7 +37,7 @@ public sealed class CaptureAnalysisOnboardingTests
     public async Task ExistingConsentOrUnavailablePolicyDoesNotPrompt(bool consent, bool available)
     {
         var memory = new Mock<ICaptureMemoryService>();
-        memory.SetupGet(x => x.State).Returns(State() with { PolicyAvailable = available, Policy = new(false, consent, Guid.NewGuid(), 0) });
+        memory.SetupGet(x => x.State).Returns(State() with { PolicyAvailable = available, Policy = new(consent, Guid.NewGuid()) });
         using var service = new CaptureAnalysisOnboarding(memory.Object);
         await service.EnableAsync();
         memory.Verify(x => x.SetConsentAsync(It.IsAny<bool>(), It.IsAny<CancellationToken>()), Times.Never);

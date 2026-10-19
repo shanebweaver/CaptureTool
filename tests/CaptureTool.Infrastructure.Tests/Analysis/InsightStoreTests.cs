@@ -13,14 +13,14 @@ public sealed partial class MetadataEnrichmentStoreTests
         using var environment = new AnalysisTestEnvironment();
         using var store = environment.CreateStore();
         CaptureId id = CaptureId.New();
-        var token = await store.BeginRunAsync(id, AnalysisMediaKind.Image, AnalysisTestEnvironment.Revision(), "v1", Ct);
+        var token = await store.StartRunAsync(id, AnalysisMediaKind.Image, AnalysisTestEnvironment.Revision(), "v1", Ct, AnalysisCapability.TextRecognition, AnalysisCapability.CaptureSynopsis, AnalysisCapability.CaptureClassification, AnalysisCapability.ImageAltText, AnalysisCapability.CaptureName);
         var source = Ocr();
-        await store.TryWriteAsync(token, source, Ct);
-        foreach (var result in Insights(source)) Assert.IsTrue(await store.TryWriteAsync(token, result, Ct));
+        await store.PublishAsync(token, source, Ct);
+        foreach (var result in Insights(source)) Assert.IsTrue(await store.PublishAsync(token, result, Ct));
         using var reopened = environment.CreateStore();
         var record = (await reopened.GetAsync(id, cancellationToken: Ct))!;
         var synopsis = (CaptureSynopsisMetadata)record.Results.Single(result => result.Payload is CaptureSynopsisMetadata).Payload;
-        Assert.AreEqual("Private link", synopsis.Title!.Text);
+        Assert.AreEqual("A link is visible.", synopsis.Summary.Single().Text);
         Assert.AreEqual(Value, synopsis.Summary[0].Evidence[0].ResolveText(source));
         var classification = (CaptureClassificationMetadata)record.Results.Single(result => result.Payload is CaptureClassificationMetadata).Payload;
         Assert.AreEqual(CaptureCategory.WebContent, classification.Category);
@@ -28,16 +28,17 @@ public sealed partial class MetadataEnrichmentStoreTests
         Assert.AreEqual("A visible link.", ((ImageAltTextMetadata)record.Results.Single(result => result.Payload is ImageAltTextMetadata).Payload).Suggestion!.Text);
         Assert.AreEqual("Private link name", ((CaptureNameMetadata)record.Results.Single(result => result.Payload is CaptureNameMetadata).Payload).Suggestion!.Text);
         foreach (var bytes in environment.Files.PublishedBytes) Assert.DoesNotContain("Private link", Encoding.UTF8.GetString(bytes));
-        await store.TryWriteAsync(token, Ocr(), Ct);
+        token = await store.StartRunAsync(id, AnalysisMediaKind.Image, AnalysisTestEnvironment.Revision(), "v1", Ct, AnalysisCapability.TextRecognition, AnalysisCapability.CaptureSynopsis, AnalysisCapability.CaptureClassification, AnalysisCapability.ImageAltText, AnalysisCapability.CaptureName);
+        await store.PublishAsync(token, Ocr(), Ct);
         Assert.HasCount(1, (await store.GetAsync(id, cancellationToken: Ct))!.Results);
-        foreach (var stale in Insights(source)) Assert.IsFalse(await store.TryWriteAsync(token, stale, Ct));
+        foreach (var stale in Insights(source)) Assert.IsFalse(await store.PublishAsync(token, stale, Ct));
         await store.ClearAsync(Ct);
         Assert.IsNull(await store.GetAsync(id, cancellationToken: Ct));
     }
 
     [TestMethod]
     [DataRow("coverage")]
-    [DataRow("title")]
+    [DataRow("summary")]
     [DataRow("evidence")]
     [DataRow("category")]
     [DataRow("vocabulary")]
@@ -47,10 +48,10 @@ public sealed partial class MetadataEnrichmentStoreTests
         using var environment = new AnalysisTestEnvironment();
         using var store = environment.CreateStore();
         CaptureId id = CaptureId.New();
-        var token = await store.BeginRunAsync(id, AnalysisMediaKind.Image, AnalysisTestEnvironment.Revision(), "v1", Ct);
+        var token = await store.StartRunAsync(id, AnalysisMediaKind.Image, AnalysisTestEnvironment.Revision(), "v1", Ct, AnalysisCapability.TextRecognition, AnalysisCapability.CaptureSynopsis, AnalysisCapability.CaptureClassification, AnalysisCapability.ImageAltText, AnalysisCapability.CaptureName);
         var source = Ocr();
-        await store.TryWriteAsync(token, source, Ct);
-        foreach (var result in Insights(source)) await store.TryWriteAsync(token, result, Ct);
+        await store.PublishAsync(token, source, Ct);
+        foreach (var result in Insights(source)) await store.PublishAsync(token, result, Ct);
         await Mutate(environment, document =>
         {
             var synopsis = document["Results"]![1]!;
@@ -58,8 +59,8 @@ public sealed partial class MetadataEnrichmentStoreTests
             switch (fault)
             {
                 case "coverage": synopsis["Coverage"] = null; break;
-                case "title": synopsis["Synopsis"]!["Title"]!["Text"] = new string('x', 161); break;
-                case "evidence": synopsis["Synopsis"]!["Title"]!["Evidence"]![0]!["ResultId"] = Guid.NewGuid(); break;
+                case "summary": synopsis["Synopsis"]!["Summary"]![0]!["Text"] = new string('x', 401); break;
+                case "evidence": synopsis["Synopsis"]!["Summary"]![0]!["Evidence"]![0]!["ResultId"] = Guid.NewGuid(); break;
                 case "category": classification["Category"] = 999; break;
                 case "vocabulary": classification["VocabularyVersion"] = "future"; break;
                 case "topics": classification["Topics"]![0] = null; break;
@@ -75,7 +76,7 @@ public sealed partial class MetadataEnrichmentStoreTests
         var coverage = new MetadataProcessingCoverage(1, 1, Value.Length + 4, MetadataProcessingLimit.None);
         var derivation = new AnalysisDerivation([new(source.Payload.Capability, source.ResultId)]);
         return [
-            new(new CaptureSynopsisMetadata(new("Private link", [evidence]), [new("A link is visible.", [evidence])], coverage),
+            new(new CaptureSynopsisMetadata([new("A link is visible.", [evidence])], coverage),
                 AnalysisTestEnvironment.Producer(), DateTimeOffset.UtcNow, "v1", derivation: derivation),
             new(new CaptureClassificationMetadata(CaptureCategory.WebContent, [evidence], [new("website", [evidence])], coverage),
                 AnalysisTestEnvironment.Producer(), DateTimeOffset.UtcNow, "v1", derivation: derivation),

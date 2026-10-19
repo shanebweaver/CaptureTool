@@ -19,9 +19,17 @@ internal sealed class ProtectedDocumentFile
     public async Task<T?> ReadAsync<T>(string path, JsonTypeInfo<T> typeInfo, CancellationToken cancellationToken) where T : class
     {
         // Missing documents are expected on a fresh install; avoid opening them just to discover that.
-        if (!_files.FileExists(path)) return null;
+        if (!_files.FileExists(path))
+        {
+            return null;
+        }
+
         byte[]? ciphertext = await _files.ReadAsync(path, cancellationToken).ConfigureAwait(false);
-        if (ciphertext == null) return null;
+        if (ciphertext == null)
+        {
+            return null;
+        }
+
         byte[] plaintext = _protector.Unprotect(ciphertext);
         try
         {
@@ -41,9 +49,20 @@ internal sealed class ProtectedDocumentFile
     {
         byte[] plaintext = JsonSerializer.SerializeToUtf8Bytes(document, typeInfo);
         byte[] ciphertext;
-        try { ciphertext = _protector.Protect(plaintext); }
-        finally { CryptographicOperations.ZeroMemory(plaintext); }
-        if (ciphertext.Length == 0) throw new CryptographicException("Protection returned an empty document.");
+        try
+        {
+            ciphertext = _protector.Protect(plaintext);
+        }
+        finally
+        {
+            CryptographicOperations.ZeroMemory(plaintext);
+        }
+
+        if (ciphertext.Length == 0)
+        {
+            throw new CryptographicException("Protection returned an empty document.");
+        }
+
         await _files.WriteAtomicallyAsync(path, ciphertext, cancellationToken).ConfigureAwait(false);
     }
 }

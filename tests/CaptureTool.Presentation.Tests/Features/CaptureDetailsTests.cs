@@ -18,6 +18,38 @@ namespace CaptureTool.Presentation.Tests.Features;
 public sealed class CaptureDetailsTests
 {
     [TestMethod]
+    public async Task PartialSummaryNoticeTracksCoverageAndClearsWhenSummaryIsAbsent()
+    {
+        var setup = new Setup();
+        using var vm = setup.ViewModel;
+        var changes = new List<string?>();
+        vm.PropertyChanged += (_, args) => changes.Add(args.PropertyName);
+        await vm.OpenAsync("capture.png", AnalysisMediaKind.Image);
+        Assert.IsFalse(vm.IsSummaryPartial);
+        setup.Reader.Setup(x => x.ReadAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new CaptureDetailsSnapshot(CaptureDetailsStatus.Available, Record(limited: true)));
+        await vm.RefreshAsync();
+        Assert.IsTrue(vm.HasSummary);
+        Assert.IsTrue(vm.IsSummaryPartial);
+        CollectionAssert.Contains(changes, nameof(vm.IsSummaryPartial));
+        setup.Reader.Setup(x => x.ReadAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new CaptureDetailsSnapshot(CaptureDetailsStatus.Empty));
+        await vm.RefreshAsync();
+        Assert.IsFalse(vm.IsSummaryPartial);
+        Assert.IsFalse(vm.HasSummary);
+    }
+
+    [TestMethod]
+    public void EmptySummaryDoesNotShowPartialNotice()
+    {
+        var record = Record(limited: true);
+        var summary = record.Results.Single(result => result.Payload is CaptureSynopsisMetadata);
+        var empty = new CaptureSynopsisMetadata([], ((CaptureSynopsisMetadata)summary.Payload).Coverage);
+        var replacement = new AnalysisResult(empty, summary.Producer, summary.GeneratedAt, summary.PlanVersion, derivation: summary.Derivation);
+        Assert.IsFalse(CaptureDetailsContent.Create(record.WithResult(replacement), Localization()).IsSummaryPartial);
+    }
+
+    [TestMethod]
     public async Task TextScanContinuesAfterAsynchronousSupportRecheck()
     {
         var setup = new Setup();
@@ -612,7 +644,7 @@ public sealed class CaptureDetailsTests
         Assert.IsTrue(vm.SummaryAction.Command.CanExecute(null));
         await vm.SummaryAction.Command.ExecuteAsync(null);
         setup.Memory.Verify(memory => memory.AnalyzeAsync("capture.png", AnalysisCapability.CaptureSynopsis, It.IsAny<CancellationToken>()), Times.Once);
-        var summary = Result(new CaptureSynopsisMetadata(null, [new("Invoice summary", [new(source.ResultId, 0, 0, 7)])], coverage), run.Id,
+        var summary = Result(new CaptureSynopsisMetadata([new("Invoice summary", [new(source.ResultId, 0, 0, 7)])], coverage), run.Id,
             new([new(source.Payload.Capability, source.ResultId)]));
         snapshot = snapshot with { Record = new(record.CaptureId, record.MediaKind, record.SourceRevision, record.PlanVersion, record.RunId, [source, summary]) };
         await vm.RefreshAsync();
@@ -657,7 +689,7 @@ public sealed class CaptureDetailsTests
     public async Task PassivePaneOpeningNeverPromptsForConsent(bool consent)
     {
         var memory = new Mock<ICaptureMemoryService>();
-        memory.SetupGet(x => x.State).Returns(new CaptureMemoryState(new(false, consent, Guid.NewGuid(), 0), true, new(false, true), new(AnalysisActivity.Idle)));
+        memory.SetupGet(x => x.State).Returns(new CaptureMemoryState(new(consent, Guid.NewGuid()), true, new(false, true), new(AnalysisActivity.Idle)));
         var onboarding = new Mock<ICaptureAnalysisOnboarding>();
         onboarding.Setup(x => x.EnableAsync(It.IsAny<CancellationToken>())).ReturnsAsync(false);
         var text = new Mock<ILocalizationService>();
@@ -751,9 +783,9 @@ public sealed class CaptureDetailsTests
     {
         var names = new Mock<ICaptureNamingService>();
         CaptureName? current = null;
-        names.Setup(service => service.GetStateAsync(It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync(() => new CaptureNamingState(current, false));
+        names.Setup(service => service.GetNameAsync(It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync(() => current);
         names.Setup(service => service.RenameAsync(It.IsAny<string>(), CaptureFileType.Image, "User draft", It.IsAny<CancellationToken>()))
-            .Callback(() => current = new("User draft", false)).ReturnsAsync(new CaptureFileRename("capture.png", "User draft.png"));
+            .Callback(() => current = new("User draft")).ReturnsAsync(new CaptureFileRename("capture.png", "User draft.png"));
         var setup = new Setup(names.Object);
         setup.State = setup.State with { Policy = CaptureMemoryPolicy.Disabled() };
         setup.Reader.Setup(reader => reader.ReadAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
@@ -843,7 +875,18 @@ public sealed class CaptureDetailsTests
     {
         var content = CaptureDetailsContent.Create(Record(), Localization());
         Assert.AreEqual("Invoice total USD 125.00", content.Passages.Single().Text);
-        Assert.AreEqual(string.Empty, content.Summary); // The fixture has a suggested title, not a summary.
+        Assert.AreEqual("Invoice summary", content.Summary);
+    }
+
+    [TestMethod]
+    public void SummaryNeverBecomesANameSuggestion()
+    {
+        var record = Record();
+        var summaryOnly = new CaptureAnalysisRecord(record.CaptureId, record.MediaKind, record.SourceRevision,
+            record.PlanVersion, record.RunId, record.Results.Where(result => result.Payload is not CaptureNameMetadata));
+        var content = CaptureDetailsContent.Create(summaryOnly, Localization());
+        Assert.AreEqual("Invoice summary", content.Summary);
+        Assert.AreEqual(string.Empty, content.SuggestedName);
     }
 
     [TestMethod]
@@ -884,7 +927,7 @@ public sealed class CaptureDetailsTests
         var source = Result(new TextRecognitionMetadata([new("Invoice total USD 125.00"), new(new string('x', 2000))]), run.Id);
         var coverage = new MetadataProcessingCoverage(2, 1, 24, MetadataProcessingLimit.OversizedEntry);
         var suggestion = new SuggestedText("Invoice summary", [new(source.ResultId, 0, 0, 24)]);
-        AnalysisPayload payload = altText ? new ImageAltTextMetadata(suggestion, coverage) : new CaptureSynopsisMetadata(null, [suggestion], coverage);
+        AnalysisPayload payload = altText ? new ImageAltTextMetadata(suggestion, coverage) : new CaptureSynopsisMetadata([suggestion], coverage);
         var output = Result(payload, run.Id, new([new(source.Payload.Capability, source.ResultId)]));
         snapshot = new(CaptureDetailsStatus.Available, new CaptureAnalysisRecord(CaptureId.New(), AnalysisMediaKind.Image,
             new(new string('a', 64)), "plan", run.Id, [source, output]));
@@ -901,14 +944,6 @@ public sealed class CaptureDetailsTests
         await reopened.OpenAsync("capture.png", AnalysisMediaKind.Image);
         Assert.AreEqual(suggestion.Text, altText ? reopened.Content.AltText : reopened.Summary);
         setup.Notifications.VerifyNoOtherCalls();
-    }
-
-    [TestMethod]
-    public void LegacyResultsWithUnknownRunIdentityAreNotCalledStale()
-    {
-        var record = new CaptureAnalysisRecord(CaptureId.New(), AnalysisMediaKind.Image, new(new string('a', 64)), "plan", Guid.NewGuid(),
-            [new(new TextRecognitionMetadata([new("Legacy source")]), new("test", "test", "test", "1"), DateTimeOffset.UtcNow, "plan")]);
-        Assert.AreEqual("Legacy source", CaptureDetailsContent.Create(record, Localization()).Passages.Single().Text);
     }
 
     [TestMethod]
@@ -1124,8 +1159,9 @@ public sealed class CaptureDetailsTests
         var coverage = new MetadataProcessingCoverage(limited ? 2 : 1, 1, 24,
             limited ? MetadataProcessingLimit.OversizedEntry : MetadataProcessingLimit.None);
         return new(CaptureId.New(), AnalysisMediaKind.Image, new(new string('a', 64)), "plan", run,
-            [source, Result(new StructuredFactsMetadata([fact]), run, inputs),
-            Result(new CaptureSynopsisMetadata(new("Invoice summary", [new(source.ResultId, 0, 0, 24)]), [], coverage), run, inputs)]);
+            [source, Result(new StructuredFactsMetadata([fact], coverage), run, inputs),
+            Result(new CaptureSynopsisMetadata([new("Invoice summary", [new(source.ResultId, 0, 0, 24)])], coverage), run, inputs),
+            Result(new CaptureNameMetadata(new("Invoice summary", [new(source.ResultId, 0, 0, 24)]), coverage), run, inputs)]);
     }
     private static AnalysisResult Result(AnalysisPayload payload, Guid run, AnalysisDerivation? inputs = null) =>
         new(payload, new("test", "test", "test", "1"), DateTimeOffset.UtcNow, "plan", run, derivation: inputs);
@@ -1142,7 +1178,7 @@ public sealed class CaptureDetailsTests
         public Mock<ICaptureMemoryService> Memory { get; } = new();
         public Mock<IClipboardService> Clipboard { get; } = new();
         public Mock<IAppNotificationService> Notifications { get; } = new();
-        public CaptureMemoryState State { get; set; } = new(new(true, true, Guid.NewGuid(), 0), true,
+        public CaptureMemoryState State { get; set; } = new(new(true, Guid.NewGuid()), true,
             new(true, true), new(AnalysisActivity.Idle));
         public CaptureDetailsViewModel ViewModel { get; }
         public Setup(ICaptureNamingService? names = null)

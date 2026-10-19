@@ -56,22 +56,22 @@ internal sealed partial class LocalCaptureAssetCatalog
         if (!string.Equals(Path.GetDirectoryName(oldPath), Path.GetDirectoryName(newPath), StringComparison.OrdinalIgnoreCase) ||
             !string.Equals(Path.GetExtension(oldPath), Path.GetExtension(newPath), StringComparison.OrdinalIgnoreCase))
             throw new InvalidDataException("Invalid rename intent.");
-        int index = state.Entries.FindIndex(entry => entry.Asset.Id.Value == rename.Id);
+        int index = state.Entries.FindIndex(entry => entry.Id.Value == rename.Id);
         if (index < 0) throw new InvalidDataException("Rename capture is missing.");
         var entry = state.Entries[index];
-        if (state.Entries.Any(other => other.Asset.Id != entry.Asset.Id &&
-            (string.Equals(other.Asset.SourcePath, newPath, StringComparison.OrdinalIgnoreCase) ||
-             string.Equals(other.Asset.PreferredPath, newPath, StringComparison.OrdinalIgnoreCase))))
+        if (state.Entries.Any(other => other.Id != entry.Id &&
+            (string.Equals(other.SourcePath, newPath, StringComparison.OrdinalIgnoreCase) ||
+             string.Equals(other.PreferredPath, newPath, StringComparison.OrdinalIgnoreCase))))
             throw new IOException("The destination belongs to another capture.");
-        bool source = string.Equals(entry.Asset.SourcePath, oldPath, StringComparison.OrdinalIgnoreCase);
-        bool preferred = string.Equals(entry.Asset.PreferredPath, oldPath, StringComparison.OrdinalIgnoreCase);
+        bool source = string.Equals(entry.SourcePath, oldPath, StringComparison.OrdinalIgnoreCase);
+        bool preferred = string.Equals(entry.PreferredPath, oldPath, StringComparison.OrdinalIgnoreCase);
         if (!source && !preferred) throw new InvalidDataException("Rename source no longer matches.");
-        var asset = new CaptureAsset(entry.Asset.Id, entry.Asset.MediaType, entry.Asset.CapturedAt,
-            source ? newPath : entry.Asset.SourcePath, entry.Asset.SourceOwnership,
-            preferred ? newPath : entry.Asset.PreferredPath, new CaptureName(Path.GetFileNameWithoutExtension(newPath), false));
+        var asset = new CaptureAsset(entry.Id, entry.MediaType, entry.CapturedAt,
+            source ? newPath : entry.SourcePath, entry.SourceOwnership,
+            preferred ? newPath : entry.PreferredPath, new CaptureName(Path.GetFileNameWithoutExtension(newPath)));
         EnsureLocationAvailable(state.Entries, asset);
         var entries = state.Entries.ToList();
-        entries[index] = entry with { Asset = asset, NamingEpoch = null };
+        entries[index] = asset;
         return state with { Entries = entries, Rename = null };
     }
 

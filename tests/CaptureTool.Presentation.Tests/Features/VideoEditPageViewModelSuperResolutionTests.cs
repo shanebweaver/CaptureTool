@@ -22,6 +22,87 @@ namespace CaptureTool.Presentation.Tests.Features;
 public sealed class VideoEditPageViewModelSuperResolutionTests
 {
     [TestMethod]
+    [DataRow("consent", false)]
+    [DataRow("preparation", false)]
+    [DataRow("generation", false)]
+    [DataRow("generation", true)]
+    public async Task DisposeDuringEnhancementCancelsAndRejectsLateCompletion(string stage, bool fault)
+    {
+        var completion = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        CancellationToken observed = default;
+        var service = CreateReadyService("enhanced.mp4", stage == "preparation"
+            ? VideoSuperResolutionReadyState.PreparationNeeded : VideoSuperResolutionReadyState.Ready);
+        var consent = new Mock<IAiFeatureConsentService>();
+        consent.Setup(s => s.GetConsentState(AiFeatureId.VideoSuperResolution)).Returns(stage == "consent"
+            ? AiFeatureConsentState.Unknown : AiFeatureConsentState.Granted);
+        consent.Setup(s => s.EnsureConsentAsync(It.IsAny<CancellationToken>())).Returns(async (CancellationToken ct) =>
+        {
+            observed = ct;
+            await completion.Task;
+            return true;
+        });
+        service.Setup(s => s.EnsureReadyAsync(It.IsAny<CancellationToken>())).Returns(async (CancellationToken ct) =>
+        {
+            observed = ct;
+            await completion.Task;
+            return VideoSuperResolutionPreparationResult.Success;
+        });
+        service.Setup(s => s.GenerateAsync(It.IsAny<VideoSuperResolutionRequest>(), It.IsAny<CancellationToken>()))
+            .Returns(async (VideoSuperResolutionRequest _, CancellationToken ct) =>
+            {
+                observed = ct;
+                await completion.Task;
+                return VideoSuperResolutionResult.Success(new VideoFile("enhanced.mp4"));
+            });
+        var scratch = new Mock<IScratchArtifactStore>();
+        var vm = CreateViewModel(service, consentService: consent.Object, scratchArtifactStore: scratch.Object);
+        vm.Load(new VideoFile("working.mp4", "retained.mp4"));
+        Task command = vm.ToggleVideoSuperResolutionCommand.ExecuteAsync(null);
+        Assert.IsTrue(observed.CanBeCanceled);
+        vm.Dispose();
+        Assert.IsTrue(observed.IsCancellationRequested);
+        var changes = new List<string?>();
+        vm.PropertyChanged += (_, args) => changes.Add(args.PropertyName);
+        if (fault) completion.SetException(new InvalidOperationException("Late failure"));
+        else completion.SetResult();
+        await command.WaitAsync(TimeSpan.FromSeconds(5), TestContext.CancellationToken);
+        Assert.IsEmpty(changes, "Late completion must not update the disposed editor.");
+        Assert.IsNull(vm.VideoPath);
+        Assert.AreEqual(CaptureTool.Presentation.Loading.LoadState.Disposed, vm.LoadState);
+        Assert.IsFalse(vm.IsVideoSuperResolutionActive);
+        scratch.Verify(s => s.DeleteArtifact("enhanced.mp4"), stage == "generation" && !fault ? Times.Once() : Times.Never());
+        scratch.Verify(s => s.DeleteArtifact("retained.mp4"), Times.Never);
+        if (stage != "generation") service.Verify(s => s.GenerateAsync(It.IsAny<VideoSuperResolutionRequest>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [TestMethod]
+    public async Task ConsentRevocationDiscardsLateGeneratedArtifact()
+    {
+        using var revoked = new CancellationTokenSource();
+        var consent = new Mock<IAiFeatureConsentService>();
+        consent.Setup(s => s.GetConsentState(AiFeatureId.VideoSuperResolution)).Returns(AiFeatureConsentState.Granted);
+        consent.SetupGet(s => s.Revoked).Returns(revoked.Token);
+        var completion = new TaskCompletionSource<VideoSuperResolutionResult>(TaskCreationOptions.RunContinuationsAsynchronously);
+        CancellationToken observed = default;
+        var service = CreateReadyService("enhanced.mp4");
+        service.Setup(s => s.GenerateAsync(It.IsAny<VideoSuperResolutionRequest>(), It.IsAny<CancellationToken>()))
+            .Returns((VideoSuperResolutionRequest _, CancellationToken ct) => { observed = ct; return completion.Task; });
+        var scratch = new Mock<IScratchArtifactStore>();
+        using var vm = CreateViewModel(service, consentService: consent.Object, scratchArtifactStore: scratch.Object);
+        vm.Load(new VideoFile("working.mp4", "retained.mp4"));
+        Task command = vm.ToggleVideoSuperResolutionCommand.ExecuteAsync(null);
+        revoked.Cancel();
+        Assert.IsTrue(observed.IsCancellationRequested);
+        completion.SetResult(VideoSuperResolutionResult.Success(new VideoFile("enhanced.mp4")));
+        await command;
+        Assert.AreEqual("working.mp4", vm.VideoPath);
+        Assert.IsFalse(vm.IsVideoSuperResolutionActive);
+        Assert.IsFalse(vm.IsVideoSuperResolutionGenerating);
+        scratch.Verify(s => s.DeleteArtifact("enhanced.mp4"), Times.Once);
+        scratch.Verify(s => s.DeleteArtifact("retained.mp4"), Times.Never);
+    }
+
+    [TestMethod]
     public void Load_WhenFeatureIsReady_ShouldExposeVideoSuperResolution()
     {
         VideoEditPageViewModel viewModel = CreateViewModel();

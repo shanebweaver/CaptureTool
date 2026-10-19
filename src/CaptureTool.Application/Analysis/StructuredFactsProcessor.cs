@@ -279,7 +279,11 @@ public sealed partial class StructuredFactsProcessor : IMetadataProcessor
         while (length > 0)
         {
             char last = value[length - 1];
-            if (".,;!，。；！".Contains(last)) { length--; continue; }
+            if (".,;!，。；！".Contains(last))
+            {
+                length--;
+                continue;
+            }
             if (last == ')' && parentheses < 0)
             {
                 parentheses++;

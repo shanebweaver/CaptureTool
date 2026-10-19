@@ -17,6 +17,23 @@ public sealed class AnalysisExecutionStoreTests
     ]);
 
     [TestMethod]
+    public async Task SelectedFileIdentityIsBoundToTheSessionRequestAndCannotBeChangedByReplay()
+    {
+        using var environment = new AnalysisTestEnvironment();
+        using var store = environment.CreateStore();
+        var identity = new AnalysisSourceIdentity(7, 11, 13);
+        var request = Request(environment, await store.GetAdmissionScopeAsync(Ct)) with { SourceIdentity = identity };
+        Assert.IsTrue(await store.AdmitAsync(request, Authorization, Plan, Ct));
+        Assert.AreEqual(identity, (await store.GetWorkAsync(request.CaptureId, Ct))!.SourceIdentity);
+        Assert.AreEqual(identity, (await store.ReadPendingAsync(Ct)).Single().SourceIdentity);
+        Assert.IsFalse(await store.AdmitAsync(request with { SourceIdentity = new(7, 12, 13) }, Authorization, Plan, Ct));
+
+        using var restarted = environment.CreateStore();
+        Assert.IsNull((await restarted.GetWorkAsync(request.CaptureId, Ct))!.SourceIdentity);
+        Assert.IsEmpty(await restarted.ReadPendingAsync(Ct));
+    }
+
+    [TestMethod]
     public async Task CachedCompletionMustReferenceTheCurrentResultAndCannotReviveClearedWork()
     {
         using var environment = new AnalysisTestEnvironment();
@@ -59,12 +76,11 @@ public sealed class AnalysisExecutionStoreTests
         };
         Task<IReadOnlyList<AnalysisWorkItem>> discovery = store.ReadPendingAsync(Ct);
         await entered.Task.WaitAsync(TimeSpan.FromSeconds(5), Ct);
-        Task<AnalysisCleanupResult> clear = store.ClearAsync(40, Ct);
+        Task<AnalysisCleanupResult> clear = store.ClearAsync(Ct);
         release.TrySetResult();
         Assert.IsTrue((await clear).Completed);
         Assert.IsEmpty(await discovery, "A discovery interrupted by clear must discard the previous generation.");
         Assert.IsLessThan(40, reads, "Clear must run before discovery reads every document.");
-        Assert.AreEqual(40, (await store.GetAdmissionScopeAsync(Ct)).ReconciliationBoundary);
     }
 
     [TestMethod]
@@ -154,7 +170,7 @@ public sealed class AnalysisExecutionStoreTests
     }
 
     [TestMethod]
-    public async Task ClearFencesQueuedAndActiveWorkAcrossRestartAndPersistsReconciliationBoundary()
+    public async Task ClearFencesQueuedAndActiveWorkAcrossRestart()
     {
         using var environment = new AnalysisTestEnvironment();
         using var store = environment.CreateStore();
@@ -166,10 +182,9 @@ public sealed class AnalysisExecutionStoreTests
         await store.BindSourceAsync(token, AnalysisTestEnvironment.Revision(), Ct);
         File.Delete(environment.ControlPath); // Explicit recovery has the same fencing guarantees.
         environment.Files.FailCleanup = true;
-        Assert.IsFalse((await store.ClearAsync(42, Ct)).Completed);
+        Assert.IsFalse((await store.ClearAsync(Ct)).Completed);
         using var restarted = environment.CreateStore();
         Assert.IsEmpty(await restarted.ReadPendingAsync(Ct));
-        Assert.AreEqual(42, (await restarted.GetAdmissionScopeAsync(Ct)).ReconciliationBoundary);
         Assert.IsFalse(await restarted.AdmitAsync(pending, Authorization, Plan, Ct));
         Assert.IsFalse(await restarted.BindSourceAsync(token, AnalysisTestEnvironment.Revision(), Ct));
         Assert.IsFalse(await restarted.CommitStepAsync(token, new(AnalysisCapability.TextRecognition, AnalyzerOutcomeKind.Succeeded, null),
@@ -226,7 +241,7 @@ public sealed class AnalysisExecutionStoreTests
         environment.Files.BeforeWrite = async (_, ct) => { entered.TrySetResult(); await release.Task.WaitAsync(ct); };
         Task<bool> admission = store.AdmitAsync(request, Authorization, Plan, Ct);
         await entered.Task.WaitAsync(TimeSpan.FromSeconds(5), Ct);
-        Task<AnalysisCleanupResult> clear = store.ClearAsync(42, Ct);
+        Task<AnalysisCleanupResult> clear = store.ClearAsync(Ct);
         release.SetResult();
         Assert.IsTrue(await admission);
         await clear;

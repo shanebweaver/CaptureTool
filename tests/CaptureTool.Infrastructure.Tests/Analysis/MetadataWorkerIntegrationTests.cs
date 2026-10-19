@@ -29,7 +29,7 @@ public sealed partial class CaptureAnalysisWorkerTests
         Assert.AreEqual(1, synopsis.Calls);
         var result = record.Results.Single(result => result.Payload is CaptureSynopsisMetadata);
         Assert.IsTrue(result.Derivation!.Matches(record.Results));
-        Assert.AreEqual("Invoice USD 12.00", ((CaptureSynopsisMetadata)result.Payload).Title!.Text);
+        Assert.AreEqual("Invoice USD 12.00", ((CaptureSynopsisMetadata)result.Payload).Summary.Single().Text);
     }
 
     [TestMethod]
@@ -48,7 +48,7 @@ public sealed partial class CaptureAnalysisWorkerTests
         var result = record.Results.Single(result => result.Payload is CaptureSynopsisMetadata);
         Assert.AreEqual(request.RequestId, result.ProducingRunId);
         Assert.IsTrue(result.Derivation!.Matches(record.Results));
-        Assert.AreEqual("Invoice USD 12.00", ((CaptureSynopsisMetadata)result.Payload).Title!.Text);
+        Assert.AreEqual("Invoice USD 12.00", ((CaptureSynopsisMetadata)result.Payload).Summary.Single().Text);
         Assert.AreEqual(1, synopsis.Calls);
         Assert.AreEqual(AnalysisActivity.Idle, fixture.Worker.Progress.Activity);
         using var reopened = fixture.Environment.CreateStore();
@@ -113,7 +113,7 @@ public sealed partial class CaptureAnalysisWorkerTests
     {
         var bad = new TestProcessor("bad");
         bad.Execute = (input, _) => Task.FromResult(AnalyzerOutcome.Success(new CaptureSynopsisMetadata(
-            new("Invented", [new(Guid.NewGuid(), 0, 0, 1)]), [], input.Coverage), new("bad", "test", "test", "1")));
+            [new("Invented", [new(Guid.NewGuid(), 0, 0, 1)])], input.Coverage), new("bad", "test", "test", "1")));
         var good = new TestProcessor("good");
         using var fixture = new Fixture(processors: [bad, good]);
         fixture.Preferred.Execute = (_, _) => Task.FromResult(SourceSuccess(fixture));
@@ -143,7 +143,7 @@ public sealed partial class CaptureAnalysisWorkerTests
         {
             await started.Task.WaitAsync(TimeSpan.FromSeconds(10), Ct);
             Assert.AreEqual(AnalysisActivity.Analyzing, fixture.Worker.Progress.Activity);
-            if (action == "delete") await fixture.Worker.ClearAsync(0, Ct);
+            if (action == "delete") await fixture.Worker.ClearAsync(Ct);
             if (action == "revoke") await fixture.Authorization.ChangeAsync(false, Ct);
             if (action == "source") fixture.Source.Unchanged = false;
             if (action == "protect") fixture.Environment.Protector.FailProtection = true;
@@ -236,7 +236,7 @@ public sealed partial class CaptureAnalysisWorkerTests
         public AnalyzerOutcome Success(MetadataProcessorInput input)
         {
             var entry = input.Entries[0];
-            return AnalyzerOutcome.Success(new CaptureSynopsisMetadata(new(entry.Text, [new(entry.ResultId, entry.EntryIndex, 0, entry.Text.Length)]), [], input.Coverage),
+            return AnalyzerOutcome.Success(new CaptureSynopsisMetadata([new(entry.Text, [new(entry.ResultId, entry.EntryIndex, 0, entry.Text.Length)])], input.Coverage),
                 new(Descriptor.Id, "test", "model", "1"));
         }
     }

@@ -53,11 +53,11 @@ internal static class ScaleChecks
                     queued ? [] : [new(capability, (int)AnalyzerOutcomeKind.Succeeded, null)])
             };
             await documents.WriteAsync(Path.Combine(generation, id + ".analysis"), document, AnalysisJsonContext.Default.AnalysisDocument, ct);
-            assets.Add(new(id.Value, (int)CaptureFileType.Image, DateTimeOffset.UtcNow, source, (int)CaptureSourceOwnership.Application, null, index));
+            assets.Add(new(id.Value, (int)CaptureFileType.Image, DateTimeOffset.UtcNow, source, (int)CaptureSourceOwnership.Application, null));
             if (index % 1000 == 0) Console.WriteLine($"Seeded {index} protected metadata documents.");
             if (index is not (100 or 1000 or 10000)) continue;
 
-            await documents.WriteAsync(Path.Combine(data, "CaptureAssets", "catalog.bin"), new CaptureCatalogDocument(3, assets.ToArray(), index),
+            await documents.WriteAsync(Path.Combine(data, "CaptureAssets", "catalog.bin"), new CaptureCatalogDocument(6, assets.ToArray()),
                 CaptureCatalogJsonContext.Default.CaptureCatalogDocument, ct);
             await documents.WriteAsync(Path.Combine(data, "CaptureAnalysis", "control.bin"), new AnalysisControlDocument(2, scope.Generation, index),
                 AnalysisJsonContext.Default.AnalysisControlDocument, ct);
@@ -69,7 +69,7 @@ internal static class ScaleChecks
             long discoveryAllocated = GC.GetTotalAllocatedBytes(precise: true) - allocated;
             if (pending.Count != 0) throw new InvalidOperationException("Historical run markers must not populate the session queue.");
             timer.Restart();
-            if ((await catalog.ReadRegistrationsAsync(ct)).Count != index) throw new InvalidOperationException("Scale catalog count is incorrect.");
+            if ((await catalog.ReadAllAsync(ct)).Count != index) throw new InvalidOperationException("Scale catalog count is incorrect.");
             double catalogMs = timer.Elapsed.TotalMilliseconds;
 
             // Measure contention against a bounded current-session batch, independent
@@ -109,7 +109,7 @@ internal static class ScaleChecks
                 Task duringClear = store.ReadPendingAsync(ct);
                 await files.FirstRead.Task.WaitAsync(ct);
                 timer.Restart();
-                var cleared = await store.ClearAsync(index, ct);
+                var cleared = await store.ClearAsync(ct);
                 clearMs = timer.Elapsed.TotalMilliseconds;
                 await duringClear;
                 if (!cleared.Completed || (await store.ReadPendingAsync(ct)).Count != 0) throw new InvalidOperationException("Clear did not complete.");

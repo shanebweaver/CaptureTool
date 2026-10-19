@@ -1,4 +1,4 @@
-﻿using CaptureTool.Application.Abstractions.Capture.Assets;
+using CaptureTool.Application.Abstractions.Capture.Assets;
 using CaptureTool.Application.Abstractions.Files;
 using CaptureTool.Application.Abstractions.Library.RecentCaptures;
 using CaptureTool.Domain;
@@ -23,16 +23,6 @@ internal sealed class CaptureNamingService(ICaptureAssetCatalog catalog, ICaptur
         try { return (await ResolveAsync(path, cancellationToken).ConfigureAwait(false))?.Name; }
         catch (Exception) { return null; }
     }
-    public async Task<CaptureNamingState> GetStateAsync(string path, CancellationToken cancellationToken = default) =>
-        new(await GetNameAsync(path, cancellationToken).ConfigureAwait(false), false);
-
-    internal async Task InvalidatePendingAsync(CancellationToken ct)
-    {
-        await _commands.WaitAsync(ct).ConfigureAwait(false);
-        try { await _names.InvalidatePendingNamesAsync(ct).ConfigureAwait(false); }
-        finally { _commands.Release(); Publish(); }
-    }
-
     public async Task<CaptureFileRename?> RenameAsync(string path, CaptureFileType mediaType, string name, CancellationToken cancellationToken = default)
     {
         if (Volatile.Read(ref _stopped))
@@ -42,7 +32,7 @@ internal sealed class CaptureNamingService(ICaptureAssetCatalog catalog, ICaptur
 
         try
         {
-            var chosen = new CaptureName(name, false);
+            var chosen = new CaptureName(name);
             if (!Path.IsPathFullyQualified(path) || !_files.FileExists(path))
             {
                 return null;

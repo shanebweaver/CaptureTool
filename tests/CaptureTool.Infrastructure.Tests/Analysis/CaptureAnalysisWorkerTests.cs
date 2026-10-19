@@ -115,6 +115,64 @@ public sealed partial class CaptureAnalysisWorkerTests
     }
 
     [TestMethod]
+    public async Task TransientExecutionFailureRetriesTheSameProviderBeforeFallback()
+    {
+        using var fixture = new Fixture(retryCount: 1);
+        int attempts = 0;
+        fixture.Preferred.Execute = (_, _) => Task.FromResult(++attempts == 1
+            ? AnalyzerOutcome.Unsuccessful(AnalyzerOutcomeKind.TemporarilyUnavailable, "transient")
+            : fixture.Preferred.Success());
+        await fixture.EnqueueAsync(Ct);
+
+        await DrainAsync(fixture.Worker, Ct);
+
+        CollectionAssert.AreEqual(new[] { "preferred", "preferred", "description" }, fixture.Calls.ToArray());
+        Assert.IsFalse(fixture.Worker.Progress.LastRunHadFailures);
+    }
+
+    [TestMethod]
+    public async Task ExhaustedRetriesUseTheNextProviderAndFenceEarlierProgress()
+    {
+        using var fixture = new Fixture(retryCount: 2);
+        IProgress<AnalysisProgress>? firstAttemptProgress = null;
+        fixture.Preferred.Execute = (_, _) =>
+        {
+            firstAttemptProgress ??= fixture.Preferred.Progress;
+            return Task.FromResult(AnalyzerOutcome.Unsuccessful(AnalyzerOutcomeKind.Failed, "transient"));
+        };
+        var fractions = new ConcurrentQueue<double?>();
+        fixture.Worker.ProgressChanged += progress => fractions.Enqueue(progress.Fraction);
+        fixture.Fallback.Execute = (_, _) =>
+        {
+            firstAttemptProgress!.Report(new(AnalysisProgressStage.Analyzing, 0.75));
+            return Task.FromResult(fixture.Fallback.Success());
+        };
+        await fixture.EnqueueAsync(Ct);
+
+        await DrainAsync(fixture.Worker, Ct);
+
+        CollectionAssert.AreEqual(new[] { "preferred", "preferred", "preferred", "fallback", "description" }, fixture.Calls.ToArray());
+        Assert.DoesNotContain(0.75, fractions.ToArray());
+        Assert.IsFalse(fixture.Worker.Progress.LastRunHadFailures);
+    }
+
+    [TestMethod]
+    [DataRow(AnalyzerAvailability.Unsupported)]
+    [DataRow(AnalyzerAvailability.TemporarilyUnavailable)]
+    [DataRow(AnalyzerAvailability.LanguageResourcesRequired)]
+    public async Task ReadinessFailureFallsBackWithoutSpendingExecutionRetries(AnalyzerAvailability availability)
+    {
+        using var fixture = new Fixture(retryCount: 2);
+        fixture.Preferred.Ready = availability;
+        await fixture.EnqueueAsync(Ct);
+
+        await DrainAsync(fixture.Worker, Ct);
+
+        Assert.AreEqual(1, fixture.Preferred.AvailabilityChecks);
+        CollectionAssert.AreEqual(new[] { "fallback", "description" }, fixture.Calls.ToArray());
+    }
+
+    [TestMethod]
     [DataRow(AnalyzerOutcomeKind.ContentRejected, true)]
     [DataRow(AnalyzerOutcomeKind.InvalidSource, false)]
     [DataRow(AnalyzerOutcomeKind.Cancelled, false)]
@@ -375,7 +433,7 @@ public sealed partial class CaptureAnalysisWorkerTests
             await fixture.Worker.CancelAsync(second.CaptureId, Ct);
             await WaitForSnapshotAsync(fixture.Worker, value => value.Activity == AnalysisActivity.ProviderUnavailable && value.QueuedCaptures == 1, Ct);
             Assert.AreEqual(AnalysisRunStatus.Cancelled, (await fixture.Store.GetWorkAsync(second.CaptureId, Ct))!.Run.Status);
-            await fixture.Worker.ClearAsync(12, Ct);
+            await fixture.Worker.ClearAsync(Ct);
             await WaitForSnapshotAsync(fixture.Worker, value => value.Activity == AnalysisActivity.Idle, Ct);
             Assert.IsEmpty(await fixture.Store.ReadAllAsync(Ct));
             Assert.IsEmpty(await fixture.Store.ReadPendingAsync(Ct));
@@ -498,7 +556,7 @@ public sealed partial class CaptureAnalysisWorkerTests
         try
         {
             await entered.Task.WaitAsync(TimeSpan.FromSeconds(5), Ct);
-            await fixture.Worker.ClearAsync(123, Ct);
+            await fixture.Worker.ClearAsync(Ct);
             Assert.IsFalse(await fixture.Worker.EnqueueAsync(request, Ct));
             release.SetResult(fixture.Preferred.Success());
             Assert.IsEmpty(await fixture.Store.ReadAllAsync(Ct));
@@ -575,7 +633,7 @@ public sealed partial class CaptureAnalysisWorkerTests
         try
         {
             await entered.Task.WaitAsync(TimeSpan.FromSeconds(5), Ct);
-            Assert.IsTrue((await fixture.Worker.ClearAsync(42, Ct)).Completed);
+            Assert.IsTrue((await fixture.Worker.ClearAsync(Ct)).Completed);
             Assert.IsEmpty(await fixture.Store.ReadPendingAsync(Ct));
         }
         finally { shutdown.Cancel(); await runner.WaitAsync(TimeSpan.FromSeconds(5), Ct); }
@@ -677,11 +735,8 @@ public sealed partial class CaptureAnalysisWorkerTests
         public Task<bool> FinishAsync(AnalysisRunToken token, AnalysisRunStatus status, CancellationToken ct) => inner.FinishAsync(token, status, ct);
         public Task<AnalysisAdmissionScope> GetAdmissionScopeAsync(CancellationToken ct) => inner.GetAdmissionScopeAsync(ct);
         public Task<bool> AdmitAsync(AnalysisRequest request, Guid auth, MediaAnalysisPlan plan, CancellationToken ct) => inner.AdmitAsync(request, auth, plan, ct);
-        public Task<AnalysisCleanupResult> ClearAsync(long boundary, CancellationToken ct) => inner.ClearAsync(boundary, ct);
         public Task<AnalysisCleanupResult> ClearAsync(CancellationToken ct) => inner.ClearAsync(ct);
         public Task<AnalysisStorageStatus> GetStorageStatusAsync(CancellationToken ct) => inner.GetStorageStatusAsync(ct);
-        public Task<AnalysisWriteToken> BeginRunAsync(CaptureId id, AnalysisMediaKind kind, SourceRevision revision, string plan, CancellationToken ct) => inner.BeginRunAsync(id, kind, revision, plan, ct);
-        public Task<bool> TryWriteAsync(AnalysisWriteToken token, AnalysisResult result, CancellationToken ct) => inner.TryWriteAsync(token, result, ct);
         public Task<CaptureAnalysisRecord?> GetAsync(CaptureId id, SourceRevision? revision, CancellationToken ct) => inner.GetAsync(id, revision, ct);
         public Task<IReadOnlyList<CaptureAnalysisRecord>> ReadAllAsync(CancellationToken ct) => inner.ReadAllAsync(ct);
     }
@@ -701,7 +756,7 @@ public sealed partial class CaptureAnalysisWorkerTests
         public CaptureAnalysisConfiguration Configuration { get; }
         public CaptureAnalysisWorker Worker { get; }
         public Fixture(TimeSpan? timeout = null, IEnumerable<IMetadataProcessor>? processors = null, AnalysisMediaKind kind = AnalysisMediaKind.Image,
-            IEnumerable<IAnalysisResources>? resources = null, TimeProvider? time = null)
+            IEnumerable<IAnalysisResources>? resources = null, TimeProvider? time = null, int retryCount = 0)
         {
             Store = Environment.CreateStore();
             Catalog = Environment.CreateCatalog();
@@ -711,7 +766,7 @@ public sealed partial class CaptureAnalysisWorkerTests
             Description = new("description", AnalysisCapability.Description, Calls);
             IMetadataProcessor[] metadata = processors?.ToArray() ?? [];
             Configuration = new([new(kind, "v1", [
-                new(sourceCapability, ["preferred", "fallback"], TimeSpan.FromSeconds(1), timeout ?? TimeSpan.FromSeconds(5)),
+                new(sourceCapability, ["preferred", "fallback"], TimeSpan.FromSeconds(1), timeout ?? TimeSpan.FromSeconds(5), retryCount),
                 .. kind == AnalysisMediaKind.Audio ? Array.Empty<AnalysisStep>() : [new(AnalysisCapability.Description, ["description"], TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(5))],
                 .. metadata.GroupBy(processor => processor.Descriptor.Capability).Select(group => new AnalysisStep(group.Key,
                     group.Select(processor => processor.Descriptor.Id), TimeSpan.FromSeconds(1), timeout ?? group.First().Descriptor.Limits.ExecutionTimeout)),
@@ -735,6 +790,7 @@ public sealed partial class CaptureAnalysisWorkerTests
         private readonly ConcurrentQueue<string> _calls;
         public MediaAnalyzerDescriptor Descriptor { get; }
         public AnalyzerAvailability Ready { get; set; } = AnalyzerAvailability.Ready;
+        public int AvailabilityChecks { get; private set; }
         public string? UnsupportedLanguage { get; set; }
         public IProgress<AnalysisProgress>? Progress { get; private set; }
         public Func<AnalysisInput, CancellationToken, Task<AnalyzerOutcome>> Execute { get; set; }
@@ -746,8 +802,11 @@ public sealed partial class CaptureAnalysisWorkerTests
         }
         public AnalyzerOutcome Success() => AnalyzerOutcome.Success(Descriptor.Capability == AnalysisCapability.TextRecognition
             ? new TextRecognitionMetadata([]) : new DescriptionMetadata([new("description")]), new(Descriptor.Id, "fake", "model", "1"));
-        public ValueTask<AnalyzerAvailability> GetAvailabilityAsync(AnalysisMediaKind kind, string? language, CancellationToken ct) =>
-            ValueTask.FromResult(language != null && language == UnsupportedLanguage ? AnalyzerAvailability.Unsupported : Ready);
+        public ValueTask<AnalyzerAvailability> GetAvailabilityAsync(AnalysisMediaKind kind, string? language, CancellationToken ct)
+        {
+            AvailabilityChecks++;
+            return ValueTask.FromResult(language != null && language == UnsupportedLanguage ? AnalyzerAvailability.Unsupported : Ready);
+        }
         public Task<AnalyzerAvailability> PrepareAsync(IProgress<AnalysisProgress>? progress, CancellationToken ct)
         {
             _calls.Enqueue("prepare:" + Descriptor.Id);
@@ -765,11 +824,13 @@ public sealed partial class CaptureAnalysisWorkerTests
 
     private sealed class TestSource : IAnalysisSource
     {
+        private static readonly AnalysisSourceIdentity Identity = new(1, 1, 0);
         public SourceRevision Revision { get; set; } = AnalysisTestEnvironment.Revision();
         public bool Unchanged { get; set; } = true;
         public string? FailPath { get; set; }
         public int Disposals { get; private set; }
-        public Task<IAnalysisSourceLease> OpenAsync(string path, CancellationToken ct) => path == FailPath
+        public Task<AnalysisSourceIdentity> GetIdentityAsync(string path, CancellationToken ct) => Task.FromResult(Identity);
+        public Task<IAnalysisSourceLease> OpenAsync(string path, CancellationToken ct, AnalysisSourceIdentity? expectedIdentity = null) => path == FailPath
             ? throw new FileNotFoundException() : Task.FromResult<IAnalysisSourceLease>(new Lease(this, path));
         private sealed class Lease(TestSource source, string path) : IAnalysisSourceLease
         {

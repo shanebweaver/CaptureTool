@@ -10,9 +10,9 @@ namespace CaptureTool.Application.Tests.Ai;
 public sealed class AiFeatureConsentServiceTests
 {
     [TestMethod]
-    public void EveryFeatureSharesConsentAndDisablingScanningDoesNotRevokeEditing()
+    public void EveryFeatureSharesConsentAndRepeatedNotificationsDoNotRevokeEditing()
     {
-        CaptureMemoryState state = State(true, true);
+        CaptureMemoryState state = State(true);
         var memory = new Mock<ICaptureMemoryService>();
         memory.SetupGet(x => x.State).Returns(() => state);
         using var service = new AiFeatureConsentService(memory.Object);
@@ -20,7 +20,7 @@ public sealed class AiFeatureConsentServiceTests
         foreach (AiFeatureId id in Enum.GetValues<AiFeatureId>())
             Assert.AreEqual(AiFeatureConsentState.Granted, service.GetConsentState(id));
 
-        state = State(true, false);
+        state = State(true);
         memory.Raise(x => x.StateChanged += null);
         Assert.AreEqual(authorized, service.Revoked);
         Assert.IsFalse(authorized.IsCancellationRequested);
@@ -67,6 +67,6 @@ public sealed class AiFeatureConsentServiceTests
         memory.Verify(x => x.EnsureConsentAsync(cancellation.Token), Times.Once);
     }
 
-    private static CaptureMemoryState State(bool consent, bool scanning = false) =>
-        new(new(scanning, consent, Guid.NewGuid(), 0), true, new(false, true), new(AnalysisActivity.Idle));
+    private static CaptureMemoryState State(bool consent) =>
+        new(new(consent, Guid.NewGuid()), true, new(false, true), new(AnalysisActivity.Idle));
 }

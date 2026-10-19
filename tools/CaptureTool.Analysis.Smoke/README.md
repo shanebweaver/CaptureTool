@@ -17,6 +17,17 @@ Release publishing enables Native AOT in the harness project. Do not pass
 `-p:PublishAot=true` globally: it also reaches the netstandard build-time generator,
 which cannot be published with AOT. Use `-p:PublishAot=false` for a managed publish.
 
+On a known supported machine (native x64 with AVX2 or native ARM64, at least 8 GB
+installed RAM, Windows 11 24H2+), verify the published hardware gate separately:
+
+```powershell
+& artifacts/capture-analysis-execution/aot/CaptureTool.Analysis.Smoke.exe "$PWD/artifacts/hardware" --hardware-check true
+```
+
+This check does not load or download models. Use `false` when testing an unsupported
+machine. Run it on the native executable: managed tests alone cannot catch AOT
+instruction-set detection regressions.
+
 `-Packaged` requires development package registration to be allowed. The script
 registers the separate `CaptureTool.AnalysisSmoke.Slice2` identity, verifies it in
 the process, and removes it afterward. It does not register or replace CaptureTool.
@@ -35,6 +46,11 @@ also verifies malformed-image rejection and a real native transcription failure.
 The Qwen checks require a description containing both colors, preserve the video
 frame timestamp, and exercise listener start/stop and model load/unload twice.
 Unavailable models are reported; they are not treated as successful inference.
+For a release acceptance run, add `-RequireAnalyzer` with the exact expected
+analyzer IDs, for example `-RequireAnalyzer foundry-local-image-description,foundry-local-speech-transcript`.
+This fails if any requested analyzer is absent, unsupported, unprepared, empty,
+or missing real model provenance in its media fixtures. Select the supported
+primary providers as well as fallbacks for the device being accepted.
 `results.json` and `exit-code.txt` are written under the output directory. Scratch
 WAV chunks should be gone after execution. Model caches are intentionally retained
 for subsequent smoke runs.
@@ -53,6 +69,18 @@ directly; these modes do not initialize or download models:
 & artifacts/capture-analysis-execution/aot/CaptureTool.Analysis.Smoke.exe "$PWD/artifacts/recovery" --recovery-checks
 & artifacts/capture-analysis-execution/aot/CaptureTool.Analysis.Smoke.exe "$PWD/artifacts/scale" --scale-checks
 ```
+
+To check startup and new-capture OCR with real Windows providers and DPAPI storage:
+
+```powershell
+& artifacts/capture-analysis-execution/aot/CaptureTool.Analysis.Smoke.exe "$PWD/artifacts/startup" --startup-ocr-checks
+```
+
+This creates a fresh synthetic store, completes OCR, adds unused JSON fields to its
+saved documents, restarts, and scans a new capture. It requires recognized fixture
+text, preserved capture names and result identities, and persisted OCR after another
+restart. It never reads or changes the installed app's data. Run on Windows with
+an available English OCR provider; unsupported OCR is a failure for this check.
 
 Recovery checks kill child processes at ten controlled boundaries, restart them,
 and verify durable intent, preserved commits, deletion fencing, encrypted storage,
@@ -111,8 +139,7 @@ cover German, embedded instructions, conflicting sources, skipped oversized entr
 description-only alt text, and classification. Reports under `input-compaction`
 include requests, responses, generation time, token counts, retries, and basic
 fixture checks. Inspect meaning and citations as well as the automatic checks.
-Only synthetic fixtures are read or saved. See the
-[input compaction investigation](../../docs/metadata-input-compaction.md).
+Only synthetic fixtures are read or saved.
 
 GPU diagnostics use explicit flags and the same isolated test cache:
 
@@ -132,8 +159,6 @@ and alt text on synthetic invoice and dense-text fixtures, recording loading and
 generation time, token counts, attempts, and parsed output. They preserve the
 production prompts and validation and leave the app's device selection unchanged.
 GPU sampling with `nvidia-smi` can independently confirm actual GPU activity.
-The [GTX 1080 Ti investigation](../../docs/foundry-gpu-investigation.md) records
-the CUDA and WebGPU compatibility failures and the successful CPU control.
 
 Scale checks seed 100, 1,000, and 10,000 DPAPI-protected records with 200 OCR regions
 each. Reports measure discovery, settings contention, cancellation, deletion,
@@ -146,10 +171,17 @@ The CI diagnostic check can also be run locally:
 pwsh -NoProfile -File .github/scripts/test-native-aot-log.ps1
 pwsh -NoProfile -File .github/scripts/verify-native-aot.ps1 -Platform x64
 pwsh -NoProfile -File .github/scripts/verify-native-aot.ps1 -Platform ARM64
+pwsh -NoProfile -File .github/scripts/test-native-aot-runtime.ps1 -BinaryDirectory artifacts/native-aot/x64/harness -OutputDirectory artifacts/native-aot/x64/checks
 ```
 
-The latter publishes both app and harness and retains logs. Cross-publishing ARM64
+Publishing verifies both app and harness and retains logs. The runtime script
+executes hardware detection and ten recovery checks from the published native
+harness, with process deadlines and machine readable reports. It requires the
+executable and shell to match the host architecture. CI runs it on the x64 host.
+Cross-publishing ARM64
 proves compilation only; run the ARM64 harness on an ARM64 device for runtime evidence.
 
-Native AOT currently reports four vendor converter warnings; see the compatibility
-exception and verification limits in [review notes](../../docs/capture-analysis-execution-review.md).
+Native AOT currently reports four vendor converter warnings, explicitly matched in
+[the diagnostic guard](../../.github/scripts/assert-native-aot-log.ps1). A successful
+publish or passive probe does not replace the real model and packaged device
+checks in [the release requirements](../../docs/prds/ai-release-validation.md).

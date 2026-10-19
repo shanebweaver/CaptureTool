@@ -2270,4 +2270,7 @@ SOFTWARE.
   <data name="CaptureVideoText_UnknownTime" xml:space="preserve"><value>Time unavailable</value></data>
   <data name="CaptureVideoText_Hint" xml:space="preserve"><value>Find text and QR codes in this video. Choose a timestamp to jump to that moment, then search or copy its text.</value></data>
   <data name="TextExtractionStatus_LanguageResourcesRequired" xml:space="preserve"><value>To extract text, install the OCR language pack for your language in Windows Settings, then try again.</value></data>
+  <data name="CaptureSummary_PartialCoverage.Text" xml:space="preserve">
+    <value>This summary uses excerpts of the available analysis and may omit details.</value>
+  </data>
 </root>

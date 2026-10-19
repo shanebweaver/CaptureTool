@@ -1,6 +1,5 @@
 using CaptureTool.Application.Abstractions.Analysis;
 using CaptureTool.Domain.Analysis;
-using CaptureTool.Domain.Analysis.Payloads;
 using System.Globalization;
 using System.Text;
 using System.Text.Encodings.Web;
@@ -8,7 +7,7 @@ using System.Text.Json;
 
 namespace CaptureTool.Infrastructure.Analysis.Windows;
 
-/// <summary>Shared source quoting, prompts and strict payload validation, independent of model transport.</summary>
+/// <summary>Builds shared prompts and source JSON independently of model transport.</summary>
 internal static class MetadataTextProtocol
 {
     internal const string SourceFormatInstructions = " Sources are grouped by kind; each numeric key identifies one source text and is its evidence id.";
@@ -59,32 +58,46 @@ internal static class MetadataTextProtocol
 
     internal static string CreateInstructions(MetadataProcessorInput input, bool correction, bool disableThinking = false)
     {
-        string instruction = input.Descriptor.Capability == AnalysisCapability.CaptureSynopsis ? SynopsisRules :
-            input.Descriptor.Capability == AnalysisCapability.CaptureName ? NameRules :
-            input.Descriptor.Capability == AnalysisCapability.ImageAltText ? AltTextRules :
-            input.Descriptor.Capability == AnalysisCapability.CaptureClassification ? ClassificationRules : throw new ArgumentException("Unsupported insight capability.");
-        return Rules + (UseCompactSources(input) ? SourceFormatInstructions : string.Empty) + (disableThinking ? " /no_think\n" : "\n") + instruction + (correction
-                ? " Your previous attempt failed output validation. Start fresh: use a single short sentence per text value, set evidence to ONE integer source id, and match the JSON schema exactly. Never output an array of source ids. If unsupported, use the specified abstention."
-                : string.Empty);
+        var instructions = new StringBuilder(Rules);
+        if (UseCompactSources(input))
+        {
+            instructions.Append(SourceFormatInstructions);
+        }
+        instructions.Append(disableThinking ? " /no_think\n" : "\n");
+        instructions.Append(GetCapabilityInstructions(input.Descriptor.Capability));
+        if (correction)
+        {
+            instructions.Append(" Your previous attempt failed output validation. Start fresh: use a single short sentence per text value, set evidence to ONE integer source id, and match the JSON schema exactly. Never output an array of source ids. If unsupported, use the specified abstention.");
+        }
+        return instructions.ToString();
+    }
+
+    private static string GetCapabilityInstructions(AnalysisCapability capability)
+    {
+        if (capability == AnalysisCapability.CaptureSynopsis)
+        {
+            return SynopsisRules;
+        }
+        if (capability == AnalysisCapability.CaptureName)
+        {
+            return NameRules;
+        }
+        if (capability == AnalysisCapability.ImageAltText)
+        {
+            return AltTextRules;
+        }
+        if (capability == AnalysisCapability.CaptureClassification)
+        {
+            return ClassificationRules;
+        }
+        throw new ArgumentException("Unsupported insight capability.");
     }
 
     internal static string CreateSources(MetadataProcessorInput input)
     {
         foreach (MetadataTextEntry entry in input.Entries)
         {
-            if (entry.Text.Contains('\0'))
-            {
-                throw new InvalidDataException("Invalid metadata text.");
-            }
-
-            for (int index = 0; index < entry.Text.Length; index++)
-            {
-                if (char.IsSurrogate(entry.Text[index]) && (!char.IsHighSurrogate(entry.Text[index]) ||
-                    index + 1 == entry.Text.Length || !char.IsLowSurrogate(entry.Text[++index])))
-                {
-                    throw new InvalidDataException("Invalid metadata Unicode.");
-                }
-            }
+            ValidateSourceText(entry.Text);
         }
         using var sources = new MemoryStream();
         using (var json = new Utf8JsonWriter(sources, new() { Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping }))
@@ -94,182 +107,79 @@ internal static class MetadataTextProtocol
             json.WritePropertyName("sources");
             if (UseCompactSources(input))
             {
-                json.WriteStartObject();
-                // Write the kind once per group, preserving every source's global id and exact text.
-                // OCR often supplies individual words; repeating an object schema for each one
-                // otherwise costs more input tokens than the words themselves.
-                foreach (var group in input.Entries.Select((entry, id) => (Entry: entry, Id: id)).GroupBy(item => item.Entry.Capability))
-                {
-                    json.WritePropertyName(group.Key.Name); json.WriteStartObject();
-                    foreach (var item in group)
-                        json.WriteString(item.Id.ToString(CultureInfo.InvariantCulture), item.Entry.Text);
-                    json.WriteEndObject();
-                }
-                json.WriteEndObject();
+                WriteCompactSources(json, input.Entries);
             }
             else
             {
-                json.WriteStartArray();
-                for (int id = 0; id < input.Entries.Count; id++)
-                {
-                    MetadataTextEntry entry = input.Entries[id];
-                    json.WriteStartObject(); json.WriteNumber("id", id);
-                    json.WriteString("kind", entry.Capability.Name); json.WriteString("text", entry.Text); json.WriteEndObject();
-                }
-                json.WriteEndArray();
+                WriteDetailedSources(json, input.Entries);
             }
             json.WriteEndObject();
         }
         return Encoding.UTF8.GetString(sources.ToArray());
     }
 
+    private static void ValidateSourceText(string text)
+    {
+        if (text.Contains('\0'))
+        {
+            throw new InvalidDataException("Invalid metadata text.");
+        }
+
+        for (int index = 0; index < text.Length; index++)
+        {
+            if (!char.IsSurrogate(text[index]))
+            {
+                continue;
+            }
+            bool hasValidPair = char.IsHighSurrogate(text[index]) &&
+                index + 1 < text.Length && char.IsLowSurrogate(text[index + 1]);
+            if (!hasValidPair)
+            {
+                throw new InvalidDataException("Invalid metadata Unicode.");
+            }
+            index++; // Consume both halves of this Unicode character.
+        }
+    }
+
+    private static void WriteCompactSources(Utf8JsonWriter json, IReadOnlyList<MetadataTextEntry> entries)
+    {
+        // OCR often supplies individual words. Group by kind to save tokens while
+        // preserving every source's global id and exact text.
+        var groups = entries.Select((entry, id) => (Entry: entry, Id: id)).GroupBy(item => item.Entry.Capability);
+        json.WriteStartObject();
+        foreach (var group in groups)
+        {
+            json.WritePropertyName(group.Key.Name);
+            json.WriteStartObject();
+            foreach (var item in group)
+            {
+                json.WriteString(item.Id.ToString(CultureInfo.InvariantCulture), item.Entry.Text);
+            }
+            json.WriteEndObject();
+        }
+        json.WriteEndObject();
+    }
+
+    private static void WriteDetailedSources(Utf8JsonWriter json, IReadOnlyList<MetadataTextEntry> entries)
+    {
+        json.WriteStartArray();
+        for (int id = 0; id < entries.Count; id++)
+        {
+            MetadataTextEntry entry = entries[id];
+            json.WriteStartObject();
+            json.WriteNumber("id", id);
+            json.WriteString("kind", entry.Capability.Name);
+            json.WriteString("text", entry.Text);
+            json.WriteEndObject();
+        }
+        json.WriteEndArray();
+    }
+
     // Tiny inputs save too little structure to offset the extra format instruction.
     private static bool UseCompactSources(MetadataProcessorInput input) => input.Entries.Count >= 4;
 
-    internal static AnalyzerOutcome ParseText(string text, MetadataProcessorInput input, AnalyzerProvenance producer)
-    {
-        text = text.Trim();
-        if (text.Length is 0 or > 16000)
-        {
-            return Rejected("content-size");
-        }
-        // A single enclosing Markdown fence is presentation, not payload. Everything
-        // inside still goes through the exact JSON, field and evidence validation.
-        if (text.StartsWith("```json\n", StringComparison.Ordinal) || text.StartsWith("```json\r\n", StringComparison.Ordinal))
-        {
-            if (!text.EndsWith("\n```", StringComparison.Ordinal))
-            {
-                return Rejected("json");
-            }
+    internal static AnalyzerOutcome ParseText(string text, MetadataProcessorInput input, AnalyzerProvenance producer) =>
+        MetadataTextResponseReader.Parse(text, input, producer);
 
-            text = text[7..^3].Trim();
-        }
-        string stage = "json";
-        try
-        {
-            using var output = JsonDocument.Parse(text, new() { MaxDepth = 8 });
-            stage = "schema";
-            JsonElement value = output.RootElement;
-            AnalysisPayload payload;
-            if (input.Descriptor.Capability == AnalysisCapability.CaptureSynopsis)
-            {
-                Fields(value, "summary", "evidence");
-                string? summary = value.GetProperty("summary").GetString();
-                var evidence = Evidence(value.GetProperty("evidence")).ToArray();
-                if (evidence.Length != (summary == null ? 0 : 1))
-                {
-                    throw new InvalidOutputException("evidence");
-                }
-
-                payload = new CaptureSynopsisMetadata(null,
-                    summary == null ? [] : [new SuggestedText(summary, evidence)], input.Coverage);
-            }
-            else if (input.Descriptor.Capability == AnalysisCapability.CaptureName)
-            {
-                Fields(value, "name", "evidence");
-                if (value.GetProperty("name").ValueKind == JsonValueKind.Null && value.GetProperty("evidence").ValueKind != JsonValueKind.Null)
-                    throw new InvalidOutputException("evidence");
-                var suggestion = value.GetProperty("name").ValueKind == JsonValueKind.Null ? null : Suggestion(value, textField: "name");
-                if (suggestion?.Text.Length > 160) throw new InvalidOutputException("text-bounds");
-                payload = new CaptureNameMetadata(suggestion, input.Coverage);
-            }
-            else if (input.Descriptor.Capability == AnalysisCapability.ImageAltText)
-            {
-                Fields(value, "altText", "evidence");
-                JsonElement suggestion = value.GetProperty("altText");
-                if (suggestion.ValueKind == JsonValueKind.Null && value.GetProperty("evidence").ValueKind != JsonValueKind.Null)
-                {
-                    throw new InvalidOutputException("evidence");
-                }
-
-                payload = new ImageAltTextMetadata(suggestion.ValueKind == JsonValueKind.Null ? null : Suggestion(value, textField: "altText"), input.Coverage);
-            }
-            else if (input.Descriptor.Capability == AnalysisCapability.CaptureClassification)
-            {
-                Fields(value, "category", "evidence", "topics");
-                string? category = value.GetProperty("category").GetString();
-                CaptureCategory? selected = category switch
-                {
-                    null => null,
-                    "document" => CaptureCategory.Document,
-                    "conversation" => CaptureCategory.Conversation,
-                    "code" => CaptureCategory.Code,
-                    "error" => CaptureCategory.Error,
-                    "web-content" => CaptureCategory.WebContent,
-                    "media" => CaptureCategory.Media,
-                    "other" => CaptureCategory.Other,
-                    _ => throw new InvalidDataException("Unknown category."),
-                };
-                var evidence = Evidence(value.GetProperty("evidence")).ToArray();
-                if (evidence.Length != (selected == null ? 0 : 1)) throw new InvalidOutputException("evidence");
-                string[] topics = value.GetProperty("topics").EnumerateArray()
-                    .Select(item => item.GetString()?.ToLowerInvariant() ?? throw new InvalidOutputException("topics")).ToArray();
-                if (selected == null && topics.Length != 0 || topics.Any(topic => topic.Length > 48))
-                    throw new InvalidOutputException("topics");
-                // Validate every topic before selecting a bounded subset. Removing duplicates
-                // or excess suggestions cannot invent content and avoids another inference call.
-                var suggestions = topics.Select(topic => new SuggestedText(topic, evidence)).ToArray();
-                payload = new CaptureClassificationMetadata(selected, evidence,
-                    suggestions.DistinctBy(topic => topic.Text).Take(5), input.Coverage);
-            }
-            else
-            {
-                return Rejected("capability");
-            }
-
-            return AnalyzerOutcome.Success(payload, producer);
-
-            SuggestedText Suggestion(JsonElement element, string textField = "text")
-            {
-                Fields(element, textField, "evidence");
-                string value = element.GetProperty(textField).GetString() ?? throw new InvalidDataException("Missing suggestion.");
-                var evidence = Evidence(element.GetProperty("evidence")).ToArray();
-                if (evidence.Length != 1)
-                {
-                    throw new InvalidOutputException("evidence");
-                }
-
-                try { return new(value, evidence); }
-                catch (ArgumentException) { throw new InvalidOutputException("text-bounds"); }
-            }
-            IEnumerable<AnalysisEvidence> Evidence(JsonElement item)
-            {
-                if (item.ValueKind == JsonValueKind.Null)
-                {
-                    yield break;
-                }
-
-                if (item.ValueKind != JsonValueKind.Number || !item.TryGetInt32(out int index) || index < 0 || index >= input.Entries.Count)
-                {
-                    throw new InvalidOutputException("evidence");
-                }
-
-                MetadataTextEntry entry = input.Entries[index];
-                yield return new(entry.ResultId, entry.EntryIndex, 0, entry.Text.Length);
-            }
-        }
-        catch (InvalidOutputException exception) { return Rejected(exception.Code); }
-        catch (Exception exception) when (exception is JsonException or InvalidOperationException or KeyNotFoundException or
-            ArgumentException or InvalidDataException or FormatException or OverflowException)
-        {
-            return Rejected(stage);
-        }
-    }
-
-    private static void Fields(JsonElement value, params string[] expected)
-    {
-        string[] actual = value.EnumerateObject().Select(property => property.Name).ToArray();
-        if (actual.Length != expected.Length || actual.Distinct(StringComparer.Ordinal).Count() != actual.Length || actual.Except(expected, StringComparer.Ordinal).Any())
-        {
-            throw new InvalidOutputException("fields");
-        }
-    }
-
-    // Codes are a closed set and contain neither captured text nor model responses.
-    private sealed class InvalidOutputException(string code) : Exception
-    {
-        public string Code { get; } = code;
-    }
     internal static AnalyzerOutcome Rejected(string reason) => AnalyzerOutcome.Unsuccessful(AnalyzerOutcomeKind.Failed, "invalid-text-" + reason);
-
 }

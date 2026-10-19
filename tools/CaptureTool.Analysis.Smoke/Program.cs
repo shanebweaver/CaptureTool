@@ -28,11 +28,21 @@ if (args.Length == 0 || !Path.IsPathFullyQualified(args[0]))
 }
 string output = Path.GetFullPath(args[0]);
 Directory.CreateDirectory(output);
+if (args.Contains("--hardware-check", StringComparer.Ordinal))
+{
+    int option = Array.IndexOf(args, "--hardware-check");
+    if (option + 1 == args.Length || !bool.TryParse(args[option + 1], out bool expected)) return 2;
+    var support = CaptureTool.Infrastructure.Ai.WindowsAiDeviceSupport.Current;
+    Console.WriteLine($"Windows AI platform: {support.WindowsAi}; Foundry CPU: {support.FoundryCpu}; expected: {expected}");
+    return support.FoundryCpu == expected ? 0 : 1;
+}
 if (args.Contains("--recovery-checks", StringComparer.Ordinal)) return await RecoveryChecks.RunAsync(output);
 if (args.Contains("--recovery-child", StringComparer.Ordinal)) return await RecoveryChecks.ChildAsync(output, args[^1], resume: false);
 if (args.Contains("--recovery-resume", StringComparer.Ordinal)) return await RecoveryChecks.ChildAsync(output, args[^1], resume: true);
 if (args.Contains("--scale-checks", StringComparer.Ordinal)) return await ScaleChecks.RunAsync(output);
 var storage = new SmokeStorage(output);
+if (args.Contains("--startup-ocr-checks", StringComparer.Ordinal))
+    return await StartupOcrChecks.RunAsync(Path.Combine(output, "startup-ocr-" + Guid.NewGuid().ToString("N")));
 if (args.Contains("--input-compaction-checks", StringComparer.Ordinal))
     return await InputCompactionChecks.RunAsync(storage, Path.Combine(output, "input-compaction", DateTime.UtcNow.ToString("yyyyMMdd-HHmmss")));
 if (args.Contains("--device-probe", StringComparer.Ordinal))

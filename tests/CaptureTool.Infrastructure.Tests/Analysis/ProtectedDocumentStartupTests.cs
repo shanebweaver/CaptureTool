@@ -2,6 +2,9 @@ using CaptureTool.Application.Abstractions.Analysis;
 using CaptureTool.Infrastructure.Analysis.Persistence;
 using System.Collections.Concurrent;
 using System.Runtime.ExceptionServices;
+using System.Text;
+using System.Text.Json;
+using System.Text.Json.Nodes;
 
 namespace CaptureTool.Infrastructure.Tests.Analysis;
 
@@ -54,6 +57,58 @@ public sealed class ProtectedDocumentStartupTests
         Assert.AreEqual(0, reads, "Missing documents must be skipped before the file read is attempted.");
         Assert.IsTrue(File.Exists(environment.ControlPath), "A fresh analysis store still initializes its control document.");
         Assert.IsFalse(File.Exists(Path.Combine(environment.Root, "CaptureAssets", "catalog.bin")));
+    }
+
+    [TestMethod]
+    [DoNotParallelize]
+    public async Task ExtraControlFieldsDoNotRaiseFirstChanceExceptionsOrRewriteSavedState()
+    {
+        using var environment = new AnalysisTestEnvironment();
+        using var store = environment.CreateStore();
+        await store.InitializeAsync(Ct);
+        var scope = await store.GetAdmissionScopeAsync(Ct);
+        var node = JsonNode.Parse(environment.Protector.Unprotect(await File.ReadAllBytesAsync(environment.ControlPath, Ct)))!;
+        node["ReconciliationBoundary"] = 42;
+        node["Extension"] = new JsonObject { ["Values"] = new JsonArray(1, 2, 3) };
+        byte[] saved = environment.Protector.Protect(Encoding.UTF8.GetBytes(node.ToJsonString()));
+        await File.WriteAllBytesAsync(environment.ControlPath, saved, Ct);
+        ConcurrentQueue<Exception> errors = new();
+        void ObserveException(object? sender, FirstChanceExceptionEventArgs args)
+        {
+            if (args.Exception is JsonException or InvalidDataException) errors.Enqueue(args.Exception);
+        }
+
+        AppDomain.CurrentDomain.FirstChanceException += ObserveException;
+        try
+        {
+            using var restarted = environment.CreateStore();
+            Assert.IsTrue((await restarted.InitializeAsync(Ct)).Completed);
+            Assert.IsTrue((await restarted.GetStorageStatusAsync(Ct)).IsAvailable);
+            Assert.AreEqual(scope, await restarted.GetAdmissionScopeAsync(Ct));
+        }
+        finally { AppDomain.CurrentDomain.FirstChanceException -= ObserveException; }
+
+        Assert.IsEmpty(errors);
+        CollectionAssert.AreEqual(saved, await File.ReadAllBytesAsync(environment.ControlPath, Ct));
+    }
+
+    [TestMethod]
+    [DataRow("Version")]
+    [DataRow("Generation")]
+    public async Task ExtraFieldsDoNotSubstituteForRequiredControlMembers(string missingMember)
+    {
+        using var environment = new AnalysisTestEnvironment();
+        using var store = environment.CreateStore();
+        await store.InitializeAsync(Ct);
+        var node = JsonNode.Parse(environment.Protector.Unprotect(await File.ReadAllBytesAsync(environment.ControlPath, Ct)))!;
+        node.AsObject().Remove(missingMember);
+        node["Extension"] = true;
+        byte[] saved = environment.Protector.Protect(Encoding.UTF8.GetBytes(node.ToJsonString()));
+        await File.WriteAllBytesAsync(environment.ControlPath, saved, Ct);
+
+        await Assert.ThrowsExactlyAsync<InvalidDataException>(() => store.InitializeAsync(Ct));
+        Assert.IsFalse((await store.GetStorageStatusAsync(Ct)).IsAvailable);
+        CollectionAssert.AreEqual(saved, await File.ReadAllBytesAsync(environment.ControlPath, Ct));
     }
 
     [TestMethod]
