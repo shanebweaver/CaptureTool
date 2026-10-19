@@ -11,8 +11,11 @@ public sealed record CaptureProperty(string Label, string Value);
 public sealed class CaptureFileProperties
 {
     public ObservableCollection<CaptureProperty> Basic { get; } = [];
+
     public ObservableCollection<CaptureProperty> Technical { get; } = [];
+
     public string Compact { get; private set; } = string.Empty;
+
     public bool HasTechnical => Technical.Count > 0;
 
     public static CaptureFileProperties Create(FileDetailsMetadata file, ILocalizationService text)
@@ -21,8 +24,12 @@ public sealed class CaptureFileProperties
         string Label(string key) => text.GetString("CaptureDetails_" + key);
         void Add(string key, string? value, bool technical = false)
         {
-            if (!string.IsNullOrEmpty(value)) (technical ? result.Technical : result.Basic).Add(new(Label(key), value));
+            if (!string.IsNullOrEmpty(value))
+            {
+                (technical ? result.Technical : result.Basic).Add(new(Label(key), value));
+            }
         }
+
         string Date(DateTimeOffset date) => date.ToLocalTime().ToString("g", CultureInfo.CurrentCulture);
         var compact = new List<string>();
         Add("MediaType", Label("Media_" + file.MediaKind));
@@ -32,16 +39,16 @@ public sealed class CaptureFileProperties
             string size = $"{dimensions.Width} × {dimensions.Height}";
             compact.Add(size);
             Add("Dimensions", size);
-            uint a = dimensions.Width, b = dimensions.Height;
-            while (b != 0) (a, b) = (b, a % b);
-            Add("AspectRatio", $"{dimensions.Width / a}:{dimensions.Height / a}");
+            Add("AspectRatio", FormatAspectRatio(dimensions.Width, dimensions.Height));
         }
+
         if (file.Duration is { } duration)
         {
             string time = CaptureDetailsContent.Time(duration);
             compact.Add(time);
             Add("Duration", time);
         }
+
         compact.Add(CaptureDetailsContent.FormatSize(file.SizeBytes));
         result.Compact = string.Join(" · ", compact);
         Add("CapturedAt", file.CapturedAt is { } captured ? Date(captured) : Label("Unknown"));
@@ -58,5 +65,17 @@ public sealed class CaptureFileProperties
         Add("AudioBitrate", file.Audio?.Bitrate is { } ab ? ab.ToString("N0", CultureInfo.CurrentCulture) + " bps" : null, true);
         Add("AudioCodec", file.Audio?.Codec, true);
         return result;
+    }
+
+    private static string FormatAspectRatio(uint width, uint height)
+    {
+        uint divisor = width;
+        uint remainder = height;
+        while (remainder != 0)
+        {
+            (divisor, remainder) = (remainder, divisor % remainder);
+        }
+
+        return $"{width / divisor}:{height / divisor}";
     }
 }

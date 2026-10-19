@@ -1,4 +1,4 @@
-﻿using CaptureTool.Application.Abstractions.Analysis;
+using CaptureTool.Application.Abstractions.Analysis;
 using CaptureTool.Application.Abstractions.Localization;
 using CaptureTool.Application.Abstractions.TaskEnvironment;
 using CaptureTool.Domain.Analysis;
@@ -17,8 +17,6 @@ public sealed class CaptureMemoryViewModel : ViewModelBase
     private readonly IAppNotificationService _notifications;
     private readonly IAnalysisFeatureAvailability? _availability;
     private bool _hasSupportedFeatures;
-    public bool ShowConsent => _hasSupportedFeatures || ConsentGranted;
-    public bool ShowSettings => ShowConsent || CanDelete;
     private string? _reportedFailure;
     private string? _pendingFailure;
     private string? _reportedOperationFailure;
@@ -28,13 +26,31 @@ public sealed class CaptureMemoryViewModel : ViewModelBase
     private bool _disposed;
     private int _activeOperations;
 
-    public bool ConsentGranted { get; private set => Set(ref field, value); }
-    public bool CanDelete { get; private set => Set(ref field, value); }
+    public bool ShowConsent => _hasSupportedFeatures || ConsentGranted;
+
+    public bool ShowSettings => ShowConsent || CanDelete;
+
+    public bool ConsentGranted
+    {
+        get;
+        private set => Set(ref field, value);
+    }
+
+    public bool CanDelete
+    {
+        get;
+        private set => Set(ref field, value);
+    }
+
     public IAsyncRelayCommand<bool> SetConsentCommand { get; }
+
     public IAsyncRelayCommand DeleteCommand { get; }
 
-    public CaptureMemoryViewModel(ICaptureMemoryService memory, ITaskEnvironment ui,
-        ILocalizationService localization, IAppNotificationService notifications,
+    public CaptureMemoryViewModel(
+        ICaptureMemoryService memory,
+        ITaskEnvironment ui,
+        ILocalizationService localization,
+        IAppNotificationService notifications,
         IAnalysisFeatureAvailability? availability = null)
     {
         _memory = memory;
@@ -42,13 +58,18 @@ public sealed class CaptureMemoryViewModel : ViewModelBase
         _localization = localization;
         _notifications = notifications;
         _availability = availability;
-        SetConsentCommand = new AsyncRelayCommand<bool>(value => !value || _hasSupportedFeatures
-            ? RunAsync(() => memory.SetConsentAsync(value)) : Task.CompletedTask,
-            value => !value || _hasSupportedFeatures);
+        SetConsentCommand = new AsyncRelayCommand<bool>(SetConsentAsync, CanSetConsent);
         DeleteCommand = new AsyncRelayCommand(() => RunAsync(() => memory.DeleteMetadataAsync()), () => CanDelete);
         _memory.StateChanged += QueueUpdate;
         QueueUpdate();
     }
+
+    private bool CanSetConsent(bool value) => !value || _hasSupportedFeatures;
+
+    private Task SetConsentAsync(bool value) => CanSetConsent(value)
+        ? RunAsync(() => _memory.SetConsentAsync(value))
+        : Task.CompletedTask;
+
     // Page navigation observes state; it is not an explicit analysis retry.
     public Task RefreshAsync() => RunAsync(async () =>
     {
@@ -58,38 +79,88 @@ public sealed class CaptureMemoryViewModel : ViewModelBase
             var support = await AnalysisFeatureBenefits.ReadAsync(_availability);
             _hasSupportedFeatures = support.Any;
         }
+
         await _memory.RefreshAsync();
     }, reportMemoryFailure: false);
+
     private async Task RunAsync(Func<Task> action, bool reportMemoryFailure = true)
     {
-        if (reportMemoryFailure) Interlocked.Increment(ref _activeOperations);
-        try { await action(); }
+        if (reportMemoryFailure)
+        {
+            Interlocked.Increment(ref _activeOperations);
+        }
+
+        try
+        {
+            await action();
+        }
         finally
         {
-            try { QueueUpdate(); }
-            finally { if (reportMemoryFailure) Interlocked.Decrement(ref _activeOperations); }
+            try
+            {
+                QueueUpdate();
+            }
+            finally
+            {
+                if (reportMemoryFailure)
+                {
+                    Interlocked.Decrement(ref _activeOperations);
+                }
+            }
         }
     }
+
     private void QueueUpdate()
     {
-        if (_disposed) return;
+        if (_disposed)
+        {
+            return;
+        }
+
+        RememberFailures(_memory.State);
+        if (Interlocked.Exchange(ref _updateQueued, 1) != 0)
+        {
+            return;
+        }
+
+        if (!_ui.TryExecute(ApplyQueuedState))
+        {
+            Interlocked.Exchange(ref _updateQueued, 0);
+        }
+    }
+
+    private void RememberFailures(CaptureMemoryState state)
+    {
         // Preserve a terminal failure even if the next capture starts before the UI dispatches.
-        CaptureMemoryState state = _memory.State;
-        if (GetAnalysisFailure(state) is { } failure) Interlocked.Exchange(ref _pendingFailure, failure);
+        if (GetAnalysisFailure(state) is { } failure)
+        {
+            Interlocked.Exchange(ref _pendingFailure, failure);
+        }
+
         if (state.FailureCode is { } operationFailure)
         {
             // Capture eligibility with the event so a delayed dispatcher still reports
             // command failures without exposing dormant failures after the command ends.
-            if (ShouldReportOperationFailure(state)) Interlocked.Exchange(ref _pendingOperationFailure, operationFailure);
+            if (ShouldReportOperationFailure(state))
+            {
+                Interlocked.Exchange(ref _pendingOperationFailure, operationFailure);
+            }
         }
-        else Interlocked.Exchange(ref _operationRecovered, 1);
-        if (Interlocked.Exchange(ref _updateQueued, 1) != 0) return;
-        if (!_ui.TryExecute(() =>
+        else
         {
-            Interlocked.Exchange(ref _updateQueued, 0);
-            if (!_disposed) ApplyState();
-        })) Interlocked.Exchange(ref _updateQueued, 0);
+            Interlocked.Exchange(ref _operationRecovered, 1);
+        }
     }
+
+    private void ApplyQueuedState()
+    {
+        Interlocked.Exchange(ref _updateQueued, 0);
+        if (!_disposed)
+        {
+            ApplyState();
+        }
+    }
+
     private void ApplyState()
     {
         CaptureMemoryState state = _memory.State;
@@ -99,21 +170,42 @@ public sealed class CaptureMemoryViewModel : ViewModelBase
         RaisePropertyChanged(nameof(ShowSettings));
         SetConsentCommand.NotifyCanExecuteChanged();
         DeleteCommand.NotifyCanExecuteChanged();
-        if (Interlocked.Exchange(ref _operationRecovered, 0) != 0) _reportedOperationFailure = null;
+        ReportFailures(state);
+    }
+
+    private void ReportFailures(CaptureMemoryState state)
+    {
+        if (Interlocked.Exchange(ref _operationRecovered, 0) != 0)
+        {
+            _reportedOperationFailure = null;
+        }
+
         string? pendingOperation = Interlocked.Exchange(ref _pendingOperationFailure, null);
         string? operationFailure = (ShouldReportOperationFailure(state) ? state.FailureCode : null) ?? pendingOperation;
         ShowFailure(operationFailure, ref _reportedOperationFailure);
         string? pendingFailure = Interlocked.Exchange(ref _pendingFailure, null);
         string? failure = GetAnalysisFailure(state) ?? pendingFailure;
-        if (operationFailure == null && state.PolicyAvailable && state.Policy.IsAllowed) ShowFailure(failure, ref _reportedFailure);
+        if (operationFailure == null && state.PolicyAvailable && state.Policy.IsAllowed)
+        {
+            ShowFailure(failure, ref _reportedFailure);
+        }
+
         // Starting the next queued capture is not recovery from the preceding failure.
-        if (GetAnalysisFailure(state) == null && state.Activity.Activity == AnalysisActivity.Idle &&
-            state.Activity.LastRunStatus == AnalysisRunStatus.Completed && !state.Activity.LastRunHadFailures)
+        bool analysisRecovered = GetAnalysisFailure(state) == null &&
+            state.Activity.Activity == AnalysisActivity.Idle &&
+            state.Activity.LastRunStatus == AnalysisRunStatus.Completed &&
+            !state.Activity.LastRunHadFailures;
+        if (analysisRecovered)
+        {
             _reportedFailure = null;
+        }
     }
+
     private bool ShouldReportOperationFailure(CaptureMemoryState state) =>
-        Volatile.Read(ref _activeOperations) > 0 || state.Activity.Activity == AnalysisActivity.StorageUnavailable ||
+        Volatile.Read(ref _activeOperations) > 0 ||
+        state.Activity.Activity == AnalysisActivity.StorageUnavailable ||
         state.FailureCode is "policy-save" or "cleanup-pending";
+
     private void ShowFailure(string? failure, ref string? reported)
     {
         if (failure != null && failure != reported)
@@ -132,12 +224,25 @@ public sealed class CaptureMemoryViewModel : ViewModelBase
             reported = failure;
         }
     }
-    private static string? GetAnalysisFailure(CaptureMemoryState state) =>
-        (state.Activity.Activity == AnalysisActivity.ProviderUnavailable ? "provider-unavailable" :
-        state.Activity.LastRunStatus == AnalysisRunStatus.Failed || state.Activity.LastRunHadFailures ? "analysis-failed" : null);
+
+    private static string? GetAnalysisFailure(CaptureMemoryState state)
+    {
+        if (state.Activity.Activity == AnalysisActivity.ProviderUnavailable)
+        {
+            return "provider-unavailable";
+        }
+
+        bool analysisFailed = state.Activity.LastRunStatus == AnalysisRunStatus.Failed || state.Activity.LastRunHadFailures;
+        return analysisFailed ? "analysis-failed" : null;
+    }
+
     public override void Dispose()
     {
-        if (_disposed) return;
+        if (_disposed)
+        {
+            return;
+        }
+
         _disposed = true;
         _memory.StateChanged -= QueueUpdate;
         base.Dispose();

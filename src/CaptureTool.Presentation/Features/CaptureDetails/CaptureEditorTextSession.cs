@@ -6,22 +6,35 @@ namespace CaptureTool.Presentation.Features.CaptureDetails;
 public sealed class CaptureEditorTextSession(Func<Task> extract, Action cancel)
 {
     public event Action? Changed;
+
     public RecognizedTextDocument? Document { get; private set; }
+
     public bool HasChanges { get; private set; }
+
     public bool CanExtract { get; private set; }
+
     public bool IsRunning { get; private set; }
+
     public string Status { get; private set; } = string.Empty;
 
     public void SetAvailability(bool available)
     {
-        if (CanExtract == available) return;
+        if (CanExtract == available)
+        {
+            return;
+        }
+
         CanExtract = available;
         Changed?.Invoke();
     }
 
     public void SetStatus(string status)
     {
-        if (Status == status) return;
+        if (Status == status)
+        {
+            return;
+        }
+
         Status = status;
         Changed?.Invoke();
     }
@@ -43,12 +56,23 @@ public sealed class CaptureEditorTextSession(Func<Task> extract, Action cancel)
 
     public async Task ExtractAsync()
     {
-        if (!CanExtract || IsRunning) return;
+        if (!CanExtract || IsRunning)
+        {
+            return;
+        }
+
         IsRunning = true;
         Status = string.Empty;
         Changed?.Invoke();
-        try { await extract(); }
-        finally { IsRunning = false; Changed?.Invoke(); }
+        try
+        {
+            await extract();
+        }
+        finally
+        {
+            IsRunning = false;
+            Changed?.Invoke();
+        }
     }
 
     public void Cancel() => cancel();

@@ -21,6 +21,22 @@ csharp_prefer_braces = true:warning
 csharp_preserve_single_line_statements = false
 csharp_preserve_single_line_blocks = true
 
+# Keep the capture analysis UI consistent with the pipeline's explicit control flow.
+[src/CaptureTool.Presentation/Features/CaptureDetails/**.cs]
+csharp_prefer_braces = true:warning
+csharp_preserve_single_line_statements = false
+csharp_preserve_single_line_blocks = true
+
+[src/CaptureTool.Presentation/Features/Settings/CaptureMemoryViewModel.cs]
+csharp_prefer_braces = true:warning
+csharp_preserve_single_line_statements = false
+csharp_preserve_single_line_blocks = true
+
+[src/CaptureTool.Presentation.Windows.WinUI/Xaml/Controls/CaptureDetailsPane*.cs]
+csharp_prefer_braces = true:warning
+csharp_preserve_single_line_statements = false
+csharp_preserve_single_line_blocks = true
+
 [src/CaptureTool.Infrastructure.Analysis.Windows/**.cs]
 csharp_prefer_braces = true:warning
 csharp_preserve_single_line_statements = false
