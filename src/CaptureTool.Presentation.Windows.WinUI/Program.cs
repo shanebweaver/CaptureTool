@@ -1,8 +1,8 @@
+using CaptureTool.Infrastructure.Windows.Activation;
 using CaptureTool.Presentation.Activation;
 using CaptureTool.Presentation.Windows.WinUI.Activation;
 using CaptureTool.Presentation.Windows.WinUI.UiTests;
 using Microsoft.UI.Dispatching;
-using Microsoft.Win32.SafeHandles;
 using Microsoft.Windows.AppLifecycle;
 using System.Diagnostics;
 using Windows.Win32.Foundation;
@@ -12,8 +12,7 @@ namespace CaptureTool.Presentation.Windows.WinUI;
 // https://learn.microsoft.com/en-us/windows/apps/windows-app-sdk/applifecycle/applifecycle-single-instance
 public class Program
 {
-    private const uint InfiniteTimeout = uint.MaxValue;
-    private const uint DefaultFlags = 0;
+    private static readonly TimeSpan RedirectTimeout = TimeSpan.FromSeconds(30);
 
     [STAThread]
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "App entry point")]
@@ -30,8 +29,7 @@ public class Program
 
             if (!instance.IsCurrent)
             {
-                RedirectToPrimary(instance);
-                return 0;
+                return RedirectToPrimary(instance);
             }
 
             // Materialize redirected data before the redirecting process can exit,
@@ -52,42 +50,31 @@ public class Program
         return 0;
     }
 
-    private static void RedirectToPrimary(AppInstance primary)
+    private static int RedirectToPrimary(AppInstance primary)
     {
-        // Create an unnamed manual-reset event (initially nonsignaled)
-        SafeFileHandle safeEvt = global::Windows.Win32.PInvoke.CreateEvent(
-            lpEventAttributes: null,
-            bManualReset: true,
-            bInitialState: false,
-            lpName: null);
-
-        // Wrap raw HANDLE for CsWin32 calls
-        var evtHandle = new HANDLE(safeEvt.DangerousGetHandle());
-
-        // Perform redirection on background thread
-        _ = Task.Run(() =>
+        try
         {
-            primary.RedirectActivationToAsync(
-                AppInstance.GetCurrent().GetActivatedEventArgs())
-                .AsTask().GetAwaiter().GetResult();
+            ActivationRedirector.Redirect(() => primary.RedirectActivationToAsync(
+                AppInstance.GetCurrent().GetActivatedEventArgs()).AsTask(), RedirectTimeout);
+        }
+        catch (Exception exception)
+        {
+            // There is no App or log service in the redirecting process.
+            Trace.TraceError($"Activation redirection failed: {exception}");
+            return 1;
+        }
 
-            // Signal completion
-            global::Windows.Win32.PInvoke.SetEvent(evtHandle);
-        });
+        try
+        {
+            using var process = Process.GetProcessById((int)primary.ProcessId);
+            global::Windows.Win32.PInvoke.SetForegroundWindow(new HWND(process.MainWindowHandle));
+        }
+        catch (Exception exception) when (exception is ArgumentException or InvalidOperationException or System.ComponentModel.Win32Exception)
+        {
+            // The primary can exit after accepting the activation.
+            Trace.TraceWarning($"Could not foreground the primary instance: {exception}");
+        }
 
-        // Pump COM and wait for the event
-        Span<HANDLE> handles = [evtHandle];
-        global::Windows.Win32.PInvoke.CoWaitForMultipleObjects(
-            dwFlags: DefaultFlags,
-            dwTimeout: InfiniteTimeout,
-            pHandles: handles,
-            out _);
-
-        // Dispose event handle
-        safeEvt.Dispose();
-
-        // Bring primary window to foreground
-        var proc = Process.GetProcessById((int)primary.ProcessId);
-        global::Windows.Win32.PInvoke.SetForegroundWindow(new HWND(proc.MainWindowHandle));
+        return 0;
     }
 }

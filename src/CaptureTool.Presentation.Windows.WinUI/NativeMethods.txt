@@ -1,8 +1,5 @@
 ﻿SetActiveWindow
 SetForegroundWindow
-SetEvent
-CreateEvent
-CoWaitForMultipleObjects
 MonitorFromWindow
 GetMonitorInfo
 GetWindowRect

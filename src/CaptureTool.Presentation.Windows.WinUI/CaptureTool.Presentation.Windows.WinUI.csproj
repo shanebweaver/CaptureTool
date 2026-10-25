@@ -26,6 +26,13 @@
     <Manifest Include="$(ApplicationManifest)" />
   </ItemGroup>
 
+  <!-- CaptureKit's recording DLL uses the desktop CRT, not the *_app.dll
+       runtime supplied by Microsoft.VCLibs. Its NuGet binaries are Release
+       builds even when this app is built in Debug. -->
+  <ItemGroup Condition="'$(WindowsPackageType)' != 'None'">
+    <SDKReference Include="Microsoft.VCLibs.Desktop, Version=14.0" TargetedSDKConfiguration="Retail" />
+  </ItemGroup>
+
   <!-- Package references -->
   <ItemGroup>
     <PackageReference Include="CaptureKit.Windows" />
