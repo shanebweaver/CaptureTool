@@ -9,6 +9,7 @@ public static class WindowsCaptureInfrastructureServiceCollectionExtensions
     public static IServiceCollection AddWindowsCaptureDomains(this IServiceCollection services)
     {
         services.AddCaptureKitWindows();
+        services.AddSingleton<IDisplayTopology, WindowsDisplayTopology>();
         services.AddSingleton<IScreenCapture, WindowsScreenCapture>();
         services.AddSingleton<IScreenRecorder, WindowsScreenRecorder>();
         services.AddSingleton<IVideoCaptureSupportService, WindowsVideoCaptureSupportService>();

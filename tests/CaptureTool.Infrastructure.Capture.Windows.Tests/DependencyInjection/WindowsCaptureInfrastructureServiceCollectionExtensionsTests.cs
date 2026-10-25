@@ -16,6 +16,7 @@ public sealed class WindowsCaptureInfrastructureServiceCollectionExtensionsTests
         services.AddWindowsCaptureDomains();
 
         services.ShouldContainSingleton<IScreenCapture, WindowsScreenCapture>();
+        services.ShouldContainSingleton<IDisplayTopology, WindowsDisplayTopology>();
         services.ShouldContainSingleton<IScreenRecorder, WindowsScreenRecorder>();
         services.ShouldContainSingleton<IAudioRecorder, WindowsAudioRecorder>();
         services.ShouldContainSingleton<CaptureKit.Abstractions.IDisplayCaptureService, CaptureKit.Windows.DisplayCaptureService>();

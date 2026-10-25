@@ -7,6 +7,8 @@ namespace CaptureTool.Mcp.CaptureServer.Annotations;
 
 public sealed class AnnotationDrawableFactory
 {
+    public const int MaxLabelLength = 1024;
+
     public AnnotationDrawableSet CreateArrowWithOptionalLabel(
         Size imageSize,
         int arrowStartX,
@@ -15,6 +17,17 @@ public sealed class AnnotationDrawableFactory
         int arrowEndY,
         string? label)
     {
+        if (imageSize.Width <= 0 || imageSize.Height <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(imageSize), "Image dimensions must be positive.");
+        }
+
+        ValidateLabel(label);
+        arrowStartX = Math.Clamp(arrowStartX, 0, imageSize.Width - 1);
+        arrowStartY = Math.Clamp(arrowStartY, 0, imageSize.Height - 1);
+        arrowEndX = Math.Clamp(arrowEndX, 0, imageSize.Width - 1);
+        arrowEndY = Math.Clamp(arrowEndY, 0, imageSize.Height - 1);
+
         int strokeWidth = Math.Max(3, (int)Math.Round(Math.Min(imageSize.Width, imageSize.Height) / 240d));
         var arrow = new ArrowDrawable(
             new Vector2(arrowStartX, arrowStartY),
@@ -48,13 +61,13 @@ public sealed class AnnotationDrawableFactory
         SizeF measured = graphics.MeasureString(label, font);
         int labelWidth = Math.Min(
             Math.Max(80, (int)Math.Ceiling(measured.Width) + horizontalPadding * 2),
-            Math.Max(80, imageSize.Width));
+            imageSize.Width);
         int labelHeight = Math.Min(
             Math.Max(36, (int)Math.Ceiling(measured.Height) + verticalPadding * 2),
-            Math.Max(36, imageSize.Height));
+            imageSize.Height);
 
-        int labelX = Clamp(x + 12, 0, Math.Max(0, imageSize.Width - labelWidth));
-        int labelY = Clamp(y + 12, 0, Math.Max(0, imageSize.Height - labelHeight));
+        int labelX = (int)Math.Clamp((long)x + 12, 0, imageSize.Width - labelWidth);
+        int labelY = (int)Math.Clamp((long)y + 12, 0, imageSize.Height - labelHeight);
 
         return new TextDrawable(
             new Vector2(labelX, labelY),
@@ -66,8 +79,13 @@ public sealed class AnnotationDrawableFactory
             fontSize);
     }
 
-    private static int Clamp(int value, int min, int max)
-        => Math.Min(Math.Max(value, min), max);
+    internal static void ValidateLabel(string? label)
+    {
+        if (label?.Length > MaxLabelLength)
+        {
+            throw new ArgumentException($"Label must be at most {MaxLabelLength} characters. Shorten the label and retry.", nameof(label));
+        }
+    }
 }
 
 public sealed record AnnotationDrawableSet(IReadOnlyList<IDrawable> Drawables, AnnotationPlacementDto[] Placements);

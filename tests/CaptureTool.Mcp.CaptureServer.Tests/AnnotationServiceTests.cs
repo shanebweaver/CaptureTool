@@ -1,7 +1,10 @@
 using CaptureTool.Domain.Edit.Drawable;
 using FluentAssertions;
+using Microsoft.Extensions.Logging.Abstractions;
+using ModelContextProtocol.Protocol;
 using System.Drawing;
 using System.Drawing.Imaging;
+using System.Numerics;
 
 namespace CaptureTool.Mcp.CaptureServer.Tests;
 
@@ -20,6 +23,122 @@ public sealed class AnnotationServiceTests
         drawables.Drawables.OfType<ArrowDrawable>().Should().ContainSingle();
         drawables.Drawables.OfType<TextDrawable>().Should().ContainSingle(text => text.Text == "Hello MCP!");
         drawables.Placements.Should().ContainSingle(placement => placement.Kind == "text" && placement.Label == "Hello MCP!");
+    }
+
+    [TestMethod]
+    [DataRow(1, 1)]
+    [DataRow(10, 5)]
+    [DataRow(79, 35)]
+    [DataRow(400, 300)]
+    public void CreateArrowWithOptionalLabel_ClampsExtremeCoordinatesAndFitsLabel(int width, int height)
+    {
+        var factory = new AnnotationDrawableFactory();
+
+        AnnotationDrawableSet drawables = factory.CreateArrowWithOptionalLabel(
+            new Size(width, height), int.MinValue, int.MaxValue, int.MaxValue, int.MinValue, " Label ");
+
+        ArrowDrawable arrow = drawables.Drawables.OfType<ArrowDrawable>().Single();
+        arrow.Offset.Should().Be(new Vector2(0, height - 1));
+        arrow.EndPoint.Should().Be(new Vector2(width - 1, 0));
+        Rectangle bounds = drawables.Placements.Single().Bounds.ToRectangle();
+        bounds.Width.Should().BePositive();
+        bounds.Height.Should().BePositive();
+        new Rectangle(0, 0, width, height).Contains(bounds).Should().BeTrue();
+        drawables.Placements.Single().Label.Should().Be("Label");
+    }
+
+    [TestMethod]
+    [DataRow(0, 1)]
+    [DataRow(1, 0)]
+    [DataRow(-1, 10)]
+    public void CreateArrowWithOptionalLabel_RejectsInvalidImageSize(int width, int height)
+    {
+        var factory = new AnnotationDrawableFactory();
+
+        Action create = () => factory.CreateArrowWithOptionalLabel(new Size(width, height), 0, 0, 1, 1, null);
+
+        create.Should().Throw<ArgumentOutOfRangeException>();
+    }
+
+    [TestMethod]
+    public void CreateArrowWithOptionalLabel_EnforcesLabelLengthBeforeTrimming()
+    {
+        var factory = new AnnotationDrawableFactory();
+        string label = new('a', AnnotationDrawableFactory.MaxLabelLength);
+
+        factory.CreateArrowWithOptionalLabel(new Size(100, 100), 0, 0, 10, 10, label)
+            .Placements.Single().Label.Should().Be(label);
+        Action tooLong = () => factory.CreateArrowWithOptionalLabel(new Size(100, 100), 0, 0, 10, 10, label + "a");
+        Action whitespace = () => factory.CreateArrowWithOptionalLabel(new Size(100, 100), 0, 0, 10, 10, new string(' ', label.Length + 1));
+
+        tooLong.Should().Throw<ArgumentException>().WithMessage("*at most 1024 characters*");
+        whitespace.Should().Throw<ArgumentException>();
+    }
+
+    [TestMethod]
+    [DataRow(1, 1)]
+    [DataRow(10, 5)]
+    public void AnnotateWithArrow_OnTinyImage_RendersWithinImageBounds(int width, int height)
+    {
+        var store = new InMemoryMcpCaptureStore();
+        store.Store(CreateStoredCapture("tiny", new Size(width, height)));
+        var service = new AnnotationService(store, new AnnotationDrawableFactory(), new ManualTimeProvider(AnnotationTime));
+
+        McpCapture result = service.AnnotateWithArrow("tiny", int.MinValue, int.MaxValue, int.MaxValue, int.MinValue, "Tiny");
+
+        using var stream = new MemoryStream(result.PngBytes);
+        using var image = new Bitmap(stream);
+        image.Size.Should().Be(new Size(width, height));
+        new Rectangle(Point.Empty, image.Size).Contains(result.Metadata.AnnotationPlacements!.Single().Bounds.ToRectangle()).Should().BeTrue();
+    }
+
+    [TestMethod]
+    public void AnnotateImage_WhenLabelIsTooLong_ReturnsRecoverableErrorBeforeDecodingImage()
+    {
+        var store = new InMemoryMcpCaptureStore();
+        McpCapture source = CreateStoredCapture("source", new Size(10, 10)) with { PngBytes = [0] };
+        store.Store(source);
+        var service = new AnnotationService(store, new AnnotationDrawableFactory(), new ManualTimeProvider(AnnotationTime));
+
+        var result = AnnotationTool.AnnotateImage(service, NullLogger<AnnotationTool>.Instance,
+            "source", 0, 0, 1, 1, new string('a', AnnotationDrawableFactory.MaxLabelLength + 1));
+
+        result.IsError.Should().BeTrue();
+        result.Content.Should().ContainSingle().Which.Should().BeOfType<TextContentBlock>()
+            .Which.Text.Should().Contain("Shorten the label and retry");
+    }
+
+    [TestMethod]
+    public void AnnotateImage_WhenSourceWasEvicted_ExplainsHowToRecover()
+    {
+        var store = new InMemoryMcpCaptureStore(maxCaptures: 1);
+        store.Store(CreateStoredCapture("old", new Size(10, 10)));
+        store.Store(CreateStoredCapture("new", new Size(10, 10)));
+        var service = new AnnotationService(store, new AnnotationDrawableFactory(), new ManualTimeProvider(AnnotationTime));
+
+        var result = AnnotationTool.AnnotateImage(service, NullLogger<AnnotationTool>.Instance, "old", 0, 0, 1, 1);
+
+        result.IsError.Should().BeTrue();
+        result.Content.Should().ContainSingle().Which.Should().BeOfType<TextContentBlock>()
+            .Which.Text.Should().Contain("evicted").And.Contain("Capture the image again and retry");
+    }
+
+    [TestMethod]
+    public void AnnotateImage_WhenResultExceedsStorageLimit_ReturnsRecoverableErrorAndPreservesSource()
+    {
+        McpCapture source = CreateStoredCapture("source", new Size(300, 200));
+        var store = new InMemoryMcpCaptureStore(maxCaptureBytes: source.PngBytes.Length);
+        store.Store(source);
+        var service = new AnnotationService(store, new AnnotationDrawableFactory(), new ManualTimeProvider(AnnotationTime));
+
+        var result = AnnotationTool.AnnotateImage(service, NullLogger<AnnotationTool>.Instance,
+            "source", 20, 30, 220, 150, "Label");
+
+        result.IsError.Should().BeTrue();
+        result.Content.Should().ContainSingle().Which.Should().BeOfType<TextContentBlock>()
+            .Which.Text.Should().Contain("storage limit").And.Contain("Capture a smaller region and retry");
+        store.TryGet("source", out McpCapture retained).Should().BeTrue();
+        retained.Should().BeSameAs(source);
     }
 
     [TestMethod]
