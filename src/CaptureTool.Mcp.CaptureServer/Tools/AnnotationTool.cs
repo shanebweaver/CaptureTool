@@ -20,17 +20,17 @@ public sealed class AnnotationTool
     public static CallToolResult AnnotateImage(
         IAnnotationService annotationService,
         ILogger<AnnotationTool> logger,
-        [Description("Capture ID returned by a previous image capture tool.")]
+        [Description("Capture ID returned by a previous image capture tool. Captures are retained up to 20 images or 128 MiB of PNG data, with a 32 MiB limit per image; older captures may be evicted. Recapture if unavailable.")]
         string captureId,
-        [Description("Arrow start X coordinate in image pixels.")]
+        [Description("Arrow start X coordinate in image pixels, clamped to the image bounds.")]
         int arrowStartX,
-        [Description("Arrow start Y coordinate in image pixels.")]
+        [Description("Arrow start Y coordinate in image pixels, clamped to the image bounds.")]
         int arrowStartY,
-        [Description("Arrow end X coordinate in image pixels.")]
+        [Description("Arrow end X coordinate in image pixels, clamped to the image bounds.")]
         int arrowEndX,
-        [Description("Arrow end Y coordinate in image pixels.")]
+        [Description("Arrow end Y coordinate in image pixels, clamped to the image bounds.")]
         int arrowEndY,
-        [Description("Optional text label rendered near the arrow using a TextDrawable.")]
+        [Description("Optional text label, at most 1024 UTF-16 characters, rendered near the arrow within the image bounds.")]
         string? label = null)
     {
         try

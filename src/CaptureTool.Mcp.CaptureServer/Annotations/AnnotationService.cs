@@ -24,9 +24,12 @@ public sealed class AnnotationService : IAnnotationService
 
     public McpCapture AnnotateWithArrow(string captureId, int arrowStartX, int arrowStartY, int arrowEndX, int arrowEndY, string? label)
     {
+        AnnotationDrawableFactory.ValidateLabel(label);
+
         if (!_captureStore.TryGet(captureId, out McpCapture sourceCapture))
         {
-            throw new InvalidOperationException($"Capture '{captureId}' is not available.");
+            throw new InvalidOperationException(
+                $"Capture '{captureId}' is not available. It may have been evicted by the capture count or byte limit. Capture the image again and retry.");
         }
 
         using var inputStream = new MemoryStream(sourceCapture.PngBytes);
@@ -90,11 +93,12 @@ public sealed class AnnotationService : IAnnotationService
 
     private static void DrawArrow(ArrowDrawable drawable, Graphics graphics)
     {
+        using var arrowCap = new AdjustableArrowCap(drawable.StrokeWidth * 3f, drawable.StrokeWidth * 4f);
         using var pen = new Pen(drawable.StrokeColor, drawable.StrokeWidth)
         {
             StartCap = LineCap.Round,
             EndCap = LineCap.Custom,
-            CustomEndCap = new AdjustableArrowCap(drawable.StrokeWidth * 3f, drawable.StrokeWidth * 4f),
+            CustomEndCap = arrowCap,
         };
 
         graphics.DrawLine(pen, ToPointF(drawable.Offset), ToPointF(drawable.EndPoint));
