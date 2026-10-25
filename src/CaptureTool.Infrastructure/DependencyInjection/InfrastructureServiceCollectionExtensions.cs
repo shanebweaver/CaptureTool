@@ -1,5 +1,6 @@
-using CaptureTool.Application.Abstractions.Ai;
+using CaptureTool.Application.Abstractions.Analysis;
 using CaptureTool.Application.Abstractions.Cancellation;
+using CaptureTool.Application.Abstractions.Capture.Assets;
 using CaptureTool.Application.Abstractions.Edit.Image.ChromaKey;
 using CaptureTool.Application.Abstractions.Edit.Image.Description;
 using CaptureTool.Application.Abstractions.Edit.Image.ForegroundExtraction;
@@ -10,8 +11,9 @@ using CaptureTool.Application.Abstractions.Edit.Image.TextExtraction;
 using CaptureTool.Application.Abstractions.Edit.Video.SuperResolution;
 using CaptureTool.Application.Abstractions.Files;
 using CaptureTool.Application.Abstractions.Globalization;
-using CaptureTool.Application.Abstractions.Logging;
+using CaptureTool.Application.Abstractions.Library.CaptureDetails;
 using CaptureTool.Application.Abstractions.Library.RecentCaptures;
+using CaptureTool.Application.Abstractions.Logging;
 using CaptureTool.Application.Abstractions.Metrics;
 using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Application.Abstractions.Settings;
@@ -19,7 +21,10 @@ using CaptureTool.Application.Abstractions.Store;
 using CaptureTool.Application.Abstractions.TaskEnvironment;
 using CaptureTool.Application.Abstractions.Telemetry;
 using CaptureTool.Application.Abstractions.Time;
+using CaptureTool.Infrastructure.Analysis.Persistence;
+using CaptureTool.Infrastructure.Analysis.Sources;
 using CaptureTool.Infrastructure.Cancellation;
+using CaptureTool.Infrastructure.CaptureAssets;
 using CaptureTool.Infrastructure.Features;
 using CaptureTool.Infrastructure.Files;
 using CaptureTool.Infrastructure.Globalization;
@@ -40,7 +45,8 @@ public static class InfrastructureServiceCollectionExtensions
     public static IServiceCollection AddGenericServices(this IServiceCollection services)
     {
         services.AddSingleton<ICancellationService, CancellationService>();
-        services.AddSingleton<IAiConsentSettingsFeatureAvailability, AiConsentSettingsFeatureAvailability>();
+        services.AddSingleton<CaptureTool.Application.Abstractions.Ai.IAiDeviceSupport>(_ => CaptureTool.Infrastructure.Ai.WindowsAiDeviceSupport.Current);
+        services.AddSingleton<ICaptureDetailsFeatureAvailability, CaptureDetailsFeatureAvailability>();
         services.AddSingleton<IStoreFeatureAvailability, StoreFeatureAvailability>();
         services.AddSingleton<IChromaKeyFeatureAvailability, ChromaKeyFeatureAvailability>();
         services.AddSingleton<IImageSuperResolutionFeatureAvailability, ImageSuperResolutionFeatureAvailability>();
@@ -56,6 +62,15 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddSingleton<ISettingsService, LocalSettingsService>();
         services.AddSingleton<IAppMetricsService, LocalAppMetricsService>();
         services.AddSingleton<IRecentCaptureCatalog, LocalRecentCaptureCatalog>();
+        services.AddSingleton<LocalCaptureAssetCatalog>();
+        services.AddSingleton<ICaptureAssetCatalog>(provider => provider.GetRequiredService<LocalCaptureAssetCatalog>());
+        services.AddSingleton<ICaptureNameStore>(provider => provider.GetRequiredService<LocalCaptureAssetCatalog>());
+        services.AddSingleton<LocalCaptureAnalysisStore>();
+        services.AddSingleton<ICaptureAnalysisStore>(provider => provider.GetRequiredService<LocalCaptureAnalysisStore>());
+        services.AddSingleton<ICaptureMetadataReader>(provider => provider.GetRequiredService<LocalCaptureAnalysisStore>());
+        services.AddSingleton<IAnalysisExecutionStore>(provider => provider.GetRequiredService<LocalCaptureAnalysisStore>());
+        services.AddSingleton<IAnalysisSource, LocalAnalysisSource>();
+        services.AddSingleton<ICaptureMemoryPolicyStore, LocalCaptureMemoryPolicyStore>();
         services.AddSingleton<IBackgroundTaskRunner, BackgroundTaskRunner>();
         services.AddSingleton<ITelemetryConsentService, TelemetryConsentService>();
         services.AddSingleton<ITelemetryEventSink, NullTelemetryService>();

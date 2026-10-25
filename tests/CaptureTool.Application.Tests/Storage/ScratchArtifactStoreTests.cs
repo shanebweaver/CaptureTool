@@ -75,6 +75,55 @@ public sealed class ScratchArtifactStoreTests
         Assert.IsTrue(File.Exists(activePath));
     }
 
+    [TestMethod]
+    public async Task BoundedLeasePrunesOnlyItsUnleasedOwnerArtifactsAndRecoversAfterRestart()
+    {
+        using TestFolders folders = new();
+        ScratchArtifactStore store = CreateStore(folders);
+        string active = store.CreateLeasedArtifactPath("analysis-audio", ".wav");
+        string abandoned = store.CreateLeasedArtifactPath("analysis-audio", ".wav");
+        string other = store.CreateLeasedArtifactPath("analysis-audio-other", ".wav");
+        foreach (string path in new[] { active, abandoned, other })
+            await File.WriteAllTextAsync(path, "scratch", TestContext.CancellationToken);
+        store.RelinquishArtifact(abandoned);
+        store.RelinquishArtifact(other);
+
+        string current = store.CreateLeasedArtifactPath("analysis-audio", ".wav", 2);
+        await File.WriteAllTextAsync(current, "current", TestContext.CancellationToken);
+        Assert.IsFalse(File.Exists(abandoned));
+        Assert.IsTrue(File.Exists(active));
+        Assert.IsTrue(File.Exists(other));
+        Assert.ThrowsExactly<IOException>(() => store.CreateLeasedArtifactPath("analysis-audio", ".wav", 2));
+
+        // An application restart has no live leases; the next extraction removes interrupted output.
+        ScratchArtifactStore restarted = CreateStore(folders);
+        string next = restarted.CreateLeasedArtifactPath("analysis-audio", ".wav", 2);
+        Assert.IsFalse(File.Exists(active));
+        Assert.IsFalse(File.Exists(current));
+        Assert.IsTrue(File.Exists(other));
+        Assert.IsTrue(Directory.Exists(Path.GetDirectoryName(next)));
+    }
+
+    [TestMethod]
+    public async Task BoundedLeaseRefusesLockedLeftoversAndCanRetryAfterTheyAreReleased()
+    {
+        using TestFolders folders = new();
+        ScratchArtifactStore store = CreateStore(folders);
+        string abandoned = store.CreateLeasedArtifactPath("analysis-audio", ".wav");
+        await File.WriteAllTextAsync(abandoned, "scratch", TestContext.CancellationToken);
+        store.RelinquishArtifact(abandoned);
+        using (var locked = File.Open(abandoned, FileMode.Open, FileAccess.Read, FileShare.Read))
+        {
+            Assert.ThrowsExactly<IOException>(() => store.CreateLeasedArtifactPath("analysis-audio", ".wav", 1));
+            Assert.IsTrue(File.Exists(abandoned));
+            Assert.HasCount(1, Directory.EnumerateFileSystemEntries(folders.ScratchPath));
+        }
+        string next = store.CreateLeasedArtifactPath("analysis-audio", ".wav", 1);
+        Assert.IsFalse(File.Exists(abandoned));
+        Assert.IsTrue(Directory.Exists(Path.GetDirectoryName(next)));
+        Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => store.CreateLeasedArtifactPath("analysis-audio", ".wav", 0));
+    }
+
     private static ScratchArtifactStore CreateStore(TestFolders folders, DateTime? utcNow = null)
     {
         var storage = new Mock<IStorageService>();

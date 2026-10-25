@@ -99,8 +99,8 @@
                     TextAlignment="Center"
                     TextWrapping="WrapWholeWords" />
                 <Slider
-                    x:Uid="ColorPalettePicker_ThicknessSlider"
                     x:Name="ThicknessSlider"
+                    x:Uid="ColorPalettePicker_ThicknessSlider"
                     Grid.Row="1"
                     Height="150"
                     HorizontalAlignment="Center"
@@ -138,8 +138,8 @@
                     TextAlignment="Center"
                     TextWrapping="WrapWholeWords" />
                 <Slider
-                    x:Uid="ColorPalettePicker_OpacitySlider"
                     x:Name="OpacitySlider"
+                    x:Uid="ColorPalettePicker_OpacitySlider"
                     Grid.Row="1"
                     Height="150"
                     HorizontalAlignment="Center"

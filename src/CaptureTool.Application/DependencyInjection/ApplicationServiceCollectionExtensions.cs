@@ -1,9 +1,11 @@
-using CaptureTool.Application.Abstractions.Ai;
+﻿using CaptureTool.Application.Abstractions.Ai;
+using CaptureTool.Application.Abstractions.Analysis;
 using CaptureTool.Application.Abstractions.Edit.External;
 using CaptureTool.Application.Abstractions.EditSessions;
 using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Application.Ai;
+using CaptureTool.Application.Analysis;
 using CaptureTool.Application.Capture;
 using CaptureTool.Application.Edit.External;
 using CaptureTool.Application.EditSessions;
@@ -43,6 +45,19 @@ public static class ApplicationServiceCollectionExtensions
     {
         services.AddTransient<IUseCaseExecutor, UseCaseExecutor>();
         services.AddSingleton<IAiFeatureConsentService, AiFeatureConsentService>();
+        services.AddSingleton(CaptureAnalysisConfiguration.CreateDefault());
+        services.AddSingleton<IAnalysisFeatureAvailability, AnalysisFeatureAvailability>();
+        services.AddSingleton<IMetadataProcessor, StructuredFactsProcessor>();
+        services.AddSingleton<CaptureMemoryAuthorization>();
+        services.AddSingleton<IAnalysisAuthorization>(provider => provider.GetRequiredService<CaptureMemoryAuthorization>());
+        services.AddSingleton<ICaptureAnalysisWorker, CaptureAnalysisWorker>();
+        services.AddSingleton<CaptureTool.Application.Capture.CaptureNamingService>();
+        services.AddSingleton<CaptureTool.Application.Abstractions.Capture.Assets.ICaptureNamingService>(provider => provider.GetRequiredService<CaptureTool.Application.Capture.CaptureNamingService>());
+        services.AddSingleton<ICaptureMemoryService, CaptureMemoryService>();
+        services.AddSingleton<CaptureTool.Application.Abstractions.Analysis.ICaptureAnalysisOnboarding, CaptureTool.Application.Analysis.CaptureAnalysisOnboarding>();
+        services.AddTransient<CaptureTool.Application.Abstractions.Library.CaptureDetails.ICaptureDetailsReader,
+            CaptureTool.Application.Library.CaptureDetails.CaptureDetailsReader>();
+        services.AddSingleton<CaptureAnalysisIntake>();
         services.AddTransient<IOpenExternalEditorUseCase, OpenExternalEditorUseCase>();
         services.AddSingleton<IActiveEditSessionService, ActiveEditSessionService>();
         services.AddSingleton<IEditSessionGuard, EditSessionGuard>();

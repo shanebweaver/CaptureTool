@@ -1,13 +1,14 @@
-using CaptureTool.Application.Abstractions.Logging;
+﻿using CaptureTool.Application.Abstractions.Logging;
 using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Application.Abstractions.Shutdown;
 using CaptureTool.Application.Abstractions.Themes;
 using CaptureTool.Application.Abstractions.Windowing;
 using CaptureTool.Domain.FileSystem;
+using CaptureTool.Presentation.Features.Settings;
 using CaptureTool.Presentation.Shell;
+using CaptureTool.Presentation.Windows.WinUI.Analysis;
 using CaptureTool.Presentation.Windows.WinUI.AudioCapture;
 using CaptureTool.Presentation.Windows.WinUI.Capture;
-using CaptureTool.Presentation.Windows.WinUI.Edit;
 using CaptureTool.Presentation.Windows.WinUI.EditSessions;
 using CaptureTool.Presentation.Windows.WinUI.Telemetry;
 using CaptureTool.Presentation.Windows.WinUI.UiTests;
@@ -39,16 +40,17 @@ public sealed partial class MainWindow : Window
     private readonly WinUIAudioCaptureNavigationConfirmationService _audioCaptureNavigationConfirmationService;
     private readonly WinUICaptureDiscardConfirmationService _captureDiscardConfirmationService;
     private readonly WinUIEditSessionConfirmationService _editSessionConfirmationService;
-    private readonly AiFeatureConsentDialogService _aiFeatureConsentDialogService;
-    private readonly ImageSuperResolutionPreparationConsentService _imageSuperResolutionPreparationConsentService;
     private readonly TelemetryConsentDialogService _telemetryConsentDialogService;
     private readonly DispatcherQueueTimer _notificationTimer;
+    private readonly CaptureMemoryDialogService _captureMemoryDialogs;
 
     public MainWindowViewModel ViewModel { get; } = ViewModelLocator.GetViewModel<MainWindowViewModel>();
     private bool _closeConfirmed;
     private bool _closeConfirmationInProgress;
     private bool _isShown;
     private bool _uiTestLaunchNavigationHandled;
+    private CancellationTokenSource? _startupPrompts;
+    private bool _requestingStartupPrompts;
 
     public MainWindow()
     {
@@ -59,9 +61,8 @@ public sealed partial class MainWindow : Window
         _audioCaptureNavigationConfirmationService = App.Current.ServiceProvider.GetService<WinUIAudioCaptureNavigationConfirmationService>();
         _captureDiscardConfirmationService = App.Current.ServiceProvider.GetService<WinUICaptureDiscardConfirmationService>();
         _editSessionConfirmationService = App.Current.ServiceProvider.GetService<WinUIEditSessionConfirmationService>();
-        _aiFeatureConsentDialogService = App.Current.ServiceProvider.GetService<AiFeatureConsentDialogService>();
-        _imageSuperResolutionPreparationConsentService = App.Current.ServiceProvider.GetService<ImageSuperResolutionPreparationConsentService>();
         _telemetryConsentDialogService = App.Current.ServiceProvider.GetService<TelemetryConsentDialogService>();
+        _captureMemoryDialogs = App.Current.ServiceProvider.GetService<CaptureMemoryDialogService>();
 
         if (AppWindow.Presenter is OverlappedPresenter presenter)
         {
@@ -70,6 +71,8 @@ public sealed partial class MainWindow : Window
         }
 
         InitializeComponent();
+        // Keep the shared observer active for metadata and consent error notifications.
+        _ = ViewModelLocator.GetViewModel<CaptureMemoryViewModel>();
         _notificationTimer = DispatcherQueue.CreateTimer();
         _notificationTimer.Interval = TimeSpan.FromSeconds(6);
         _notificationTimer.Tick += NotificationTimer_Tick;
@@ -96,14 +99,13 @@ public sealed partial class MainWindow : Window
         _editSessionConfirmationService.XamlRoot = RootGrid.XamlRoot;
         _audioCaptureNavigationConfirmationService.XamlRoot = RootGrid.XamlRoot;
         _captureDiscardConfirmationService.XamlRoot = RootGrid.XamlRoot;
-        _aiFeatureConsentDialogService.XamlRoot = RootGrid.XamlRoot;
-        _imageSuperResolutionPreparationConsentService.XamlRoot = RootGrid.XamlRoot;
         _telemetryConsentDialogService.XamlRoot = RootGrid.XamlRoot;
+        _captureMemoryDialogs.XamlRoot = RootGrid.XamlRoot;
         NavigateToUiTestImageWhenRequested();
 
         if (_isShown)
         {
-            RequestTelemetryConsentIfNeeded();
+            RequestStartupPromptsIfNeeded();
         }
     }
 
@@ -114,13 +116,14 @@ public sealed partial class MainWindow : Window
 
         if (RootGrid.XamlRoot is not null)
         {
-            RequestTelemetryConsentIfNeeded();
+            RequestStartupPromptsIfNeeded();
         }
     }
 
     internal void NotifyHidden()
     {
         _isShown = false;
+        _startupPrompts?.Cancel();
         _mainWindowActivationService.SetActive(false);
         _telemetryConsentDialogService.SuppressPrompt();
 
@@ -130,21 +133,20 @@ public sealed partial class MainWindow : Window
         }
     }
 
-    private async void RequestTelemetryConsentIfNeeded()
+    private async void RequestStartupPromptsIfNeeded()
     {
-        if (UiTestLaunchOptions.Current.IsEnabled)
-        {
-            return;
-        }
-
+        if (_requestingStartupPrompts || (UiTestLaunchOptions.Current.IsEnabled && !UiTestLaunchOptions.Onboarding)) return;
+        _requestingStartupPrompts = true;
+        using var lifetime = new CancellationTokenSource();
+        _startupPrompts = lifetime;
         try
         {
-            await _telemetryConsentDialogService.RequestConsentIfNeededAsync();
+            if (_isShown && !UiTestLaunchOptions.Current.IsEnabled)
+                await _telemetryConsentDialogService.RequestConsentIfNeededAsync(lifetime.Token);
         }
-        catch (Exception ex)
-        {
-            _logService.LogException(ex, "Failed to request telemetry consent.");
-        }
+        catch (OperationCanceledException) when (lifetime.IsCancellationRequested) { }
+        catch (Exception ex) { _logService.LogException(ex, "Failed to request startup consent."); }
+        finally { _startupPrompts = null; _requestingStartupPrompts = false; }
     }
 
     private void NavigateToUiTestImageWhenRequested()
@@ -163,6 +165,17 @@ public sealed partial class MainWindow : Window
             try
             {
                 INavigationService navigationService = App.Current.ServiceProvider.GetService<INavigationService>();
+                if (UiTestLaunchOptions.CaptureFixture)
+                {
+                    var memory = App.Current.ServiceProvider.GetService<CaptureTool.Application.Abstractions.Analysis.ICaptureMemoryService>();
+                    await memory.InitializeAsync();
+                    var asset = new CaptureTool.Domain.Capture.CaptureAsset(CaptureTool.Domain.CaptureId.New(),
+                        CaptureTool.Domain.Capture.CaptureFileType.Image, DateTimeOffset.UtcNow, options.ImageFilePath,
+                        CaptureTool.Domain.Capture.CaptureSourceOwnership.Application);
+                    await memory.RegisterCaptureAsync(asset);
+                    App.Current.ServiceProvider.GetService<CaptureTool.Application.Abstractions.Library.RecentCaptures.IRecentCaptureCatalog>()
+                        .RecordCaptured(options.ImageFilePath, CaptureTool.Domain.Capture.CaptureFileType.Image);
+                }
                 await navigationService.NavigateAsync(
                     NavigationRoute.ImageEdit,
                     new ImageFile(options.ImageFilePath),
@@ -347,6 +360,7 @@ public sealed partial class MainWindow : Window
 
     private void OnClosed(object sender, WindowEventArgs args)
     {
+        _startupPrompts?.Cancel();
         _mainWindowActivationService.SetActive(false);
         Activated -= OnActivated;
         Activated -= OnActivationStateChanged;
@@ -357,6 +371,7 @@ public sealed partial class MainWindow : Window
         AppTitleBar.SizeChanged -= AppTitleBar_SizeChanged;
         _notificationTimer.Stop();
         _notificationTimer.Tick -= NotificationTimer_Tick;
+        _captureMemoryDialogs.XamlRoot = null;
 
         ViewModel.PropertyChanged -= OnViewModelPropertyChanged;
 

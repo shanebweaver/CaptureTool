@@ -1,9 +1,8 @@
-using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Application.Abstractions.EditSessions;
 using CaptureTool.Application.Abstractions.Library.RecentCaptures;
+using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Application.Abstractions.Shell.AppMenu.OpenFile;
 using CaptureTool.Application.Abstractions.Storage;
-using CaptureTool.Application.Capture.Audio;
 using CaptureTool.Application.Shell.AppMenu.OpenFile;
 using CaptureTool.Domain.Capture;
 using CaptureTool.Domain.FileSystem;
@@ -134,7 +133,7 @@ public class OpenFileUseCaseTests
         navigationService.Verify(
             service => service.NavigateAsync(
                 NavigationRoute.AudioEdit,
-                It.Is<AudioFile>(file => file.FilePath == copiedPath),
+                It.Is<AudioFile>(file => file.FilePath == copiedPath && file.PersistentFilePath == sourcePath),
                 false,
                 It.IsAny<CancellationToken>()),
             Times.Once);
@@ -180,7 +179,7 @@ public class OpenFileUseCaseTests
         navigationService.Verify(
             service => service.NavigateAsync(
                 NavigationRoute.VideoEdit,
-                It.Is<VideoFile>(file => file.FilePath == copiedPath),
+                It.Is<VideoFile>(file => file.FilePath == copiedPath && file.PersistentFilePath == sourcePath),
                 false,
                 It.IsAny<CancellationToken>()),
             Times.Once);

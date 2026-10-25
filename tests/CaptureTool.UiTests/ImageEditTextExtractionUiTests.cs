@@ -13,7 +13,7 @@ using ZXing.Common;
 namespace CaptureTool.UiTests;
 
 [TestClass]
-public sealed class ImageEditTextExtractionUiTests
+public sealed partial class ImageEditTextExtractionUiTests
 {
     private static readonly TimeSpan AppLaunchTimeout = TimeSpan.FromSeconds(30);
     private static readonly TimeSpan InteractionTimeout = TimeSpan.FromSeconds(15);
@@ -21,165 +21,117 @@ public sealed class ImageEditTextExtractionUiTests
     public TestContext TestContext { get; set; } = null!;
 
     [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
     [TestCategory("UI")]
-    public void TextExtractionMode_ShouldShowOverlayAndCaptureScreenshot()
+    public void ExtractTextShortcut_UnifiesSavedAndEditedImageTextInThePane(bool editBeforeConsent)
     {
-        if (!ShouldRunUiTests())
+        if (!ShouldRunUiTests()) Assert.Inconclusive("Enable isolated desktop UI tests.");
+        using var dpi = new DesktopDpiScope();
+        string repo = FindRepositoryRoot();
+        string artifacts = Path.Combine(repo, "tests", "CaptureTool.UiTests", "TestResults", "artifacts", "unified-text",
+            editBeforeConsent ? "edited-first-use" : "saved-first-use");
+        string isolated = Path.Combine(artifacts, Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(isolated);
+        string fixture = Path.Combine(isolated, "capture.png");
+        CreateOcrFixtureImage(fixture);
+        using var app = LaunchApp(ResolveAppExecutablePath(repo), fixture, Path.Combine(isolated, "data"),
+            Path.Combine(isolated, "temp"), "en-US", detailsFixture: true);
+        using var automation = new UIA3Automation();
+        var window = WaitForMainWindow(app, automation, AppLaunchTimeout);
+        Element("ImageEdit_CommandBar"); MaximizeWindow(window);
+        if (editBeforeConsent) Element("ImageEdit_RotateButton").Patterns.Invoke.Pattern.Invoke();
+        Element("Editor_DetailsToggle").Click();
+        Element("CapturePane_TextTab").Patterns.SelectionItem.Pattern.Select();
+        Assert.IsNull(Find("CaptureMemoryConsentDialog"), "Browsing the pane does not request analysis.");
+        Assert.IsNull(Find("CaptureAction_ScanText_Loading"));
+        var shortcut = Element("ImageEdit_TextExtractionButton");
+        Assert.IsFalse(shortcut.Patterns.Toggle.IsSupported, "Extract text is a shortcut, not a second mode.");
+        shortcut.Click();
+        var consent = Element("CaptureMemoryConsentDialog");
+        WaitForElementByName(consent, automation, "Allow local AI", InteractionTimeout).AsButton().Invoke();
+        WaitForElementRemoved(window, automation, "CaptureMemoryConsentDialog", InteractionTimeout);
+        Element("CaptureAction_ScanText_Loading");
+        Assert.IsNull(Find("ImageEdit_TextExtractionProgressRing"));
+        AssertDetailsLayout(window, automation, "ImageEdit_CommandBar", "ZoomSlider");
+        Screenshot("loading");
+        WaitForElementRemoved(window, automation, "CaptureAction_ScanText_Loading", InteractionTimeout);
+        Element("ImageEdit_TextExtractionOverlayMarker");
+        Assert.IsNull(Find("ImageEdit_TextExtractionCopyAllButton"));
+        Element("CapturePane_CopyResults").Patterns.Invoke.Pattern.Invoke();
+        WaitFor(() => ReadDetailsClipboard()?.Contains(editBeforeConsent ? "OCR MODE" : "Contoso invoice") == true ? window : null,
+            InteractionTimeout, "text copied from the pane after first-use consent");
+        var sources = Element("CapturePane_SourceFilter");
+        sources.Patterns.ExpandCollapse.Pattern.Expand();
+        WaitForElementByName(window, automation, "On-screen text", InteractionTimeout);
+        WaitForElementByName(window, automation, "QR codes", InteractionTimeout);
+        Assert.IsNull(window.FindFirstDescendant(automation.ConditionFactory.ByName("Speech")),
+            "Image results must not offer the speech filter.");
+        Screenshot("image-source-choices");
+        sources.Patterns.ExpandCollapse.Pattern.Collapse();
+        shortcut.Click();
+        Assert.IsNull(Find("CaptureAction_ScanText_Loading"));
+        Element("CapturePane_SummaryTab").Patterns.SelectionItem.Pattern.Select();
+        WaitForElementRemoved(window, automation, "ImageEdit_TextExtractionOverlayMarker", InteractionTimeout);
+        shortcut.Click();
+        Element("ImageEdit_TextExtractionOverlayMarker");
+        Assert.IsNull(Find("CaptureAction_ScanText_Loading"));
+        Screenshot("saved-text");
+
+        Element("ImageEdit_RotateButton").Patterns.Invoke.Pattern.Invoke();
+        Element("CaptureAction_ScanText");
+        WaitForElementRemoved(window, automation, "ImageEdit_TextExtractionOverlayMarker", InteractionTimeout);
+        Assert.IsNull(Find("CapturePane_Search"), "Saved text is hidden once the image changes.");
+        shortcut.Click();
+        Element("CaptureAction_ScanText_Loading");
+        Element("CapturePane_Close").Patterns.Invoke.Pattern.Invoke();
+        WaitForElementRemoved(window, automation, "CaptureDetailsPane", InteractionTimeout);
+        Element("Editor_DetailsToggle").Click();
+        Element("CaptureAction_ScanText");
+        WaitForElementRemoved(window, automation, "CaptureAction_ScanText_Loading", InteractionTimeout);
+        Assert.IsNull(Find("ImageEdit_TextExtractionOverlayMarker"), "Closing the pane cancels current-image extraction.");
+        shortcut.Click();
+        Element("CaptureAction_ScanText_Loading");
+        WaitForElementRemoved(window, automation, "CaptureAction_ScanText_Loading", InteractionTimeout);
+        Element("ImageEdit_TextExtractionOverlayMarker");
+        Element("ImageCanvas_QrCodeCopyButton_0");
+        Element("CapturePane_CopyResults").Patterns.Invoke.Pattern.Invoke();
+        WaitFor(() => ReadDetailsClipboard()?.Contains("OCR MODE") == true && ReadDetailsClipboard()?.Contains("https://example.com/capturetool") == true
+            ? window : null, InteractionTimeout, "current rendered image text and QR results copied");
+        var passageText = WaitFor(() => Element("CapturePane_Passages").FindAllDescendants(automation.ConditionFactory.ByControlType(ControlType.Text))
+            .FirstOrDefault(item => !item.IsOffscreen && item.Name.Contains("OCR MODE")), InteractionTimeout, "current-image passages visibly rendered");
+        Assert.IsGreaterThan(0d, passageText.BoundingRectangle.Height);
+        Screenshot("edited-image-text");
+        passageText.Click();
+        WaitFor(() => Element("CapturePane_Passages").FindAllChildren(automation.ConditionFactory.ByControlType(ControlType.ListItem))
+            .FirstOrDefault(item => item.Patterns.SelectionItem.Pattern.IsSelected.Value), InteractionTimeout, "current-image row selected by clicking its text");
+        Screenshot("edited-image-selection");
+        Element("CapturePane_Close").Patterns.Invoke.Pattern.Invoke();
+        WaitForElementRemoved(window, automation, "CaptureDetailsPane", InteractionTimeout);
+        shortcut.Click();
+        Element("ImageEdit_TextExtractionOverlayMarker");
+        Assert.IsNull(Find("CaptureAction_ScanText_Loading"), "Reopening reuses current-session extraction.");
+        Element("ImageEdit_CropButton").Click();
+        WaitForElementRemoved(window, automation, "CaptureDetailsPane", InteractionTimeout);
+        WaitForElementRemoved(window, automation, "ImageEdit_TextExtractionOverlayMarker", InteractionTimeout);
+
+        AutomationElement Element(string id) => WaitForElement(window, automation, id, InteractionTimeout);
+        AutomationElement? Find(string id) => window.FindFirstDescendant(automation.ConditionFactory.ByAutomationId(id));
+        void Screenshot(string name)
         {
-            Assert.Inconclusive("Set CAPTURETOOL_RUN_UI_TESTS=1 to run desktop UI automation tests.");
+            Thread.Sleep(200);
+            string path = Path.Combine(artifacts, name + ".png");
+            window.CaptureToFile(path); TestContext.AddResultFile(path);
         }
-
-        string repoRoot = FindRepositoryRoot();
-        string appExecutablePath = ResolveAppExecutablePath(repoRoot);
-        Assert.IsFalse(string.IsNullOrWhiteSpace(appExecutablePath));
-        Assert.IsTrue(File.Exists(appExecutablePath), $"The WinUI app should be built at {appExecutablePath}.");
-
-        string artifactDirectory = Path.Combine(
-            TestContext.TestRunResultsDirectory ?? TestContext.TestRunDirectory ?? Path.GetTempPath(),
-            "CaptureTool.UiTests",
-            Guid.NewGuid().ToString("N"));
-        Directory.CreateDirectory(artifactDirectory);
-
-        string fixtureImagePath = Path.Combine(artifactDirectory, "ocr-fixture.png");
-        string appDataDirectory = Path.Combine(artifactDirectory, "app-data");
-        string appTempDirectory = Path.Combine(artifactDirectory, "app-temp");
-        string screenshotDirectory = Path.Combine(repoRoot, "tests", "CaptureTool.UiTests", "TestResults", "artifacts");
-        string loadingScreenshotPath = Path.Combine(screenshotDirectory, "text-extraction-loading.png");
-        string screenshotPath = Path.Combine(screenshotDirectory, "text-extraction-overlay.png");
-
-        CreateOcrFixtureImage(fixtureImagePath);
-        Directory.CreateDirectory(appDataDirectory);
-        Directory.CreateDirectory(appTempDirectory);
-        Directory.CreateDirectory(screenshotDirectory);
-
-        using LaunchedCaptureToolApp app = LaunchApp(
-            appExecutablePath,
-            fixtureImagePath,
-            appDataDirectory,
-            appTempDirectory);
-
-        try
+    }
+    private static void RequireUiTestLanguage(string language)
+    {
+        string? requested = Environment.GetEnvironmentVariable("CAPTURETOOL_UI_TEST_LANGUAGE");
+        requested = string.IsNullOrWhiteSpace(requested) ? "en-US" : requested;
+        if (!string.Equals(requested, "all", StringComparison.OrdinalIgnoreCase) &&
+            !string.Equals(requested, language, StringComparison.OrdinalIgnoreCase))
         {
-            using var automation = new UIA3Automation();
-            Window mainWindow = WaitForMainWindow(app, automation, AppLaunchTimeout);
-            mainWindow.Focus();
-            MaximizeWindow(mainWindow);
-
-            WaitForElement(mainWindow, automation, "ImageEdit_CommandBar", AppLaunchTimeout);
-
-            AutomationElement textExtractionButton = WaitForElement(
-                mainWindow,
-                automation,
-                "ImageEdit_TextExtractionButton",
-                InteractionTimeout);
-            textExtractionButton.Click();
-
-            WaitForElement(
-                mainWindow,
-                automation,
-                "AiFeatureConsentDialog",
-                InteractionTimeout);
-            AutomationElement allowButton = WaitForElementByName(
-                mainWindow,
-                automation,
-                "Allow",
-                InteractionTimeout);
-            allowButton.Click();
-
-            WaitForElement(
-                mainWindow,
-                automation,
-                "ImageEdit_TextExtractionProgressRing",
-                InteractionTimeout);
-
-            Assert.IsTrue(
-                textExtractionButton.IsEnabled,
-                "The Text Extraction button should remain enabled while OCR is running.");
-            textExtractionButton.Click();
-            WaitForElementRemoved(
-                mainWindow,
-                automation,
-                "ImageEdit_TextExtractionProgressRing",
-                InteractionTimeout);
-
-            textExtractionButton.Click();
-            WaitForElement(
-                mainWindow,
-                automation,
-                "ImageEdit_TextExtractionProgressRing",
-                InteractionTimeout);
-
-            CaptureWindowScreenshot(app.ProcessId, mainWindow, loadingScreenshotPath);
-            Assert.IsTrue(File.Exists(loadingScreenshotPath), "The OCR loading screenshot should exist.");
-            Assert.IsGreaterThan(0L, new FileInfo(loadingScreenshotPath).Length, "The OCR loading screenshot should not be empty.");
-            TestContext.AddResultFile(loadingScreenshotPath);
-            TestContext.WriteLine($"Text Extraction loading screenshot: {loadingScreenshotPath}");
-
-            WaitForElementRemoved(
-                mainWindow,
-                automation,
-                "ImageEdit_TextExtractionProgressRing",
-                InteractionTimeout);
-
-            WaitForElement(
-                mainWindow,
-                automation,
-                "ImageEdit_TextExtractionOverlayMarker",
-                InteractionTimeout);
-            AutomationElement copyAllTextButton = WaitForElement(
-                mainWindow,
-                automation,
-                "ImageEdit_TextExtractionCopyAllButton",
-                InteractionTimeout);
-            Assert.IsTrue(copyAllTextButton.IsEnabled, "Copy all text should be enabled after OCR completes.");
-            WaitForElement(
-                mainWindow,
-                automation,
-                "ImageCanvas_QrCodeCopyButton_0",
-                InteractionTimeout);
-            WaitForElement(
-                mainWindow,
-                automation,
-                "ImageCanvas_QrCodeOpenButton_0",
-                InteractionTimeout);
-
-            Thread.Sleep(500);
-            File.Delete(screenshotPath);
-            CaptureWindowScreenshot(app.ProcessId, mainWindow, screenshotPath);
-
-            Assert.IsTrue(File.Exists(screenshotPath), "The OCR overlay screenshot should exist.");
-            Assert.IsGreaterThan(0L, new FileInfo(screenshotPath).Length, "The OCR overlay screenshot should not be empty.");
-            TestContext.AddResultFile(screenshotPath);
-            TestContext.WriteLine($"Text Extraction overlay screenshot: {screenshotPath}");
-
-            textExtractionButton.Click();
-            WaitForElementRemoved(
-                mainWindow,
-                automation,
-                "ImageEdit_TextExtractionOverlayMarker",
-                InteractionTimeout);
-
-            textExtractionButton.Click();
-            Assert.IsNull(
-                mainWindow.FindFirstDescendant(
-                    automation.ConditionFactory.ByAutomationId("ImageEdit_TextExtractionProgressRing")),
-                "Reopening OCR for an unchanged image should reuse its cached result without showing the loader.");
-            WaitForElement(
-                mainWindow,
-                automation,
-                "ImageEdit_TextExtractionOverlayMarker",
-                InteractionTimeout);
-
-            textExtractionButton.Click();
-            WaitForElementRemoved(
-                mainWindow,
-                automation,
-                "ImageEdit_TextExtractionOverlayMarker",
-                InteractionTimeout);
-        }
-        finally
-        {
-            app.Close();
+            Assert.Inconclusive("UI tests default to en-US. Set CAPTURETOOL_UI_TEST_LANGUAGE to select another language or explicitly request all.");
         }
     }
 
@@ -195,7 +147,10 @@ public sealed class ImageEditTextExtractionUiTests
         string appExecutablePath,
         string fixtureImagePath,
         string appDataDirectory,
-        string appTempDirectory)
+        string appTempDirectory,
+        string? language = null,
+        bool detailsFixture = false, bool captureFixture = false, bool onboarding = false, string? textFixturePath = null,
+        bool mediaTabs = false, string? aiProfile = null)
     {
         string[] appArguments = [
             "--capturetool-ui-test",
@@ -217,12 +172,56 @@ public sealed class ImageEditTextExtractionUiTests
         {
             startInfo.ArgumentList.Add(argument);
         }
+        if (onboarding) startInfo.ArgumentList.Add("--ui-test-onboarding");
+        if (aiProfile != null)
+        {
+            startInfo.ArgumentList.Add("--ui-test-ai-profile");
+            startInfo.ArgumentList.Add(aiProfile);
+        }
+        if (detailsFixture) startInfo.ArgumentList.Add("--ui-test-details");
+        if (mediaTabs) startInfo.ArgumentList.Add("--ui-test-media-tabs");
+        if (captureFixture) startInfo.ArgumentList.Add("--ui-test-capture");
+        if (textFixturePath != null)
+        {
+            startInfo.ArgumentList.Add("--ui-test-text-fixture");
+            startInfo.ArgumentList.Add(textFixturePath);
+        }
+        if (language != null)
+        {
+            startInfo.ArgumentList.Add("--ui-test-language");
+            startInfo.ArgumentList.Add(language);
+        }
+
+        if (Environment.GetEnvironmentVariable("CAPTURETOOL_UI_TEST_APP_ID") is { Length: > 0 } appId)
+        {
+            var activation = (IApplicationActivationManager)new ApplicationActivationManager();
+            try
+            {
+                string arguments = string.Join(" ", startInfo.ArgumentList.Select(argument => $"\"{argument}\""));
+                activation.ActivateApplication(appId, arguments, 0, out uint processId);
+                return new LaunchedCaptureToolApp(Process.GetProcessById((int)processId));
+            }
+            finally
+            {
+                Marshal.ReleaseComObject(activation);
+            }
+        }
 
         Process process = Process.Start(startInfo) ??
             throw new InvalidOperationException("Failed to launch CaptureTool.");
 
         return new LaunchedCaptureToolApp(process);
     }
+
+    [ComImport, Guid("2E941141-7F97-4756-BA1D-9DECDE894A3D"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+    private interface IApplicationActivationManager
+    {
+        void ActivateApplication([MarshalAs(UnmanagedType.LPWStr)] string appId,
+            [MarshalAs(UnmanagedType.LPWStr)] string arguments, uint options, out uint processId);
+    }
+
+    [ComImport, Guid("45BA127D-10A8-46EA-8AB7-56EA9078943C")]
+    private class ApplicationActivationManager { }
 
     private static Window WaitForMainWindow(
         LaunchedCaptureToolApp app,
@@ -244,6 +243,7 @@ public sealed class ImageEditTextExtractionUiTests
                         .FindAllChildren(automation.ConditionFactory.ByProcessId(app.ProcessId))
                         .Select(element => element.AsWindow())
                         .FirstOrDefault(window =>
+                            window.ControlType == ControlType.Window &&
                             window.BoundingRectangle.Width > 0 &&
                             window.BoundingRectangle.Height > 0);
                 }
@@ -567,6 +567,7 @@ public sealed class ImageEditTextExtractionUiTests
                 if (!process.HasExited)
                 {
                     process.Kill(entireProcessTree: true);
+                    process.WaitForExit(5000);
                 }
             }
             catch
@@ -582,6 +583,9 @@ public sealed class ImageEditTextExtractionUiTests
 
     private static string ResolveAppExecutablePath(string repoRoot)
     {
+        if (Environment.GetEnvironmentVariable("CAPTURETOOL_UI_TEST_APP_PATH") is { Length: > 0 } publishedApp)
+            return Path.GetFullPath(publishedApp);
+
         string configuration = Environment.GetEnvironmentVariable("CONFIGURATION") ?? "Debug";
         string platform = Environment.GetEnvironmentVariable("PLATFORM") ?? "x64";
         string runtimeIdentifier = RuntimeInformation.ProcessArchitecture == Architecture.Arm64 || platform.Equals("ARM64", StringComparison.OrdinalIgnoreCase)

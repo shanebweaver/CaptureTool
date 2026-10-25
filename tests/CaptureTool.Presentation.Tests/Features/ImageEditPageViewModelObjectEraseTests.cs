@@ -31,20 +31,16 @@ public sealed class ImageEditPageViewModelObjectEraseTests
     public async Task ToggleMode_WhenConsentRefused_ShouldRemainInactive()
     {
         var consent = new Mock<IAiFeatureConsentService>();
-        var dialog = new Mock<IAiFeatureConsentDialogService>();
         var service = new Mock<IImageObjectEraseService>();
         consent
             .Setup(x => x.GetConsentState(AiFeatureId.ImageObjectErase))
             .Returns(AiFeatureConsentState.Denied);
         consent
-            .Setup(x => x.SetConsentAsync(AiFeatureId.ImageObjectErase, false, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(true);
-        dialog
-            .Setup(x => x.RequestConsentAsync(AiFeatureId.ImageObjectErase, It.IsAny<CancellationToken>()))
+            .Setup(x => x.EnsureConsentAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(false);
         service.Setup(x => x.GetReadyState()).Returns(ObjectEraseReadyState.Ready);
 
-        ImageEditPageViewModel viewModel = CreateViewModel(service.Object, consent.Object, dialog.Object);
+        ImageEditPageViewModel viewModel = CreateViewModel(service.Object, consent.Object);
         await viewModel.LoadAsync(new ImageFile("original.png"), CancellationToken.None);
 
         await viewModel.ToggleObjectEraseModeCommand.ExecuteAsync(null);
@@ -131,8 +127,7 @@ public sealed class ImageEditPageViewModelObjectEraseTests
 
     private static ImageEditPageViewModel CreateViewModel(
         IImageObjectEraseService objectEraseService,
-        IAiFeatureConsentService? consentService = null,
-        IAiFeatureConsentDialogService? consentDialogService = null)
+        IAiFeatureConsentService? consentService = null)
     {
         var imageMetadata = new Mock<IImageMetadataService>();
         imageMetadata
@@ -156,7 +151,6 @@ public sealed class ImageEditPageViewModelObjectEraseTests
             imageMetadata.Object,
             Mock.Of<IImageSuperResolutionService>(),
             Mock.Of<IImageSuperResolutionFeatureAvailability>(x => x.IsImageSuperResolutionEnabled == false),
-            Mock.Of<IImageSuperResolutionPreparationConsentService>(),
             Mock.Of<IShareService>(),
             Mock.Of<IOpenExternalEditorUseCase>(),
             Mock.Of<IStorageService>(),
@@ -174,7 +168,6 @@ public sealed class ImageEditPageViewModelObjectEraseTests
             new TextExtractionToolViewModel(Mock.Of<IClipboardService>(), localization, notifications),
             aiFeatureConsentService: consentService ?? Mock.Of<IAiFeatureConsentService>(x =>
                 x.GetConsentState(AiFeatureId.ImageObjectErase) == AiFeatureConsentState.Granted),
-            aiFeatureConsentDialogService: consentDialogService ?? Mock.Of<IAiFeatureConsentDialogService>(),
             imageObjectEraseService: objectEraseService,
             imageObjectEraseFeatureAvailability: Mock.Of<IImageObjectEraseFeatureAvailability>(x =>
                 x.IsImageObjectEraseEnabled == true));

@@ -1,0 +1,273 @@
+using CaptureTool.Application.Abstractions.Localization;
+using CaptureTool.Presentation.ViewModels;
+using CommunityToolkit.Mvvm.Input;
+using System.Collections.ObjectModel;
+using System.Globalization;
+
+namespace CaptureTool.Presentation.Features.CaptureDetails;
+
+public sealed record CaptureTextFilter(string Label, CaptureTextSource? Source);
+
+/// <summary>Search/copy scope is independent of the bounded set of visual rows.</summary>
+public sealed class CaptureTextViewModel : ViewModelBase
+{
+    private const int PageSize = 100;
+    private readonly ILocalizationService _text;
+    private readonly CaptureTextFilter[] _sourceFilters;
+    private IReadOnlyList<CaptureTextPassage> _all = [];
+    private CaptureTextPassage[] _filtered = [];
+    private CaptureTextNavigationContext _context = new(false, false);
+
+    internal IReadOnlyList<CaptureTextPassage> All => _all;
+
+    public ObservableCollection<CaptureTextPassage> Visible { get; } = [];
+
+    public ObservableCollection<CaptureTextFilter> Filters { get; }
+
+    public string Query
+    {
+        get;
+        set
+        {
+            if (Set(ref field, value))
+            {
+                Filter();
+            }
+        }
+    } = string.Empty;
+
+    public CaptureTextFilter? SelectedFilter
+    {
+        get;
+        set
+        {
+            // ComboBox can briefly clear its selection while the available sources change.
+            if (value == null || !Filters.Contains(value))
+            {
+                return;
+            }
+
+            if (Set(ref field, value))
+            {
+                Filter();
+            }
+        }
+    }
+
+    public CaptureTextPassage? SelectedPassage
+    {
+        get;
+        set
+        {
+            if (Set(ref field, value))
+            {
+                UpdateCount();
+            }
+        }
+    }
+
+    public bool HasMore => Visible.Count < _filtered.Length;
+
+    public bool HasText => _filtered.Length > 0;
+
+    public bool HasSources => _all.Select(passage => passage.Source).Distinct().Take(2).Count() > 1;
+
+    public string CountText
+    {
+        get;
+        private set => Set(ref field, value);
+    } = string.Empty;
+
+    public IRelayCommand NextCommand { get; }
+
+    public IRelayCommand PreviousCommand { get; }
+
+    public IRelayCommand LoadMoreCommand { get; }
+
+    public event Action<CaptureTextPassage>? ScrollRequested;
+
+    public CaptureTextViewModel(ILocalizationService text)
+    {
+        _text = text;
+        _sourceFilters =
+        [
+            new(Text("ScreenText"), CaptureTextSource.ImageText),
+            new(Text("Speech"), CaptureTextSource.Speech),
+            new(Text("Codes"), CaptureTextSource.QrCode)
+        ];
+        Filters = [new(Text("AllSources"), null)];
+        SelectedFilter = Filters[0];
+        NextCommand = new RelayCommand(() => Move(1), () => HasText && SelectedIndex < _filtered.Length - 1);
+        PreviousCommand = new RelayCommand(() => Move(-1), () => SelectedIndex > 0);
+        LoadMoreCommand = new RelayCommand(LoadMore, () => HasMore);
+    }
+
+    public void Replace(IReadOnlyList<CaptureTextPassage> passages)
+    {
+        var previous = _all.ToDictionary(passage => passage.Id, StringComparer.Ordinal);
+        var replacement = passages.Select(passage =>
+            previous.TryGetValue(passage.Id, out var prior) && prior.SameContent(passage) ? prior : passage).ToArray();
+        if (_all.SequenceEqual(replacement))
+        {
+            return;
+        }
+
+        _all = replacement;
+        SetNavigationContext(_context);
+        UpdateSourceFilters();
+        Filter();
+        RaisePropertyChanged(nameof(HasSources));
+    }
+
+    private void UpdateSourceFilters()
+    {
+        var sources = _all.Select(passage => passage.Source).ToHashSet();
+        if (SelectedFilter?.Source is { } selected && (sources.Count < 2 || !sources.Contains(selected)))
+        {
+            SelectedFilter = Filters[0];
+        }
+
+        // Retain existing items so a still-available selection survives incremental results.
+        for (int i = Filters.Count - 1; i > 0; i--)
+        {
+            if (!sources.Contains(Filters[i].Source!.Value))
+            {
+                Filters.RemoveAt(i);
+            }
+        }
+
+        int index = 1;
+        foreach (var filter in _sourceFilters.Where(filter => sources.Contains(filter.Source!.Value)))
+        {
+            if (index == Filters.Count || Filters[index] != filter)
+            {
+                Filters.Insert(index, filter);
+            }
+
+            index++;
+        }
+    }
+
+    public void SetNavigationContext(CaptureTextNavigationContext context)
+    {
+        _context = context;
+        foreach (var passage in _all)
+        {
+            passage.SetNavigationContext(context, Text("LocationUnavailable"));
+        }
+    }
+
+    public string CopyVisibleScope()
+    {
+        var text = new System.Text.StringBuilder();
+        for (int i = 0; i < _filtered.Length; i++)
+        {
+            if (i > 0)
+            {
+                text.AppendLine();
+                if (_filtered[i - 1].Source == CaptureTextSource.ImageText && _filtered[i].Source == CaptureTextSource.ImageText)
+                {
+                    text.AppendLine();
+                }
+            }
+
+            text.Append(_filtered[i].Text);
+        }
+
+        return text.ToString();
+    }
+
+    private void Filter()
+    {
+        string query = Query.Trim();
+        var filtered = _all
+            .Where(passage => SelectedFilter?.Source == null || passage.Source == SelectedFilter.Source)
+            .Where(passage => query.Length == 0 || passage.Text.Contains(query, StringComparison.OrdinalIgnoreCase))
+            .ToArray();
+        foreach (var passage in filtered)
+        {
+            passage.Query = query;
+        }
+
+        if (_filtered.SequenceEqual(filtered))
+        {
+            UpdateCount();
+            return;
+        }
+
+        _filtered = filtered;
+        CaptureTextPassage? selected = SelectedPassage;
+        UpdateVisiblePassages();
+        SelectedPassage = selected != null && filtered.Contains(selected) ? selected : null;
+        UpdateCount();
+    }
+
+    private void UpdateVisiblePassages()
+    {
+        // Keep containers (and their text selection/scroll offsets) when the visible prefix is unchanged.
+        int keep = 0;
+        while (keep < Visible.Count && keep < _filtered.Length && ReferenceEquals(Visible[keep], _filtered[keep]))
+        {
+            keep++;
+        }
+
+        while (Visible.Count > keep)
+        {
+            Visible.RemoveAt(Visible.Count - 1);
+        }
+
+        int target = Math.Min(_filtered.Length, Math.Max(PageSize, keep));
+        for (int i = Visible.Count; i < target; i++)
+        {
+            Visible.Add(_filtered[i]);
+        }
+    }
+
+    private void LoadMore()
+    {
+        int target = Math.Min(_filtered.Length, Visible.Count + PageSize);
+        for (int i = Visible.Count; i < target; i++)
+        {
+            Visible.Add(_filtered[i]);
+        }
+
+        UpdateCount();
+    }
+
+    private void Move(int direction)
+    {
+        if (_filtered.Length == 0)
+        {
+            return;
+        }
+
+        int next = SelectedIndex + direction;
+        if (next < 0 || next >= _filtered.Length)
+        {
+            return;
+        }
+
+        while (Visible.Count <= next)
+        {
+            LoadMore();
+        }
+
+        SelectedPassage = _filtered[next];
+        ScrollRequested?.Invoke(SelectedPassage);
+    }
+
+    private int SelectedIndex => SelectedPassage == null ? -1 : Array.IndexOf(_filtered, SelectedPassage);
+
+    private void UpdateCount()
+    {
+        string countFormat = Text(Query.Trim().Length == 0 ? "PassageCount" : "MatchCount");
+        CountText = string.Format(CultureInfo.CurrentCulture, countFormat, _filtered.Length);
+        RaisePropertyChanged(nameof(HasMore));
+        RaisePropertyChanged(nameof(HasText));
+        NextCommand?.NotifyCanExecuteChanged();
+        PreviousCommand?.NotifyCanExecuteChanged();
+        LoadMoreCommand?.NotifyCanExecuteChanged();
+    }
+
+    private string Text(string key) => _text.GetString("CapturePane_" + key);
+}

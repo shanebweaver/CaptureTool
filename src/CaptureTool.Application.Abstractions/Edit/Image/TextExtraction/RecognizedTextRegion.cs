@@ -6,5 +6,6 @@ public sealed record RecognizedTextRegion(
     string Text,
     RectangleF Bounds,
     int LineIndex = -1,
-    int WordIndex = -1);
+    int WordIndex = -1,
+    int ParagraphIndex = -1);
 

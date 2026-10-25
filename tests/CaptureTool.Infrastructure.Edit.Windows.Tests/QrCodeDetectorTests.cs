@@ -1,5 +1,4 @@
 using CaptureTool.Application.Abstractions.Edit.Image.TextExtraction;
-using CaptureTool.Infrastructure.Edit.Windows;
 using FluentAssertions;
 using ZXing;
 using ZXing.Common;
@@ -50,11 +49,7 @@ public sealed class QrCodeDetectorTests
             new("https://example.com", new System.Drawing.RectangleF(40, 40, 120, 120))
         ];
 
-        QrCodeDetector.ShouldExcludeText(
-            new System.Drawing.RectangleF(70, 85, 28, 14),
-            qrCodes).Should().BeTrue();
-        QrCodeDetector.ShouldExcludeText(
-            new System.Drawing.RectangleF(10, 10, 24, 12),
-            qrCodes).Should().BeFalse();
+        qrCodes[0].OverlapsText(new System.Drawing.RectangleF(70, 85, 28, 14)).Should().BeTrue();
+        qrCodes[0].OverlapsText(new System.Drawing.RectangleF(10, 10, 24, 12)).Should().BeFalse();
     }
 }

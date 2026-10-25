@@ -734,7 +734,7 @@ Ajuste la tolerancia para eliminar el fondo y desature el color clave para limpi
     <value>Licencias de terceros</value>
   </data>
   <data name="About_ThirdParty_DialogContent" xml:space="preserve">
-    <value>This application uses open-source software. Below are the third-party components and their licenses.
+    <value>Esta aplicación utiliza software de código abierto. A continuación se indican los componentes de terceros y sus licencias.
 
 CommunityToolkit.WinUI.Controls.Segmented
 Copyright © .NET Foundation and Contributors
@@ -1312,49 +1312,37 @@ SOFTWARE.
     <value>Fondo</value>
   </data>
   <data name="ImageEdit_SuperResolutionButton.Label" xml:space="preserve">
-    <value>Super Resolution</value>
+    <value>Superresolución</value>
   </data>
   <data name="ImageEdit_SuperResolutionButton.AccessKey" xml:space="preserve">
     <value>U</value>
   </data>
   <data name="ImageEdit_SuperResolutionButton.ToolTipService.ToolTip" xml:space="preserve">
-    <value>Show or hide the AI super-resolution image</value>
+    <value>Mostrar u ocultar la imagen con superresolución por IA</value>
   </data>
   <data name="ImageEdit_SuperResolutionProgressRing.AutomationProperties.Name" xml:space="preserve">
     <value>Mejorando la imagen</value>
   </data>
-  <data name="ImageSuperResolutionPreparation_Title" xml:space="preserve">
-    <value>Prepare Super Resolution</value>
-  </data>
-  <data name="ImageSuperResolutionPreparation_Content" xml:space="preserve">
-    <value>Windows needs to prepare local AI components before Super Resolution can run. This may use Windows Update and can take some time.</value>
-  </data>
-  <data name="ImageSuperResolutionPreparation_ContinueButton" xml:space="preserve">
-    <value>Continue</value>
-  </data>
-  <data name="ImageSuperResolutionPreparation_CancelButton" xml:space="preserve">
-    <value>Cancel</value>
-  </data>
   <data name="ImageSuperResolutionStatus_NotSupported" xml:space="preserve">
-    <value>Super Resolution is not supported on this PC.</value>
+    <value>La superresolución no es compatible con este PC.</value>
   </data>
   <data name="ImageSuperResolutionStatus_Disabled" xml:space="preserve">
-    <value>Super Resolution is disabled on this PC.</value>
+    <value>La superresolución está desactivada en este PC.</value>
   </data>
   <data name="ImageSuperResolutionStatus_NotAvailable" xml:space="preserve">
-    <value>Super Resolution is not available.</value>
+    <value>La superresolución no está disponible.</value>
   </data>
   <data name="ImageSuperResolutionStatus_PreparationFailed" xml:space="preserve">
-    <value>Super Resolution could not be prepared.</value>
+    <value>No se ha podido preparar la superresolución.</value>
   </data>
   <data name="ImageSuperResolutionStatus_NotReady" xml:space="preserve">
-    <value>Super Resolution is not ready.</value>
+    <value>La superresolución aún no está lista.</value>
   </data>
   <data name="ImageSuperResolutionStatus_TooLarge" xml:space="preserve">
-    <value>This image is too large for Super Resolution.</value>
+    <value>Esta imagen es demasiado grande para la superresolución.</value>
   </data>
   <data name="ImageSuperResolutionStatus_Failed" xml:space="preserve">
-    <value>Super Resolution failed.</value>
+    <value>Se ha producido un error en la superresolución.</value>
   </data>
   <data name="ImageEdit_EditInPaintButton.Label" xml:space="preserve">
     <value>Editar en Paint</value>
@@ -1372,55 +1360,55 @@ SOFTWARE.
     <value>Abrir en Clipchamp</value>
   </data>
   <data name="About_SendFeedbackButton.AutomationProperties.Name" xml:space="preserve">
-    <value>Send feedback</value>
+    <value>Enviar comentarios</value>
   </data>
   <data name="About_SendFeedbackButton.ToolTipService.ToolTip" xml:space="preserve">
-    <value>Open Feedback Hub</value>
+    <value>Abrir el Centro de opiniones</value>
   </data>
   <data name="About_SendFeedbackButtonLabel.Text" xml:space="preserve">
-    <value>Send feedback</value>
+    <value>Enviar comentarios</value>
   </data>
   <data name="StoreReviewPrompt_Title" xml:space="preserve">
-    <value>Enjoying Capture Tool?</value>
+    <value>¿Te gusta Capture Tool?</value>
   </data>
   <data name="StoreReviewPrompt_Content" xml:space="preserve">
-    <value>A quick Microsoft Store review helps other people find the app.</value>
+    <value>Una breve valoración en Microsoft Store ayuda a otras personas a descubrir la aplicación.</value>
   </data>
   <data name="StoreReviewPrompt_ReviewButton" xml:space="preserve">
-    <value>Leave a review</value>
+    <value>Dejar una valoración</value>
   </data>
   <data name="StoreReviewPrompt_RemindLaterButton" xml:space="preserve">
-    <value>Remind me later</value>
+    <value>Recordármelo más tarde</value>
   </data>
   <data name="StoreReviewPrompt_DontShowAgainButton" xml:space="preserve">
-    <value>Don't show again</value>
+    <value>No volver a mostrar</value>
   </data>
   <data name="Settings_StoreHeaderLabel.Text" xml:space="preserve">
-    <value>Store</value>
+    <value>Microsoft Store</value>
   </data>
   <data name="Settings_StoreReview_HeaderLabel.Text" xml:space="preserve">
-    <value>Store Review reminders</value>
+    <value>Recordatorios para valorar la aplicación en la tienda</value>
   </data>
   <data name="Settings_StoreReview_SubtitleLabel.Text" xml:space="preserve">
-    <value>Ask for a Microsoft Store review after enough time and app launches.</value>
+    <value>Pedir una valoración en Microsoft Store después de un tiempo y de varios inicios de la aplicación.</value>
   </data>
   <data name="Settings_StoreReview_LinkLabel.Text" xml:space="preserve">
-    <value>Leave a Microsoft Store review</value>
+    <value>Dejar una valoración en Microsoft Store</value>
   </data>
   <data name="Settings_StoreReviewReminders_Toggle.OnContent" xml:space="preserve">
-    <value>On</value>
+    <value>Activado</value>
   </data>
   <data name="Settings_StoreReviewReminders_Toggle.OffContent" xml:space="preserve">
-    <value>Off</value>
+    <value>Desactivado</value>
   </data>
   <data name="ImageEdit_TextExtractionButton.Label" xml:space="preserve">
-    <value>Extracción de texto</value>
+    <value>Extraer texto</value>
   </data>
   <data name="ImageEdit_TextExtractionButton.AutomationProperties.Name" xml:space="preserve">
-    <value>Extraer texto de la imagen</value>
+    <value>Extraer texto</value>
   </data>
   <data name="ImageEdit_TextExtractionButton.ToolTipService.ToolTip" xml:space="preserve">
-    <value>Extraer y seleccionar texto de la imagen</value>
+    <value>Busca y copia texto en la pestaña Texto</value>
   </data>
   <data name="ImageEdit_TextExtractionOverlayMarker.AutomationProperties.Name" xml:space="preserve">
     <value>La superposición de extracción de texto está lista</value>
@@ -1466,30 +1454,6 @@ SOFTWARE.
   </data>
   <data name="TextExtractionStatus_Failed" xml:space="preserve">
     <value>No se pudo extraer el texto.</value>
-  </data>
-  <data name="AiFeatureConsentDialog_AllowButton" xml:space="preserve">
-    <value>Permitir</value>
-  </data>
-  <data name="AiFeatureConsentDialog_DontAllowButton" xml:space="preserve">
-    <value>No permitir</value>
-  </data>
-  <data name="AiFeatureConsentDialog_CancelButton" xml:space="preserve">
-    <value>Cancelar</value>
-  </data>
-  <data name="AiFeatureConsentDialog_TextExtractionTitle" xml:space="preserve">
-    <value>¿Permitir la extracción de texto?</value>
-  </data>
-  <data name="AiFeatureConsentDialog_TextExtractionContent" xml:space="preserve">
-    <value>La extracción de texto usa un modelo de IA en el dispositivo para detectar texto y su ubicación en la imagen actual.</value>
-  </data>
-  <data name="Settings_AiConsentHeaderLabel.Text" xml:space="preserve">
-    <value>Consentimiento para IA</value>
-  </data>
-  <data name="Settings_AiConsentDescription.Text" xml:space="preserve">
-    <value>Permitir que esta característica de IA procese imágenes en este dispositivo.</value>
-  </data>
-  <data name="Settings_AiConsent_TextExtractionDisplayName" xml:space="preserve">
-    <value>Extracción de texto</value>
   </data>
   <data name="ImageEdit_ImageDescriptionButton.Label" xml:space="preserve">
     <value>Descripción de imagen</value>
@@ -1557,15 +1521,6 @@ SOFTWARE.
   <data name="ImageEdit_ImageDescriptionProgressRing.AutomationProperties.Name" xml:space="preserve">
     <value>Generando descripción de imagen</value>
   </data>
-  <data name="AiFeatureConsentDialog_ImageDescriptionTitle" xml:space="preserve">
-    <value>¿Permitir la descripción de imágenes?</value>
-  </data>
-  <data name="AiFeatureConsentDialog_ImageDescriptionContent" xml:space="preserve">
-    <value>La descripción de imágenes usa un modelo de IA en el dispositivo para describir la imagen actual.</value>
-  </data>
-  <data name="Settings_AiConsent_ImageDescriptionDisplayName" xml:space="preserve">
-    <value>Descripción de imagen</value>
-  </data>
   <data name="ImageDescriptionStatus_NotSupported" xml:space="preserve">
     <value>La descripción de imágenes no es compatible con este equipo.</value>
   </data>
@@ -1608,15 +1563,6 @@ SOFTWARE.
   <data name="ImageEdit_ForegroundExtractionProgressRing.AutomationProperties.Name" xml:space="preserve">
     <value>Quitando el fondo de la imagen</value>
   </data>
-  <data name="AiFeatureConsentDialog_ImageForegroundExtractionTitle" xml:space="preserve">
-    <value>¿Permitir quitar el fondo?</value>
-  </data>
-  <data name="AiFeatureConsentDialog_ImageForegroundExtractionContent" xml:space="preserve">
-    <value>Quitar fondo usa un modelo de IA en el dispositivo para aislar el sujeto que selecciones y eliminar su fondo.</value>
-  </data>
-  <data name="Settings_AiConsent_ImageForegroundExtractionDisplayName" xml:space="preserve">
-    <value>Quitar fondo</value>
-  </data>
   <data name="ForegroundExtractionStatus_Success" xml:space="preserve">
     <value>Fondo eliminado.</value>
   </data>
@@ -1652,15 +1598,6 @@ SOFTWARE.
   </data>
   <data name="ImageEdit_ObjectEraseProgressRing.AutomationProperties.Name" xml:space="preserve">
     <value>Borrando el objeto seleccionado</value>
-  </data>
-  <data name="AiFeatureConsentDialog_ImageObjectEraseTitle" xml:space="preserve">
-    <value>¿Permitir el borrado de objetos?</value>
-  </data>
-  <data name="AiFeatureConsentDialog_ImageObjectEraseContent" xml:space="preserve">
-    <value>El borrado de objetos usa modelos de IA en el dispositivo para identificar el objeto seleccionado, eliminarlo y rellenar el área a partir de su entorno.</value>
-  </data>
-  <data name="Settings_AiConsent_ImageObjectEraseDisplayName" xml:space="preserve">
-    <value>Borrado de objetos</value>
   </data>
   <data name="ObjectEraseStatus_Success" xml:space="preserve">
     <value>Objeto borrado.</value>
@@ -1698,15 +1635,6 @@ SOFTWARE.
   <data name="ImageEdit_ObjectExtractionProgressRing.AutomationProperties.Name" xml:space="preserve">
     <value>Extrayendo el objeto seleccionado</value>
   </data>
-  <data name="AiFeatureConsentDialog_ImageObjectExtractionTitle" xml:space="preserve">
-    <value>¿Permitir la extracción de objetos?</value>
-  </data>
-  <data name="AiFeatureConsentDialog_ImageObjectExtractionContent" xml:space="preserve">
-    <value>La extracción de objetos usa un modelo de IA en el dispositivo para identificar y extraer de la imagen actual el objeto que selecciones.</value>
-  </data>
-  <data name="Settings_AiConsent_ImageObjectExtractionDisplayName" xml:space="preserve">
-    <value>Extracción de objetos</value>
-  </data>
   <data name="ObjectExtractionStatus_Success" xml:space="preserve">
     <value>Objeto extraído.</value>
   </data>
@@ -1742,15 +1670,6 @@ SOFTWARE.
   </data>
   <data name="VideoEdit_SuperResolutionProgressText.Text" xml:space="preserve">
     <value>Mejorando vídeo...</value>
-  </data>
-  <data name="AiFeatureConsentDialog_VideoSuperResolutionTitle" xml:space="preserve">
-    <value>¿Permitir la superresolución de vídeo?</value>
-  </data>
-  <data name="AiFeatureConsentDialog_VideoSuperResolutionContent" xml:space="preserve">
-    <value>La superresolución de vídeo usa un modelo de IA en el dispositivo para crear una copia más nítida y de mayor resolución del vídeo actual.</value>
-  </data>
-  <data name="Settings_AiConsent_VideoSuperResolutionDisplayName" xml:space="preserve">
-    <value>Superresolución de vídeo</value>
   </data>
   <data name="VideoSuperResolutionStatus_NotSupported" xml:space="preserve">
     <value>La superresolución de vídeo no es compatible con este dispositivo.</value>
@@ -1805,5 +1724,285 @@ SOFTWARE.
   </data>
   <data name="CaptureOverlay_RecordingUnsupportedMessage" xml:space="preserve">
     <value>La grabación de pantalla no es compatible con este dispositivo.</value>
+  </data>
+  <data name="CaptureMemory_SettingsHeader.Text" xml:space="preserve">
+    <value>IA</value>
+  </data>
+  <data name="CaptureMemory_Scanning.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Analizar capturas automáticamente</value>
+  </data>
+  <data name="CaptureMemory_Consent.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Permitir funciones de IA local</value>
+  </data>
+  <data name="CaptureMemory_SettingsDescription.Text" xml:space="preserve">
+    <value>Analiza capturas con IA en el dispositivo y guarda la información de forma segura para Memoria de capturas.</value>
+  </data>
+  <data name="CaptureMemory_Delete.Content" xml:space="preserve">
+    <value>Eliminar</value>
+  </data>
+  <data name="CaptureMemory_ConsentTitle" xml:space="preserve">
+    <value>¿Permitir funciones de IA?</value>
+  </data>
+  <data name="CaptureMemory_ConsentContent" xml:space="preserve">
+    <value>La IA se ejecuta en este PC solo cuando eliges una acción. Los resultados se guardan de forma segura en este PC. Algunas funciones pueden requerir la descarga de un modelo de IA. Puedes desactivar la IA o eliminar los resultados guardados en Configuración.</value>
+  </data>
+  <data name="CaptureMemory_ConsentAccept" xml:space="preserve">
+    <value>Permitir IA local</value>
+  </data>
+  <data name="CaptureMemory_DeleteMetadataTitle" xml:space="preserve">
+    <value>¿Eliminar la información del análisis?</value>
+  </data>
+  <data name="CaptureMemory_DeleteMetadataContent" xml:space="preserve">
+    <value>¿Eliminar el análisis guardado y cancelar las acciones pendientes? Se conservarán los archivos y el consentimiento para la IA.</value>
+  </data>
+  <data name="CaptureMemory_DeleteMetadataAccept" xml:space="preserve">
+    <value>Eliminar información</value>
+  </data>
+  <data name="CaptureMemory_Cancel" xml:space="preserve">
+    <value>Cancelar</value>
+  </data>
+  <data name="CaptureMemory_Error_Policy" xml:space="preserve">
+    <value>No se pudo cargar o guardar la configuración de Memoria de capturas. El análisis está en pausa. Inténtalo de nuevo.</value>
+  </data>
+  <data name="CaptureMemory_Error_Registration" xml:space="preserve">
+    <value>La captura se creó, pero no se pudo registrar en Memoria de capturas. Intenta analizar las capturas existentes de nuevo.</value>
+  </data>
+  <data name="CaptureMemory_Error_Provider" xml:space="preserve">
+    <value>Un modelo de IA aún no se ha detenido. Las capturas pendientes se reanudarán cuando termine o después de reiniciar CaptureTool.</value>
+  </data>
+  <data name="CaptureMemory_Error_Cleanup" xml:space="preserve">
+    <value>No se pudo eliminar parte de la información del análisis. Intenta eliminarla de nuevo.</value>
+  </data>
+  <data name="CaptureMemory_Error_Analysis" xml:space="preserve">
+    <value>No se pudo completar el análisis de capturas. Puedes volver a intentarlo desde Configuración.</value>
+  </data>
+  <data name="CaptureMemory_Error_Storage" xml:space="preserve">
+    <value>El almacenamiento de Memoria de capturas no está disponible. Reintenta la operación o elimina su información de análisis desde Configuración.</value>
+  </data>
+  <data name="AiSettings_ConsentHeader.Text" xml:space="preserve">
+    <value>Permitir funciones de IA local</value>
+  </data>
+  <data name="AiSettings_ConsentDescription.Text" xml:space="preserve"><value>Permite las acciones de IA local que solicites. Las capturas nunca se analizan automáticamente.</value></data>
+  <data name="AiSettings_ScanningHeader.Text" xml:space="preserve">
+    <value>Analizar capturas automáticamente</value>
+  </data>
+  <data name="AiSettings_ScanningDescription.Text" xml:space="preserve">
+    <value>Analiza nuevas imágenes, grabaciones de audio y vídeos. Las capturas anteriores solo se analizan cuando las abres.</value>
+  </data>
+  <data name="AiSettings_DeleteHeader.Text" xml:space="preserve">
+    <value>Eliminar análisis de capturas</value>
+  </data>
+  <data name="AiSettings_DeleteDescription.Text" xml:space="preserve">
+    <value>Eliminar todos los análisis guardados, incluidos texto, códigos QR y detalles de archivos. Las capturas se conservan.</value>
+  </data>
+  <data name="CaptureMemory_Scanning.OnContent" xml:space="preserve">
+    <value>Activado</value>
+  </data>
+  <data name="CaptureMemory_Scanning.OffContent" xml:space="preserve">
+    <value>Desactivado</value>
+  </data>
+  <data name="CaptureDetails_Dialog.Title" xml:space="preserve"><value>Detalles de la captura</value></data>
+  <data name="CaptureDetails_Dialog.CloseButtonText" xml:space="preserve"><value>Cerrar</value></data>
+  <data name="CaptureDetails_Evidence.Header" xml:space="preserve"><value>Ver fuente</value></data>
+  <data name="CaptureDetails_Copy.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Copiar texto</value></data>
+  <data name="CaptureDetails_Copy.ToolTipService.ToolTip" xml:space="preserve"><value>Copiar texto</value></data>
+<data name="CaptureDetails_CopyAll.Content" xml:space="preserve"><value>Copiar todo el texto</value></data>
+  <data name="CaptureDetails_OverviewHeading.Text" xml:space="preserve"><value>Resumen de IA</value></data>
+  <data name="CaptureDetails_SuggestionsHint.Text" xml:space="preserve"><value>Sugerencias generadas. Comprueba la fuente si la precisión es importante.</value></data>
+  <data name="CaptureDetails_FactsHeading.Text" xml:space="preserve"><value>Información útil</value></data>
+  <data name="CaptureDetails_SourcesHeading.Text" xml:space="preserve"><value>Contenido de origen</value></data>
+  <data name="CaptureDetails_PropertiesHeading.Header" xml:space="preserve"><value>Propiedades del archivo</value></data>
+  <data name="CaptureDetails_SuggestedTitle" xml:space="preserve"><value>Título sugerido</value></data>
+  <data name="CaptureDetails_Summary" xml:space="preserve"><value>Resumen</value></data>
+  <data name="CaptureDetails_Category" xml:space="preserve"><value>Categoría sugerida</value></data>
+  <data name="CaptureDetails_Topic" xml:space="preserve"><value>Tema sugerido</value></data>
+  <data name="CaptureDetails_Category_Document" xml:space="preserve"><value>Documento</value></data>
+  <data name="CaptureDetails_Category_Conversation" xml:space="preserve"><value>Conversación</value></data>
+  <data name="CaptureDetails_Category_Code" xml:space="preserve"><value>Código</value></data>
+  <data name="CaptureDetails_Category_Error" xml:space="preserve"><value>Error</value></data>
+  <data name="CaptureDetails_Category_WebContent" xml:space="preserve"><value>Contenido web</value></data>
+  <data name="CaptureDetails_Category_Media" xml:space="preserve"><value>Contenido multimedia</value></data>
+  <data name="CaptureDetails_Category_Other" xml:space="preserve"><value>Otro</value></data>
+  <data name="CaptureDetails_Fact_Url" xml:space="preserve"><value>Enlace web</value></data>
+  <data name="CaptureDetails_Fact_EmailAddress" xml:space="preserve"><value>Correo electrónico</value></data>
+  <data name="CaptureDetails_Fact_Date" xml:space="preserve"><value>Fecha en el contenido</value></data>
+  <data name="CaptureDetails_Fact_CurrencyAmount" xml:space="preserve"><value>Importe</value></data>
+  <data name="CaptureDetails_Fact_ErrorCode" xml:space="preserve"><value>Código de error</value></data>
+  <data name="CaptureDetails_Fact_ReferenceCode" xml:space="preserve"><value>Código de referencia</value></data>
+  <data name="CaptureDetails_QrCode" xml:space="preserve"><value>Código QR</value></data>
+  <data name="CaptureDetails_RecognizedText" xml:space="preserve"><value>Texto reconocido</value></data>
+  <data name="CaptureDetails_Transcript" xml:space="preserve"><value>Transcripción</value></data>
+  <data name="CaptureDetails_Descriptions" xml:space="preserve"><value>Descripciones de IA</value></data>
+  <data name="CaptureDetails_Sources" xml:space="preserve"><value>Fuente</value></data>
+  <data name="CaptureDetails_MediaType" xml:space="preserve"><value>Tipo de contenido</value></data>
+  <data name="CaptureDetails_Media_Image" xml:space="preserve"><value>Imagen</value></data>
+  <data name="CaptureDetails_Media_Audio" xml:space="preserve"><value>Audio</value></data>
+  <data name="CaptureDetails_Media_Video" xml:space="preserve"><value>Vídeo</value></data>
+  <data name="CaptureDetails_Size" xml:space="preserve"><value>Tamaño del archivo</value></data>
+  <data name="CaptureDetails_ContentType" xml:space="preserve"><value>Formato del archivo</value></data>
+  <data name="CaptureDetails_CapturedAt" xml:space="preserve"><value>Capturado</value></data>
+  <data name="CaptureDetails_CreatedAt" xml:space="preserve"><value>Archivo creado</value></data>
+  <data name="CaptureDetails_ModifiedAt" xml:space="preserve"><value>Archivo modificado</value></data>
+  <data name="CaptureDetails_Unknown" xml:space="preserve"><value>Desconocido</value></data>
+  <data name="CaptureDetails_Duration" xml:space="preserve"><value>Duración</value></data>
+  <data name="CaptureDetails_Dimensions" xml:space="preserve"><value>Dimensiones (píxeles)</value></data>
+  <data name="CaptureDetails_AspectRatio" xml:space="preserve"><value>Relación de aspecto</value></data>
+  <data name="CaptureDetails_DpiX" xml:space="preserve"><value>PPP horizontales</value></data>
+  <data name="CaptureDetails_DpiY" xml:space="preserve"><value>PPP verticales</value></data>
+  <data name="CaptureDetails_FrameRate" xml:space="preserve"><value>Fotogramas por segundo</value></data>
+  <data name="CaptureDetails_VideoBitrate" xml:space="preserve"><value>Tasa de bits de vídeo</value></data>
+  <data name="CaptureDetails_VideoCodec" xml:space="preserve"><value>Códec de vídeo</value></data>
+  <data name="CaptureDetails_Channels" xml:space="preserve"><value>Canales de audio</value></data>
+  <data name="CaptureDetails_SampleRate" xml:space="preserve"><value>Frecuencia de muestreo</value></data>
+  <data name="CaptureDetails_AudioBitrate" xml:space="preserve"><value>Tasa de bits de audio</value></data>
+  <data name="CaptureDetails_AudioCodec" xml:space="preserve"><value>Códec de audio</value></data>
+  <data name="CaptureDetails_Deleting" xml:space="preserve"><value>Se está eliminando el análisis guardado.</value></data>
+  <data name="CaptureDetails_Unavailable" xml:space="preserve"><value>No se pudieron cargar los detalles de la captura.</value></data>
+  <data name="CaptureDetails_SourceChanged" xml:space="preserve"><value>El archivo ha cambiado desde que se guardaron estos resultados.</value></data>
+  <data name="CaptureDetails_SourceUnavailable" xml:space="preserve"><value>No se pudo abrir el archivo.</value></data>
+  <data name="CaptureDetails_Analyzing" xml:space="preserve"><value>Análisis en espera o en curso. Los detalles se actualizan con los resultados.</value></data>
+  <data name="CaptureDetails_Paused" xml:space="preserve"><value>El análisis se detuvo. Elige una acción para volver a intentarlo.</value></data>
+  <data name="CaptureDetails_Partial" xml:space="preserve"><value>Parte del análisis no se completó. Se muestran los resultados guardados disponibles.</value></data>
+  <data name="CaptureDetails_Empty" xml:space="preserve"><value>Aún no hay texto guardado. Elige una acción arriba para extraer lo que necesites.</value></data>
+  <data name="CaptureDetails_Retained" xml:space="preserve"><value>Algunos resultados proceden de un análisis anterior del mismo archivo.</value></data>
+  <data name="CaptureDetails_Copied" xml:space="preserve"><value>Copiado al portapapeles.</value></data>
+  <data name="CaptureDetails_CopyFailed" xml:space="preserve"><value>No se pudo copiar el texto. Inténtalo de nuevo.</value></data>
+  <data name="HomePage_RecentCaptureDetailsMenuItem.Text" xml:space="preserve"><value>Detalles</value></data>
+  <data name="CaptureDetails_AnalyzedFile" xml:space="preserve"><value>Archivo analizado</value></data>
+  <data name="CaptureDetails_AnalyzedAt" xml:space="preserve"><value>Propiedades registradas</value></data>
+  <data name="CapturePane_Toggle.Label" xml:space="preserve"><value>Detalles</value></data>
+  <data name="CapturePane_Heading.Text" xml:space="preserve"><value>Detalles de la captura</value></data>
+  <data name="CapturePane_Close.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Cerrar detalles</value></data>
+  <data name="CapturePane_Close.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve"><value>Cerrar detalles</value></data>
+  <data name="CapturePane_CopyPath.Content" xml:space="preserve"><value>Copiar ruta</value></data>
+  <data name="CapturePane_OpenFolder.Content" xml:space="preserve"><value>Abrir carpeta</value></data>
+  <data name="CapturePane_Technical.Header" xml:space="preserve"><value>Detalles técnicos</value></data>
+  <data name="CapturePane_Summary.Text" xml:space="preserve"><value>Resumen de IA</value></data>
+  <data name="CapturePane_PendingEdits" xml:space="preserve"><value>Los detalles y resúmenes corresponden al archivo guardado.</value></data>
+  <data name="CapturePane_FileUnavailable" xml:space="preserve"><value>No se pudieron leer las propiedades del archivo.</value></data>
+  <data name="CapturePane_FolderUnavailable" xml:space="preserve"><value>No se pudo abrir la carpeta.</value></data>
+  <data name="CapturePane_DetailsTab.Header" xml:space="preserve"><value>Detalles</value></data>
+  <data name="CapturePane_TextTab.Header" xml:space="preserve"><value>Texto</value></data>
+  <data name="CapturePane_Search.PlaceholderText" xml:space="preserve"><value>Buscar texto</value></data>
+  <data name="CapturePane_Search.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Buscar texto</value></data>
+  <data name="CapturePane_SourceFilter.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Origen del texto</value></data>
+  <data name="CapturePane_Previous.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Resultado anterior</value></data>
+  <data name="CapturePane_Next.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Resultado siguiente</value></data>
+  <data name="CapturePane_Occurrences.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Apariciones</value></data>
+  <data name="CapturePane_OpenLink.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Abrir enlace</value></data>
+  <data name="CapturePane_OpenLink.ToolTipService.ToolTip" xml:space="preserve"><value>Abrir enlace</value></data>
+  <data name="CapturePane_LoadMore.Content" xml:space="preserve"><value>Mostrar más</value></data>
+  <data name="CapturePane_CopyResults.Content" xml:space="preserve"><value>Copiar todos los resultados</value></data>
+  <data name="CapturePane_AllSources" xml:space="preserve"><value>Todos los orígenes</value></data>
+  <data name="CapturePane_ScreenText" xml:space="preserve"><value>Texto en pantalla</value></data>
+  <data name="CapturePane_Speech" xml:space="preserve"><value>Voz</value></data>
+  <data name="CapturePane_Codes" xml:space="preserve"><value>Códigos QR</value></data>
+  <data name="CapturePane_PassageCount" xml:space="preserve"><value>Resultados: {0}</value></data>
+  <data name="CapturePane_MatchCount" xml:space="preserve"><value>Coincidencias: {0}</value></data>
+  <data name="CapturePane_LocationUnavailable" xml:space="preserve"><value>No se puede localizar este texto en la vista actual.</value></data>
+  <data name="CapturePane_ActionFailed" xml:space="preserve"><value>No se pudo abrir este resultado.</value></data>
+  <data name="CaptureNaming_Header.Text" xml:space="preserve"><value>Sugerir nombres para nuevas capturas</value></data>
+  <data name="CaptureNaming_Description.Text" xml:space="preserve"><value>La IA sugiere nombres de archivo después de la captura. Los archivos conservan su nombre hasta que aceptes una sugerencia.</value></data>
+  <data name="CaptureNaming_Toggle.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Sugerir nombres para nuevas capturas</value></data>
+  <data name="CaptureNaming_Edit.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Cambiar nombre</value></data>
+  <data name="CaptureNaming_Input.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Nombre de archivo</value></data>
+  <data name="CaptureNaming_Save.ToolTipService.ToolTip" xml:space="preserve"><value>Cambiar nombre</value></data>
+  <data name="CaptureNaming_Save.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Cambiar nombre</value></data>
+  <data name="CaptureNaming_Cancel.ToolTipService.ToolTip" xml:space="preserve"><value>Cancelar</value></data>
+  <data name="CaptureNaming_Cancel.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Cancelar</value></data>
+  <data name="CaptureNaming_FileName.Text" xml:space="preserve"><value>Nombre de archivo</value></data>
+  <data name="CaptureNaming_Invalid" xml:space="preserve"><value>Escribe un nombre de una línea de 1 a 160 caracteres.</value></data>
+  <data name="CaptureNaming_SaveFailed" xml:space="preserve"><value>No se pudo cambiar el nombre. Comprueba que no esté en uso y que el archivo permita escritura.</value></data>
+  <data name="CaptureWelcome_Eyebrow.Text" xml:space="preserve"><value>IA LOCAL</value></data>
+  <data name="CaptureWelcome_Hero.Text" xml:space="preserve"><value>Saca más partido a tus capturas</value></data>
+  <data name="CaptureWelcome_Text.Text" xml:space="preserve"><value>Copia texto de imágenes para usarlo donde quieras.</value></data>
+  <data name="CaptureWelcome_Recording.Text" xml:space="preserve"><value>Obtén un breve resumen de tus capturas.</value></data>
+  <data name="CaptureWelcome_Names.Text" xml:space="preserve"><value>Pon nombres más claros a tus capturas con sugerencias de IA.</value></data>
+  <data name="CaptureWelcome_Consent.Text" xml:space="preserve"><value>La IA se ejecuta en este PC solo cuando eliges una acción. Los resultados se guardan de forma segura en este PC. Algunas funciones pueden requerir la descarga de un modelo de IA. Puedes desactivar la IA o eliminar los resultados guardados en Configuración.</value></data>
+  <data name="CaptureWelcome_NotNow" xml:space="preserve"><value>Ahora no</value></data>
+  <data name="AddOns_ChromaKeyPurchaseNotCompletedLabel.Text" xml:space="preserve"><value>La compra no se ha completado. Inténtalo de nuevo.</value></data>
+  <data name="AudioCapture_StopCaptureFailedMessage" xml:space="preserve"><value>No se ha podido finalizar la grabación. Intenta grabar de nuevo.</value></data>
+  <data name="AudioEdit_LoadingMediaText.Text" xml:space="preserve"><value>Abriendo audio…</value></data>
+  <data name="AudioEdit_MediaFailureOpenFolderButton.Content" xml:space="preserve"><value>Abrir la carpeta de grabaciones de audio</value></data>
+  <data name="ErrorPage_ExitAppButtonLabel.Text" xml:space="preserve"><value>Salir de la aplicación</value></data>
+  <data name="ErrorPage_RestartFailedLabel.Text" xml:space="preserve"><value>No se ha podido reiniciar la aplicación. Inténtalo de nuevo o sal de la aplicación.</value></data>
+  <data name="MediaFailure_FileUnavailable" xml:space="preserve"><value>Este archivo multimedia no está disponible. Comprueba que aún existe e inténtalo de nuevo.</value></data>
+  <data name="MediaFailure_Finalization" xml:space="preserve"><value>No se ha podido finalizar la grabación. Abre la carpeta de grabaciones para comprobar el archivo.</value></data>
+  <data name="MediaFailure_Playback" xml:space="preserve"><value>No se ha podido reproducir este archivo multimedia. Inténtalo de nuevo o abre la carpeta de grabaciones.</value></data>
+  <data name="MediaFailure_RetryButton.Content" xml:space="preserve"><value>Reintentar</value></data>
+  <data name="MediaFailure_Unsupported" xml:space="preserve"><value>Este formato multimedia o códec no es compatible.</value></data>
+  <data name="VideoEdit_LoadingMediaText.Text" xml:space="preserve"><value>Abriendo vídeo…</value></data>
+  <data name="VideoEdit_MediaFailureOpenFolderButton.Content" xml:space="preserve"><value>Abrir la carpeta de grabaciones de pantalla</value></data>
+  <data name="AddOns_ItemUnknown" xml:space="preserve"><value>Cargando…</value></data>
+  <data name="ChromaKeyToolbar_KeyColorLabel.Text" xml:space="preserve"><value>Color clave</value></data>
+  <data name="Common_BackButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Atrás</value></data>
+  <data name="MainWindow_DismissNotificationButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Descartar notificación</value></data>
+  <data name="MainWindow_DismissNotificationButton.ToolTipService.ToolTip" xml:space="preserve"><value>Descartar</value></data>
+  <data name="AppMenu_NoRecentCaptures" xml:space="preserve"><value>Ninguna</value></data>
+  <data name="ImageEdit_DeleteShape" xml:space="preserve"><value>Eliminar</value></data>
+  <data name="ImageCanvas_CopyQrCodeValue" xml:space="preserve"><value>Copiar el contenido del código QR</value></data>
+  <data name="ImageCanvas_OpenQrCodeLink" xml:space="preserve"><value>Abrir el enlace del código QR</value></data>
+  <data name="ImageCanvas_QrCodeValue" xml:space="preserve"><value>Código QR: {0}</value></data>
+  <data name="Common_MediaType_Image" xml:space="preserve"><value>Imagen</value></data>
+  <data name="Common_MediaType_Video" xml:space="preserve"><value>Vídeo</value></data>
+  <data name="Common_MediaType_Audio" xml:space="preserve"><value>Audio</value></data>
+  <data name="Common_MediaType_File" xml:space="preserve"><value>Archivo</value></data>
+  <data name="CaptureNaming_Generating.Text" xml:space="preserve"><value>Sugiriendo un nombre…</value></data>
+  <data name="CaptureNaming_Suggestion.Text" xml:space="preserve"><value>Nombre de archivo sugerido</value></data>
+  <data name="CaptureNaming_Accept.Content" xml:space="preserve"><value>Usar este nombre</value></data>
+  <data name="CapturePane_GeneratingSummary.Text" xml:space="preserve"><value>Preparando un resumen…</value></data>
+  <data name="CaptureAction_Description" xml:space="preserve"><value>Generar descripción</value></data>
+  <data name="CaptureAction_Summary" xml:space="preserve"><value>Generar resumen</value></data>
+  <data name="CaptureAction_Name" xml:space="preserve"><value>Sugerir un nombre</value></data>
+  <data name="CaptureAction_Text" xml:space="preserve"><value>Extraer texto</value></data>
+  <data name="CaptureAction_ScanText" xml:space="preserve"><value>Buscar texto y códigos QR</value></data>
+  <data name="CaptureAction_Qr" xml:space="preserve"><value>Buscar códigos QR</value></data>
+  <data name="CaptureAction_Transcript" xml:space="preserve"><value>Transcribir audio</value></data>
+  <data name="CaptureAction_DescriptionHeading.Text" xml:space="preserve"><value>Descripción con IA</value></data>
+  <data name="CapturePane_EmptyTextTitle.Text" xml:space="preserve"><value>No se encontraron resultados</value></data>
+  <data name="CapturePane_EmptyTextDescription" xml:space="preserve"><value>No se encontró texto ni códigos QR en esta captura.</value></data>
+  <data name="CaptureAction_NoSpeech" xml:space="preserve"><value>No se encontró voz.</value></data>
+  <data name="CaptureAction_NoDescription" xml:space="preserve"><value>No se generó ninguna descripción.</value></data>
+  <data name="CaptureAction_Unavailable" xml:space="preserve"><value>Esta acción no está disponible en este dispositivo.</value></data>
+  <data name="CaptureAction_Failed" xml:space="preserve"><value>No se pudo completar esta acción. Puedes volver a intentarlo.</value></data>
+  <data name="CapturePane_SummaryTab.Header" xml:space="preserve"><value>Resumen</value></data>
+  <data name="CaptureAction_ScreenshotSummary" xml:space="preserve"><value>Resumir imagen</value></data>
+  <data name="CaptureAction_AltText" xml:space="preserve"><value>Generar texto alternativo</value></data>
+  <data name="CaptureSummary_Hint.Text" xml:space="preserve"><value>Crear un resumen de esta imagen con IA.</value></data>
+  <data name="CaptureSummary_AltText.Text" xml:space="preserve"><value>Texto alternativo</value></data>
+  <data name="CaptureSummary_AltTextHint.Text" xml:space="preserve"><value>Crear una descripción breve para lectores de pantalla. Revísala antes de compartirla.</value></data>
+  <data name="CaptureSummary_CopySummary.Content" xml:space="preserve"><value>Copiar resumen</value></data>
+  <data name="CaptureSummary_CopyAltText.Content" xml:space="preserve"><value>Copiar texto alternativo</value></data>
+  <data name="CaptureAction_NoSuggestion" xml:space="preserve"><value>No hay suficiente información para ofrecer una sugerencia.</value></data>
+  <data name="CaptureNaming_Suggest" xml:space="preserve"><value>Sugerir un nombre de archivo con IA</value></data>
+  <data name="CaptureNaming_AiGenerating" xml:space="preserve"><value>Sugiriendo un nombre con IA…</value></data>
+  <data name="CaptureNaming_Edit.ToolTipService.ToolTip" xml:space="preserve"><value>Cambiar nombre</value></data>
+  <data name="CapturePane_Loading.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Cargando detalles</value></data>
+  <data name="CaptureSummary_Info.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Acerca del resumen con IA</value></data>
+  <data name="CaptureSummary_AltTextInfo.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Acerca del texto alternativo</value></data>
+  <data name="CaptureText_Title.Text" xml:space="preserve"><value>Texto y códigos QR</value></data>
+  <data name="CaptureText_Info.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Acerca del texto y los códigos QR</value></data>
+  <data name="CaptureText_Hint.Text" xml:space="preserve"><value>Busca texto y códigos QR en esta captura. Selecciona un resultado para localizarlo o copia el texto para usarlo en otro lugar.</value></data>
+  <data name="CapturePane_SpeechTab.Header" xml:space="preserve"><value>Voz</value></data>
+  <data name="CaptureSpeech_Title.Text" xml:space="preserve"><value>Voz a texto</value></data>
+  <data name="CaptureSpeech_Info.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Acerca de voz a texto</value></data>
+  <data name="CaptureSpeech_Hint.Text" xml:space="preserve"><value>Transcribe la voz de esta grabación. Selecciona un resultado para ir a ese momento o copia la transcripción para usarla en otro lugar.</value></data>
+  <data name="CaptureSpeech_Search.PlaceholderText" xml:space="preserve"><value>Buscar en la transcripción</value></data>
+  <data name="CaptureSpeech_Search.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Buscar en la transcripción</value></data>
+  <data name="CaptureSpeech_EmptyTitle.Text" xml:space="preserve"><value>No se encontró voz</value></data>
+  <data name="CaptureSpeech_EmptyDescription.Text" xml:space="preserve"><value>No se detectó voz en esta grabación.</value></data>
+  <data name="CaptureSummary_VideoHint" xml:space="preserve"><value>Crea un resumen con IA de este vídeo.</value></data>
+  <data name="CaptureSummary_AudioHint" xml:space="preserve"><value>Crea un resumen con IA de esta grabación.</value></data>
+  <data name="CaptureVideoText_Search.PlaceholderText" xml:space="preserve"><value>Buscar texto o una marca de tiempo</value></data>
+  <data name="CaptureVideoText_Search.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Buscar texto o una marca de tiempo</value></data>
+  <data name="CaptureVideoText_Back.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Volver a las marcas de tiempo</value></data>
+  <data name="CaptureVideoText_Back.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve"><value>Volver a las marcas de tiempo</value></data>
+  <data name="CaptureVideoText_TimestampCount" xml:space="preserve"><value>Marcas de tiempo: {0}</value></data>
+  <data name="CaptureVideoText_NoMatches.Text" xml:space="preserve"><value>No hay marcas de tiempo coincidentes</value></data>
+  <data name="CaptureVideoText_UnknownTime" xml:space="preserve"><value>Tiempo no disponible</value></data>
+  <data name="CaptureVideoText_Hint" xml:space="preserve"><value>Busca texto y códigos QR en este vídeo. Elige una marca de tiempo para ir a ese momento y buscar o copiar su texto.</value></data>
+  <data name="TextExtractionStatus_LanguageResourcesRequired" xml:space="preserve"><value>Para extraer texto, instala el paquete de reconocimiento de texto (OCR) de tu idioma en Configuración de Windows y vuelve a intentarlo.</value></data>
+  <data name="CaptureSummary_PartialCoverage.Text" xml:space="preserve">
+    <value>Este resumen utiliza extractos del análisis disponible y puede omitir detalles.</value>
   </data>
 </root>

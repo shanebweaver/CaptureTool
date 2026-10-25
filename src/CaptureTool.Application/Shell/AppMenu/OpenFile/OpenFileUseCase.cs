@@ -68,7 +68,7 @@ internal sealed class OpenFileUseCase : IOpenFileUseCase
                             {
                                 CaptureFileType.Audio => await _navigationCoordinator.NavigateAsync(
                                     NavigationRoute.AudioEdit,
-                                    new AudioFile(workingFilePath),
+                                    new AudioFile(workingFilePath, file.FilePath),
                                     cancellationToken: token),
                                 CaptureFileType.Image => await _navigationCoordinator.NavigateAsync(
                                     NavigationRoute.ImageEdit,
@@ -76,7 +76,7 @@ internal sealed class OpenFileUseCase : IOpenFileUseCase
                                     cancellationToken: token),
                                 CaptureFileType.Video => await _navigationCoordinator.NavigateAsync(
                                     NavigationRoute.VideoEdit,
-                                    new VideoFile(workingFilePath),
+                                    new VideoFile(workingFilePath, file.FilePath),
                                     cancellationToken: token),
                                 _ => false
                             };

@@ -21,9 +21,7 @@
         </Border.Shadow>
         <StackPanel Orientation="Horizontal" Spacing="8">
             <SymbolIcon Symbol="Cut" />
-            <TextBlock
-                x:Uid="ForegroundExtractionToolbar_Instruction"
-                VerticalAlignment="Center" />
+            <TextBlock x:Uid="ForegroundExtractionToolbar_Instruction" VerticalAlignment="Center" />
         </StackPanel>
     </Border>
 </local:UserControlBase>

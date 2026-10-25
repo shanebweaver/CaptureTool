@@ -17,13 +17,15 @@ internal sealed class TelemetryConsentDialogService
     private bool _isPromptAllowed;
     private int _promptGeneration;
     private ResourceLoader? _resourceLoader;
+    private readonly MainWindowDialogCoordinator _dialogs;
 
     public TelemetryConsentDialogService(
         ISettingsService settingsService,
-        ITelemetryConsentService consentService)
+        ITelemetryConsentService consentService, MainWindowDialogCoordinator dialogs)
     {
         _settingsService = settingsService;
         _consentService = consentService;
+        _dialogs = dialogs;
     }
 
     public XamlRoot? XamlRoot { get; set; }
@@ -83,7 +85,7 @@ internal sealed class TelemetryConsentDialogService
             AutomationProperties.SetAutomationId(dialog, "TelemetryConsentDialog");
             _activeDialog = dialog;
 
-            ContentDialogResult result = await dialog.ShowAsync();
+            ContentDialogResult result = await _dialogs.ShowAsync(() => dialog, cancellationToken);
             if (cancellationToken.IsCancellationRequested ||
                 !_isPromptAllowed ||
                 promptGeneration != _promptGeneration)

@@ -28,9 +28,7 @@
             Command="{x:Bind CopyAllTextCommand, Mode=OneWay}">
             <StackPanel Orientation="Horizontal" Spacing="8">
                 <SymbolIcon Symbol="Copy" />
-                <TextBlock
-                    x:Uid="TextExtractionToolbar_CopyAllTextButtonLabel"
-                    VerticalAlignment="Center" />
+                <TextBlock x:Uid="TextExtractionToolbar_CopyAllTextButtonLabel" VerticalAlignment="Center" />
             </StackPanel>
         </Button>
     </Border>

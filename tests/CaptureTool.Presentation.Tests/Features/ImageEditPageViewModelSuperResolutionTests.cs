@@ -1,3 +1,4 @@
+using CaptureTool.Application.Abstractions.Ai;
 using CaptureTool.Application.Abstractions.Cancellation;
 using CaptureTool.Application.Abstractions.Clipboard;
 using CaptureTool.Application.Abstractions.Edit.External;
@@ -178,16 +179,16 @@ public sealed class ImageEditPageViewModelSuperResolutionTests
     }
 
     [TestMethod]
-    public async Task ToggleSuperResolutionCommand_WhenPreparationConsentIsDenied_ShouldNotGenerate()
+    public async Task ToggleSuperResolutionCommand_WhenSharedConsentIsDenied_ShouldNotGenerate()
     {
         var service = new Mock<IImageSuperResolutionService>();
-        var consent = new Mock<IImageSuperResolutionPreparationConsentService>();
+        var consent = new Mock<IAiFeatureConsentService>();
 
         service
             .Setup(x => x.GetReadyState())
             .Returns(ImageSuperResolutionReadyState.PreparationNeeded);
         consent
-            .Setup(x => x.ConfirmPreparationAsync(It.IsAny<CancellationToken>()))
+            .Setup(x => x.EnsureConsentAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(false);
 
         ImageEditPageViewModel viewModel = CreateViewModel(service: service.Object, consent: consent.Object);
@@ -260,7 +261,7 @@ public sealed class ImageEditPageViewModelSuperResolutionTests
     private static ImageEditPageViewModel CreateViewModel(
         IImageSuperResolutionService? service = null,
         IImageSuperResolutionFeatureAvailability? featureAvailability = null,
-        IImageSuperResolutionPreparationConsentService? consent = null,
+        IAiFeatureConsentService? consent = null,
         ILocalizationService? localizationService = null,
         IAppNotificationService? notifications = null)
     {
@@ -290,7 +291,6 @@ public sealed class ImageEditPageViewModelSuperResolutionTests
             imageMetadata.Object,
             service ?? Mock.Of<IImageSuperResolutionService>(),
             featureAvailability ?? Mock.Of<IImageSuperResolutionFeatureAvailability>(x => x.IsImageSuperResolutionEnabled == true),
-            consent ?? Mock.Of<IImageSuperResolutionPreparationConsentService>(),
             Mock.Of<IShareService>(),
             Mock.Of<IOpenExternalEditorUseCase>(),
             Mock.Of<IStorageService>(),
@@ -309,7 +309,8 @@ public sealed class ImageEditPageViewModelSuperResolutionTests
             new TextExtractionToolViewModel(
                 Mock.Of<IClipboardService>(),
                 localizationService ?? CreateLocalizationService(),
-                notificationService));
+                notificationService),
+            aiFeatureConsentService: consent);
     }
 
     private static ILocalizationService CreateLocalizationService()

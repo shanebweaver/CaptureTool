@@ -1,4 +1,4 @@
-using CaptureTool.Application.Abstractions.Localization;
+﻿using CaptureTool.Application.Abstractions.Localization;
 using CaptureTool.Application.Abstractions.Themes;
 using CaptureTool.Domain.Capture;
 using CaptureTool.Presentation.Factories;
@@ -30,6 +30,7 @@ public static class PresentationServiceCollectionExtensions
     {
         services.AddSingleton<IAudioWaveformHistory, AudioWaveformHistory>();
         services.AddSingleton<IAppNotificationService, AppNotificationService>();
+        services.AddSingleton<CaptureMemoryViewModel>();
 
         // ViewModels
         services.AddTransient<MainWindowViewModel>();
@@ -38,6 +39,7 @@ public static class PresentationServiceCollectionExtensions
         services.AddTransient<AboutPageViewModel>();
         services.AddTransient<StorePageViewModel>();
         services.AddTransient<HomePageViewModel>();
+        services.AddTransient<CaptureTool.Presentation.Features.CaptureDetails.CaptureDetailsViewModel>();
         services.AddTransient<SettingsPageViewModel>();
         services.AddTransient<LoadingPageViewModel>();
         services.AddTransient<ChromaKeyToolViewModel>();

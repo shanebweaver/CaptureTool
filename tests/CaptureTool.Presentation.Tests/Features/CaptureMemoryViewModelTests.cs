@@ -1,0 +1,309 @@
+using CaptureTool.Application.Abstractions.Analysis;
+using CaptureTool.Application.Abstractions.Localization;
+using CaptureTool.Application.Abstractions.TaskEnvironment;
+using CaptureTool.Domain.Analysis;
+using CaptureTool.Presentation.Features.Settings;
+using CaptureTool.Presentation.Notifications;
+using Moq;
+
+namespace CaptureTool.Presentation.Tests.Features;
+
+[TestClass]
+public sealed class CaptureMemoryViewModelTests
+{
+    [TestMethod]
+    public async Task UnsupportedDeviceHidesEnablementButKeepsRevocationAndDeletion()
+    {
+        using var fixture = new Fixture();
+        fixture.Availability.Query = (_, _) => Task.FromResult(false);
+        fixture.Change(fixture.State with { Policy = CaptureMemoryPolicy.Disabled(), Storage = new(false, true) });
+        await fixture.ViewModel.RefreshAsync();
+        fixture.Dispatch();
+        Assert.IsFalse(fixture.ViewModel.ShowSettings);
+        Assert.IsFalse(fixture.ViewModel.ShowConsent);
+        Assert.IsFalse(fixture.ViewModel.SetConsentCommand.CanExecute(true));
+        await fixture.ViewModel.SetConsentCommand.ExecuteAsync(true);
+        fixture.Memory.Verify(x => x.SetConsentAsync(true, It.IsAny<CancellationToken>()), Times.Never);
+        fixture.Change(fixture.State with { Storage = new(true, true) });
+        fixture.Dispatch();
+        Assert.IsTrue(fixture.ViewModel.ShowSettings);
+        Assert.IsFalse(fixture.ViewModel.ShowConsent);
+        Assert.IsTrue(fixture.ViewModel.DeleteCommand.CanExecute(null));
+        fixture.Change(fixture.State with { Policy = new(true, Guid.NewGuid()) });
+        fixture.Dispatch();
+        Assert.IsTrue(fixture.ViewModel.ShowConsent);
+        Assert.IsTrue(fixture.ViewModel.SetConsentCommand.CanExecute(false));
+    }
+
+    [TestMethod]
+    public async Task SupportedDeviceShowsConsentBeforeAnyModelsHaveBeenPrepared()
+    {
+        using var fixture = new Fixture();
+        fixture.Change(fixture.State with { Policy = CaptureMemoryPolicy.Disabled(), Storage = new(false, true) });
+        fixture.Dispatch();
+        Assert.IsFalse(fixture.ViewModel.ShowSettings);
+        await fixture.ViewModel.RefreshAsync();
+        fixture.Dispatch();
+        Assert.IsTrue(fixture.ViewModel.ShowSettings);
+        Assert.IsTrue(fixture.ViewModel.ShowConsent);
+        Assert.IsTrue(fixture.ViewModel.SetConsentCommand.CanExecute(true));
+    }
+    [TestMethod]
+    public void CoalescesSettingsStateOnDispatcher()
+    {
+        using var fixture = new Fixture();
+        fixture.Change(fixture.State with { Storage = new(true, true), IsDeleting = true });
+        fixture.Change(fixture.State with { IsDeleting = false });
+        Assert.HasCount(1, fixture.Updates);
+        fixture.Dispatch();
+        Assert.IsTrue(fixture.ViewModel.ConsentGranted);
+        Assert.IsTrue(fixture.ViewModel.CanDelete);
+        fixture.Change(fixture.State with { Policy = CaptureMemoryPolicy.Disabled(), Storage = new(false, true) });
+        fixture.Dispatch();
+        Assert.IsFalse(fixture.ViewModel.ConsentGranted);
+        Assert.IsFalse(fixture.ViewModel.CanDelete);
+    }
+
+    [TestMethod]
+    public void DeleteDisablesDuringDeletionAndReenablesAfterFailureWithNoAlternateAction()
+    {
+        using var fixture = new Fixture();
+        fixture.Change(fixture.State with { Storage = new(true, true), IsDeleting = true });
+        fixture.Dispatch();
+        Assert.IsFalse(fixture.ViewModel.DeleteCommand.CanExecute(null));
+        fixture.Change(fixture.State with { IsDeleting = false, Storage = new(true, true, true), FailureCode = "cleanup-pending" });
+        fixture.Dispatch();
+        Assert.IsTrue(fixture.ViewModel.DeleteCommand.CanExecute(null));
+        fixture.Notifications.Verify(value => value.ShowError("CaptureMemory_Error_Cleanup"), Times.Once);
+        fixture.Change(fixture.State);
+        fixture.Dispatch();
+        fixture.Notifications.Verify(value => value.ShowError(It.IsAny<string>()), Times.Once);
+    }
+
+    [TestMethod]
+    public async Task SettingsCommandsUseApplicationService()
+    {
+        using var fixture = new Fixture();
+        fixture.Change(fixture.State with { Storage = new(true, true) });
+        fixture.Dispatch();
+        await fixture.ViewModel.DeleteCommand.ExecuteAsync(null);
+        fixture.Memory.Verify(value => value.DeleteMetadataAsync(default), Times.Once);
+        await fixture.ViewModel.SetConsentCommand.ExecuteAsync(false);
+        fixture.Memory.Verify(value => value.SetConsentAsync(false, default), Times.Once);
+        fixture.Change(fixture.State with { Policy = CaptureMemoryPolicy.Disabled(), Storage = new(false, true) });
+        fixture.Dispatch();
+        Assert.IsFalse(fixture.ViewModel.DeleteCommand.CanExecute(null));
+    }
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public void RepeatedFailuresAcrossQueuedCapturesDoNotFloodNotifications(bool completed)
+    {
+        using var fixture = new Fixture();
+        for (int i = 0; i < 3; i++)
+        {
+            fixture.Change(fixture.State with { Activity = new(AnalysisActivity.Analyzing) });
+            fixture.Dispatch();
+            fixture.Change(fixture.State with
+            {
+                Activity = new(AnalysisActivity.Analyzing,
+                LastRunStatus: completed ? AnalysisRunStatus.Completed : AnalysisRunStatus.Failed, LastRunHadFailures: completed)
+            });
+            fixture.Dispatch();
+        }
+        fixture.Notifications.Verify(value => value.ShowError("CaptureMemory_Error_Analysis"), Times.Once);
+    }
+
+    [TestMethod]
+    [DataRow(AnalysisActivity.Analyzing)]
+    [DataRow(AnalysisActivity.Idle)]
+    public void CompletedStepFailureSurvivesCoalescingWithTheNextCapture(AnalysisActivity nextActivity)
+    {
+        using var fixture = new Fixture();
+        fixture.Change(fixture.State with
+        {
+            Activity = new(AnalysisActivity.Analyzing,
+            LastRunStatus: AnalysisRunStatus.Completed, LastRunHadFailures: true)
+        });
+        fixture.Change(fixture.State with
+        {
+            Activity = new(nextActivity,
+            LastRunStatus: nextActivity == AnalysisActivity.Idle ? AnalysisRunStatus.Completed : null)
+        });
+        fixture.Dispatch();
+        fixture.Notifications.Verify(value => value.ShowError("CaptureMemory_Error_Analysis"), Times.Once);
+    }
+
+    [TestMethod]
+    public void SuccessfulCompletionResetsFailureDeduplicationAndUnsupportedStepsRemainQuiet()
+    {
+        using var fixture = new Fixture();
+        var failed = fixture.State with
+        {
+            Activity = new(AnalysisActivity.Idle,
+            LastRunStatus: AnalysisRunStatus.Completed, LastRunHadFailures: true)
+        };
+        fixture.Change(failed);
+        fixture.Dispatch();
+        fixture.Change(fixture.State with
+        {
+            Activity = new(AnalysisActivity.Idle,
+            FailureCode: "model-unavailable", LastRunStatus: AnalysisRunStatus.Completed)
+        });
+        fixture.Dispatch();
+        fixture.Notifications.Verify(value => value.ShowError(It.IsAny<string>()), Times.Once);
+        fixture.Change(failed);
+        fixture.Dispatch();
+        fixture.Notifications.Verify(value => value.ShowError("CaptureMemory_Error_Analysis"), Times.Exactly(2));
+    }
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public void SuccessfulSettingsRetryResetsFailureNotificationEvenWithScanningOff(bool coalesced)
+    {
+        using var fixture = new Fixture();
+        var failed = fixture.State with { Policy = CaptureMemoryPolicy.Disabled(), FailureCode = "policy-save" };
+        fixture.Change(failed);
+        fixture.Dispatch();
+        fixture.Change(failed);
+        fixture.Dispatch();
+        fixture.Notifications.Verify(value => value.ShowError("CaptureMemory_Error_Policy"), Times.Once);
+        fixture.Change(failed with { FailureCode = null });
+        if (!coalesced) fixture.Dispatch();
+        fixture.Change(failed);
+        fixture.Dispatch();
+        fixture.Notifications.Verify(value => value.ShowError("CaptureMemory_Error_Policy"), Times.Exactly(2));
+        fixture.Change(failed);
+        fixture.Dispatch();
+        fixture.Notifications.Verify(value => value.ShowError(It.IsAny<string>()), Times.Exactly(2));
+    }
+
+    [TestMethod]
+    public void DisposalIgnoresQueuedUpdatesAndUnsubscribes()
+    {
+        using var fixture = new Fixture();
+        fixture.ViewModel.Dispose();
+        fixture.Dispatch();
+        fixture.Change(fixture.State with { Activity = new(AnalysisActivity.Analyzing) });
+        Assert.IsEmpty(fixture.Updates);
+        Assert.IsFalse(fixture.ViewModel.ConsentGranted);
+    }
+
+    [TestMethod]
+    [DataRow("storage-unavailable")]
+    [DataRow("policy-unavailable")]
+    public async Task DisabledStartupAndSettingsVisitsStayQuiet(string code)
+    {
+        using var fixture = new Fixture();
+        fixture.Change(fixture.State with
+        {
+            Policy = CaptureMemoryPolicy.Disabled(),
+            FailureCode = code,
+            Activity = new(AnalysisActivity.Idle, LastRunStatus: AnalysisRunStatus.Failed)
+        });
+        fixture.Dispatch();
+        fixture.Notifications.Verify(x => x.ShowError(It.IsAny<string>()), Times.Never);
+        await fixture.ViewModel.RefreshAsync();
+        fixture.Dispatch();
+        await fixture.ViewModel.RefreshAsync();
+        fixture.Dispatch();
+        fixture.Notifications.Verify(x => x.ShowError(It.IsAny<string>()), Times.Never);
+    }
+
+    [TestMethod]
+    [DataRow("storage-unavailable")]
+    [DataRow("policy-unavailable")]
+    public async Task ExplicitActionReportsFailureEvenWhenUiUpdateRunsAfterCommandCompletes(string code)
+    {
+        using var fixture = new Fixture();
+        await fixture.ViewModel.RefreshAsync();
+        fixture.Change(fixture.State with { Policy = CaptureMemoryPolicy.Disabled(), FailureCode = code });
+        fixture.Dispatch();
+        fixture.Notifications.Verify(x => x.ShowError(It.IsAny<string>()), Times.Never);
+        await fixture.ViewModel.SetConsentCommand.ExecuteAsync(true);
+        fixture.Dispatch();
+        fixture.Notifications.Verify(x => x.ShowError(It.IsAny<string>()), Times.Once);
+    }
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task CompletedActionDoesNotEnableLaterDormantErrorNotifications(bool dispatchDuringAction)
+    {
+        using var fixture = new Fixture();
+        fixture.Change(fixture.State with { Policy = CaptureMemoryPolicy.Disabled() });
+        fixture.Dispatch();
+        fixture.Memory.Setup(x => x.SetConsentAsync(false, default)).Callback(() =>
+        {
+            fixture.Change(fixture.State);
+            if (dispatchDuringAction) fixture.Dispatch();
+        }).Returns(Task.CompletedTask);
+        await fixture.ViewModel.SetConsentCommand.ExecuteAsync(false);
+        fixture.Change(fixture.State with { FailureCode = "storage-unavailable" });
+        fixture.Dispatch();
+        await fixture.ViewModel.RefreshAsync();
+        fixture.Dispatch();
+        fixture.Notifications.Verify(x => x.ShowError(It.IsAny<string>()), Times.Never);
+    }
+
+    [TestMethod]
+    public async Task ExplicitFailureSurvivesRecoveryBeforeDispatcherRuns()
+    {
+        using var fixture = new Fixture();
+        await fixture.ViewModel.RefreshAsync();
+        fixture.Change(fixture.State with { Policy = CaptureMemoryPolicy.Disabled() });
+        fixture.Dispatch();
+        fixture.Memory.Setup(x => x.SetConsentAsync(true, default)).Callback(() =>
+        {
+            fixture.Change(fixture.State with { FailureCode = "storage-unavailable" });
+            fixture.Change(fixture.State with { FailureCode = null });
+        }).Returns(Task.CompletedTask);
+        await fixture.ViewModel.SetConsentCommand.ExecuteAsync(true);
+        fixture.Dispatch();
+        fixture.Notifications.Verify(x => x.ShowError("CaptureMemory_Error_Storage"), Times.Once);
+    }
+
+    [TestMethod]
+    public void RunningWorkerStillReportsStorageFailures()
+    {
+        using var fixture = new Fixture();
+        fixture.Change(fixture.State with { FailureCode = "storage-unavailable", Activity = new(AnalysisActivity.StorageUnavailable) });
+        fixture.Dispatch();
+        fixture.Notifications.Verify(x => x.ShowError("CaptureMemory_Error_Storage"), Times.Once);
+    }
+
+    [TestMethod]
+    public async Task ConsentAloneDoesNotMakeDormantStorageErrorsIntrusive()
+    {
+        using var fixture = new Fixture();
+        fixture.Change(fixture.State with { FailureCode = "storage-unavailable" });
+        fixture.Dispatch();
+        await fixture.ViewModel.RefreshAsync();
+        fixture.Dispatch();
+        fixture.Notifications.Verify(x => x.ShowError(It.IsAny<string>()), Times.Never);
+    }
+
+    private sealed class Fixture : IDisposable
+    {
+        public TestAnalysisAvailability Availability { get; } = new();
+        public Mock<ICaptureMemoryService> Memory { get; } = new();
+        public Mock<IAppNotificationService> Notifications { get; } = new();
+        public Queue<Action> Updates { get; } = new();
+        public CaptureMemoryState State { get; private set; } = new(new(true, Guid.NewGuid()), true, new(false, true), new(AnalysisActivity.Idle));
+        public CaptureMemoryViewModel ViewModel { get; }
+        public Fixture()
+        {
+            Memory.SetupGet(value => value.State).Returns(() => State);
+            var ui = new Mock<ITaskEnvironment>();
+            ui.Setup(value => value.TryExecute(It.IsAny<Action>())).Callback<Action>(Updates.Enqueue).Returns(true);
+            var localization = new Mock<ILocalizationService>();
+            localization.Setup(value => value.GetString(It.IsAny<string>())).Returns<string>(value => value);
+            ViewModel = new(Memory.Object, ui.Object, localization.Object, Notifications.Object, Availability);
+        }
+        public void Change(CaptureMemoryState state) { State = state; Memory.Raise(value => value.StateChanged += null); }
+        public void Dispatch() { while (Updates.TryDequeue(out Action? update)) update(); }
+        public void Dispose() => ViewModel.Dispose();
+    }
+}

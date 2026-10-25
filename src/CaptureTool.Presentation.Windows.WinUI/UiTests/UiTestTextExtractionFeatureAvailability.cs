@@ -4,5 +4,5 @@ namespace CaptureTool.Presentation.Windows.WinUI.UiTests;
 
 internal sealed class UiTestTextExtractionFeatureAvailability : ITextExtractionFeatureAvailability
 {
-    public bool IsTextExtractionEnabled => true;
+    public bool IsTextExtractionEnabled => UiTestLaunchOptions.AiProfile != "none";
 }

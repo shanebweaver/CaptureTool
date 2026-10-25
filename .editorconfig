@@ -14,3 +14,30 @@ csharp_style_prefer_primary_constructors = false
 # which effectively disables it and prevents it from showing as a suggestion,
 # warning, or error.
 dotnet_diagnostic.IDE0290.severity = none
+
+# Keep pipeline control flow readable, especially ownership and cancellation paths.
+[src/{CaptureTool.Application,CaptureTool.Application.Abstractions,CaptureTool.Infrastructure}/Analysis/**.cs]
+csharp_prefer_braces = true:warning
+csharp_preserve_single_line_statements = false
+csharp_preserve_single_line_blocks = true
+
+# Keep the capture analysis UI consistent with the pipeline's explicit control flow.
+[src/CaptureTool.Presentation/Features/CaptureDetails/**.cs]
+csharp_prefer_braces = true:warning
+csharp_preserve_single_line_statements = false
+csharp_preserve_single_line_blocks = true
+
+[src/CaptureTool.Presentation/Features/Settings/CaptureMemoryViewModel.cs]
+csharp_prefer_braces = true:warning
+csharp_preserve_single_line_statements = false
+csharp_preserve_single_line_blocks = true
+
+[src/CaptureTool.Presentation.Windows.WinUI/Xaml/Controls/CaptureDetailsPane*.cs]
+csharp_prefer_braces = true:warning
+csharp_preserve_single_line_statements = false
+csharp_preserve_single_line_blocks = true
+
+[src/CaptureTool.Infrastructure.Analysis.Windows/**.cs]
+csharp_prefer_braces = true:warning
+csharp_preserve_single_line_statements = false
+csharp_preserve_single_line_blocks = true

@@ -1,0 +1,357 @@
+using FlaUI.Core.AutomationElements;
+using FlaUI.Core.Definitions;
+using FlaUI.Core.Input;
+using FlaUI.Core.WindowsAPI;
+using FlaUI.UIA3;
+using System.Runtime.InteropServices;
+using System.Text.Json;
+using System.Xml.Linq;
+
+namespace CaptureTool.UiTests;
+
+public sealed partial class ImageEditTextExtractionUiTests
+{
+    [TestMethod]
+    [TestCategory("UI")]
+    public void CapturePane_AltTextSummaryAndNameRunOnlyWhenRequestedWithSharedConsent()
+    {
+        if (!ShouldRunUiTests()) Assert.Inconclusive("Enable isolated desktop UI tests.");
+        using var dpi = new DesktopDpiScope();
+        string repo = FindRepositoryRoot();
+        string isolated = Path.Combine(repo, "tests", "CaptureTool.UiTests", "TestResults", "artifacts", "screenshot-summary", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(isolated);
+        string fixture = Path.Combine(isolated, "capture.png"); CreateOcrFixtureImage(fixture);
+        using var app = LaunchApp(ResolveAppExecutablePath(repo), fixture, Path.Combine(isolated, "data"), Path.Combine(isolated, "temp"), "en-US", detailsFixture: true);
+        using var automation = new UIA3Automation();
+        var window = WaitForMainWindow(app, automation, AppLaunchTimeout);
+        Element("ImageEdit_CommandBar"); MaximizeWindow(window);
+        Element("Editor_DetailsToggle").Patterns.Toggle.Pattern.Toggle();
+        Element("CapturePane_SummaryTab").Patterns.SelectionItem.Pattern.Select();
+        AssertInfoAccessibility("CaptureSummary_Info", "About AI summary", "Create an AI summary of this image.");
+        AssertInfoAccessibility("CaptureSummary_AltTextInfo", "About alt text",
+            "Create a brief description for screen readers. Review it before sharing.");
+        Assert.IsNull(window.FindFirstDescendant(automation.ConditionFactory.ByAutomationId("CaptureMemoryConsentDialog")));
+        Element("CaptureAction_AltText").Patterns.Invoke.Pattern.Invoke();
+        Answer("Not now");
+        WaitFor(() => Element("CaptureAction_AltText").IsEnabled ? window : null, InteractionTimeout, "declined action remains available");
+        var altButtonBounds = StableButtonBounds("CaptureAction_AltText");
+        string altButtonLabel = Element("CaptureAction_AltText").Name;
+        Element("CaptureAction_AltText").Patterns.Invoke.Pattern.Invoke();
+        Answer("Allow local AI");
+        AssertButtonLoading("CaptureAction_AltText", altButtonBounds, altButtonLabel, "alt-text-loading.png");
+        Assert.IsNull(window.FindFirstDescendant(automation.ConditionFactory.ByAutomationId("CaptureAction_Summary_Loading")));
+        Assert.IsNull(window.FindFirstDescendant(automation.ConditionFactory.ByAutomationId("CaptureAction_Name_Loading")));
+        WaitForElementRemoved(window, automation, "CaptureAction_AltText_Loading", InteractionTimeout);
+        WaitForElementRemoved(window, automation, "CaptureAction_AltText", InteractionTimeout);
+        const string alt = "Invoice INV-2048 from Contoso showing a total of USD 125.00, due October 15, 2026.";
+        WaitForElementByName(window, automation, alt, InteractionTimeout);
+        WaitFor(() => Element("CaptureAction_Summary").IsEnabled ? window : null, InteractionTimeout, "summary available after alt text");
+        const string summary = "Invoice INV-2048 totals USD 125.00 and is due on 2026-10-15.";
+        Assert.IsNull(window.FindFirstDescendant(automation.ConditionFactory.ByName(summary)), "Alt text must not generate a summary.");
+        var summaryButtonBounds = StableButtonBounds("CaptureAction_Summary");
+        string summaryButtonLabel = Element("CaptureAction_Summary").Name;
+        Element("CaptureAction_Summary").Patterns.Invoke.Pattern.Invoke();
+        AssertButtonLoading("CaptureAction_Summary", summaryButtonBounds, summaryButtonLabel, "summary-loading.png");
+        Assert.IsNull(window.FindFirstDescendant(automation.ConditionFactory.ByAutomationId("CaptureAction_Name_Loading")));
+        Assert.IsNull(window.FindFirstDescendant(automation.ConditionFactory.ByAutomationId("CaptureMemoryConsentDialog")));
+        WaitForElementRemoved(window, automation, "CaptureAction_Summary_Loading", InteractionTimeout);
+        WaitForElementRemoved(window, automation, "CaptureAction_Summary", InteractionTimeout);
+        WaitForElementByName(window, automation, summary, InteractionTimeout);
+        WaitFor(() => Element("CaptureAction_Name").IsEnabled ? window : null, InteractionTimeout, "name action available");
+        Assert.IsNull(window.FindFirstDescendant(automation.ConditionFactory.ByAutomationId("CaptureName_Input")),
+            "Other actions must not start renaming.");
+        Assert.IsTrue(File.Exists(fixture));
+        Element("CaptureAction_Name").Patterns.Invoke.Pattern.Invoke();
+        Element("CaptureAction_Name_Loading");
+        WaitFor(() => window.FindFirstDescendant(automation.ConditionFactory.ByAutomationId("CaptureName_Input"))?.AsTextBox().Text == "Contoso invoice" ? window : null,
+            InteractionTimeout, "explicit name suggestion");
+        Element("CaptureName_Cancel").Patterns.Invoke.Pattern.Invoke();
+        Element("CaptureAction_Name").Patterns.Invoke.Pattern.Invoke();
+        Assert.IsNull(window.FindFirstDescendant(automation.ConditionFactory.ByAutomationId("CaptureAction_Name_Loading")),
+            "Reviewing the cached name must not run the model again.");
+        WaitForElementRemoved(window, automation, "CaptureAction_Name", InteractionTimeout);
+        WaitFor(() => Element("CaptureName_Input").AsTextBox().Text == "Contoso invoice" ? window : null,
+            InteractionTimeout, "cached filename suggestion opened for review");
+        WaitForElementByName(window, automation, summary, InteractionTimeout);
+        Element("CaptureSummary_CopySummary").Patterns.Invoke.Pattern.Invoke();
+        WaitFor(() => ReadDetailsClipboard() == summary ? window : null, InteractionTimeout, "summary copied");
+        Element("CapturePane_TextTab").Patterns.SelectionItem.Pattern.Select();
+        Element("CapturePane_Search");
+        Assert.IsNull(window.FindFirstDescendant(automation.ConditionFactory.ByAutomationId("CaptureAction_ScanText")),
+            "Cached OCR opens directly into results even when no QR scan was requested.");
+        Element("CapturePane_SummaryTab").Patterns.SelectionItem.Pattern.Select();
+        WaitForElementRemoved(window, automation, "ImageEdit_TextExtractionOverlayMarker", InteractionTimeout);
+        Assert.IsNull(window.FindFirstDescendant(automation.ConditionFactory.ByAutomationId("CaptureAction_AltText")));
+        WaitForElementByName(window, automation, alt, InteractionTimeout);
+        Assert.IsNull(window.FindFirstDescendant(automation.ConditionFactory.ByAutomationId("CaptureMemoryConsentDialog")), "Alt text reuses shared consent.");
+        Element("CaptureSummary_CopyAltText").Patterns.Invoke.Pattern.Invoke();
+        WaitFor(() => ReadDetailsClipboard() == alt ? window : null, InteractionTimeout, "alt text copied");
+        WaitForElementByName(window, automation, summary, InteractionTimeout);
+        Thread.Sleep(350);
+        string screenshot = Path.Combine(isolated, "summary-and-alt-text.png"); window.CaptureToFile(screenshot); TestContext.AddResultFile(screenshot);
+        window.Patterns.Window.Pattern.SetWindowVisualState(WindowVisualState.Normal);
+        window.Patterns.Transform.Pattern.Resize(720, 760);
+        Thread.Sleep(350);
+        AssertDetailsLayout(window, automation, "ImageEdit_CommandBar", "ZoomSlider");
+        Element("CapturePane_SummaryTab").Patterns.SelectionItem.Pattern.Select();
+        WaitForElementByName(window, automation, alt, InteractionTimeout);
+        Thread.Sleep(350);
+        screenshot = Path.Combine(isolated, "summary-compact.png"); window.CaptureToFile(screenshot); TestContext.AddResultFile(screenshot);
+        AutomationElement Element(string id) => WaitForElement(window, automation, id, InteractionTimeout);
+        void AssertInfoAccessibility(string id, string name, string hint)
+        {
+            var info = Element(id);
+            Assert.AreEqual(name, info.Name);
+            Assert.AreEqual(hint, info.Properties.HelpText.Value);
+            Assert.IsTrue(info.Properties.IsKeyboardFocusable.Value);
+            Assert.IsNull(window.FindFirstDescendant(automation.ConditionFactory.ByName(hint)), "Hints should only appear in tooltips.");
+        }
+        System.Drawing.Rectangle StableButtonBounds(string id)
+        {
+            var bounds = Element(id).BoundingRectangle;
+            var stable = System.Diagnostics.Stopwatch.StartNew();
+            return WaitFor(() =>
+            {
+                var button = Element(id);
+                if (button.BoundingRectangle != bounds) { bounds = button.BoundingRectangle; stable.Restart(); }
+                return stable.Elapsed >= TimeSpan.FromMilliseconds(500) ? button : null;
+            }, InteractionTimeout, "settled action button geometry").BoundingRectangle;
+        }
+        void AssertButtonLoading(string id, System.Drawing.Rectangle bounds, string label, string fileName)
+        {
+            Assert.AreEqual(bounds, StableButtonBounds(id), "Loading must preserve the button's position and size.");
+            var button = Element(id);
+            var loading = Element(id + "_Loading");
+            Assert.AreEqual(label, button.Name);
+            Assert.IsFalse(button.IsEnabled);
+            Assert.AreEqual(bounds, loading.BoundingRectangle, "The busy edge should follow the button's bounds.");
+            Assert.AreEqual(ControlType.ProgressBar, loading.ControlType, "Busy state remains available to assistive technology.");
+            Assert.IsNull(button.FindFirstDescendant(automation.ConditionFactory.ByAutomationId(id + "_Loading")));
+            string path = Path.Combine(isolated, fileName); window.CaptureToFile(path); TestContext.AddResultFile(path);
+        }
+        void Answer(string label)
+        {
+            var consent = Element("CaptureMemoryConsentDialog");
+            WaitForElementByName(consent, automation, label, InteractionTimeout).AsButton().Invoke();
+            WaitForElementRemoved(window, automation, "CaptureMemoryConsentDialog", InteractionTimeout);
+        }
+    }
+
+    [TestMethod]
+    [DataRow("en-US")]
+    [DataRow("de-DE")]
+    [DataRow("es-ES")]
+    [DataRow("fr-FR")]
+    [DataRow("ru-RU")]
+    [DataRow("zh-CN")]
+    [TestCategory("UI")]
+    public void CapturePane_LocalDetailsAndAnalysisLifecycle(string language)
+    {
+        RequireUiTestLanguage(language);
+        if (!ShouldRunUiTests()) Assert.Inconclusive("Set CAPTURETOOL_RUN_UI_TESTS=1 to run desktop UI automation tests.");
+        using var dpi = new DesktopDpiScope();
+        string repo = FindRepositoryRoot();
+        string artifacts = Path.Combine(repo, "tests", "CaptureTool.UiTests", "TestResults", "artifacts", "capture-details", language);
+        var resources = XDocument.Load(Path.Combine(repo, "src", "CaptureTool.Presentation.Windows.WinUI", "Strings", language, "Resources.resw"))
+            .Root!.Elements("data").ToDictionary(item => (string)item.Attribute("name")!, item => item.Element("value")!.Value);
+        string isolated = Path.Combine(artifacts, Guid.NewGuid().ToString("N"));
+        string data = Path.Combine(isolated, "data");
+        string temp = Path.Combine(isolated, "temp");
+        Directory.CreateDirectory(data);
+        Directory.CreateDirectory(temp);
+        string fixture = Path.Combine(isolated, "captured.png");
+        CreateOcrFixtureImage(fixture);
+        using (var stream = File.Create(Path.Combine(data, "RecentCaptures.json")))
+        using (var json = new Utf8JsonWriter(stream))
+        {
+            json.WriteStartArray(); json.WriteStartObject();
+            json.WriteString("FilePath", fixture); json.WriteNumber("CaptureFileType", 0); json.WriteNumber("Origin", 0);
+            json.WriteString("LastActivityUtc", DateTime.UtcNow); json.WriteEndObject(); json.WriteEndArray();
+        }
+        using var app = LaunchApp(ResolveAppExecutablePath(repo), fixture, data, temp, language, detailsFixture: true);
+        using var automation = new UIA3Automation();
+        Window window = WaitForMainWindow(app, automation, AppLaunchTimeout);
+        window.Focus();
+        WaitForElement(window, automation, "ImageEdit_CommandBar", AppLaunchTimeout);
+        MaximizeWindow(window);
+        AutomationElement dialog = OpenDetails();
+        WaitForElementByName(dialog, automation, resources["CaptureDetails_Unknown"], InteractionTimeout);
+        WaitForElementByName(dialog, automation, resources["CaptureDetails_Media_Image"], InteractionTimeout);
+        Screenshot("local-details");
+        WaitForElementByName(dialog, automation, resources["CapturePane_CopyPath.Content"], InteractionTimeout).AsButton().Invoke();
+        WaitFor(() => ReadDetailsClipboard() == fixture ? dialog : null, InteractionTimeout, "source path copied without AI consent");
+        CloseDetails();
+
+        OpenSettings();
+        Element("CaptureMemoryConsent").Patterns.Toggle.Pattern.Toggle();
+        Confirm("Consent", "CaptureMemory_ConsentAccept");
+        GoHome();
+        OpenCapture();
+        dialog = OpenDetails();
+        Element("CapturePane_TextTab").Patterns.SelectionItem.Pattern.Select();
+        Element("CaptureAction_ScanText").Patterns.Invoke.Pattern.Invoke();
+        Element("CaptureAction_ScanText_Loading");
+        WaitForElementRemoved(window, automation, "CaptureAction_ScanText_Loading", InteractionTimeout);
+        WaitForElementRemoved(window, automation, "CaptureAction_ScanText", InteractionTimeout);
+        Element("CapturePane_Search");
+        Element("CapturePane_SummaryTab").Patterns.SelectionItem.Pattern.Select();
+        WaitFor(() => Element("CaptureAction_Summary").IsEnabled ? window : null, InteractionTimeout, "summary inputs available");
+        Element("CaptureAction_Summary").Patterns.Invoke.Pattern.Invoke();
+        WaitForElementByName(dialog, automation, "Invoice INV-2048 totals USD 125.00 and is due on 2026-10-15.", InteractionTimeout);
+        Screenshot("summary");
+        Element("CapturePane_TextTab").Patterns.SelectionItem.Pattern.Select();
+        WaitFor(() => window.FindFirstDescendant(automation.ConditionFactory.ByAutomationId("ImageEdit_TextExtractionOverlayMarker"))
+            is { IsOffscreen: false } marker ? marker : null, InteractionTimeout, "saved text uses the dimmed text-selection overlay");
+        Assert.IsFalse(Element("CapturePane_Passages").FindAllDescendants(automation.ConditionFactory.ByControlType(ControlType.Text))
+            .Any(item => item.Name == resources["CaptureDetails_RecognizedText"] && !item.IsOffscreen), "Rows should not repeat a recognized-text heading.");
+        Assert.HasCount(3, Element("CapturePane_Passages").FindAllChildren(automation.ConditionFactory.ByControlType(ControlType.ListItem)),
+            "Word-level OCR should display as two readable passages and one QR code.");
+        var search = Element("CapturePane_Search").AsTextBox();
+        search.Text = "Reference: INV-2048";
+        Element("CapturePane_CopyResults").Patterns.Invoke.Pattern.Invoke();
+        WaitFor(() => ReadDetailsClipboard() == "Contoso invoice. Reference: INV-2048. Total USD 125.00. Due 2026-10-15." ? dialog : null,
+            InteractionTimeout, "all matching text copied");
+        const string firstPassage = "Contoso invoice. Reference: INV-2048. Total USD 125.00. Due 2026-10-15.";
+        const string secondPassage = "Contact billing@example.com or visit https://example.com/invoice.";
+        WaitForElementByName(Element("CapturePane_Passages"), automation, firstPassage, InteractionTimeout).Click();
+        WaitFor(() => Element("CapturePane_Passages").FindFirstChild(automation.ConditionFactory.ByControlType(ControlType.ListItem))
+            is { } row && row.Patterns.SelectionItem.Pattern.IsSelected.Value ? row : null, InteractionTimeout, "clicked passage selected");
+        Screenshot("text-location");
+        search.Text = "absent phrase";
+        WaitFor(() => !Element("CapturePane_CopyResults").IsEnabled ? dialog : null, InteractionTimeout, "empty search");
+        search.Text = string.Empty;
+        WaitForElementByName(Element("CapturePane_Passages"), automation, firstPassage, InteractionTimeout).Click();
+        AssertCanvasSelection(firstPassage);
+        Element("CapturePane_Next").Patterns.Invoke.Pattern.Invoke();
+        AssertCanvasSelection(secondPassage);
+        Element("CapturePane_Previous").Patterns.Invoke.Pattern.Invoke();
+        AssertCanvasSelection(firstPassage);
+        // Clicking an already-selected row restores the highlight after clearing it on the canvas.
+        Keyboard.Type(VirtualKeyShort.ESCAPE);
+        WaitForElementByName(Element("CapturePane_Passages"), automation, firstPassage, InteractionTimeout).Click();
+        AssertCanvasSelection(firstPassage);
+        WaitForElementByName(Element("CapturePane_Passages"), automation, "https://example.com/invoice", InteractionTimeout).Click();
+        AssertCanvasSelection("https://example.com/invoice");
+        Screenshot("source-text");
+        Element("CapturePane_DetailsTab").Patterns.SelectionItem.Pattern.Select();
+        WaitForElementRemoved(window, automation, "ImageEdit_TextExtractionOverlayMarker", InteractionTimeout);
+        CloseDetails();
+        OpenSettings();
+        WaitForElementByName(window, automation, resources["AppTheme_Dark"], InteractionTimeout).Patterns.SelectionItem.Pattern.Select();
+        GoHome(); OpenCapture();
+        window.Patterns.Window.Pattern.SetWindowVisualState(WindowVisualState.Normal);
+        window.Patterns.Transform.Pattern.Resize(720, 760);
+        dialog = OpenDetails();
+        Screenshot("compact-dark");
+        CloseDetails();
+        MaximizeWindow(window);
+        OpenSettings();
+        Element("CaptureMemoryConsent").Patterns.Toggle.Pattern.Toggle();
+        Confirm("DeleteMetadata", "CaptureMemory_Cancel");
+        WaitFor(() => Element("CaptureMemoryDelete") is { IsEnabled: true } delete ? delete : null,
+            InteractionTimeout, "deletion enabled after declining deletion").Patterns.Invoke.Pattern.Invoke();
+        Confirm("DeleteMetadata", "CaptureMemory_DeleteMetadataAccept");
+        WaitFor(() => !Element("CaptureMemoryDelete").IsEnabled &&
+            !Directory.EnumerateFiles(Path.Combine(data, "CaptureAnalysis"), "*.analysis", SearchOption.AllDirectories).Any()
+            ? window : null, InteractionTimeout, "metadata deletion completed");
+        GoHome(); OpenCapture();
+        dialog = OpenDetails();
+        WaitForElementByName(dialog, automation, resources["CaptureDetails_Media_Image"], InteractionTimeout);
+        Assert.IsNull(dialog.FindFirstDescendant(automation.ConditionFactory.ByName("Invoice INV-2048 totals USD 125.00 and is due on 2026-10-15.")));
+        Screenshot("after-delete");
+        CloseDetails();
+
+        AutomationElement Element(string id) => WaitForElement(window, automation, id, InteractionTimeout);
+        void AssertCanvasSelection(string expected)
+        {
+            Element("CapturePane_CopyResults").Patterns.Invoke.Pattern.Invoke();
+            WaitFor(() => ReadDetailsClipboard()?.Contains(firstPassage + Environment.NewLine) == true ? window : null,
+                InteractionTimeout, "all results copied before checking the canvas selection");
+            Element("PART_ScrollPresenter").Focus();
+            Keyboard.TypeSimultaneously(VirtualKeyShort.CONTROL, VirtualKeyShort.KEY_C);
+            WaitFor(() => ReadDetailsClipboard() == expected ? window : null, InteractionTimeout, "selected passage uses the text extraction selection");
+        }
+        void Menu(string id)
+        {
+            window.Focus();
+            WaitForElementByName(window, automation, resources["AppMenu_FileMenuItem.Title"], InteractionTimeout).Click();
+            Element(id).Patterns.Invoke.Pattern.Invoke();
+        }
+        void GoHome() { Menu("AppMenu_HomeItem"); Element("Home_RecentCaptures"); }
+        void OpenSettings()
+        {
+            Menu("AppMenu_SettingsItem");
+            var target = Element("CaptureMemoryConsent");
+            ScrollTo(window, target);
+        }
+        void OpenCapture()
+        {
+            var grid = Element("Home_RecentCaptures");
+            var item = WaitFor(() => grid.FindFirstDescendant(automation.ConditionFactory.ByControlType(ControlType.ListItem)),
+                InteractionTimeout, "recent capture");
+            item.DoubleClick();
+            Element("Editor_DetailsToggle");
+        }
+        AutomationElement OpenDetails()
+        {
+            var toggle = Element("Editor_DetailsToggle").Patterns.Toggle.Pattern;
+            if (toggle.ToggleState.Value != ToggleState.On) toggle.Toggle();
+            Thread.Sleep(300);
+            window.CaptureToFile(Path.Combine(artifacts, "opened-pane.png"));
+            return Element("CaptureDetailsPane");
+        }
+        void CloseDetails()
+        {
+            WaitForElementByName(dialog, automation, resources["CapturePane_Close.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name"], InteractionTimeout).AsButton().Invoke();
+            WaitFor(() => Element("Editor_DetailsToggle").Patterns.Toggle.Pattern.ToggleState.Value == ToggleState.Off ? window : null,
+                InteractionTimeout, "closed details pane");
+            Thread.Sleep(350); // Let the SplitView closing transition release pointer input.
+        }
+        void Confirm(string prompt, string answer)
+        {
+            var promptDialog = Element("CaptureMemory" + prompt + "Dialog");
+            WaitForElementByName(promptDialog, automation, resources[answer], InteractionTimeout).AsButton().Invoke();
+            WaitForElementRemoved(window, automation, "CaptureMemory" + prompt + "Dialog", InteractionTimeout);
+        }
+        void ScrollTo(AutomationElement root, AutomationElement target)
+        {
+            var scroll = root.FindAllDescendants().First(element => element.Patterns.Scroll.IsSupported &&
+                element.Patterns.Scroll.Pattern.VerticallyScrollable.Value).Patterns.Scroll.Pattern;
+            for (int i = 0; i < 30 && target.IsOffscreen; i++)
+            {
+                scroll.Scroll(ScrollAmount.NoAmount, ScrollAmount.LargeIncrement);
+                Thread.Sleep(60);
+            }
+            Assert.IsFalse(target.IsOffscreen);
+        }
+        void Screenshot(string name)
+        {
+            Thread.Sleep(200);
+            string path = Path.Combine(artifacts, name + ".png");
+            window.CaptureToFile(path);
+            TestContext.AddResultFile(path);
+        }
+    }
+
+    private static string? ReadDetailsClipboard()
+    {
+        if (!DetailsClipboard.OpenClipboard(0)) return null;
+        try
+        {
+            nint handle = DetailsClipboard.GetClipboardData(13);
+            if (handle == 0) return null;
+            nint pointer = DetailsClipboard.GlobalLock(handle);
+            try { return Marshal.PtrToStringUni(pointer); }
+            finally { DetailsClipboard.GlobalUnlock(handle); }
+        }
+        finally { DetailsClipboard.CloseClipboard(); }
+    }
+    private static class DetailsClipboard
+    {
+        [DllImport("user32.dll")] public static extern bool OpenClipboard(nint window);
+        [DllImport("user32.dll")] public static extern bool CloseClipboard();
+        [DllImport("user32.dll")] public static extern nint GetClipboardData(uint format);
+        [DllImport("kernel32.dll")] public static extern nint GlobalLock(nint handle);
+        [DllImport("kernel32.dll")] public static extern bool GlobalUnlock(nint handle);
+    }
+}

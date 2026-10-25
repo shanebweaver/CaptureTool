@@ -1,6 +1,5 @@
 using CaptureTool.Application.Abstractions.Library.RecentCaptures;
 using CaptureTool.Application.Abstractions.Localization;
-using CaptureTool.Application.Abstractions.Logging;
 using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Application.Abstractions.Settings;
 using CaptureTool.Application.Abstractions.Settings.ChangeAudioFolder;

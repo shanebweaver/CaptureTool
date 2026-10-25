@@ -1,6 +1,7 @@
 using CaptureTool.Application.Abstractions.Edit.Audio.CopyAudioFile;
 using CaptureTool.Application.Abstractions.Edit.Audio.SaveAudioFile;
 using CaptureTool.Application.Abstractions.Edit.External;
+using CaptureTool.Application.Abstractions.Files;
 using CaptureTool.Application.Abstractions.Localization;
 using CaptureTool.Application.Abstractions.Settings.OpenAudioFolder;
 using CaptureTool.Application.Abstractions.Storage;
@@ -17,6 +18,22 @@ namespace CaptureTool.Presentation.Features.AudioEdit;
 
 public sealed partial class AudioEditPageViewModel : LoadableViewModelBase<AudioFile>
 {
+    public string? DetailsSourcePath { get; private set => Set(ref field, value); }
+    private AudioFile? _loadedFile;
+
+    public void ApplyCaptureRename(CaptureTool.Application.Abstractions.Capture.Assets.CaptureFileRename rename)
+    {
+        bool Matches(string? path) => string.Equals(path, rename.OldPath, StringComparison.OrdinalIgnoreCase);
+        if (_loadedFile != null)
+        {
+            if (Matches(_loadedFile.FilePath)) _loadedFile.FilePath = rename.NewPath;
+            if (Matches(_loadedFile.PersistentFilePath)) _loadedFile.PersistentFilePath = rename.NewPath;
+        }
+        if (Matches(AudioPath)) AudioPath = rename.NewPath;
+        if (Matches(DetailsSourcePath)) DetailsSourcePath = rename.NewPath;
+    }
+
+
     private const double WaveformMinBarHeight = 0;
     private const double WaveformMaxBarHeight = 132;
 
@@ -79,6 +96,7 @@ public sealed partial class AudioEditPageViewModel : LoadableViewModelBase<Audio
     private readonly ILocalizationService? _localizationService;
     private readonly ITelemetryService? _telemetryService;
     private readonly IScratchArtifactStore? _scratchArtifactStore;
+    private readonly IFileSystem? _fileSystem;
 
     public ObservableCollection<AudioWaveformBarViewModel> WaveformBars
     {
@@ -94,7 +112,8 @@ public sealed partial class AudioEditPageViewModel : LoadableViewModelBase<Audio
         IAudioWaveformHistory waveformHistory,
         ITelemetryService? telemetryService = null,
         ILocalizationService? localizationService = null,
-        IScratchArtifactStore? scratchArtifactStore = null)
+        IScratchArtifactStore? scratchArtifactStore = null,
+        IFileSystem? fileSystem = null)
     {
         _saveAction = saveAction;
         _copyAction = copyAction;
@@ -104,6 +123,7 @@ public sealed partial class AudioEditPageViewModel : LoadableViewModelBase<Audio
         _telemetryService = telemetryService;
         _localizationService = localizationService;
         _scratchArtifactStore = scratchArtifactStore;
+        _fileSystem = fileSystem;
 
         SaveCommand = new AsyncRelayCommand(SaveAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
         CopyCommand = new AsyncRelayCommand(CopyAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
@@ -132,9 +152,12 @@ public sealed partial class AudioEditPageViewModel : LoadableViewModelBase<Audio
     public override void Load(AudioFile audio)
     {
         ThrowIfNotReadyToLoad();
+        MediaWorkingCopy.RestoreIfMissing(audio, audio.PersistentFilePath, _fileSystem, _scratchArtifactStore);
+        _loadedFile = audio;
         StartLoading();
 
         AudioPath = audio.FilePath;
+        DetailsSourcePath = audio.PersistentFilePath ?? audio.FilePath;
         IsAudioReady = true;
         BeginMediaLoading();
         ResetWaveform();
@@ -223,7 +246,7 @@ public sealed partial class AudioEditPageViewModel : LoadableViewModelBase<Audio
         }
 
         var response = await _saveAction.ExecuteAsync(
-            new SaveAudioFileRequest(AudioPath),
+            new SaveAudioFileRequest(AudioPath, DetailsSourcePath),
             CancellationToken.None);
         TrackOutput(
             "save",

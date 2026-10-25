@@ -15,12 +15,12 @@ internal sealed class ImageEditOperationCoordinator : IDisposable
     private readonly Dictionary<ImageEditOperation, OperationLease> _activeOperations = [];
     private bool _isDisposed;
 
-    public OperationLease Start(ImageEditOperation operation)
+    public OperationLease Start(ImageEditOperation operation, CancellationToken revoked = default)
     {
         ObjectDisposedException.ThrowIf(_isDisposed, this);
         Cancel(operation);
 
-        var lease = new OperationLease(this, operation);
+        var lease = new OperationLease(this, operation, revoked);
         _activeOperations.Add(operation, lease);
         return lease;
     }
@@ -65,13 +65,14 @@ internal sealed class ImageEditOperationCoordinator : IDisposable
     internal sealed class OperationLease : IDisposable
     {
         private readonly ImageEditOperationCoordinator _owner;
-        private readonly CancellationTokenSource _cancellationTokenSource = new();
+        private readonly CancellationTokenSource _cancellationTokenSource;
         private bool _isDisposed;
 
-        internal OperationLease(ImageEditOperationCoordinator owner, ImageEditOperation operation)
+        internal OperationLease(ImageEditOperationCoordinator owner, ImageEditOperation operation, CancellationToken revoked)
         {
             _owner = owner;
             Operation = operation;
+            _cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(revoked);
             Token = _cancellationTokenSource.Token;
         }
 

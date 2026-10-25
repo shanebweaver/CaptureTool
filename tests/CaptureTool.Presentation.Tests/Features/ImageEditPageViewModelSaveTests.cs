@@ -1,4 +1,5 @@
 using CaptureTool.Application.Abstractions.Cancellation;
+using CaptureTool.Application.Abstractions.Capture.Assets;
 using CaptureTool.Application.Abstractions.Clipboard;
 using CaptureTool.Application.Abstractions.Edit.External;
 using CaptureTool.Application.Abstractions.Edit.Image;
@@ -11,6 +12,7 @@ using CaptureTool.Application.Abstractions.Settings;
 using CaptureTool.Application.Abstractions.Settings.OpenScreenshotsFolder;
 using CaptureTool.Application.Abstractions.Share;
 using CaptureTool.Application.Abstractions.Storage;
+using CaptureTool.Domain.Capture;
 using CaptureTool.Domain.Edit;
 using CaptureTool.Domain.Edit.Drawable;
 using CaptureTool.Domain.FileSystem;
@@ -26,6 +28,17 @@ namespace CaptureTool.Presentation.Tests.Features;
 [TestClass]
 public sealed class ImageEditPageViewModelSaveTests
 {
+    [TestMethod]
+    public async Task SaveAsSuggestsTheChosenNameOfTheOriginalCapture()
+    {
+        var names = new Mock<ICaptureNamingService>();
+        names.Setup(service => service.GetNameAsync("original.png", It.IsAny<CancellationToken>())).ReturnsAsync(new CaptureName("Roadmap: 東京"));
+        var picker = new Mock<IFilePickerService>();
+        using var vm = await CreateLoadedViewModelAsync(new("working.png", "original.png"), Mock.Of<IImageCanvasExporter>(), picker.Object, names.Object);
+        await vm.SaveAsync();
+        picker.Verify(service => service.PickSaveFileAsync(FilePickerType.Image, UserFolder.Pictures, "Roadmap_ 東京"), Times.Once);
+    }
+
     [TestMethod]
     public async Task SaveToSourceAsync_WithPersistentSource_DoesNotModifyWorkingFile()
     {
@@ -189,7 +202,7 @@ public sealed class ImageEditPageViewModelSaveTests
     private static async Task<ImageEditPageViewModel> CreateLoadedViewModelAsync(
         ImageFile imageFile,
         IImageCanvasExporter exporter,
-        IFilePickerService? filePicker = null)
+        IFilePickerService? filePicker = null, ICaptureNamingService? names = null)
     {
         var cancellationService = new Mock<ICancellationService>();
         cancellationService
@@ -210,7 +223,6 @@ public sealed class ImageEditPageViewModelSaveTests
             imageMetadata.Object,
             Mock.Of<IImageSuperResolutionService>(),
             Mock.Of<IImageSuperResolutionFeatureAvailability>(),
-            Mock.Of<IImageSuperResolutionPreparationConsentService>(),
             Mock.Of<IShareService>(),
             Mock.Of<IOpenExternalEditorUseCase>(),
             Mock.Of<IStorageService>(),
@@ -231,7 +243,7 @@ public sealed class ImageEditPageViewModelSaveTests
             new TextExtractionToolViewModel(
                 Mock.Of<IClipboardService>(),
                 Mock.Of<ILocalizationService>(),
-                notifications));
+                notifications), captureNames: names);
 
         await viewModel.LoadAsync(imageFile, CancellationToken.None);
         return viewModel;

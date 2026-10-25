@@ -1,0 +1,57 @@
+using CaptureTool.Application.Abstractions.Analysis;
+using CaptureTool.Presentation.Windows.WinUI.Utils;
+using CaptureTool.Presentation.Windows.WinUI.Xaml.Controls;
+using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Automation;
+using Microsoft.UI.Xaml.Controls;
+using Microsoft.Windows.ApplicationModel.Resources;
+
+namespace CaptureTool.Presentation.Windows.WinUI.Analysis;
+
+internal sealed class CaptureMemoryDialogService(
+    MainWindowDialogCoordinator dialogs,
+    IAnalysisFeatureAvailability availability) : ICaptureMemoryPrompts
+{
+    private ResourceLoader? _resources;
+
+    public XamlRoot? XamlRoot
+    {
+        get => dialogs.XamlRoot;
+        set => dialogs.XamlRoot = value;
+    }
+
+    public async Task<bool> ConfirmAsync(CaptureMemoryPrompt prompt, CancellationToken cancellationToken)
+    {
+        var benefits = prompt == CaptureMemoryPrompt.Consent
+            ? await AnalysisFeatureBenefits.ReadAsync(availability, cancellationToken).ConfigureAwait(false)
+            : null;
+        if (benefits is { Any: false })
+        {
+            return false;
+        }
+
+        var result = await dialogs.ShowAsync(
+            () => CreateDialog(prompt, benefits), cancellationToken).ConfigureAwait(false);
+        return result == ContentDialogResult.Primary;
+    }
+
+    private ContentDialog CreateDialog(CaptureMemoryPrompt prompt, AnalysisFeatureBenefits? benefits)
+    {
+        string name = prompt.ToString();
+        bool welcome = prompt == CaptureMemoryPrompt.Consent;
+        var dialog = new ContentDialog
+        {
+            Title = Text("CaptureMemory_" + name + "Title"),
+            Content = welcome ? new CaptureAnalysisWelcome(benefits!) : Text("CaptureMemory_" + name + "Content"),
+            PrimaryButtonText = Text("CaptureMemory_" + name + "Accept"),
+            CloseButtonText = Text(welcome ? "CaptureWelcome_NotNow" : "CaptureMemory_Cancel"),
+            DefaultButton = prompt == CaptureMemoryPrompt.DeleteMetadata
+                ? ContentDialogButton.Close
+                : ContentDialogButton.Primary
+        };
+        AutomationProperties.SetAutomationId(dialog, "CaptureMemory" + name + "Dialog");
+        return dialog;
+    }
+
+    private string Text(string key) => WinUIResourceLoader.GetString(ref _resources, key, key);
+}

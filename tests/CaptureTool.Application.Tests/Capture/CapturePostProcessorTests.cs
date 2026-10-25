@@ -1,3 +1,4 @@
+﻿using CaptureTool.Application.Abstractions.Analysis;
 using CaptureTool.Application.Abstractions.Clipboard;
 using CaptureTool.Application.Abstractions.Files;
 using CaptureTool.Application.Abstractions.Library.RecentCaptures;
@@ -10,6 +11,7 @@ using CaptureTool.Application.Capture;
 using CaptureTool.Application.Capture.Audio;
 using CaptureTool.Application.Capture.Image;
 using CaptureTool.Application.Capture.Video;
+using CaptureTool.Domain.Capture;
 using CaptureTool.Domain.FileSystem;
 using Moq;
 
@@ -23,6 +25,7 @@ public sealed class CapturePostProcessorTests
     {
         const string SourcePath = @"C:\Temp\capture.png";
         const string DestinationFolder = @"C:\Captures";
+        var memory = CreateCaptureMemory();
         var fileSystem = new Mock<IFileSystem>();
         Mock<ISettingsService> settings = CreateSettings(
             CaptureToolSettings.Settings_ImageCapture_AutoSave,
@@ -37,9 +40,10 @@ public sealed class CapturePostProcessorTests
             CreateImmediateTaskEnvironment().Object,
             Mock.Of<ILogService>(),
             new ImageCaptureFileNameGenerator(TestClock.Instance),
-            Mock.Of<IRecentCaptureCatalog>());
+            Mock.Of<IRecentCaptureCatalog>(), analysis: new(memory.Object));
 
         processor.Process(new ImageFile(SourcePath));
+        VerifyCaptureMemory(memory, SourcePath, CaptureFileType.Image, DestinationFolder);
 
         fileSystem.Verify(
             service => service.CopyFile(
@@ -108,6 +112,7 @@ public sealed class CapturePostProcessorTests
     {
         const string SourcePath = @"C:\Temp\capture.mp4";
         const string DestinationFolder = @"C:\Captures";
+        var memory = CreateCaptureMemory();
         var fileSystem = new Mock<IFileSystem>();
         Mock<ISettingsService> settings = CreateSettings(
             CaptureToolSettings.Settings_VideoCapture_AutoSave,
@@ -123,9 +128,10 @@ public sealed class CapturePostProcessorTests
             Mock.Of<IMainWindowActivationService>(),
             Mock.Of<ILogService>(),
             new VideoCaptureFileNameGenerator(TestClock.Instance),
-            Mock.Of<IRecentCaptureCatalog>());
+            Mock.Of<IRecentCaptureCatalog>(), analysis: new(memory.Object));
 
         processor.Process(new VideoFile(SourcePath));
+        VerifyCaptureMemory(memory, SourcePath, CaptureFileType.Video, DestinationFolder);
 
         fileSystem.Verify(
             service => service.CopyFile(
@@ -140,6 +146,7 @@ public sealed class CapturePostProcessorTests
     {
         const string SourcePath = @"C:\Temp\capture.wav";
         const string DestinationFolder = @"C:\Captures";
+        var memory = CreateCaptureMemory();
         var fileSystem = new Mock<IFileSystem>();
         Mock<ISettingsService> settings = CreateSettings(
             CaptureToolSettings.Settings_AudioCapture_AutoSave,
@@ -154,9 +161,10 @@ public sealed class CapturePostProcessorTests
             CreateImmediateTaskEnvironment().Object,
             Mock.Of<ILogService>(),
             new AudioCaptureFileNameGenerator(TestClock.Instance),
-            Mock.Of<IRecentCaptureCatalog>());
+            Mock.Of<IRecentCaptureCatalog>(), analysis: new(memory.Object));
 
         processor.Process(new AudioFile(SourcePath));
+        VerifyCaptureMemory(memory, SourcePath, CaptureFileType.Audio, DestinationFolder);
 
         fileSystem.Verify(
             service => service.CopyFile(
@@ -164,6 +172,22 @@ public sealed class CapturePostProcessorTests
                 It.Is<string>(path => path.StartsWith(DestinationFolder, StringComparison.Ordinal) && path.EndsWith(".wav", StringComparison.Ordinal)),
                 false),
             Times.Once);
+    }
+
+    private static Mock<ICaptureMemoryService> CreateCaptureMemory()
+    {
+        var memory = new Mock<ICaptureMemoryService>();
+        return memory;
+    }
+
+    private static void VerifyCaptureMemory(Mock<ICaptureMemoryService> memory, string source, CaptureFileType type, string destination)
+    {
+        memory.Verify(value => value.RegisterCaptureAsync(It.Is<CaptureAsset>(asset => asset.SourcePath == source &&
+            asset.MediaType == type && asset.SourceOwnership == CaptureSourceOwnership.Application && !asset.Id.IsEmpty),
+            default), Times.Once);
+        memory.Verify(value => value.SetPreferredPathAsync(source, It.Is<string>(path => path.StartsWith(destination, StringComparison.Ordinal)), default), Times.Once);
+        memory.Verify(value => value.AnalyzeAsync(It.IsAny<string>(), It.IsAny<CaptureTool.Domain.Analysis.AnalysisCapability>(),
+            It.IsAny<CancellationToken>()), Times.Never);
     }
 
     private static Mock<ISettingsService> CreateSettings(

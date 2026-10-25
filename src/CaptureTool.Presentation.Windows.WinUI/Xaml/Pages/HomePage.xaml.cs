@@ -154,7 +154,10 @@ public sealed partial class HomePage : HomePageBase
 
     private void RecentCapturesGridView_KeyDown(object sender, KeyRoutedEventArgs e)
     {
-        if (e.Key != VirtualKey.Delete)
+        bool contextMenu = e.Key == VirtualKey.Application || e.Key == VirtualKey.F10 &&
+            (Microsoft.UI.Input.InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Shift) &
+                global::Windows.UI.Core.CoreVirtualKeyStates.Down) != 0;
+        if (e.Key != VirtualKey.Delete && !contextMenu)
         {
             return;
         }
@@ -166,7 +169,12 @@ public sealed partial class HomePage : HomePageBase
                 && RecentCapturesGridView.ItemFromContainer(itemContainer) is RecentCaptureViewModel recentCapture)
             {
                 e.Handled = true;
-                _ = ViewModel.RemoveRecentCaptureCommand.ExecuteAsync(recentCapture);
+                if (contextMenu)
+                {
+                    Grid? card = FindDescendant<Grid>(itemContainer, "RecentCaptureCard");
+                    if (card != null) card.ContextFlyout?.ShowAt(card);
+                }
+                else _ = ViewModel.RemoveRecentCaptureCommand.ExecuteAsync(recentCapture);
                 return;
             }
 

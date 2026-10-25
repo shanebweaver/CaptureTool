@@ -24,7 +24,7 @@ public sealed class ImageDescriptionFeatureAvailability : IImageDescriptionFeatu
     {
         if (_imageDescriptionService is null)
         {
-            return true;
+            return false;
         }
 
         return _imageDescriptionService.GetReadyState() is

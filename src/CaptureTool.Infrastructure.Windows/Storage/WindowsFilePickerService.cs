@@ -96,7 +96,7 @@ public sealed partial class WindowsFilePickerService : IFilePickerService
         return new FileReference(file.Path);
     }
 
-    public async Task<FileReference?> PickSaveFileAsync(FilePickerType fileType, UserFolder userFolder)
+    public async Task<FileReference?> PickSaveFileAsync(FilePickerType fileType, UserFolder userFolder, string? suggestedName = null)
     {
         var filePicker = new FileSavePicker
         {
@@ -153,6 +153,7 @@ public sealed partial class WindowsFilePickerService : IFilePickerService
         nint hwnd = _windowHandleProvider.GetMainWindowHandle();
         WinRT.Interop.InitializeWithWindow.Initialize(filePicker, hwnd);
 
+        if (!string.IsNullOrWhiteSpace(suggestedName)) filePicker.SuggestedFileName = suggestedName;
         StorageFile file = await filePicker.PickSaveFileAsync();
         if (file is null)
         {

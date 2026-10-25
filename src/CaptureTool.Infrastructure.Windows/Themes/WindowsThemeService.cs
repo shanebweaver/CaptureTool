@@ -1,5 +1,5 @@
-using CaptureTool.Application.Abstractions.Themes;
 using CaptureTool.Application.Abstractions.Telemetry;
+using CaptureTool.Application.Abstractions.Themes;
 using System.Diagnostics;
 
 namespace CaptureTool.Infrastructure.Windows.Themes;

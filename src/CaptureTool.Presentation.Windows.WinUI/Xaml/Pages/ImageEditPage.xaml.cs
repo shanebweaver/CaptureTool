@@ -1,3 +1,4 @@
+using CaptureTool.Application.Abstractions.Localization;
 using CaptureTool.Domain.Edit.Drawable;
 using CaptureTool.Domain.Edit.Operations;
 using CaptureTool.Presentation.Loading;
@@ -31,6 +32,15 @@ public sealed partial class ImageEditPage : ImageEditPageBase
     public ImageEditPage()
     {
         InitializeComponent();
+        DetailsHost.ToggleControl = DetailsToggle;
+        DetailsHost.ActivateMode = ViewModel.ExitEditMode;
+        DetailsHost.EditorText = ViewModel.EditorText;
+        DetailsHost.FileRenamed = ViewModel.ApplyCaptureRename;
+        DetailsHost.Navigate = passage => ViewModel.IsLoaded &&
+            ImageCanvas.ShowCapturePassage(passage);
+        DetailsHost.ClearLocation = () => ImageCanvas.ShowCapturePassage(null);
+        DetailsHost.TextOverlayChanged = ImageCanvas.SetCaptureTextOverlay;
+        ImageCanvas.TextOverlayVisibilityChanged += visible => TextOverlayMarker.Visibility = visible ? Visibility.Visible : Visibility.Collapsed;
         InitializeContextMenus();
         InitializeToolbarHosts();
         ViewModel.LoadStateChanged += ViewModel_LoadStateChanged;
@@ -62,25 +72,26 @@ public sealed partial class ImageEditPage : ImageEditPageBase
 
     private void InitializeContextMenus()
     {
+        var localization = App.Current.ServiceProvider.GetService<ILocalizationService>();
         _imageContextMenu = new MenuFlyout();
         _saveMenuItem = CreateMenuItem(
-            "Save as",
+            localization.GetString("ImageEdit_SaveAsButton/Label"),
             new SymbolIcon(Symbol.Save),
             ViewModel.SaveCommand);
         _copyMenuItem = CreateMenuItem(
-            "Copy",
+            localization.GetString("ImageEdit_CopyButton/Label"),
             new SymbolIcon(Symbol.Copy),
             ViewModel.CopyCommand);
         _shareMenuItem = CreateMenuItem(
-            "Share",
+            localization.GetString("ImageEdit_ShareButton/Label"),
             new SymbolIcon(Symbol.Share),
             ViewModel.ShareCommand);
         _undoMenuItem = CreateMenuItem(
-            "Undo",
+            localization.GetString("ImageEdit_UndoButton/Label"),
             new SymbolIcon(Symbol.Undo),
             ViewModel.UndoCommand);
         _redoMenuItem = CreateMenuItem(
-            "Redo",
+            localization.GetString("ImageEdit_RedoButton/Label"),
             new SymbolIcon(Symbol.Redo),
             ViewModel.RedoCommand);
 
@@ -94,7 +105,7 @@ public sealed partial class ImageEditPage : ImageEditPageBase
         _shapeContextMenu = new MenuFlyout();
         var deleteMenuItem = new MenuFlyoutItem
         {
-            Text = "Delete",
+            Text = localization.GetString("ImageEdit_DeleteShape"),
             Icon = new SymbolIcon(Symbol.Delete)
         };
         deleteMenuItem.Click += (_, _) => ImageCanvas.DeleteSelectedShape();
@@ -107,7 +118,6 @@ public sealed partial class ImageEditPage : ImageEditPageBase
         SetToolbarHostState(ShapeToolbarHost, ViewModel.IsShapesModeActive);
         SetToolbarHostState(TextToolbarHost, ViewModel.IsTextModeActive);
         SetToolbarHostState(ColorPickerToolbarHost, ViewModel.IsColorPickerModeActive);
-        SetToolbarHostState(TextExtractionToolbarHost, ViewModel.IsTextExtractionModeActive);
         SetToolbarHostState(ImageDescriptionToolbarHost, ViewModel.IsImageDescriptionModeActive);
         SetToolbarHostState(ForegroundExtractionToolbarHost, ViewModel.IsForegroundExtractionModeActive);
         SetToolbarHostState(ObjectEraseToolbarHost, ViewModel.IsObjectEraseModeActive);
@@ -116,6 +126,8 @@ public sealed partial class ImageEditPage : ImageEditPageBase
 
     private void ViewModel_PropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
+        if (e.PropertyName == nameof(ViewModel.HasActiveEditMode) && ViewModel.HasActiveEditMode)
+            DetailsHost.IsPaneOpen = false;
         switch (e.PropertyName)
         {
             case nameof(ViewModel.IsChromaKeyModeActive):
@@ -129,9 +141,6 @@ public sealed partial class ImageEditPage : ImageEditPageBase
                 break;
             case nameof(ViewModel.IsColorPickerModeActive):
                 AnimateToolbarHost(ColorPickerToolbarHost, ViewModel.IsColorPickerModeActive);
-                break;
-            case nameof(ViewModel.IsTextExtractionModeActive):
-                AnimateToolbarHost(TextExtractionToolbarHost, ViewModel.IsTextExtractionModeActive);
                 break;
             case nameof(ViewModel.IsImageDescriptionModeActive):
                 AnimateToolbarHost(ImageDescriptionToolbarHost, ViewModel.IsImageDescriptionModeActive);
@@ -147,6 +156,8 @@ public sealed partial class ImageEditPage : ImageEditPageBase
                 break;
         }
     }
+
+    private void ExtractText_Click(object sender, RoutedEventArgs e) => DetailsHost.OpenText();
 
     private void SetToolbarHostState(FrameworkElement host, bool isVisible)
     {

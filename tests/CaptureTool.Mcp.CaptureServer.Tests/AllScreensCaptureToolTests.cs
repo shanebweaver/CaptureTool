@@ -1,6 +1,3 @@
-using CaptureTool.Mcp.CaptureServer.Abstractions;
-using CaptureTool.Mcp.CaptureServer.Models;
-using CaptureTool.Mcp.CaptureServer.Tools;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Moq;

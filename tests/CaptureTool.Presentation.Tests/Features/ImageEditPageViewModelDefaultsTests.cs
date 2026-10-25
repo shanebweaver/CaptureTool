@@ -149,6 +149,22 @@ public sealed class ImageEditPageViewModelDefaultsTests
     }
 
     [TestMethod]
+    public void EnteringDetailsCanExitAnEditModeWithoutApplyingAnEdit()
+    {
+        var viewModel = CreateViewModel();
+        viewModel.ToggleCropModeCommand.Execute(null);
+        viewModel.HasActiveEditMode.Should().BeTrue();
+        viewModel.ExitEditMode();
+        viewModel.HasActiveEditMode.Should().BeFalse();
+        viewModel.IsCropModeActive.Should().BeFalse();
+        viewModel.HasUnsavedChanges.Should().BeFalse();
+        viewModel.ToggleTextModeCommand.Execute(null);
+        viewModel.HasActiveEditMode.Should().BeTrue();
+        viewModel.ExitEditMode();
+        viewModel.IsTextModeActive.Should().BeFalse();
+    }
+
+    [TestMethod]
     public void EditModeCommands_ShouldIgnoreInactiveModeDeactivation()
     {
         var viewModel = CreateViewModel();
@@ -350,7 +366,6 @@ public sealed class ImageEditPageViewModelDefaultsTests
             imageMetadata ?? Mock.Of<IImageMetadataService>(),
             Mock.Of<IImageSuperResolutionService>(),
             Mock.Of<IImageSuperResolutionFeatureAvailability>(x => x.IsImageSuperResolutionEnabled == true),
-            Mock.Of<IImageSuperResolutionPreparationConsentService>(),
             Mock.Of<IShareService>(),
             Mock.Of<IOpenExternalEditorUseCase>(),
             Mock.Of<IStorageService>(),

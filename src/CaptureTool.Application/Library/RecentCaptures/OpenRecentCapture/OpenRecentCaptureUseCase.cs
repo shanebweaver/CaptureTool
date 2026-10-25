@@ -78,13 +78,13 @@ internal sealed class OpenRecentCaptureUseCase : IOpenRecentCaptureUseCase
                             navigated = fileType switch
                             {
                                 CaptureFileType.Audio => (await _goToAudioEdit.ExecuteAsync(
-                                    new OpenAudioEditPageRequest(new AudioFile(workingFilePath)),
+                                    new OpenAudioEditPageRequest(new AudioFile(workingFilePath, request.FilePath)),
                                     token)).Value?.Succeeded == true,
                                 CaptureFileType.Image => (await _goToImageEdit.ExecuteAsync(
                                     new OpenImageEditPageRequest(new ImageFile(workingFilePath, request.FilePath)),
                                     token)).Value?.Succeeded == true,
                                 CaptureFileType.Video => (await _goToVideoEdit.ExecuteAsync(
-                                    new OpenVideoEditPageRequest(new VideoFile(workingFilePath)),
+                                    new OpenVideoEditPageRequest(new VideoFile(workingFilePath, request.FilePath)),
                                     token)).Value?.Succeeded == true,
                                 _ => false
                             };

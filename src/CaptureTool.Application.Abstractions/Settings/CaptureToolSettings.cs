@@ -15,16 +15,10 @@ public static partial class CaptureToolSettings
     public static readonly IStringSettingDefinition Settings_AudioCapture_AutoSaveFolder = new StringSettingDefinition("Settings_AudioCapture_AudioFolder", string.Empty);
     public static readonly IStringSettingDefinition Settings_LanguageOverride = new StringSettingDefinition("Settings_LanguageOverride", string.Empty);
     public static readonly IStringSettingDefinition Settings_TelemetryConsent = new StringSettingDefinition("Settings_TelemetryConsent", Telemetry.TelemetryConsentSettingValues.Unknown);
+    public static readonly IBoolSettingDefinition Settings_CaptureAnalysis_OnboardingSeen = new BoolSettingDefinition("Settings_CaptureAnalysis_OnboardingSeen", false);
     public static readonly IBoolSettingDefinition VerboseLogging = new BoolSettingDefinition("VerboseLogging", false);
     public static readonly IBoolSettingDefinition Settings_VideoCapture_DefaultLocalAudioEnabled = new BoolSettingDefinition("Settings_VideoCapture_DefaultLocalAudioEnabled", true);
     public static readonly IBoolSettingDefinition Settings_AudioCapture_DefaultLocalAudioEnabled = new BoolSettingDefinition("Settings_AudioCapture_DefaultLocalAudioEnabled", true);
     public static readonly IBoolSettingDefinition Settings_Edit_WarnBeforeDiscard = new BoolSettingDefinition("Settings_Edit_WarnBeforeDiscard", true);
     public static readonly IBoolSettingDefinition Settings_Capture_WarnBeforeDiscard = new BoolSettingDefinition("Settings_Capture_WarnBeforeDiscard", true);
-    public static readonly IBoolSettingDefinition Settings_AiConsent_TextExtraction = new BoolSettingDefinition("Settings_AiConsent_TextExtraction", false);
-    public static readonly IBoolSettingDefinition Settings_AiConsent_ImageSuperResolution = new BoolSettingDefinition("Settings_AiConsent_ImageSuperResolution", false);
-    public static readonly IBoolSettingDefinition Settings_AiConsent_ImageDescription = new BoolSettingDefinition("Settings_AiConsent_ImageDescription", false);
-    public static readonly IBoolSettingDefinition Settings_AiConsent_ImageForegroundExtraction = new BoolSettingDefinition("Settings_AiConsent_ImageForegroundExtraction", false);
-    public static readonly IBoolSettingDefinition Settings_AiConsent_ImageObjectErase = new BoolSettingDefinition("Settings_AiConsent_ImageObjectErase", false);
-    public static readonly IBoolSettingDefinition Settings_AiConsent_ImageObjectExtraction = new BoolSettingDefinition("Settings_AiConsent_ImageObjectExtraction", false);
-    public static readonly IBoolSettingDefinition Settings_AiConsent_VideoSuperResolution = new BoolSettingDefinition("Settings_AiConsent_VideoSuperResolution", false);
 }

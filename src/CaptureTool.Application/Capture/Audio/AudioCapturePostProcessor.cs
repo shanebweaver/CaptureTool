@@ -1,12 +1,12 @@
 using CaptureTool.Application.Abstractions.Clipboard;
-using CaptureTool.Application.Abstractions.Logging;
 using CaptureTool.Application.Abstractions.Library.RecentCaptures;
+using CaptureTool.Application.Abstractions.Logging;
 using CaptureTool.Application.Abstractions.Settings;
 using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Application.Abstractions.TaskEnvironment;
 using CaptureTool.Application.Abstractions.Telemetry;
-using CaptureTool.Domain.FileSystem;
 using CaptureTool.Domain.Capture;
+using CaptureTool.Domain.FileSystem;
 
 namespace CaptureTool.Application.Capture.Audio;
 
@@ -21,6 +21,7 @@ internal sealed class AudioCapturePostProcessor
     private readonly AudioCaptureFileNameGenerator _fileNameGenerator;
     private readonly IRecentCaptureCatalog _recentCaptureCatalog;
     private readonly ITelemetryService? _telemetryService;
+    private readonly CaptureAnalysisIntake? _analysis;
 
     public AudioCapturePostProcessor(
         IClipboardService clipboardService,
@@ -31,7 +32,8 @@ internal sealed class AudioCapturePostProcessor
         ILogService logService,
         AudioCaptureFileNameGenerator fileNameGenerator,
         IRecentCaptureCatalog recentCaptureCatalog,
-        ITelemetryService? telemetryService = null)
+        ITelemetryService? telemetryService = null,
+        CaptureAnalysisIntake? analysis = null)
     {
         _clipboardService = clipboardService;
         _fileAllocator = fileAllocator;
@@ -42,12 +44,14 @@ internal sealed class AudioCapturePostProcessor
         _fileNameGenerator = fileNameGenerator;
         _recentCaptureCatalog = recentCaptureCatalog;
         _telemetryService = telemetryService;
+        _analysis = analysis;
     }
 
     public void Process(AudioFile audioFile)
     {
+        Task registration = _analysis?.RegisterAsync(audioFile.FilePath, CaptureFileType.Audio) ?? Task.CompletedTask;
         _recentCaptureCatalog.RecordCaptured(audioFile.FilePath, CaptureFileType.Audio);
-        AutoSaveAudio(audioFile);
+        _ = AutoSaveAudioAsync(audioFile, registration);
         AutoCopyAudio(audioFile);
     }
 
@@ -75,7 +79,7 @@ internal sealed class AudioCapturePostProcessor
         });
     }
 
-    private void AutoSaveAudio(AudioFile audioFile)
+    private async Task AutoSaveAudioAsync(AudioFile audioFile, Task registration)
     {
         try
         {
@@ -95,6 +99,11 @@ internal sealed class AudioCapturePostProcessor
                 audioFile.FilePath,
                 audioFolder,
                 _fileNameGenerator.GetNewCaptureFileName);
+            if (_analysis != null)
+            {
+                await _analysis.SavedAsync(registration, audioFile.FilePath, newFilePath).ConfigureAwait(false);
+            }
+
             _recentCaptureCatalog.ReplacePath(audioFile.FilePath, newFilePath);
             TrackOutput("auto_save", TelemetryOutcomes.Succeeded);
         }

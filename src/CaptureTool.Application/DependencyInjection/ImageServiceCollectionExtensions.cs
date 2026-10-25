@@ -3,11 +3,13 @@ using CaptureTool.Application.Abstractions.Capture.Image.CaptureAllScreensImage;
 using CaptureTool.Application.Abstractions.Capture.Image.CaptureImage;
 using CaptureTool.Application.Abstractions.Edit.Image.ChromaKey;
 using CaptureTool.Application.Abstractions.Edit.Image.OpenImageEditPage;
+using CaptureTool.Application.Abstractions.Edit.Image.TextExtraction;
 using CaptureTool.Application.Capture.Image;
 using CaptureTool.Application.Capture.Image.CaptureAllScreensImage;
 using CaptureTool.Application.Capture.Image.CaptureImage;
 using CaptureTool.Application.Edit.Image.ChromaKey;
 using CaptureTool.Application.Edit.Image.OpenImageEditPage;
+using CaptureTool.Application.Edit.Image.TextExtraction;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace CaptureTool.Application.DependencyInjection;
@@ -29,6 +31,7 @@ internal static class ImageServiceCollectionExtensions
 
     public static IServiceCollection AddImageEditUseCases(this IServiceCollection services)
     {
+        services.AddSingleton<IRecognizedTextDocumentBuilder, RecognizedTextDocumentBuilder>();
         services.AddTransient<IChromaKeyAccessService, ChromaKeyAccessService>();
         services.AddTransient<IOpenImageEditPageUseCase, OpenImageEditPageUseCase>();
 

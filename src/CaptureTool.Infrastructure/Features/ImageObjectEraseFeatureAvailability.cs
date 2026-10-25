@@ -24,7 +24,7 @@ public sealed class ImageObjectEraseFeatureAvailability : IImageObjectEraseFeatu
     {
         if (_objectEraseService is null)
         {
-            return true;
+            return false;
         }
 
         return _objectEraseService.GetReadyState() is

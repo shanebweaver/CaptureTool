@@ -1,0 +1,13 @@
+<Project>
+  <!-- Foundry Local 1.2.4 / Betalgo 9.1.0's Error.MessageConverter Read/Write
+       produce IL2026 and IL3050. Native AOT does not support external link-attribute
+       suppressions. Keep the detailed warnings visible at the executable boundary.
+       All four must remain confined to this vendor converter on SDK upgrades.
+       Responses are never serialized. Array-shaped error messages can throw in
+       AOT; the worker treats deserialization errors as failed model attempts.
+       See docs/capture-analysis-execution-review.md and the real AOT smoke test. -->
+  <PropertyGroup Condition="'$(PublishAot)' == 'true'">
+    <TrimmerSingleWarn>false</TrimmerSingleWarn>
+    <WarningsNotAsErrors>$(WarningsNotAsErrors);IL2026;IL3050</WarningsNotAsErrors>
+  </PropertyGroup>
+</Project>

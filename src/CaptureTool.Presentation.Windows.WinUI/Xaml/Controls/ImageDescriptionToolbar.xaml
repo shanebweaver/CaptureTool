@@ -11,8 +11,8 @@
 
     <Border
         Height="48"
-        HorizontalAlignment="Center"
         Padding="8,6"
+        HorizontalAlignment="Center"
         Background="{ThemeResource AcrylicBackgroundFillColorBaseBrush}"
         BorderBrush="{ThemeResource SystemControlBackgroundBaseLowBrush}"
         BorderThickness="1"
@@ -32,9 +32,7 @@
                 IsChecked="{x:Bind IsBriefSelected, Mode=OneWay}">
                 <StackPanel Orientation="Horizontal" Spacing="6">
                     <SymbolIcon Symbol="Caption" />
-                    <TextBlock
-                        x:Uid="ImageDescriptionToolbar_BriefButtonText"
-                        VerticalAlignment="Center" />
+                    <TextBlock x:Uid="ImageDescriptionToolbar_BriefButtonText" VerticalAlignment="Center" />
                 </StackPanel>
             </ToggleButton>
             <ToggleButton
@@ -46,9 +44,7 @@
                 IsChecked="{x:Bind IsDetailedSelected, Mode=OneWay}">
                 <StackPanel Orientation="Horizontal" Spacing="6">
                     <SymbolIcon Symbol="Document" />
-                    <TextBlock
-                        x:Uid="ImageDescriptionToolbar_DetailedButtonText"
-                        VerticalAlignment="Center" />
+                    <TextBlock x:Uid="ImageDescriptionToolbar_DetailedButtonText" VerticalAlignment="Center" />
                 </StackPanel>
             </ToggleButton>
             <ToggleButton
@@ -60,9 +56,7 @@
                 IsChecked="{x:Bind IsDiagramSelected, Mode=OneWay}">
                 <StackPanel Orientation="Horizontal" Spacing="6">
                     <SymbolIcon Symbol="Pictures" />
-                    <TextBlock
-                        x:Uid="ImageDescriptionToolbar_DiagramButtonText"
-                        VerticalAlignment="Center" />
+                    <TextBlock x:Uid="ImageDescriptionToolbar_DiagramButtonText" VerticalAlignment="Center" />
                 </StackPanel>
             </ToggleButton>
             <ToggleButton
@@ -74,9 +68,7 @@
                 IsChecked="{x:Bind IsAccessibleSelected, Mode=OneWay}">
                 <StackPanel Orientation="Horizontal" Spacing="6">
                     <SymbolIcon Symbol="FontIncrease" />
-                    <TextBlock
-                        x:Uid="ImageDescriptionToolbar_AccessibleButtonText"
-                        VerticalAlignment="Center" />
+                    <TextBlock x:Uid="ImageDescriptionToolbar_AccessibleButtonText" VerticalAlignment="Center" />
                 </StackPanel>
             </ToggleButton>
         </StackPanel>

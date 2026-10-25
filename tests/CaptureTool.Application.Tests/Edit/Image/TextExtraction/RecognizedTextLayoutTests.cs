@@ -9,6 +9,20 @@ namespace CaptureTool.Application.Tests.Edit.Image.TextExtraction;
 public sealed class RecognizedTextLayoutTests
 {
     [TestMethod]
+    public void Create_WithPassageBoundaries_UsesThemForSelectionAndCopyWithoutRegrouping()
+    {
+        RecognizedTextRegion[] words = [
+            new("First paragraph", new(10, 10, 90, 10), 0, 0, 0),
+            new("Second paragraph", new(10, 23, 90, 10), 0, 0, 1),
+            new("continued", new(10, 36, 60, 10), 1, 0, 1)];
+        var layout = RecognizedTextLayout.Create(words, includeCutoutContours: false);
+        layout.Blocks.Should().HaveCount(2);
+        layout.Blocks[1].Lines.Should().HaveCount(2);
+        layout.Select(0, 2).Text.Should().Be(string.Join(Environment.NewLine, "First paragraph", "", "Second paragraph", "continued"));
+        layout.ReadingOrder.Should().Equal(words);
+    }
+
+    [TestMethod]
     public void Create_WhenWordsAndLinesAreNearby_GroupsThemIntoOneParagraphCutout()
     {
         RecognizedTextRegion[] regions = [

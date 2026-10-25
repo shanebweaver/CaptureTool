@@ -319,7 +319,9 @@ public sealed partial class HomePageViewModel : AsyncLoadableViewModelBase
                 var recentCaptures = response.Value?.Captures ?? [];
                 foreach (var recentCapture in recentCaptures)
                 {
-                    _recentCaptures.Add(_recentCaptureViewModelFactory.Create(recentCapture.FilePath));
+                    var item = _recentCaptureViewModelFactory.Create(recentCapture.FilePath);
+                    item.SetDisplayName(recentCapture.FileName);
+                    _recentCaptures.Add(item);
                 }
 
                 HasMoreRecentCaptures = response.Value?.HasMore == true;

@@ -1,0 +1,187 @@
+# Provider smoke checks
+
+This opt-in Windows harness exercises the production adapters using a generated
+text image, colored shapes, and synthetic speech/video. It never reads the user's captures or
+enables background scanning. Reports contain statuses, counts, model identity,
+and diagnostics from synthetic failures. The vision and audio checks also record
+descriptions of the generated shapes and synthetic transcripts for inspection.
+
+From the repository root, publish and run on an x64 Windows 11 24H2+ machine:
+
+```powershell
+dotnet publish tools/CaptureTool.Analysis.Smoke/CaptureTool.Analysis.Smoke.csproj -c Release -p:Platform=x64 -r win-x64 -o artifacts/capture-analysis-execution/aot
+& tools/CaptureTool.Analysis.Smoke/run-smoke.ps1 -BinaryDirectory artifacts/capture-analysis-execution/aot -OutputDirectory artifacts/capture-analysis-execution/smoke -Packaged -PrepareAll
+```
+
+Release publishing enables Native AOT in the harness project. Do not pass
+`-p:PublishAot=true` globally: it also reaches the netstandard build-time generator,
+which cannot be published with AOT. Use `-p:PublishAot=false` for a managed publish.
+
+On a known supported machine (native x64 with AVX2 or native ARM64, at least 8 GB
+installed RAM, Windows 11 24H2+), verify the published hardware gate separately:
+
+```powershell
+& artifacts/capture-analysis-execution/aot/CaptureTool.Analysis.Smoke.exe "$PWD/artifacts/hardware" --hardware-check true
+```
+
+This check does not load or download models. Use `false` when testing an unsupported
+machine. Run it on the native executable: managed tests alone cannot catch AOT
+instruction-set detection regressions.
+
+`-Packaged` requires development package registration to be allowed. The script
+registers the separate `CaptureTool.AnalysisSmoke.Slice2` identity, verifies it in
+the process, and removes it afterward. It does not register or replace CaptureTool.
+Use a publish directory without an existing AppxManifest.xml. The script's package
+manifest architecture is read from the executable. Publish with
+`-p:Platform=ARM64 -r win-arm64` and use the same script on an ARM64 host for native
+ARM64 checks. Reports include OS and process architecture; x64 emulation is not
+native ARM64 evidence. The script detects an exited/crashed process and cleans up
+its own package registration on failure as well as success.
+
+Omit `-PrepareAll` for passive probes; use `-PrepareWhisper` for the small speech
+fallback only, or `-PrepareVision` for the Qwen 3.5 0.8B CPU description fallback
+(about 1 GB on first use). Preparation can download models into the isolated output directory.
+The fourfold synthetic speech fixture spans multiple 15-second chunks. The harness
+also verifies malformed-image rejection and a real native transcription failure.
+The Qwen checks require a description containing both colors, preserve the video
+frame timestamp, and exercise listener start/stop and model load/unload twice.
+Unavailable models are reported; they are not treated as successful inference.
+For a release acceptance run, add `-RequireAnalyzer` with the exact expected
+analyzer IDs, for example `-RequireAnalyzer foundry-local-image-description,foundry-local-speech-transcript`.
+This fails if any requested analyzer is absent, unsupported, unprepared, empty,
+or missing real model provenance in its media fixtures. Select the supported
+primary providers as well as fallbacks for the device being accepted.
+`results.json` and `exit-code.txt` are written under the output directory. Scratch
+WAV chunks should be gone after execution. Model caches are intentionally retained
+for subsequent smoke runs.
+
+The speech matrix checks digital silence, video without an audio track, and German
+and French speech generated with installed SAPI desktop voices. It checks an expected
+word, timestamps, actual provider identity, unchanged sources, and released scratch.
+Missing voices are reported as `MissingSyntheticVoice`; unavailable/unprepared
+providers are recorded without claiming successful inference. These synthetic
+fixtures establish basic compatibility, not transcription accuracy on real recordings.
+
+For process interruption and library measurements, invoke the published executable
+directly; these modes do not initialize or download models:
+
+```powershell
+& artifacts/capture-analysis-execution/aot/CaptureTool.Analysis.Smoke.exe "$PWD/artifacts/recovery" --recovery-checks
+& artifacts/capture-analysis-execution/aot/CaptureTool.Analysis.Smoke.exe "$PWD/artifacts/scale" --scale-checks
+```
+
+To check startup and new-capture OCR with real Windows providers and DPAPI storage:
+
+```powershell
+& artifacts/capture-analysis-execution/aot/CaptureTool.Analysis.Smoke.exe "$PWD/artifacts/startup" --startup-ocr-checks
+```
+
+This creates a fresh synthetic store, completes OCR, adds unused JSON fields to its
+saved documents, restarts, and scans a new capture. It requires recognized fixture
+text, preserved capture names and result identities, and persisted OCR after another
+restart. It never reads or changes the installed app's data. Run on Windows with
+an available English OCR provider; unsupported OCR is a failure for this check.
+
+Recovery checks kill child processes at ten controlled boundaries, restart them,
+and verify durable intent, preserved commits, deletion fencing, encrypted storage,
+and orphan temporary cleanup. They use the production worker, catalog, policy,
+atomic store, and Windows DPAPI with synthetic analyzers. The publication boundary
+injects a partial encrypted temporary write before replacement. This is process
+crash evidence, not power-loss or real model interruption evidence.
+
+Metadata enrichment checks use synthetic OCR/transcript entries rather than media:
+
+```powershell
+& artifacts/capture-analysis-execution/aot/CaptureTool.Analysis.Smoke.exe "$PWD/artifacts/enrichment" --enrichment-checks
+```
+
+Add `--enrichment-languages` to check Name and Summary with synthetic text in all
+six supported app languages (English, German, Spanish, French, Russian, and
+Simplified Chinese). `--enrichment-model phi-4-mini` selects the CPU fallback.
+This uses the same preparation/download behavior as the other enrichment checks.
+Fixture vocabulary checks reject accidental translations into English. Inspect
+the saved suggestions for fluency and factual accuracy as well. These fixtures
+exercise metadata generation, not speech recognition, OCR, or localized UI layout.
+
+The configured text model is prepared if necessary. `enrichment-results.json` retains
+normalized outputs, source evidence, real model identities, and fixture acceptance
+separately from provider outcomes. Noise/hostile fixtures may safely abstain or be
+rejected; a provider failure is never relabeled successful inference. Inspect meaning
+as well as the automated schema/category checks. The corpus covers three media kinds,
+all six app languages, conflicting entries, and a whole oversized entry omitted with explicit coverage.
+Use `--enrichment-first` for the invoice only, or `--enrichment-model <catalog-alias>`
+to evaluate a candidate without editing production configuration. Models and runtime
+components are retained under this output directory for repeat checks.
+
+An opt-in `--enrichment-probe --enrichment-model <catalog-alias>` diagnostic writes
+raw responses for one hard-coded synthetic invoice only. It never reads captures.
+Production adapters do not log source text, prompts, or raw responses.
+
+`--screenshot-checks` explicitly evaluates OCR, description, name, summary,
+alt text, and classification on generated development and invoice screenshots.
+This diagnostic requests every output; a normal UI action requests only its own output.
+It requires cached vision and Phi models and never downloads them. Add
+`--classification-only` to repeat just OCR, description, and classification when
+investigating its prompt or parser. Reports retain synthetic responses and per-step
+timings under `screenshots`; no user captures are read.
+
+`--model-reuse-checks` requires cached Phi weights and measures cold acquisition,
+reuse after a short idle pause, and reacquisition after explicit release. It also
+queries the Windows low-memory signal. It runs no inference and reads no captures.
+Worker regression tests separately cover the 30-second deadline, deadline reset,
+low-memory release, cancellation, consent revocation, deletion, and shutdown.
+
+`--input-compaction-checks` compares the former per-entry source objects with the
+compact source format using cached CPU Phi weights. It keeps one model loaded,
+runs two rounds of name, summary, and alt-text requests on invoice and dense OCR
+fixtures, and reverses format order in the second round. Additional paired checks
+cover German, embedded instructions, conflicting sources, skipped oversized entries,
+description-only alt text, and classification. Reports under `input-compaction`
+include requests, responses, generation time, token counts, retries, and basic
+fixture checks. Inspect meaning and citations as well as the automatic checks.
+Only synthetic fixtures are read or saved.
+
+GPU diagnostics use explicit flags and the same isolated test cache:
+
+```powershell
+& CaptureTool.Analysis.Smoke.exe <absolute-output-directory> --device-probe
+& CaptureTool.Analysis.Smoke.exe <absolute-output-directory> --device-probe --prepare-ep CUDAExecutionProvider
+& CaptureTool.Analysis.Smoke.exe <absolute-output-directory> --device-check Phi-4-mini-instruct-cuda-gpu:5 --prepare-ep CUDAExecutionProvider --prepare-model
+& CaptureTool.Analysis.Smoke.exe <absolute-output-directory> --device-check Phi-4-mini-instruct-generic-cpu:5
+```
+
+Choose IDs returned by the probe on the test machine. `--prepare-ep` downloads
+and registers the named compatible execution provider; registration is required
+in each process even when its binaries are cached. `--prepare-model` permits
+downloading the selected variant. Without these flags the diagnostic uses only
+already available providers and weights. Device checks compare name, summary,
+and alt text on synthetic invoice and dense-text fixtures, recording loading and
+generation time, token counts, attempts, and parsed output. They preserve the
+production prompts and validation and leave the app's device selection unchanged.
+GPU sampling with `nvidia-smi` can independently confirm actual GPU activity.
+
+Scale checks seed 100, 1,000, and 10,000 DPAPI-protected records with 200 OCR regions
+each. Reports measure discovery, settings contention, cancellation, deletion,
+catalog reads, managed allocations, and peak working set. They retain isolated
+fixtures and JSON reports for inspection. No user capture data is accessed.
+
+The CI diagnostic check can also be run locally:
+
+```powershell
+pwsh -NoProfile -File .github/scripts/test-native-aot-log.ps1
+pwsh -NoProfile -File .github/scripts/verify-native-aot.ps1 -Platform x64
+pwsh -NoProfile -File .github/scripts/verify-native-aot.ps1 -Platform ARM64
+pwsh -NoProfile -File .github/scripts/test-native-aot-runtime.ps1 -BinaryDirectory artifacts/native-aot/x64/harness -OutputDirectory artifacts/native-aot/x64/checks
+```
+
+Publishing verifies both app and harness and retains logs. The runtime script
+executes hardware detection and ten recovery checks from the published native
+harness, with process deadlines and machine readable reports. It requires the
+executable and shell to match the host architecture. CI runs it on the x64 host.
+Cross-publishing ARM64
+proves compilation only; run the ARM64 harness on an ARM64 device for runtime evidence.
+
+Native AOT currently reports four vendor converter warnings, explicitly matched in
+[the diagnostic guard](../../.github/scripts/assert-native-aot-log.ps1). A successful
+publish or passive probe does not replace the real model and packaged device
+checks in [the release requirements](../../docs/prds/ai-release-validation.md).

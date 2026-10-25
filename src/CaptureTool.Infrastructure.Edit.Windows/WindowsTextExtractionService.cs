@@ -10,22 +10,25 @@ using WinRect = global::Windows.Foundation.Rect;
 
 namespace CaptureTool.Infrastructure.Edit.Windows;
 
-public sealed class WindowsTextExtractionService : ITextExtractionService
+public sealed class WindowsTextExtractionService(IRecognizedTextDocumentBuilder documents,
+    CaptureTool.Application.Abstractions.Ai.IAiDeviceSupport? device = null) : ITextExtractionService
 {
+    private bool WindowsAiSupported => (device ?? CaptureTool.Infrastructure.Ai.WindowsAiDeviceSupport.Current).WindowsAi;
     public TextExtractionReadyState GetReadyState()
     {
+        if (!WindowsAiSupported) return LegacyReadyState();
         try
         {
-            return GetCombinedReadyState(
+            var ready = GetCombinedReadyState(
                 TextRecognizer.GetReadyState(),
                 IsLegacyOcrAvailable());
+            return ready is TextExtractionReadyState.NotSupported or TextExtractionReadyState.Disabled or TextExtractionReadyState.Unknown
+                ? LegacyReadyState() : ready;
         }
         catch
         {
             // The Windows AI runtime can be absent even when the app package contains its projections.
-            return IsLegacyOcrAvailable()
-                ? TextExtractionReadyState.Ready
-                : TextExtractionReadyState.Unknown;
+            return LegacyReadyState();
         }
     }
 
@@ -33,6 +36,9 @@ public sealed class WindowsTextExtractionService : ITextExtractionService
         CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
+        if (!WindowsAiSupported) return IsLegacyOcrAvailable()
+            ? TextExtractionPreparationResult.Success
+            : new(TextExtractionPreparationStatus.LanguageResourcesRequired);
 
         try
         {
@@ -86,7 +92,7 @@ public sealed class WindowsTextExtractionService : ITextExtractionService
             IReadOnlyList<RecognizedQrCodeRegion> qrCodes = QrCodeDetector.Detect(sourceBitmap);
             cancellationToken.ThrowIfCancellationRequested();
 
-            TextExtractionResult? aiResult = await TryExtractWithWindowsAiAsync(
+            TextExtractionResult? aiResult = !WindowsAiSupported ? null : await TryExtractWithWindowsAiAsync(
                 sourceBitmap,
                 request,
                 qrCodes,
@@ -111,6 +117,9 @@ public sealed class WindowsTextExtractionService : ITextExtractionService
             return TextExtractionResult.Failed(ex.Message);
         }
     }
+
+    private static TextExtractionReadyState LegacyReadyState() => IsLegacyOcrAvailable()
+        ? TextExtractionReadyState.Ready : TextExtractionReadyState.LanguageResourcesRequired;
 
     internal static TextExtractionReadyState GetCombinedReadyState(
         AIFeatureReadyState aiReadyState,
@@ -147,7 +156,7 @@ public sealed class WindowsTextExtractionService : ITextExtractionService
         return RectangleF.FromLTRB(left, top, right, bottom);
     }
 
-    private static async Task<TextExtractionResult?> TryExtractWithWindowsAiAsync(
+    private async Task<TextExtractionResult?> TryExtractWithWindowsAiAsync(
         SoftwareBitmap sourceBitmap,
         TextExtractionRequest request,
         IReadOnlyList<RecognizedQrCodeRegion> qrCodes,
@@ -170,43 +179,27 @@ public sealed class WindowsTextExtractionService : ITextExtractionService
             cancellationToken.ThrowIfCancellationRequested();
 
             List<RecognizedTextRegion> regions = [];
-            List<string> recognizedLines = [];
             int lineIndex = 0;
             foreach (RecognizedLine line in recognizedText.Lines)
             {
-                List<string> recognizedWords = [];
                 int wordIndex = 0;
                 foreach (RecognizedWord word in line.Words)
                 {
                     RectangleF bounds = ToRectangleF(word.BoundingBox);
                     if (!string.IsNullOrWhiteSpace(word.Text) &&
                         bounds.Width > 0 &&
-                        bounds.Height > 0 &&
-                        !QrCodeDetector.ShouldExcludeText(bounds, qrCodes))
+                        bounds.Height > 0)
                     {
                         regions.Add(new RecognizedTextRegion(word.Text, bounds, lineIndex, wordIndex));
-                        recognizedWords.Add(word.Text);
                     }
 
                     wordIndex++;
                 }
 
-                if (recognizedWords.Count > 0)
-                {
-                    recognizedLines.Add(string.Join(' ', recognizedWords));
-                }
-
                 lineIndex++;
             }
 
-            string documentText = CombineRecognizedValues(
-                string.Join(Environment.NewLine, recognizedLines),
-                qrCodes);
-            return TextExtractionResult.Success(new RecognizedTextDocument(
-                documentText,
-                request.SourceSize,
-                regions,
-                qrCodes));
+            return TextExtractionResult.Success(documents.Build(request.SourceSize, regions, qrCodes));
         }
         catch (OperationCanceledException)
         {
@@ -219,7 +212,7 @@ public sealed class WindowsTextExtractionService : ITextExtractionService
         }
     }
 
-    private static async Task<TextExtractionResult> ExtractWithLegacyOcrAsync(
+    private async Task<TextExtractionResult> ExtractWithLegacyOcrAsync(
         SoftwareBitmap sourceBitmap,
         TextExtractionRequest request,
         IReadOnlyList<RecognizedQrCodeRegion> qrCodes,
@@ -228,7 +221,7 @@ public sealed class WindowsTextExtractionService : ITextExtractionService
         OcrEngine? engine = OcrEngine.TryCreateFromUserProfileLanguages();
         if (engine is null)
         {
-            return TextExtractionResult.NotReady;
+            return qrCodes.Count != 0 ? TextExtractionResult.Success(documents.Build(request.SourceSize, null, qrCodes)) : TextExtractionResult.NotReady;
         }
 
         OcrResult ocrResult = await engine
@@ -237,39 +230,24 @@ public sealed class WindowsTextExtractionService : ITextExtractionService
         cancellationToken.ThrowIfCancellationRequested();
 
         List<RecognizedTextRegion> regions = [];
-        List<string> recognizedLines = [];
         for (int lineIndex = 0; lineIndex < ocrResult.Lines.Count; lineIndex++)
         {
             OcrLine line = ocrResult.Lines[lineIndex];
-            List<string> recognizedWords = [];
             for (int wordIndex = 0; wordIndex < line.Words.Count; wordIndex++)
             {
                 OcrWord word = line.Words[wordIndex];
                 RectangleF bounds = ToRectangleF(word.BoundingRect);
                 if (!string.IsNullOrWhiteSpace(word.Text) &&
                     bounds.Width > 0 &&
-                    bounds.Height > 0 &&
-                    !QrCodeDetector.ShouldExcludeText(bounds, qrCodes))
+                    bounds.Height > 0)
                 {
                     regions.Add(new RecognizedTextRegion(word.Text, bounds, lineIndex, wordIndex));
-                    recognizedWords.Add(word.Text);
                 }
             }
 
-            if (recognizedWords.Count > 0)
-            {
-                recognizedLines.Add(string.Join(' ', recognizedWords));
-            }
         }
 
-        string documentText = CombineRecognizedValues(
-            string.Join(Environment.NewLine, recognizedLines),
-            qrCodes);
-        return TextExtractionResult.Success(new RecognizedTextDocument(
-            documentText,
-            request.SourceSize,
-            regions,
-            qrCodes));
+        return TextExtractionResult.Success(documents.Build(request.SourceSize, regions, qrCodes));
     }
 
     private static async Task<SoftwareBitmap> LoadSoftwareBitmapAsync(Stream sourceStream)
@@ -312,17 +290,5 @@ public sealed class WindowsTextExtractionService : ITextExtractionService
             : result.ExtendedError.Message;
     }
 
-    private static string CombineRecognizedValues(
-        string? recognizedText,
-        IReadOnlyList<RecognizedQrCodeRegion> qrCodes)
-    {
-        IEnumerable<string> values = qrCodes.Select(qrCode => qrCode.Value);
-        if (!string.IsNullOrWhiteSpace(recognizedText))
-        {
-            values = values.Prepend(recognizedText.TrimEnd());
-        }
-
-        return string.Join(Environment.NewLine, values);
-    }
 }
 

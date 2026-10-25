@@ -4,6 +4,7 @@ using CaptureTool.Application.Abstractions.Edit.Video.CopyVideoFile;
 using CaptureTool.Application.Abstractions.Edit.Video.SaveVideoFile;
 using CaptureTool.Application.Abstractions.Edit.Video.SuperResolution;
 using CaptureTool.Application.Abstractions.EditSessions;
+using CaptureTool.Application.Abstractions.Files;
 using CaptureTool.Application.Abstractions.Localization;
 using CaptureTool.Application.Abstractions.Logging;
 using CaptureTool.Application.Abstractions.Settings.OpenVideosFolder;
@@ -22,6 +23,23 @@ namespace CaptureTool.Presentation.Features.VideoEdit;
 
 public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<VideoFile>, IEditableSession
 {
+    public string? DetailsSourcePath { get; private set => Set(ref field, value); }
+    private VideoFile? _loadedFile;
+
+    public void ApplyCaptureRename(CaptureTool.Application.Abstractions.Capture.Assets.CaptureFileRename rename)
+    {
+        bool Matches(string? path) => string.Equals(path, rename.OldPath, StringComparison.OrdinalIgnoreCase);
+        if (_loadedFile != null)
+        {
+            if (Matches(_loadedFile.FilePath)) _loadedFile.FilePath = rename.NewPath;
+            if (Matches(_loadedFile.PersistentFilePath)) _loadedFile.PersistentFilePath = rename.NewPath;
+        }
+        if (Matches(_originalVideoPath)) _originalVideoPath = rename.NewPath;
+        if (Matches(VideoPath)) VideoPath = rename.NewPath;
+        if (Matches(DetailsSourcePath)) DetailsSourcePath = rename.NewPath;
+    }
+
+
     private const double TrimComparisonToleranceSeconds = 0.01;
 
     private enum VideoVariant
@@ -199,15 +217,17 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
     private readonly IVideoSuperResolutionService _videoSuperResolutionService;
     private readonly IVideoSuperResolutionFeatureAvailability _videoSuperResolutionFeatureAvailability;
     private readonly IAiFeatureConsentService _aiFeatureConsentService;
-    private readonly IAiFeatureConsentDialogService _aiFeatureConsentDialogService;
     private readonly ILocalizationService _localizationService;
     private readonly IAppNotificationService _notificationService;
     private readonly ITelemetryService? _telemetryService;
     private readonly IScratchArtifactStore? _scratchArtifactStore;
+    private readonly IFileSystem? _fileSystem;
     private readonly HashSet<string> _scratchArtifactPaths = new(StringComparer.OrdinalIgnoreCase);
     private string? _originalVideoPath;
     private string? _superResolutionVideoPath;
     private VideoEditSnapshot? _savedEditSnapshot;
+    private CancellationTokenSource? _enhancementCancellation;
+    private bool _isDisposed;
 
     public string EditSessionName => "video edit session";
 
@@ -226,11 +246,11 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
         IVideoSuperResolutionService? videoSuperResolutionService = null,
         IVideoSuperResolutionFeatureAvailability? videoSuperResolutionFeatureAvailability = null,
         IAiFeatureConsentService? aiFeatureConsentService = null,
-        IAiFeatureConsentDialogService? aiFeatureConsentDialogService = null,
         ILocalizationService? localizationService = null,
         IAppNotificationService? notificationService = null,
         ITelemetryService? telemetryService = null,
-        IScratchArtifactStore? scratchArtifactStore = null)
+        IScratchArtifactStore? scratchArtifactStore = null,
+        IFileSystem? fileSystem = null)
     {
         _saveAction = saveAction;
         _copyAction = copyAction;
@@ -241,11 +261,11 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
         _videoSuperResolutionFeatureAvailability =
             videoSuperResolutionFeatureAvailability ?? new DisabledVideoSuperResolutionFeatureAvailability();
         _aiFeatureConsentService = aiFeatureConsentService ?? new PermissiveAiFeatureConsentService();
-        _aiFeatureConsentDialogService = aiFeatureConsentDialogService ?? new PermissiveAiFeatureConsentDialogService();
         _localizationService = localizationService ?? new ResourceKeyLocalizationService();
         _notificationService = notificationService ?? new NullAppNotificationService();
         _telemetryService = telemetryService;
         _scratchArtifactStore = scratchArtifactStore;
+        _fileSystem = fileSystem;
 
         SaveCommand = new AsyncRelayCommand(SaveCommandAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
         CopyCommand = new AsyncRelayCommand(CopyAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
@@ -273,9 +293,12 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
     public override void Load(VideoFile video)
     {
         ThrowIfNotReadyToLoad();
+        MediaWorkingCopy.RestoreIfMissing(video, video.PersistentFilePath, _fileSystem, _scratchArtifactStore);
+        _loadedFile = video;
         StartLoading();
 
         _originalVideoPath = video.FilePath;
+        DetailsSourcePath = video.PersistentFilePath ?? video.FilePath;
         TrackScratchArtifact(video.FilePath);
         _superResolutionVideoPath = null;
         _savedEditSnapshot = null;
@@ -439,7 +462,7 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
         }
 
         var response = await _saveAction.ExecuteAsync(
-            new SaveVideoFileRequest(VideoPath, GetTrimStartForRequest(), GetTrimEndForRequest()),
+            new SaveVideoFileRequest(VideoPath, GetTrimStartForRequest(), GetTrimEndForRequest(), DetailsSourcePath),
             cancellationToken);
         bool saved = response?.Value?.Saved == true;
         TrackOutput("save", response?.Result ?? UseCaseResult.Failed, saved);
@@ -486,6 +509,7 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
 
     private async Task ToggleVideoSuperResolutionAsync()
     {
+        if (_isDisposed || _enhancementCancellation != null) return;
         if (IsVideoSuperResolutionActive)
         {
             ShowOriginalVideo();
@@ -497,31 +521,37 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
             return;
         }
 
-        if (!await EnsureAiFeatureConsentAsync(
-            AiFeatureId.VideoSuperResolution,
-            CancellationToken.None))
-        {
-            TrackEditTool("super_resolution", TelemetryOutcomes.Canceled);
-            return;
-        }
-
-        if (!string.IsNullOrWhiteSpace(_superResolutionVideoPath) &&
-            File.Exists(_superResolutionVideoPath))
-        {
-            ShowSuperResolutionVideo(_superResolutionVideoPath);
-            return;
-        }
-
-        VideoSuperResolutionStatusMessage = string.Empty;
-        IsVideoSuperResolutionGenerating = true;
-        UpdateVideoSuperResolutionAvailability();
+        using var consentCancellation = new CancellationTokenSource();
+        _enhancementCancellation = consentCancellation;
         try
         {
+            if (!await EnsureAiFeatureConsentAsync(AiFeatureId.VideoSuperResolution, consentCancellation.Token))
+            {
+                TrackEditTool("super_resolution", TelemetryOutcomes.Canceled);
+                return;
+            }
+            consentCancellation.Token.ThrowIfCancellationRequested();
+            // Consent may create a new authorization generation. Capture its token
+            // after the prompt, and let editor disposal cancel this exact operation.
+            using var operation = CancellationTokenSource.CreateLinkedTokenSource(_aiFeatureConsentService.Revoked);
+            _enhancementCancellation = operation;
+            CancellationToken cancellationToken = operation.Token;
+            cancellationToken.ThrowIfCancellationRequested();
+            if (!string.IsNullOrWhiteSpace(_superResolutionVideoPath) && File.Exists(_superResolutionVideoPath))
+            {
+                ShowSuperResolutionVideo(_superResolutionVideoPath);
+                return;
+            }
+
+            VideoSuperResolutionStatusMessage = string.Empty;
+            IsVideoSuperResolutionGenerating = true;
+            UpdateVideoSuperResolutionAvailability();
             VideoSuperResolutionReadyState readyState = _videoSuperResolutionService.GetReadyState();
             if (readyState == VideoSuperResolutionReadyState.PreparationNeeded)
             {
                 VideoSuperResolutionPreparationResult preparationResult =
-                    await _videoSuperResolutionService.EnsureReadyAsync(CancellationToken.None);
+                    await _videoSuperResolutionService.EnsureReadyAsync(cancellationToken);
+                cancellationToken.ThrowIfCancellationRequested();
                 if (preparationResult.Status != VideoSuperResolutionPreparationStatus.Success)
                 {
                     ShowVideoSuperResolutionFailure(GetPreparationFailureMessage(preparationResult));
@@ -536,7 +566,14 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
 
             VideoSuperResolutionResult result = await _videoSuperResolutionService.GenerateAsync(
                 new VideoSuperResolutionRequest(new VideoFile(_originalVideoPath)),
-                CancellationToken.None);
+                cancellationToken);
+            if (cancellationToken.IsCancellationRequested && result.VideoFile is { } abandoned)
+            {
+                // Only the scratch store can delete a generated artifact; it rejects
+                // paths outside its owned directory, including retained captures.
+                _scratchArtifactStore?.DeleteArtifact(abandoned.FilePath);
+            }
+            cancellationToken.ThrowIfCancellationRequested();
             if (result.Status != VideoSuperResolutionStatus.Success ||
                 result.VideoFile is null)
             {
@@ -550,19 +587,23 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
         }
         catch (OperationCanceledException)
         {
-            VideoSuperResolutionStatusMessage = string.Empty;
+            if (!_isDisposed) VideoSuperResolutionStatusMessage = string.Empty;
             TrackEditTool("super_resolution", TelemetryOutcomes.Canceled);
         }
         catch (Exception ex)
         {
             _logService.LogException(ex, "Failed to generate super-resolution video.");
-            ShowVideoSuperResolutionFailure(
+            if (!_isDisposed) ShowVideoSuperResolutionFailure(
                 GetLocalizedString("VideoSuperResolutionStatus_Failed"));
         }
         finally
         {
-            IsVideoSuperResolutionGenerating = false;
-            UpdateVideoSuperResolutionAvailability();
+            _enhancementCancellation = null;
+            if (!_isDisposed)
+            {
+                IsVideoSuperResolutionGenerating = false;
+                UpdateVideoSuperResolutionAvailability();
+            }
         }
     }
 
@@ -575,15 +616,10 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
             return true;
         }
 
-        bool consented = await _aiFeatureConsentDialogService.RequestConsentAsync(
-            featureId,
-            cancellationToken);
-        bool saved = await _aiFeatureConsentService.SetConsentAsync(
-            featureId,
-            consented,
-            cancellationToken);
+        bool consented = await _aiFeatureConsentService.EnsureConsentAsync(cancellationToken);
+        cancellationToken.ThrowIfCancellationRequested();
         UpdateVideoSuperResolutionAvailability();
-        return consented && saved;
+        return consented;
     }
 
     private void ShowOriginalVideo()
@@ -613,6 +649,11 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
 
     public override void Dispose()
     {
+        if (_isDisposed) return;
+        _isDisposed = true;
+        // Mark the operation canceled immediately; provider callbacks cannot hold
+        // the UI thread during disposal. The operation disposes its own token source.
+        if (_enhancementCancellation != null) _ = ObserveCancellationAsync(_enhancementCancellation.CancelAsync());
         foreach (string artifactPath in _scratchArtifactPaths)
         {
             _scratchArtifactStore?.DeleteArtifact(artifactPath);
@@ -622,6 +663,12 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
         _superResolutionVideoPath = null;
         VideoPath = null;
         base.Dispose();
+    }
+
+    private async Task ObserveCancellationAsync(Task cancellation)
+    {
+        try { await cancellation.ConfigureAwait(false); }
+        catch (Exception ex) { _logService.LogException(ex, "Failed to cancel video enhancement."); }
     }
 
     private void TrackScratchArtifact(string artifactPath)
@@ -652,10 +699,7 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
             !IsFinalizingVideo &&
             !IsVideoSuperResolutionGenerating &&
             (readyState is VideoSuperResolutionReadyState.Ready or
-                VideoSuperResolutionReadyState.PreparationNeeded) &&
-            (IsVideoSuperResolutionActive ||
-                _aiFeatureConsentService.GetConsentState(AiFeatureId.VideoSuperResolution) !=
-                    AiFeatureConsentState.Denied);
+                VideoSuperResolutionReadyState.PreparationNeeded);
     }
 
     private string GetReadyStateFailureMessage(VideoSuperResolutionReadyState readyState)
@@ -846,33 +890,9 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
 
     private sealed class PermissiveAiFeatureConsentService : IAiFeatureConsentService
     {
-        public IReadOnlyList<AiFeatureConsent> GetFeatureConsents()
-        {
-            return [];
-        }
-
-        public AiFeatureConsentState GetConsentState(AiFeatureId featureId)
-        {
-            return AiFeatureConsentState.Granted;
-        }
-
-        public Task<bool> SetConsentAsync(
-            AiFeatureId featureId,
-            bool isGranted,
-            CancellationToken cancellationToken = default)
-        {
-            return Task.FromResult(true);
-        }
-    }
-
-    private sealed class PermissiveAiFeatureConsentDialogService : IAiFeatureConsentDialogService
-    {
-        public Task<bool> RequestConsentAsync(
-            AiFeatureId featureId,
-            CancellationToken cancellationToken = default)
-        {
-            return Task.FromResult(true);
-        }
+        public AiFeatureConsentState GetConsentState(AiFeatureId featureId) => AiFeatureConsentState.Granted;
+        public Task<bool> EnsureConsentAsync(CancellationToken cancellationToken = default) => Task.FromResult(true);
+        public CancellationToken Revoked => CancellationToken.None;
     }
 
     private sealed class ResourceKeyLocalizationService : ILocalizationService
