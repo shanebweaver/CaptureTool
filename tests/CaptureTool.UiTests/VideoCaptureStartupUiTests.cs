@@ -147,7 +147,8 @@ public sealed class VideoCaptureStartupUiTests
                 "StopVideoCaptureButton",
                 InteractionTimeout);
 
-            FileInfo recordedFile = WaitForFinalizedRecording(appTempDirectory, InteractionTimeout);
+            FileInfo recordedFile = WaitForFinalizedRecording(
+                Path.Combine(appDataDirectory, "Captures"), InteractionTimeout);
             Assert.IsGreaterThan(0L, recordedFile.Length, "The recorded video should not be empty.");
             TestContext.WriteLine($"Recorded output: {recordedFile.FullName} ({recordedFile.Length} bytes)");
 
@@ -217,8 +218,7 @@ public sealed class VideoCaptureStartupUiTests
             startInfo.ArgumentList.Add(argument);
         }
 
-        Process process = Process.Start(startInfo) ??
-            throw new InvalidOperationException("Failed to launch CaptureTool.");
+        Process process = UiTestAppLauncher.Launch(startInfo);
         return new LaunchedCaptureToolApp(
             process,
             Path.Combine(appTempDirectory, "capturetool.log"));
@@ -305,6 +305,7 @@ public sealed class VideoCaptureStartupUiTests
 
         Assert.Fail(
             $"Timed out waiting for video capture to reach the recording state.{Environment.NewLine}" +
+            app.GetLogContents() + Environment.NewLine +
             DescribeAutomationTree(app, automation));
         throw new UnreachableException();
     }
@@ -642,6 +643,9 @@ public sealed class VideoCaptureStartupUiTests
 
     private static string ResolveAppExecutablePath(string repoRoot)
     {
+        if (Environment.GetEnvironmentVariable("CAPTURETOOL_UI_TEST_APP_PATH") is { Length: > 0 } publishedApp)
+            return Path.GetFullPath(publishedApp);
+
         string configuration = Environment.GetEnvironmentVariable("CONFIGURATION") ?? "Debug";
         string platform = Environment.GetEnvironmentVariable("PLATFORM") ?? "x64";
         string runtimeIdentifier = RuntimeInformation.ProcessArchitecture == Architecture.Arm64 ||
