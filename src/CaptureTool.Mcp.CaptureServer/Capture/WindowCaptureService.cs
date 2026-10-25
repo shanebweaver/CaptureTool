@@ -3,30 +3,34 @@ using CaptureTool.Application.Abstractions.Capture;
 using CaptureTool.Domain.Capture;
 using CaptureTool.Mcp.CaptureServer.Abstractions;
 using CaptureTool.Mcp.CaptureServer.Models;
+using System.Drawing;
 
 namespace CaptureTool.Mcp.CaptureServer.Capture;
 
 public sealed class WindowCaptureService : IWindowCaptureService
 {
     private readonly IDisplayCaptureService _displayCaptureService;
+    private readonly IDisplayTopology _displayTopology;
     private readonly IScreenCapture _screenCapture;
     private readonly ICaptureKitImageCaptureAdapter _imageCaptureAdapter;
 
     public WindowCaptureService(
         IDisplayCaptureService displayCaptureService,
+        IDisplayTopology displayTopology,
         IScreenCapture screenCapture,
         ICaptureKitImageCaptureAdapter imageCaptureAdapter)
     {
         _displayCaptureService = displayCaptureService;
+        _displayTopology = displayTopology;
         _screenCapture = screenCapture;
         _imageCaptureAdapter = imageCaptureAdapter;
     }
 
     public IReadOnlyList<WindowInfoDto> ListWindows()
     {
-        MonitorCaptureResult[] monitors = GetMonitors();
+        IReadOnlyList<Rectangle> monitorBounds = _displayTopology.GetMonitorBounds();
 
-        return [.. GetCandidateWindows(monitors).Select(window => new WindowInfoDto(
+        return [.. GetCandidateWindows(monitorBounds).Select(window => new WindowInfoDto(
             GetWindowId(window.Handle),
             window.Title,
             RectangleDto.FromRectangle(window.Bounds)))];
@@ -36,7 +40,7 @@ public sealed class WindowCaptureService : IWindowCaptureService
     {
         nint handle = ParseWindowId(windowId);
         MonitorCaptureResult[] monitors = GetMonitors();
-        CaptureWindow window = GetCandidateWindows(monitors)
+        CaptureWindow window = GetCandidateWindows([.. monitors.Select(monitor => monitor.MonitorBounds)])
             .FirstOrDefault(window => window.Handle == handle);
 
         if (window.Handle == 0)
@@ -59,19 +63,15 @@ public sealed class WindowCaptureService : IWindowCaptureService
             isPrimary: referenceMonitor.IsPrimary);
     }
 
-    private IReadOnlyList<CaptureWindow> GetCandidateWindows(IReadOnlyList<MonitorCaptureResult> monitors)
+    private IReadOnlyList<CaptureWindow> GetCandidateWindows(IReadOnlyList<Rectangle> monitorBounds)
         => [.. _displayCaptureService.GetWindows()
             .Where(window =>
                 window.Handle != 0
                 && !string.IsNullOrWhiteSpace(window.Title)
                 && window.Bounds.Width > 0
                 && window.Bounds.Height > 0
-                && IsOnCapturedDesktop(window, monitors))
+                && monitorBounds.Any(bounds => bounds.IntersectsWith(window.Bounds)))
             .OrderBy(window => window.Title, StringComparer.CurrentCultureIgnoreCase)];
-
-    private static bool IsOnCapturedDesktop(CaptureWindow window, IReadOnlyList<MonitorCaptureResult> monitors)
-        => monitors.Count == 0
-            || monitors.Any(monitor => monitor.MonitorBounds.IntersectsWith(window.Bounds));
 
     private MonitorCaptureResult[] GetMonitors()
         => _screenCapture.CaptureAllMonitors() ?? [];
