@@ -1127,6 +1127,39 @@ public sealed class CaptureDetailsTests
     }
 
     [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task OfflineModelNoticeExplainsDownloadAndLeavesActionRetryable(bool missingPrerequisite)
+    {
+        var setup = new Setup();
+        using var vm = setup.ViewModel;
+        var action = vm.SummaryAction;
+        CaptureDetailsSnapshot snapshot = new(CaptureDetailsStatus.Empty);
+        setup.Reader.Setup(x => x.ReadAsync(It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync(() => snapshot);
+        setup.Memory.Setup(x => x.EnsureConsentAsync(It.IsAny<CancellationToken>())).ReturnsAsync(true);
+        setup.Memory.Setup(x => x.AnalyzeAsync("capture.png", action.Capability, It.IsAny<CancellationToken>()))
+            .Callback(() => snapshot = new(CaptureDetailsStatus.Empty, Run: new AnalysisRun(
+                Guid.NewGuid(), Guid.NewGuid(), 1, "test", null, AnalysisRunStatus.Queued,
+                missingPrerequisite ? [AnalysisCapability.Description, action.Capability] : [action.Capability], [])))
+            .Returns(Task.CompletedTask);
+        await vm.OpenAsync("capture.png", AnalysisMediaKind.Image);
+        await action.Command.ExecuteAsync(null);
+        var run = snapshot.Run!.BindSource(new(new string('a', 64)));
+        if (missingPrerequisite)
+        {
+            run = run.CompleteStep(new(AnalysisCapability.Description, AnalyzerOutcomeKind.TemporarilyUnavailable, "model-download-required"));
+        }
+        snapshot = snapshot with { Run = run.CompleteStep(new(action.Capability,
+            missingPrerequisite ? AnalyzerOutcomeKind.Unsupported : AnalyzerOutcomeKind.TemporarilyUnavailable,
+            missingPrerequisite ? "metadata-input-empty" : "model-download-required")) };
+        await vm.RefreshAsync();
+        Assert.AreEqual("CaptureAction_DownloadRequired", action.Status);
+        Assert.IsFalse(action.IsRunning);
+        Assert.IsTrue(action.Command.CanExecute(null));
+        setup.Notifications.Verify(x => x.ShowInfo("CaptureAction_DownloadRequired"), Times.Once);
+    }
+
+    [TestMethod]
     public async Task RenameValidationAndFilesystemFailuresUseSnackbarsAndKeepTheDraft()
     {
         var names = new Mock<ICaptureNamingService>();

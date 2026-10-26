@@ -2005,4 +2005,5 @@ SOFTWARE.
   <data name="CaptureSummary_PartialCoverage.Text" xml:space="preserve">
     <value>Este resumen utiliza extractos del análisis disponible y puede omitir detalles.</value>
   </data>
+  <data name="CaptureAction_DownloadRequired" xml:space="preserve"><value>Conéctate a internet para descargar el modelo de esta función y vuelve a intentarlo. Puedes seguir capturando, editando y guardando sin conexión.</value></data>
 </root>

@@ -2273,4 +2273,5 @@ SOFTWARE.
   <data name="CaptureSummary_PartialCoverage.Text" xml:space="preserve">
     <value>This summary uses excerpts of the available analysis and may omit details.</value>
   </data>
+  <data name="CaptureAction_DownloadRequired" xml:space="preserve"><value>Connect to the internet to download this feature’s model, then try again. You can still capture, edit, and save offline.</value></data>
 </root>

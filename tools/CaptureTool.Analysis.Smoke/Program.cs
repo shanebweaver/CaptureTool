@@ -41,6 +41,8 @@ if (args.Contains("--recovery-child", StringComparer.Ordinal)) return await Reco
 if (args.Contains("--recovery-resume", StringComparer.Ordinal)) return await RecoveryChecks.ChildAsync(output, args[^1], resume: true);
 if (args.Contains("--scale-checks", StringComparer.Ordinal)) return await ScaleChecks.RunAsync(output);
 var storage = new SmokeStorage(output);
+if (args.Contains("--offline-checks", StringComparer.Ordinal))
+    return await OfflineChecks.RunAsync(Path.Combine(output, "offline-" + Guid.NewGuid().ToString("N")));
 if (args.Contains("--startup-ocr-checks", StringComparer.Ordinal))
     return await StartupOcrChecks.RunAsync(Path.Combine(output, "startup-ocr-" + Guid.NewGuid().ToString("N")));
 if (args.Contains("--input-compaction-checks", StringComparer.Ordinal))

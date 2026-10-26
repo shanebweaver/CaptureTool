@@ -175,7 +175,12 @@ public sealed partial class CaptureDetailsViewModel
 
             if (_memory.State.FailureCode is { } failure && !_disposed)
             {
-                _requestFailures[capability] = failure == "model-unavailable" ? "Unavailable" : "Failed";
+                _requestFailures[capability] = failure switch
+                {
+                    "model-unavailable" => "Unavailable",
+                    "model-download-required" => "DownloadRequired",
+                    _ => "Failed"
+                };
             }
             await RefreshAsync();
         }
@@ -283,7 +288,11 @@ public sealed partial class CaptureDetailsViewModel
 
         if (completion?.Outcome is { } outcome && outcome != AnalyzerOutcomeKind.Cancelled)
         {
-            status = outcome == AnalyzerOutcomeKind.Unsupported ? "Unavailable" : "Failed";
+            bool needsDownload = completion.FailureCode == "model-download-required" ||
+                (completion.FailureCode == "metadata-input-empty" &&
+                    _snapshot?.Run?.CompletedSteps.Any(step => step.FailureCode == "model-download-required") == true);
+            status = needsDownload ? "DownloadRequired"
+                : outcome == AnalyzerOutcomeKind.Unsupported ? "Unavailable" : "Failed";
         }
         if (_snapshot?.Run is { Status: AnalysisRunStatus.Failed } failed && failed.Steps.Contains(action.Capability))
         {

@@ -2005,4 +2005,5 @@ SOFTWARE.
   <data name="CaptureSummary_PartialCoverage.Text" xml:space="preserve">
     <value>此摘要使用了现有分析的部分内容，可能会遗漏细节。</value>
   </data>
+  <data name="CaptureAction_DownloadRequired" xml:space="preserve"><value>请连接互联网以下载此功能所需的模型，然后重试。您仍可离线捕获、编辑和保存。</value></data>
 </root>

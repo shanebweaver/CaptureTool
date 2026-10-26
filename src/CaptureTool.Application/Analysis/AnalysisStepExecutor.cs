@@ -43,7 +43,7 @@ internal sealed class AnalysisStepExecutor
                 }
 
                 // An unavailable/unsupported fallback cannot hide an execution failure.
-                if (GetFailurePriority(attempt.Outcome.Kind) >= GetFailurePriority(strongestFailure.Kind))
+                if (GetFailurePriority(attempt.Outcome) >= GetFailurePriority(strongestFailure))
                 {
                     strongestFailure = attempt.Outcome;
                 }
@@ -94,6 +94,11 @@ internal sealed class AnalysisStepExecutor
         catch (TimeoutException)
         {
             return new(Failed("model-timeout"), NextAction.RetryProvider);
+        }
+        catch (ModelDownloadRequiredException)
+        {
+            return new(AnalyzerOutcome.Unsuccessful(AnalyzerOutcomeKind.TemporarilyUnavailable,
+                "model-download-required"), NextAction.TryNextProvider);
         }
         catch (OperationCanceledException)
         {
@@ -212,9 +217,10 @@ internal sealed class AnalysisStepExecutor
         }
     }
 
-    private static int GetFailurePriority(AnalyzerOutcomeKind kind) => kind switch
+    private static int GetFailurePriority(AnalyzerOutcome outcome) => outcome.Kind switch
     {
-        AnalyzerOutcomeKind.Failed => 2,
+        AnalyzerOutcomeKind.Failed => 3,
+        AnalyzerOutcomeKind.TemporarilyUnavailable when outcome.FailureCode == "model-download-required" => 2,
         AnalyzerOutcomeKind.TemporarilyUnavailable => 1,
         _ => 0,
     };

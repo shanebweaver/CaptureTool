@@ -40,13 +40,7 @@ internal sealed class FoundryImageDescriptionAnalyzer(
             return AnalyzerAvailability.Unsupported;
         }
 
-        if (!await _model.IsCachedAsync(ct).ConfigureAwait(false))
-        {
-            await _model.DownloadAsync(value => progress?.Report(new(AnalysisProgressStage.Preparing,
-                double.IsFinite(value) ? Math.Clamp(value / 100d, 0, 1) : null)), ct).ConfigureAwait(false);
-        }
-
-        progress?.Report(new(AnalysisProgressStage.Preparing, 1));
+        await runtime.EnsureCachedAsync(_model, progress, ct).ConfigureAwait(false);
         return AnalyzerAvailability.Ready;
     }
 

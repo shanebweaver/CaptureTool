@@ -6,8 +6,10 @@ using Microsoft.Extensions.Logging.Abstractions;
 namespace CaptureTool.Infrastructure.Analysis.Windows.Foundry;
 
 internal sealed partial class FoundryRuntime(IStorageService storage,
-    CaptureTool.Application.Abstractions.Ai.IAiDeviceSupport? device = null) : IAnalysisResources, IDisposable
+    CaptureTool.Application.Abstractions.Ai.IAiDeviceSupport? device = null,
+    ModelDownloadGuard? downloads = null) : IAnalysisResources, IDisposable
 {
+    private ModelDownloadGuard Downloads => downloads ?? ModelDownloadGuard.Current;
     public bool IsSupported => (device ?? CaptureTool.Infrastructure.Ai.WindowsAiDeviceSupport.Current).FoundryCpu;
     private readonly SemaphoreSlim _gate = new(1, 1);
     private readonly SemaphoreSlim _modelGate = new(1, 1);
@@ -111,26 +113,48 @@ internal sealed partial class FoundryRuntime(IStorageService storage,
         await _gate.WaitAsync(ct).ConfigureAwait(false);
         try
         {
+            string root = Path.Combine(storage.GetApplicationDataFolderPath(), "AnalysisModels", "FoundryLocal");
+            string cache = Path.Combine(root, "models");
+            if (_manager == null && !FoundryLocalManager.IsInitialized && Downloads.IsOffline &&
+                (!Directory.Exists(cache) || !Directory.EnumerateFileSystemEntries(cache).Any()))
+            {
+                // A fresh offline installation has nothing to resolve. Do not bootstrap
+                // the SDK/catalog or wait through a model download deadline.
+                throw new ModelDownloadRequiredException();
+            }
+
+            using var resolution = CancellationTokenSource.CreateLinkedTokenSource(ct);
+            if (Downloads.IsOffline)
+            {
+                resolution.CancelAfter(TimeSpan.FromSeconds(10));
+            }
+            CancellationToken resolveToken = resolution.Token;
             if (_manager == null)
             {
                 if (!FoundryLocalManager.IsInitialized)
                 {
-                    string root = Path.Combine(storage.GetApplicationDataFolderPath(), "AnalysisModels", "FoundryLocal");
                     await FoundryLocalManager.CreateAsync(new Configuration
                     {
                         AppName = "capture-tool",
                         AppDataDir = root,
-                        ModelCacheDir = Path.Combine(root, "models"),
+                        ModelCacheDir = cache,
                         LogsDir = Path.Combine(root, "logs"),
                         LogLevel = Microsoft.AI.Foundry.Local.LogLevel.Fatal,
                         Web = new Configuration.WebService { Urls = "http://127.0.0.1:0" },
-                    }, NullLogger.Instance, ct).ConfigureAwait(false);
+                    }, NullLogger.Instance, resolveToken).ConfigureAwait(false);
                     _ownsManager = true;
                 }
                 _manager = FoundryLocalManager.Instance;
             }
-            ICatalog catalog = await _manager.GetCatalogAsync(ct).ConfigureAwait(false);
-            IModel? model = await catalog.GetModelAsync(alias, ct).ConfigureAwait(false);
+            ICatalog catalog = await _manager.GetCatalogAsync(resolveToken).ConfigureAwait(false);
+            IModel? cached = (await catalog.GetCachedModelsAsync(resolveToken).ConfigureAwait(false))
+                .FirstOrDefault(model => model.Alias == alias && model.Info.Runtime?.DeviceType == DeviceType.CPU);
+            if (cached != null)
+            {
+                return cached;
+            }
+            Downloads.ThrowIfOffline();
+            IModel? model = await catalog.GetModelAsync(alias, resolveToken).ConfigureAwait(false);
             IModel? cpu = model?.Variants.FirstOrDefault(variant => variant.Info.Runtime?.DeviceType == DeviceType.CPU);
             if (model == null || cpu == null)
             {
@@ -140,10 +164,25 @@ internal sealed partial class FoundryRuntime(IStorageService storage,
             model.SelectVariant(cpu);
             return model;
         }
+        catch (Exception) when (!ct.IsCancellationRequested && Downloads.IsOffline)
+        {
+            throw new ModelDownloadRequiredException();
+        }
         finally
         {
             _gate.Release();
         }
+    }
+
+    internal async Task EnsureCachedAsync(IModel model, IProgress<AnalysisProgress>? progress, CancellationToken ct)
+    {
+        if (!await model.IsCachedAsync(ct).ConfigureAwait(false))
+        {
+            await Downloads.RunAsync(token => model.DownloadAsync(value => progress?.Report(new(
+                AnalysisProgressStage.Preparing, double.IsFinite(value) ? Math.Clamp(value / 100d, 0, 1) : null)), token), ct)
+                .ConfigureAwait(false);
+        }
+        progress?.Report(new(AnalysisProgressStage.Preparing, 1));
     }
 
     // Vision in SDK 1.2.4 uses its documented Responses endpoint. Bind only an OS-assigned

@@ -28,6 +28,12 @@ This check does not load or download models. Use `false` when testing an unsuppo
 machine. Run it on the native executable: managed tests alone cannot catch AOT
 instruction-set detection regressions.
 
+Run `CaptureTool.Analysis.Smoke.exe <absolute-output-directory> --offline-checks`
+to verify first-use download avoidance and real Windows OCR with the app's offline
+condition forced. This uses a fresh synthetic fixture and requires the Windows
+English OCR language pack. It does not disconnect the machine, download models,
+or verify cached AI inference under a physical network outage.
+
 `-Packaged` requires development package registration to be allowed. The script
 registers the separate `CaptureTool.AnalysisSmoke.Slice2` identity, verifies it in
 the process, and removes it afterward. It does not register or replace CaptureTool.
