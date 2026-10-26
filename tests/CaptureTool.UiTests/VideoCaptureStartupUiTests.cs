@@ -40,8 +40,9 @@ public sealed class VideoCaptureStartupUiTests
         Assert.IsTrue(File.Exists(appExecutablePath), $"The WinUI app should be built at {appExecutablePath}.");
 
         string artifactDirectory = Path.Combine(
-            TestContext.TestRunResultsDirectory ?? TestContext.TestRunDirectory ?? Path.GetTempPath(),
-            "CaptureTool.UiTests",
+            // MSTest's deployment hierarchy plus the generated recording name
+            // can exceed Media Foundation's path limit. Keep this fixture short.
+            repoRoot, "artifacts", "ui-recording",
             Guid.NewGuid().ToString("N"));
         string appDataDirectory = Path.Combine(artifactDirectory, "app-data");
         string appTempDirectory = Path.Combine(artifactDirectory, "app-temp");
