@@ -139,6 +139,12 @@ public sealed class VideoCaptureStartupUiTests
             // Keep the recorder active long enough to exercise more than the first frame,
             // then stop through the same UI path a user would use.
             Thread.Sleep(500);
+            AutomationElement pauseResumeButton = WaitForElement(
+                app, automation, "PauseResumeVideoCaptureButton", InteractionTimeout);
+            pauseResumeButton.Click();
+            Thread.Sleep(250);
+            pauseResumeButton.Click();
+            Thread.Sleep(500);
             stopRecordingButton.Click();
 
             WaitForElementHiddenOrRemoved(
@@ -150,6 +156,10 @@ public sealed class VideoCaptureStartupUiTests
             FileInfo recordedFile = WaitForFinalizedRecording(
                 Path.Combine(appDataDirectory, "Captures"), InteractionTimeout);
             Assert.IsGreaterThan(0L, recordedFile.Length, "The recorded video should not be empty.");
+            var file = Windows.Storage.StorageFile.GetFileFromPathAsync(recordedFile.FullName).AsTask().GetAwaiter().GetResult();
+            var video = file.Properties.GetVideoPropertiesAsync().AsTask().GetAwaiter().GetResult();
+            Assert.IsGreaterThan(TimeSpan.Zero, video.Duration, "Windows should be able to read the finalized recording duration.");
+            Assert.IsGreaterThan(0U, video.Width, "The recording should contain a decodable video track.");
             TestContext.WriteLine($"Recorded output: {recordedFile.FullName} ({recordedFile.Length} bytes)");
 
             Assert.IsTrue(app.IsProcessRunning(), "CaptureTool should remain running after recording is stopped.");

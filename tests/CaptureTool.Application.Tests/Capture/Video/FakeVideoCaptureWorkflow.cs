@@ -36,6 +36,7 @@ internal sealed class FakeVideoCaptureWorkflow : IVideoCaptureWorkflow
     public bool? LastPausedState { get; private set; }
     public bool ThrowOnCancel { get; set; }
     public Exception? StartException { get; set; }
+    public Action? OnStart { get; set; }
     public PendingVideoFile PendingVideo { get; set; } = new("capture.mp4");
 
     public void PrepareForVideoCapture()
@@ -45,6 +46,7 @@ internal sealed class FakeVideoCaptureWorkflow : IVideoCaptureWorkflow
 
     public void StartVideoCapture(NewCaptureArgs args)
     {
+        OnStart?.Invoke();
         StartedCaptureArgs = args;
         if (StartException is not null)
         {

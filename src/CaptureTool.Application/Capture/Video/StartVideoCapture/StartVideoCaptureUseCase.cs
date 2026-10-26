@@ -33,7 +33,9 @@ internal sealed class StartVideoCaptureUseCase : IStartVideoCaptureUseCase
     {
         return _useCaseExecutor.ExecuteAsync(
             activityId: ActivityId,
-            useCase: () =>
+            // Native capture initialization must leave the UI apartment free to
+            // dispatch Windows capture and encoder callbacks.
+            useCase: token => Task.Run(() =>
             {
                 try
                 {
@@ -48,7 +50,7 @@ internal sealed class StartVideoCaptureUseCase : IStartVideoCaptureUseCase
                         Succeeded: false,
                         FailureReason: StartVideoCaptureFailureReason.NotSupported);
                 }
-            },
+            }, token),
             cancellationToken: cancellationToken);
     }
 }

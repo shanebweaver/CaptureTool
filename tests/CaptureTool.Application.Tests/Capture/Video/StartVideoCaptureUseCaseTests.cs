@@ -13,6 +13,40 @@ namespace CaptureTool.Application.Tests.Capture.Video;
 public class StartVideoCaptureUseCaseTests
 {
     [TestMethod]
+    public async Task ExecuteAsync_WhenNativeStartupWaits_LeavesCallingThreadAvailable()
+    {
+        using var entered = new ManualResetEventSlim();
+        using var release = new ManualResetEventSlim();
+        using var returned = new ManualResetEventSlim();
+        var workflow = new FakeVideoCaptureWorkflow
+        {
+            OnStart = () => { entered.Set(); release.Wait(TimeSpan.FromSeconds(10)); }
+        };
+        var useCase = new StartVideoCaptureUseCase(Mock.Of<INavigationService>(), workflow, TestUseCaseExecutor.Instance);
+        Task<UseCaseResponse<StartVideoCaptureResponse>>? pending = null;
+        var caller = new Thread(() =>
+        {
+            pending = useCase.ExecuteAsync(new StartVideoCaptureRequest(default));
+            returned.Set();
+        }) { IsBackground = true };
+        caller.Start();
+        try
+        {
+            Assert.IsTrue(entered.Wait(TimeSpan.FromSeconds(5)), "Startup should begin.");
+            Assert.IsTrue(returned.Wait(TimeSpan.FromSeconds(2)), "The UI caller must return while native startup is pending.");
+            Assert.IsNotNull(pending);
+            Assert.IsFalse(pending.IsCompleted);
+        }
+        finally
+        {
+            release.Set();
+            caller.Join(TimeSpan.FromSeconds(5));
+        }
+        Assert.IsNotNull(pending);
+        Assert.AreEqual(UseCaseResult.Succeeded, (await pending.WaitAsync(TimeSpan.FromSeconds(5))).Result);
+    }
+
+    [TestMethod]
     public async Task ExecuteAsync_ShouldStartRecording_WithoutNavigating()
     {
         var navigationService = new Mock<INavigationService>();
