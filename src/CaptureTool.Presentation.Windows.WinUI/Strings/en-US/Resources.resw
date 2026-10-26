@@ -2274,4 +2274,7 @@ SOFTWARE.
     <value>This summary uses excerpts of the available analysis and may omit details.</value>
   </data>
   <data name="CaptureAction_DownloadRequired" xml:space="preserve"><value>Connect to the internet to download this feature’s model, then try again. You can still capture, edit, and save offline.</value></data>
+  <data name="CaptureOverlay_MicrophoneAccessDeniedMessage" xml:space="preserve">
+    <value>Microphone access is off. Allow microphone access in Windows Settings, or mute the microphone to record without it.</value>
+  </data>
 </root>

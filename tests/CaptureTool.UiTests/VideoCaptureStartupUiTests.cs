@@ -127,6 +127,35 @@ public sealed class VideoCaptureStartupUiTests
 
             startRecordingButton.Click();
 
+            // A machine with microphone access disabled must offer a recoverable
+            // error, not hang in native audio initialization. Exercise the real
+            // muted retry without changing the machine's privacy settings.
+            var firstOutcome = WaitFor(() =>
+            {
+                EnsureAppIsRunning(app);
+                var error = FindElement(app, automation, "RecordingErrorInfoBar");
+                if (IsElementVisible(error)) return error;
+                var stop = FindElement(app, automation, "StopVideoCaptureButton");
+                return IsElementVisible(stop) ? stop : null;
+            }, RecordingStartTimeout, "recording or a recoverable microphone-access error");
+            if (firstOutcome.AutomationId == "RecordingErrorInfoBar")
+            {
+                StringAssert.Contains(GetElementText(firstOutcome), "Microphone access is off.");
+                var dismiss = firstOutcome.FindFirstDescendant(cf => cf.ByControlType(FlaUI.Core.Definitions.ControlType.Button))
+                    ?? throw new InvalidOperationException("The recording error should have a dismiss button.");
+                dismiss.AsButton().Invoke();
+                startRecordingButton = WaitForElement(app, automation, "StartVideoCaptureButton", InteractionTimeout);
+                Assert.IsTrue(startRecordingButton.IsEnabled, "The recording control should be available for retry.");
+                var microphone = WaitForElement(app, automation, "AudioInputSplitButton", InteractionTimeout);
+                Assert.AreEqual("Mute microphone", microphone.Name);
+                var bounds = microphone.BoundingRectangle;
+                Mouse.Click(new Point(bounds.Left + 10, bounds.Top + bounds.Height / 2));
+                WaitFor(() => microphone.Name == "Unmute microphone" ? microphone : null,
+                    InteractionTimeout, "muted microphone");
+                TestContext.WriteLine("Microphone access denied: recovered by muting and retrying.");
+                startRecordingButton.Click();
+            }
+
             AutomationElement stopRecordingButton = WaitForRecordingState(
                 app,
                 automation,

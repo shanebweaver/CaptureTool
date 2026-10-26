@@ -1,6 +1,9 @@
 using CaptureTool.Application.Abstractions.Audio;
+using CaptureTool.Application.Abstractions.Capture;
 using CaptureTool.Application.Abstractions.Capture.Overlay.GetAudioInputSources;
 using CaptureTool.Application.Abstractions.Capture.Video.SelectAudioInputSource;
+using CaptureTool.Application.Abstractions.Capture.Video.SetVideoCaptureAudioInputMuted;
+using CaptureTool.Application.Capture.Video.SetVideoCaptureAudioInputMuted;
 using CaptureTool.Application.Capture.Overlay.GetAudioInputSources;
 using CaptureTool.Application.Capture.Video.SelectAudioInputSource;
 using FluentAssertions;
@@ -11,6 +14,27 @@ namespace CaptureTool.Application.Tests.Capture.Video;
 [TestClass]
 public sealed class AudioInputSourceUseCaseTests
 {
+    [TestMethod]
+    public async Task DeniedMicrophone_ShouldReturnRecoveryReasonForAudioChanges()
+    {
+        var workflow = new FakeVideoCaptureWorkflow { AudioChangeException = new MicrophoneAccessDeniedException() };
+        var detection = new Mock<IAudioInputDetectionService>();
+        detection.Setup(value => value.GetAudioInputSourcesAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync([new AudioInputSource("microphone", "Microphone", true)]);
+        var mute = new SetVideoCaptureAudioInputMutedUseCase(workflow, TestUseCaseExecutor.Instance);
+        var select = new SelectAudioInputSourceUseCase(detection.Object, workflow, TestUseCaseExecutor.Instance);
+
+        var unmuteResponse = await mute.ExecuteAsync(new SetVideoCaptureAudioInputMutedRequest(false), TestContext.CancellationToken);
+        var selectResponse = await select.ExecuteAsync(new SelectAudioInputSourceRequest("microphone"), TestContext.CancellationToken);
+
+        Assert.IsNotNull(unmuteResponse.Value);
+        Assert.IsFalse(unmuteResponse.Value.Succeeded);
+        Assert.IsTrue(unmuteResponse.Value.MicrophoneAccessDenied);
+        Assert.IsNotNull(selectResponse.Value);
+        Assert.IsTrue(selectResponse.Value.MicrophoneAccessDenied);
+        Assert.IsFalse(selectResponse.Value.WasRemoved);
+    }
+
     [TestMethod]
     public async Task GetAudioInputSources_ShouldReturnSourcesFromDetectionService()
     {

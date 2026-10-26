@@ -2006,4 +2006,7 @@ SOFTWARE.
     <value>Эта сводка основана на выдержках из доступного анализа и может не включать некоторые детали.</value>
   </data>
   <data name="CaptureAction_DownloadRequired" xml:space="preserve"><value>Подключитесь к Интернету, чтобы скачать модель для этой функции, и повторите попытку. Создавать, редактировать и сохранять снимки можно и без подключения.</value></data>
+  <data name="CaptureOverlay_MicrophoneAccessDeniedMessage" xml:space="preserve">
+    <value>Доступ к микрофону отключён. Разрешите доступ в параметрах Windows или отключите микрофон, чтобы записывать без него.</value>
+  </data>
 </root>

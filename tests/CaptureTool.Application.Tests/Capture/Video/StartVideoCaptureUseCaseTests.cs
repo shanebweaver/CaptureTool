@@ -13,6 +13,21 @@ namespace CaptureTool.Application.Tests.Capture.Video;
 public class StartVideoCaptureUseCaseTests
 {
     [TestMethod]
+    public async Task ExecuteAsync_WhenMicrophoneIsDenied_ReturnsRecoveryReason()
+    {
+        var workflow = new FakeVideoCaptureWorkflow { StartException = new MicrophoneAccessDeniedException() };
+        var useCase = new StartVideoCaptureUseCase(Mock.Of<INavigationService>(), workflow, TestUseCaseExecutor.Instance);
+
+        var response = await useCase.ExecuteAsync(new StartVideoCaptureRequest(default), TestContext.CancellationToken);
+
+        Assert.AreEqual(UseCaseResult.Succeeded, response.Result);
+        Assert.IsNotNull(response.Value);
+        Assert.IsFalse(response.Value.Succeeded);
+        Assert.AreEqual(StartVideoCaptureFailureReason.MicrophoneAccessDenied, response.Value.FailureReason);
+        Assert.IsFalse(workflow.IsRecording);
+    }
+
+    [TestMethod]
     public async Task ExecuteAsync_WhenNativeStartupWaits_LeavesCallingThreadAvailable()
     {
         using var entered = new ManualResetEventSlim();

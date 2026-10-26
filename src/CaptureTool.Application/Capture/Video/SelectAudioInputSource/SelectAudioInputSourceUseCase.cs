@@ -1,4 +1,5 @@
 using CaptureTool.Application.Abstractions.Audio;
+using CaptureTool.Application.Abstractions.Capture;
 using CaptureTool.Application.Abstractions.Capture.Video.SelectAudioInputSource;
 using CaptureTool.Application.Abstractions.UseCases;
 using CaptureTool.Application.UseCases;
@@ -38,7 +39,14 @@ internal sealed class SelectAudioInputSourceUseCase : ISelectAudioInputSourceUse
                 bool isAvailable = sources.Any(source => string.Equals(source.Id, request.SourceId, StringComparison.OrdinalIgnoreCase));
                 if (isAvailable)
                 {
-                    _videoCaptureWorkflow.SelectAudioInputSource(request.SourceId);
+                    try
+                    {
+                        _videoCaptureWorkflow.SelectAudioInputSource(request.SourceId);
+                    }
+                    catch (MicrophoneAccessDeniedException)
+                    {
+                        return new SelectAudioInputSourceResponse(true, false, MicrophoneAccessDenied: true);
+                    }
                 }
 
                 return new SelectAudioInputSourceResponse(isAvailable, !isAvailable);
