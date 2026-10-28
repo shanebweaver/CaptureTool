@@ -36,6 +36,8 @@ internal sealed class FakeVideoCaptureWorkflow : IVideoCaptureWorkflow
     public bool? LastPausedState { get; private set; }
     public bool ThrowOnCancel { get; set; }
     public Exception? StartException { get; set; }
+    public Exception? AudioChangeException { get; set; }
+    public Action? OnStart { get; set; }
     public PendingVideoFile PendingVideo { get; set; } = new("capture.mp4");
 
     public void PrepareForVideoCapture()
@@ -45,6 +47,7 @@ internal sealed class FakeVideoCaptureWorkflow : IVideoCaptureWorkflow
 
     public void StartVideoCapture(NewCaptureArgs args)
     {
+        OnStart?.Invoke();
         StartedCaptureArgs = args;
         if (StartException is not null)
         {
@@ -90,6 +93,7 @@ internal sealed class FakeVideoCaptureWorkflow : IVideoCaptureWorkflow
 
     public void SetIsAudioInputMuted(bool value)
     {
+        if (AudioChangeException is not null) throw AudioChangeException;
         IsAudioInputMuted = value;
         LastAudioInputMuted = value;
         AudioInputMutedStateChanged?.Invoke(this, value);
@@ -97,6 +101,7 @@ internal sealed class FakeVideoCaptureWorkflow : IVideoCaptureWorkflow
 
     public void SelectAudioInputSource(string? sourceId)
     {
+        if (AudioChangeException is not null) throw AudioChangeException;
         SelectedAudioInputSourceId = sourceId;
         LastSelectedAudioInputSourceId = sourceId;
         SelectAudioInputSourceWasCalled = true;

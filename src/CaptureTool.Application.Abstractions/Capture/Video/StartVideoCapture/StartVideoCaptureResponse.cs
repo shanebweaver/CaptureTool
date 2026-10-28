@@ -7,5 +7,6 @@ public sealed record StartVideoCaptureResponse(
 public enum StartVideoCaptureFailureReason
 {
     None = 0,
-    NotSupported = 1
+    NotSupported = 1,
+    MicrophoneAccessDenied = 2
 }

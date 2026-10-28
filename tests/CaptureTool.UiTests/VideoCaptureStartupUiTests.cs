@@ -40,8 +40,9 @@ public sealed class VideoCaptureStartupUiTests
         Assert.IsTrue(File.Exists(appExecutablePath), $"The WinUI app should be built at {appExecutablePath}.");
 
         string artifactDirectory = Path.Combine(
-            TestContext.TestRunResultsDirectory ?? TestContext.TestRunDirectory ?? Path.GetTempPath(),
-            "CaptureTool.UiTests",
+            // MSTest's deployment hierarchy plus the generated recording name
+            // can exceed Media Foundation's path limit. Keep this fixture short.
+            repoRoot, "artifacts", "ui-recording",
             Guid.NewGuid().ToString("N"));
         string appDataDirectory = Path.Combine(artifactDirectory, "app-data");
         string appTempDirectory = Path.Combine(artifactDirectory, "app-temp");
@@ -127,6 +128,35 @@ public sealed class VideoCaptureStartupUiTests
 
             startRecordingButton.Click();
 
+            // A machine with microphone access disabled must offer a recoverable
+            // error, not hang in native audio initialization. Exercise the real
+            // muted retry without changing the machine's privacy settings.
+            var firstOutcome = WaitFor(() =>
+            {
+                EnsureAppIsRunning(app);
+                var error = FindElement(app, automation, "RecordingErrorInfoBar");
+                if (IsElementVisible(error)) return error;
+                var stop = FindElement(app, automation, "StopVideoCaptureButton");
+                return IsElementVisible(stop) ? stop : null;
+            }, RecordingStartTimeout, "recording or a recoverable microphone-access error");
+            if (firstOutcome.AutomationId == "RecordingErrorInfoBar")
+            {
+                StringAssert.Contains(GetElementText(firstOutcome), "Microphone access is off.");
+                var dismiss = firstOutcome.FindFirstDescendant(cf => cf.ByControlType(FlaUI.Core.Definitions.ControlType.Button))
+                    ?? throw new InvalidOperationException("The recording error should have a dismiss button.");
+                dismiss.AsButton().Invoke();
+                startRecordingButton = WaitForElement(app, automation, "StartVideoCaptureButton", InteractionTimeout);
+                Assert.IsTrue(startRecordingButton.IsEnabled, "The recording control should be available for retry.");
+                var microphone = WaitForElement(app, automation, "AudioInputSplitButton", InteractionTimeout);
+                Assert.AreEqual("Mute microphone", microphone.Name);
+                var bounds = microphone.BoundingRectangle;
+                Mouse.Click(new Point(bounds.Left + 10, bounds.Top + bounds.Height / 2));
+                WaitFor(() => microphone.Name == "Unmute microphone" ? microphone : null,
+                    InteractionTimeout, "muted microphone");
+                TestContext.WriteLine("Microphone access denied: recovered by muting and retrying.");
+                startRecordingButton.Click();
+            }
+
             AutomationElement stopRecordingButton = WaitForRecordingState(
                 app,
                 automation,
@@ -139,6 +169,12 @@ public sealed class VideoCaptureStartupUiTests
             // Keep the recorder active long enough to exercise more than the first frame,
             // then stop through the same UI path a user would use.
             Thread.Sleep(500);
+            AutomationElement pauseResumeButton = WaitForElement(
+                app, automation, "PauseResumeVideoCaptureButton", InteractionTimeout);
+            pauseResumeButton.Click();
+            Thread.Sleep(250);
+            pauseResumeButton.Click();
+            Thread.Sleep(500);
             stopRecordingButton.Click();
 
             WaitForElementHiddenOrRemoved(
@@ -147,8 +183,13 @@ public sealed class VideoCaptureStartupUiTests
                 "StopVideoCaptureButton",
                 InteractionTimeout);
 
-            FileInfo recordedFile = WaitForFinalizedRecording(appTempDirectory, InteractionTimeout);
+            FileInfo recordedFile = WaitForFinalizedRecording(
+                Path.Combine(appDataDirectory, "Captures"), InteractionTimeout);
             Assert.IsGreaterThan(0L, recordedFile.Length, "The recorded video should not be empty.");
+            var file = Windows.Storage.StorageFile.GetFileFromPathAsync(recordedFile.FullName).AsTask().GetAwaiter().GetResult();
+            var video = file.Properties.GetVideoPropertiesAsync().AsTask().GetAwaiter().GetResult();
+            Assert.IsGreaterThan(TimeSpan.Zero, video.Duration, "Windows should be able to read the finalized recording duration.");
+            Assert.IsGreaterThan(0U, video.Width, "The recording should contain a decodable video track.");
             TestContext.WriteLine($"Recorded output: {recordedFile.FullName} ({recordedFile.Length} bytes)");
 
             Assert.IsTrue(app.IsProcessRunning(), "CaptureTool should remain running after recording is stopped.");
@@ -217,8 +258,7 @@ public sealed class VideoCaptureStartupUiTests
             startInfo.ArgumentList.Add(argument);
         }
 
-        Process process = Process.Start(startInfo) ??
-            throw new InvalidOperationException("Failed to launch CaptureTool.");
+        Process process = UiTestAppLauncher.Launch(startInfo);
         return new LaunchedCaptureToolApp(
             process,
             Path.Combine(appTempDirectory, "capturetool.log"));
@@ -305,6 +345,7 @@ public sealed class VideoCaptureStartupUiTests
 
         Assert.Fail(
             $"Timed out waiting for video capture to reach the recording state.{Environment.NewLine}" +
+            app.GetLogContents() + Environment.NewLine +
             DescribeAutomationTree(app, automation));
         throw new UnreachableException();
     }
@@ -642,6 +683,9 @@ public sealed class VideoCaptureStartupUiTests
 
     private static string ResolveAppExecutablePath(string repoRoot)
     {
+        if (Environment.GetEnvironmentVariable("CAPTURETOOL_UI_TEST_APP_PATH") is { Length: > 0 } publishedApp)
+            return Path.GetFullPath(publishedApp);
+
         string configuration = Environment.GetEnvironmentVariable("CONFIGURATION") ?? "Debug";
         string platform = Environment.GetEnvironmentVariable("PLATFORM") ?? "x64";
         string runtimeIdentifier = RuntimeInformation.ProcessArchitecture == Architecture.Arm64 ||

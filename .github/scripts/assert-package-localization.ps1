@@ -13,7 +13,8 @@ if (!$MakePriPath) {
 if (!$MakePriPath) { throw 'Windows SDK makepri.exe is required.' }
 $resources = @(Get-ChildItem "$repo/src/CaptureTool.Presentation.Windows.WinUI/Strings" -Filter Resources.resw -Recurse)
 if (!$resources.Count) { throw 'No supported language resources found.' }
-$keys = @('CaptureMemory_SettingsHeader.Text', 'CaptureMemory_Scanning.OnContent', 'CaptureMemory_Scanning.OffContent')
+$keys = @('CaptureMemory_SettingsHeader.Text', 'CaptureMemory_Scanning.OnContent', 'CaptureMemory_Scanning.OffContent',
+    'CaptureAction_DownloadRequired', 'CaptureOverlay_MicrophoneAccessDeniedMessage')
 $root = Join-Path ([IO.Path]::GetTempPath()) ('CaptureToolPackageLanguages-' + [Guid]::NewGuid().ToString('N'))
 New-Item -ItemType Directory -Path $root | Out-Null
 $bundle = $null

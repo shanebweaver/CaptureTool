@@ -2,6 +2,7 @@ using CaptureKit.Abstractions;
 using CaptureTool.Application.Abstractions.Capture;
 using FluentAssertions;
 using Moq;
+using Windows.Devices.Enumeration;
 using AppVideoCaptureNotSupportedException = CaptureTool.Application.Abstractions.Capture.VideoCaptureNotSupportedException;
 using AppVideoCaptureSupportService = CaptureTool.Application.Abstractions.Capture.IVideoCaptureSupportService;
 
@@ -10,6 +11,48 @@ namespace CaptureTool.Infrastructure.Capture.Windows.Tests;
 [TestClass]
 public sealed class WindowsScreenRecorderTests
 {
+    [TestMethod]
+    [DataRow(DeviceAccessStatus.DeniedByUser)]
+    [DataRow(DeviceAccessStatus.DeniedBySystem)]
+    public void DeniedMicrophone_ShouldNeverEnterNativeCapture_AndAllowMutedRetry(DeviceAccessStatus access)
+    {
+        var session = new Mock<IVideoCaptureSession>();
+        var captureService = new Mock<IVideoCaptureService>();
+        captureService.Setup(service => service.CreateSession(It.IsAny<VideoCaptureOptions>())).Returns(session.Object);
+        var recorder = new WindowsScreenRecorder(captureService.Object, CreateSupportedService().Object, _ => { }, () => access);
+
+        Action start = () => recorder.StartRecording(CreateOptions() with { AudioInputSourceId = "microphone" });
+        start.Should().Throw<MicrophoneAccessDeniedException>();
+        captureService.Verify(service => service.CreateSession(It.IsAny<VideoCaptureOptions>()), Times.Never);
+
+        recorder.StartRecording(CreateOptions());
+        session.Verify(value => value.Start(), Times.Once);
+        Action unmute = () => recorder.SetAudioInputSource("microphone");
+        unmute.Should().Throw<MicrophoneAccessDeniedException>();
+        session.Verify(value => value.SetAudioInputSource(It.IsAny<string?>()), Times.Never);
+        recorder.StopRecording();
+        session.Verify(value => value.Stop(), Times.Once);
+    }
+
+    [TestMethod]
+    public void AllowedMicrophone_ShouldReachNativeCapture_AndRespectRevokedAccess()
+    {
+        DeviceAccessStatus access = DeviceAccessStatus.Allowed;
+        var session = new Mock<IVideoCaptureSession>();
+        var captureService = new Mock<IVideoCaptureService>();
+        captureService.Setup(service => service.CreateSession(It.IsAny<VideoCaptureOptions>())).Returns(session.Object);
+        var recorder = new WindowsScreenRecorder(captureService.Object, CreateSupportedService().Object, _ => { }, () => access);
+
+        recorder.StartRecording(CreateOptions() with { AudioInputSourceId = "microphone" });
+        captureService.Verify(service => service.CreateSession(It.Is<VideoCaptureOptions>(options => options.AudioInputSourceId == "microphone")), Times.Once);
+        access = DeviceAccessStatus.DeniedByUser;
+        recorder.SetAudioInputSource(null);
+        Action unmute = () => recorder.SetAudioInputSource("microphone");
+        unmute.Should().Throw<MicrophoneAccessDeniedException>();
+        session.Verify(value => value.SetAudioInputSource(null), Times.Once);
+        recorder.StopRecording();
+    }
+
     [TestMethod]
     public void StartRecording_ShouldRejectUnsupportedDevice_BeforeCreatingSession()
     {

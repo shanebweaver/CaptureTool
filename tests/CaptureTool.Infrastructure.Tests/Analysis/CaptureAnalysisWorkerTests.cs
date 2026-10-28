@@ -173,6 +173,36 @@ public sealed partial class CaptureAnalysisWorkerTests
     }
 
     [TestMethod]
+    [DataRow(true)]
+    [DataRow(false)]
+    public async Task OfflineMissingModelSkipsRetriesAndPreservesLocalWork(bool fallbackAvailable)
+    {
+        using var fixture = new Fixture(retryCount: 2);
+        fixture.Preferred.Ready = AnalyzerAvailability.PreparationRequired;
+        fixture.Preferred.PrepareException = new ModelDownloadRequiredException();
+        fixture.Fallback.Ready = fallbackAvailable ? AnalyzerAvailability.Ready : AnalyzerAvailability.TemporarilyUnavailable;
+        var request = await fixture.EnqueueAsync(Ct);
+        await DrainAsync(fixture.Worker, Ct);
+
+        Assert.AreEqual(1, fixture.Preferred.AvailabilityChecks, "Offline downloads must not consume retries.");
+        CollectionAssert.AreEqual(fallbackAvailable
+            ? new[] { "prepare:preferred", "fallback", "description" }
+            : new[] { "prepare:preferred", "description" }, fixture.Calls.ToArray());
+        var work = (await fixture.Store.GetWorkAsync(request.CaptureId, Ct))!;
+        Assert.AreEqual(fallbackAvailable ? AnalyzerOutcomeKind.Succeeded : AnalyzerOutcomeKind.TemporarilyUnavailable,
+            work.Run.CompletedSteps[0].Outcome);
+        Assert.AreEqual(fallbackAvailable ? null : "model-download-required", work.Run.CompletedSteps[0].FailureCode);
+        Assert.AreEqual(AnalyzerOutcomeKind.Succeeded, work.Run.CompletedSteps[1].Outcome);
+        Assert.AreEqual(AnalysisActivity.Idle, fixture.Worker.Progress.Activity);
+
+        fixture.Preferred.PrepareException = null;
+        fixture.Calls.Clear();
+        await fixture.EnqueueAsync(Ct);
+        await DrainAsync(fixture.Worker, Ct);
+        CollectionAssert.AreEqual(new[] { "prepare:preferred", "preferred", "description" }, fixture.Calls.ToArray());
+    }
+
+    [TestMethod]
     [DataRow(AnalyzerOutcomeKind.ContentRejected, true)]
     [DataRow(AnalyzerOutcomeKind.InvalidSource, false)]
     [DataRow(AnalyzerOutcomeKind.Cancelled, false)]
@@ -793,6 +823,7 @@ public sealed partial class CaptureAnalysisWorkerTests
         public int AvailabilityChecks { get; private set; }
         public string? UnsupportedLanguage { get; set; }
         public IProgress<AnalysisProgress>? Progress { get; private set; }
+        public Exception? PrepareException { get; set; }
         public Func<AnalysisInput, CancellationToken, Task<AnalyzerOutcome>> Execute { get; set; }
         public FakeAnalyzer(string id, AnalysisCapability capability, ConcurrentQueue<string> calls)
         {
@@ -810,6 +841,7 @@ public sealed partial class CaptureAnalysisWorkerTests
         public Task<AnalyzerAvailability> PrepareAsync(IProgress<AnalysisProgress>? progress, CancellationToken ct)
         {
             _calls.Enqueue("prepare:" + Descriptor.Id);
+            if (PrepareException != null) throw PrepareException;
             Ready = AnalyzerAvailability.Ready;
             progress?.Report(new(AnalysisProgressStage.Preparing, 1));
             return Task.FromResult(Ready);

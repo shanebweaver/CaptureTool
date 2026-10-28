@@ -28,7 +28,8 @@ internal interface IWindowsLanguageModelClient
 /// <summary>The WinRT boundary. No native objects are created by registration or passive probes.</summary>
 internal sealed class WindowsLanguageModelClient(IAnalysisResources otherModels,
     WindowsLanguageModelAccess? access, ILogService? log = null,
-    CaptureTool.Application.Abstractions.Ai.IAiDeviceSupport? device = null) : IWindowsLanguageModelClient
+    CaptureTool.Application.Abstractions.Ai.IAiDeviceSupport? device = null,
+    ModelDownloadGuard? downloads = null) : IWindowsLanguageModelClient
 {
     private bool PlatformSupported => (device ?? WindowsAiDeviceSupport.Current).WindowsAi;
     public AnalyzerAvailability GetAvailability()
@@ -84,9 +85,13 @@ internal sealed class WindowsLanguageModelClient(IAnalysisResources otherModels,
                 return state;
             }
             // Keep the operation owned until WinRT completes; cancellation fences subsequent work.
-            var result = await LanguageModel.EnsureReadyAsync().AsTask(CancellationToken.None).ConfigureAwait(false);
+            AIFeatureReadyResult? result = null;
+            await (downloads ?? ModelDownloadGuard.Current).RunAsync(async _ =>
+            {
+                result = await LanguageModel.EnsureReadyAsync().AsTask(CancellationToken.None).ConfigureAwait(false);
+            }, ct).ConfigureAwait(false);
             ct.ThrowIfCancellationRequested();
-            return result.Status == AIFeatureReadyResultState.Success ? AnalyzerAvailability.Ready : AnalyzerAvailability.TemporarilyUnavailable;
+            return result?.Status == AIFeatureReadyResultState.Success ? AnalyzerAvailability.Ready : AnalyzerAvailability.TemporarilyUnavailable;
         }
         catch (Exception exception) when (IsUnavailable(exception))
         {

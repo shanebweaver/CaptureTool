@@ -1999,4 +1999,8 @@ SOFTWARE.
   <data name="CaptureSummary_PartialCoverage.Text" xml:space="preserve">
     <value>Diese Zusammenfassung verwendet Auszüge der verfügbaren Analyse und kann Details auslassen.</value>
   </data>
+  <data name="CaptureAction_DownloadRequired" xml:space="preserve"><value>Verbinden Sie sich mit dem Internet, um das Modell für diese Funktion herunterzuladen, und versuchen Sie es erneut. Aufnahmen, Bearbeitung und Speichern sind weiterhin offline möglich.</value></data>
+  <data name="CaptureOverlay_MicrophoneAccessDeniedMessage" xml:space="preserve">
+    <value>Der Mikrofonzugriff ist deaktiviert. Erlauben Sie den Mikrofonzugriff in den Windows-Einstellungen oder schalten Sie das Mikrofon stumm, um ohne Mikrofon aufzunehmen.</value>
+  </data>
 </root>

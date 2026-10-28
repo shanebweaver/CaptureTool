@@ -1,5 +1,6 @@
 using CaptureTool.Application.Abstractions.Capture;
 using System.Runtime.InteropServices;
+using Windows.Devices.Enumeration;
 
 namespace CaptureTool.Infrastructure.Capture.Windows;
 
@@ -11,6 +12,7 @@ public partial class WindowsScreenRecorder : IScreenRecorder
     private readonly CaptureKit.Abstractions.IVideoCaptureService _videoCaptureService;
     private readonly IVideoCaptureSupportService _videoCaptureSupportService;
     private readonly Action<CaptureRecordingTarget> _validateTarget;
+    private readonly Func<DeviceAccessStatus> _getMicrophoneAccess;
     private readonly Lock _sessionLock = new();
     private CaptureKit.Abstractions.IVideoCaptureSession? _session;
 
@@ -24,11 +26,14 @@ public partial class WindowsScreenRecorder : IScreenRecorder
     internal WindowsScreenRecorder(
         CaptureKit.Abstractions.IVideoCaptureService videoCaptureService,
         IVideoCaptureSupportService videoCaptureSupportService,
-        Action<CaptureRecordingTarget> validateTarget)
+        Action<CaptureRecordingTarget> validateTarget,
+        Func<DeviceAccessStatus>? getMicrophoneAccess = null)
     {
         _videoCaptureService = videoCaptureService;
         _videoCaptureSupportService = videoCaptureSupportService;
         _validateTarget = validateTarget;
+        _getMicrophoneAccess = getMicrophoneAccess ?? (() =>
+            DeviceAccessInformation.CreateFromDeviceClass(DeviceClass.AudioCapture).CurrentStatus);
     }
 
     public event EventHandler? RecordingStarted;
@@ -45,6 +50,7 @@ public partial class WindowsScreenRecorder : IScreenRecorder
             }
 
             _validateTarget(options.Target);
+            ValidateMicrophoneAccess(options.AudioInputSourceId);
 
             if (_session is not null)
             {
@@ -126,7 +132,22 @@ public partial class WindowsScreenRecorder : IScreenRecorder
         => ExecuteOnSession(session => session.SetSystemAudioVolume(volumePercentage), "update local audio volume");
 
     public void SetAudioInputSource(string? sourceId)
-        => ExecuteOnSession(session => session.SetAudioInputSource(sourceId), "update audio input source");
+    {
+        ValidateMicrophoneAccess(sourceId);
+        ExecuteOnSession(session => session.SetAudioInputSource(sourceId), "update audio input source");
+    }
+
+    private void ValidateMicrophoneAccess(string? sourceId)
+    {
+        // Muted/screen-only recording does not require microphone access. Check
+        // before native initialization: denied WASAPI capture can wait inside
+        // the audio service instead of returning E_ACCESSDENIED on some builds.
+        if (!string.IsNullOrWhiteSpace(sourceId) &&
+            _getMicrophoneAccess() is DeviceAccessStatus.DeniedByUser or DeviceAccessStatus.DeniedBySystem)
+        {
+            throw new MicrophoneAccessDeniedException();
+        }
+    }
 
     public void SetAudioInputVolume(int volumePercentage)
         => ExecuteOnSession(session => session.SetAudioInputVolume(volumePercentage), "update audio input volume");

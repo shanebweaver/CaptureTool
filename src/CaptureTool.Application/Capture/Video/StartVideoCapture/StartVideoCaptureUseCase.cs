@@ -33,7 +33,9 @@ internal sealed class StartVideoCaptureUseCase : IStartVideoCaptureUseCase
     {
         return _useCaseExecutor.ExecuteAsync(
             activityId: ActivityId,
-            useCase: () =>
+            // Native capture initialization can wait on Windows device services.
+            // Keep the UI apartment available while that work runs.
+            useCase: token => Task.Run(() =>
             {
                 try
                 {
@@ -48,7 +50,13 @@ internal sealed class StartVideoCaptureUseCase : IStartVideoCaptureUseCase
                         Succeeded: false,
                         FailureReason: StartVideoCaptureFailureReason.NotSupported);
                 }
-            },
+                catch (MicrophoneAccessDeniedException)
+                {
+                    return new StartVideoCaptureResponse(
+                        Succeeded: false,
+                        FailureReason: StartVideoCaptureFailureReason.MicrophoneAccessDenied);
+                }
+            }, token),
             cancellationToken: cancellationToken);
     }
 }

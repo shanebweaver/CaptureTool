@@ -17,7 +17,8 @@ internal enum WindowsImageModel { Ocr, LegacyOcr, Description }
 
 internal sealed class WindowsImageAnalyzer(string id, WindowsImageModel model, AnalysisMediaKind mediaKind,
     WindowsAnalysisMedia media, IAnalysisResources otherModels,
-    CaptureTool.Application.Abstractions.Ai.IAiDeviceSupport? device = null) : IMediaAnalyzer
+    CaptureTool.Application.Abstractions.Ai.IAiDeviceSupport? device = null,
+    ModelDownloadGuard? downloads = null) : IMediaAnalyzer
 {
     private bool PlatformSupported => model == WindowsImageModel.LegacyOcr
         ? OperatingSystem.IsWindowsVersionAtLeast(10, 0, 17763)
@@ -63,11 +64,22 @@ internal sealed class WindowsImageAnalyzer(string id, WindowsImageModel model, A
             return CreateLegacy(null) == null ? AnalyzerAvailability.LanguageResourcesRequired : AnalyzerAvailability.Ready;
         }
 
-        AIFeatureReadyResult ready = model == WindowsImageModel.Ocr
-            ? await TextRecognizer.EnsureReadyAsync().AsTask(cancellationToken).ConfigureAwait(false)
-            : await ImageDescriptionGenerator.EnsureReadyAsync().AsTask(cancellationToken).ConfigureAwait(false);
+        AnalyzerAvailability availability = MapReady(model == WindowsImageModel.Ocr
+            ? TextRecognizer.GetReadyState() : ImageDescriptionGenerator.GetReadyState());
+        if (availability != AnalyzerAvailability.PreparationRequired)
+        {
+            return availability;
+        }
+
+        AIFeatureReadyResult? ready = null;
+        await (downloads ?? ModelDownloadGuard.Current).RunAsync(async token =>
+        {
+            ready = model == WindowsImageModel.Ocr
+                ? await TextRecognizer.EnsureReadyAsync().AsTask(token).ConfigureAwait(false)
+                : await ImageDescriptionGenerator.EnsureReadyAsync().AsTask(token).ConfigureAwait(false);
+        }, cancellationToken).ConfigureAwait(false);
         progress?.Report(new(AnalysisProgressStage.Preparing, 1));
-        return ready.Status == AIFeatureReadyResultState.Success ? AnalyzerAvailability.Ready : AnalyzerAvailability.TemporarilyUnavailable;
+        return ready?.Status == AIFeatureReadyResultState.Success ? AnalyzerAvailability.Ready : AnalyzerAvailability.TemporarilyUnavailable;
     }
 
     public async Task<AnalyzerOutcome> AnalyzeAsync(AnalysisInput input, IProgress<AnalysisProgress>? progress, CancellationToken cancellationToken)

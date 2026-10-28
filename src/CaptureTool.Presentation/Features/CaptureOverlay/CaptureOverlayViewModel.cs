@@ -32,6 +32,8 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
     private const string StartRecordingFailedMessageFallback = "Recording couldn't start. Try again.";
     private const string RecordingUnsupportedMessageResourceKey = "CaptureOverlay_RecordingUnsupportedMessage";
     private const string RecordingUnsupportedMessageFallback = "Screen recording isn't supported on this device.";
+    private const string MicrophoneAccessDeniedMessageResourceKey = "CaptureOverlay_MicrophoneAccessDeniedMessage";
+    private const string MicrophoneAccessDeniedMessageFallback = "Microphone access is off. Allow microphone access in Windows Settings, or mute the microphone to record without it.";
 
     private readonly IStartVideoCaptureUseCase _startVideoCaptureCommand;
     private readonly ICancelVideoCaptureUseCase _cancelVideoCaptureCommand;
@@ -401,6 +403,10 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
             {
                 ShowRecordingError(RecordingUnsupportedMessageResourceKey, RecordingUnsupportedMessageFallback);
             }
+            else if (response.Value?.FailureReason == StartVideoCaptureFailureReason.MicrophoneAccessDenied)
+            {
+                ShowRecordingError(MicrophoneAccessDeniedMessageResourceKey, MicrophoneAccessDeniedMessageFallback);
+            }
             ClearRecordingStartWait(recordingStartCancellationTokenSource);
             return;
         }
@@ -619,16 +625,25 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
 
     private async Task ToggleAudioInputMuteAsync()
     {
-        await _setVideoCaptureAudioInputMutedCommand.ExecuteAsync(
+        var response = await _setVideoCaptureAudioInputMutedCommand.ExecuteAsync(
             new SetVideoCaptureAudioInputMutedRequest(!IsAudioInputMuted),
             CancellationToken.None);
+        if (response.Value?.MicrophoneAccessDenied == true)
+        {
+            ShowRecordingError(MicrophoneAccessDeniedMessageResourceKey, MicrophoneAccessDeniedMessageFallback);
+        }
     }
 
     private async Task<SelectAudioInputSourceResponse?> RequestAudioInputSourceSelectionAsync(string? sourceId)
     {
-        return (await _selectAudioInputSourceCommand.ExecuteAsync(
+        var response = (await _selectAudioInputSourceCommand.ExecuteAsync(
             new SelectAudioInputSourceRequest(sourceId),
             CancellationToken.None)).Value;
+        if (response?.MicrophoneAccessDenied == true)
+        {
+            ShowRecordingError(MicrophoneAccessDeniedMessageResourceKey, MicrophoneAccessDeniedMessageFallback);
+        }
+        return response;
     }
 
     private async Task SelectAudioInputSourceAsync(AudioInputSource? source)

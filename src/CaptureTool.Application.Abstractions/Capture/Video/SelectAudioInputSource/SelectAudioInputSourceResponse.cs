@@ -1,3 +1,3 @@
 namespace CaptureTool.Application.Abstractions.Capture.Video.SelectAudioInputSource;
 
-public sealed record SelectAudioInputSourceResponse(bool IsAvailable, bool WasRemoved);
+public sealed record SelectAudioInputSourceResponse(bool IsAvailable, bool WasRemoved, bool MicrophoneAccessDenied = false);

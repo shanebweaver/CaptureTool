@@ -27,6 +27,58 @@ namespace CaptureTool.Presentation.Tests.Features;
 public sealed class CaptureOverlayViewModelAudioInputTests
 {
     [TestMethod]
+    public async Task DeniedMicrophone_ShouldExplainRecovery_AndAllowMutedRetry()
+    {
+        TestContext context = CreateViewModel([]);
+        context.ViewModel.Load(CreateOptions());
+        context.StartVideoCapture
+            .Setup(useCase => useCase.ExecuteAsync(It.IsAny<StartVideoCaptureRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(UseCaseResponse<StartVideoCaptureResponse>.Success(
+                new StartVideoCaptureResponse(false, StartVideoCaptureFailureReason.MicrophoneAccessDenied)));
+
+        await context.ViewModel.StartVideoCaptureCommand.ExecuteAsync(null);
+
+        Assert.IsFalse(context.ViewModel.IsStarting);
+        Assert.IsFalse(context.ViewModel.IsRecording);
+        StringAssert.Contains(context.ViewModel.RecordingErrorMessage, "Microphone access is off.");
+        StringAssert.Contains(context.ViewModel.RecordingErrorMessage, "mute the microphone");
+        await context.ViewModel.ToggleAudioInputMuteCommand.ExecuteAsync(null);
+        Assert.IsTrue(context.ViewModel.IsAudioInputMuted);
+
+        context.StartVideoCapture
+            .Setup(useCase => useCase.ExecuteAsync(It.IsAny<StartVideoCaptureRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(UseCaseResponse<StartVideoCaptureResponse>.Success(new StartVideoCaptureResponse()));
+        Task retry = context.ViewModel.StartVideoCaptureCommand.ExecuteAsync(null);
+        context.VideoCaptureState.Raise(state => state.RecordingStarted += null!, EventArgs.Empty);
+        await retry;
+        Assert.IsTrue(context.ViewModel.IsRecording);
+        Assert.IsFalse(context.ViewModel.HasRecordingError);
+        context.ViewModel.Dispose();
+    }
+
+    [TestMethod]
+    public async Task DeniedMicrophoneWhileRecording_ShouldKeepRecordingAndExplainFailure()
+    {
+        TestContext context = CreateViewModel([]);
+        context.ViewModel.Load(CreateOptions());
+        await context.ViewModel.ToggleAudioInputMuteCommand.ExecuteAsync(null);
+        Task start = context.ViewModel.StartVideoCaptureCommand.ExecuteAsync(null);
+        context.VideoCaptureState.Raise(state => state.RecordingStarted += null!, EventArgs.Empty);
+        await start;
+        context.SetAudioInputMuted
+            .Setup(useCase => useCase.ExecuteAsync(It.IsAny<SetVideoCaptureAudioInputMutedRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(UseCaseResponse<SetVideoCaptureAudioInputMutedResponse>.Success(
+                new SetVideoCaptureAudioInputMutedResponse(false, true)));
+
+        await context.ViewModel.ToggleAudioInputMuteCommand.ExecuteAsync(null);
+
+        Assert.IsTrue(context.ViewModel.IsAudioInputMuted);
+        Assert.IsTrue(context.ViewModel.IsRecording);
+        StringAssert.Contains(context.ViewModel.RecordingErrorMessage, "Microphone access is off.");
+        context.ViewModel.Dispose();
+    }
+
+    [TestMethod]
     public async Task StartVideoCaptureCommand_ShouldWaitForRecordingStartedBeforeAdvancingTimer()
     {
         TestContext context = CreateViewModel([]);
@@ -560,6 +612,7 @@ public sealed class CaptureOverlayViewModelAudioInputTests
             .Returns((string resourceKey) => resourceKey switch
             {
                 "CaptureOverlay_RecordingUnsupportedMessage" => "Screen recording isn't supported on this device.",
+                "CaptureOverlay_MicrophoneAccessDeniedMessage" => "Microphone access is off. Allow microphone access in Windows Settings, or mute the microphone to record without it.",
                 _ => "Recording couldn't start. Try again."
             });
 

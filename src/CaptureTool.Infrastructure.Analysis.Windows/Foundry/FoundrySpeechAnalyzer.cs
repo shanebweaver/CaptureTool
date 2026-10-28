@@ -37,13 +37,7 @@ internal sealed class FoundrySpeechAnalyzer(string id, string alias, bool stream
             return AnalyzerAvailability.Unsupported;
         }
 
-        if (!await _model.IsCachedAsync(cancellationToken).ConfigureAwait(false))
-        {
-            await _model.DownloadAsync(value => progress?.Report(new(AnalysisProgressStage.Preparing,
-                double.IsFinite(value) ? Math.Clamp(value / 100d, 0, 1) : null)), cancellationToken).ConfigureAwait(false);
-        }
-
-        progress?.Report(new(AnalysisProgressStage.Preparing, 1));
+        await runtime.EnsureCachedAsync(_model, progress, cancellationToken).ConfigureAwait(false);
         return AnalyzerAvailability.Ready;
     }
 

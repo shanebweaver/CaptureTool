@@ -21,6 +21,14 @@ try {
         throw 'The package is missing the Windows AI MaxVersionTested declaration.'
     }
     if ($manifest.Package.Identity.ProcessorArchitecture -ne $Architecture) { throw 'Manifest architecture mismatch.' }
+    if (@($manifest.Package.Capabilities.DeviceCapability | Where-Object Name -eq 'microphone').Count -ne 1) {
+        throw 'The package is missing the microphone capability used by recording.'
+    }
+    $desktopCrt = @($manifest.Package.Dependencies.PackageDependency | Where-Object Name -eq 'Microsoft.VCLibs.140.00.UWPDesktop')
+    if ($desktopCrt.Count -ne 1 -or [version] $desktopCrt[0].MinVersion -lt [version] '14.0.33728.0' -or
+        $desktopCrt[0].Publisher -ne 'CN=Microsoft Corporation, O=Microsoft Corporation, L=Redmond, S=Washington, C=US') {
+        throw 'The package must declare the retail desktop Visual C++ runtime required by CaptureKit recording.'
+    }
     $ai = $manifest.Package.Capabilities.ChildNodes | Where-Object {
         $_.Name -eq 'systemAIModels' -and $_.NamespaceURI -eq 'http://schemas.microsoft.com/appx/manifest/systemai/windows10'
     }

@@ -30,6 +30,7 @@
             </Button>
 
             <Button
+                x:Name="PauseResumeVideoCaptureButton"
                 x:Uid="CaptureOverlay_PauseResumeButton"
                 Command="{x:Bind TogglePauseResumeCommand, Mode=OneWay}"
                 Style="{StaticResource IconButtonStyle}"

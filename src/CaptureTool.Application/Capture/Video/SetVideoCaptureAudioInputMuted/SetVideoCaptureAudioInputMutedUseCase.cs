@@ -1,3 +1,4 @@
+using CaptureTool.Application.Abstractions.Capture;
 using CaptureTool.Application.Abstractions.Capture.Video.SetVideoCaptureAudioInputMuted;
 using CaptureTool.Application.Abstractions.UseCases;
 using CaptureTool.Application.UseCases;
@@ -25,8 +26,15 @@ internal sealed class SetVideoCaptureAudioInputMutedUseCase : ISetVideoCaptureAu
             activityId: ActivityId,
             useCase: () =>
             {
-                _videoCaptureWorkflow.SetIsAudioInputMuted(request.IsMuted);
-                return new SetVideoCaptureAudioInputMutedResponse();
+                try
+                {
+                    _videoCaptureWorkflow.SetIsAudioInputMuted(request.IsMuted);
+                    return new SetVideoCaptureAudioInputMutedResponse();
+                }
+                catch (MicrophoneAccessDeniedException)
+                {
+                    return new SetVideoCaptureAudioInputMutedResponse(Succeeded: false, MicrophoneAccessDenied: true);
+                }
             },
             cancellationToken: cancellationToken);
     }

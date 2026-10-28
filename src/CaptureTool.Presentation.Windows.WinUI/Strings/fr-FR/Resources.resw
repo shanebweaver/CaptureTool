@@ -2005,4 +2005,8 @@ SOFTWARE.
   <data name="CaptureSummary_PartialCoverage.Text" xml:space="preserve">
     <value>Ce résumé utilise des extraits de l’analyse disponible et peut omettre des détails.</value>
   </data>
+  <data name="CaptureAction_DownloadRequired" xml:space="preserve"><value>Connectez-vous à Internet pour télécharger le modèle de cette fonction, puis réessayez. Vous pouvez toujours capturer, modifier et enregistrer hors connexion.</value></data>
+  <data name="CaptureOverlay_MicrophoneAccessDeniedMessage" xml:space="preserve">
+    <value>L’accès au microphone est désactivé. Autorisez-le dans les paramètres Windows ou coupez le microphone pour enregistrer sans celui-ci.</value>
+  </data>
 </root>
