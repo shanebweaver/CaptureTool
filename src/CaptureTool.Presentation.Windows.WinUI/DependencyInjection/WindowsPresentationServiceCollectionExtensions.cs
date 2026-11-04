@@ -1,9 +1,14 @@
 ﻿using CaptureTool.Application.Abstractions.Analysis;
+using CaptureTool.Application.Abstractions.Cancellation;
 using CaptureTool.Application.Abstractions.Capture;
 using CaptureTool.Application.Abstractions.Capture.Audio;
 using CaptureTool.Application.Abstractions.EditSessions;
+using CaptureTool.Application.Abstractions.Logging;
 using CaptureTool.Application.Abstractions.Navigation;
+using CaptureTool.Application.Abstractions.Shutdown;
+using CaptureTool.Application.Abstractions.Telemetry;
 using CaptureTool.Application.Abstractions.Windowing;
+using CaptureTool.Infrastructure.Windows.Shutdown;
 using CaptureTool.Presentation.Windows.WinUI.Analysis;
 using CaptureTool.Presentation.Windows.WinUI.AudioCapture;
 using CaptureTool.Presentation.Windows.WinUI.Capture;
@@ -17,6 +22,12 @@ public static class WindowsPresentationServiceCollectionExtensions
 {
     public static IServiceCollection AddAppWindowsServices(this IServiceCollection services)
     {
+        services.AddSingleton<IShutdownHandler>(sp => new WindowsShutdownHandler(
+            sp.GetRequiredService<ILogService>(),
+            sp.GetRequiredService<ICancellationService>(),
+            sp.GetService<ITelemetryService>(),
+            sp.GetService<ICaptureMemoryService>(),
+            App.Current.RequestExit));
         services.AddSingleton<AppNavigationHandler>();
         services.AddSingleton<INavigationHandler>(sp => sp.GetRequiredService<AppNavigationHandler>());
         services.AddSingleton<IWindowHandleProvider>(sp => sp.GetRequiredService<AppNavigationHandler>());

@@ -1,3 +1,4 @@
+using CaptureTool.Application.Abstractions.Logging;
 using CaptureTool.Infrastructure.Windows.Activation;
 using CaptureTool.Presentation.Activation;
 using CaptureTool.Presentation.Windows.WinUI.Activation;
@@ -39,14 +40,20 @@ public class Program
         }
 
         // Start WinUI app
+        UiTestFileLogService? uiTestLog = null;
         Microsoft.UI.Xaml.Application.Start(_ =>
         {
             SynchronizationContext.SetSynchronizationContext(
                 new DispatcherQueueSynchronizationContext(
                     DispatcherQueue.GetForCurrentThread()));
             var app = new App(redirectedActivations);
+            if (UiTestLaunchOptions.Current.IsEnabled)
+            {
+                uiTestLog = app.ServiceProvider.GetService<ILogService>() as UiTestFileLogService;
+            }
         });
 
+        uiTestLog?.RecordNormalExit();
         return 0;
     }
 

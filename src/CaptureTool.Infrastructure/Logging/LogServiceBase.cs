@@ -29,15 +29,16 @@ public abstract class LogServiceBase : ILogService
     public void LogException(Exception e, string? message = null)
     {
         StringBuilder stringBuilder = new($"ERROR: {e.Message}");
+        stringBuilder.AppendLine();
+        stringBuilder.AppendLine($"Exception type: {e.GetType().FullName}. HRESULT: 0x{e.HResult:X8}.");
 
         if (message != null)
         {
             stringBuilder.AppendLine(message);
         }
-        if (!string.IsNullOrEmpty(e.StackTrace))
-        {
-            stringBuilder.AppendLine(e.StackTrace);
-        }
+        // ToString preserves inner exceptions (including AggregateException
+        // branches), which often contain the original native/COM failure.
+        stringBuilder.AppendLine(e.ToString());
 
         AddLogEntry(stringBuilder.ToString());
     }

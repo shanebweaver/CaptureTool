@@ -59,6 +59,25 @@ public sealed class LogServiceTests
     }
 
     [TestMethod]
+    public void LogException_PreservesTypeHResultAndNestedFailures()
+    {
+        var service = new ShortTermMemoryLogService();
+        service.Enable();
+        var nativeFailure = new System.Runtime.InteropServices.COMException("native failure", unchecked((int)0x8001010E));
+        var exception = new AggregateException("operation failed", nativeFailure, new IOException("second failure"));
+
+        service.LogException(exception, "while capturing");
+
+        string message = service.GetLogs().Single().Message;
+        StringAssert.Contains(message, "Exception type: System.AggregateException.");
+        StringAssert.Contains(message, $"HRESULT: 0x{exception.HResult:X8}");
+        StringAssert.Contains(message, "System.Runtime.InteropServices.COMException (0x8001010E): native failure");
+        StringAssert.Contains(message, "System.IO.IOException: second failure");
+        StringAssert.Contains(message, $"ERROR: {exception.Message}{Environment.NewLine}");
+        StringAssert.Contains(message, "while capturing");
+    }
+
+    [TestMethod]
     public void ClearLogs_RemovesStoredEntries()
     {
         var service = new ShortTermMemoryLogService();

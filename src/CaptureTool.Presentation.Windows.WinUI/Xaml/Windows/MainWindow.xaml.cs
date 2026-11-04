@@ -18,6 +18,7 @@ using Microsoft.UI;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Hosting;
 using Microsoft.UI.Xaml.Media;
 using System.Runtime.InteropServices;
 using Windows.ApplicationModel;
@@ -45,7 +46,6 @@ public sealed partial class MainWindow : Window
     private readonly CaptureMemoryDialogService _captureMemoryDialogs;
 
     public MainWindowViewModel ViewModel { get; } = ViewModelLocator.GetViewModel<MainWindowViewModel>();
-    private bool _closeConfirmed;
     private bool _closeConfirmationInProgress;
     private bool _isShown;
     private bool _uiTestLaunchNavigationHandled;
@@ -327,13 +327,13 @@ public sealed partial class MainWindow : Window
 
     private void OnAppWindowClosing(Microsoft.UI.Windowing.AppWindow sender, AppWindowClosingEventArgs args)
     {
-        if (_closeConfirmed)
-        {
-            return;
-        }
-
+        // Keep the native window alive until UI cleanup has finished. Application.Exit
+        // closes it after preparation; repeated close requests must not bypass that.
         args.Cancel = true;
-        BeginCloseConfirmation();
+        if (!_shutdownHandler.IsShuttingDown)
+        {
+            BeginCloseConfirmation();
+        }
     }
 
     private async Task ConfirmCloseAsync()
@@ -343,8 +343,7 @@ public sealed partial class MainWindow : Window
             await _navigationCoordinator.ExecuteTransitionAsync(
                 _ =>
                 {
-                    _closeConfirmed = true;
-                    Close();
+                    _shutdownHandler.Shutdown();
                     return Task.FromResult(true);
                 });
         }
@@ -378,6 +377,23 @@ public sealed partial class MainWindow : Window
         ViewModel.Dispose();
 
         _shutdownHandler.Shutdown();
+    }
+
+    internal async Task PrepareForShutdownAsync()
+    {
+        // Unload controls while their XAML core and native window are still alive.
+        // Commit the removal and let pending composition callbacks complete before
+        // stopping the dispatcher and retiring the controls' dependency properties.
+        var compositor = ElementCompositionPreview.GetElementVisual(RootGrid).Compositor;
+        if (NavigationFrame.Content is ImageEditPage imageEditPage)
+        {
+            await imageEditPage.PrepareForShutdownAsync();
+        }
+        NavigationFrame.Content = null;
+        NavigationFrame.BackStack.Clear();
+        NavigationFrame.ForwardStack.Clear();
+        RootGrid.UpdateLayout();
+        await compositor.RequestCommitAsync().AsTask().WaitAsync(TimeSpan.FromSeconds(5));
     }
 
     public void SuspendMediaPlayback()

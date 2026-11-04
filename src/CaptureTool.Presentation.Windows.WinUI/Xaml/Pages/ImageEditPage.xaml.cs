@@ -29,6 +29,8 @@ public sealed partial class ImageEditPage : ImageEditPageBase
     private const int ToolbarSlideDurationMilliseconds = 160;
     private const double ToolbarHiddenOffset = -8;
 
+    internal Task PrepareForShutdownAsync() => ImageCanvas.PrepareForShutdownAsync();
+
     public ImageEditPage()
     {
         InitializeComponent();

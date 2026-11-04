@@ -13,6 +13,7 @@ public sealed partial class WindowsShutdownHandler : IShutdownHandler
     private readonly IWindowsAppRestartService _restartService;
     private readonly ITelemetryService? _telemetryService;
     private readonly ICaptureMemoryService? _captureMemory;
+    private readonly Action _exitApplication;
 
     public bool IsShuttingDown { get; private set; }
 
@@ -20,12 +21,13 @@ public sealed partial class WindowsShutdownHandler : IShutdownHandler
         ILogService logService,
         ICancellationService cancellationService,
         ITelemetryService? telemetryService = null,
-        ICaptureMemoryService? captureMemory = null)
+        ICaptureMemoryService? captureMemory = null,
+        Action? exitApplication = null)
         : this(
             logService,
             cancellationService,
             new WindowsAppRestartService(),
-            telemetryService, captureMemory)
+            telemetryService, captureMemory, exitApplication)
     {
     }
 
@@ -34,13 +36,15 @@ public sealed partial class WindowsShutdownHandler : IShutdownHandler
         ICancellationService cancellationService,
         IWindowsAppRestartService restartService,
         ITelemetryService? telemetryService = null,
-        ICaptureMemoryService? captureMemory = null)
+        ICaptureMemoryService? captureMemory = null,
+        Action? exitApplication = null)
     {
         _logService = logService;
         _cancellationService = cancellationService;
         _restartService = restartService;
         _telemetryService = telemetryService;
         _captureMemory = captureMemory;
+        _exitApplication = exitApplication ?? (() => Microsoft.UI.Xaml.Application.Current.Exit());
     }
 
     public bool TryRestart()
@@ -81,6 +85,9 @@ public sealed partial class WindowsShutdownHandler : IShutdownHandler
             return;
         }
 
+        // Cancellation and window closure can re-enter Shutdown. Claim the
+        // transition before invoking telemetry or application cleanup.
+        IsShuttingDown = true;
         try
         {
             TrackShutdownRequested("exit");
@@ -88,15 +95,19 @@ public sealed partial class WindowsShutdownHandler : IShutdownHandler
         }
         catch (Exception e)
         {
-            _logService.LogException(e, "Error during shutdown. Forcing exit.");
+            _logService.LogException(e, "Error during shutdown.");
         }
-
-        Environment.Exit(0);
+        finally
+        {
+            // Let WinUI unwind the window callback and shut down its dispatcher.
+            // Environment.Exit tears down FrameworkUdk/CoreMessaging from inside
+            // Window.Closed and can fail-fast during endpoint revocation.
+            _exitApplication();
+        }
     }
 
     private void Teardown()
     {
-        IsShuttingDown = true;
         _captureMemory?.StopAsync().GetAwaiter().GetResult();
         _cancellationService.CancelAll();
     }
