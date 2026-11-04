@@ -1,6 +1,7 @@
 using Microsoft.Graphics.Canvas.Effects;
 using Microsoft.UI.Composition;
 using Microsoft.UI.System;
+using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Automation.Peers;
 using Microsoft.UI.Xaml.Controls;
@@ -20,6 +21,7 @@ public sealed partial class AuroraEdge : UserControl
     private const float HaloPadding = 12;
     private readonly UISettings _uiSettings = new();
     private ThemeSettings? _themeSettings;
+    private AppWindow? _settingsWindow;
     private readonly List<CompositionObject> _resources = [];
     private ContainerVisual? _scene;
     private LayerVisual? _halo;
@@ -60,8 +62,11 @@ public sealed partial class AuroraEdge : UserControl
         {
             if (OperatingSystem.IsWindowsVersionAtLeast(10, 0, 19041))
                 _uiSettings.AnimationsEnabledChanged += OnAnimationsChanged;
-            _themeSettings = ThemeSettings.CreateForWindowId(XamlRoot.ContentIslandEnvironment.AppWindowId);
+            var windowId = XamlRoot.ContentIslandEnvironment.AppWindowId;
+            _settingsWindow = AppWindow.GetFromWindowId(windowId);
+            _themeSettings = ThemeSettings.CreateForWindowId(windowId);
             _themeSettings.Changed += OnContrastChanged;
+            _settingsWindow.Destroying += OnSettingsWindowDestroying;
             _observingSettings = true;
         }
         UpdateState();
@@ -69,14 +74,7 @@ public sealed partial class AuroraEdge : UserControl
 
     private void OnUnloaded(object sender, RoutedEventArgs args)
     {
-        if (_observingSettings)
-        {
-            if (OperatingSystem.IsWindowsVersionAtLeast(10, 0, 19041))
-                _uiSettings.AnimationsEnabledChanged -= OnAnimationsChanged;
-            if (_themeSettings != null) _themeSettings.Changed -= OnContrastChanged;
-            _themeSettings = null;
-            _observingSettings = false;
-        }
+        StopObservingSettings();
         CancelFade();
         StopMotion();
         ElementCompositionPreview.SetElementChildVisual(CompositionHost, null);
@@ -84,6 +82,25 @@ public sealed partial class AuroraEdge : UserControl
         _resources.Clear();
         _scene = null; _halo = null; _edge = null; _haloShape = null; _geometry = null; _gradient = null;
         _compositionUnavailable = false;
+    }
+
+    private void OnSettingsWindowDestroying(AppWindow sender, object args) => StopObservingSettings();
+
+    private void StopObservingSettings()
+    {
+        if (_observingSettings)
+        {
+            _observingSettings = false;
+            if (OperatingSystem.IsWindowsVersionAtLeast(10, 0, 19041))
+                _uiSettings.AnimationsEnabledChanged -= OnAnimationsChanged;
+            // XAML Unloaded can run after the native window is gone. Revoke
+            // this window-bound event during Destroying while its WindowId
+            // is still valid, or during Unloaded when navigating away.
+            if (_themeSettings != null) _themeSettings.Changed -= OnContrastChanged;
+            if (_settingsWindow != null) _settingsWindow.Destroying -= OnSettingsWindowDestroying;
+            _themeSettings = null;
+            _settingsWindow = null;
+        }
     }
 
     private void OnAnimationsChanged(UISettings sender, UISettingsAnimationsEnabledChangedEventArgs args) =>

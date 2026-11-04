@@ -255,4 +255,6 @@ internal partial class AppNavigationHandler : INavigationHandler, IWindowHandleP
     {
         return _mainWindowHost.Handle;
     }
+
+    internal Task PrepareForShutdownAsync() => _mainWindowHost.PrepareForShutdownAsync();
 }

@@ -583,6 +583,7 @@ public sealed partial class ImageCanvas : UserControlBase
     private INotifyCollectionChanged? _observableDrawables;
     private ScrollingInputKinds _defaultIgnoredInputKinds = ScrollingInputKinds.None;
     private bool _isIgnoringTouchInputForEditing;
+    private bool _isPreparingForShutdown;
 
     // Track if we're in a potential selection scenario
     private IDrawable? _shapeUnderPointer;
@@ -723,6 +724,44 @@ public sealed partial class ImageCanvas : UserControlBase
         InvalidateColorPickerSnapshot();
         StopTextExtractionOverlayAnimation();
         RenderCanvas.RemoveFromVisualTree();
+    }
+
+    internal async Task PrepareForShutdownAsync()
+    {
+        _isPreparingForShutdown = true;
+        CanvasScrollView.IsEnabled = false;
+        RootContainer.CancelDirectManipulations();
+        var zoomCompleted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var scrollCompleted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        int zoomId = -1;
+        int scrollId = -1;
+        void OnZoomCompleted(ScrollView sender, ScrollingZoomCompletedEventArgs args)
+        {
+            if (args.CorrelationId == zoomId) zoomCompleted.TrySetResult();
+        }
+        void OnScrollCompleted(ScrollView sender, ScrollingScrollCompletedEventArgs args)
+        {
+            if (args.CorrelationId == scrollId) scrollCompleted.TrySetResult();
+        }
+        CanvasScrollView.ZoomCompleted += OnZoomCompleted;
+        CanvasScrollView.ScrollCompleted += OnScrollCompleted;
+        try
+        {
+            // Interrupt pending zoom/scroll animations, then wait for their native
+            // callbacks while the control still has a live XAML core.
+            zoomId = CanvasScrollView.ZoomTo(CanvasScrollView.ZoomFactor, null,
+                new ScrollingZoomOptions(ScrollingAnimationMode.Disabled, ScrollingSnapPointsMode.Ignore));
+            scrollId = CanvasScrollView.ScrollTo(CanvasScrollView.HorizontalOffset, CanvasScrollView.VerticalOffset,
+                new ScrollingScrollOptions(ScrollingAnimationMode.Disabled, ScrollingSnapPointsMode.Ignore));
+            if (zoomId == -1) zoomCompleted.TrySetResult();
+            if (scrollId == -1) scrollCompleted.TrySetResult();
+            await Task.WhenAll(zoomCompleted.Task, scrollCompleted.Task).WaitAsync(TimeSpan.FromSeconds(5));
+        }
+        finally
+        {
+            CanvasScrollView.ZoomCompleted -= OnZoomCompleted;
+            CanvasScrollView.ScrollCompleted -= OnScrollCompleted;
+        }
     }
 
     private void UpdateTouchInputLock()
@@ -1019,6 +1058,7 @@ public sealed partial class ImageCanvas : UserControlBase
 
     private void ZoomAndCenter()
     {
+        if (_isPreparingForShutdown) return;
         lock (this)
         {
             if (CanvasScrollView == null ||
@@ -1069,6 +1109,7 @@ public sealed partial class ImageCanvas : UserControlBase
 
     public void SetZoom(double zoomLevel, ZoomUpdateSource source)
     {
+        if (_isPreparingForShutdown) return;
         lock (this)
         {
             if (CanvasScrollView == null)
@@ -2198,6 +2239,7 @@ public sealed partial class ImageCanvas : UserControlBase
 
     private void RootContainer_PointerMoved(object sender, PointerRoutedEventArgs e)
     {
+        if (_isPreparingForShutdown) return;
         if (IsColorPickerModeEnabled)
         {
             HandleColorPickerPointerMoved(e);

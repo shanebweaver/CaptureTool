@@ -73,6 +73,8 @@ internal sealed partial class MainWindowHost : IDisposable
         _mainWindow = null;
     }
 
+    internal Task PrepareForShutdownAsync() => _mainWindow?.PrepareForShutdownAsync() ?? Task.CompletedTask;
+
     public Task<NavigationResult> HandleNavigationRequestAsync(
         INavigationRequest request,
         CancellationToken cancellationToken = default)

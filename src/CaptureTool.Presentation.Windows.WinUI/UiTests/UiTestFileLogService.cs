@@ -28,9 +28,24 @@ internal sealed class UiTestFileLogService : LogServiceBase
         lock (_lock)
         {
             base.AddLogEntry(message);
-            File.AppendAllText(
-                _logFilePath,
-                $"{DateTimeOffset.UtcNow:O} {message}{Environment.NewLine}");
+            WriteLogEntry(message);
         }
+    }
+
+    internal void RecordNormalExit()
+    {
+        // The dispatcher has shut down. Write the test marker without notifying
+        // any LogAdded subscribers that could try to access the retired UI.
+        lock (_lock)
+        {
+            WriteLogEntry("INFO: WinUI application loop exited normally.");
+        }
+    }
+
+    private void WriteLogEntry(string message)
+    {
+        File.AppendAllText(
+            _logFilePath,
+            $"{DateTimeOffset.UtcNow:O} {message}{Environment.NewLine}");
     }
 }
