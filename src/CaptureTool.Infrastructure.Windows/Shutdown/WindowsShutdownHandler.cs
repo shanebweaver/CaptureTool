@@ -14,20 +14,23 @@ public sealed partial class WindowsShutdownHandler : IShutdownHandler
     private readonly ITelemetryService? _telemetryService;
     private readonly ICaptureMemoryService? _captureMemory;
     private readonly Action _exitApplication;
+    private readonly Func<Task>? _prepareForShutdown;
 
     public bool IsShuttingDown { get; private set; }
+    internal Task ShutdownCompletion { get; private set; } = Task.CompletedTask;
 
     public WindowsShutdownHandler(
         ILogService logService,
         ICancellationService cancellationService,
         ITelemetryService? telemetryService = null,
         ICaptureMemoryService? captureMemory = null,
-        Action? exitApplication = null)
+        Action? exitApplication = null,
+        Func<Task>? prepareForShutdown = null)
         : this(
             logService,
             cancellationService,
             new WindowsAppRestartService(),
-            telemetryService, captureMemory, exitApplication)
+            telemetryService, captureMemory, exitApplication, prepareForShutdown)
     {
     }
 
@@ -37,7 +40,8 @@ public sealed partial class WindowsShutdownHandler : IShutdownHandler
         IWindowsAppRestartService restartService,
         ITelemetryService? telemetryService = null,
         ICaptureMemoryService? captureMemory = null,
-        Action? exitApplication = null)
+        Action? exitApplication = null,
+        Func<Task>? prepareForShutdown = null)
     {
         _logService = logService;
         _cancellationService = cancellationService;
@@ -45,6 +49,7 @@ public sealed partial class WindowsShutdownHandler : IShutdownHandler
         _telemetryService = telemetryService;
         _captureMemory = captureMemory;
         _exitApplication = exitApplication ?? (() => Microsoft.UI.Xaml.Application.Current.Exit());
+        _prepareForShutdown = prepareForShutdown;
     }
 
     public bool TryRestart()
@@ -88,14 +93,24 @@ public sealed partial class WindowsShutdownHandler : IShutdownHandler
         // Cancellation and window closure can re-enter Shutdown. Claim the
         // transition before invoking telemetry or application cleanup.
         IsShuttingDown = true;
+        ShutdownCompletion = ShutdownCoreAsync();
+    }
+
+    private async Task ShutdownCoreAsync()
+    {
         try
         {
-            TrackShutdownRequested("exit");
-            Teardown();
-        }
-        catch (Exception e)
-        {
-            _logService.LogException(e, "Error during shutdown.");
+            await RunCleanupAsync(() =>
+            {
+                TrackShutdownRequested("exit");
+                return Task.CompletedTask;
+            });
+            await RunCleanupAsync(_cancellationService.CancelAllAsync);
+            // Both operations may need the UI dispatcher to finish cancellation.
+            // Never synchronously block it with GetAwaiter().GetResult().
+            await Task.WhenAll(
+                RunCleanupAsync(() => _prepareForShutdown?.Invoke() ?? Task.CompletedTask),
+                RunCleanupAsync(() => _captureMemory?.StopAsync() ?? Task.CompletedTask));
         }
         finally
         {
@@ -106,10 +121,20 @@ public sealed partial class WindowsShutdownHandler : IShutdownHandler
         }
     }
 
-    private void Teardown()
+    private async Task RunCleanupAsync(Func<Task> cleanup)
     {
-        _captureMemory?.StopAsync().GetAwaiter().GetResult();
-        _cancellationService.CancelAll();
+        try
+        {
+            await cleanup();
+        }
+        catch (OperationCanceledException)
+        {
+            // Cancellation is an expected outcome while stopping work.
+        }
+        catch (Exception exception)
+        {
+            _logService.LogException(exception, "Error during shutdown.");
+        }
     }
 
     private void TrackShutdownRequested(string source)

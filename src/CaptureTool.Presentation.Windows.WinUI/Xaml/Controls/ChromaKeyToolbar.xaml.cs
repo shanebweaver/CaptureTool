@@ -176,7 +176,7 @@ public sealed partial class ChromaKeyToolbar : UserControlBase
             }
         }
 
-        PaletteColorOptions = [.. _bindableColorOptions.Select(option => option.Color)];
+        PaletteColorOptions = _bindableColorOptions.Select(option => option.Color).ToArray();
         HasColorOptions = _bindableColorOptions.Count > 0;
         UpdateSelectedColor();
         UpdateSliderEnablement();

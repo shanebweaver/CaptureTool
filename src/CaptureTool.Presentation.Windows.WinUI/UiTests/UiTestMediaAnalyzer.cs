@@ -1,11 +1,12 @@
 using CaptureTool.Application.Abstractions.Analysis;
+using CaptureTool.Application.Abstractions.Logging;
 using CaptureTool.Domain.Analysis;
 using CaptureTool.Domain.Analysis.Payloads;
 
 namespace CaptureTool.Presentation.Windows.WinUI.UiTests;
 
 /// <summary>Deterministic provider for isolated desktop tests; never downloads or invokes device models.</summary>
-internal sealed class UiTestMediaAnalyzer(MediaAnalyzerDescriptor descriptor) : IMediaAnalyzer
+internal sealed class UiTestMediaAnalyzer(MediaAnalyzerDescriptor descriptor, ILogService log) : IMediaAnalyzer
 {
     public MediaAnalyzerDescriptor Descriptor => descriptor;
     public ValueTask<AnalyzerAvailability> GetAvailabilityAsync(AnalysisMediaKind kind, string? language, CancellationToken ct) =>
@@ -22,22 +23,24 @@ internal sealed class UiTestMediaAnalyzer(MediaAnalyzerDescriptor descriptor) : 
                 DateTimeOffset.UtcNow, DateTimeOffset.UtcNow, input.CapturedAt,
                 image: UiTestTextFixture.Current is { } fixture ? new(new((uint)fixture.Width, (uint)fixture.Height), 96, 96) :
                     UiTestLaunchOptions.DetailsFixture && input.MediaKind == AnalysisMediaKind.Image ? new(new(1200, 800), 96, 96) : null), new(descriptor.Id, "ui-test", "fixture", "1"));
-        await Task.Delay(TimeSpan.FromSeconds(3), ct);
+        await UiTestInferenceLifetime.WaitAsync("background", log, ct);
+        if (UiTestLaunchOptions.AiProfile is not ("shutdown-cancel" or "shutdown-late-result"))
+            await Task.Delay(TimeSpan.FromSeconds(3), ct);
         if (descriptor.Capability == AnalysisCapability.QrCodeDetection)
             return AnalyzerOutcome.Success(new QrCodeMetadata(UiTestLaunchOptions.DetailsFixture && UiTestTextFixture.Current == null
                 ? input.MediaKind == AnalysisMediaKind.Video
-                    ? [new("https://example.com/invoice", new(.1, .1, .2, .2), TimeSpan.FromSeconds(1)),
+                    ? (DecodedQrCode[])[new("https://example.com/invoice", new(.1, .1, .2, .2), TimeSpan.FromSeconds(1)),
                         new("https://example.com/invoice", new(.1, .1, .2, .2), TimeSpan.FromSeconds(3))]
-                    : [new("https://example.com/invoice", new(.1, .1, .2, .2))]
+                    : (DecodedQrCode[])[new("https://example.com/invoice", new(.1, .1, .2, .2))]
                 : []), new(descriptor.Id, "ui-test", "fixture", "1"));
         if (descriptor.Capability == AnalysisCapability.TextRecognition)
             return AnalyzerOutcome.Success(new TextRecognitionMetadata(UiTestTextFixture.Current?.SavedText() ??
                 (UiTestLaunchOptions.DetailsFixture ? TextFixture(input.MediaKind) : [])), new(descriptor.Id, "ui-test", "fixture", "1"));
         if (descriptor.Capability == AnalysisCapability.Transcription && UiTestLaunchOptions.DetailsFixture)
-            return AnalyzerOutcome.Success(new TranscriptMetadata("en", [new("First spoken passage", TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(2)),
+            return AnalyzerOutcome.Success(new TranscriptMetadata("en", (TranscriptSegment[])[new("First spoken passage", TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(2)),
                 new("Second spoken passage", TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(4))]), new(descriptor.Id, "ui-test", "fixture", "1"));
         if (descriptor.Capability == AnalysisCapability.Description)
-            return AnalyzerOutcome.Success(new DescriptionMetadata([new("UI fixture capture")]), new(descriptor.Id, "ui-test", "fixture", "1"));
+            return AnalyzerOutcome.Success(new DescriptionMetadata((MediaDescription[])[new("UI fixture capture")]), new(descriptor.Id, "ui-test", "fixture", "1"));
         return AnalyzerOutcome.Unsuccessful(AnalyzerOutcomeKind.Unsupported, "ui-test-media");
     }
 

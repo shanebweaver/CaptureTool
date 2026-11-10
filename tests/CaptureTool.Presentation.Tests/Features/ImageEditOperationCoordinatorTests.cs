@@ -7,6 +7,51 @@ namespace CaptureTool.Presentation.Tests.Features;
 public sealed class ImageEditOperationCoordinatorTests
 {
     [TestMethod]
+    public async Task StopAsync_WhenCancellationCallbackThrows_StillCancelsAndDrainsAllOperations()
+    {
+        using var coordinator = new ImageEditOperationCoordinator();
+        using var first = coordinator.Start(ImageEditOperation.ImageDescription);
+        using var second = coordinator.Start(ImageEditOperation.TextExtraction);
+        var failure = new InvalidOperationException("Provider cancellation failed.");
+        using var registration = first.Token.Register(() => throw failure);
+
+        Task stopping = coordinator.StopAsync();
+
+        first.Token.IsCancellationRequested.Should().BeTrue();
+        second.Token.IsCancellationRequested.Should().BeTrue();
+        stopping.IsCompleted.Should().BeFalse("cancellation failure must not bypass provider cleanup");
+        first.Dispose();
+        stopping.IsCompleted.Should().BeFalse();
+        second.Dispose();
+
+        Func<Task> complete = () => stopping.WaitAsync(TimeSpan.FromSeconds(5));
+        var thrown = await complete.Should().ThrowAsync<AggregateException>();
+        thrown.Which.Flatten().InnerExceptions.Should().Contain(failure);
+    }
+
+    [TestMethod]
+    public async Task StopAsync_WaitsForCanceledAndSupersededOperationsToUnwind()
+    {
+        using var coordinator = new ImageEditOperationCoordinator();
+        var superseded = coordinator.Start(ImageEditOperation.ImageDescription);
+        var current = coordinator.Start(ImageEditOperation.ImageDescription);
+        var extraction = coordinator.Start(ImageEditOperation.TextExtraction);
+
+        Task stopping = coordinator.StopAsync();
+
+        superseded.Token.IsCancellationRequested.Should().BeTrue();
+        current.Token.IsCancellationRequested.Should().BeTrue();
+        extraction.Token.IsCancellationRequested.Should().BeTrue();
+        stopping.IsCompleted.Should().BeFalse();
+        current.Dispose();
+        extraction.Dispose();
+        stopping.IsCompleted.Should().BeFalse("a canceled provider may still be releasing native resources");
+        superseded.Dispose();
+        await stopping.WaitAsync(TimeSpan.FromSeconds(5));
+        await coordinator.StopAsync();
+    }
+
+    [TestMethod]
     public void Start_ShouldCancelPreviousGeneration_ForSameOperation()
     {
         using var coordinator = new ImageEditOperationCoordinator();

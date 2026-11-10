@@ -13,6 +13,7 @@ internal enum ImageEditOperation
 internal sealed class ImageEditOperationCoordinator : IDisposable
 {
     private readonly Dictionary<ImageEditOperation, OperationLease> _activeOperations = [];
+    private readonly HashSet<OperationLease> _runningOperations = [];
     private bool _isDisposed;
 
     public OperationLease Start(ImageEditOperation operation, CancellationToken revoked = default)
@@ -22,6 +23,7 @@ internal sealed class ImageEditOperationCoordinator : IDisposable
 
         var lease = new OperationLease(this, operation, revoked);
         _activeOperations.Add(operation, lease);
+        _runningOperations.Add(lease);
         return lease;
     }
 
@@ -41,12 +43,40 @@ internal sealed class ImageEditOperationCoordinator : IDisposable
         }
 
         _isDisposed = true;
-        foreach (OperationLease lease in _activeOperations.Values)
+        List<Exception>? failures = null;
+        foreach (OperationLease lease in _activeOperations.Values.ToArray())
         {
-            lease.CancelFromOwner();
+            try
+            {
+                lease.CancelFromOwner();
+            }
+            catch (Exception exception)
+            {
+                (failures ??= []).Add(exception);
+            }
         }
 
         _activeOperations.Clear();
+        if (failures is not null)
+        {
+            throw new AggregateException("Failed to cancel editor operations.", failures);
+        }
+    }
+
+    public async Task StopAsync()
+    {
+        // Superseded operations can still be unwinding after cancellation. Keep
+        // them until the caller leaves its using scope, including its finally.
+        try
+        {
+            Dispose();
+        }
+        finally
+        {
+            // A failing cancellation callback must not release the dispatcher
+            // while this or another provider still owns native resources.
+            await Task.WhenAll(_runningOperations.Select(lease => lease.Completion));
+        }
     }
 
     private bool IsCurrent(OperationLease lease) =>
@@ -56,6 +86,7 @@ internal sealed class ImageEditOperationCoordinator : IDisposable
 
     private void Complete(OperationLease lease)
     {
+        _runningOperations.Remove(lease);
         if (IsCurrent(lease))
         {
             _activeOperations.Remove(lease.Operation);
@@ -67,6 +98,8 @@ internal sealed class ImageEditOperationCoordinator : IDisposable
         private readonly ImageEditOperationCoordinator _owner;
         private readonly CancellationTokenSource _cancellationTokenSource;
         private bool _isDisposed;
+        private bool _isCanceled;
+        private readonly TaskCompletionSource _completion = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
         internal OperationLease(ImageEditOperationCoordinator owner, ImageEditOperation operation, CancellationToken revoked)
         {
@@ -80,7 +113,9 @@ internal sealed class ImageEditOperationCoordinator : IDisposable
 
         public CancellationToken Token { get; }
 
-        public bool IsCurrent => !_isDisposed && _owner.IsCurrent(this);
+        internal Task Completion => _completion.Task;
+
+        public bool IsCurrent => !_isDisposed && !_isCanceled && _owner.IsCurrent(this);
 
         public void Dispose()
         {
@@ -92,24 +127,18 @@ internal sealed class ImageEditOperationCoordinator : IDisposable
             _owner.Complete(this);
             _isDisposed = true;
             _cancellationTokenSource.Dispose();
+            _completion.TrySetResult();
         }
 
         internal void CancelFromOwner()
         {
-            if (_isDisposed)
+            if (_isDisposed || _isCanceled)
             {
                 return;
             }
 
-            _isDisposed = true;
-            try
-            {
-                _cancellationTokenSource.Cancel();
-            }
-            finally
-            {
-                _cancellationTokenSource.Dispose();
-            }
+            _isCanceled = true;
+            _cancellationTokenSource.Cancel();
         }
     }
 }

@@ -100,6 +100,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     private readonly ImageEditHistory _editHistory;
     private readonly ImageEditModeStateMachine _modeStateMachine;
     private readonly ImageEditOperationCoordinator _operationCoordinator = new();
+    private bool _isStopping;
     private ImageDrawable? _imageDrawable;
     private ImageEditSession _editSession;
     private ImageFile? _originalImageFile;
@@ -982,8 +983,15 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         }
     }
 
+    public Task StopOperationsAsync()
+    {
+        _isStopping = true;
+        return _operationCoordinator.StopAsync();
+    }
+
     public override void Dispose()
     {
+        _isStopping = true;
         CancelSuperResolutionWork();
         CancelTextExtractionWork();
         CancelImageDescriptionWork();
@@ -1925,7 +1933,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
     public async Task OnForegroundExtractionRequestedAsync(Vector2 foregroundPoint)
     {
-        if (!IsLoaded ||
+        if (_isStopping || !IsLoaded ||
             !IsForegroundExtractionModeActive ||
             IsForegroundExtractionRunning ||
             _imageDrawable is null ||
@@ -2050,7 +2058,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
     public async Task OnObjectEraseRequestedAsync(Vector2 objectPoint)
     {
-        if (!IsLoaded ||
+        if (_isStopping || !IsLoaded ||
             !IsObjectEraseModeActive ||
             IsObjectEraseRunning ||
             _imageDrawable is null ||
@@ -2175,7 +2183,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
     public async Task OnObjectExtractionRequestedAsync(Vector2 objectPoint)
     {
-        if (!IsLoaded ||
+        if (_isStopping || !IsLoaded ||
             !IsObjectExtractionModeActive ||
             IsObjectExtractionRunning ||
             _imageDrawable is null ||
@@ -2300,6 +2308,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
     private async Task<bool> EnsureAiFeatureConsentAsync(AiFeatureId featureId, CancellationToken cancellationToken)
     {
+        if (_isStopping) return false;
         AiFeatureConsentState consentState = _aiFeatureConsentService.GetConsentState(featureId);
         if (consentState == AiFeatureConsentState.Granted)
         {
@@ -2313,7 +2322,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         UpdateCanToggleForegroundExtraction();
         UpdateCanToggleObjectErase();
         UpdateCanToggleObjectExtraction();
-        return consented;
+        return consented && !_isStopping;
     }
 
     private async Task EnsureTextExtractionCurrentAsync()
@@ -2329,7 +2338,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
     private async Task RunTextExtractionAsync()
     {
-        if (!IsLoaded)
+        if (!IsLoaded || _isStopping)
         {
             return;
         }
@@ -2490,7 +2499,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
     private async Task GenerateImageDescriptionAsync(ImageDescriptionMode mode)
     {
-        if (!CanGenerateImageDescription || _runningImageDescriptionMode == mode)
+        if (_isStopping || !CanGenerateImageDescription || _runningImageDescriptionMode == mode)
         {
             return;
         }
@@ -2598,7 +2607,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
     private async Task ShowSuperResolutionImageAsync()
     {
-        if (_originalImageFile is null || _imageDrawable is null)
+        if (_isStopping || _originalImageFile is null || _imageDrawable is null)
         {
             return;
         }

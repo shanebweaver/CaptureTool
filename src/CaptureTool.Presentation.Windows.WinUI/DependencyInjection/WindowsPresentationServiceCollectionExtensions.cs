@@ -27,7 +27,8 @@ public static class WindowsPresentationServiceCollectionExtensions
             sp.GetRequiredService<ICancellationService>(),
             sp.GetService<ITelemetryService>(),
             sp.GetService<ICaptureMemoryService>(),
-            App.Current.RequestExit));
+            App.Current.Exit,
+            App.Current.PrepareForShutdownAsync));
         services.AddSingleton<AppNavigationHandler>();
         services.AddSingleton<INavigationHandler>(sp => sp.GetRequiredService<AppNavigationHandler>());
         services.AddSingleton<IWindowHandleProvider>(sp => sp.GetRequiredService<AppNavigationHandler>());

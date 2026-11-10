@@ -1,1 +1,9 @@
-<Project />
+<Project>
+  <!-- Older .NET 10 SDKs select an AOT compiler affected by GHSA-p3jp-9v83-76w9.
+       Keep both host and target compiler packs patched without downgrading newer SDKs. -->
+  <ItemGroup>
+    <KnownILCompilerPack Update="Microsoft.DotNet.ILCompiler">
+      <ILCompilerPackVersion Condition="'%(KnownILCompilerPack.TargetFramework)' == 'net10.0' and $([MSBuild]::VersionLessThan('%(KnownILCompilerPack.ILCompilerPackVersion)', '10.0.14'))">10.0.14</ILCompilerPackVersion>
+    </KnownILCompilerPack>
+  </ItemGroup>
+</Project>

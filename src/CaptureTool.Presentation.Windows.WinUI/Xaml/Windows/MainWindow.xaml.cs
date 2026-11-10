@@ -192,6 +192,7 @@ public sealed partial class MainWindow : Window
     {
         DispatcherQueue.TryEnqueue(() =>
         {
+            if (_shutdownHandler.IsShuttingDown) return;
             string appTitle = "Capture Tool";
 
             if (!UiTestLaunchOptions.Current.IsEnabled &&
@@ -238,7 +239,7 @@ public sealed partial class MainWindow : Window
     {
         DispatcherQueue.TryEnqueue(() =>
         {
-            double scaleAdjustment = AppTitleBar.XamlRoot.RasterizationScale;
+            if (_shutdownHandler.IsShuttingDown || AppTitleBar.XamlRoot == null) return;
 
             var rightInset = AppWindow.TitleBar.RightInset;
             var leftInset = AppWindow.TitleBar.LeftInset;
@@ -268,6 +269,7 @@ public sealed partial class MainWindow : Window
 
     private void OnViewModelPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
+        if (_shutdownHandler.IsShuttingDown) return;
         if (e.PropertyName == nameof(MainWindowViewModel.CurrentAppTheme))
         {
             UpdateRequestedAppTheme();
@@ -385,15 +387,25 @@ public sealed partial class MainWindow : Window
         // Commit the removal and let pending composition callbacks complete before
         // stopping the dispatcher and retiring the controls' dependency properties.
         var compositor = ElementCompositionPreview.GetElementVisual(RootGrid).Compositor;
-        if (NavigationFrame.Content is ImageEditPage imageEditPage)
+        _startupPrompts?.Cancel();
+        RootGrid.IsHitTestVisible = false;
+        NavigationFrame.IsEnabled = false;
+        SuspendMediaPlayback();
+        try
         {
-            await imageEditPage.PrepareForShutdownAsync();
+            if (NavigationFrame.Content is IShutdownAwarePage page)
+            {
+                await page.PrepareForShutdownAsync();
+            }
         }
-        NavigationFrame.Content = null;
-        NavigationFrame.BackStack.Clear();
-        NavigationFrame.ForwardStack.Clear();
-        RootGrid.UpdateLayout();
-        await compositor.RequestCommitAsync().AsTask().WaitAsync(TimeSpan.FromSeconds(5));
+        finally
+        {
+            NavigationFrame.Content = null;
+            NavigationFrame.BackStack.Clear();
+            NavigationFrame.ForwardStack.Clear();
+            RootGrid.UpdateLayout();
+            await compositor.RequestCommitAsync().AsTask().WaitAsync(TimeSpan.FromSeconds(5));
+        }
     }
 
     public void SuspendMediaPlayback()
@@ -412,6 +424,7 @@ public sealed partial class MainWindow : Window
 
     public void ResumeMediaPlayback()
     {
+        if (_shutdownHandler.IsShuttingDown) return;
         switch (NavigationFrame.Content)
         {
             case AudioEditPage audioEditPage:
@@ -428,17 +441,23 @@ public sealed partial class MainWindow : Window
         INavigationRequest request,
         CancellationToken cancellationToken = default)
     {
+        if (_shutdownHandler.IsShuttingDown) return NavigationResult.Rejected;
         if (ViewModel.IsCurrentNavigationRequest(request))
         {
             DispatcherQueue.TryEnqueue(ResumeMediaPlayback);
             return NavigationResult.NoChange;
         }
 
-        var completion = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var completion = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
         bool enqueued = DispatcherQueue.TryEnqueue(() =>
         {
             try
             {
+                if (_shutdownHandler.IsShuttingDown)
+                {
+                    completion.SetResult(false);
+                    return;
+                }
                 cancellationToken.ThrowIfCancellationRequested();
 
                 Type pageType = PageLocator.GetPageType(request.Route);
@@ -469,7 +488,7 @@ public sealed partial class MainWindow : Window
                 }
 
                 ResumeMediaPlayback();
-                completion.SetResult();
+                completion.SetResult(true);
             }
             catch (OperationCanceledException ex)
             {
@@ -486,7 +505,7 @@ public sealed partial class MainWindow : Window
             return NavigationResult.Rejected;
         }
 
-        await completion.Task;
+        if (!await completion.Task || _shutdownHandler.IsShuttingDown) return NavigationResult.Rejected;
         ViewModel.CommitNavigationRequest(request);
         return NavigationResult.Accepted;
     }
@@ -540,6 +559,7 @@ public sealed partial class MainWindow : Window
     {
         DispatcherQueue.TryEnqueue(() =>
         {
+            if (_shutdownHandler.IsShuttingDown) return;
             var titleBar = AppWindow.TitleBar;
 
             if (titleBar is null)
