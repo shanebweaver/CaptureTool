@@ -144,8 +144,8 @@ public sealed class WindowsLanguageModelTests
 
     private static MetadataProcessorInput Input()
     {
-        var source = new AnalysisResult(new TextRecognitionMetadata([new("Invoice total USD 125.00.")]), new("ocr", "test", "model", "1"), DateTimeOffset.UtcNow, "test");
-        var record = new CaptureAnalysisRecord(CaptureId.New(), AnalysisMediaKind.Image, new(new string('a', 64)), "test", Guid.NewGuid(), [source]);
+        var source = new AnalysisResult(new TextRecognitionMetadata((RecognizedText[])[new("Invoice total USD 125.00.")]), new("ocr", "test", "model", "1"), DateTimeOffset.UtcNow, "test");
+        var record = new CaptureAnalysisRecord(CaptureId.New(), AnalysisMediaKind.Image, new(new string('a', 64)), "test", Guid.NewGuid(), (AnalysisResult[])[source]);
         return MetadataProcessorInput.Create(record, MetadataEnrichmentConfiguration.CreateSemantic("windows-test", AnalysisCapability.ImageAltText));
     }
 

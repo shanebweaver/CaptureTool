@@ -28,6 +28,22 @@ namespace CaptureTool.Presentation.Tests.Features;
 public sealed class ImageEditPageViewModelForegroundExtractionTests
 {
     [TestMethod]
+    public async Task PointRequest_AfterShutdownStarts_DoesNotStartInference()
+    {
+        var service = new Mock<IImageForegroundExtractionService>();
+        service.Setup(x => x.GetReadyState()).Returns(ForegroundExtractionReadyState.Ready);
+        using var viewModel = CreateViewModel(service.Object);
+        await viewModel.LoadAsync(new ImageFile("original.png"), CancellationToken.None);
+        await viewModel.ToggleForegroundExtractionModeCommand.ExecuteAsync(null);
+        viewModel.IsForegroundExtractionModeActive.Should().BeTrue();
+
+        await viewModel.StopOperationsAsync();
+        await viewModel.OnForegroundExtractionRequestedAsync(new Vector2(30, 20));
+
+        service.Verify(x => x.ExtractAsync(It.IsAny<ForegroundExtractionRequest>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [TestMethod]
     public async Task ToggleMode_WhenConsentRefused_ShouldRemainInactive()
     {
         var consent = new Mock<IAiFeatureConsentService>();

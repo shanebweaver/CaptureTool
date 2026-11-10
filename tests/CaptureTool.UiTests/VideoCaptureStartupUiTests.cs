@@ -700,6 +700,7 @@ public sealed class VideoCaptureStartupUiTests
             "bin",
             platform,
             configuration,
+            "unpackaged",
             "net10.0-windows10.0.26100.0",
             runtimeIdentifier,
             "CaptureTool.Presentation.Windows.WinUI.exe");

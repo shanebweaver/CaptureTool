@@ -21,6 +21,14 @@
     <AppxOSMaxVersionTestedReplaceManifestVersion>false</AppxOSMaxVersionTestedReplaceManifestVersion>
   </PropertyGroup>
 
+  <!-- The solution also builds this project as an unpackaged, self-contained
+       UI-test app. Keep its XAML, PRI, and runtime outputs out of the packaged
+       debugger build, including when both variants are built in parallel. -->
+  <PropertyGroup Condition="'$(WindowsPackageType)' == 'None'">
+    <OutputPath>bin\$(Platform)\$(Configuration)\unpackaged\</OutputPath>
+    <IntermediateOutputPath>obj\$(Platform)\$(Configuration)\unpackaged\</IntermediateOutputPath>
+  </PropertyGroup>
+
   <!-- App manifest -->
   <ItemGroup>
     <Manifest Include="$(ApplicationManifest)" />

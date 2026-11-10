@@ -1,9 +1,10 @@
 using CaptureTool.Application.Abstractions.Edit.Image.TextExtraction;
+using CaptureTool.Application.Abstractions.Logging;
 using System.Drawing;
 
 namespace CaptureTool.Presentation.Windows.WinUI.UiTests;
 
-internal sealed class UiTestTextExtractionService : ITextExtractionService
+internal sealed class UiTestTextExtractionService(ILogService log) : ITextExtractionService
 {
     private static readonly Size BaseImageSize = new(420, 220);
     private static readonly TimeSpan SimulatedInferenceDelay = TimeSpan.FromSeconds(2);
@@ -24,7 +25,9 @@ internal sealed class UiTestTextExtractionService : ITextExtractionService
         CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        await Task.Delay(SimulatedInferenceDelay, cancellationToken);
+        await UiTestInferenceLifetime.WaitAsync("editor", log, cancellationToken);
+        if (UiTestLaunchOptions.AiProfile is not ("shutdown-cancel" or "shutdown-late-result"))
+            await Task.Delay(SimulatedInferenceDelay, cancellationToken);
 
         Size sourceSize = request.SourceSize.Width > 0 && request.SourceSize.Height > 0
             ? request.SourceSize

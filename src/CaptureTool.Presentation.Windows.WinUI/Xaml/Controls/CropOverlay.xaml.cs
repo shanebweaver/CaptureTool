@@ -174,7 +174,7 @@ public sealed partial class CropOverlay : UserControlBase
     private FrameworkElement? _activeAnchor;
     private DragMode _dragMode = DragMode.None;
     private Rectangle _oldSelectionArea = Rectangle.Empty;
-    private IReadOnlyList<FrameworkElement> _anchorBoxes = [];
+    private FrameworkElement[] _anchorBoxes = [];
 
     public CropOverlay()
     {

@@ -1420,7 +1420,7 @@ public sealed partial class ImageCanvas : UserControlBase
             RectangleF bounds = qrCode.Bounds;
             float padding = Math.Clamp(Math.Min(bounds.Width, bounds.Height) * 0.03f, 3, 12);
             bounds.Inflate(padding, padding);
-            contours.Add([
+            contours.Add((PointF[])[
                 new PointF(bounds.Left, bounds.Top),
                 new PointF(bounds.Right, bounds.Top),
                 new PointF(bounds.Right, bounds.Bottom),
@@ -1620,7 +1620,7 @@ public sealed partial class ImageCanvas : UserControlBase
         };
         if (includeOuterBounds)
         {
-            AddPathFigure(geometry, [
+            AddPathFigure(geometry, (PointF[])[
                 new PointF(0, 0),
                 new PointF((float)width, 0),
                 new PointF((float)width, (float)height),

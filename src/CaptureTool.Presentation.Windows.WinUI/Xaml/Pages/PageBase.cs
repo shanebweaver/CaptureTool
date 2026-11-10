@@ -8,12 +8,14 @@ using Microsoft.UI.Xaml.Navigation;
 
 namespace CaptureTool.Presentation.Windows.WinUI.Xaml.Pages;
 
-public abstract class PageBase<VM> : Page where VM : IViewModel
+public abstract class PageBase<VM> : Page, IShutdownAwarePage where VM : IViewModel
 {
     private readonly IActiveEditSessionService _activeEditSessionService = App.Current.ServiceProvider.GetService<IActiveEditSessionService>();
     private readonly ILogService _logService = App.Current.ServiceProvider.GetService<ILogService>();
     private readonly INavigationService _navigationService = App.Current.ServiceProvider.GetService<INavigationService>();
     private CancellationTokenSource? _loadCts;
+    private bool _released;
+    private Task _loadTask = Task.CompletedTask;
 
     public VM ViewModel { get; } = App.Current.ServiceProvider.GetService<VM>();
 
@@ -23,6 +25,13 @@ public abstract class PageBase<VM> : Page where VM : IViewModel
     }
 
     protected override async void OnNavigatedTo(NavigationEventArgs e)
+    {
+        _loadTask = LoadPageAsync(e);
+        await _loadTask;
+        base.OnNavigatedTo(e);
+    }
+
+    private async Task LoadPageAsync(NavigationEventArgs e)
     {
         _loadCts ??= new();
 
@@ -55,21 +64,46 @@ public abstract class PageBase<VM> : Page where VM : IViewModel
                 }
             }
         }
-        catch (OperationCanceledException ex)
+        catch (OperationCanceledException) when (_released || _loadCts?.IsCancellationRequested == true)
         {
-            _logService.LogException(ex, "Page load canceled.");
+            // Navigating away or shutting down cancels page loading normally.
         }
         catch (Exception ex)
         {
             _logService.LogException(ex, "Failed to load page.");
-            await _navigationService.NavigateAsync(NavigationRoute.Error, ex);
+            if (!_released) await _navigationService.NavigateAsync(NavigationRoute.Error, ex);
         }
-
-        base.OnNavigatedTo(e);
     }
 
     protected override void OnNavigatedFrom(NavigationEventArgs e)
     {
+        ReleaseViewModel();
+        base.OnNavigatedFrom(e);
+    }
+
+    public virtual async Task PrepareForShutdownAsync()
+    {
+        try
+        {
+            _loadCts?.Cancel();
+        }
+        finally
+        {
+            try
+            {
+                await _loadTask;
+            }
+            finally
+            {
+                ReleaseViewModel();
+            }
+        }
+    }
+
+    private void ReleaseViewModel()
+    {
+        if (_released) return;
+        _released = true;
         if (_loadCts != null)
         {
             _loadCts.Cancel();
@@ -82,7 +116,5 @@ public abstract class PageBase<VM> : Page where VM : IViewModel
         {
             _activeEditSessionService.ClearCurrentSession(editableSession);
         }
-
-        base.OnNavigatedFrom(e);
     }
 }

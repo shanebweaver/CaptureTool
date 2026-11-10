@@ -17,7 +17,7 @@ public sealed class WindowsShutdownHandlerTests
     {
         var calls = new List<string>();
         var cancellationService = new Mock<ICancellationService>();
-        cancellationService.Setup(service => service.CancelAll()).Callback(() => calls.Add("cancel"));
+        cancellationService.Setup(service => service.CancelAllAsync()).Callback(() => calls.Add("cancel"));
         var captureMemory = new Mock<ICaptureMemoryService>();
         captureMemory.Setup(service => service.StopAsync()).Returns(() =>
         {
@@ -33,8 +33,57 @@ public sealed class WindowsShutdownHandlerTests
         handler.Shutdown();
 
         handler.IsShuttingDown.Should().BeTrue();
-        calls.Should().Equal("stop", "cancel", "exit");
+        calls.Should().Equal("cancel", "stop", "exit");
         handler.TryRestart().Should().BeFalse();
+    }
+
+    [TestMethod]
+    public async Task Shutdown_KeepsDispatcherAvailableUntilUiAndBackgroundWorkFinish()
+    {
+        var uiStopped = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var analysisStopped = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var captureMemory = new Mock<ICaptureMemoryService>();
+        captureMemory.Setup(service => service.StopAsync()).Returns(analysisStopped.Task);
+        var cancellation = new Mock<ICancellationService>();
+        var canceled = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        cancellation.Setup(service => service.CancelAllAsync()).Returns(canceled.Task);
+        int exits = 0;
+        var handler = new WindowsShutdownHandler(Mock.Of<ILogService>(), cancellation.Object,
+            new TestWindowsAppRestartService(AppRestartFailureReason.Other), captureMemory: captureMemory.Object,
+            exitApplication: () => exits++, prepareForShutdown: () => uiStopped.Task);
+
+        handler.Shutdown();
+        handler.Shutdown();
+
+        cancellation.Verify(service => service.CancelAllAsync(), Times.Once);
+        captureMemory.Verify(service => service.StopAsync(), Times.Never);
+        handler.ShutdownCompletion.IsCompleted.Should().BeFalse();
+        exits.Should().Be(0);
+        canceled.SetResult();
+        uiStopped.SetResult();
+        exits.Should().Be(0);
+        analysisStopped.SetResult();
+        await handler.ShutdownCompletion.WaitAsync(TimeSpan.FromSeconds(5));
+        captureMemory.Verify(service => service.StopAsync(), Times.Once);
+        exits.Should().Be(1);
+    }
+
+    [TestMethod]
+    public async Task Shutdown_WhenUiCleanupFails_StillDrainsBackgroundWork()
+    {
+        var stopped = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var captureMemory = new Mock<ICaptureMemoryService>();
+        captureMemory.Setup(service => service.StopAsync()).Returns(stopped.Task);
+        int exits = 0;
+        var handler = new WindowsShutdownHandler(Mock.Of<ILogService>(), Mock.Of<ICancellationService>(),
+            new TestWindowsAppRestartService(AppRestartFailureReason.Other), captureMemory: captureMemory.Object,
+            exitApplication: () => exits++, prepareForShutdown: () => throw new InvalidOperationException("cleanup failed"));
+
+        handler.Shutdown();
+        exits.Should().Be(0);
+        stopped.SetResult();
+        await handler.ShutdownCompletion.WaitAsync(TimeSpan.FromSeconds(5));
+        exits.Should().Be(1);
     }
 
     [TestMethod]
@@ -52,7 +101,7 @@ public sealed class WindowsShutdownHandlerTests
 
         handler.Shutdown();
 
-        cancellationService.Verify(service => service.CancelAll(), Times.Once);
+        cancellationService.Verify(service => service.CancelAllAsync(), Times.Once);
         exitCount.Should().Be(1);
     }
 
@@ -61,7 +110,7 @@ public sealed class WindowsShutdownHandlerTests
     {
         var failure = new InvalidOperationException("cleanup failed");
         var cancellationService = new Mock<ICancellationService>();
-        cancellationService.Setup(service => service.CancelAll()).Throws(failure);
+        cancellationService.Setup(service => service.CancelAllAsync()).Throws(failure);
         var logService = new Mock<ILogService>();
         int exitCount = 0;
         var handler = new WindowsShutdownHandler(
@@ -97,7 +146,7 @@ public sealed class WindowsShutdownHandlerTests
 
         restarted.Should().BeFalse();
         handler.IsShuttingDown.Should().BeFalse();
-        cancellationService.Verify(service => service.CancelAll(), Times.Never);
+        cancellationService.Verify(service => service.CancelAllAsync(), Times.Never);
         restartService.CallCount.Should().Be(1);
         restartService.Arguments.Should().BeEmpty();
         logService.Verify(service => service.LogWarning(It.IsAny<string>()), Times.Once);

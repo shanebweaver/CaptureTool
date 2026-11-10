@@ -28,6 +28,22 @@ namespace CaptureTool.Presentation.Tests.Features;
 public sealed class ImageEditPageViewModelObjectEraseTests
 {
     [TestMethod]
+    public async Task PointRequest_AfterShutdownStarts_DoesNotStartInference()
+    {
+        var service = new Mock<IImageObjectEraseService>();
+        service.Setup(x => x.GetReadyState()).Returns(ObjectEraseReadyState.Ready);
+        using var viewModel = CreateViewModel(service.Object);
+        await viewModel.LoadAsync(new ImageFile("original.png"), CancellationToken.None);
+        await viewModel.ToggleObjectEraseModeCommand.ExecuteAsync(null);
+        viewModel.IsObjectEraseModeActive.Should().BeTrue();
+
+        await viewModel.StopOperationsAsync();
+        await viewModel.OnObjectEraseRequestedAsync(new Vector2(30, 20));
+
+        service.Verify(x => x.EraseAsync(It.IsAny<ObjectEraseRequest>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [TestMethod]
     public async Task ToggleMode_WhenConsentRefused_ShouldRemainInactive()
     {
         var consent = new Mock<IAiFeatureConsentService>();

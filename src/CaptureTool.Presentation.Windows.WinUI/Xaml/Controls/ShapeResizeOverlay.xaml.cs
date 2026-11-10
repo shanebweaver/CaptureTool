@@ -63,8 +63,8 @@ public sealed partial class ShapeResizeOverlay : UserControlBase
     private ResizeHandle _activeHandle = ResizeHandle.None;
     private Point _handleStartPoint;
     private RectangleF _initialBounds;
-    private IReadOnlyList<FrameworkElement> _resizeHandles = [];
-    private IReadOnlyList<FrameworkElement> _borderMoveHandles = [];
+    private FrameworkElement[] _resizeHandles = [];
+    private FrameworkElement[] _borderMoveHandles = [];
 
     private enum ResizeHandle
     {

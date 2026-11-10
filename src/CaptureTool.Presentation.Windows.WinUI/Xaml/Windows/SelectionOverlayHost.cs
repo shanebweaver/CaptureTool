@@ -96,7 +96,7 @@ internal sealed partial class SelectionOverlayHost : IDisposable
             return;
         }
 
-        await _viewModel.CaptureAllScreensAsync([.. _monitors]);
+        await _viewModel.CaptureAllScreensAsync(_monitors.ToArray());
     }
 
     public void Activate()

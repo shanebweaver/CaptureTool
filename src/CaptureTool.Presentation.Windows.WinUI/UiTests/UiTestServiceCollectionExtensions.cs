@@ -40,8 +40,8 @@ internal static class UiTestServiceCollectionExtensions
             .SelectMany(plan => plan.Steps.SelectMany(step => step.Candidates.Select(id => new { Id = id, step.Capability, plan.MediaKind })))
             .Where(candidate => !metadataIds.Contains(candidate.Id))
             .GroupBy(candidate => candidate.Id))
-            services.AddSingleton<IMediaAnalyzer>(new UiTestMediaAnalyzer(new(group.Key, group.First().Capability,
-                group.Select(candidate => candidate.MediaKind).Distinct().ToArray())));
+            services.AddSingleton<IMediaAnalyzer>(sp => new UiTestMediaAnalyzer(new(group.Key, group.First().Capability,
+                group.Select(candidate => candidate.MediaKind).Distinct().ToArray()), sp.GetRequiredService<ILogService>()));
 
         return services;
     }
@@ -70,12 +70,12 @@ internal static class UiTestServiceCollectionExtensions
             AnalysisEvidence[] evidence = [new(entry.ResultId, entry.EntryIndex, 0, entry.Text.Length)];
             AnalysisPayload payload = descriptor.Capability == AnalysisCapability.CaptureSynopsis
                 ? new CaptureSynopsisMetadata(
-                    [new("Invoice INV-2048 totals USD 125.00 and is due on 2026-10-15.", evidence)], input.Coverage)
+                    (SuggestedText[])[new("Invoice INV-2048 totals USD 125.00 and is due on 2026-10-15.", evidence)], input.Coverage)
                 : descriptor.Capability == AnalysisCapability.CaptureName
                 ? new CaptureNameMetadata(new("Contoso invoice", evidence), input.Coverage)
                 : descriptor.Capability == AnalysisCapability.ImageAltText
                 ? new ImageAltTextMetadata(new("Invoice INV-2048 from Contoso showing a total of USD 125.00, due October 15, 2026.", evidence), input.Coverage)
-                : new CaptureClassificationMetadata(CaptureCategory.Document, evidence, [new("invoice", evidence)], input.Coverage);
+                : new CaptureClassificationMetadata(CaptureCategory.Document, evidence, (SuggestedText[])[new("invoice", evidence)], input.Coverage);
             return AnalyzerOutcome.Success(payload, new(descriptor.Id, "ui-test", "fixture", "1"));
         }
     }

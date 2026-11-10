@@ -44,21 +44,8 @@ public partial class App : Microsoft.UI.Xaml.Application
             $"Unhandled exception occurred. HRESULT: 0x{e.Exception.HResult:X8}. XAML message: {e.Message}");
     }
 
-    internal async void RequestExit()
-    {
-        try
-        {
-            await ServiceProvider.GetService<AppNavigationHandler>().PrepareForShutdownAsync();
-        }
-        catch (Exception exception)
-        {
-            ServiceProvider.GetService<ILogService>().LogException(exception, "Failed to prepare the UI for shutdown.");
-        }
-        finally
-        {
-            Exit();
-        }
-    }
+    internal Task PrepareForShutdownAsync() =>
+        ServiceProvider.GetService<AppNavigationHandler>().PrepareForShutdownAsync();
 
     private void RestoreAppTheme()
     {

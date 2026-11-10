@@ -29,6 +29,43 @@ namespace CaptureTool.Presentation.Tests.Features;
 public sealed class ImageEditPageViewModelImageDescriptionTests
 {
     [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task StopOperationsAsync_CancelsInferenceAndWaitsForLateCompletion(bool providerThrowsCancellation)
+    {
+        var pending = new TaskCompletionSource<ImageDescriptionResult>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var provider = new Mock<IImageDescriptionService>();
+        provider.Setup(service => service.GetReadyState()).Returns(ImageDescriptionReadyState.Ready);
+        CancellationToken requestToken = default;
+        provider.Setup(service => service.DescribeAsync(It.IsAny<ImageDescriptionRequest>(), It.IsAny<CancellationToken>()))
+            .Returns((ImageDescriptionRequest _, CancellationToken token) =>
+            {
+                requestToken = token;
+                return pending.Task;
+            });
+        var source = new MemoryStream([1, 2, 3]);
+        var exporter = new Mock<IImageCanvasExporter>();
+        exporter.Setup(service => service.RenderToStreamAsync(It.IsAny<IDrawable[]>(), It.IsAny<ImageCanvasRenderOptions>()))
+            .ReturnsAsync(source);
+        var model = CreateViewModel(imageCanvasExporter: exporter.Object, imageDescriptionService: provider.Object);
+        await model.LoadAsync(new ImageFile("original.png"), CancellationToken.None);
+        await model.ToggleImageDescriptionModeCommand.ExecuteAsync(null);
+        Task inference = model.GenerateDetailedImageDescriptionCommand.ExecuteAsync(null);
+
+        Task stopping = model.StopOperationsAsync();
+
+        requestToken.IsCancellationRequested.Should().BeTrue();
+        stopping.IsCompleted.Should().BeFalse();
+        source.CanRead.Should().BeTrue("the provider still owns the request");
+        if (providerThrowsCancellation) pending.SetCanceled(requestToken);
+        else pending.SetResult(ImageDescriptionResult.Success("A late description."));
+        await Task.WhenAll(inference, stopping).WaitAsync(TimeSpan.FromSeconds(5));
+        model.ImageDescription.Should().BeEmpty();
+        source.CanRead.Should().BeFalse();
+        model.Dispose();
+    }
+
+    [TestMethod]
     public async Task LoadAsync_WhenFeatureDisabled_ShouldHideAndDisableMode()
     {
         var service = new Mock<IImageDescriptionService>(MockBehavior.Strict);

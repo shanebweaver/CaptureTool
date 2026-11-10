@@ -29,7 +29,30 @@ public sealed partial class ImageEditPage : ImageEditPageBase
     private const int ToolbarSlideDurationMilliseconds = 160;
     private const double ToolbarHiddenOffset = -8;
 
-    internal Task PrepareForShutdownAsync() => ImageCanvas.PrepareForShutdownAsync();
+    public override async Task PrepareForShutdownAsync()
+    {
+        DetachEventHandlers();
+        Bindings.StopTracking();
+        foreach (Storyboard animation in _toolbarAnimations.Values) animation.Stop();
+        _toolbarAnimations.Clear();
+        // Cancellation alone does not mean inference has finished. Keep the UI
+        // dispatcher alive until every editor operation has left its finally.
+        try
+        {
+            await ViewModel.StopOperationsAsync();
+        }
+        finally
+        {
+            try
+            {
+                await base.PrepareForShutdownAsync();
+            }
+            finally
+            {
+                await ImageCanvas.PrepareForShutdownAsync();
+            }
+        }
+    }
 
     public ImageEditPage()
     {
@@ -56,7 +79,13 @@ public sealed partial class ImageEditPage : ImageEditPageBase
         ImageCanvas.ShapeContextMenuRequested += ImageCanvas_ShapeContextMenuRequested;
     }
 
-    ~ImageEditPage()
+    protected override void OnNavigatedFrom(Microsoft.UI.Xaml.Navigation.NavigationEventArgs e)
+    {
+        DetachEventHandlers();
+        base.OnNavigatedFrom(e);
+    }
+
+    private void DetachEventHandlers()
     {
         ViewModel.LoadStateChanged -= ViewModel_LoadStateChanged;
         ViewModel.InvalidateCanvasRequested -= ViewModel_InvalidateCanvasRequested;
@@ -70,6 +99,9 @@ public sealed partial class ImageEditPage : ImageEditPageBase
         ImageCanvas.ShapeModified -= ImageCanvas_ShapeModified;
         ImageCanvas.ImageContextMenuRequested -= ImageCanvas_ImageContextMenuRequested;
         ImageCanvas.ShapeContextMenuRequested -= ImageCanvas_ShapeContextMenuRequested;
+        ImageCanvas.ForegroundExtractionRequested -= ImageCanvas_ForegroundExtractionRequested;
+        ImageCanvas.ObjectEraseRequested -= ImageCanvas_ObjectEraseRequested;
+        ImageCanvas.ObjectExtractionRequested -= ImageCanvas_ObjectExtractionRequested;
     }
 
     private void InitializeContextMenus()
