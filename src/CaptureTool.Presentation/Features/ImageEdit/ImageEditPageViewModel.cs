@@ -75,6 +75,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     private readonly IImageSuperResolutionService _imageSuperResolutionService;
     private readonly IImageSuperResolutionFeatureAvailability _imageSuperResolutionFeatureAvailability;
     private readonly ITextExtractionService _textExtractionService;
+    private readonly ICaptureImageTextService? _captureImageText;
     private readonly ITextExtractionFeatureAvailability _textExtractionFeatureAvailability;
     private readonly IImageDescriptionService _imageDescriptionService;
     private readonly IImageDescriptionFeatureAvailability _imageDescriptionFeatureAvailability;
@@ -774,7 +775,8 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         ITelemetryService? telemetryService = null,
         IScratchArtifactStore? scratchArtifactStore = null,
         IFileSystem? fileSystem = null,
-        ICaptureNamingService? captureNames = null)
+        ICaptureNamingService? captureNames = null,
+        ICaptureImageTextService? captureImageText = null)
     {
         _localizationService = localizationService;
         EditorText = new(EnsureTextExtractionCurrentAsync, CancelTextExtractionWork);
@@ -786,6 +788,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         _imageSuperResolutionService = imageSuperResolutionService;
         _imageSuperResolutionFeatureAvailability = imageSuperResolutionFeatureAvailability;
         _textExtractionService = textExtractionService ?? new NullTextExtractionService();
+        _captureImageText = captureImageText;
         _textExtractionFeatureAvailability = textExtractionFeatureAvailability ?? new DisabledTextExtractionFeatureAvailability();
         _imageDescriptionService = imageDescriptionService ?? new NullImageDescriptionService();
         _imageDescriptionFeatureAvailability = imageDescriptionFeatureAvailability ?? new DisabledImageDescriptionFeatureAvailability();
@@ -2371,6 +2374,31 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
             authorization = CancellationTokenSource.CreateLinkedTokenSource(operation.Token, _aiFeatureConsentService.Revoked);
             cancellationToken = authorization.Token;
             cancellationToken.ThrowIfCancellationRequested();
+            if (processedRevision == 0 && !IsSourceImageGeometryChanged && _originalImageFile != null && _captureImageText != null)
+            {
+                TextExtractionResult? saved = await _captureImageText.TryExtractAsync(_originalImageFile, _originalImageSize, cancellationToken);
+                cancellationToken.ThrowIfCancellationRequested();
+                if (!operation.IsCurrent || processedRevision != _editRevision)
+                {
+                    return;
+                }
+                if (saved != null)
+                {
+                    if (saved.Status == TextExtractionStatus.Cancelled)
+                    {
+                        throw new OperationCanceledException(cancellationToken);
+                    }
+                    if (saved.Status == TextExtractionStatus.Success && saved.Document != null)
+                    {
+                        ApplyTextExtractionDocument(saved.Document, processedRevision);
+                    }
+                    else
+                    {
+                        ShowTextExtractionFailure(GetExtractionFailureMessage(saved));
+                    }
+                    return;
+                }
+            }
             TextExtractionReadyState readyState = _textExtractionService.GetReadyState();
             if (readyState == TextExtractionReadyState.PreparationNeeded)
             {

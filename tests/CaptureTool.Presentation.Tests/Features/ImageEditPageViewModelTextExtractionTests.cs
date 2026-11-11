@@ -29,6 +29,77 @@ namespace CaptureTool.Presentation.Tests.Features;
 public sealed class ImageEditPageViewModelTextExtractionTests
 {
     [TestMethod]
+    public async Task ReopenedUneditedImageUsesSharedTextWithoutRenderingOrPreparingTheStandaloneModel()
+    {
+        var shared = new Mock<ICaptureImageTextService>();
+        var image = new ImageFile("capture.png", "saved.png");
+        shared.Setup(service => service.TryExtractAsync(image, new Size(100, 50), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(TextExtractionResult.Success(new("saved OCR", new(100, 50), [new("saved OCR", new(10, 10, 50, 10))], [])));
+        var standalone = new Mock<ITextExtractionService>();
+        standalone.Setup(service => service.GetReadyState()).Returns(TextExtractionReadyState.PreparationNeeded);
+        var exporter = new Mock<IImageCanvasExporter>(MockBehavior.Strict);
+        for (int reopen = 0; reopen < 2; reopen++)
+        {
+            using var vm = CreateViewModel(imageCanvasExporter: exporter.Object, textExtractionService: standalone.Object, captureImageText: shared.Object);
+            await vm.LoadAsync(image, CancellationToken.None);
+            await vm.ToggleTextExtractionModeCommand.ExecuteAsync(null);
+            Assert.AreEqual("saved OCR", vm.TextExtractionTool.Text);
+            Assert.HasCount(1, vm.TextExtractionRegions);
+            Assert.IsFalse(vm.IsTextExtractionRunning);
+        }
+        shared.Verify(service => service.TryExtractAsync(image, new Size(100, 50), It.IsAny<CancellationToken>()), Times.Exactly(2));
+        standalone.Verify(service => service.EnsureReadyAsync(It.IsAny<CancellationToken>()), Times.Never);
+        standalone.Verify(service => service.ExtractAsync(It.IsAny<TextExtractionRequest>(), It.IsAny<CancellationToken>()), Times.Never);
+        exporter.VerifyNoOtherCalls();
+    }
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task EditedOrUnmatchedImageUsesRenderedCanvasWithoutPersistingItsText(bool edited)
+    {
+        var shared = new Mock<ICaptureImageTextService>();
+        shared.Setup(service => service.TryExtractAsync(It.IsAny<ImageFile>(), It.IsAny<Size>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((TextExtractionResult?)null);
+        var standalone = new Mock<ITextExtractionService>();
+        standalone.Setup(service => service.GetReadyState()).Returns(TextExtractionReadyState.Ready);
+        standalone.Setup(service => service.ExtractAsync(It.IsAny<TextExtractionRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(TextExtractionResult.Success(new("canvas text", new(100, 50), [], [])));
+        var exporter = CreateExporter();
+        using var vm = CreateViewModel(imageCanvasExporter: exporter.Object, textExtractionService: standalone.Object, captureImageText: shared.Object);
+        await vm.LoadAsync(new("capture.png"), CancellationToken.None);
+        if (edited) vm.RotateCommand.Execute(null);
+        await vm.ToggleTextExtractionModeCommand.ExecuteAsync(null);
+        Assert.AreEqual("canvas text", vm.TextExtractionTool.Text);
+        shared.Verify(service => service.TryExtractAsync(It.IsAny<ImageFile>(), It.IsAny<Size>(), It.IsAny<CancellationToken>()), edited ? Times.Never() : Times.Once());
+        standalone.Verify(service => service.ExtractAsync(It.IsAny<TextExtractionRequest>(), It.IsAny<CancellationToken>()), Times.Once);
+        exporter.Verify(service => service.RenderToStreamAsync(It.IsAny<IDrawable[]>(), It.IsAny<ImageCanvasRenderOptions>()), Times.Once);
+    }
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task SharedTextExtractionCancelsAndRejectsLateResultsOnSecondClickOrEdit(bool edit)
+    {
+        var shared = new Mock<ICaptureImageTextService>();
+        var pending = new TaskCompletionSource<TextExtractionResult?>();
+        CancellationToken token = default;
+        shared.Setup(service => service.TryExtractAsync(It.IsAny<ImageFile>(), It.IsAny<Size>(), It.IsAny<CancellationToken>()))
+            .Returns((ImageFile _, Size _, CancellationToken ct) => { token = ct; return pending.Task; });
+        using var vm = CreateViewModel(captureImageText: shared.Object);
+        await vm.LoadAsync(new("capture.png"), CancellationToken.None);
+        Task scan = vm.ToggleTextExtractionModeCommand.ExecuteAsync(null);
+        Assert.IsTrue(vm.IsTextExtractionRunning);
+        if (edit) vm.RotateCommand.Execute(null);
+        else await vm.ToggleTextExtractionModeCommand.ExecuteAsync(null);
+        Assert.IsTrue(token.IsCancellationRequested);
+        pending.SetResult(TextExtractionResult.Success(new("late", new(100, 50), [], [])));
+        await scan;
+        Assert.IsNull(vm.EditorText.Document);
+        Assert.IsFalse(vm.IsTextExtractionRunning);
+    }
+
+    [TestMethod]
     public async Task PaneExtractionUsesRenderedEditsAndCachesForTheSessionWithoutEnteringAnotherMode()
     {
         var exporter = CreateExporter();
@@ -583,7 +654,8 @@ public sealed class ImageEditPageViewModelTextExtractionTests
         IClipboardService? clipboardService = null,
         ILocalizationService? localizationService = null,
         IAppNotificationService? notificationService = null,
-        IAiFeatureConsentService? sharedConsent = null)
+        IAiFeatureConsentService? sharedConsent = null,
+        ICaptureImageTextService? captureImageText = null)
     {
         var imageMetadata = new Mock<IImageMetadataService>();
         imageMetadata
@@ -632,6 +704,7 @@ public sealed class ImageEditPageViewModelTextExtractionTests
                 service => service.GetConsentState(AiFeatureId.TextExtraction) == AiFeatureConsentState.Granted &&
                 service.EnsureConsentAsync(It.IsAny<CancellationToken>()) == Task.FromResult(true)),
             textExtractionService ?? Mock.Of<ITextExtractionService>(service => service.GetReadyState() == TextExtractionReadyState.Ready),
-            textExtractionFeatureAvailability ?? Mock.Of<ITextExtractionFeatureAvailability>(service => service.IsTextExtractionEnabled == true));
+            textExtractionFeatureAvailability ?? Mock.Of<ITextExtractionFeatureAvailability>(service => service.IsTextExtractionEnabled == true),
+            captureImageText: captureImageText);
     }
 }

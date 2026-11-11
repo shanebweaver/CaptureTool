@@ -825,19 +825,20 @@ public sealed partial class CaptureMemoryIntegrationTests
         public Recents Recents { get; } = new();
         public Analyzer Analyzer { get; } = new();
         public App(AnalysisTestEnvironment environment, IEnumerable<IMetadataProcessor>? processors = null,
-            IAnalysisFeatureAvailability? availability = null, IMediaAnalyzer[]? mediaAnalyzers = null)
+            IAnalysisFeatureAvailability? availability = null, IMediaAnalyzer[]? mediaAnalyzers = null,
+            CaptureAnalysisConfiguration? configuration = null)
         {
             _environment = environment;
             Store = environment.CreateStore();
             Catalog = environment.CreateCatalog();
             Authorization = new(new LocalCaptureMemoryPolicyStore(environment, environment.Protector, environment.Files));
             mediaAnalyzers ??= [Analyzer];
-            var configuration = new CaptureAnalysisConfiguration([new(AnalysisMediaKind.Image, "test-v1",
+            configuration ??= new CaptureAnalysisConfiguration([new(AnalysisMediaKind.Image, "test-v1",
                 mediaAnalyzers.Select(analyzer => new AnalysisStep(analyzer.Descriptor.Capability, [analyzer.Descriptor.Id],
                     TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(5))))]);
-            Worker = new(Store, Authorization, new LocalAnalysisSource(), configuration, mediaAnalyzers, Catalog);
+            Worker = new(Store, Authorization, new LocalAnalysisSource(), configuration, mediaAnalyzers, Catalog, processors);
             Names = new(Catalog, Catalog, new NameNotifier(), new LocalFileSystem());
-            Memory = new(Authorization, Catalog, Store, Worker, Prompts, new LocalFileSystem(), Names, processors, availability);
+            Memory = new(Authorization, Catalog, Store, Worker, Prompts, new LocalFileSystem(), Names, processors, availability, new LocalAnalysisSource());
         }
         public CaptureAsset Asset()
         {
