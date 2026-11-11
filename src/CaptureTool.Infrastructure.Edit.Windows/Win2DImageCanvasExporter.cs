@@ -2,8 +2,6 @@ using CaptureTool.Application.Abstractions.Clipboard;
 using CaptureTool.Application.Abstractions.Edit.Image.Rendering;
 using CaptureTool.Domain.Edit.Drawable;
 using Microsoft.Graphics.Canvas;
-using Windows.Storage;
-using Windows.Storage.Provider;
 using Windows.Storage.Streams;
 
 namespace CaptureTool.Infrastructure.Edit.Windows;
@@ -51,23 +49,10 @@ public sealed partial class Win2DImageCanvasExporter : IImageCanvasExporter
 
     private static async Task SaveStreamAtomicallyAsync(string filePath, IRandomAccessStream stream)
     {
-        await AtomicImageFileWriter.WriteAsync(filePath, async temporaryFilePath =>
+        await AtomicImageFileWriter.WriteAsync(filePath, async fileStream =>
         {
-            StorageFile file = await StorageFile.GetFileFromPathAsync(temporaryFilePath);
-            CachedFileManager.DeferUpdates(file);
-
-            using (var fileStream = await file.OpenAsync(FileAccessMode.ReadWrite))
-            {
-                fileStream.Size = 0;
-                stream.Seek(0);
-                await RandomAccessStream.CopyAsync(stream, fileStream);
-            }
-
-            FileUpdateStatus status = await CachedFileManager.CompleteUpdatesAsync(file);
-            if (status != FileUpdateStatus.Complete)
-            {
-                throw new Exception("File could not be saved.");
-            }
+            stream.Seek(0);
+            await RandomAccessStream.CopyAsync(stream, fileStream);
         });
     }
 

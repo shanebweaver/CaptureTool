@@ -106,6 +106,7 @@ public sealed class WindowsLanguageModelTests
         var client = new Client { Generate = _ => completion.Task };
         var task = new WindowsLanguageModelProcessor(Input().Descriptor, client).ProcessAsync(Input(), cancelled.Token);
         cancelled.Cancel();
+        Assert.IsTrue(client.Sessions[0].Cancellation.IsCancellationRequested);
         Assert.IsFalse(task.IsCompleted);
         Assert.IsFalse(client.Sessions[0].Disposed);
         completion.SetResult(new(LanguageModelResponseStatus.Complete, "invalid"));
@@ -169,8 +170,10 @@ public sealed class WindowsLanguageModelTests
     {
         public bool Disposed;
         public int Calls;
-        public Task<WindowsLanguageModelResponse> GenerateAsync(string instructions, string sources)
+        public CancellationToken Cancellation;
+        public Task<WindowsLanguageModelResponse> GenerateAsync(string instructions, string sources, CancellationToken ct)
         {
+            Cancellation = ct;
             Calls++;
             Assert.AreEqual(Calls == 2, instructions.Contains("previous attempt failed", StringComparison.Ordinal));
             Assert.DoesNotContain("Invoice total USD 125.00.", instructions);

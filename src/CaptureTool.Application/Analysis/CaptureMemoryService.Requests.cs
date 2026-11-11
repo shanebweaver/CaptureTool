@@ -14,6 +14,21 @@ internal sealed partial class CaptureMemoryService
     public Task ScanTextAsync(string path, CancellationToken cancellationToken = default)
         => RequestAnalysisAsync(path, AnalysisCapability.TextRecognition, scanText: true, cancellationToken);
 
+    public Task CancelAnalysisAsync(string path, CancellationToken cancellationToken = default)
+        => RunSafelyAsync(ct => RunCommandAsync(async () =>
+        {
+            // Serialize with admission so cancellation also catches a request that was
+            // still being queued when the user clicked the action a second time.
+            var assets = await _catalog.ReadAllAsync(ct).ConfigureAwait(false);
+            CaptureAsset? asset = assets.FirstOrDefault(item => SamePath(item.SourcePath, path)) ??
+                assets.FirstOrDefault(item => SamePath(item.PreferredPath, path));
+            if (asset != null)
+            {
+                await _worker.CancelAsync(asset.Id, ct).ConfigureAwait(false);
+            }
+            await RefreshStatusAsync(ct).ConfigureAwait(false);
+        }, ct), cancellationToken);
+
     private Task RequestAnalysisAsync(string path, AnalysisCapability capability, bool scanText, CancellationToken cancellationToken)
     {
         long epoch = Interlocked.Read(ref _epoch);

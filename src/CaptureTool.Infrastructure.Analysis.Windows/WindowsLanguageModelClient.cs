@@ -15,7 +15,7 @@ internal sealed record WindowsLanguageModelResponse(LanguageModelResponseStatus 
 
 internal interface IWindowsLanguageModelSession : IDisposable
 {
-    Task<WindowsLanguageModelResponse> GenerateAsync(string instructions, string sources);
+    Task<WindowsLanguageModelResponse> GenerateAsync(string instructions, string sources, CancellationToken ct);
 }
 
 internal interface IWindowsLanguageModelClient
@@ -84,11 +84,13 @@ internal sealed class WindowsLanguageModelClient(IAnalysisResources otherModels,
             {
                 return state;
             }
-            // Keep the operation owned until WinRT completes; cancellation fences subsequent work.
+            // Request native cancellation, retaining ownership until WinRT acknowledges it.
             AIFeatureReadyResult? result = null;
-            await (downloads ?? ModelDownloadGuard.Current).RunAsync(async _ =>
+            await (downloads ?? ModelDownloadGuard.Current).RunAsync(async token =>
             {
-                result = await LanguageModel.EnsureReadyAsync().AsTask(CancellationToken.None).ConfigureAwait(false);
+                var operation = LanguageModel.EnsureReadyAsync();
+                using var cancellation = token.Register(operation.Cancel);
+                result = await operation.AsTask(CancellationToken.None).ConfigureAwait(false);
             }, ct).ConfigureAwait(false);
             ct.ThrowIfCancellationRequested();
             return result?.Status == AIFeatureReadyResultState.Success ? AnalyzerAvailability.Ready : AnalyzerAvailability.TemporarilyUnavailable;
@@ -105,7 +107,9 @@ internal sealed class WindowsLanguageModelClient(IAnalysisResources otherModels,
         // before acquiring the Windows model so both are not retained together.
         await otherModels.ReleaseAsync().ConfigureAwait(false);
         ct.ThrowIfCancellationRequested();
-        LanguageModel model = await LanguageModel.CreateAsync().AsTask(CancellationToken.None).ConfigureAwait(false);
+        var operation = LanguageModel.CreateAsync();
+        using var cancellation = ct.Register(operation.Cancel);
+        LanguageModel model = await operation.AsTask(CancellationToken.None).ConfigureAwait(false);
         if (ct.IsCancellationRequested)
         {
             model.Dispose();
@@ -131,8 +135,9 @@ internal sealed class WindowsLanguageModelClient(IAnalysisResources otherModels,
 
     private sealed partial class Session(LanguageModel model) : IWindowsLanguageModelSession
     {
-        public async Task<WindowsLanguageModelResponse> GenerateAsync(string instructions, string sources)
+        public async Task<WindowsLanguageModelResponse> GenerateAsync(string instructions, string sources, CancellationToken ct)
         {
+            ct.ThrowIfCancellationRequested();
             var context = model.CreateContext(instructions);
             if (model.GetUsablePromptLength(context, sources) < (ulong)sources.Length)
             {
@@ -140,8 +145,9 @@ internal sealed class WindowsLanguageModelClient(IAnalysisResources otherModels,
             }
             // Each request gets a fresh context. The same native instance is used for
             // a bounded correction, then disposed at the end of this explicit action.
-            var result = await model.GenerateResponseAsync(context, sources, new LanguageModelOptions { Temperature = 0 })
-                .AsTask(CancellationToken.None).ConfigureAwait(false);
+            var operation = model.GenerateResponseAsync(context, sources, new LanguageModelOptions { Temperature = 0 });
+            using var cancellation = ct.Register(operation.Cancel);
+            var result = await operation.AsTask(CancellationToken.None).ConfigureAwait(false);
             return new(result.Status, result.Text ?? string.Empty);
         }
         public void Dispose() => model.Dispose();

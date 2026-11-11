@@ -60,7 +60,8 @@ public sealed class CaptureAnalysisAction : ViewModelBase
         Id = id;
         Label = label;
         ToolTip = label;
-        Command = new AsyncRelayCommand(request, () => _canRun);
+        // A second invocation cancels the active request; the view model guards new work.
+        Command = new AsyncRelayCommand(request, () => _canRun, AsyncRelayCommandOptions.AllowConcurrentExecutions);
     }
 
     public void Update(bool running, bool hasResult, bool canRun, string status = "")

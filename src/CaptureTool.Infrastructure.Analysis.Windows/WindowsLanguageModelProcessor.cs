@@ -60,7 +60,7 @@ internal sealed class WindowsLanguageModelProcessor(MetadataProcessorDescriptor 
             {
                 ct.ThrowIfCancellationRequested();
                 string instructions = MetadataTextProtocol.CreateInstructions(input, correction: attempt != 0);
-                var response = await session.GenerateAsync(instructions, sources).ConfigureAwait(false);
+                var response = await session.GenerateAsync(instructions, sources, ct).ConfigureAwait(false);
                 ct.ThrowIfCancellationRequested();
                 AnalyzerOutcome result = response.Status == LanguageModelResponseStatus.Complete
                     ? MetadataTextProtocol.ParseText(response.Text, input, new(Descriptor.Id, "microsoft-windows", "windows-language-model", Descriptor.Version))

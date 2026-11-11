@@ -287,6 +287,80 @@ public sealed partial class CaptureMemoryIntegrationTests
     }
 
     [TestMethod]
+    public async Task CancelAnalysisStopsActiveCapturePreservesOthersAndAllowsRetry()
+    {
+        using var environment = new AnalysisTestEnvironment();
+        await using var app = new App(environment);
+        await app.EnableAsync(Ct);
+        var completed = app.Asset();
+        await app.RequestAsync(completed, Ct);
+        await app.CompletedAsync(completed, Ct);
+        var started = Signal();
+        var cancelled = Signal();
+        int calls = 0;
+        app.Analyzer.BeforeComplete = async ct =>
+        {
+            if (Interlocked.Increment(ref calls) != 1) return;
+            started.TrySetResult();
+            try
+            {
+                await Task.Delay(Timeout.Infinite, ct);
+            }
+            finally
+            {
+                if (ct.IsCancellationRequested) cancelled.TrySetResult();
+            }
+        };
+        var active = app.Asset();
+        var queued = app.Asset();
+        await app.RequestAsync(active, Ct);
+        await started.Task.WaitAsync(TimeSpan.FromSeconds(5), Ct);
+        await app.RequestAsync(queued, Ct);
+
+        await app.Memory.CancelAnalysisAsync(active.SourcePath, Ct);
+
+        await cancelled.Task.WaitAsync(TimeSpan.FromSeconds(5), Ct);
+        Assert.AreEqual(AnalysisRunStatus.Cancelled, (await app.Store.GetWorkAsync(active.Id, Ct))!.Run.Status);
+        await app.CompletedAsync(queued, Ct);
+        Assert.IsNotNull(await app.Store.GetAsync(completed.Id, cancellationToken: Ct));
+        Assert.IsEmpty((await app.Store.GetAsync(active.Id, cancellationToken: Ct))!.Results);
+        Assert.IsTrue(app.Memory.State.Policy.IsAllowed);
+        await app.Memory.AnalyzeAsync(active.SourcePath, AnalysisCapability.Description, Ct);
+        await app.CompletedAsync(active, Ct);
+        Assert.AreEqual(1, app.Analyzer.MaximumConcurrency);
+    }
+
+    [TestMethod]
+    public async Task CancelQueuedAnalysisDoesNotCancelActiveCapture()
+    {
+        using var environment = new AnalysisTestEnvironment();
+        await using var app = new App(environment);
+        await app.EnableAsync(Ct);
+        var started = Signal();
+        var finish = Signal();
+        CancellationToken activeToken = default;
+        app.Analyzer.BeforeComplete = async ct =>
+        {
+            activeToken = ct;
+            started.TrySetResult();
+            await finish.Task.WaitAsync(ct);
+        };
+        var active = app.Asset();
+        var queued = app.Asset();
+        await app.RequestAsync(active, Ct);
+        await started.Task.WaitAsync(TimeSpan.FromSeconds(5), Ct);
+        await app.RequestAsync(queued, Ct);
+
+        await app.Memory.CancelAnalysisAsync(queued.SourcePath, Ct);
+
+        Assert.IsFalse(activeToken.IsCancellationRequested);
+        Assert.AreEqual(AnalysisRunStatus.Cancelled, (await app.Store.GetWorkAsync(queued.Id, Ct))!.Run.Status);
+        finish.SetResult();
+        await app.CompletedAsync(active, Ct);
+        Assert.AreEqual(1, app.Analyzer.Calls);
+    }
+
+    [TestMethod]
     public async Task CloseDiscardsActiveAndQueuedScansAndStartupDoesNotReadTheirMetadata()
     {
         using var environment = new AnalysisTestEnvironment();
