@@ -99,7 +99,7 @@ public sealed partial class CaptureDetailsViewModel : ViewModelBase
         EditNameCommand = new RelayCommand(EditCurrentName);
         CancelNameCommand = new RelayCommand(CancelNameEdit);
         SaveNameCommand = new AsyncRelayCommand(() => RenameAsync(NameDraft));
-        SuggestNameCommand = new AsyncRelayCommand(SuggestNameAsync, CanSuggestName);
+        SuggestNameCommand = new AsyncRelayCommand(SuggestNameAsync, CanSuggestName, AsyncRelayCommandOptions.AllowConcurrentExecutions);
         if (_names != null)
         {
             _names.Changed += OnNamesChanged;

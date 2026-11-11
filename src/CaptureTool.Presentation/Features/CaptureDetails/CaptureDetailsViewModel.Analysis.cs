@@ -9,6 +9,8 @@ public sealed partial class CaptureDetailsViewModel
     private readonly ICaptureAnalysisOnboarding? _onboarding;
     private readonly IAnalysisFeatureAvailability? _availability;
     private bool _requesting;
+    private bool _canceling;
+    private CancellationTokenSource? _requestCancellation;
     private AnalysisCapability? _requestedAction;
     private Guid? _actionNoticeRun;
     private readonly HashSet<(string Message, bool Error)> _actionNotices = [];
@@ -65,43 +67,111 @@ public sealed partial class CaptureDetailsViewModel
 
     private async Task RequestAnalysisAsync(AnalysisCapability capability, bool scanText = false)
     {
-        // Check eligibility before awaiting: AsyncRelayCommand disables itself while running.
-        if (!CanRequestAnalysis(capability, scanText))
+        if (_disposed || _canceling)
         {
             return;
         }
 
+        CaptureAnalysisAction action = scanText ? ScanTextAction : Actions.Single(action => action.Capability == capability);
+        if (action.IsRunning)
+        {
+            await CancelAnalysisAsync(capability);
+            return;
+        }
+
+        bool requestsImageText = capability == AnalysisCapability.TextRecognition || capability == AnalysisCapability.QrCodeDetection;
+        if (!CanRequestAnalysis(capability, scanText) || _path == null || _requesting ||
+            _memory.State.IsDeleting || (_snapshot?.Run?.IsPending == true && !(UsesEditorText && requestsImageText)))
+        {
+            return;
+        }
+
+        using var request = CancellationTokenSource.CreateLinkedTokenSource(_cancellation);
+        _requestCancellation = request;
+        _requesting = true;
+        _requestedAction = capability;
+        _actionNotices.Clear();
+        _requestFailures.Remove(capability);
+        UpdateActions();
         try
         {
-            if (!await CheckRequestSupportAsync(capability, scanText))
+            if (!await CheckRequestSupportAsync(capability, scanText, request.Token))
             {
                 return;
+            }
+            request.Token.ThrowIfCancellationRequested();
+
+            if (UsesEditorText && requestsImageText)
+            {
+                await _editorText!.ExtractAsync();
+            }
+            else
+            {
+                await RequestSavedAnalysisAsync(capability, scanText, request.Token);
+            }
+        }
+        catch (OperationCanceledException) when (request.IsCancellationRequested)
+        {
+        }
+        catch (Exception)
+        {
+            if (!request.IsCancellationRequested)
+            {
+                _requestFailures[capability] = "Failed";
+            }
+        }
+        finally
+        {
+            _requestCancellation = null;
+            _requesting = false;
+            if (!_disposed)
+            {
+                UpdateActions();
+            }
+            _requestedAction = null;
+        }
+    }
+
+    private async Task CancelAnalysisAsync(AnalysisCapability capability)
+    {
+        if (_requestCancellation?.IsCancellationRequested == true)
+        {
+            return;
+        }
+
+        _canceling = true;
+        _reviewSuggestedName = false;
+        UpdateActions();
+        try
+        {
+            _requestCancellation?.Cancel();
+            if (_editorText?.IsRunning == true &&
+                (capability == AnalysisCapability.TextRecognition || capability == AnalysisCapability.QrCodeDetection))
+            {
+                _editorText.Cancel();
+            }
+            else if (_path != null)
+            {
+                // Admission returns before inference finishes; cancel the actual worker too.
+                await _memory.CancelAnalysisAsync(_path, _cancellation);
+                await RefreshAsync();
             }
         }
         catch (OperationCanceledException) when (_cancellation.IsCancellationRequested)
         {
-            return;
         }
-
-        if (_disposed)
+        catch (Exception)
         {
-            return;
+            Notify(_text.GetString("CaptureAction_Failed"), error: true);
         }
-
-        bool requestsImageText = capability == AnalysisCapability.TextRecognition ||
-            capability == AnalysisCapability.QrCodeDetection;
-        if (UsesEditorText && requestsImageText)
+        finally
         {
-            await _editorText!.ExtractAsync();
-            return;
+            _canceling = false;
+            if (!_disposed)
+            {
+                UpdateActions();
+            }
         }
-
-        if (_path == null || _requesting || _memory.State.IsDeleting || _snapshot?.Run?.IsPending == true)
-        {
-            return;
-        }
-
-        await RequestSavedAnalysisAsync(capability, scanText);
     }
 
     private bool CanRequestAnalysis(AnalysisCapability capability, bool scanText)
@@ -116,7 +186,7 @@ public sealed partial class CaptureDetailsViewModel
             : Actions.Any(action => action.Capability == capability && action.IsSupported);
     }
 
-    private async Task<bool> CheckRequestSupportAsync(AnalysisCapability capability, bool scanText)
+    private async Task<bool> CheckRequestSupportAsync(AnalysisCapability capability, bool scanText, CancellationToken cancellationToken)
     {
         if (_availability == null || _kind is not { } kind)
         {
@@ -124,10 +194,10 @@ public sealed partial class CaptureDetailsViewModel
         }
 
         _availability.Invalidate();
-        bool supported = await _availability.IsSupportedAsync(kind, capability, _cancellation);
+        bool supported = await _availability.IsSupportedAsync(kind, capability, cancellationToken);
         if (!supported && scanText)
         {
-            supported = await _availability.IsSupportedAsync(kind, AnalysisCapability.QrCodeDetection, _cancellation);
+            supported = await _availability.IsSupportedAsync(kind, AnalysisCapability.QrCodeDetection, cancellationToken);
         }
 
         if (!supported)
@@ -137,69 +207,41 @@ public sealed partial class CaptureDetailsViewModel
         return supported;
     }
 
-    private async Task RequestSavedAnalysisAsync(AnalysisCapability capability, bool scanText)
+    private async Task RequestSavedAnalysisAsync(AnalysisCapability capability, bool scanText, CancellationToken cancellationToken)
     {
-        _requesting = true;
-        _requestedAction = capability;
-        _actionNotices.Clear();
-        _requestFailures.Remove(capability);
-        UpdateActions();
-
-        try
+        bool consent = _onboarding != null
+            ? await _onboarding.EnableAsync(cancellationToken)
+            : await _memory.EnsureConsentAsync(cancellationToken);
+        cancellationToken.ThrowIfCancellationRequested();
+        if (!consent)
         {
-            bool consent = _onboarding != null
-                ? await _onboarding.EnableAsync(_cancellation)
-                : await _memory.EnsureConsentAsync(_cancellation);
-            if (_disposed)
+            if (!_memory.State.PolicyAvailable)
             {
-                return;
+                Notify(Text("Unavailable"), error: true);
             }
+            return;
+        }
 
-            if (!consent)
-            {
-                if (!_memory.State.PolicyAvailable)
-                {
-                    Notify(Text("Unavailable"), error: true);
-                }
-                return;
-            }
+        if (scanText)
+        {
+            await _memory.ScanTextAsync(_path!, cancellationToken);
+        }
+        else
+        {
+            await _memory.AnalyzeAsync(_path!, capability, cancellationToken);
+        }
+        cancellationToken.ThrowIfCancellationRequested();
 
-            if (scanText)
-            {
-                await _memory.ScanTextAsync(_path!, _cancellation);
-            }
-            else
-            {
-                await _memory.AnalyzeAsync(_path!, capability, _cancellation);
-            }
-
-            if (_memory.State.FailureCode is { } failure && !_disposed)
-            {
-                _requestFailures[capability] = failure switch
-                {
-                    "model-unavailable" => "Unavailable",
-                    "model-download-required" => "DownloadRequired",
-                    _ => "Failed"
-                };
-            }
-            await RefreshAsync();
-        }
-        catch (OperationCanceledException) when (_cancellation.IsCancellationRequested)
+        if (_memory.State.FailureCode is { } failure && !_disposed)
         {
-        }
-        catch (Exception)
-        {
-            _requestFailures[capability] = "Failed";
-        }
-        finally
-        {
-            _requesting = false;
-            if (!_disposed)
+            _requestFailures[capability] = failure switch
             {
-                UpdateActions();
-            }
-            _requestedAction = null;
+                "model-unavailable" => "Unavailable",
+                "model-download-required" => "DownloadRequired",
+                _ => "Failed"
+            };
         }
+        await RefreshAsync();
     }
 
     private void UpdateActions()
@@ -240,9 +282,11 @@ public sealed partial class CaptureDetailsViewModel
             status = _text.GetString("CaptureAction_Unavailable");
         }
 
-        bool canRun = action.IsSupported && !_disposed && !_memory.State.IsDeleting &&
-            editor.CanExtract && !editor.IsRunning;
-        action.Update(isText && editor.IsRunning, hasResult, canRun, status);
+        bool running = (isText && editor.IsRunning) || (_requesting && _requestedAction == action.Capability);
+        bool canRun = !_disposed && !_canceling && !_memory.State.IsDeleting &&
+            (running ? _requestCancellation?.IsCancellationRequested != true :
+                action.IsSupported && editor.CanExtract && !_requesting && !editor.IsRunning);
+        action.Update(running, hasResult, canRun, status);
     }
 
     private void UpdateSavedAction(CaptureAnalysisAction action, bool pending)
@@ -252,8 +296,9 @@ public sealed partial class CaptureDetailsViewModel
             .SingleOrDefault(result => result.Payload.Capability == action.Capability);
         AnalysisStepCompletion? completion = run?.CompletedSteps
             .SingleOrDefault(step => step.Capability == action.Capability);
-        bool running = result == null && pending && _memory.State.Policy.IsAllowed &&
-            run!.Steps.Contains(action.Capability) && completion == null;
+        bool running = (_requesting && _requestedAction == action.Capability) ||
+            (result == null && pending && _memory.State.Policy.IsAllowed &&
+                run!.Steps.Contains(action.Capability) && completion == null);
 
         string? status = GetSavedActionStatus(action, result, completion, running);
         string message = status == null ? string.Empty : _text.GetString("CaptureAction_" + status);
@@ -264,8 +309,10 @@ public sealed partial class CaptureDetailsViewModel
         NotifyActionResult(action, running, status, message);
 
         bool hasName = action == NameAction && (_acceptedName || Content.SuggestedName.Length > 0);
-        bool canRun = action.IsSupported && !_disposed && !_requesting && !pending &&
-            !_memory.State.IsDeleting && (action.Capability != AnalysisCapability.ImageAltText || IsImage);
+        bool canRun = !_disposed && !_canceling && !_memory.State.IsDeleting &&
+            (running ? _requestCancellation?.IsCancellationRequested != true :
+                action.IsSupported && !_requesting && !pending &&
+                (action.Capability != AnalysisCapability.ImageAltText || IsImage));
         action.Update(running, result != null || hasName, canRun, message);
     }
 
@@ -339,8 +386,10 @@ public sealed partial class CaptureDetailsViewModel
     private void RefreshActionBindings()
     {
         SummaryAction.Label = _text.GetString(IsImage ? "CaptureAction_ScreenshotSummary" : "CaptureAction_Summary");
-        AltTextAction.ToolTip = AltTextAction.Label;
-        SummaryAction.ToolTip = SummaryAction.Label;
+        foreach (CaptureAnalysisAction action in Actions.Append(ScanTextAction))
+        {
+            action.ToolTip = action.IsRunning ? _text.GetString("CaptureMemory_Cancel") : action.Label;
+        }
         RaisePropertyChanged(nameof(IsImage));
         RaisePropertyChanged(nameof(IsVideo));
         RaisePropertyChanged(nameof(TextHint));
@@ -349,6 +398,7 @@ public sealed partial class CaptureDetailsViewModel
         RaisePropertyChanged(nameof(ShowTextPassages));
         IsGeneratingSummary = SummaryAction.IsRunning;
         IsGeneratingName = NameAction.IsRunning;
+        RaisePropertyChanged(nameof(NameSuggestionToolTip));
         SuggestNameCommand.NotifyCanExecuteChanged();
         RaisePropertyChanged(nameof(HasVisualMedia));
         RaisePropertyChanged(nameof(HasAudio));

@@ -44,7 +44,7 @@ public sealed partial class CaptureDetailsViewModel
 
     public IAsyncRelayCommand SuggestNameCommand { get; }
 
-    public string NameSuggestionToolTip => _text.GetString("CaptureNaming_Suggest");
+    public string NameSuggestionToolTip => _text.GetString(IsGeneratingName ? "CaptureMemory_Cancel" : "CaptureNaming_Suggest");
 
     public string FileName
     {
@@ -53,7 +53,7 @@ public sealed partial class CaptureDetailsViewModel
     } = string.Empty;
 
     private bool CanSuggestName() => !_disposed && CanEditName &&
-        !_memory.State.IsDeleting && !IsGeneratingName &&
+        !_memory.State.IsDeleting && !_canceling &&
         (HasSuggestedName || NameAction.Command.CanExecute(null));
 
     private void EditCurrentName()
@@ -77,6 +77,13 @@ public sealed partial class CaptureDetailsViewModel
 
     private async Task SuggestNameAsync()
     {
+        if (NameAction.IsRunning)
+        {
+            _reviewSuggestedName = false;
+            await NameAction.Command.ExecuteAsync(null);
+            return;
+        }
+
         if (HasSuggestedName)
         {
             EditName(SuggestedName);

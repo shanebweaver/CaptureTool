@@ -1,5 +1,6 @@
 using CaptureTool.Application.Abstractions.Analysis;
 using CaptureTool.Application.Abstractions.Capture.Assets;
+using CaptureTool.Application.Abstractions.Edit.Image.TextExtraction;
 using CaptureTool.Application.Abstractions.Files;
 using CaptureTool.Application.Capture;
 using CaptureTool.Domain;
@@ -8,7 +9,7 @@ using CaptureTool.Domain.Capture;
 
 namespace CaptureTool.Application.Analysis;
 
-internal sealed partial class CaptureMemoryService : ICaptureMemoryService, IDisposable
+internal sealed partial class CaptureMemoryService : ICaptureMemoryService, ICaptureImageTextService, IDisposable
 {
     private readonly CaptureMemoryAuthorization _authorization;
     private readonly ICaptureAssetCatalog _catalog;
@@ -19,6 +20,7 @@ internal sealed partial class CaptureMemoryService : ICaptureMemoryService, IDis
     private readonly CaptureNamingService? _naming;
     private readonly IReadOnlyList<IMetadataProcessor> _processors;
     private readonly IAnalysisFeatureAvailability? _availability;
+    private readonly IAnalysisSource? _imageTextSource;
     private readonly SemaphoreSlim _commands = new(1, 1);
     private readonly SemaphoreSlim _consentRequests = new(1, 1);
     private long _consentAttempt;
@@ -34,7 +36,7 @@ internal sealed partial class CaptureMemoryService : ICaptureMemoryService, IDis
     public CaptureMemoryService(CaptureMemoryAuthorization authorization, ICaptureAssetCatalog catalog,
         IAnalysisExecutionStore store, ICaptureAnalysisWorker worker, ICaptureMemoryPrompts prompts, IFileSystem files,
         CaptureNamingService? naming = null, IEnumerable<IMetadataProcessor>? processors = null,
-        IAnalysisFeatureAvailability? availability = null)
+        IAnalysisFeatureAvailability? availability = null, IAnalysisSource? imageTextSource = null)
     {
         _authorization = authorization;
         _catalog = catalog;
@@ -45,6 +47,7 @@ internal sealed partial class CaptureMemoryService : ICaptureMemoryService, IDis
         _naming = naming;
         _processors = processors?.ToArray() ?? [];
         _availability = availability;
+        _imageTextSource = imageTextSource;
         _worker.ProgressChanged += OnProgress;
     }
 

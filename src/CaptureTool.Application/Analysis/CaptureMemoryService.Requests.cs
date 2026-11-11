@@ -14,6 +14,21 @@ internal sealed partial class CaptureMemoryService
     public Task ScanTextAsync(string path, CancellationToken cancellationToken = default)
         => RequestAnalysisAsync(path, AnalysisCapability.TextRecognition, scanText: true, cancellationToken);
 
+    public Task CancelAnalysisAsync(string path, CancellationToken cancellationToken = default)
+        => RunSafelyAsync(ct => RunCommandAsync(async () =>
+        {
+            // Serialize with admission so cancellation also catches a request that was
+            // still being queued when the user clicked the action a second time.
+            var assets = await _catalog.ReadAllAsync(ct).ConfigureAwait(false);
+            CaptureAsset? asset = assets.FirstOrDefault(item => SamePath(item.SourcePath, path)) ??
+                assets.FirstOrDefault(item => SamePath(item.PreferredPath, path));
+            if (asset != null)
+            {
+                await _worker.CancelAsync(asset.Id, ct).ConfigureAwait(false);
+            }
+            await RefreshStatusAsync(ct).ConfigureAwait(false);
+        }, ct), cancellationToken);
+
     private Task RequestAnalysisAsync(string path, AnalysisCapability capability, bool scanText, CancellationToken cancellationToken)
     {
         long epoch = Interlocked.Read(ref _epoch);
@@ -23,7 +38,8 @@ internal sealed partial class CaptureMemoryService
     }
 
     // Called under the command gate; consent is rechecked after each admission boundary.
-    private async Task RequestAnalysisCoreAsync(string path, AnalysisCapability capability, bool scanText, long epoch, CancellationToken ct)
+    private async Task RequestAnalysisCoreAsync(string path, AnalysisCapability capability, bool scanText, long epoch, CancellationToken ct,
+        Action<AnalysisRunToken>? requestSelected = null)
     {
         // Admit only the requested output and its prerequisites. The worker reuses
         // cached results and briefly retains the model for subsequent requests.
@@ -78,7 +94,7 @@ internal sealed partial class CaptureMemoryService
             return;
         }
 
-        await AdmitAsync(asset, path, scope.Generation, _authorization.Policy.Revision, prior?.Run.Id, capability, scanText, ct).ConfigureAwait(false);
+        await AdmitAsync(asset, path, scope.Generation, _authorization.Policy.Revision, prior?.Run.Id, capability, scanText, ct, requestSelected).ConfigureAwait(false);
         await InitializeStorageAsync(ct).ConfigureAwait(false);
     }
 
@@ -129,7 +145,8 @@ internal sealed partial class CaptureMemoryService
         return false;
     }
 
-    private async Task AdmitAsync(CaptureAsset asset, string path, Guid generation, Guid authorization, Guid? prior, AnalysisCapability capability, bool scanText, CancellationToken ct)
+    private async Task AdmitAsync(CaptureAsset asset, string path, Guid generation, Guid authorization, Guid? prior, AnalysisCapability capability, bool scanText, CancellationToken ct,
+        Action<AnalysisRunToken>? requestSelected = null)
     {
         if (_runner != null && _worker.Progress.Activity == AnalysisActivity.StorageUnavailable)
         {
@@ -143,7 +160,10 @@ internal sealed partial class CaptureMemoryService
             CaptureFileType.Video => AnalysisMediaKind.Video,
             _ => throw new InvalidOperationException("Unsupported capture media.")
         };
-        if (await _worker.EnqueueAsync(new(asset.Id, media, path, Guid.NewGuid(), generation, prior,
+        Guid requestId = Guid.NewGuid();
+        // Capture ownership before admission, including cancellation during the durable write.
+        requestSelected?.Invoke(new(asset.Id, generation, requestId));
+        if (await _worker.EnqueueAsync(new(asset.Id, media, path, requestId, generation, prior,
             ExpectedAuthorizationId: authorization, Capabilities: scanText
                 ? [AnalysisCapability.QrCodeDetection, AnalysisCapability.TextRecognition]
                 : CaptureAnalysisConfiguration.ForAction(media, capability), ReuseExisting: true,

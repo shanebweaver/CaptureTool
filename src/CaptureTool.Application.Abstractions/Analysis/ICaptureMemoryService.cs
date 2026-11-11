@@ -49,6 +49,8 @@ public interface ICaptureMemoryService
     Task AnalyzeAsync(string path, AnalysisCapability capability, CancellationToken cancellationToken = default);
     /// <summary>Requests OCR and QR detection together for visual media, reusing either completed scan.</summary>
     Task ScanTextAsync(string path, CancellationToken cancellationToken = default);
+    /// <summary>Cancels queued or active analysis for this capture, retaining completed results.</summary>
+    Task CancelAnalysisAsync(string path, CancellationToken cancellationToken = default);
     Task DeleteMetadataAsync(CancellationToken cancellationToken = default);
     Task RefreshAsync(CancellationToken cancellationToken = default);
     Task StopAsync();

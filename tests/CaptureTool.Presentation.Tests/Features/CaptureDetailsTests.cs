@@ -18,6 +18,126 @@ namespace CaptureTool.Presentation.Tests.Features;
 public sealed class CaptureDetailsTests
 {
     [TestMethod]
+    [DataRow("summary")]
+    [DataRow("alt-text")]
+    [DataRow("name")]
+    [DataRow("speech")]
+    [DataRow("text")]
+    [DataRow("qr")]
+    [DataRow("scan")]
+    public async Task SecondClickCancelsQueuedAnalysisAndAllowsRetry(string requested)
+    {
+        var setup = new Setup(Mock.Of<ICaptureNamingService>());
+        using var vm = setup.ViewModel;
+        CaptureAnalysisAction action = requested switch
+        {
+            "summary" => vm.SummaryAction,
+            "alt-text" => vm.AltTextAction,
+            "name" => vm.NameAction,
+            "speech" => vm.TranscriptAction,
+            "qr" => vm.QrAction,
+            "scan" => vm.ScanTextAction,
+            _ => vm.TextAction,
+        };
+        var command = requested == "name" ? vm.SuggestNameCommand : action.Command;
+        CaptureDetailsSnapshot snapshot = new(CaptureDetailsStatus.Empty);
+        setup.Reader.Setup(reader => reader.ReadAsync(It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync(() => snapshot);
+        setup.Memory.Setup(memory => memory.EnsureConsentAsync(It.IsAny<CancellationToken>())).ReturnsAsync(true);
+        void Queue() => snapshot = snapshot with
+        {
+            Run = new AnalysisRun(Guid.NewGuid(), Guid.NewGuid(), 1, "plan", null, AnalysisRunStatus.Queued,
+                [action.Capability], [])
+        };
+        setup.Memory.Setup(memory => memory.AnalyzeAsync("capture.png", action.Capability, It.IsAny<CancellationToken>()))
+            .Callback(Queue).Returns(Task.CompletedTask);
+        setup.Memory.Setup(memory => memory.ScanTextAsync("capture.png", It.IsAny<CancellationToken>()))
+            .Callback(Queue).Returns(Task.CompletedTask);
+        setup.Memory.Setup(memory => memory.CancelAnalysisAsync("capture.png", It.IsAny<CancellationToken>()))
+            .Callback(() => snapshot = snapshot with { Run = snapshot.Run!.Finish(AnalysisRunStatus.Cancelled) })
+            .Returns(Task.CompletedTask);
+        await vm.OpenAsync("capture.png", requested == "speech" ? AnalysisMediaKind.Audio : AnalysisMediaKind.Image);
+
+        await command.ExecuteAsync(null);
+        Assert.IsTrue(action.IsRunning);
+        Assert.IsTrue(command.CanExecute(null));
+        Assert.AreEqual("CaptureMemory_Cancel", action.ToolTip);
+
+        await command.ExecuteAsync(null);
+
+        setup.Memory.Verify(memory => memory.CancelAnalysisAsync("capture.png", It.IsAny<CancellationToken>()), Times.Once);
+        setup.Memory.Verify(memory => memory.EnsureConsentAsync(It.IsAny<CancellationToken>()), Times.Once);
+        Assert.IsFalse(action.IsRunning);
+        Assert.IsTrue(command.CanExecute(null));
+        Assert.AreEqual(string.Empty, action.Status);
+        Assert.IsFalse(vm.IsEditingName);
+        setup.Notifications.VerifyNoOtherCalls();
+
+        await command.ExecuteAsync(null);
+        Assert.IsTrue(action.IsRunning);
+        setup.Memory.Verify(memory => memory.EnsureConsentAsync(It.IsAny<CancellationToken>()), Times.Exactly(2));
+    }
+
+    [TestMethod]
+    public async Task SecondClickWhileAwaitingConsentCancelsRequestWithoutStartingAnalysis()
+    {
+        var setup = new Setup();
+        setup.Reader.Setup(reader => reader.ReadAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new CaptureDetailsSnapshot(CaptureDetailsStatus.Empty));
+        var consent = new TaskCompletionSource<bool>();
+        CancellationToken requestToken = default;
+        setup.Memory.Setup(memory => memory.EnsureConsentAsync(It.IsAny<CancellationToken>()))
+            .Returns((CancellationToken ct) => { requestToken = ct; return consent.Task; });
+        using var vm = setup.ViewModel;
+        await vm.OpenAsync("capture.png", AnalysisMediaKind.Image);
+
+        Task request = vm.SummaryAction.Command.ExecuteAsync(null);
+        Assert.IsTrue(vm.SummaryAction.Command.CanExecute(null));
+        Assert.IsFalse(vm.AltTextAction.Command.CanExecute(null));
+        await vm.SummaryAction.Command.ExecuteAsync(null);
+        Assert.IsTrue(requestToken.IsCancellationRequested);
+        // A late consent result cannot start work after cancellation.
+        consent.SetResult(true);
+        await request;
+
+        Assert.IsFalse(vm.SummaryAction.IsRunning);
+        Assert.IsTrue(vm.SummaryAction.Command.CanExecute(null));
+        setup.Memory.Verify(memory => memory.AnalyzeAsync(It.IsAny<string>(), It.IsAny<AnalysisCapability>(), It.IsAny<CancellationToken>()), Times.Never);
+        setup.Notifications.VerifyNoOtherCalls();
+    }
+
+    [TestMethod]
+    public async Task SecondClickOnEditedImageScanCancelsEditorSession()
+    {
+        var setup = new Setup();
+        var stopped = new TaskCompletionSource();
+        int cancellations = 0;
+        var editor = new CaptureEditorTextSession(() => stopped.Task, () =>
+        {
+            cancellations++;
+            stopped.TrySetResult();
+        });
+        editor.Invalidate(true);
+        cancellations = 0;
+        stopped = new TaskCompletionSource();
+        editor.SetAvailability(true);
+        using var vm = setup.ViewModel;
+        vm.SetEditorText(editor);
+        await vm.OpenAsync("capture.png", AnalysisMediaKind.Image);
+
+        Task scan = vm.ScanTextAction.Command.ExecuteAsync(null);
+        Assert.IsTrue(editor.IsRunning);
+        Assert.IsTrue(vm.ScanTextAction.Command.CanExecute(null));
+        await vm.ScanTextAction.Command.ExecuteAsync(null);
+        await scan;
+
+        Assert.AreEqual(1, cancellations);
+        Assert.IsFalse(editor.IsRunning);
+        Assert.IsFalse(vm.ScanTextAction.IsRunning);
+        setup.Memory.Verify(memory => memory.CancelAnalysisAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+        setup.Notifications.VerifyNoOtherCalls();
+    }
+
+    [TestMethod]
     public async Task PartialSummaryNoticeTracksCoverageAndClearsWhenSummaryIsAbsent()
     {
         var setup = new Setup();
@@ -180,7 +300,7 @@ public sealed class CaptureDetailsTests
         await vm.RefreshAsync();
         Assert.IsTrue(vm.TranscriptAction.IsRunning);
         Assert.IsTrue(vm.ShowSpeechAction);
-        Assert.IsFalse(vm.TranscriptAction.Command.CanExecute(null));
+        Assert.IsTrue(vm.TranscriptAction.Command.CanExecute(null), "The active action remains available for cancellation.");
         Assert.IsFalse(vm.ShowSpeechResults);
         Assert.IsFalse(vm.ShowSpeechEmptyState);
         snapshot = new(CaptureDetailsStatus.Available, new CaptureAnalysisRecord(CaptureId.New(), kind,
@@ -255,11 +375,10 @@ public sealed class CaptureDetailsTests
         Assert.IsFalse(vm.ShowTextEmptyState);
         Task request = vm.ScanTextAction.Command.ExecuteAsync(null);
         Assert.IsTrue(vm.ScanTextAction.IsRunning);
-        Assert.IsFalse(vm.ScanTextAction.Command.CanExecute(null));
+        Assert.IsTrue(vm.ScanTextAction.Command.CanExecute(null));
         Assert.IsTrue(vm.ShowScanTextAction);
         Assert.IsFalse(vm.ShowTextResults);
         Assert.IsFalse(vm.ShowTextEmptyState);
-        await vm.ScanTextAction.Command.ExecuteAsync(null);
         var revision = new SourceRevision(new string('a', 64));
         var run = new AnalysisRun(Guid.NewGuid(), Guid.NewGuid(), 1, "plan", null, AnalysisRunStatus.Queued,
             [AnalysisCapability.QrCodeDetection, AnalysisCapability.TextRecognition], []).BindSource(revision);
@@ -270,7 +389,7 @@ public sealed class CaptureDetailsTests
         admission.SetResult();
         await request;
         Assert.IsTrue(vm.ScanTextAction.IsRunning, "A completed QR scan must not end progress while OCR is pending.");
-        Assert.IsFalse(vm.ScanTextAction.Command.CanExecute(null));
+        Assert.IsTrue(vm.ScanTextAction.Command.CanExecute(null));
         Assert.IsFalse(vm.ShowTextResults);
         Assert.IsFalse(vm.ShowTextEmptyState);
         setup.Notifications.VerifyNoOtherCalls();
@@ -361,7 +480,7 @@ public sealed class CaptureDetailsTests
         Assert.IsFalse(editor.IsRunning, "Opening the pane does not start extraction.");
         Task extraction = vm.EnsureTextAsync();
         Assert.IsTrue(vm.TextAction.IsRunning);
-        Assert.IsFalse(vm.TextAction.Command.CanExecute(null));
+        Assert.IsTrue(vm.TextAction.Command.CanExecute(null));
         complete.SetResult();
         await extraction;
         Assert.IsTrue(vm.CanShowImageTextOverlay);
@@ -739,10 +858,10 @@ public sealed class CaptureDetailsTests
         await vm.OpenAsync("capture.png", AnalysisMediaKind.Image);
         await vm.SuggestNameCommand.ExecuteAsync(null);
         Assert.IsTrue(vm.IsGeneratingName);
-        Assert.IsFalse(vm.SuggestNameCommand.CanExecute(null));
+        Assert.IsTrue(vm.SuggestNameCommand.CanExecute(null));
         Assert.IsFalse(vm.IsEditingName);
-        Assert.AreEqual("CaptureNaming_Suggest", vm.NameSuggestionToolTip,
-            "The AI tooltip stays unchanged during loading.");
+        Assert.AreEqual("CaptureMemory_Cancel", vm.NameSuggestionToolTip,
+            "The AI tooltip explains the second-click cancellation behavior.");
         if (editWhileGenerating)
         {
             vm.EditNameCommand.Execute(null);
@@ -1109,7 +1228,7 @@ public sealed class CaptureDetailsTests
             Assert.IsTrue(action.Command.CanExecute(null));
             await action.Command.ExecuteAsync(null);
             Assert.IsTrue(action.IsRunning);
-            Assert.IsFalse(action.Command.CanExecute(null));
+            Assert.IsTrue(action.Command.CanExecute(null));
             snapshot = snapshot with
             {
                 Run = snapshot.Run!.BindSource(new(new string('a', 64)))
