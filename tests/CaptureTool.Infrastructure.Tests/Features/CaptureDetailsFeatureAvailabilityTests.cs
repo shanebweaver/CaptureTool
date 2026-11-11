@@ -8,11 +8,11 @@ namespace CaptureTool.Infrastructure.Tests.Features;
 public sealed class CaptureDetailsFeatureAvailabilityTests
 {
     [TestMethod]
-    public void ReleaseDefaults_KeepImageTextAndHideRecordingTextAndSpeech()
+    public void ReleaseDefaults_HideTextAndSpeechTabs()
     {
         var availability = new CaptureDetailsFeatureAvailability(new MicrosoftFeatureManager());
 
-        Assert.IsTrue(availability.IsTextTabEnabled(AnalysisMediaKind.Image));
+        Assert.IsFalse(availability.IsTextTabEnabled(AnalysisMediaKind.Image));
         Assert.IsFalse(availability.IsSpeechTabEnabled(AnalysisMediaKind.Image));
         Assert.IsFalse(availability.IsTextTabEnabled(AnalysisMediaKind.Video));
         Assert.IsFalse(availability.IsSpeechTabEnabled(AnalysisMediaKind.Video));
@@ -33,6 +33,7 @@ public sealed class CaptureDetailsFeatureAvailabilityTests
     {
         var flags = new Dictionary<FeatureFlag, bool>
         {
+            [AppFeatures.Feature_CaptureDetails_ImageTextTab] = false,
             [AppFeatures.Feature_CaptureDetails_VideoTextTab] = videoText,
             [AppFeatures.Feature_CaptureDetails_VideoSpeechTab] = videoSpeech,
             [AppFeatures.Feature_CaptureDetails_AudioSpeechTab] = audioSpeech
@@ -42,9 +43,30 @@ public sealed class CaptureDetailsFeatureAvailabilityTests
         Assert.AreEqual(videoText, availability.IsTextTabEnabled(AnalysisMediaKind.Video));
         Assert.AreEqual(videoSpeech, availability.IsSpeechTabEnabled(AnalysisMediaKind.Video));
         Assert.AreEqual(audioSpeech, availability.IsSpeechTabEnabled(AnalysisMediaKind.Audio));
-        Assert.IsTrue(availability.IsTextTabEnabled(AnalysisMediaKind.Image));
+        Assert.IsFalse(availability.IsTextTabEnabled(AnalysisMediaKind.Image));
         Assert.IsFalse(availability.IsSpeechTabEnabled(AnalysisMediaKind.Image));
         Assert.IsFalse(availability.IsTextTabEnabled(AnalysisMediaKind.Audio));
+    }
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public void ImageTextTab_CanBeEnabledIndependentlyOfRecordingTabs(bool imageText)
+    {
+        var flags = new Dictionary<FeatureFlag, bool>
+        {
+            [AppFeatures.Feature_CaptureDetails_ImageTextTab] = imageText,
+            [AppFeatures.Feature_CaptureDetails_VideoTextTab] = false,
+            [AppFeatures.Feature_CaptureDetails_VideoSpeechTab] = false,
+            [AppFeatures.Feature_CaptureDetails_AudioSpeechTab] = false
+        };
+        var manager = new TestFeatureManager(flags);
+        var availability = new CaptureDetailsFeatureAvailability(manager);
+
+        Assert.AreEqual(imageText, availability.IsTextTabEnabled(AnalysisMediaKind.Image));
+        Assert.IsFalse(availability.IsTextTabEnabled(AnalysisMediaKind.Video));
+        Assert.IsFalse(availability.IsSpeechTabEnabled(AnalysisMediaKind.Video));
+        Assert.IsFalse(availability.IsSpeechTabEnabled(AnalysisMediaKind.Audio));
     }
 
     private sealed class TestFeatureManager(IReadOnlyDictionary<FeatureFlag, bool> flags) : IFeatureManager

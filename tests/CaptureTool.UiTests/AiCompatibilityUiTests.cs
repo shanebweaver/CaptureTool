@@ -27,7 +27,7 @@ public sealed partial class ImageEditTextExtractionUiTests
         var resources = XDocument.Load(Path.Combine(repo, "src", "CaptureTool.Presentation.Windows.WinUI", "Strings", language, "Resources.resw"))
             .Root!.Elements("data").ToDictionary(item => (string)item.Attribute("name")!, item => item.Element("value")!.Value);
         using var app = LaunchApp(ResolveAppExecutablePath(repo), fixture, Path.Combine(isolated, "data"),
-            Path.Combine(isolated, "temp"), language, detailsFixture: true, aiProfile: profile);
+            Path.Combine(isolated, "temp"), language, detailsFixture: true, aiProfile: profile, mediaTabs: true);
         using var automation = new UIA3Automation();
         var window = WaitForMainWindow(app, automation, AppLaunchTimeout);
         Element("ImageEdit_CommandBar"); MaximizeWindow(window);

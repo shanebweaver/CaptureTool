@@ -21,7 +21,7 @@ public sealed partial class ImageEditTextExtractionUiTests
         string isolated = Path.Combine(repo, "tests", "CaptureTool.UiTests", "TestResults", "artifacts", "screenshot-summary", Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(isolated);
         string fixture = Path.Combine(isolated, "capture.png"); CreateOcrFixtureImage(fixture);
-        using var app = LaunchApp(ResolveAppExecutablePath(repo), fixture, Path.Combine(isolated, "data"), Path.Combine(isolated, "temp"), "en-US", detailsFixture: true);
+        using var app = LaunchApp(ResolveAppExecutablePath(repo), fixture, Path.Combine(isolated, "data"), Path.Combine(isolated, "temp"), "en-US", detailsFixture: true, mediaTabs: true);
         using var automation = new UIA3Automation();
         var window = WaitForMainWindow(app, automation, AppLaunchTimeout);
         Element("ImageEdit_CommandBar"); MaximizeWindow(window);
@@ -168,7 +168,7 @@ public sealed partial class ImageEditTextExtractionUiTests
             json.WriteString("FilePath", fixture); json.WriteNumber("CaptureFileType", 0); json.WriteNumber("Origin", 0);
             json.WriteString("LastActivityUtc", DateTime.UtcNow); json.WriteEndObject(); json.WriteEndArray();
         }
-        using var app = LaunchApp(ResolveAppExecutablePath(repo), fixture, data, temp, language, detailsFixture: true);
+        using var app = LaunchApp(ResolveAppExecutablePath(repo), fixture, data, temp, language, detailsFixture: true, mediaTabs: true);
         using var automation = new UIA3Automation();
         Window window = WaitForMainWindow(app, automation, AppLaunchTimeout);
         window.Focus();

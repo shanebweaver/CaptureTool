@@ -63,15 +63,16 @@ public sealed partial class ImageEditTextExtractionUiTests
         WaitForElement(window, automation, "ImageEdit_CommandBar", AppLaunchTimeout);
         MaximizeWindow(window);
         OpenPane();
-        Element("CapturePane_TextTab");
+        Assert.AreEqual(mediaTabs, window.FindFirstDescendant(automation.ConditionFactory.ByAutomationId("CapturePane_TextTab")) != null,
+            "The image Text tab is hidden unless its feature flag is enabled.");
         Assert.IsNull(window.FindFirstDescendant(automation.ConditionFactory.ByAutomationId("CapturePane_SpeechTab")),
-            "Images have a Text tab and no Speech tab.");
-        Element("CapturePane_TextTab").Patterns.SelectionItem.Pattern.Select();
+            "Images do not have a Speech tab.");
+        if (mediaTabs) Element("CapturePane_TextTab").Patterns.SelectionItem.Pattern.Select();
         Menu("AppMenu_HomeItem"); OpenRecording(); OpenPane();
         var pane = Element("CaptureDetailsPane");
         if (!mediaTabs)
             Assert.IsTrue(Element("CapturePane_DetailsTab").Patterns.SelectionItem.Pattern.IsSelected.Value,
-                "A remembered Text tab falls back to file details when unavailable for this recording.");
+                "A newly opened recording starts on file details.");
         Element("CapturePane_DetailsTab").Patterns.SelectionItem.Pattern.Select();
         WaitForElementByName(pane, automation, video ? "Video" : "Audio", InteractionTimeout);
         AssertDetailsLayout(window, automation, video ? "VideoEdit_CommandBar" : "AudioEdit_CommandBar",

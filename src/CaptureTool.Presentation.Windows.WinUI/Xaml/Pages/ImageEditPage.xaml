@@ -61,15 +61,17 @@
                     <FontIcon Glyph="&#xE945;" />
                 </AppBarToggleButton.Icon>
             </AppBarToggleButton>
-            <AppBarButton
+            <AppBarToggleButton
                 x:Uid="ImageEdit_TextExtractionButton"
                 AutomationProperties.AutomationId="ImageEdit_TextExtractionButton"
-                Click="ExtractText_Click"
-                IsEnabled="{x:Bind ViewModel.IsLoaded, Mode=OneWay}">
-                <AppBarButton.Icon>
+                Command="{x:Bind ViewModel.ToggleTextExtractionModeCommand}"
+                IsChecked="{x:Bind ViewModel.IsTextExtractionModeActive, Mode=OneWay}"
+                IsEnabled="{x:Bind ViewModel.CanToggleTextExtraction, Mode=OneWay}"
+                Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.IsTextExtractionAvailable), Mode=OneWay}">
+                <AppBarToggleButton.Icon>
                     <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xED37;" />
-                </AppBarButton.Icon>
-            </AppBarButton>
+                </AppBarToggleButton.Icon>
+            </AppBarToggleButton>
             <AppBarToggleButton
                 x:Uid="ImageEdit_ImageDescriptionButton"
                 AutomationProperties.AutomationId="ImageEdit_ImageDescriptionButton"
@@ -293,6 +295,7 @@
                         IsObjectEraseModeEnabled="{x:Bind ViewModel.IsObjectEraseModeActive, Mode=OneWay}"
                         IsObjectExtractionModeEnabled="{x:Bind ViewModel.IsObjectExtractionModeActive, Mode=OneWay}"
                         IsShapesModeEnabled="{x:Bind ViewModel.IsShapesModeActive, Mode=OneWay}"
+                        IsTextExtractionOverlayEnabled="{x:Bind ViewModel.IsTextExtractionModeActive, Mode=OneWay}"
                         IsTextModeEnabled="{x:Bind ViewModel.IsTextModeActive, Mode=OneWay}"
                         ObjectEraseRequested="ImageCanvas_ObjectEraseRequested"
                         ObjectExtractionRequested="ImageCanvas_ObjectExtractionRequested"
@@ -308,6 +311,8 @@
                         TextBackgroundColor="{x:Bind ViewModel.TextTool.TextBackgroundColor, Mode=OneWay}"
                         TextBoxDrawn="ImageCanvas_TextBoxDrawn"
                         TextDrawableSelected="ImageCanvas_TextDrawableSelected"
+                        TextExtractionQrCodes="{x:Bind ViewModel.TextExtractionQrCodes, Mode=OneWay}"
+                        TextExtractionRegions="{x:Bind ViewModel.TextExtractionRegions, Mode=OneWay}"
                         TextFontFamily="{x:Bind ViewModel.TextTool.TextFontFamily, Mode=OneWay}"
                         TextFontSize="{x:Bind ViewModel.TextTool.TextFontSize, Mode=OneWay}"
                         TextForegroundColor="{x:Bind ViewModel.TextTool.TextFontColor, Mode=OneWay}" />
@@ -420,6 +425,18 @@
                                 <TranslateTransform Y="-8" />
                             </controls:ColorPickerToolbar.RenderTransform>
                         </controls:ColorPickerToolbar>
+
+                        <!--  Text extraction options  -->
+                        <controls:TextExtractionToolbar
+                            x:Name="TextExtractionToolbarHost"
+                            HorizontalAlignment="Center"
+                            CopyAllTextCommand="{x:Bind ViewModel.TextExtractionTool.CopyAllTextCommand, Mode=OneWay}"
+                            Opacity="0"
+                            Visibility="Collapsed">
+                            <controls:TextExtractionToolbar.RenderTransform>
+                                <TranslateTransform Y="-8" />
+                            </controls:TextExtractionToolbar.RenderTransform>
+                        </controls:TextExtractionToolbar>
 
                         <!--  Foreground extraction instructions  -->
                         <controls:ForegroundExtractionToolbar
@@ -535,6 +552,14 @@
                     AutomationProperties.AutomationId="ImageEdit_SuperResolutionProgressRing"
                     IsActive="{x:Bind ViewModel.IsSuperResolutionGenerating, Mode=OneWay}"
                     Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.IsSuperResolutionGenerating), Mode=OneWay}" />
+
+                <controls:AiLoadingIndicator
+                    x:Uid="ImageEdit_TextExtractionProgressRing"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    AutomationProperties.AutomationId="ImageEdit_TextExtractionProgressRing"
+                    IsActive="{x:Bind ViewModel.IsTextExtractionRunning, Mode=OneWay}"
+                    Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.IsTextExtractionRunning), Mode=OneWay}" />
 
                 <controls:AiLoadingIndicator
                     x:Uid="ImageEdit_ImageDescriptionProgressRing"

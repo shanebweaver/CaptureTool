@@ -54,7 +54,7 @@ public sealed partial class ImageEditTextExtractionUiTests
 
         string temp = Path.Combine(isolated, "temp");
         using var app = LaunchApp(ResolveAppExecutablePath(repo), image, Path.Combine(isolated, "data"), temp,
-            "en-US", detailsFixture: true);
+            "en-US", detailsFixture: true, mediaTabs: true);
         using var automation = new UIA3Automation();
         var window = WaitForMainWindow(app, automation, AppLaunchTimeout);
         WaitForElement(window, automation, "ImageEdit_CommandBar", InteractionTimeout);
@@ -67,7 +67,7 @@ public sealed partial class ImageEditTextExtractionUiTests
         }
         if (populateText)
         {
-            Element("ImageEdit_TextExtractionButton").Click();
+            Element("CaptureAction_ScanText").Patterns.Invoke.Pattern.Invoke();
             var consent = Element("CaptureMemoryConsentDialog");
             WaitForElementByName(consent, automation, "Allow local AI", InteractionTimeout).AsButton().Invoke();
             WaitForElementRemoved(window, automation, "CaptureMemoryConsentDialog", InteractionTimeout);

@@ -78,9 +78,14 @@ public sealed partial class ImageEditTextExtractionUiTests
         var consent = Element("CaptureMemoryConsentDialog");
         WaitForElementByName(consent, automation, "Allow local AI", InteractionTimeout).AsButton().Invoke();
         WaitForElementRemoved(window, automation, "CaptureMemoryConsentDialog", InteractionTimeout);
+        AssertClosed();
+        Element("ImageEdit_TextExtractionCopyAllButton");
+        Assert.AreEqual(ToggleState.On, Element("ImageEdit_TextExtractionButton").Patterns.Toggle.Pattern.ToggleState.Value);
+        Element("Editor_DetailsToggle").Click();
         Layout();
-        Assert.IsTrue(Element("CapturePane_TextTab").Patterns.SelectionItem.Pattern.IsSelected.Value);
-        Assert.IsFalse(Element("ImageEdit_TextExtractionButton").Patterns.Toggle.IsSupported);
+        Assert.AreEqual(ToggleState.Off, Element("ImageEdit_TextExtractionButton").Patterns.Toggle.Pattern.ToggleState.Value);
+        WaitForElementRemoved(window, automation, "ImageEdit_TextExtractionCopyAllButton", InteractionTimeout);
+        Assert.IsNull(window.FindFirstDescendant(automation.ConditionFactory.ByAutomationId("CapturePane_TextTab")));
         Element("CapturePane_Close").Patterns.Invoke.Pattern.Invoke();
         AssertClosed();
 

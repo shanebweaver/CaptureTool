@@ -37,7 +37,7 @@ public sealed partial class ImageEditTextExtractionUiTests
             .Select(value => value.GetString()!.Replace("\n", Environment.NewLine)).ToArray();
         string expectedCopy = string.Join(Environment.NewLine + Environment.NewLine, paragraphs);
         using var app = LaunchApp(ResolveAppExecutablePath(repo), image, Path.Combine(isolated, "data"),
-            Path.Combine(isolated, "temp"), "en-US", detailsFixture: true, textFixturePath: fixture);
+            Path.Combine(isolated, "temp"), "en-US", detailsFixture: true, mediaTabs: true, textFixturePath: fixture);
         using var automation = new UIA3Automation();
         var window = WaitForMainWindow(app, automation, AppLaunchTimeout);
         Element("ImageEdit_CommandBar"); MaximizeWindow(window);

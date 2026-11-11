@@ -24,7 +24,7 @@ public sealed partial class ImageEditTextExtractionUiTests
             .Root!.Elements("data").ToDictionary(item => (string)item.Attribute("name")!, item => item.Element("value")!.Value);
         using var automation = new UIA3Automation();
         Window window = null!;
-        using (var app = LaunchApp(ResolveAppExecutablePath(repo), fixture, data, temp, "en-US", detailsFixture: true))
+        using (var app = LaunchApp(ResolveAppExecutablePath(repo), fixture, data, temp, "en-US", detailsFixture: true, mediaTabs: true))
         {
             window = WaitForMainWindow(app, automation, AppLaunchTimeout); MaximizeWindow(window);
             Element("ImageEdit_CommandBar");
@@ -110,7 +110,7 @@ public sealed partial class ImageEditTextExtractionUiTests
                 ? window : null, InteractionTimeout, "metadata deletion completed before restart");
         }
 
-        using (var app = LaunchApp(ResolveAppExecutablePath(repo), fixture, data, temp, "en-US", detailsFixture: true))
+        using (var app = LaunchApp(ResolveAppExecutablePath(repo), fixture, data, temp, "en-US", detailsFixture: true, mediaTabs: true))
         {
             window = WaitForMainWindow(app, automation, AppLaunchTimeout); MaximizeWindow(window);
             Element("ImageEdit_CommandBar"); OpenPane();
