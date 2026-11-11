@@ -1,6 +1,7 @@
 name: Build
 
 on:
+  pull_request:
   push:
     branches: [ main ]
 
@@ -84,6 +85,7 @@ jobs:
           coverage-report
 
     - name: Upload coverage to Codecov
+      if: github.event_name == 'push'
       uses: codecov/codecov-action@v7
       with:
         files: coverage.cobertura.xml
@@ -91,6 +93,7 @@ jobs:
         fail_ci_if_error: true
 
     - name: Upload Package Artifacts
+      if: github.event_name == 'push'
       uses: actions/upload-artifact@v7
       with:
         name: StorePackage
