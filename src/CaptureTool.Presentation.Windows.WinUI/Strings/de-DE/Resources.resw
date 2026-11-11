@@ -2003,4 +2003,13 @@ SOFTWARE.
   <data name="CaptureOverlay_MicrophoneAccessDeniedMessage" xml:space="preserve">
     <value>Der Mikrofonzugriff ist deaktiviert. Erlauben Sie den Mikrofonzugriff in den Windows-Einstellungen oder schalten Sie das Mikrofon stumm, um ohne Mikrofon aufzunehmen.</value>
   </data>
+  <data name="MicrophoneAccess_Title" xml:space="preserve">
+    <value>Mikrofonzugriff erlauben</value>
+  </data>
+  <data name="MicrophoneAccess_Content" xml:space="preserve">
+    <value>Windows blockiert den Mikrofonzugriff. Öffnen Sie die Datenschutzeinstellungen für das Mikrofon und erlauben Sie den Zugriff für CaptureTool oder Desktop-Apps. Kehren Sie anschließend zurück und versuchen Sie es erneut. Sie können das Mikrofon auch stummschalten, um ohne Mikrofon aufzunehmen.</value>
+  </data>
+  <data name="MicrophoneAccess_OpenSettings" xml:space="preserve">
+    <value>Mikrofoneinstellungen öffnen</value>
+  </data>
 </root>

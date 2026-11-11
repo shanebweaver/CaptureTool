@@ -18,6 +18,7 @@ public sealed partial class CaptureOverlayView : CaptureOverlayViewBase
 {
     private readonly NewCaptureArgs _captureArgs;
     private readonly WinUICaptureDiscardConfirmationService _captureDiscardConfirmationService;
+    private readonly WinUIMicrophoneAccessPrompt _microphoneAccessPrompt;
     private CaptureOverlaySurfaceMetrics _lastPublishedMetrics;
     private XamlRoot? _observedXamlRoot;
     private double _lastToolbarWidth;
@@ -33,6 +34,7 @@ public sealed partial class CaptureOverlayView : CaptureOverlayViewBase
     {
         _captureArgs = captureArgs;
         _captureDiscardConfirmationService = App.Current.ServiceProvider.GetService<WinUICaptureDiscardConfirmationService>();
+        _microphoneAccessPrompt = App.Current.ServiceProvider.GetService<WinUIMicrophoneAccessPrompt>();
 
         InitializeComponent();
 
@@ -54,6 +56,7 @@ public sealed partial class CaptureOverlayView : CaptureOverlayViewBase
         _unloaded = false;
         _captureDiscardConfirmationService.XamlRoot = RootPanel.XamlRoot;
         _captureDiscardConfirmationService.DialogHostBounds = _captureArgs.Monitor.MonitorBounds;
+        _microphoneAccessPrompt.DialogHostBounds = _captureArgs.Monitor.MonitorBounds;
         ViewModel.PropertyChanged += ViewModel_PropertyChanged;
         AttachXamlRoot();
         ViewModel.Load(new CaptureOverlayViewModelOptions(_captureArgs));
@@ -76,6 +79,7 @@ public sealed partial class CaptureOverlayView : CaptureOverlayViewBase
 
         _captureDiscardConfirmationService.XamlRoot = null;
         _captureDiscardConfirmationService.DialogHostBounds = null;
+        _microphoneAccessPrompt.DialogHostBounds = null;
 
         ViewModel.Dispose();
     }

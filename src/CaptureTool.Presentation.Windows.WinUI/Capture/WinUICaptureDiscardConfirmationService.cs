@@ -53,7 +53,7 @@ internal sealed class WinUICaptureDiscardConfirmationService : ICaptureDiscardCo
                 cancelButtonText);
         }
 
-        using var overlayHost = new CaptureDiscardConfirmationOverlayHost(DialogHostBounds);
+        using var overlayHost = new CaptureConfirmationOverlayHost(DialogHostBounds);
         return await overlayHost.ShowConfirmationAsync(
             title,
             content,
