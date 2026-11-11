@@ -16,9 +16,9 @@ using Rectangle = System.Drawing.Rectangle;
 
 namespace CaptureTool.Presentation.Windows.WinUI.Capture;
 
-internal sealed class CaptureDiscardConfirmationOverlayHost : IDisposable
+internal sealed class CaptureConfirmationOverlayHost : IDisposable
 {
-    private const string WindowClassName = "CaptureDiscardConfirmationOverlayWindow";
+    private const string WindowClassName = "CaptureConfirmationOverlayWindow";
 
     private readonly Rectangle? _windowBounds;
     private readonly TaskCompletionSource<bool> _resultCompletion = new(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -28,7 +28,7 @@ internal sealed class CaptureDiscardConfirmationOverlayHost : IDisposable
     private Grid? _root;
     private bool _disposed;
 
-    public CaptureDiscardConfirmationOverlayHost(Rectangle? windowBounds = null)
+    public CaptureConfirmationOverlayHost(Rectangle? windowBounds = null)
     {
         _windowBounds = windowBounds;
     }
@@ -37,14 +37,16 @@ internal sealed class CaptureDiscardConfirmationOverlayHost : IDisposable
         string title,
         string content,
         string discardButtonText,
-        string cancelButtonText)
+        string cancelButtonText,
+        CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         Initialize(title, content, discardButtonText, cancelButtonText);
         Activate();
 
         try
         {
-            return await _resultCompletion.Task;
+            return await _resultCompletion.Task.WaitAsync(cancellationToken);
         }
         finally
         {

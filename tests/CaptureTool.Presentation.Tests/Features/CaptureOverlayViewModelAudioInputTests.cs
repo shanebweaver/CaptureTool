@@ -24,7 +24,7 @@ using System.Drawing;
 namespace CaptureTool.Presentation.Tests.Features;
 
 [TestClass]
-public sealed class CaptureOverlayViewModelAudioInputTests
+public sealed partial class CaptureOverlayViewModelAudioInputTests
 {
     [TestMethod]
     public async Task DeniedMicrophone_ShouldExplainRecovery_AndAllowMutedRetry()
@@ -497,7 +497,9 @@ public sealed class CaptureOverlayViewModelAudioInputTests
 
     private static TestContext CreateViewModel(
         IReadOnlyList<AudioInputSource> sources,
-        TimeSpan? recordingStartTimeout = null)
+        TimeSpan? recordingStartTimeout = null,
+        IMicrophoneAccessService? microphoneAccess = null,
+        IMicrophoneAccessPrompt? microphonePrompt = null)
     {
         Mock<IGetAudioInputSourcesUseCase> getAudioInputSources = new();
         getAudioInputSources
@@ -634,7 +636,7 @@ public sealed class CaptureOverlayViewModelAudioInputTests
             videoCaptureState.Object,
             taskEnvironment.Object,
             localizationService.Object,
-            recordingStartTimeout);
+            recordingStartTimeout, microphoneAccess, microphonePrompt);
 
         return new TestContext(
             viewModel,
