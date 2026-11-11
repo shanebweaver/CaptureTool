@@ -12,6 +12,7 @@ public static class WindowsCaptureInfrastructureServiceCollectionExtensions
         services.AddSingleton<IDisplayTopology, WindowsDisplayTopology>();
         services.AddSingleton<IScreenCapture, WindowsScreenCapture>();
         services.AddSingleton<IScreenRecorder, WindowsScreenRecorder>();
+        services.AddSingleton<IMicrophoneAccessService, WindowsMicrophoneAccessService>();
         services.AddSingleton<IVideoCaptureSupportService, WindowsVideoCaptureSupportService>();
         services.AddSingleton<IAudioRecorder, WindowsAudioRecorder>();
 

@@ -38,6 +38,8 @@ public static class WindowsPresentationServiceCollectionExtensions
         services.AddSingleton<IAudioCaptureNavigationConfirmationService>(sp => sp.GetRequiredService<WinUIAudioCaptureNavigationConfirmationService>());
         services.AddSingleton<WinUICaptureDiscardConfirmationService>();
         services.AddSingleton<ICaptureDiscardConfirmationService>(sp => sp.GetRequiredService<WinUICaptureDiscardConfirmationService>());
+        services.AddSingleton<WinUIMicrophoneAccessPrompt>();
+        services.AddSingleton<IMicrophoneAccessPrompt>(sp => sp.GetRequiredService<WinUIMicrophoneAccessPrompt>());
         services.AddSingleton<TelemetryConsentDialogService>();
         services.AddSingleton<CaptureTool.Presentation.Windows.WinUI.Utils.MainWindowDialogCoordinator>();
         services.AddSingleton<CaptureMemoryDialogService>();

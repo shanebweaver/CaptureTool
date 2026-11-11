@@ -49,6 +49,10 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
     private readonly IVideoCaptureState _videoCaptureState;
     private readonly ITaskEnvironment _taskEnvironment;
     private readonly ILocalizationService _localizationService;
+    private readonly IMicrophoneAccessService? _microphoneAccess;
+    private readonly IMicrophoneAccessPrompt? _microphonePrompt;
+    private readonly CancellationTokenSource _permissionLifetime = new();
+    private readonly CancellationToken _permissionToken;
 
     private NewCaptureArgs? _captureArgs;
 
@@ -181,7 +185,9 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
         IVideoCaptureState videoCaptureState,
         ITaskEnvironment taskEnvironment,
         ILocalizationService localizationService,
-        TimeSpan? recordingStartTimeout = null)
+        TimeSpan? recordingStartTimeout = null,
+        IMicrophoneAccessService? microphoneAccess = null,
+        IMicrophoneAccessPrompt? microphonePrompt = null)
     {
         _startVideoCaptureCommand = startVideoCaptureCommand;
         _cancelVideoCaptureCommand = cancelVideoCaptureCommand;
@@ -197,6 +203,9 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
         _videoCaptureState = videoCaptureState;
         _taskEnvironment = taskEnvironment;
         _localizationService = localizationService;
+        _microphoneAccess = microphoneAccess;
+        _microphonePrompt = microphonePrompt;
+        _permissionToken = _permissionLifetime.Token;
         _recordingStartTimeout = recordingStartTimeout ?? DefaultRecordingStartTimeout;
 
         DefaultAppTheme = themeService.DefaultTheme;
@@ -330,6 +339,8 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
         _isDisposed = true;
         IsStarting = false;
         CancelRecordingStartWait();
+        _permissionLifetime.Cancel();
+        _permissionLifetime.Dispose();
         _videoCaptureState.RecordingStarted -= OnRecordingStarted;
         _videoCaptureState.DesktopAudioStateChanged -= OnDesktopAudioStateChanged;
         _videoCaptureState.DesktopAudioVolumeChanged -= OnDesktopAudioVolumeChanged;
@@ -383,9 +394,23 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
         UseCaseResponse<StartVideoCaptureResponse> response;
         try
         {
+            if (!_videoCaptureState.IsAudioInputMuted && !string.IsNullOrWhiteSpace(_videoCaptureState.SelectedAudioInputSourceId) &&
+                !await EnsureMicrophoneAccessAsync(recordingStartCancellationTokenSource.Token))
+            {
+                HandleRecordingStartFailure(showMessage: false);
+                ClearRecordingStartWait(recordingStartCancellationTokenSource);
+                return;
+            }
+            recordingStartCancellationTokenSource.Token.ThrowIfCancellationRequested();
             response = await _startVideoCaptureCommand.ExecuteAsync(
                 new StartVideoCaptureRequest(_captureArgs.Value),
                 CancellationToken.None);
+        }
+        catch (OperationCanceledException)
+        {
+            HandleRecordingStartFailure(showMessage: false);
+            ClearRecordingStartWait(recordingStartCancellationTokenSource);
+            return;
         }
         catch (Exception)
         {
@@ -397,15 +422,16 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
         if (response.Result != UseCaseResult.Succeeded || response.Value?.Succeeded != true)
         {
             bool isUnsupported = response.Value?.FailureReason == StartVideoCaptureFailureReason.NotSupported;
+            bool microphoneDenied = response.Value?.FailureReason == StartVideoCaptureFailureReason.MicrophoneAccessDenied;
             HandleRecordingStartFailure(
-                showMessage: response.Result != UseCaseResult.Cancelled && !isUnsupported);
+                showMessage: response.Result != UseCaseResult.Cancelled && !isUnsupported && !microphoneDenied);
             if (isUnsupported)
             {
                 ShowRecordingError(RecordingUnsupportedMessageResourceKey, RecordingUnsupportedMessageFallback);
             }
-            else if (response.Value?.FailureReason == StartVideoCaptureFailureReason.MicrophoneAccessDenied)
+            else if (microphoneDenied)
             {
-                ShowRecordingError(MicrophoneAccessDeniedMessageResourceKey, MicrophoneAccessDeniedMessageFallback);
+                await ShowMicrophoneAccessPromptAsync(_permissionToken);
             }
             ClearRecordingStartWait(recordingStartCancellationTokenSource);
             return;
@@ -625,23 +651,33 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
 
     private async Task ToggleAudioInputMuteAsync()
     {
+        if (IsAudioInputMuted && !string.IsNullOrWhiteSpace(_videoCaptureState.SelectedAudioInputSourceId) &&
+            !await EnsureMicrophoneAccessAsync(_permissionToken))
+        {
+            return;
+        }
         var response = await _setVideoCaptureAudioInputMutedCommand.ExecuteAsync(
             new SetVideoCaptureAudioInputMutedRequest(!IsAudioInputMuted),
             CancellationToken.None);
         if (response.Value?.MicrophoneAccessDenied == true)
         {
-            ShowRecordingError(MicrophoneAccessDeniedMessageResourceKey, MicrophoneAccessDeniedMessageFallback);
+            await ShowMicrophoneAccessPromptAsync(_permissionToken);
         }
     }
 
     private async Task<SelectAudioInputSourceResponse?> RequestAudioInputSourceSelectionAsync(string? sourceId)
     {
+        if (IsRecording && !IsAudioInputMuted && !string.IsNullOrWhiteSpace(sourceId) &&
+            !await EnsureMicrophoneAccessAsync(_permissionToken))
+        {
+            return new SelectAudioInputSourceResponse(true, false, MicrophoneAccessDenied: true);
+        }
         var response = (await _selectAudioInputSourceCommand.ExecuteAsync(
             new SelectAudioInputSourceRequest(sourceId),
             CancellationToken.None)).Value;
         if (response?.MicrophoneAccessDenied == true)
         {
-            ShowRecordingError(MicrophoneAccessDeniedMessageResourceKey, MicrophoneAccessDeniedMessageFallback);
+            await ShowMicrophoneAccessPromptAsync(_permissionToken);
         }
         return response;
     }
@@ -658,6 +694,39 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
         if (response?.WasRemoved == true)
         {
             await RefreshAudioInputSourcesAsync();
+        }
+    }
+
+    private async Task<bool> EnsureMicrophoneAccessAsync(CancellationToken ct)
+    {
+        if (_microphoneAccess == null) return true;
+        try
+        {
+            MicrophoneAccessResult result = await _microphoneAccess.RequestAccessAsync(ct);
+            ct.ThrowIfCancellationRequested();
+            if (_isDisposed) return false;
+            if (result == MicrophoneAccessResult.Granted) return true;
+            if (result == MicrophoneAccessResult.SettingsRequired) await ShowMicrophoneAccessPromptAsync(ct);
+            return false;
+        }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested) { return false; }
+    }
+
+    private async Task ShowMicrophoneAccessPromptAsync(CancellationToken ct)
+    {
+        if (_isDisposed || ct.IsCancellationRequested) return;
+        DismissRecordingError();
+        if (_microphonePrompt == null)
+        {
+            ShowRecordingError(MicrophoneAccessDeniedMessageResourceKey, MicrophoneAccessDeniedMessageFallback);
+            return;
+        }
+        try { await _microphonePrompt.ShowAsync(ct); }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested) { }
+        catch (Exception)
+        {
+            // Keep manual recovery instructions if the prompt or Settings cannot open.
+            ShowRecordingError(MicrophoneAccessDeniedMessageResourceKey, MicrophoneAccessDeniedMessageFallback);
         }
     }
 
