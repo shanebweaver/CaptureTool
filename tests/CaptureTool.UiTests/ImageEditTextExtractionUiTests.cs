@@ -21,109 +21,99 @@ public sealed partial class ImageEditTextExtractionUiTests
     public TestContext TestContext { get; set; } = null!;
 
     [TestMethod]
-    [DataRow(false)]
-    [DataRow(true)]
+    [DataRow(false, false)]
+    [DataRow(true, false)]
+    [DataRow(false, true)]
+    [DataRow(true, true)]
     [TestCategory("UI")]
-    public void ExtractTextShortcut_UnifiesSavedAndEditedImageTextInThePane(bool editBeforeConsent)
+    public void TextExtractionMode_ShowsStandaloneToolbarAndOverlay(bool editBeforeConsent, bool mediaTabs)
     {
         if (!ShouldRunUiTests()) Assert.Inconclusive("Enable isolated desktop UI tests.");
         using var dpi = new DesktopDpiScope();
         string repo = FindRepositoryRoot();
-        string artifacts = Path.Combine(repo, "tests", "CaptureTool.UiTests", "TestResults", "artifacts", "unified-text",
-            editBeforeConsent ? "edited-first-use" : "saved-first-use");
-        string isolated = Path.Combine(artifacts, Guid.NewGuid().ToString("N"));
+        string isolated = Path.Combine(repo, "tests", "CaptureTool.UiTests", "TestResults", "artifacts",
+            "text-extraction", Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(isolated);
         string fixture = Path.Combine(isolated, "capture.png");
         CreateOcrFixtureImage(fixture);
         using var app = LaunchApp(ResolveAppExecutablePath(repo), fixture, Path.Combine(isolated, "data"),
-            Path.Combine(isolated, "temp"), "en-US", detailsFixture: true);
+            Path.Combine(isolated, "temp"), "en-US", detailsFixture: true, mediaTabs: mediaTabs);
         using var automation = new UIA3Automation();
         var window = WaitForMainWindow(app, automation, AppLaunchTimeout);
         Element("ImageEdit_CommandBar"); MaximizeWindow(window);
         if (editBeforeConsent) Element("ImageEdit_RotateButton").Patterns.Invoke.Pattern.Invoke();
-        Element("Editor_DetailsToggle").Click();
-        Element("CapturePane_TextTab").Patterns.SelectionItem.Pattern.Select();
-        Assert.IsNull(Find("CaptureMemoryConsentDialog"), "Browsing the pane does not request analysis.");
-        Assert.IsNull(Find("CaptureAction_ScanText_Loading"));
-        var shortcut = Element("ImageEdit_TextExtractionButton");
-        Assert.IsFalse(shortcut.Patterns.Toggle.IsSupported, "Extract text is a shortcut, not a second mode.");
-        shortcut.Click();
+        Element("Editor_DetailsToggle").Patterns.Toggle.Pattern.Toggle();
+        Element("CapturePane_DetailsTab");
+        if (mediaTabs) Element("CapturePane_TextTab");
+        else Assert.IsNull(Find("CapturePane_TextTab"));
+        Assert.IsNull(Find("CaptureMemoryConsentDialog"), "Browsing details does not request analysis.");
+
+        var toggle = Element("ImageEdit_TextExtractionButton");
+        Assert.IsTrue(toggle.Patterns.Toggle.IsSupported);
+        toggle.Patterns.Toggle.Pattern.Toggle();
         var consent = Element("CaptureMemoryConsentDialog");
         WaitForElementByName(consent, automation, "Allow local AI", InteractionTimeout).AsButton().Invoke();
         WaitForElementRemoved(window, automation, "CaptureMemoryConsentDialog", InteractionTimeout);
-        Element("CaptureAction_ScanText_Loading");
-        Assert.IsNull(Find("ImageEdit_TextExtractionProgressRing"));
-        AssertDetailsLayout(window, automation, "ImageEdit_CommandBar", "ZoomSlider");
-        Screenshot("loading");
-        WaitForElementRemoved(window, automation, "CaptureAction_ScanText_Loading", InteractionTimeout);
-        Element("ImageEdit_TextExtractionOverlayMarker");
-        Assert.IsNull(Find("ImageEdit_TextExtractionCopyAllButton"));
-        Element("CapturePane_CopyResults").Patterns.Invoke.Pattern.Invoke();
-        WaitFor(() => ReadDetailsClipboard()?.Contains(editBeforeConsent ? "OCR MODE" : "Contoso invoice") == true ? window : null,
-            InteractionTimeout, "text copied from the pane after first-use consent");
-        var sources = Element("CapturePane_SourceFilter");
-        sources.Patterns.ExpandCollapse.Pattern.Expand();
-        WaitForElementByName(window, automation, "On-screen text", InteractionTimeout);
-        WaitForElementByName(window, automation, "QR codes", InteractionTimeout);
-        Assert.IsNull(window.FindFirstDescendant(automation.ConditionFactory.ByName("Speech")),
-            "Image results must not offer the speech filter.");
-        Screenshot("image-source-choices");
-        sources.Patterns.ExpandCollapse.Pattern.Collapse();
-        shortcut.Click();
-        Assert.IsNull(Find("CaptureAction_ScanText_Loading"));
-        Element("CapturePane_SummaryTab").Patterns.SelectionItem.Pattern.Select();
-        WaitForElementRemoved(window, automation, "ImageEdit_TextExtractionOverlayMarker", InteractionTimeout);
-        shortcut.Click();
-        Element("ImageEdit_TextExtractionOverlayMarker");
-        Assert.IsNull(Find("CaptureAction_ScanText_Loading"));
-        Screenshot("saved-text");
+        Element("ImageEdit_TextExtractionProgressRing");
+        WaitForElementRemoved(window, automation, "CaptureDetailsPane", InteractionTimeout);
+        Assert.AreEqual(ToggleState.On, toggle.Patterns.Toggle.Pattern.ToggleState.Value);
+        Assert.IsTrue(toggle.IsEnabled, "Extraction can be canceled while it is running.");
+        toggle.Patterns.Toggle.Pattern.Toggle();
+        WaitForElementRemoved(window, automation, "ImageEdit_TextExtractionProgressRing", InteractionTimeout);
+        WaitForElementRemoved(window, automation, "ImageEdit_TextExtractionCopyAllButton", InteractionTimeout);
+        Assert.IsNull(Find("ImageEdit_TextExtractionOverlayMarker"));
 
-        Element("ImageEdit_RotateButton").Patterns.Invoke.Pattern.Invoke();
-        Element("CaptureAction_ScanText");
-        WaitForElementRemoved(window, automation, "ImageEdit_TextExtractionOverlayMarker", InteractionTimeout);
-        Assert.IsNull(Find("CapturePane_Search"), "Saved text is hidden once the image changes.");
-        shortcut.Click();
-        Element("CaptureAction_ScanText_Loading");
-        Element("CapturePane_Close").Patterns.Invoke.Pattern.Invoke();
-        WaitForElementRemoved(window, automation, "CaptureDetailsPane", InteractionTimeout);
-        Element("Editor_DetailsToggle").Click();
-        Element("CaptureAction_ScanText");
-        WaitForElementRemoved(window, automation, "CaptureAction_ScanText_Loading", InteractionTimeout);
-        Assert.IsNull(Find("ImageEdit_TextExtractionOverlayMarker"), "Closing the pane cancels current-image extraction.");
-        shortcut.Click();
-        Element("CaptureAction_ScanText_Loading");
-        WaitForElementRemoved(window, automation, "CaptureAction_ScanText_Loading", InteractionTimeout);
+        toggle.Patterns.Toggle.Pattern.Toggle();
+        // The first scan may finish before the toggle-off reaches the UI; either
+        // a fresh scan or the completed cached result is valid when reopening.
+        WaitForElementRemoved(window, automation, "ImageEdit_TextExtractionProgressRing", InteractionTimeout);
         Element("ImageEdit_TextExtractionOverlayMarker");
+        Assert.IsTrue(Element("ImageEdit_TextExtractionCopyAllButton").IsEnabled,
+            "The standalone toolbar enables Copy all after extraction completes.");
         Element("ImageCanvas_QrCodeCopyButton_0");
-        Element("CapturePane_CopyResults").Patterns.Invoke.Pattern.Invoke();
-        WaitFor(() => ReadDetailsClipboard()?.Contains("OCR MODE") == true && ReadDetailsClipboard()?.Contains("https://example.com/capturetool") == true
-            ? window : null, InteractionTimeout, "current rendered image text and QR results copied");
-        var passageText = WaitFor(() => Element("CapturePane_Passages").FindAllDescendants(automation.ConditionFactory.ByControlType(ControlType.Text))
-            .FirstOrDefault(item => !item.IsOffscreen && item.Name.Contains("OCR MODE")), InteractionTimeout, "current-image passages visibly rendered");
-        Assert.IsGreaterThan(0d, passageText.BoundingRectangle.Height);
-        Screenshot("edited-image-text");
-        passageText.Click();
-        WaitFor(() => Element("CapturePane_Passages").FindAllChildren(automation.ConditionFactory.ByControlType(ControlType.ListItem))
-            .FirstOrDefault(item => item.Patterns.SelectionItem.Pattern.IsSelected.Value), InteractionTimeout, "current-image row selected by clicking its text");
-        Screenshot("edited-image-selection");
-        Element("CapturePane_Close").Patterns.Invoke.Pattern.Invoke();
-        WaitForElementRemoved(window, automation, "CaptureDetailsPane", InteractionTimeout);
-        shortcut.Click();
-        Element("ImageEdit_TextExtractionOverlayMarker");
-        Assert.IsNull(Find("CaptureAction_ScanText_Loading"), "Reopening reuses current-session extraction.");
-        Element("ImageEdit_CropButton").Click();
-        WaitForElementRemoved(window, automation, "CaptureDetailsPane", InteractionTimeout);
+        Element("ImageCanvas_QrCodeOpenButton_0");
+        Assert.IsNull(Find("CaptureDetailsPane"));
+        Screenshot("overlay");
+
+        toggle.Patterns.Toggle.Pattern.Toggle();
         WaitForElementRemoved(window, automation, "ImageEdit_TextExtractionOverlayMarker", InteractionTimeout);
+        WaitForElementRemoved(window, automation, "ImageEdit_TextExtractionCopyAllButton", InteractionTimeout);
+        toggle.Patterns.Toggle.Pattern.Toggle();
+        Element("ImageEdit_TextExtractionOverlayMarker");
+        Assert.IsNull(Find("ImageEdit_TextExtractionProgressRing"), "Reopening reuses current-session extraction.");
+        Element("ImageEdit_RotateButton").Patterns.Invoke.Pattern.Invoke();
+        WaitForElementRemoved(window, automation, "ImageEdit_TextExtractionOverlayMarker", InteractionTimeout);
+        WaitForElementRemoved(window, automation, "ImageEdit_TextExtractionCopyAllButton", InteractionTimeout);
+        Assert.AreEqual(ToggleState.Off, toggle.Patterns.Toggle.Pattern.ToggleState.Value);
+        toggle.Patterns.Toggle.Pattern.Toggle();
+        Element("ImageEdit_TextExtractionProgressRing");
+        WaitForElementRemoved(window, automation, "ImageEdit_TextExtractionProgressRing", InteractionTimeout);
+        Element("ImageEdit_TextExtractionOverlayMarker");
+
+        Element("Editor_DetailsToggle").Patterns.Toggle.Pattern.Toggle();
+        Element("CaptureDetailsPane");
+        Assert.AreEqual(ToggleState.Off, toggle.Patterns.Toggle.Pattern.ToggleState.Value);
+        WaitForElementRemoved(window, automation, "ImageEdit_TextExtractionOverlayMarker", InteractionTimeout);
+        WaitForElementRemoved(window, automation, "ImageEdit_TextExtractionCopyAllButton", InteractionTimeout);
+        toggle.Patterns.Toggle.Pattern.Toggle();
+        WaitForElementRemoved(window, automation, "CaptureDetailsPane", InteractionTimeout);
+        Element("ImageEdit_TextExtractionOverlayMarker");
+        Assert.IsNull(Find("ImageEdit_TextExtractionProgressRing"));
+        Element("ImageEdit_CropButton").Patterns.Toggle.Pattern.Toggle();
+        WaitForElementRemoved(window, automation, "ImageEdit_TextExtractionOverlayMarker", InteractionTimeout);
+        WaitForElementRemoved(window, automation, "ImageEdit_TextExtractionCopyAllButton", InteractionTimeout);
+        Assert.AreEqual(ToggleState.Off, toggle.Patterns.Toggle.Pattern.ToggleState.Value);
 
         AutomationElement Element(string id) => WaitForElement(window, automation, id, InteractionTimeout);
         AutomationElement? Find(string id) => window.FindFirstDescendant(automation.ConditionFactory.ByAutomationId(id));
         void Screenshot(string name)
         {
             Thread.Sleep(200);
-            string path = Path.Combine(artifacts, name + ".png");
+            string path = Path.Combine(isolated, name + ".png");
             window.CaptureToFile(path); TestContext.AddResultFile(path);
         }
     }
+
     private static void RequireUiTestLanguage(string language)
     {
         string? requested = Environment.GetEnvironmentVariable("CAPTURETOOL_UI_TEST_LANGUAGE");

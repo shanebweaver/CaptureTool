@@ -49,6 +49,7 @@ internal static class UiTestServiceCollectionExtensions
     private sealed class UiTestMediaTabsFeatureManager : IFeatureManager
     {
         public bool IsEnabled(FeatureFlag featureFlag) =>
+            featureFlag == AppFeatures.Feature_CaptureDetails_ImageTextTab ||
             featureFlag == AppFeatures.Feature_CaptureDetails_VideoTextTab ||
             featureFlag == AppFeatures.Feature_CaptureDetails_VideoSpeechTab ||
             featureFlag == AppFeatures.Feature_CaptureDetails_AudioSpeechTab ||

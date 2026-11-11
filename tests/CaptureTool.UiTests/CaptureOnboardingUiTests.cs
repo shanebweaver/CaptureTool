@@ -122,7 +122,7 @@ public sealed partial class ImageEditTextExtractionUiTests
             .Root!.Elements("data").ToDictionary(x => (string)x.Attribute("name")!, x => x.Element("value")!.Value);
         using var automation = new UIA3Automation();
         Window window = null!;
-        using (var app = LaunchApp(ResolveAppExecutablePath(repo), fixture, data, temp, language, detailsFixture: true, onboarding: true))
+        using (var app = LaunchApp(ResolveAppExecutablePath(repo), fixture, data, temp, language, detailsFixture: true, onboarding: true, mediaTabs: true))
         {
             window = WaitForMainWindow(app, automation, AppLaunchTimeout); MaximizeWindow(window);
             Element("ImageEdit_CommandBar");
@@ -136,7 +136,7 @@ public sealed partial class ImageEditTextExtractionUiTests
             WaitFor(() => ReadDetailsClipboard()?.Contains("OCR MODE") == true ? window : null, InteractionTimeout, "standalone OCR with shared consent");
             Screenshot("standalone-ocr");
         }
-        using (var app = LaunchApp(ResolveAppExecutablePath(repo), fixture, data, temp, language, detailsFixture: true, onboarding: true))
+        using (var app = LaunchApp(ResolveAppExecutablePath(repo), fixture, data, temp, language, detailsFixture: true, onboarding: true, mediaTabs: true))
         {
             window = WaitForMainWindow(app, automation, AppLaunchTimeout); MaximizeWindow(window);
             Element("ImageEdit_CommandBar"); Thread.Sleep(500);

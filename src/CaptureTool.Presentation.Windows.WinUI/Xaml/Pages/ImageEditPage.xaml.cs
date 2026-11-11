@@ -152,6 +152,7 @@ public sealed partial class ImageEditPage : ImageEditPageBase
         SetToolbarHostState(ShapeToolbarHost, ViewModel.IsShapesModeActive);
         SetToolbarHostState(TextToolbarHost, ViewModel.IsTextModeActive);
         SetToolbarHostState(ColorPickerToolbarHost, ViewModel.IsColorPickerModeActive);
+        SetToolbarHostState(TextExtractionToolbarHost, ViewModel.IsTextExtractionModeActive);
         SetToolbarHostState(ImageDescriptionToolbarHost, ViewModel.IsImageDescriptionModeActive);
         SetToolbarHostState(ForegroundExtractionToolbarHost, ViewModel.IsForegroundExtractionModeActive);
         SetToolbarHostState(ObjectEraseToolbarHost, ViewModel.IsObjectEraseModeActive);
@@ -176,6 +177,9 @@ public sealed partial class ImageEditPage : ImageEditPageBase
             case nameof(ViewModel.IsColorPickerModeActive):
                 AnimateToolbarHost(ColorPickerToolbarHost, ViewModel.IsColorPickerModeActive);
                 break;
+            case nameof(ViewModel.IsTextExtractionModeActive):
+                AnimateToolbarHost(TextExtractionToolbarHost, ViewModel.IsTextExtractionModeActive);
+                break;
             case nameof(ViewModel.IsImageDescriptionModeActive):
                 AnimateToolbarHost(ImageDescriptionToolbarHost, ViewModel.IsImageDescriptionModeActive);
                 break;
@@ -190,8 +194,6 @@ public sealed partial class ImageEditPage : ImageEditPageBase
                 break;
         }
     }
-
-    private void ExtractText_Click(object sender, RoutedEventArgs e) => DetailsHost.OpenText();
 
     private void SetToolbarHostState(FrameworkElement host, bool isVisible)
     {

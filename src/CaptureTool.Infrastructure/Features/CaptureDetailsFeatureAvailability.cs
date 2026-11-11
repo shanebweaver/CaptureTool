@@ -8,7 +8,7 @@ public sealed class CaptureDetailsFeatureAvailability(IFeatureManager featureMan
 {
     public bool IsTextTabEnabled(AnalysisMediaKind mediaKind) => mediaKind switch
     {
-        AnalysisMediaKind.Image => true,
+        AnalysisMediaKind.Image => featureManager.IsEnabled(AppFeatures.Feature_CaptureDetails_ImageTextTab),
         AnalysisMediaKind.Video => featureManager.IsEnabled(AppFeatures.Feature_CaptureDetails_VideoTextTab),
         _ => false
     };

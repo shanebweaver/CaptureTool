@@ -42,7 +42,7 @@ public sealed partial class ImageEditTextExtractionUiTests
             var consent = WaitForElement(window, automation, "CaptureMemoryConsentDialog", InteractionTimeout);
             WaitForElementByName(consent, automation, "Allow local AI", InteractionTimeout).AsButton().Invoke();
             WaitForElementRemoved(window, automation, "CaptureMemoryConsentDialog", InteractionTimeout);
-            string source = editedImage ? "editor" : "background";
+            const string source = "editor";
             WaitFor(() => ReadLog().Contains($"UI test inference started: {source}.", StringComparison.Ordinal)
                 ? window : null, InteractionTimeout, "AI provider running");
 

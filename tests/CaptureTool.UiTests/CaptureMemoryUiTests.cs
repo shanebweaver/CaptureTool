@@ -46,7 +46,7 @@ public sealed partial class ImageEditTextExtractionUiTests
             json.WriteEndArray();
         }
 
-        using var app = LaunchApp(ResolveAppExecutablePath(repo), fixture, data, temp, language);
+        using var app = LaunchApp(ResolveAppExecutablePath(repo), fixture, data, temp, language, mediaTabs: true);
         using var automation = new UIA3Automation();
         Window window = WaitForMainWindow(app, automation, AppLaunchTimeout);
         window.Focus();

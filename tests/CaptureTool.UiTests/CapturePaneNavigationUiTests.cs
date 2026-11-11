@@ -57,7 +57,7 @@ public sealed partial class ImageEditTextExtractionUiTests
         }
         string commandBar = media switch { "video" => "VideoEdit_CommandBar", "audio" => "AudioEdit_CommandBar", _ => "ImageEdit_CommandBar" };
         using var app = LaunchApp(ResolveAppExecutablePath(repo), image, data, temp,
-            "en-US", detailsFixture: true);
+            "en-US", detailsFixture: true, mediaTabs: media == "image");
         using var automation = new UIA3Automation();
         var window = WaitForMainWindow(app, automation, AppLaunchTimeout);
         try
